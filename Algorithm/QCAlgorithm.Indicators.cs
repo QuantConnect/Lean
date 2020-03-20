@@ -467,8 +467,23 @@ namespace QuantConnect.Algorithm
         /// <returns>The ExponentialMovingAverage for the given parameters</returns>
         public ExponentialMovingAverage EMA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
+            return EMA(symbol, period, ExponentialMovingAverage.SmoothingFactorDefault(period), resolution, selector);
+        }
+
+        /// <summary>
+        /// Creates an ExponentialMovingAverage indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose EMA we want</param>
+        /// <param name="period">The period of the EMA</param>
+        /// <param name="smoothingFactor">The percentage of data from the previous value to be carried into the next value</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The ExponentialMovingAverage for the given parameters</returns>
+        public ExponentialMovingAverage EMA(Symbol symbol, int period, decimal smoothingFactor, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
             var name = CreateIndicatorName(symbol, $"EMA({period})", resolution);
-            var exponentialMovingAverage = new ExponentialMovingAverage(name, period);
+            var exponentialMovingAverage = new ExponentialMovingAverage(name, period, smoothingFactor);
             RegisterIndicator(symbol, exponentialMovingAverage, resolution, selector);
 
             if (EnableAutomaticIndicatorWarmUp)
