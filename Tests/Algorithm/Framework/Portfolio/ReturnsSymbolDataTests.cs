@@ -13,13 +13,16 @@
  * limitations under the License.
 */
 
+using Accord.Math;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Python;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
@@ -28,8 +31,39 @@ using System.Linq;
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
     [TestFixture]
-    public class DuplicateKeyPortfolioConstructionModelTests
+    public class ReturnsSymbolDataTests
     {
+        [Test]
+        [TestCase(false)]
+        [TestCase(true)]
+        public void ReturnsSymbolDataMatrixIsSimilarToPandasDataFrame(bool odd)
+        {
+            var symbols = new[] { "A", "B", "C", "D", "E" }
+                .Select(x => Symbol.Create(x, SecurityType.Equity, Market.USA, x));
+
+            var slices = GetHistory(symbols, odd);
+
+            var expected = GetExpectedValue(slices);
+
+            var symbolDataDict = new Dictionary<Symbol, ReturnsSymbolData>();
+
+            slices.PushThrough(bar =>
+            {
+                ReturnsSymbolData symbolData;
+                if (!symbolDataDict.TryGetValue(bar.Symbol, out symbolData))
+                {
+                    symbolData = new ReturnsSymbolData(bar.Symbol, 1, 5);
+                    symbolDataDict.Add(bar.Symbol, symbolData);
+                }
+                symbolData.Update(bar.EndTime, bar.Value);
+            });
+
+            var matrix = symbolDataDict.FormReturnsMatrix(symbols);
+            var actual = matrix.Determinant();
+
+            Assert.AreEqual(expected, actual, 0.000001);
+        }
+
         [Test]
         public void DuplicateKeyPortfolioConstructionModelDoesNotThrow()
         {
@@ -67,6 +101,67 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var insights = new[] {Insight.Price(symbol, Time.OneMinute, InsightDirection.Up, .1)};
 
             Assert.DoesNotThrow(() => algorithm.PortfolioConstruction.CreateTargets(algorithm, insights));
+        }
+
+        private List<Slice> GetHistory(IEnumerable<Symbol> symbols, bool odd)
+        {
+            var reference = DateTime.Now;
+            var rnd = new Random(reference.Second);
+            var symbolsArray = symbols.ToArray();
+
+            return Enumerable.Range(0, 10).Select(t =>
+            {
+                var time = reference.AddDays(t);
+
+                var data = Enumerable.Range(0, symbolsArray.Length).Select(i =>
+                {
+                    // Odd data means that one of the symbols have a different timestamp
+                    if (odd && i == symbolsArray.Length - 1)
+                    {
+                        time = time.AddMinutes(10);
+                    }
+                    return new Tick(time, symbolsArray[i], (decimal)rnd.NextDouble(), 0, 0);
+                });
+
+                return new Slice(time, data);
+            }).ToList();
+        }
+
+        private double GetExpectedValue(List<Slice> history)
+        {
+            var code = @"
+import numpy as np
+import pandas as pd
+import math
+from BlackLittermanOptimizationPortfolioConstructionModel import BlackLittermanOptimizationPortfolioConstructionModel as blopcm
+
+def GetDeterminantFromHistory(history):
+    returns = dict()
+    history = history.lastprice.unstack(0)
+
+    for symbol, df in history.items():
+        symbolData = blopcm.BlackLittermanSymbolData(symbol, 1, 5)
+        for time, close in df.dropna().items():
+            symbolData.Update(time, close)
+
+        returns[symbol] = symbolData.Return
+    
+    df = pd.DataFrame(returns)
+    if df.isna().sum().sum() > 0:
+        df[df.columns[-1]] = df[df.columns[-1]].bfill()
+        df = df.dropna()
+
+    return np.linalg.det(df)";
+
+            using (Py.GIL())
+            {
+                dynamic GetDeterminantFromHistory = PythonEngine
+                    .ModuleFromString("GetDeterminantFromHistory", code)
+                    .GetAttr("GetDeterminantFromHistory");
+
+                dynamic df = new PandasConverter().GetDataFrame(history);
+                return GetDeterminantFromHistory(df);
+            }
         }
 
         private class DuplicateKeyPortfolioConstructionModel : IPortfolioConstructionModel

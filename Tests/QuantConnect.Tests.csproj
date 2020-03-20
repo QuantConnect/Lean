@@ -283,7 +283,7 @@
     <Compile Include="Algorithm\Framework\FrameworkModelsPythonInheritanceTests.cs" />
     <Compile Include="Algorithm\Framework\InsightTests.cs" />
     <Compile Include="Algorithm\Framework\NotifiedSecurityChangesTests.cs" />
-    <Compile Include="Algorithm\Framework\Portfolio\DuplicateKeyPortfolioConstructionModelTests.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\ReturnsSymbolDataTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\BlackLittermanOptimizationPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\AccumulativeInsightPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\ConfidenceWeightedPortfolioConstructionModelTests.cs" />

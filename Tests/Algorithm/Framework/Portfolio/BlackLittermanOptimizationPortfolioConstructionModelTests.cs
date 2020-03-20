@@ -26,6 +26,7 @@ using System;
 using System.Linq;
 using QuantConnect.Algorithm;
 using QuantConnect.Tests.Engine.DataFeeds;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
@@ -235,6 +236,42 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.IsTrue(createdValidTarget);
         }
 
+        [Test]
+        public void NewSymbolPortfolioConstructionModelDoesNotThrow()
+        {
+            var algorithm = new QCAlgorithm();
+            var timezone = algorithm.TimeZone;
+            algorithm.SetDateTime(new DateTime(2018, 8, 7).ConvertToUtc(timezone));
+            algorithm.SetPortfolioConstruction(new NewSymbolPortfolioConstructionModel());
+
+            var spySymbol = Symbols.SPY;
+            var spy = GetSecurity(spySymbol, Resolution.Daily);
+
+            spy.SetMarketPrice(new Tick(algorithm.Time, spySymbol, 1m, 1m));
+            algorithm.Securities.Add(spySymbol, spy);
+
+            algorithm.PortfolioConstruction.OnSecuritiesChanged(algorithm, SecurityChanges.Added(spy));
+
+            var insights = new[] { Insight.Price(spySymbol, Time.OneMinute, InsightDirection.Up, .1) };
+
+            Assert.DoesNotThrow(() => algorithm.PortfolioConstruction.CreateTargets(algorithm, insights));
+
+            algorithm.SetDateTime(algorithm.Time.AddDays(1));
+
+            var aaplSymbol = Symbols.AAPL;
+            var aapl = GetSecurity(spySymbol, Resolution.Daily);
+
+            aapl.SetMarketPrice(new Tick(algorithm.Time, aaplSymbol, 1m, 1m));
+            algorithm.Securities.Add(aaplSymbol, aapl);
+
+            algorithm.PortfolioConstruction.OnSecuritiesChanged(algorithm, SecurityChanges.Added(aapl));
+
+            insights = new[] { spySymbol, aaplSymbol }
+                .Select(x => Insight.Price(x, Time.OneMinute, InsightDirection.Up, .1)).ToArray();
+
+            Assert.DoesNotThrow(() => algorithm.PortfolioConstruction.CreateTargets(algorithm, insights));
+        }
+
         private Security GetSecurity(Symbol symbol, Resolution resolution)
         {
             var timezone = _algorithm.TimeZone;
@@ -373,6 +410,54 @@ class BLOPCM(BlackLittermanOptimizationPortfolioConstructionModel):
 
     def OnSecuritiesChanged(self, algorithm, changes):
         pass";
+        }
+
+        private class NewSymbolPortfolioConstructionModel : BlackLittermanOptimizationPortfolioConstructionModel
+        {
+            private readonly Dictionary<Symbol, ReturnsSymbolData> _symbolDataDict = new Dictionary<Symbol, ReturnsSymbolData>();
+
+            public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
+            {
+                // Updates the ReturnsSymbolData with insights
+                foreach (var insight in insights)
+                {
+                    ReturnsSymbolData symbolData;
+                    if (_symbolDataDict.TryGetValue(insight.Symbol, out symbolData))
+                    {
+                        symbolData.Add(algorithm.Time, .1m);
+                    }
+                }
+
+                double[,] returns = null;
+                Assert.DoesNotThrow(() => returns = _symbolDataDict.FormReturnsMatrix(insights.Select(x => x.Symbol)));
+
+                // Calculate posterior estimate of the mean and uncertainty in the mean
+                double[,] Σ;
+                var Π = GetEquilibriumReturns(returns, out Σ);
+
+                Assert.IsFalse(double.IsNaN(Π[0]));
+
+                return Enumerable.Empty<PortfolioTarget>();
+            }
+
+            public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
+            {
+                const int period = 2;
+                var reference = algorithm.Time.AddDays(-period);
+
+                foreach (var security in changes.AddedSecurities)
+                {
+                    var symbol = security.Symbol;
+                    var symbolData = new ReturnsSymbolData(symbol, 1, period);
+
+                    for (var i = 0; i <= period * 2; i++)
+                    {
+                        symbolData.Update(reference.AddDays(i), i);
+                    }
+
+                    _symbolDataDict[symbol] = symbolData;
+                }
+            }
         }
     }
 }
