@@ -385,5 +385,46 @@ namespace QuantConnect.Tests.Common.Data.Custom
             // Cast inside since we can't pass in decimal values through TestCase attributes
             Assert.AreEqual((decimal?)expected, TradingEconomicsCalendar.ParseDecimal(value, inPercentage));
         }
+
+        [Test]
+        public void SerializeRoundTrip()
+        {
+            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+
+            var time = new DateTime(2020, 3, 20, 14, 0, 0);
+            var symbol = Symbol.CreateBase(
+                typeof(TradingEconomicsCalendar),
+                Symbol.Create(
+                    TradingEconomics.Calendar.UnitedStates.ExistingHomeSales,
+                    SecurityType.Base,
+                    QuantConnect.Market.USA),
+                QuantConnect.Market.USA);
+
+            var item = new TradingEconomicsCalendar
+            {
+                Country = "United States",
+                Category = "Existing Home Sales",
+                Importance = TradingEconomicsImportance.Medium,
+                Event = "existing home sales",
+                Actual = 5770000m,
+                Previous = 5460000m,
+                LastUpdate = time,
+                EndTime = time,
+                Symbol = symbol,
+            };
+
+            var serialized = JsonConvert.SerializeObject(item, settings);
+            var deserialized = JsonConvert.DeserializeObject<TradingEconomicsCalendar>(serialized, settings);
+
+            Assert.AreEqual("United States", deserialized.Country);
+            Assert.AreEqual("Existing Home Sales", deserialized.Category);
+            Assert.AreEqual(TradingEconomicsImportance.Medium, deserialized.Importance);
+            Assert.AreEqual(5770000m, deserialized.Actual);
+            Assert.AreEqual(5460000m, deserialized.Previous);
+            Assert.AreEqual(time, deserialized.LastUpdate);
+            Assert.AreEqual(time, deserialized.Time);
+            Assert.AreEqual(time, deserialized.EndTime);
+            Assert.AreEqual(symbol, deserialized.Symbol);
+        }
     }
 }

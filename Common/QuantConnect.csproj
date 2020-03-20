@@ -293,6 +293,7 @@
     <Compile Include="Data\Custom\Estimize\EstimizeEstimate.cs" />
     <Compile Include="Data\Custom\Estimize\EstimizeRelease.cs" />
     <Compile Include="Data\Custom\PsychSignal\PsychSignalSentiment.cs" />
+    <Compile Include="Data\Custom\TradingEconomics\TradingEconomicsSymbolJsonConverter.cs" />
     <Compile Include="Data\Custom\USEnergy\USEnergy.cs" />
     <Compile Include="Data\Custom\USEnergy\USEnergyAPI.cs" />
     <Compile Include="Data\Custom\USEnergy\USEnergy.Category.cs" />

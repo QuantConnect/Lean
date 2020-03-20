@@ -185,10 +185,10 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         public string Ticker { get; set; }
 
         /// <summary>
-        /// Unique symbol used by Trading Economics
+        /// The LEAN symbol
         /// </summary>
-        [JsonProperty(PropertyName = "Symbol")]
-        public string TESymbol { get; set; }
+        [JsonProperty(PropertyName = "Symbol"), JsonConverter(typeof(TradingEconomicsSymbolJsonConverter))]
+        public new Symbol Symbol { get; set; }
 
         /// <summary>
         /// Indicates whether the Actual, Previous, Forecast, TradingEconomicsForecast fields are reported as percent values
@@ -278,7 +278,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
             instance.Reference = csv[i++].Trim('"');
             instance.Revised = csv[i++].IfNotNullOrEmpty<decimal?>(x => Parse.Decimal(x));
             instance.Source = csv[i++].Trim('"');
-            instance.TESymbol = csv[i++];
+            i++;
             instance.TradingEconomicsForecast = csv[i++].IfNotNullOrEmpty<decimal?>(x => Parse.Decimal(x));
             instance.Symbol = config.Symbol;
 
@@ -311,7 +311,6 @@ namespace QuantConnect.Data.Custom.TradingEconomics
                 OCountry = Country,
                 OCategory = OCategory,
                 Ticker = Ticker,
-                TESymbol = TESymbol,
                 IsPercentage = IsPercentage,
 
 
@@ -325,8 +324,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// </summary>
         public override string ToString()
         {
-            var symbol = string.IsNullOrWhiteSpace(TESymbol) ? Ticker : TESymbol;
-            return Invariant($"{symbol} ({Country} - {Category}): {Event} : Importance.{Importance}");
+            return Invariant($"{Ticker} ({Country} - {Category}): {Event} : Importance.{Importance}");
         }
 
         /// <summary>
@@ -355,7 +353,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
                 $"\"{Reference}\"",
                 Revised.ToStringInvariant(),
                 $"\"{Source}\"",
-                TESymbol,
+                string.Empty,
                 TradingEconomicsForecast.ToStringInvariant()
             );
         }
