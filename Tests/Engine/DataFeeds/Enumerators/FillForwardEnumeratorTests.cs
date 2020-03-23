@@ -16,11 +16,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
@@ -1079,6 +1083,92 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             fillForwardEnumerator.Dispose();
+        }
+
+        [TestCase(Resolution.Second, Resolution.Second)]
+        [TestCase(Resolution.Second, Resolution.Minute)]
+        [TestCase(Resolution.Minute, Resolution.Second)]
+        [TestCase(Resolution.Minute, Resolution.Minute)]
+        [TestCase(Resolution.Minute, Resolution.Daily)]
+        [TestCase(Resolution.Daily, Resolution.Minute)]
+        public void FillForwardBarsForDifferentResolutions(Resolution resolution, Resolution anotherSymbolResolution)
+        {
+            FillForwardTestAlgorithm.FillForwardBars.Clear();
+
+            FillForwardTestAlgorithm.Resolution = resolution;
+            FillForwardTestAlgorithm.ResolutionAnotherSymbol = anotherSymbolResolution;
+
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(nameof(FillForwardTestAlgorithm),
+                new Dictionary<string, string>(),
+                Language.CSharp,
+                AlgorithmStatus.Completed);
+
+            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+                parameter.Statistics,
+                parameter.AlphaStatistics,
+                parameter.Language,
+                parameter.ExpectedFinalStatus,
+                setupHandler: "FillForwardTestSetupHandler");
+
+            var expectedDataFile = $"ff_{resolution}_{anotherSymbolResolution}.txt";
+
+            // updates expected data
+            if (false)
+            {
+                QuantConnect.Compression.ZipCreateAppendData(
+                    "../../TestData/FillForwardBars.zip", expectedDataFile, FillForwardTestAlgorithm.Result.Value);
+            }
+            QuantConnect.Compression.Unzip("TestData/FillForwardBars.zip", "./", overwrite: true);
+            var expected = File.ReadAllLines(expectedDataFile);
+
+            Assert.AreEqual(expected.Length, FillForwardTestAlgorithm.FillForwardBars.Count);
+            Assert.IsTrue(expected.SequenceEqual(FillForwardTestAlgorithm.FillForwardBars));
+        }
+
+        internal class FillForwardTestAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+        {
+            private Symbol _symbol;
+            public static List<string> FillForwardBars = new List<string>();
+            public static Lazy<string> Result { get; set; }
+            public static Resolution Resolution { get; set; }
+            public static Resolution ResolutionAnotherSymbol { get; set; }
+            public override void Initialize()
+            {
+                SetStartDate(2013, 10, 04);
+                SetEndDate(2013, 10, 07);
+                AddEquity("SPY", ResolutionAnotherSymbol);
+                _symbol = AddEquity("AIG", Resolution).Symbol;
+            }
+            public override void OnData(Slice data)
+            {
+                if (data.ContainsKey(_symbol))
+                {
+                    var tradeBar = data[_symbol] as TradeBar;
+                    if (tradeBar != null && tradeBar.IsFillForward)
+                    {
+                        FillForwardBars.Add($"{tradeBar.EndTime:d H:m:s} {Time:d H:m:s}");
+                    }
+                }
+            }
+            public override void OnEndOfAlgorithm()
+            {
+                Result = new Lazy<string>(() => string.Join(Environment.NewLine, FillForwardBars));
+            }
+
+            public bool CanRunLocally { get; } = true;
+            public Language[] Languages { get; } = { Language.CSharp };
+            public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>();
+        }
+
+        internal class FillForwardTestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
+        {
+            internal static FillForwardTestAlgorithm TestAlgorithm { get; set; }
+
+            public override IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
+            {
+                Algorithm = TestAlgorithm = new FillForwardTestAlgorithm();
+                return Algorithm;
+            }
         }
     }
 }

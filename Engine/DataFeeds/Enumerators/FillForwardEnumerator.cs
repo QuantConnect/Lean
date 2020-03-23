@@ -334,11 +334,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         private IEnumerable<ReferenceDateInterval> GetReferenceDateIntervals(DateTime previousEndTime, TimeSpan smallerResolution, TimeSpan largerResolution)
         {
-            var result = new List<ReferenceDateInterval>();
             if (Exchange.IsOpenDuringBar(previousEndTime, previousEndTime + smallerResolution, _isExtendedMarketHours))
             {
-                result.Add(new ReferenceDateInterval(previousEndTime, smallerResolution));
+                yield return new ReferenceDateInterval(previousEndTime, smallerResolution);
             }
+
+            var result = new List<ReferenceDateInterval>(3);
             // we need to round down because previous end time could be of the smaller resolution
             var start = previousEndTime.RoundDown(largerResolution);
             if (Exchange.IsOpenDuringBar(start, start + largerResolution, _isExtendedMarketHours))
@@ -354,7 +355,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             result.Add(new ReferenceDateInterval(marketOpen, largerResolution));
 
             // we need to order them because they might not be in an incremental order and consumer expects them to be
-            return result.OrderBy(interval => interval.ReferenceDateTime + interval.Interval);
+            foreach(var referenceDateInterval in result.OrderBy(interval => interval.ReferenceDateTime + interval.Interval))
+            {
+                yield return referenceDateInterval;
+            }
         }
 
         private DateTime RoundDown(DateTime value, TimeSpan interval)
