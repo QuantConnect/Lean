@@ -161,6 +161,7 @@
     <Compile Include="AltData\TiingoNewsAlgorithm.cs" />
     <Compile Include="AutomaticIndicatorWarmupRegressionAlgorithm.cs" />
     <Compile Include="BasicTemplateConstituentUniverseAlgorithm.cs" />
+    <Compile Include="ConsolidateRegressionAlgorithm.cs" />
     <Compile Include="DefaultResolutionRegressionAlgorithm.cs" />
     <Compile Include="BasicPythonIntegrationTemplateAlgorithm.cs" />
     <Compile Include="BasicSetAccountCurrencyAlgorithm.cs" />
