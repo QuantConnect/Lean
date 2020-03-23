@@ -1,6 +1,4 @@
-﻿#define NET45
-
-/*
+﻿/*
  * The official C# API client for alpaca brokerage
  * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
  * Changes from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.5.5
