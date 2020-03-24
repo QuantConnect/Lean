@@ -20,6 +20,7 @@ using QuantConnect.Indicators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Algorithm
@@ -2212,7 +2213,8 @@ namespace QuantConnect.Algorithm
         public IDataConsolidator Consolidate<T>(Symbol symbol, TimeSpan period, Action<T> handler)
             where T : class, IBaseData
         {
-            return Consolidate(symbol, period, null, handler);
+            var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(typeof(T), symbol.SecurityType);
+            return Consolidate(symbol, period, tickType, handler);
         }
 
         /// <summary>
@@ -2227,7 +2229,7 @@ namespace QuantConnect.Algorithm
         public IDataConsolidator Consolidate<T>(Symbol symbol, Resolution period, TickType? tickType, Action<T> handler)
             where T : class, IBaseData
         {
-            return Consolidate(symbol, period.ToTimeSpan(), null, handler);
+            return Consolidate(symbol, period.ToTimeSpan(), tickType, handler);
         }
 
         /// <summary>
@@ -2306,7 +2308,8 @@ namespace QuantConnect.Algorithm
         public IDataConsolidator Consolidate<T>(Symbol symbol, Func<DateTime, CalendarInfo> calendar, Action<T> handler)
             where T : class, IBaseData
         {
-            return Consolidate(symbol, calendar, null, handler);
+            var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(typeof(T), symbol.SecurityType);
+            return Consolidate(symbol, calendar, tickType, handler);
         }
 
         /// <summary>
