@@ -120,7 +120,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Gets list of streaming data permissions
         /// </summary>
-        [JsonProperty(PropertyName = "StreamingDataPermissions")]
+        [JsonProperty(PropertyName = "streamingDataPermissions")]
         public HashSet<string> StreamingDataPermissions;
 
         /// <summary>
