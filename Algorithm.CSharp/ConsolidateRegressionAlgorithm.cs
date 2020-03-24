@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
             _symbol = FutureChainProvider.GetFutureContractList(SP500, StartDate).First();
             AddFutureContract(_symbol);
 
-            _consolidationCount = new List<int> { 0, 0, 0, 0, 0 };
+            _consolidationCount = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0 };
 
             var sma = new SimpleMovingAverage(10);
             Consolidate<QuoteBar>(_symbol, time => new CalendarInfo(time.RoundDown(TimeSpan.FromDays(1)), TimeSpan.FromDays(1)),
@@ -78,8 +78,25 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 // will try to use BaseDataConsolidator for which input is TradeBars not QuoteBars
             }
-        }
 
+            var sma7 = new SimpleMovingAverage(10);
+            Consolidate(_symbol, Resolution.Daily, null, (Action<BaseData>)(bar => UpdateBar(sma7, bar, 5)));
+
+            var sma8 = new SimpleMovingAverage(10);
+            Consolidate(_symbol, TimeSpan.FromDays(1), null, (Action<BaseData>)(bar => UpdateBar(sma8, bar, 6)));
+
+            var sma9 = new SimpleMovingAverage(10);
+            Consolidate(_symbol, TimeSpan.FromDays(1), (Action<BaseData>)(bar => UpdateBar(sma9, bar, 7)));
+        }
+        private void UpdateBar(SimpleMovingAverage sma, BaseData tradeBar, int position)
+        {
+            if (!(tradeBar is TradeBar))
+            {
+                throw new Exception("Expected a TradeBar");
+            }
+            _consolidationCount[position]++;
+            sma.Update(tradeBar.EndTime, tradeBar.Value);
+        }
         private void UpdateTradeBar(SimpleMovingAverage sma, TradeBar tradeBar, int position)
         {
             _consolidationCount[position]++;

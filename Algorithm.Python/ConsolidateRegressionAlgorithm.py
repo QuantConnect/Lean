@@ -24,6 +24,7 @@ from QuantConnect.Indicators import *
 from QuantConnect.Securities import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Data.Consolidators import *
+from CustomDataRegressionAlgorithm import Bitcoin
 from datetime import timedelta
 
 ### <summary>
@@ -54,16 +55,30 @@ class ConsolidateRegressionAlgorithm(QCAlgorithm):
         sma4 = SimpleMovingAverage(10)
         self.Consolidate(_symbol, timedelta(1), lambda bar: self.UpdateTradeBar(sma4, bar, 2))
 
+        # custom data
+        self._customDataConsolidator = 0
+        customSymbol = self.AddData(Bitcoin, "BTC", Resolution.Minute).Symbol
+        self.Consolidate(customSymbol, timedelta(1), lambda bar: self.IncrementCounter(1))
+
+        self._customDataConsolidator2 = 0
+        self.Consolidate(customSymbol, Resolution.Daily, lambda bar: self.IncrementCounter(2))
+
+    def IncrementCounter(self, id):
+        if id == 1:
+            self._customDataConsolidator += 1
+        if id == 2:
+            self._customDataConsolidator2 += 1
+
     def UpdateTradeBar(self, sma, bar, position):
-        self._consolidationCount[position] += 1
         sma.Update(bar.EndTime, bar.Volume)
+        self._consolidationCount[position] += 1
 
     def UpdateQuoteBar(self, sma, bar, position):
-        self._consolidationCount[position] += 1
         sma.Update(bar.EndTime, bar.Ask.High)
+        self._consolidationCount[position] += 1
 
     def  OnEndOfAlgorithm(self):
-        if any(i != 3 for i in self._consolidationCount):
+        if any(i != 3 for i in self._consolidationCount) or self._customDataConsolidator == 0 or self._customDataConsolidator2 == 0:
             raise ValueError("Unexpected consolidation count")
 
     # OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
