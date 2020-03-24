@@ -4,6 +4,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
@@ -116,5 +117,10 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// Gets current order status.
         /// </summary>
         OrderStatus OrderStatus { get; }
+
+        /// <summary>
+        /// Gets legs for this order.
+        /// </summary>
+        IReadOnlyList<IOrder> Legs { get; }
     }
 }

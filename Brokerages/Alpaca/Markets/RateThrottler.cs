@@ -1,6 +1,9 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
  * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
+ * Updates from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.5.5
+ * Changes
+ *   * Added disposed CancellationToken to WaitToProceed
 */
 
 using System;
@@ -27,7 +30,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
 
             private DateTime _nextRetryTime = DateTime.MinValue;
 
-            public async Task WaitToProceed()
+            public async Task WaitToProceed(
+                CancellationToken cancellationToken)
             {
                 var delay = GetDelayTillNextRetryTime();
 
@@ -36,7 +40,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                     return;
                 }
 
-                await Task.Delay(delay);
+                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
             }
 
             public void SetNextRetryTimeRandom()
@@ -46,7 +50,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                     _randomRetryWait.Next(1000, 5000)));
             }
 
-            public void SetNextRetryTime(DateTime nextRetryTime)
+            public void SetNextRetryTime(
+                DateTime nextRetryTime)
             {
                 if (nextRetryTime < DateTime.UtcNow)
                 {
@@ -80,10 +85,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                 }
             }
 
-            public void Dispose()
-            {
-                _lock?.Dispose();
-            }
+            public void Dispose() => _lock?.Dispose();
         }
 
         private readonly NextRetryGuard _nextRetryGuard = new NextRetryGuard();
@@ -149,14 +151,15 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         public Int32 MaxRetryAttempts { get;}
 
         /// <inheritdoc />
-        public async Task WaitToProceed()
+        public async Task WaitToProceed(
+            CancellationToken cancellationToken)
         {
-            await _nextRetryGuard.WaitToProceed();
+            await _nextRetryGuard.WaitToProceed(cancellationToken).ConfigureAwait(false);
 
             // Block until we can enter the semaphore or until the timeout expires.
             var entered = _throttleSemaphore.Wait(Timeout.Infinite);
 
-            // If we entered the semaphore, compute the corresponding exit time 
+            // If we entered the semaphore, compute the corresponding exit time
             // and add it to the queue.
             if (entered)
             {
@@ -165,9 +168,10 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             }
         }
 
-        // Callback for the exit timer that exits the semaphore based on exit times 
+        // Callback for the exit timer that exits the semaphore based on exit times
         // in the queue and then sets the timer for the next exit time.
-        private void exitTimerCallback(Object state)
+        private void exitTimerCallback(
+            Object state)
         {
             var nextRetryDelay = _nextRetryGuard.GetDelayTillNextRetryTime().TotalMilliseconds;
             if (nextRetryDelay > 0)
@@ -187,7 +191,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             }
 
             // Try to get the next exit time from the queue and compute
-            // the time until the next check should take place. If the 
+            // the time until the next check should take place. If the
             // queue is empty, then no exit times will occur until at least
             // one time unit has passed.
             var timeUntilNextCheck = _exitTimes.TryPeek(out exitTime)
@@ -199,7 +203,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         }
 
         /// <inheritdoc />
-        public Boolean CheckHttpResponse(HttpResponseMessage response)
+        public Boolean CheckHttpResponse(
+            HttpResponseMessage response)
         {
             // Adhere to server reported instructions
             if (response.StatusCode == HttpStatusCode.OK)
@@ -236,9 +241,6 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             {
                 return false;
             }
-
-            // Allow framework to throw the exception
-            response.EnsureSuccessStatusCode();
 
             return true;
         }

@@ -44,7 +44,8 @@ namespace QuantConnect.Brokerages.Alpaca
         // Rest API requests must be limited to a maximum of 200 messages/minute
         private readonly RateGate _messagingRateLimiter = new RateGate(200, TimeSpan.FromMinutes(1));
 
-        private readonly RestClient _restClient;
+        private readonly AlpacaTradingClient _alpacaTradingClient;
+        private readonly PolygonDataClient _polygonDataClient;
         private readonly SockClient _sockClient;
         private readonly PolygonStreamingClient _polygonStreamingClient;
         private readonly bool _handlesMarketData;
@@ -97,8 +98,18 @@ namespace QuantConnect.Brokerages.Alpaca
 
             _marketHours = MarketHoursDatabase.FromDataFolder();
 
-            // api client for alpaca
-            _restClient = new RestClient(accountKeyId, secretKey, httpAlpacaBaseUrl);
+            // Alpaca trading client
+            _alpacaTradingClient = new AlpacaTradingClient(new AlpacaTradingClientConfiguration
+            {
+                ApiEndpoint = tradingMode.Equals("paper") ? Environments.Paper.AlpacaTradingApi : Environments.Live.AlpacaTradingApi,
+                SecurityId = new SecretKey(accountKeyId, secretKey)
+            });
+            // api client for alpaca data
+            _polygonDataClient = new PolygonDataClient(new PolygonDataClientConfiguration
+            {
+                ApiEndpoint = Environments.Live.PolygonDataApi,
+                KeyId = accountKeyId
+            });
 
             // websocket client for alpaca
             _sockClient = new SockClient(accountKeyId, secretKey, httpAlpacaBaseUrl);
@@ -255,7 +266,7 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             CheckRateLimiting();
 
-            var task = _restClient.GetAccountAsync();
+            var task = _alpacaTradingClient.GetAccountAsync();
             var balance = task.SynchronouslyAwaitTaskResult();
 
             return new List<CashAmount>
@@ -273,7 +284,7 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             CheckRateLimiting();
 
-            var task = _restClient.ListPositionsAsync();
+            var task = _alpacaTradingClient.ListPositionsAsync();
             var holdings = task.SynchronouslyAwaitTaskResult();
 
             return holdings.Select(ConvertHolding).ToList();
@@ -288,7 +299,7 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             CheckRateLimiting();
 
-            var task = _restClient.ListOrdersAsync();
+            var task = _alpacaTradingClient.ListAllOrdersAsync();
             var orders = task.SynchronouslyAwaitTaskResult();
 
             return orders.Select(ConvertOrder).ToList();
@@ -361,7 +372,7 @@ namespace QuantConnect.Brokerages.Alpaca
             foreach (var orderId in order.BrokerId)
             {
                 CheckRateLimiting();
-                var task = _restClient.DeleteOrderAsync(new Guid(orderId));
+                var task = _alpacaTradingClient.DeleteOrderAsync(new Guid(orderId));
                 task.SynchronouslyAwaitTaskResult();
             }
 

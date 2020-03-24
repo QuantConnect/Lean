@@ -28,5 +28,29 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// Gets read-only collection of historical items.
         /// </summary>
         IReadOnlyList<TItem> Items { get; }
+
+        /// <summary>
+        /// Indicates if this response was adjusted for splits.
+        /// Polygon v2 API only.
+        /// </summary>
+        Boolean Adjusted { get; }
+
+        /// <summary>
+        /// Number of aggregates (minutes or days) used to generate the response.
+        /// Polygon v2 API only.
+        /// </summary>
+        Int64 QueryCount { get; }
+
+        /// <summary>
+        /// Total number of results generated.
+        /// Polygon v2 API only.
+        /// </summary>
+        Int64 ResultsCount { get; }
+
+        /// <summary>
+        /// Query execution database latency reported by Polygon.
+        /// </summary>
+        [Obsolete("This property will be removed in upcoming major version of SDK.", true)]
+        TimeSpan DatabaseLatency { get; }
     }
 }

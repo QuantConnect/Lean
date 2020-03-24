@@ -1,11 +1,16 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
  * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
+ * Updated to:
+ *
+ * Changes:
+ *   * Changed WaitToProceed to accept CancellationToken (disposed)
 */
 
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
@@ -22,7 +27,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
 
         public HashSet<Int32> RetryHttpStatuses { get; set; } = new HashSet<Int32>();
 
-        public Task WaitToProceed() { return _completedTask.Value; }
+        public Task WaitToProceed(CancellationToken _) { return _completedTask.Value; }
 
         public Boolean CheckHttpResponse(HttpResponseMessage response) => true;
     }
