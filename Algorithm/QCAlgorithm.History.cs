@@ -660,7 +660,7 @@ namespace QuantConnect.Algorithm
             }
             else
             {
-                var timeZone = GetExchangeHours(symbol).TimeZone;
+                var entry = MarketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
                 resolution = GetResolution(symbol, resolution);
 
                 return SubscriptionManager
@@ -669,7 +669,8 @@ namespace QuantConnect.Algorithm
                         x.Item1,
                         symbol,
                         resolution.Value,
-                        timeZone, timeZone,
+                        entry.DataTimeZone,
+                        entry.ExchangeHours.TimeZone,
                         UniverseSettings.FillForward,
                         UniverseSettings.ExtendedMarketHours,
                         true,

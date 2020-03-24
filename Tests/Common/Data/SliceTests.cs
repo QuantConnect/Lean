@@ -31,6 +31,20 @@ namespace QuantConnect.Tests.Common.Data
     public class SliceTests
     {
         [Test]
+        public void AccessesByDataType()
+        {
+            var tradeBar = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.UtcNow };
+            var quandl = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now };
+            var quoteBar = new QuoteBar { Symbol = Symbols.SPY, Time = DateTime.Now };
+
+            var slice = new Slice(DateTime.UtcNow, new BaseData[] { tradeBar, quoteBar, quandl });
+
+            Assert.AreEqual(slice.Get(typeof(TradeBar))[Symbols.SPY], tradeBar);
+            Assert.AreEqual(slice.Get(typeof(Quandl))[Symbols.SPY], quandl);
+            Assert.AreEqual(slice.Get(typeof(QuoteBar))[Symbols.SPY], quoteBar);
+        }
+
+        [Test]
         public void AccessesBaseBySymbol()
         {
             IndicatorDataPoint tick = new IndicatorDataPoint(Symbols.SPY, DateTime.Now, 1);
