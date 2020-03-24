@@ -120,7 +120,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (subscription != null)
             {
                 // send the subscription for the new symbol through to the data queuehandler
-                if (_channelProvider.ShouldStreamSubscription(subscription.Configuration))
+                if (_channelProvider.ShouldStreamSubscription(_job, subscription.Configuration))
                 {
                     _dataQueueHandler.Subscribe(_job, new[] { request.Security.Symbol });
                 }
@@ -138,7 +138,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var symbol = subscription.Configuration.Symbol;
 
             // remove the subscriptions
-            if (!_channelProvider.ShouldStreamSubscription(subscription.Configuration))
+            if (!_channelProvider.ShouldStreamSubscription(_job, subscription.Configuration))
             {
                 _customExchange.RemoveEnumerator(symbol);
                 _customExchange.RemoveDataHandler(symbol);
@@ -202,7 +202,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
                 IEnumerator<BaseData> enumerator;
-                if (!_channelProvider.ShouldStreamSubscription(request.Configuration))
+                if (!_channelProvider.ShouldStreamSubscription(_job, request.Configuration))
                 {
                     if (!Quandl.IsAuthCodeSet)
                     {

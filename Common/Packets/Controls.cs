@@ -14,6 +14,7 @@
  *
 */
 
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 
@@ -117,6 +118,12 @@ namespace QuantConnect.Packets
         public int PersistenceIntervalSeconds;
 
         /// <summary>
+        /// Gets list of streaming data permissions
+        /// </summary>
+        [JsonProperty(PropertyName = "streamingDataPermissions")]
+        public HashSet<string> StreamingDataPermissions;
+
+        /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class
         /// </summary>
         public Controls()
@@ -138,6 +145,8 @@ namespace QuantConnect.Packets
 
             // initialize to default leaky bucket values in case they're not specified
             TrainingLimits = new LeakyBucketControlParameters();
+
+            StreamingDataPermissions = new HashSet<string>();
         }
 
         /// <summary>
