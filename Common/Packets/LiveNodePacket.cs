@@ -61,6 +61,12 @@ namespace QuantConnect.Packets
         public bool DisableAcknowledgement;
 
         /// <summary>
+        /// Gets list of user data subscriptions
+        /// </summary>
+        [JsonProperty(PropertyName = "UserDataSubscriptions")]
+        public HashSet<string> UserDataSubscriptions = new HashSet<string>();
+
+        /// <summary>
         /// Default constructor for JSON of the Live Task Packet
         /// </summary>
         public LiveNodePacket()

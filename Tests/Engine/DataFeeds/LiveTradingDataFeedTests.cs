@@ -2159,13 +2159,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
     internal class TestDataChannelProvider : DataChannelProvider
     {
-        public override bool ShouldStreamSubscription(SubscriptionDataConfig config)
+        public override bool ShouldStreamSubscription(LiveNodePacket job, SubscriptionDataConfig config)
         {
             if (config.Type == typeof(TiingoNews))
             {
                 return true;
             }
-            return base.ShouldStreamSubscription(config);
+            return base.ShouldStreamSubscription(job, config);
         }
     }
 
