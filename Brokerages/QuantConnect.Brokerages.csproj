@@ -330,9 +330,6 @@
     <Compile Include="Alpaca\Markets\PolygonDataClient.cs" />
     <Compile Include="Alpaca\Markets\PolygonStreamingClient.cs" />
     <Compile Include="Alpaca\Markets\RateThrottler.cs" />
-    <Compile Include="Alpaca\Markets\RestClient.cs" />
-    <Compile Include="Alpaca\Markets\RestClient.General.cs" />
-    <Compile Include="Alpaca\Markets\RestClient.Polygon.cs" />
     <Compile Include="Alpaca\Markets\SockClient.cs" />
     <Compile Include="Alpaca\Markets\ThrottleParameters.cs" />
     <Compile Include="Alpaca\Markets\WebSocket\IWebSocket.cs" />
