@@ -481,27 +481,21 @@ namespace QuantConnect.Algorithm
 
             if (indicator.TryConvert(out indicatorDataPoint))
             {
-                Func<IBaseData, decimal> func = null;
-                selector?.TryConvert(out func);
-                RegisterIndicator(symbol, indicatorDataPoint, consolidator, func);
+                RegisterIndicator(symbol, indicatorDataPoint, consolidator, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
                 return;
             }
             else if (indicator.TryConvert(out indicatorDataBar))
             {
-                Func<IBaseData, IBaseDataBar> func = null;
-                selector?.TryConvert(out func);
-                RegisterIndicator(symbol, indicatorDataBar, consolidator, func);
+                RegisterIndicator(symbol, indicatorDataBar, consolidator, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
                 return;
             }
             else if (indicator.TryConvert(out indicatorTradeBar))
             {
-                Func<IBaseData, TradeBar> func = null;
-                selector?.TryConvert(out func);
-                RegisterIndicator(symbol, indicatorTradeBar, consolidator, func);
+                RegisterIndicator(symbol, indicatorTradeBar, consolidator, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
                 return;
             }
 
-            RegisterIndicator(symbol, WrapPythonIndicator(indicator), consolidator);
+            RegisterIndicator(symbol, WrapPythonIndicator(indicator), consolidator, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
         }
 
         /// <summary>

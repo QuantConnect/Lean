@@ -20,6 +20,7 @@ using QuantConnect.Indicators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Algorithm
@@ -1829,7 +1830,7 @@ namespace QuantConnect.Algorithm
         public void RegisterIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, Resolution? resolution = null)
             where T : IBaseData
         {
-            RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution));
+            RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution, typeof(T)));
         }
 
         /// <summary>
@@ -1843,7 +1844,7 @@ namespace QuantConnect.Algorithm
         public void RegisterIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, Resolution? resolution, Func<IBaseData, T> selector)
             where T : IBaseData
         {
-            RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution), selector);
+            RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution, typeof(T)), selector);
         }
 
         /// <summary>
@@ -1857,7 +1858,7 @@ namespace QuantConnect.Algorithm
         public void RegisterIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, TimeSpan? resolution, Func<IBaseData, T> selector = null)
             where T : IBaseData
         {
-            RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution), selector);
+            RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution, typeof(T)), selector);
         }
 
         /// <summary>
@@ -1872,7 +1873,7 @@ namespace QuantConnect.Algorithm
             where T : IBaseData
         {
             // assign default using cast
-            selector = selector ?? (x => (T)x);
+            var selectorToUse = selector ?? (x => (T)x);
 
             // register the consolidator for automatic updates via SubscriptionManager
             SubscriptionManager.AddConsolidator(symbol, consolidator);
@@ -1881,15 +1882,24 @@ namespace QuantConnect.Algorithm
             var type = typeof(T);
             if (!type.IsAssignableFrom(consolidator.OutputType))
             {
-                throw new ArgumentException($"Type mismatch found between consolidator and indicator for symbol: {symbol}." +
-                    $"Consolidator outputs type {consolidator.OutputType.Name} but indicator expects input type {type.Name}"
-                );
+                if (type == typeof(IndicatorDataPoint) && selector == null)
+                {
+                    // if no selector was provided and the indicator input is of 'IndicatorDataPoint', common case, a selector with a direct cast will fail
+                    // so we use a smarter selector as in other API methods
+                    selectorToUse = consolidated => (T)(object)new IndicatorDataPoint(consolidated.Symbol, consolidated.EndTime, consolidated.Value);
+                }
+                else
+                {
+                    throw new ArgumentException($"Type mismatch found between consolidator and indicator for symbol: {symbol}." +
+                                                $"Consolidator outputs type {consolidator.OutputType.Name} but indicator expects input type {type.Name}"
+                    );
+                }
             }
 
             // attach to the DataConsolidated event so it updates our indicator
             consolidator.DataConsolidated += (sender, consolidated) =>
             {
-                var value = selector(consolidated);
+                var value = selectorToUse(consolidated);
                 indicator.Update(value);
             };
         }
@@ -2043,10 +2053,12 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose data is to be consolidated</param>
         /// <param name="resolution">The resolution for the consolidator, if null, uses the resolution from subscription</param>
+        /// <param name="dataType">The data type for this consolidator, if null, uses TradeBar over QuoteBar if present</param>
         /// <returns>The new default consolidator</returns>
-        public IDataConsolidator ResolveConsolidator(Symbol symbol, Resolution? resolution)
+        public IDataConsolidator ResolveConsolidator(Symbol symbol, Resolution? resolution, Type dataType = null)
         {
-            var subscription = GetSubscription(symbol);
+            var tickType = dataType != null ? LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType) : (TickType?)null;
+            var subscription = GetSubscription(symbol, tickType);
 
             // if not specified, default to the subscription's resolution
             if (!resolution.HasValue)
@@ -2066,7 +2078,7 @@ namespace QuantConnect.Algorithm
                 );
             }
 
-            return ResolveConsolidator(symbol, timeSpan);
+            return ResolveConsolidator(symbol, timeSpan, dataType);
         }
 
         /// <summary>
@@ -2074,10 +2086,12 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose data is to be consolidated</param>
         /// <param name="timeSpan">The requested time span for the consolidator, if null, uses the resolution from subscription</param>
+        /// <param name="dataType">The data type for this consolidator, if null, uses TradeBar over QuoteBar if present</param>
         /// <returns>The new default consolidator</returns>
-        public IDataConsolidator ResolveConsolidator(Symbol symbol, TimeSpan? timeSpan)
+        public IDataConsolidator ResolveConsolidator(Symbol symbol, TimeSpan? timeSpan, Type dataType = null)
         {
-            var subscription = GetSubscription(symbol);
+            var tickType = dataType != null ? LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType) : (TickType?)null;
+            var subscription = GetSubscription(symbol, tickType);
 
             // if not specified, default to the subscription resolution
             if (!timeSpan.HasValue)
