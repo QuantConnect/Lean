@@ -41,19 +41,29 @@ class ConsolidateRegressionAlgorithm(QCAlgorithm):
         self._symbol = _symbol = self.FutureChainProvider.GetFutureContractList(SP500, self.StartDate)[0]
         self.AddFutureContract(_symbol)
 
-        self._consolidationCount = [0, 0, 0]
+        self._consolidationCount = [0, 0, 0, 0, 0, 0]
 
         sma = SimpleMovingAverage(10)
         self.Consolidate(_symbol, Calendar.Monthly, lambda bar: self.UpdateTradeBar(sma, bar, -1)) # shouldn't consolidate
 
         sma2 = SimpleMovingAverage(10)
-        self.Consolidate(_symbol, timedelta(1), lambda bar: self.UpdateTradeBar(sma2, bar, 0))
+        self.Consolidate(_symbol, Resolution.Daily, lambda bar: self.UpdateTradeBar(sma2, bar, 0))
 
         sma3 = SimpleMovingAverage(10)
         self.Consolidate(_symbol, Resolution.Daily, TickType.Quote, lambda bar: self.UpdateQuoteBar(sma3, bar, 1))
 
         sma4 = SimpleMovingAverage(10)
         self.Consolidate(_symbol, timedelta(1), lambda bar: self.UpdateTradeBar(sma4, bar, 2))
+
+        sma5 = SimpleMovingAverage(10)
+        self.Consolidate(_symbol, timedelta(1), TickType.Quote, lambda bar: self.UpdateQuoteBar(sma5, bar, 3))
+
+        # sending None tick type
+        sma6 = SimpleMovingAverage(10)
+        self.Consolidate(_symbol, timedelta(1), None, lambda bar: self.UpdateTradeBar(sma6, bar, 4))
+
+        sma7 = SimpleMovingAverage(10)
+        self.Consolidate(_symbol, Resolution.Daily, None, lambda bar: self.UpdateTradeBar(sma7, bar, 5))
 
         # custom data
         self._customDataConsolidator = 0
