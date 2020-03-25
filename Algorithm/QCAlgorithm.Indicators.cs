@@ -1748,12 +1748,12 @@ namespace QuantConnect.Algorithm
                     .OrderBy(x => x.TickType)
                     .ToList();
 
-                // find our subscription to this symbol
-                subscription = subscriptions.FirstOrDefault(x => x.Symbol == symbol && (tickType == null || tickType == x.TickType));
+                // find our subscription
+                subscription = subscriptions.FirstOrDefault(x => tickType == null || tickType == x.TickType);
                 if (subscription == null)
                 {
                     // if we can't locate the exact subscription by tick type just grab the first one we find
-                    subscription = subscriptions.First(x => x.Symbol == symbol);
+                    subscription = subscriptions.First();
                 }
             }
             catch (InvalidOperationException)
@@ -2003,14 +2003,11 @@ namespace QuantConnect.Algorithm
                     Debug($"{indicator.Name} could not be warmed up. Reason: {e.Message}");
                 }
             }
-            else
+            else if (!_isEmitWarmupInsightWarningSent)
             {
-                if (!_isEmitWarmupInsightWarningSent)
-                {
-                    Debug($"Warning: the 'WarmUpIndicator' feature only works with indicators which inherit from '{nameof(IIndicatorWarmUpPeriodProvider)}' and define a warm up period." +
-                          $" The provided indicator of type '{indicator.GetType().Name}' will not be warmed up.");
-                    _isEmitWarmupInsightWarningSent = true;
-                }
+                Debug($"Warning: the 'WarmUpIndicator' feature only works with indicators which inherit from '{nameof(IIndicatorWarmUpPeriodProvider)}' and define a warm up period." +
+                      $" The provided indicator of type '{indicator.GetType().Name}' will not be warmed up.");
+                _isEmitWarmupInsightWarningSent = true;
             }
 
             return Enumerable.Empty<Slice>();
