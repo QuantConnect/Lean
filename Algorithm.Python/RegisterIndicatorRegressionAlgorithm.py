@@ -39,45 +39,57 @@ class RegisterIndicatorRegressionAlgorithm(QCAlgorithm):
         SP500 = Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.USA)
         self._symbol = _symbol = self.FutureChainProvider.GetFutureContractList(SP500, self.StartDate)[0]
         self.AddFutureContract(_symbol)
+
+        # this collection will hold all indicators and at the end of the algorithm we will assert that all of them are ready
         self._indicators = []
+
+        # this collection will be used to determine if the Selectors were called, we will assert so at the end of algorithm
         self._selectorCalled = [ False, False, False, False, False, False ]
 
-        # QuoteBars
+        # First we will test that we can register our custom indicator using a QuoteBar consolidator
         indicator = CustomIndicator()
         consolidator = self.ResolveConsolidator(_symbol, Resolution.Minute, QuoteBar)
         self.RegisterIndicator(_symbol, indicator, consolidator)
         self._indicators.append(indicator)
 
         indicator2 = CustomIndicator()
+        # We use the TimeDelta overload to fetch the consolidator
         consolidator = self.ResolveConsolidator(_symbol, timedelta(minutes=1), QuoteBar)
+        # We specify a custom selector to be used
         self.RegisterIndicator(_symbol, indicator2, consolidator, lambda bar: self.SetSelectorCalled(0) and bar)
         self._indicators.append(indicator2);
 
+        # We use a IndicatorBase<IndicatorDataPoint> with QuoteBar data and a custom selector
         indicator3 = SimpleMovingAverage(10)
         consolidator = self.ResolveConsolidator(_symbol, timedelta(minutes=1), QuoteBar)
         self.RegisterIndicator(_symbol, indicator3, consolidator, lambda bar: self.SetSelectorCalled(1) and (bar.Ask.High - bar.Bid.Low))
         self._indicators.append(indicator3);
 
-        # TradeBar - default type
+        # We test default consolidator resolution works correctly
         movingAverage = SimpleMovingAverage(10)
+        # Using Resolution, specifying custom selector and explicitly using TradeBar.Volume
         self.RegisterIndicator(_symbol, movingAverage, Resolution.Minute, lambda bar: self.SetSelectorCalled(2) and bar.Volume)
         self._indicators.append(movingAverage)
 
         movingAverage2 = SimpleMovingAverage(10);
+        # Using Resolution
         self.RegisterIndicator(_symbol, movingAverage2, Resolution.Minute)
         self._indicators.append(movingAverage2)
 
         movingAverage3 = SimpleMovingAverage(10)
+        # Using timedelta
         self.RegisterIndicator(_symbol, movingAverage3, timedelta(minutes=1))
         self._indicators.append(movingAverage3)
 
         movingAverage4 = SimpleMovingAverage(10)
+        # Using timeDelta, specifying custom selector and explicitly using TradeBar.Volume
         self.RegisterIndicator(_symbol, movingAverage4, timedelta(minutes=1), lambda bar: self.SetSelectorCalled(3) and bar.Volume)
         self._indicators.append(movingAverage4)
 
-        # Custom data
-        smaCustomData = SimpleMovingAverage(1)
+        # Test custom data is able to register correctly and indicators updated
         symbolCustom = self.AddData(Bitcoin, "BTC", Resolution.Minute).Symbol
+
+        smaCustomData = SimpleMovingAverage(1)
         self.RegisterIndicator(symbolCustom, smaCustomData, timedelta(minutes=1), lambda bar: self.SetSelectorCalled(4) and bar.Volume)
         self._indicators.append(smaCustomData)
 

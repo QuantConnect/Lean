@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class RegisterIndicatorRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private readonly List<IIndicator> _indicators = new List<IIndicator>();
+        private List<IIndicator> _indicators;
         private Symbol _symbol;
 
         /// <summary>
@@ -44,24 +44,32 @@ namespace QuantConnect.Algorithm.CSharp
             _symbol = FutureChainProvider.GetFutureContractList(SP500, StartDate).First();
             AddFutureContract(_symbol);
 
-            // QuoteBars
+            // this collection will hold all indicators and at the end of the algorithm we will assert that all of them are ready
+            _indicators = new List<IIndicator>();
+
+            // Test the different APIs for IndicatorBase<QuoteBar> works correctly.
+            // Should be able to determine the correct consolidator and not throw an exception
             var indicator = new CustomIndicator();
             RegisterIndicator(_symbol, indicator, Resolution.Minute);
             _indicators.Add(indicator);
 
+            // specifying a selector and using resolution
             var indicator2 = new CustomIndicator();
             RegisterIndicator(_symbol, indicator2, Resolution.Minute, data => (QuoteBar) data);
             _indicators.Add(indicator2);
 
+            // specifying a selector and using timeSpan
             var indicator3 = new CustomIndicator();
             RegisterIndicator(_symbol, indicator3, TimeSpan.FromMinutes(1), data => (QuoteBar)data);
             _indicators.Add(indicator3);
 
+            // directly sending in the desired consolidator
             var indicator4 = new SimpleMovingAverage(10);
             var consolidator = ResolveConsolidator(_symbol, Resolution.Minute, typeof(QuoteBar));
             RegisterIndicator(_symbol, indicator4, consolidator);
             _indicators.Add(indicator4);
 
+            // directly sending in the desired consolidator and specifying a selector
             var indicator5 = new SimpleMovingAverage(10);
             var consolidator2 = ResolveConsolidator(_symbol, Resolution.Minute, typeof(QuoteBar));
             RegisterIndicator(_symbol, indicator5, consolidator2,
@@ -72,24 +80,28 @@ namespace QuantConnect.Algorithm.CSharp
                 });
             _indicators.Add(indicator5);
 
-            // TradeBar - default type
+            // Now make sure default data type TradeBar works correctly and does not throw an exception
+            // Specifying resolution and selector
             var movingAverage = new SimpleMovingAverage(10);
             RegisterIndicator(_symbol, movingAverage, Resolution.Minute, data => data.Value);
             _indicators.Add(movingAverage);
 
+            // Specifying resolution
             var movingAverage2 = new SimpleMovingAverage(10);
             RegisterIndicator(_symbol, movingAverage2, Resolution.Minute);
             _indicators.Add(movingAverage2);
 
+            // Specifying TimeSpan
             var movingAverage3 = new SimpleMovingAverage(10);
             RegisterIndicator(_symbol, movingAverage3, TimeSpan.FromMinutes(1));
             _indicators.Add(movingAverage3);
 
+            // Specifying TimeSpan and selector
             var movingAverage4 = new SimpleMovingAverage(10);
             RegisterIndicator(_symbol, movingAverage4, TimeSpan.FromMinutes(1), data => data.Value);
             _indicators.Add(movingAverage4);
 
-            // Custom data
+            // Test custom data is able to register correctly and indicators updated
             var smaCustomData = new SimpleMovingAverage(1);
             var symbol = AddData<CustomDataRegressionAlgorithm.Bitcoin>("BTC", Resolution.Minute).Symbol;
             RegisterIndicator(symbol, smaCustomData, TimeSpan.FromMinutes(1), data => data.Value);
