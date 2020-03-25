@@ -13,19 +13,16 @@
  * limitations under the License.
 */
 
-using Python.Runtime;
-using QuantConnect.Interfaces;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Data.Market
 {
     /// <summary>
     /// Provides a base class for types holding base data instances keyed by symbol
     /// </summary>
-    public class DataDictionary<T> : IDictionary<Symbol, T>, IExtendedDictionary<Symbol, T>
+    public class DataDictionary<T> : BaseDictionary<T>, IDictionary<Symbol, T>
     {
         // storage for the data
         private readonly IDictionary<Symbol, T> _data = new Dictionary<Symbol, T>();
@@ -79,7 +76,6 @@ namespace QuantConnect.Data.Market
         {
             return _data.GetEnumerator();
         }
-
         /// <summary>
         /// Returns an enumerator that iterates through a collection.
         /// </summary>
@@ -89,7 +85,7 @@ namespace QuantConnect.Data.Market
         /// <filterpriority>2</filterpriority>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable) _data).GetEnumerator();
+            return ((IEnumerable)_data).GetEnumerator();
         }
 
         /// <summary>
@@ -105,7 +101,7 @@ namespace QuantConnect.Data.Market
         /// Removes all items from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
         /// </summary>
         /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only. </exception>
-        public void Clear()
+        public override void Clear()
         {
             _data.Clear();
         }
@@ -193,7 +189,7 @@ namespace QuantConnect.Data.Market
         /// true if the element is successfully removed; otherwise, false.  This method also returns false if <paramref name="key"/> was not found in the original <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
         /// <param name="key">The key of the element to remove.</param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
-        public bool Remove(Symbol key)
+        public override bool Remove(Symbol key)
         {
             return _data.Remove(key);
         }
@@ -205,7 +201,7 @@ namespace QuantConnect.Data.Market
         /// true if the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/> contains an element with the specified key; otherwise, false.
         /// </returns>
         /// <param name="key">The key whose value to get.</param><param name="value">When this method returns, the value associated with the specified key, if the key is found; otherwise, the default value for the type of the <paramref name="value"/> parameter. This parameter is passed uninitialized.</param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception>
-        public bool TryGetValue(Symbol key, out T value)
+        public override bool TryGetValue(Symbol key, out T value)
         {
             return _data.TryGetValue(key, out value);
         }
@@ -220,7 +216,7 @@ namespace QuantConnect.Data.Market
         /// <exception cref="T:System.ArgumentNullException"><paramref name="symbol"/> is null.</exception>
         /// <exception cref="T:System.Collections.Generic.KeyNotFoundException">The property is retrieved and <paramref name="symbol"/> is not found.</exception>
         /// <exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
-        public T this[Symbol symbol]
+        public override T this[Symbol symbol]
         {
             get
             {
@@ -247,7 +243,7 @@ namespace QuantConnect.Data.Market
         /// <exception cref="T:System.ArgumentNullException"><paramref name="ticker"/> is null.</exception>
         /// <exception cref="T:System.Collections.Generic.KeyNotFoundException">The property is retrieved and <paramref name="ticker"/> is not found.</exception>
         /// <exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
-        public T this[string ticker]
+        public override T this[string ticker]
         {
             get
             {
@@ -290,6 +286,8 @@ namespace QuantConnect.Data.Market
         {
             get { return _data.Values; }
         }
+        protected override IEnumerable<Symbol> GetKeys => Keys;
+        protected override IEnumerable<T> GetValues => Values;
 
         /// <summary>
         /// Gets the value associated with the specified key.
@@ -304,125 +302,6 @@ namespace QuantConnect.Data.Market
             TryGetValue(key, out value);
             return value;
         }
-
-        #region IExtendedDictionary Implementation
-        public void clear()
-        {
-            Clear();
-        }
-
-        public PyDict copy()
-        {
-            return fromkeys(Keys.ToArray());
-        }
-
-        public PyDict fromkeys(Symbol[] sequence)
-        {
-            return fromkeys(sequence, default(T));
-        }
-
-        public PyDict fromkeys(Symbol[] sequence, T value)
-        {
-            using (Py.GIL())
-            {
-                var dict = new PyDict();
-                foreach (var key in sequence)
-                {
-                    var pyValue = get(key, value);
-                    dict.SetItem(key.ToPython(), pyValue.ToPython());
-                }
-                return dict;
-            }
-        }
-
-        public T get(Symbol symbol)
-        {
-            T data;
-            if (TryGetValue(symbol, out data))
-            {
-                return data;
-            }
-            throw new KeyNotFoundException($"'{symbol}' wasn't found in the Slice object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{symbol}\")");
-        }
-
-        public T get(Symbol symbol, T value)
-        {
-            T data;
-            if (TryGetValue(symbol, out data))
-            {
-                return data;
-            }
-            return value;
-        }
-
-        public IEnumerable<PyTuple> items()
-        {
-            foreach (var key in Keys)
-            {
-                object data = this[key];
-                using (Py.GIL())
-                {
-                    yield return new PyTuple(new PyObject[] { key.ToPython(), data.ToPython() });
-                }
-            }
-        }
-
-        public PyTuple popitem()
-        {
-            throw new Exception("Slice is read-only: cannot pop an item from the collection");
-        }
-
-        public T setdefault(Symbol symbol)
-        {
-            return setdefault(symbol, default(T));
-        }
-
-        public T setdefault(Symbol symbol, T default_value)
-        {
-            T data;
-            if (TryGetValue(symbol, out data))
-            {
-                return data;
-            }
-
-            this[symbol] = default_value;
-            return default_value;
-        }
-
-        public T pop(Symbol symbol)
-        {
-            return pop(symbol, default(T));
-        }
-
-        public T pop(Symbol symbol, T default_value)
-        {
-            T data;
-            if (TryGetValue(symbol, out data))
-            {
-                Remove(symbol);
-                return data;
-            }
-            return default_value;
-        }
-
-        public void update(PyDict other)
-        {
-            foreach (var kvp in other.ConvertToDictionary<Symbol, T>())
-            {
-                this[kvp.Key] = kvp.Value;
-            }
-        }
-
-        public IEnumerable<Symbol> keys()
-        {
-            return Keys;
-        }
-
-        public IEnumerable<T> values()
-        {
-            return Values;
-        }
-        #endregion
     }
 
     /// <summary>
