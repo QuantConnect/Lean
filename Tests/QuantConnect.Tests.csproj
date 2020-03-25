@@ -321,7 +321,9 @@
     <Compile Include="Common\Data\Fundamental\FineFundamentalTests.cs" />
     <Compile Include="Common\Orders\OrderSizingTests.cs" />
     <Compile Include="Common\Securities\TestDefaultMarginCallModel.cs" />
+    <Compile Include="Common\Statistics\AnnualPerformanceTests.cs" />
     <Compile Include="Common\Statistics\StatisticsBuilderTests.cs" />
+    <Compile Include="Common\Statistics\TrackingErrorTests.cs" />
     <Compile Include="Common\Storage\LocalObjectStoreTests.cs" />
     <Compile Include="Common\Data\BaseDataTests.cs" />
     <Compile Include="Common\Data\CalendarConsolidatorsTests.cs" />
