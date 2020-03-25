@@ -17,8 +17,6 @@ using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -27,7 +25,7 @@ namespace QuantConnect.Python
     /// <summary>
     /// Provides a data structure for all of an algorithm's data at a single time step
     /// </summary>
-    public class PythonSlice : Slice, IExtendedDictionary<Symbol, BaseData>
+    public class PythonSlice : Slice
     {
         private Slice _slice;
         private static readonly PyObject _converter;
@@ -89,7 +87,7 @@ namespace QuantConnect.Python
         /// <summary>
         /// Gets the number of symbols held in this slice
         /// </summary>
-        public new int Count
+        public override int Count
         {
             get { return _slice.Count; }
         }
@@ -97,7 +95,7 @@ namespace QuantConnect.Python
         /// <summary>
         /// Gets all the symbols in this slice
         /// </summary>
-        public new IReadOnlyList<Symbol> Keys
+        public override IReadOnlyList<Symbol> Keys
         {
             get { return _slice.Keys; }
         }
@@ -105,7 +103,7 @@ namespace QuantConnect.Python
         /// <summary>
         /// Gets a list of all the data in this slice
         /// </summary>
-        public new IReadOnlyList<BaseData> Values
+        public override IReadOnlyList<BaseData> Values
         {
             get { return _slice.Values; }
         }
@@ -118,7 +116,7 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="symbol">The data's symbols</param>
         /// <returns>The data for the specified symbol</returns>
-        public new dynamic this[Symbol symbol]
+        public override dynamic this[Symbol symbol]
         {
             get
             {
@@ -148,7 +146,7 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="symbol">The symbol we seek data for</param>
         /// <returns>True if this instance contains data for the symbol, false otherwise</returns>
-        public new bool ContainsKey(Symbol symbol)
+        public override bool ContainsKey(Symbol symbol)
         {
             return _slice.ContainsKey(symbol);
         }
@@ -159,115 +157,9 @@ namespace QuantConnect.Python
         /// <param name="symbol">The symbol we want data for</param>
         /// <param name="data">The data for the specifed symbol, or null if no data was found</param>
         /// <returns>True if data was found, false otherwise</returns>
-        public new bool TryGetValue(Symbol symbol, out dynamic data)
+        public override bool TryGetValue(Symbol symbol, out dynamic data)
         {
             return _slice.TryGetValue(symbol, out data);
-        }
-
-        public void clear()
-        {
-            throw new Exception("Slice is read-only: cannot clear the collection");
-        }
-        
-        public PyDict copy()
-        {
-            return fromkeys(Keys.ToArray());
-        }
-
-        public PyDict fromkeys(Symbol[] sequence)
-        {
-            return fromkeys(sequence, default(BaseData));
-        }
-
-        public PyDict fromkeys(Symbol[] sequence, BaseData value)
-        {
-            using (Py.GIL())
-            {
-                var dict = new PyDict();
-                foreach (var key in sequence)
-                {
-                    var pyValue = get(key, value);
-                    dict.SetItem(key.ToPython(), pyValue.ToPython());
-                }
-                return dict;
-            }
-        }
-
-        public BaseData get(Symbol symbol)
-        {
-            dynamic data;
-            if (TryGetValue(symbol, out data))
-            {
-                return data;
-            }
-            throw new KeyNotFoundException($"'{symbol}' wasn't found in the Slice object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{symbol}\")");
-        }
-
-        public BaseData get(Symbol symbol, BaseData value)
-        {
-            dynamic data;
-            if (TryGetValue(symbol, out data))
-            {
-                return data;
-            }
-            return value;
-        }
-
-        public IEnumerable<PyTuple> items()
-        {
-            foreach (var key in Keys)
-            {
-                object data = _slice[key];
-                using (Py.GIL())
-                {
-                    yield return new PyTuple(new PyObject[] { key.ToPython(), data.ToPython() });
-                }
-            }
-        }
-
-        public PyTuple popitem()
-        {
-            throw new Exception("Slice is read-only: cannot pop an item from the collection");
-        }
-
-        public BaseData setdefault(Symbol symbol)
-        {
-            return setdefault(symbol, default(BaseData));
-        }
-
-        public BaseData setdefault(Symbol symbol, BaseData default_value)
-        {
-            dynamic data;
-            if (TryGetValue(symbol, out data))
-            {
-                return data;
-            }
-            throw new Exception($"Slice is read-only: cannot set default value to {default_value} for {symbol}");
-        }
-
-        public BaseData pop(Symbol symbol)
-        {
-            return pop(symbol, default(BaseData));
-        }
-
-        public BaseData pop(Symbol symbol, BaseData default_value)
-        {
-            throw new Exception($"Slice is read-only: cannot pop the value for {symbol} from the collection");
-        }
-
-        public void update(PyDict other)
-        {
-            throw new Exception("Slice is read-only: cannot update the collection");
-        }
-
-        public IEnumerable<Symbol> keys()
-        {
-            return _slice.Keys;
-        }
-
-        public IEnumerable<BaseData> values()
-        {
-            return _slice.Values;
         }
     }
 }

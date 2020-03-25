@@ -14,7 +14,6 @@
 */
 
 using Python.Runtime;
-using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Interfaces
@@ -24,8 +23,6 @@ namespace QuantConnect.Interfaces
     /// </summary>
     public interface IExtendedDictionary<TKey, TValue>
     {
-        //bool __contains__(IntPtr self, TKey key);
-
         /// <summary>
         /// Removes all keys and values from the <see cref="IExtendedDictionary{TKey, TValue}"/>.
         /// </summary>

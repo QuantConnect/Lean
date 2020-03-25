@@ -18,8 +18,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Python.Runtime;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Python;
 
 namespace QuantConnect.Data
@@ -27,7 +29,7 @@ namespace QuantConnect.Data
     /// <summary>
     /// Provides a data structure for all of an algorithm's data at a single time step
     /// </summary>
-    public class Slice : IEnumerable<KeyValuePair<Symbol, BaseData>>
+    public class Slice : IEnumerable<KeyValuePair<Symbol, BaseData>>, IExtendedDictionary<Symbol, BaseData>
     {
         private readonly Ticks _ticks;
         private readonly TradeBars _bars;
@@ -146,7 +148,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the number of symbols held in this slice
         /// </summary>
-        public int Count
+        public virtual int Count
         {
             get { return _data.Value.Count; }
         }
@@ -154,7 +156,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets all the symbols in this slice
         /// </summary>
-        public IReadOnlyList<Symbol> Keys
+        public virtual IReadOnlyList<Symbol> Keys
         {
             get { return new List<Symbol>(_data.Value.Keys); }
         }
@@ -162,7 +164,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets a list of all the data in this slice
         /// </summary>
-        public IReadOnlyList<BaseData> Values
+        public virtual IReadOnlyList<BaseData> Values
         {
             get { return GetKeyValuePairEnumerable().Select(x => x.Value).ToList(); }
         }
@@ -274,7 +276,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="symbol">The data's symbols</param>
         /// <returns>The data for the specified symbol</returns>
-        public dynamic this[Symbol symbol]
+        public virtual dynamic this[Symbol symbol]
         {
             get
             {
@@ -396,7 +398,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="symbol">The symbol we seek data for</param>
         /// <returns>True if this instance contains data for the symbol, false otherwise</returns>
-        public bool ContainsKey(Symbol symbol)
+        public virtual bool ContainsKey(Symbol symbol)
         {
             return _data.Value.ContainsKey(symbol);
         }
@@ -407,7 +409,7 @@ namespace QuantConnect.Data
         /// <param name="symbol">The symbol we want data for</param>
         /// <param name="data">The data for the specifed symbol, or null if no data was found</param>
         /// <returns>True if data was found, false otherwise</returns>
-        public bool TryGetValue(Symbol symbol, out dynamic data)
+        public virtual bool TryGetValue(Symbol symbol, out dynamic data)
         {
             data = null;
             SymbolData symbolData;
@@ -556,6 +558,115 @@ namespace QuantConnect.Data
                 }
             }
         }
+
+        #region IExtendedDictionary Implementation
+
+        public void clear()
+        {
+            throw new Exception("Slice is read-only: cannot clear the collection");
+        }
+
+        public PyDict copy()
+        {
+            return fromkeys(Keys.ToArray());
+        }
+
+        public PyDict fromkeys(Symbol[] sequence)
+        {
+            return fromkeys(sequence, default(BaseData));
+        }
+
+        public PyDict fromkeys(Symbol[] sequence, BaseData value)
+        {
+            using (Py.GIL())
+            {
+                var dict = new PyDict();
+                foreach (var key in sequence)
+                {
+                    var pyValue = get(key, value);
+                    dict.SetItem(key.ToPython(), pyValue.ToPython());
+                }
+                return dict;
+            }
+        }
+
+        public BaseData get(Symbol symbol)
+        {
+            dynamic data;
+            if (TryGetValue(symbol, out data))
+            {
+                return data;
+            }
+            throw new KeyNotFoundException($"'{symbol}' wasn't found in the Slice object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{symbol}\")");
+        }
+
+        public BaseData get(Symbol symbol, BaseData value)
+        {
+            dynamic data;
+            if (TryGetValue(symbol, out data))
+            {
+                return data;
+            }
+            return value;
+        }
+
+        public IEnumerable<PyTuple> items()
+        {
+            foreach (var key in Keys)
+            {
+                object data = this[key];
+                using (Py.GIL())
+                {
+                    yield return new PyTuple(new PyObject[] { key.ToPython(), data.ToPython() });
+                }
+            }
+        }
+
+        public PyTuple popitem()
+        {
+            throw new Exception("Slice is read-only: cannot pop an item from the collection");
+        }
+
+        public BaseData setdefault(Symbol symbol)
+        {
+            return setdefault(symbol, default(BaseData));
+        }
+
+        public BaseData setdefault(Symbol symbol, BaseData default_value)
+        {
+            dynamic data;
+            if (TryGetValue(symbol, out data))
+            {
+                return data;
+            }
+            throw new Exception($"Slice is read-only: cannot set default value to {default_value} for {symbol}");
+        }
+
+        public BaseData pop(Symbol symbol)
+        {
+            return pop(symbol, default(BaseData));
+        }
+
+        public BaseData pop(Symbol symbol, BaseData default_value)
+        {
+            throw new Exception($"Slice is read-only: cannot pop the value for {symbol} from the collection");
+        }
+
+        public void update(PyDict other)
+        {
+            throw new Exception("Slice is read-only: cannot update the collection");
+        }
+
+        public IEnumerable<Symbol> keys()
+        {
+            return Keys;
+        }
+
+        public IEnumerable<BaseData> values()
+        {
+            return Values;
+        }
+        #endregion
 
         private enum SubscriptionType { TradeBar, QuoteBar, Tick, Custom };
         private class SymbolData

@@ -14,36 +14,37 @@
 */
 
 using Python.Runtime;
-using QuantConnect.Interfaces;
+using QuantConnect.Data;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace QuantConnect.Data.Market
+namespace QuantConnect
 {
     /// <summary>
-    /// Provides a base class for types holding base data instances keyed by symbol
+    /// Provides a base class for types holding instances keyed by symbol
     /// </summary>
-    public class DataDictionary<T> : IDictionary<Symbol, T>, IExtendedDictionary<Symbol, T>
+    public class BaseDictionary<T> : IDictionary<Symbol, T>
     {
         // storage for the data
-        private readonly IDictionary<Symbol, T> _data = new Dictionary<Symbol, T>();
+        private IDictionary<Symbol, T> _data = new Dictionary<Symbol, T>();
 
-       /// <summary>
-       /// Initializes a new instance of the <see cref="QuantConnect.Data.Market.DataDictionary{T}"/> class.
-       /// </summary>
-        public DataDictionary()
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BaseDictionary{T}"/> class.
+        /// </summary>
+        public BaseDictionary()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="QuantConnect.Data.Market.DataDictionary{T}"/> class
+        /// Initializes a new instance of the <see cref="BaseDictionary{T}"/> class
         /// using the specified <paramref name="data"/> as a data source
         /// </summary>
         /// <param name="data">The data source for this data dictionary</param>
         /// <param name="keySelector">Delegate used to select a key from the value</param>
-        public DataDictionary(IEnumerable<T> data, Func<T, Symbol> keySelector)
+        public BaseDictionary(IEnumerable<T> data, Func<T, Symbol> keySelector)
         {
             foreach (var datum in data)
             {
@@ -51,22 +52,10 @@ namespace QuantConnect.Data.Market
             }
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="QuantConnect.Data.Market.DataDictionary{T}"/> class.
-        /// </summary>
-        /// <param name="time">The time this data was emitted.</param>
-        public DataDictionary(DateTime time)
+        internal void SetInternalDictionary(IDictionary<Symbol, T> data)
         {
-#pragma warning disable 618 // This assignment is left here until the Time property is removed.
-            Time = time;
-#pragma warning restore 618
+            _data = data;
         }
-
-        /// <summary>
-        /// Gets or sets the time associated with this collection of data
-        /// </summary>
-        [Obsolete("The DataDictionary<T> Time property is now obsolete. All algorithms should use algorithm.Time instead.")]
-        public DateTime Time { get; set; }
 
         /// <summary>
         /// Returns an enumerator that iterates through the collection.
@@ -149,10 +138,7 @@ namespace QuantConnect.Data.Market
         /// <returns>
         /// The number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
         /// </returns>
-        public int Count
-        {
-            get { return _data.Count; }
-        }
+        public int Count => _data.Count;
 
         /// <summary>
         /// Gets a value indicating whether the <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.
@@ -160,10 +146,7 @@ namespace QuantConnect.Data.Market
         /// <returns>
         /// true if the <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only; otherwise, false.
         /// </returns>
-        public bool IsReadOnly
-        {
-            get { return _data.IsReadOnly; }
-        }
+        public bool IsReadOnly => _data.IsReadOnly;
 
         /// <summary>
         /// Determines whether the <see cref="T:System.Collections.Generic.IDictionary`2"/> contains an element with the specified key.
@@ -275,10 +258,7 @@ namespace QuantConnect.Data.Market
         /// <returns>
         /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the keys of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
-        public ICollection<Symbol> Keys
-        {
-            get { return _data.Keys; }
-        }
+        public ICollection<Symbol> Keys => _data.Keys;
 
         /// <summary>
         /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
@@ -286,10 +266,7 @@ namespace QuantConnect.Data.Market
         /// <returns>
         /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
-        public ICollection<T> Values
-        {
-            get { return _data.Values; }
-        }
+        public ICollection<T> Values => _data.Values;
 
         /// <summary>
         /// Gets the value associated with the specified key.
@@ -305,7 +282,6 @@ namespace QuantConnect.Data.Market
             return value;
         }
 
-        #region IExtendedDictionary Implementation
         public void clear()
         {
             Clear();
@@ -359,7 +335,7 @@ namespace QuantConnect.Data.Market
         {
             foreach (var key in Keys)
             {
-                object data = this[key];
+                object data = _data[key];
                 using (Py.GIL())
                 {
                     yield return new PyTuple(new PyObject[] { key.ToPython(), data.ToPython() });
@@ -369,7 +345,7 @@ namespace QuantConnect.Data.Market
 
         public PyTuple popitem()
         {
-            throw new Exception("Slice is read-only: cannot pop an item from the collection");
+            throw new Exception("popitem method is not supported");
         }
 
         public T setdefault(Symbol symbol)
@@ -384,9 +360,7 @@ namespace QuantConnect.Data.Market
             {
                 return data;
             }
-
-            this[symbol] = default_value;
-            return default_value;
+            throw new Exception($"Dictionary is read-only: cannot set default value to {default_value} for {symbol}");
         }
 
         public T pop(Symbol symbol)
@@ -399,7 +373,7 @@ namespace QuantConnect.Data.Market
             T data;
             if (TryGetValue(symbol, out data))
             {
-                Remove(symbol);
+                _data.Remove(symbol);
                 return data;
             }
             return default_value;
@@ -407,10 +381,7 @@ namespace QuantConnect.Data.Market
 
         public void update(PyDict other)
         {
-            foreach (var kvp in other.ConvertToDictionary<Symbol, T>())
-            {
-                this[kvp.Key] = kvp.Value;
-            }
+            throw new Exception("popitem method is not supported");
         }
 
         public IEnumerable<Symbol> keys()
@@ -421,22 +392,6 @@ namespace QuantConnect.Data.Market
         public IEnumerable<T> values()
         {
             return Values;
-        }
-        #endregion
-    }
-
-    /// <summary>
-    /// Provides extension methods for the DataDictionary class
-    /// </summary>
-    public static class DataDictionaryExtensions
-    {
-        /// <summary>
-        /// Provides a convenience method for adding a base data instance to our data dictionary
-        /// </summary>
-        public static void Add<T>(this DataDictionary<T> dictionary, T data)
-            where T : BaseData
-        {
-            dictionary.Add(data.Symbol, data);
         }
     }
 }
