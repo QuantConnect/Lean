@@ -54,7 +54,6 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextStatisticsUpdate;
         private DateTime _nextStatusUpdate;
         private DateTime _currentUtcDate;
-        private int _nextOrderEventsStoring;
 
         //Log Message Store:
         private DateTime _nextSample;
@@ -244,13 +243,7 @@ namespace QuantConnect.Lean.Engine.Results
                             }
                         }
 
-                        // we store all order events every 10x chart updates => 10 minutes
-                        List<OrderEvent> orderEvents = null;
-                        if (++_nextOrderEventsStoring >= 10)
-                        {
-                            _nextOrderEventsStoring = 0;
-                            orderEvents = GetOrderEventsToStore();
-                        }
+                        var orderEvents = GetOrderEventsToStore();
 
                         var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                         var complete = new LiveResultPacket(_job, new LiveResult(new LiveResultParameters(chartComplete, orders, Algorithm.Transactions.TransactionRecord, holdings, Algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, orderEvents, serverStatistics)));
