@@ -25,6 +25,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Tests.Algorithm
@@ -114,11 +115,12 @@ namespace QuantConnect.Tests.Algorithm
             var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
+            var cacheProvider = new ZipDataCacheProvider(new DefaultDataProvider());
             algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
                 null,
                 null,
                 new DefaultDataProvider(),
-                new ZipDataCacheProvider(new DefaultDataProvider()),
+                cacheProvider,
                 new LocalDiskMapFileProvider(),
                 new LocalDiskFactorFileProvider(),
                 null,
@@ -135,6 +137,8 @@ namespace QuantConnect.Tests.Algorithm
 
             // Data gap of more than 15 minutes
             Assert.Greater((algorithm.Time - lastKnownPrice.EndTime).TotalMinutes, 15);
+
+            cacheProvider.DisposeSafely();
         }
 
 
