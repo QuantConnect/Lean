@@ -27,6 +27,8 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
+        private bool _isWarmUpIndicatorWarningSent = false;
+
         /// <summary>
         /// Gets whether or not WarmUpIndicator is allowed to warm up indicators/>
         /// </summary>
@@ -1729,30 +1731,22 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Gets the SubscriptionDataConfig for the specified symbol
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if no configuration is found for the requested symbol</exception>
-        /// <param name="symbol">The symbol to retrieve configuration for</param>
-        /// <returns>The SubscriptionDataConfig for the specified symbol</returns>
-        public SubscriptionDataConfig GetSubscription(Symbol symbol)
-        {
-            return GetSubscription(symbol, null);
-        }
-
-        /// <summary>
         /// Gets the SubscriptionDataConfig for the specified symbol and tick type
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if no configuration is found for the requested symbol</exception>
         /// <param name="symbol">The symbol to retrieve configuration for</param>
-        /// <param name="tickType">The tick type of the subscription to ge</param>
+        /// <param name="tickType">The tick type of the subscription to get. If null, will use the first ordered by TickType</param>
         /// <returns>The SubscriptionDataConfig for the specified symbol</returns>
-        public SubscriptionDataConfig GetSubscription(Symbol symbol, TickType? tickType)
+        private SubscriptionDataConfig GetSubscription(Symbol symbol, TickType? tickType = null)
         {
             SubscriptionDataConfig subscription;
             try
             {
                 // deterministic ordering is required here
-                var subscriptions = SubscriptionManager.Subscriptions.OrderBy(x => x.TickType);
+                var subscriptions = SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(symbol)
+                    .OrderBy(x => x.TickType)
+                    .ToList();
 
                 // find our subscription to this symbol
                 subscription = subscriptions.FirstOrDefault(x => x.Symbol == symbol && (tickType == null || tickType == x.TickType));
@@ -2007,6 +2001,15 @@ namespace QuantConnect.Algorithm
                 catch (ArgumentException e)
                 {
                     Debug($"{indicator.Name} could not be warmed up. Reason: {e.Message}");
+                }
+            }
+            else
+            {
+                if (!_isEmitWarmupInsightWarningSent)
+                {
+                    Debug($"Warning: the 'WarmUpIndicator' feature only works with indicators which inherit from '{nameof(IIndicatorWarmUpPeriodProvider)}' and define a warm up period." +
+                          $" The provided indicator of type '{indicator.GetType().Name}' will not be warmed up.");
+                    _isEmitWarmupInsightWarningSent = true;
                 }
             }
 
