@@ -25,7 +25,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Algorithm which reproduces , related to GH issue 4205
+    /// Algorithm which tests indicator warm up using different data types, related to GH issue 4205
     /// </summary>
     public class AutomaticIndicatorWarmupDataTypeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
             var SP500 = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.USA);
             _symbol = FutureChainProvider.GetFutureContractList(SP500, StartDate).First();
 
-            // Test case: custom IndicatorBase<QuoteBar> indicator using unsubscribed symbol
+            // Test case: custom IndicatorBase<QuoteBar> indicator using Future unsubscribed symbol
             var indicator1 = new CustomIndicator();
             AssertIndicatorState(indicator1, isReady: false);
             WarmUpIndicator(_symbol, indicator1);
@@ -82,7 +82,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!sma11.Current.Equals(sma1.Current))
             {
-                throw new Exception("Expected Future SMA warmed up before and after adding the symbol to be equals");
+                throw new Exception("Expected SMAs warmed up before and after adding the Future to the algorithm to have the same current value. " +
+                                    "The result of 'WarmUpIndicator' shouldn't change if the symbol is or isn't subscribed");
             }
 
             // Test case: SimpleMovingAverage<IndicatorDataPoint> using Equity unsubscribed symbol
@@ -93,7 +94,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!smaSpy.Current.Equals(sma.Current))
             {
-                throw new Exception("Expected Equity SMA warmed up before and after adding the symbol to be equals");
+                throw new Exception("Expected SMAs warmed up before and after adding the Equity to the algorithm to have the same current value. " +
+                                    "The result of 'WarmUpIndicator' shouldn't change if the symbol is or isn't subscribed");
             }
         }
 

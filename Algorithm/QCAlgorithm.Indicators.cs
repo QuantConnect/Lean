@@ -2244,8 +2244,9 @@ namespace QuantConnect.Algorithm
         public IDataConsolidator Consolidate<T>(Symbol symbol, TimeSpan period, Action<T> handler)
             where T : class, IBaseData
         {
-            // only infer TickType from T if it's not abstract, else if will end up being TradeBar let's not take that decision here (default type)
-            // will be taken later by 'GetSubscription'
+            // only infer TickType from T if it's not abstract (for example IBaseData, BaseData), else if will end up being TradeBar let's not take that
+            // decision here (default type), it will be taken later by 'GetSubscription' so we keep it centralized
+            // An example of an abstract case can be found in the 'ConsolidateRegressionAlgorithm' where a 'Action<BaseData>' handler is used
             var tickType = typeof(T).IsAbstract ? (TickType?)null : LeanData.GetCommonTickTypeForCommonDataTypes(typeof(T), symbol.SecurityType);
             return Consolidate(symbol, period, tickType, handler);
         }
@@ -2341,8 +2342,9 @@ namespace QuantConnect.Algorithm
         public IDataConsolidator Consolidate<T>(Symbol symbol, Func<DateTime, CalendarInfo> calendar, Action<T> handler)
             where T : class, IBaseData
         {
-            // only infer TickType from T if it's not abstract, else if will end up being TradeBar let's not take that decision here (default type)
-            // will be taken later by 'GetSubscription'
+            // only infer TickType from T if it's not abstract (for example IBaseData, BaseData), else if will end up being TradeBar let's not take that
+            // decision here (default type), it will be taken later by 'GetSubscription' so we keep it centralized
+            // An example of an abstract case can be found in the 'ConsolidateRegressionAlgorithm' where a 'Action<BaseData>' handler is used
             var tickType = typeof(T).IsAbstract ? (TickType?)null : LeanData.GetCommonTickTypeForCommonDataTypes(typeof(T), symbol.SecurityType);
             return Consolidate(symbol, calendar, tickType, handler);
         }

@@ -79,6 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // will try to use BaseDataConsolidator for which input is TradeBars not QuoteBars
             }
 
+            // Test using abstract T types, through defining a 'BaseData' handler
             var sma7 = new SimpleMovingAverage(10);
             Consolidate(_symbol, Resolution.Daily, null, (Action<BaseData>)(bar => UpdateBar(sma7, bar, 5)));
 
