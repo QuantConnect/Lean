@@ -24,8 +24,11 @@ namespace QuantConnect.Orders
     /// </summary>
     public class OrderEvent
     {
-        private decimal fillPrice;
-        private decimal fillQuantity;
+        private decimal _fillPrice;
+        private decimal _fillQuantity;
+        private decimal _quantity;
+        private decimal? _limitPrice;
+        private decimal? _stopPrice;
 
         /// <summary>
         /// Id of the order this event comes from.
@@ -62,8 +65,8 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal FillPrice
         {
-            get { return fillPrice; }
-            set { fillPrice = value.Normalize(); }
+            get { return _fillPrice; }
+            set { _fillPrice = value.Normalize(); }
         }
 
         /// <summary>
@@ -76,8 +79,8 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal FillQuantity
         {
-            get { return fillQuantity; }
-            set { fillQuantity = value.Normalize(); }
+            get { return _fillQuantity; }
+            set { _fillQuantity = value.Normalize(); }
         }
 
         /// <summary>
@@ -99,6 +102,45 @@ namespace QuantConnect.Orders
         /// True if the order event is an assignment
         /// </summary>
         public bool IsAssignment { get; set; }
+
+        /// <summary>
+        /// The current stop price
+        /// </summary>
+        public decimal? StopPrice
+        {
+            get { return _stopPrice; }
+            set
+            {
+                if (value.HasValue)
+                {
+                    _stopPrice = value.Value.Normalize();
+                }
+            }
+        }
+
+        /// <summary>
+        /// The current limit price
+        /// </summary>
+        public decimal? LimitPrice
+        {
+            get { return _limitPrice; }
+            set
+            {
+                if (value.HasValue)
+                {
+                    _limitPrice = value.Value.Normalize();
+                }
+            }
+        }
+
+        /// <summary>
+        /// The current order quantity
+        /// </summary>
+        public decimal Quantity
+        {
+            get { return _quantity; }
+            set { _quantity = value.Normalize(); }
+        }
 
         /// <summary>
         /// Order Event Constructor.
@@ -170,10 +212,20 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            var message = FillQuantity == 0
-                ? Invariant($"Time: {UtcTime} OrderID: {OrderId} EventID: {Id} Symbol: {Symbol.Value} Status: {Status}")
-                : Invariant($"Time: {UtcTime} OrderID: {OrderId} EventID: {Id} Symbol: {Symbol.Value} Status: {Status} ")+
-                  Invariant($"Quantity: {FillQuantity} FillPrice: {FillPrice.SmartRounding()} {FillPriceCurrency}");
+            var message = Invariant($"Time: {UtcTime} OrderID: {OrderId} EventID: {Id} Symbol: {Symbol.Value} Status: {Status} Quantity {Quantity}");
+            if (FillQuantity != 0)
+            {
+                message += Invariant($" FillQuantity: {FillQuantity} FillPrice: {FillPrice.SmartRounding()} {FillPriceCurrency}");
+            }
+
+            if (LimitPrice.HasValue)
+            {
+                message += Invariant($" LimitPrice: {LimitPrice.Value.SmartRounding()}");
+            }
+            if (StopPrice.HasValue)
+            {
+                message += Invariant($" StopPrice: {StopPrice.Value.SmartRounding()}");
+            }
 
             // attach the order fee so it ends up in logs properly.
             if (OrderFee.Value.Amount != 0m) message += $" OrderFee: {OrderFee}";

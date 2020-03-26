@@ -1,4 +1,4 @@
-﻿
+
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -29,7 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="managing orders" />
     /// <meta name="tag" content="order tickets" />
     /// <meta name="tag" content="updating orders" />
-    public class OrderTicketDemoAlgorithm : QCAlgorithm
+    public class OrderTicketDemoAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string symbol = "SPY";
         private readonly List<OrderTicket> _openMarketOnOpenOrders = new List<OrderTicket>();
@@ -430,6 +431,24 @@ namespace QuantConnect.Algorithm.CSharp
         {
             var order = Transactions.GetOrderById(orderEvent.OrderId);
             Console.WriteLine("{0}: {1}: {2}", Time, order.Type, orderEvent);
+
+            if (orderEvent.Quantity == 0)
+            {
+                throw new Exception("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity");
+            }
+            if (orderEvent.Quantity != order.Quantity)
+            {
+                throw new Exception("OrderEvent quantity should hold the current order Quantity");
+            }
+            if (order is LimitOrder && orderEvent.LimitPrice == 0
+                || order is StopLimitOrder && orderEvent.LimitPrice == 0)
+            {
+                throw new Exception("OrderEvent LimitPrice is Not expected to be 0 for LimitOrder and StopLimitOrder");
+            }
+            if (order is StopMarketOrder && orderEvent.StopPrice == 0)
+            {
+                throw new Exception("OrderEvent StopPrice is Not expected to be 0 for StopMarketOrder");
+            }
         }
 
         private bool CheckPairOrdersForFills(OrderTicket longOrder, OrderTicket shortOrder)
@@ -453,5 +472,62 @@ namespace QuantConnect.Algorithm.CSharp
         {
             return Time.Day == day && Time.Hour == hour && Time.Minute == minute;
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "8"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "97.402%"},
+            {"Drawdown", "0.100%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "0.873%"},
+            {"Sharpe Ratio", "9.917"},
+            {"Probabilistic Sharpe Ratio", "99.143%"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0.302"},
+            {"Beta", "0.239"},
+            {"Annual Standard Deviation", "0.056"},
+            {"Annual Variance", "0.003"},
+            {"Information Ratio", "-3.001"},
+            {"Tracking Error", "0.169"},
+            {"Treynor Ratio", "2.327"},
+            {"Total Fees", "$8.00"},
+            {"Fitness Score", "0.098"},
+            {"Kelly Criterion Estimate", "-101.7"},
+            {"Kelly Criterion Probability Value", "0.795"},
+            {"Sortino Ratio", "156.697"},
+            {"Return Over Maximum Drawdown", "1224.048"},
+            {"Portfolio Turnover", "0.098"},
+            {"Total Insights Generated", "8"},
+            {"Total Insights Closed", "7"},
+            {"Total Insights Analysis Completed", "7"},
+            {"Long Insight Count", "8"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$-11275.05"},
+            {"Total Accumulated Estimated Alpha Value", "$-1816.536"},
+            {"Mean Population Estimated Insight Value", "$-259.5051"},
+            {"Mean Population Direction", "14.2857%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "23.5441%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "-122598386"}
+        };
     }
 }
