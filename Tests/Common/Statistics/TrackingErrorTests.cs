@@ -35,18 +35,11 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
             var spyPath = LeanData.GenerateZipFilePath(Globals.DataFolder, spy, new DateTime(2020, 3, 1), Resolution.Daily, TickType.Trade);
+            var spyConfig = new QuantConnect.Data.SubscriptionDataConfig(typeof(TradeBar), spy, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+
             foreach (var line in QuantConnect.Compression.ReadLines(spyPath))
             {
-                var elements = line.Split(',').ToList();
-                var format = "yyyyMMdd HH:mm";
-                var bar = new TradeBar(DateTime.ParseExact(elements[0], format, CultureInfo.InvariantCulture),
-                                        spy,
-                                        elements[1].ToDecimal(),
-                                        elements[2].ToDecimal(),
-                                        elements[3].ToDecimal(),
-                                        elements[4].ToDecimal(),
-                                        elements[5].ToDecimal(),
-                                        TimeSpan.FromDays(1));
+                var bar = TradeBar.ParseEquity(spyConfig, line, DateTime.Now.Date);
                 _spy.Add(bar);
             }
 
@@ -57,18 +50,11 @@ namespace QuantConnect.Tests.Common.Statistics
 
             var aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             var aaplPath = LeanData.GenerateZipFilePath(Globals.DataFolder, aapl, new DateTime(2020, 3, 1), Resolution.Daily, TickType.Trade);
+            var aaplConfig = new QuantConnect.Data.SubscriptionDataConfig(typeof(TradeBar), aapl, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+
             foreach (var line in QuantConnect.Compression.ReadLines(aaplPath))
             {
-                var elements = line.Split(',').ToList();
-                var format = "yyyyMMdd HH:mm";
-                var bar = new TradeBar(DateTime.ParseExact(elements[0], format, CultureInfo.InvariantCulture),
-                                        aapl,
-                                        elements[1].ToDecimal(),
-                                        elements[2].ToDecimal(),
-                                        elements[3].ToDecimal(),
-                                        elements[4].ToDecimal(),
-                                        elements[5].ToDecimal(),
-                                        TimeSpan.FromDays(1));
+                var bar = TradeBar.ParseEquity(aaplConfig, line, DateTime.Now.Date);
                 _aapl.Add(bar);
             }
 
