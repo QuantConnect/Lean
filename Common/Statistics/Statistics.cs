@@ -520,7 +520,7 @@ namespace QuantConnect.Statistics
             // Un-equal lengths will blow up other statistics, but this will handle the case here
             if (algoPerformance.Count() != benchmarkPerformance.Count())
             {
-                return Double.NaN;
+                return 0.0;
             }
 
             var performanceDifference = new List<double>();
