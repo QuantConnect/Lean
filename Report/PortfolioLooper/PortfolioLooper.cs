@@ -24,7 +24,6 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
-using QuantConnect.Orders.Fills;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -270,11 +269,21 @@ namespace QuantConnect.Report
             PointInTimePortfolio prev = null;
             foreach (var deploymentOrders in portfolioDeployments)
             {
+                if (deploymentOrders.Count == 0)
+                {
+                    Log.Trace($"PortfolioLooper.FromOrders(): Deployment contains no orders");
+                    continue;
+                }
+                var startTime = deploymentOrders.First().Time;
+                var deployment = equityCurve.Where(kvp => kvp.Key <= startTime);
+                if (deployment.IsEmpty)
+                {
+                    Log.Trace($"PortfolioLooper.FromOrders(): Equity series is empty after filtering with upper bound: {startTime}");
+                    continue;
+                }
+
                 // For every deployment, we want to start fresh.
-                var looper = new PortfolioLooper(
-                    equityCurve.Where(kvp => kvp.Key <= deploymentOrders.First().Time).LastValue(),
-                    deploymentOrders
-                );
+                var looper = new PortfolioLooper(deployment.LastValue(), deploymentOrders);
 
                 foreach (var portfolio in looper.ProcessOrders(deploymentOrders))
                 {

@@ -13,7 +13,10 @@
  * limitations under the License.
 */
 
+using Deedle;
 using QuantConnect.Packets;
+using System;
+using System.Linq;
 
 namespace QuantConnect.Report.ReportElements
 {
@@ -42,7 +45,30 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            return _backtest?.TotalPerformance?.PortfolioStatistics?.SharpeRatio.ToString("F1") ?? "-";
+            var result = _live ?? (Result)_backtest;
+            if (result == null)
+            {
+                return "-";
+            }
+
+            var equityPoints = ResultsUtil.EquityPoints(result);
+            var performance = DeedleUtil.PercentChange(new Series<DateTime, double>(equityPoints).ResampleEquivalence(date => date.Date, s => s.LastValue()));
+            if (performance.ValueCount == 0)
+            {
+                return "-";
+            }
+
+            var sixMonthsAgo = performance.LastKey().AddDays(-180);
+            var trailingPerformance = performance.Where(series => series.Key >= sixMonthsAgo && series.Key.DayOfWeek != DayOfWeek.Saturday && series.Key.DayOfWeek != DayOfWeek.Sunday)
+                .Values
+                .ToList();
+
+            if (trailingPerformance.Count < 7 || Statistics.Statistics.AnnualStandardDeviation(trailingPerformance) == 0)
+            {
+                return "-";
+            }
+
+            return Statistics.Statistics.SharpeRatio(trailingPerformance, 0.0).ToString("F2");
         }
     }
 }
