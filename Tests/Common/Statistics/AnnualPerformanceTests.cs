@@ -15,20 +15,98 @@
 using System.Linq;
 using System.Collections.Generic;
 using NUnit.Framework;
+using QuantConnect.Util;
+using System;
+using QuantConnect.Data.Market;
+using System.Globalization;
 
 namespace QuantConnect.Tests.Common.Statistics
 {
     [TestFixture]
     public class AnnualPerformanceTests
     {
-        [Test]
-        public void ZeroTradingDays()
+        private List<TradeBar> _spy = new List<TradeBar>();
+
+        [SetUp]
+        public void GetSPY()
         {
-            var performance = new List<double> { 0.1, 0.2, 0.1, 0.2 };
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            var path = LeanData.GenerateZipFilePath(Globals.DataFolder, symbol, new DateTime(2020, 3, 1),Resolution.Daily, TickType.Trade);
+            foreach (var line in QuantConnect.Compression.ReadLines(path))
+            {
+                var elements = line.Split(',').ToList();
+                var format = "yyyyMMdd HH:mm";
+                var bar = new TradeBar(DateTime.ParseExact(elements[0], format, CultureInfo.InvariantCulture),
+                                        symbol,
+                                        elements[1].ToDecimal(),
+                                        elements[2].ToDecimal(),
+                                        elements[3].ToDecimal(),
+                                        elements[4].ToDecimal(),
+                                        elements[5].ToDecimal(),
+                                        TimeSpan.FromDays(1));
+                _spy.Add(bar);
+            }
+        }
 
-            var result = QuantConnect.Statistics.Statistics.AnnualPerformance(performance, 0);
+        [TearDown]
+        public void Delete()
+        {
+            _spy.Clear();
+        }
 
-            Assert.AreEqual(0, result);
+        [Test]
+        public void TotalMarketPerformance()
+        {
+            var performance = new List<double>();
+
+            for (var i = 1; i < _spy.Count(); i++)
+            {
+                performance.Add((double)((_spy[i].Close / _spy[i - 1].Close) - 1));
+            }
+
+            var result = QuantConnect.Statistics.Statistics.AnnualPerformance(performance);
+
+            Assert.AreEqual(0.070349834404899392, result);
+        }
+
+        [Test]
+        public void BearMarketPerformance()
+        {
+            var performance = new List<double>();
+            var start = new DateTime(2008, 5, 1);
+            var end = new DateTime(2009, 1, 1);
+            for (var i = 1; i < _spy.Count(); i++)
+            {
+                if ((_spy[i].EndTime < start) || (_spy[i].EndTime > end))
+                {
+                    continue;
+                }
+                performance.Add((double)((_spy[i].Close / _spy[i - 1].Close) - 1));
+            }
+
+            var result = QuantConnect.Statistics.Statistics.AnnualPerformance(performance);
+
+            Assert.AreEqual(-0.41405447461285583, result);
+        }
+
+        [Test]
+        public void BullMarketPerformance()
+        {
+            var performance = new List<double>();
+            var start = new DateTime(2017, 1, 1);
+            var end = new DateTime(2018, 1, 1);
+            for (var i = 1; i < _spy.Count(); i++)
+            {
+                if ((_spy[i].EndTime < start) || (_spy[i].EndTime > end))
+                {
+                    continue;
+                }
+                performance.Add((double)((_spy[i].Close / _spy[i - 1].Close) - 1));
+            }
+
+            var result = QuantConnect.Statistics.Statistics.AnnualPerformance(performance);
+
+            Assert.AreEqual(0.19728183468892757, result);
         }
 
         [Test]

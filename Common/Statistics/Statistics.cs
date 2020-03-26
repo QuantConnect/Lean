@@ -517,6 +517,12 @@ namespace QuantConnect.Statistics
         /// <returns>Value for tracking error</returns>
         public static double TrackingError(List<double> algoPerformance, List<double> benchmarkPerformance)
         {
+            // Un-equal lengths will blow up other statistics, but this will handle the case here
+            if (algoPerformance.Count() != benchmarkPerformance.Count())
+            {
+                return Double.NaN;
+            }
+
             var performanceDifference = new List<double>();
             for (var i = 0; i < algoPerformance.Count(); i++)
             {
