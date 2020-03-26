@@ -392,7 +392,7 @@
       <SubType>Designer</SubType>
     </None>
     <Content Include="CoarseUniverseGenerator\blacklisted-tickers.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Visualizer\QuantConnect.Visualizer.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
