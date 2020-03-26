@@ -51,6 +51,9 @@ namespace QuantConnect.Brokerages
                 }
             };
 
+            // Some API only support SslProtocols Tls12
+            _wrapped.SslConfiguration.EnabledSslProtocols |= System.Security.Authentication.SslProtocols.Tls12;
+
             _wrapped.OnOpen += (sender, args) => OnOpen();
             _wrapped.OnMessage += (sender, args) => OnMessage(new WebSocketMessage(args.Data));
             _wrapped.OnError += (sender, args) => OnError(new WebSocketError(args.Message, args.Exception));
