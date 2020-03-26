@@ -250,6 +250,16 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Gets the data of the specified type.
+        /// </summary>
+        /// <param name="type">The type of data we seek</param>
+        /// <returns>The <see cref="DataDictionary{T}"/> instance for the requested type</returns>
+        public dynamic Get(Type type)
+        {
+            return GetImpl(type, this);
+        }
+
+        /// <summary>
         /// Gets the data of the specified symbol and type.
         /// </summary>
         /// <remarks>Supports both C# and Python use cases</remarks>

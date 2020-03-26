@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
@@ -26,94 +25,85 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm reproducing data type bugs in the Consolidate API. Related to GH 4205.
+    /// Algorithm which tests indicator warm up using different data types, related to GH issue 4205
     /// </summary>
-    public class ConsolidateRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class AutomaticIndicatorWarmupDataTypeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private List<int> _consolidationCount;
-        private int _customDataConsolidator;
         private Symbol _symbol;
-
-        /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        /// </summary>
         public override void Initialize()
         {
+            UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
+            EnableAutomaticIndicatorWarmUp = true;
             SetStartDate(2013, 10, 08);
             SetEndDate(2013, 10, 09);
 
             var SP500 = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.USA);
             _symbol = FutureChainProvider.GetFutureContractList(SP500, StartDate).First();
-            AddFutureContract(_symbol);
 
-            _consolidationCount = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0 };
+            // Test case: custom IndicatorBase<QuoteBar> indicator using Future unsubscribed symbol
+            var indicator1 = new CustomIndicator();
+            AssertIndicatorState(indicator1, isReady: false);
+            WarmUpIndicator(_symbol, indicator1);
+            AssertIndicatorState(indicator1, isReady: true);
 
+            // Test case: SimpleMovingAverage<IndicatorDataPoint> using Future unsubscribed symbol (should use TradeBar)
+            var sma1 = new SimpleMovingAverage(10);
+            AssertIndicatorState(sma1, isReady: false);
+            WarmUpIndicator(_symbol, sma1);
+            AssertIndicatorState(sma1, isReady: true);
+
+            // Test case: SimpleMovingAverage<IndicatorDataPoint> using Equity unsubscribed symbol
+            var spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
             var sma = new SimpleMovingAverage(10);
-            Consolidate<QuoteBar>(_symbol, time => new CalendarInfo(time.RoundDown(TimeSpan.FromDays(1)), TimeSpan.FromDays(1)),
-                bar => UpdateQuoteBar(sma, bar, 0));
+            AssertIndicatorState(sma, isReady: false);
+            WarmUpIndicator(spy, sma);
+            AssertIndicatorState(sma, isReady: true);
 
-            var sma2 = new SimpleMovingAverage(10);
-            Consolidate<QuoteBar>(_symbol, TimeSpan.FromDays(1), bar => UpdateQuoteBar(sma2, bar, 1));
+            // We add the symbol
+            AddFutureContract(_symbol);
+            AddEquity("SPY");
+            // force spy for use Raw data mode so that it matches the used when unsubscribed which uses the universe settings
+            SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(spy).SetDataNormalizationMode(DataNormalizationMode.Raw);
 
-            var sma3 = new SimpleMovingAverage(10);
-            Consolidate(_symbol, Resolution.Daily, TickType.Quote, (Action<QuoteBar>)(bar => UpdateQuoteBar(sma3, bar, 2)));
+            // Test case: custom IndicatorBase<QuoteBar> indicator using Future subscribed symbol
+            var indicator = new CustomIndicator();
+            var consolidator = CreateConsolidator(TimeSpan.FromMinutes(1), typeof(QuoteBar));
+            RegisterIndicator(_symbol, indicator, consolidator);
 
-            var sma4 = new SimpleMovingAverage(10);
-            Consolidate(_symbol, TimeSpan.FromDays(1), bar => UpdateTradeBar(sma4, bar, 3));
+            AssertIndicatorState(indicator, isReady: false);
+            WarmUpIndicator(_symbol, indicator);
+            AssertIndicatorState(indicator, isReady: true);
 
-            var sma5 = new SimpleMovingAverage(10);
-            Consolidate<TradeBar>(_symbol, TimeSpan.FromDays(1), bar => UpdateTradeBar(sma5, bar, 4));
+            // Test case: SimpleMovingAverage<IndicatorDataPoint> using Future Subscribed symbol (should use TradeBar)
+            var sma11 = new SimpleMovingAverage(10);
+            AssertIndicatorState(sma11, isReady: false);
+            WarmUpIndicator(_symbol, sma11);
+            AssertIndicatorState(sma11, isReady: true);
 
-            // custom data
-            var sma6 = new SimpleMovingAverage(10);
-            var symbol = AddData<CustomDataRegressionAlgorithm.Bitcoin>("BTC", Resolution.Minute).Symbol;
-            Consolidate<TradeBar>(symbol, TimeSpan.FromDays(1), bar => _customDataConsolidator++);
-
-            try
+            if (!sma11.Current.Equals(sma1.Current))
             {
-                Consolidate<QuoteBar>(symbol, TimeSpan.FromDays(1), bar => { UpdateQuoteBar(sma6, bar, -1); });
-                throw new Exception($"Expected {nameof(ArgumentException)} to be thrown");
+                throw new Exception("Expected SMAs warmed up before and after adding the Future to the algorithm to have the same current value. " +
+                                    "The result of 'WarmUpIndicator' shouldn't change if the symbol is or isn't subscribed");
             }
-            catch (ArgumentException)
+
+            // Test case: SimpleMovingAverage<IndicatorDataPoint> using Equity unsubscribed symbol
+            var smaSpy = new SimpleMovingAverage(10);
+            AssertIndicatorState(smaSpy, isReady: false);
+            WarmUpIndicator(spy, smaSpy);
+            AssertIndicatorState(smaSpy, isReady: true);
+
+            if (!smaSpy.Current.Equals(sma.Current))
             {
-                // will try to use BaseDataConsolidator for which input is TradeBars not QuoteBars
+                throw new Exception("Expected SMAs warmed up before and after adding the Equity to the algorithm to have the same current value. " +
+                                    "The result of 'WarmUpIndicator' shouldn't change if the symbol is or isn't subscribed");
             }
-
-            // Test using abstract T types, through defining a 'BaseData' handler
-            var sma7 = new SimpleMovingAverage(10);
-            Consolidate(_symbol, Resolution.Daily, null, (Action<BaseData>)(bar => UpdateBar(sma7, bar, 5)));
-
-            var sma8 = new SimpleMovingAverage(10);
-            Consolidate(_symbol, TimeSpan.FromDays(1), null, (Action<BaseData>)(bar => UpdateBar(sma8, bar, 6)));
-
-            var sma9 = new SimpleMovingAverage(10);
-            Consolidate(_symbol, TimeSpan.FromDays(1), (Action<BaseData>)(bar => UpdateBar(sma9, bar, 7)));
         }
-        private void UpdateBar(SimpleMovingAverage sma, BaseData tradeBar, int position)
+
+        private void AssertIndicatorState(IIndicator indicator, bool isReady)
         {
-            if (!(tradeBar is TradeBar))
+            if (indicator.IsReady != isReady)
             {
-                throw new Exception("Expected a TradeBar");
-            }
-            _consolidationCount[position]++;
-            sma.Update(tradeBar.EndTime, tradeBar.Value);
-        }
-        private void UpdateTradeBar(SimpleMovingAverage sma, TradeBar tradeBar, int position)
-        {
-            _consolidationCount[position]++;
-            sma.Update(tradeBar.EndTime, tradeBar.High);
-        }
-        private void UpdateQuoteBar(SimpleMovingAverage sma, QuoteBar quoteBar, int position)
-        {
-            _consolidationCount[position]++;
-            sma.Update(quoteBar.EndTime, quoteBar.High);
-        }
-
-        public override void OnEndOfAlgorithm()
-        {
-            if (_consolidationCount.Any(i => i != 3) || _customDataConsolidator == 0)
-            {
-                throw new Exception("Unexpected consolidation count");
+                throw new Exception($"Expected indicator state, expected {isReady} but was {indicator.IsReady}");
             }
         }
 
@@ -129,6 +119,20 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        private class CustomIndicator : IndicatorBase<QuoteBar>, IIndicatorWarmUpPeriodProvider
+        {
+            private bool _isReady;
+            public int WarmUpPeriod => 1;
+            public override bool IsReady => _isReady;
+            public CustomIndicator() : base("Pepe")
+            { }
+            protected override decimal ComputeNextValue(QuoteBar input)
+            {
+                _isReady = true;
+                return input.Ask.High;
+            }
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -137,7 +141,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

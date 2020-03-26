@@ -1948,7 +1948,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The given indicator</returns>
         public IndicatorBase<T> WarmUpIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, Resolution? resolution = null, Func<IBaseData, T> selector = null)
-            where T : IBaseData
+            where T : class, IBaseData
         {
             resolution = GetResolution(symbol, resolution);
             var period = resolution.Value.ToTimeSpan();
@@ -1964,7 +1964,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
         /// <returns>The given indicator</returns>
         public IndicatorBase<T> WarmUpIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, TimeSpan period, Func<IBaseData, T> selector = null)
-            where T : IBaseData
+            where T : class, IBaseData
         {
             var history = GetIndicatorWarmUpHistory(symbol, indicator, period);
             if (history == Enumerable.Empty<Slice>()) return indicator;
@@ -1972,7 +1972,8 @@ namespace QuantConnect.Algorithm
             // assign default using cast
             selector = selector ?? (x => (T)x);
 
-            Action<IBaseData> onDataConsolidated = bar =>
+            // we expect T type as input
+            Action<T> onDataConsolidated = bar =>
             {
                 indicator.Update(selector(bar));
             };
@@ -2017,28 +2018,44 @@ namespace QuantConnect.Algorithm
             where T : class, IBaseData
         {
             IDataConsolidator consolidator;
-            if (SubscriptionManager.Subscriptions.Any(x => x.Symbol == symbol))
+            if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).Count > 0)
             {
                 consolidator = Consolidate(symbol, period, handler);
             }
             else
             {
-                var dataType = SubscriptionManager.LookupSubscriptionConfigDataTypes(
-                    symbol.SecurityType,
-                    Resolution.Daily,
-                    symbol.IsCanonical()).First();
+                var providedType = typeof(T);
+                if (providedType.IsAbstract)
+                {
+                    var dataType = SubscriptionManager.LookupSubscriptionConfigDataTypes(
+                        symbol.SecurityType,
+                        Resolution.Daily,
+                        // order by tick type so that behavior is consistent with 'GetSubscription()'
+                        symbol.IsCanonical()).OrderBy(tuple => tuple.Item2).First();
 
-                consolidator = CreateConsolidator(period, dataType.Item1, dataType.Item2);
+                    consolidator = CreateConsolidator(period, dataType.Item1, dataType.Item2);
+                }
+                else
+                {
+                    // if the 'providedType' is not abstract we use it instead to determine which consolidator to use
+                    var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(providedType, symbol.SecurityType);
+                    consolidator = CreateConsolidator(period, providedType, tickType);
+                }
                 consolidator.DataConsolidated += (s, bar) => handler((T)bar);
             }
 
-            BaseData lastBar = null;
-            history.PushThrough(bar =>
+            var consolidatorInputType = consolidator.InputType;
+            IBaseData lastBar = null;
+            foreach (var slice in history)
+            {
+                var data = slice.Get(consolidatorInputType);
+                if (data.ContainsKey(symbol))
                 {
-                    lastBar = bar;
-                    consolidator.Update(bar);
+                    lastBar = (IBaseData)data[symbol];
+                    consolidator.Update(lastBar);
                 }
-            );
+            }
+
             // Scan for time after we've pumped all the data through for this consolidator
             if (lastBar != null)
             {
@@ -2226,7 +2243,10 @@ namespace QuantConnect.Algorithm
         public IDataConsolidator Consolidate<T>(Symbol symbol, TimeSpan period, Action<T> handler)
             where T : class, IBaseData
         {
-            var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(typeof(T), symbol.SecurityType);
+            // only infer TickType from T if it's not abstract (for example IBaseData, BaseData), else if will end up being TradeBar let's not take that
+            // decision here (default type), it will be taken later by 'GetSubscription' so we keep it centralized
+            // This could happen when a user passes in a generic 'Action<BaseData>' handler
+            var tickType = typeof(T).IsAbstract ? (TickType?)null : LeanData.GetCommonTickTypeForCommonDataTypes(typeof(T), symbol.SecurityType);
             return Consolidate(symbol, period, tickType, handler);
         }
 
@@ -2321,7 +2341,10 @@ namespace QuantConnect.Algorithm
         public IDataConsolidator Consolidate<T>(Symbol symbol, Func<DateTime, CalendarInfo> calendar, Action<T> handler)
             where T : class, IBaseData
         {
-            var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(typeof(T), symbol.SecurityType);
+            // only infer TickType from T if it's not abstract (for example IBaseData, BaseData), else if will end up being TradeBar let's not take that
+            // decision here (default type), it will be taken later by 'GetSubscription' so we keep it centralized
+            // This could happen when a user passes in a generic 'Action<BaseData>' handler
+            var tickType = typeof(T).IsAbstract ? (TickType?)null : LeanData.GetCommonTickTypeForCommonDataTypes(typeof(T), symbol.SecurityType);
             return Consolidate(symbol, calendar, tickType, handler);
         }
 
