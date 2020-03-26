@@ -143,10 +143,10 @@ namespace QuantConnect.Securities
         public int Count => _securityManager.Skip(0).Count();
 
         /// <summary>
-        /// Flag indicating if the internal arrray is read only.
+        /// Flag indicating if the internal array is read only.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        public bool IsReadOnly
+        public override bool IsReadOnly
         {
             get { return false; }
         }
@@ -195,7 +195,21 @@ namespace QuantConnect.Securities
         {
             return _securityManager.TryGetValue(symbol, out security);
         }
+
+        /// <summary>
+        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </returns>
         protected override IEnumerable<Symbol> GetKeys => Keys;
+
+        /// <summary>
+        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </returns>
         protected override IEnumerable<Security> GetValues => Values;
 
         /// <summary>
@@ -291,8 +305,7 @@ namespace QuantConnect.Securities
         /// <param name="changedEventArgs">Event arguments for the <see cref="CollectionChanged"/> event</param>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs changedEventArgs)
         {
-            var handler = CollectionChanged;
-            if (handler != null) handler(this, changedEventArgs);
+            CollectionChanged?.Invoke(this, changedEventArgs);
         }
 
         /// <summary>

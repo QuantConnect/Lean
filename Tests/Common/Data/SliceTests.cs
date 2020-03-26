@@ -838,7 +838,7 @@ def Test(slice, symbol, default_value):
         }
 
         [Test]
-        public void PythonSlice_get_keynotfound()
+        public void PythonSlice_get_NoneIfKeyNotFound()
         {
             using (Py.GIL())
             {
@@ -851,9 +851,7 @@ from QuantConnect import *
 def Test(slice, symbol):
     return slice.get(symbol)").GetAttr("Test");
 
-                var symbol = Symbols.EURUSD;
-                Assert.Throws<PythonException>(() => test(GetPythonSlice(), symbol),
-                    $"'{symbol}' wasn't found in the Slice object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{symbol}\")");
+                Assert.IsNull(test(GetPythonSlice(), Symbols.EURUSD));
             }
         }
 
