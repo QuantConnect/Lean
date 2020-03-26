@@ -454,7 +454,7 @@ namespace QuantConnect.Statistics
         /// <returns>Double annual performance percentage</returns>
         public static double AnnualPerformance(List<double> performance, double tradingDaysPerYear = 252)
         {
-            return performance.Average() * tradingDaysPerYear;
+            return Math.Pow((performance.Average() + 1), tradingDaysPerYear) - 1;
         }
 
         /// <summary>
@@ -517,7 +517,19 @@ namespace QuantConnect.Statistics
         /// <returns>Value for tracking error</returns>
         public static double TrackingError(List<double> algoPerformance, List<double> benchmarkPerformance)
         {
-            return Math.Sqrt(AnnualVariance(algoPerformance) - 2 * Correlation.Pearson(algoPerformance, benchmarkPerformance) * AnnualStandardDeviation(algoPerformance) * AnnualStandardDeviation(benchmarkPerformance) + AnnualVariance(benchmarkPerformance));
+            // Un-equal lengths will blow up other statistics, but this will handle the case here
+            if (algoPerformance.Count() != benchmarkPerformance.Count())
+            {
+                return 0.0;
+            }
+
+            var performanceDifference = new List<double>();
+            for (var i = 0; i < algoPerformance.Count(); i++)
+            {
+                performanceDifference.Add(algoPerformance[i] - benchmarkPerformance[i]);
+            }
+
+            return Math.Sqrt(AnnualVariance(performanceDifference));
         }
 
 

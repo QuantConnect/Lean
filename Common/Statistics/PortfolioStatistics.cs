@@ -225,10 +225,7 @@ namespace QuantConnect.Statistics
 
             Alpha = Beta == 0 ? 0 : annualPerformance - (RiskFreeRate + Beta * (benchmarkAnnualPerformance - RiskFreeRate));
 
-            var correlation = Correlation.Pearson(listPerformance, listBenchmark);
-            var benchmarkAnnualVariance = benchmarkVariance * tradingDaysPerYear;
-            TrackingError = correlation.IsNaNOrZero() || benchmarkAnnualVariance.IsNaNOrZero() ? 0 :
-                (decimal)Math.Sqrt((double)AnnualVariance - 2 * correlation * (double)AnnualStandardDeviation * Math.Sqrt(benchmarkAnnualVariance) + benchmarkAnnualVariance);
+            TrackingError = GetTrackingError(listPerformance, listBenchmark, tradingDaysPerYear);
 
             InformationRatio = TrackingError == 0 ? 0 : (annualPerformance - benchmarkAnnualPerformance) / TrackingError;
 
@@ -285,7 +282,7 @@ namespace QuantConnect.Statistics
         /// <returns>Double annual performance percentage</returns>
         private static decimal GetAnnualPerformance(List<double> performance, int tradingDaysPerYear = 252)
         {
-            return (decimal)performance.Average() * tradingDaysPerYear;
+            return (decimal)Math.Pow((performance.Average() + 1), tradingDaysPerYear) - 1;
         }
 
         /// <summary>
@@ -299,6 +296,31 @@ namespace QuantConnect.Statistics
         {
             var variance = performance.Variance();
             return variance.IsNaNOrZero() ? 0 : (decimal)variance * tradingDaysPerYear;
+        }
+
+        /// <summary>
+        /// Tracking error volatility (TEV) statistic - a measure of how closely a portfolio follows the index to which it is benchmarked
+        /// </summary>
+        /// <remarks>If algo = benchmark, TEV = 0</remarks>
+        /// <param name="listPerformance">Double collection of algorithm performance values</param>
+        /// <param name="listBenchmark">Double collection of benchmark performance values</param>
+        /// <param name="tradingDaysPerYear">Trading days per year for the assets in portfolio</param>
+        /// <returns>Tracking error value</returns>
+        private static decimal GetTrackingError(List<double> listPerformance, List<double> listBenchmark, int tradingDaysPerYear = 252)
+        {
+            // Un-equal lengths will blow up other statistics, but this will handle the case here
+            if (listPerformance.Count() != listBenchmark.Count())
+            {
+                return (decimal)0.0;
+            }
+
+            var performanceDifference = new List<double>();
+            for (var i = 0; i < listPerformance.Count(); i++)
+            {
+                performanceDifference.Add(listPerformance[i] - listBenchmark[i]);
+            }
+
+            return (decimal)Math.Sqrt((double)GetAnnualVariance(performanceDifference, tradingDaysPerYear));
         }
     }
 }
