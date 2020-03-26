@@ -45,13 +45,12 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var result = _live ?? (Result)_backtest;
-            if (result == null)
+            if (_live == null)
             {
-                return "-";
+                return _backtest?.TotalPerformance?.PortfolioStatistics?.SharpeRatio.ToString("F1") ?? "-";
             }
 
-            var equityPoints = ResultsUtil.EquityPoints(result);
+            var equityPoints = ResultsUtil.EquityPoints(_live);
             var performance = DeedleUtil.PercentChange(new Series<DateTime, double>(equityPoints).ResampleEquivalence(date => date.Date, s => s.LastValue()));
             if (performance.ValueCount == 0)
             {
