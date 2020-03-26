@@ -2025,7 +2025,6 @@ namespace QuantConnect.Algorithm
             else
             {
                 var providedType = typeof(T);
-                // AutomaticIndicatorWarmupDataTypeRegressionAlgorithm executes both branches that follow
                 if (providedType.IsAbstract)
                 {
                     var dataType = SubscriptionManager.LookupSubscriptionConfigDataTypes(
@@ -2246,7 +2245,7 @@ namespace QuantConnect.Algorithm
         {
             // only infer TickType from T if it's not abstract (for example IBaseData, BaseData), else if will end up being TradeBar let's not take that
             // decision here (default type), it will be taken later by 'GetSubscription' so we keep it centralized
-            // An example of an abstract case can be found in the 'ConsolidateRegressionAlgorithm' where a 'Action<BaseData>' handler is used
+            // This could happen when a user passes in a generic 'Action<BaseData>' handler
             var tickType = typeof(T).IsAbstract ? (TickType?)null : LeanData.GetCommonTickTypeForCommonDataTypes(typeof(T), symbol.SecurityType);
             return Consolidate(symbol, period, tickType, handler);
         }
@@ -2344,7 +2343,7 @@ namespace QuantConnect.Algorithm
         {
             // only infer TickType from T if it's not abstract (for example IBaseData, BaseData), else if will end up being TradeBar let's not take that
             // decision here (default type), it will be taken later by 'GetSubscription' so we keep it centralized
-            // An example of an abstract case can be found in the 'ConsolidateRegressionAlgorithm' where a 'Action<BaseData>' handler is used
+            // This could happen when a user passes in a generic 'Action<BaseData>' handler
             var tickType = typeof(T).IsAbstract ? (TickType?)null : LeanData.GetCommonTickTypeForCommonDataTypes(typeof(T), symbol.SecurityType);
             return Consolidate(symbol, calendar, tickType, handler);
         }
