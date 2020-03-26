@@ -16,12 +16,95 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using NUnit.Framework;
+using QuantConnect.Util;
+using QuantConnect.Data.Market;
+using System.Globalization;
 
 namespace QuantConnect.Tests.Common.Statistics
 {
     [TestFixture]
     public class TrackingErrorTests
     {
+        private List<TradeBar> _spy = new List<TradeBar>();
+        private List<TradeBar> _aapl = new List<TradeBar>();
+        private List<double> _spyPerformance = new List<double>();
+        private List<double> _aaplPerformance = new List<double>();
+
+        [SetUp]
+        public void GetData()
+        {
+            var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            var spyPath = LeanData.GenerateZipFilePath(Globals.DataFolder, spy, new DateTime(2020, 3, 1), Resolution.Daily, TickType.Trade);
+            foreach (var line in QuantConnect.Compression.ReadLines(spyPath))
+            {
+                var elements = line.Split(',').ToList();
+                var format = "yyyyMMdd HH:mm";
+                var bar = new TradeBar(DateTime.ParseExact(elements[0], format, CultureInfo.InvariantCulture),
+                                        spy,
+                                        elements[1].ToDecimal(),
+                                        elements[2].ToDecimal(),
+                                        elements[3].ToDecimal(),
+                                        elements[4].ToDecimal(),
+                                        elements[5].ToDecimal(),
+                                        TimeSpan.FromDays(1));
+                _spy.Add(bar);
+            }
+
+            for (var i = 1; i < _spy.Count(); i++)
+            {
+                _spyPerformance.Add((double)((_spy[i].Close / _spy[i - 1].Close) - 1));
+            }
+
+            var aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            var aaplPath = LeanData.GenerateZipFilePath(Globals.DataFolder, aapl, new DateTime(2020, 3, 1), Resolution.Daily, TickType.Trade);
+            foreach (var line in QuantConnect.Compression.ReadLines(aaplPath))
+            {
+                var elements = line.Split(',').ToList();
+                var format = "yyyyMMdd HH:mm";
+                var bar = new TradeBar(DateTime.ParseExact(elements[0], format, CultureInfo.InvariantCulture),
+                                        aapl,
+                                        elements[1].ToDecimal(),
+                                        elements[2].ToDecimal(),
+                                        elements[3].ToDecimal(),
+                                        elements[4].ToDecimal(),
+                                        elements[5].ToDecimal(),
+                                        TimeSpan.FromDays(1));
+                _aapl.Add(bar);
+            }
+
+            for (var i = 1; i < _aapl.Count(); i++)
+            {
+                _aaplPerformance.Add((double)((_aapl[i].Close / _aapl[i - 1].Close) - 1));
+            }
+        }
+
+        [TearDown]
+        public void Delete()
+        {
+            _spy.Clear();
+            _aapl.Clear();
+            _spyPerformance.Clear();
+            _aaplPerformance.Clear();
+        }
+
+        [Test]
+        public void OneYearPerformance()
+        {
+            var result = QuantConnect.Statistics.Statistics.TrackingError(_aaplPerformance.Take(252).ToList(), _spyPerformance.Take(252).ToList());
+
+            Assert.AreEqual(0.52792744060003449, result);
+        }
+
+        [Test]
+        public void TotalPerformance()
+        {
+            // For some reason the first SPY day is one day before AAPL
+            var localSpy = _spyPerformance.Where((v, i) => i != 0).ToList();
+            var result = QuantConnect.Statistics.Statistics.TrackingError(_aaplPerformance, localSpy);
+
+            Assert.AreEqual(0.53166313895342709, result);
+        }
+
         [Test]
         public void IdenticalPerformance()
         {
