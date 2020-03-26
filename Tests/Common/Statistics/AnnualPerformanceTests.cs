@@ -32,18 +32,11 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
             var path = LeanData.GenerateZipFilePath(Globals.DataFolder, symbol, new DateTime(2020, 3, 1),Resolution.Daily, TickType.Trade);
+            var config = new QuantConnect.Data.SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+
             foreach (var line in QuantConnect.Compression.ReadLines(path))
             {
-                var elements = line.Split(',').ToList();
-                var format = "yyyyMMdd HH:mm";
-                var bar = new TradeBar(DateTime.ParseExact(elements[0], format, CultureInfo.InvariantCulture),
-                                        symbol,
-                                        elements[1].ToDecimal(),
-                                        elements[2].ToDecimal(),
-                                        elements[3].ToDecimal(),
-                                        elements[4].ToDecimal(),
-                                        elements[5].ToDecimal(),
-                                        TimeSpan.FromDays(1));
+                var bar = TradeBar.ParseEquity(config, line, DateTime.Now.Date);                
                 _spy.Add(bar);
             }
         }
