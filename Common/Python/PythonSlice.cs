@@ -54,19 +54,7 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="slice">slice object to wrap</param>
         public PythonSlice(Slice slice)
-            : base(slice.Time,
-                Enumerable.Empty<BaseData>(),
-                slice.Bars,
-                slice.QuoteBars,
-                slice.Ticks,
-                slice.OptionChains,
-                slice.FuturesChains,
-                slice.Splits,
-                slice.Dividends,
-                slice.Delistings,
-                slice.SymbolChangedEvents,
-                slice.HasData
-                )
+            : base(slice)
         {
             _slice = slice;
         }

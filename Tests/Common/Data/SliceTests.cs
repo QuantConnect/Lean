@@ -36,12 +36,18 @@ namespace QuantConnect.Tests.Common.Data
             var tradeBar = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.UtcNow };
             var quandl = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now };
             var quoteBar = new QuoteBar { Symbol = Symbols.SPY, Time = DateTime.Now };
+            var tick = new Tick(DateTime.Now, Symbols.SPY, 1.1m, 2.1m) {TickType = TickType.Trade};
+            var split = new Split(Symbols.SPY, DateTime.UtcNow, 1, 1, SplitType.SplitOccurred);
+            var delisting = new Delisting(Symbols.SPY, DateTime.UtcNow, 1, DelistingType.Delisted);
 
-            var slice = new Slice(DateTime.UtcNow, new BaseData[] { tradeBar, quoteBar, quandl });
+            var slice = new Slice(DateTime.UtcNow, new BaseData[] {quoteBar, tradeBar, quandl, tick, split, delisting });
 
             Assert.AreEqual(slice.Get(typeof(TradeBar))[Symbols.SPY], tradeBar);
             Assert.AreEqual(slice.Get(typeof(Quandl))[Symbols.SPY], quandl);
             Assert.AreEqual(slice.Get(typeof(QuoteBar))[Symbols.SPY], quoteBar);
+            Assert.AreEqual(slice.Get(typeof(Tick))[Symbols.SPY], tick);
+            Assert.AreEqual(slice.Get(typeof(Split))[Symbols.SPY], split);
+            Assert.AreEqual(slice.Get(typeof(Delisting))[Symbols.SPY], delisting);
         }
 
         [Test]
@@ -102,6 +108,34 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(2, ticks.Count);
             Assert.AreEqual(2, ticks[Symbols.SPY].Count);
             Assert.AreEqual(2, ticks[Symbols.AAPL].Count);
+        }
+
+        [Test]
+        public void DifferentCollectionsAreCorrectlyGeneratedSameSymbol()
+        {
+            var quoteBar = new QuoteBar(DateTime.Now, Symbols.SPY,
+                new Bar(3100, 3100, 3100, 3100), 0,
+                new Bar(3101, 3101, 3101, 3101), 0,
+                Time.OneMinute);
+            var tradeBar = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
+            var slice = new Slice(DateTime.Now, new BaseData[] { quoteBar, tradeBar });
+
+            Assert.AreEqual(1, slice.QuoteBars.Count);
+            Assert.AreEqual(1, slice.Bars.Count);
+
+            Assert.AreEqual(1, slice.Get<QuoteBar>().Count);
+            Assert.AreEqual(1, slice.Get<TradeBar>().Count);
+        }
+
+        [Test]
+        public void AccessesCustomGenericallyByTypeOtherTypesPresent()
+        {
+            var tradeBar = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
+            var quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now };
+            Slice slice = new Slice(DateTime.Now, new BaseData[] { quandlSpy, tradeBar });
+
+            DataDictionary<Quandl> quandlData = slice.Get<Quandl>();
+            Assert.AreEqual(1, quandlData.Count);
         }
 
         [Test]
@@ -171,6 +205,31 @@ def Test(slice):
                 Assert.AreEqual(2, (int)data.Count);
                 Assert.AreEqual(10, (int)data[Symbols.SPY].Value);
                 Assert.AreEqual(11, (int)data[Symbols.AAPL].Value);
+            }
+        }
+
+        [Test]
+        public void PythonEnumerationWorks()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+from QuantConnect.Data.Custom import *
+
+def Test(slice):
+    for dataPoint in slice:
+        return dataPoint").GetAttr("Test");
+                var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new[] { quandlAapl });
+
+                var data = test(new PythonSlice(slice)) as PyObject;
+                var keyValuePair = data.As<KeyValuePair<Symbol, BaseData>>();
+                Assert.IsNotNull(keyValuePair);
+                Assert.AreEqual(11, keyValuePair.Value.Value);
             }
         }
 
