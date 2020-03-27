@@ -515,7 +515,7 @@ namespace QuantConnect.Statistics
         /// <param name="algoPerformance">Double collection of algorithm daily performance values</param>
         /// <param name="benchmarkPerformance">Double collection of benchmark daily performance values</param>
         /// <returns>Value for tracking error</returns>
-        public static double TrackingError(List<double> algoPerformance, List<double> benchmarkPerformance)
+        public static double TrackingError(List<double> algoPerformance, List<double> benchmarkPerformance, double tradingDaysPerYear = 252)
         {
             // Un-equal lengths will blow up other statistics, but this will handle the case here
             if (algoPerformance.Count() != benchmarkPerformance.Count())
@@ -529,7 +529,7 @@ namespace QuantConnect.Statistics
                 performanceDifference.Add(algoPerformance[i] - benchmarkPerformance[i]);
             }
 
-            return Math.Sqrt(AnnualVariance(performanceDifference));
+            return Math.Sqrt(AnnualVariance(performanceDifference, tradingDaysPerYear));
         }
 
 

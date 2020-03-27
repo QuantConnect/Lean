@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Common.Statistics
     {
         private List<TradeBar> _spy = new List<TradeBar>();
 
-        [SetUp]
+        [TestFixtureSetUp]
         public void GetSPY()
         {
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Common.Statistics
             }
         }
 
-        [TearDown]
+        [TestFixtureTearDown]
         public void Delete()
         {
             _spy.Clear();
