@@ -28,25 +28,25 @@ namespace QuantConnect.Tests.Common
                 new Dictionary<string, string> {
                     {"Total Trades", "3"},
                     {"Average Win", "0%"},
-                    {"Average Loss", "-1.03%"},
-                    {"Compounding Annual Return", "245.167%"},
-                    {"Drawdown", "2.300%"},
-                    {"Expectancy", "-1"},
-                    {"Net Profit", "1.597%"},
-                    {"Sharpe Ratio", "4.554"},
-                    {"Probabilistic Sharpe Ratio", "65.613%"},
-                    {"Loss Rate", "100%"},
+                    {"Average Loss", "0%"},
+                    {"Compounding Annual Return", "-100%"},
+                    {"Drawdown", "99.600%"},
+                    {"Expectancy", "0"},
+                    {"Net Profit", "-99.546%"},
+                    {"Sharpe Ratio", "-0.126"},
+                    {"Probabilistic Sharpe Ratio", "1.654%"},
+                    {"Loss Rate", "0%"},
                     {"Win Rate", "0%"},
                     {"Profit-Loss Ratio", "0"},
-                    {"Alpha", "-0.06"},
-                    {"Beta", "1.015"},
-                    {"Annual Standard Deviation", "0.223"},
-                    {"Annual Variance", "0.05"},
-                    {"Information Ratio", "-9.541"},
-                    {"Tracking Error", "0.005"},
-                    {"Treynor Ratio", "1.002"},
-                    {"Total Fees", "$9.77"},
-                    {"OrderListHash", "-1005558829"}
+                    {"Alpha", "3.788"},
+                    {"Beta", "-2.542"},
+                    {"Annual Standard Deviation", "7.945"},
+                    {"Annual Variance", "63.118"},
+                    {"Information Ratio", "-0.362"},
+                    {"Tracking Error", "7.963"},
+                    {"Treynor Ratio", "0.393"},
+                    {"Total Fees", "$0.00"},
+                    {"OrderListHash", "1168233401"}
                 },
                 Language.Python,
                 AlgorithmStatus.Completed);
@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Common
                 parameter.AlphaStatistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
-                initialCash: 1000000);
+                initialCash: 100000);
         }
     }
 }

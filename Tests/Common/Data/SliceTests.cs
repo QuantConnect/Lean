@@ -627,6 +627,140 @@ def Test(slice, symbol):
             }
         }
 
+        [Test, Ignore]
+        public void PythonSlice_performance()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from datetime import datetime
+from clr import AddReference
+AddReference(""QuantConnect.Tests"")
+AddReference(""QuantConnect.Common"")
+AddReference(""System"")
+from QuantConnect import *
+from QuantConnect.Data.Market import Tick
+from QuantConnect.Tests.Common.Data import PublicArrayTest
+
+def Test(slice, symbol):
+    msg = '__contains__'
+
+    if 'SPY' in slice:
+        msg += ' Py'
+    now = datetime.now()
+    for i in range(0,1000000):
+        result = 'SPY' in slice
+    span1 = (datetime.now()-now).total_seconds()
+
+    if slice.ContainsKey('SPY'):
+        msg += ' C#\n'
+    now = datetime.now()
+    for i in range(0,1000000):
+        result = slice.ContainsKey('SPY')
+    span2 = (datetime.now()-now).total_seconds()
+
+    msg += f'Py: {span1}\nC#: {span2}\nRatio: {span1/span2}'
+    
+    msg += '\n\n__len__'
+
+    if len(slice) > 0:
+        msg += ' Py'
+    now = datetime.now()
+    for i in range(0,1000000):
+        result = len(slice)
+    span1 = (datetime.now()-now).total_seconds()
+
+    if slice.Count > 0:
+        msg += ' C#\n'
+    now = datetime.now()
+    for i in range(0,1000000):
+        result = slice.Count
+    span2 = (datetime.now()-now).total_seconds()
+
+    msg += f'Py: {span1}\nC#: {span2}\nRatio: {span1/span2}'
+
+    msg += '\n\nkeys()'
+
+    if len(slice.keys()) > 0:
+        msg += ' Py'
+    now = datetime.now()
+    for i in range(0,1000000):
+        result = slice.keys()
+    span1 = (datetime.now()-now).total_seconds()
+
+    if len(slice.Keys) > 0:
+        msg += ' C#\n'
+    now = datetime.now()
+    for i in range(0,1000000):
+        result = slice.Keys
+    span2 = (datetime.now()-now).total_seconds()
+    
+    msg += f'Py: {span1}\nC#: {span2}\nRatio: {span1/span2}'
+
+    msg += '\n\nvalues()'
+
+    if len(slice.values()) > 0:
+        msg += ' Py'
+    now = datetime.now()
+    for i in range(0,1000000):
+        result = slice.values()
+    span1 = (datetime.now()-now).total_seconds()
+
+    if len(slice.Values) > 0:
+        msg += ' C#\n'
+    now = datetime.now()
+    for i in range(0,1000000):
+        result = slice.Values
+    span2 = (datetime.now()-now).total_seconds()
+    
+    msg += f'Py: {span1}\nC#: {span2}\nRatio: {span1/span2}'
+
+    msg += '\n\nget()'
+
+    if slice.get(symbol):
+        msg += ' Py'
+    now = datetime.now()
+    for i in range(0,1000000):
+        result = slice.get(symbol)
+    span1 = (datetime.now()-now).total_seconds()
+
+    dummy = None
+    if slice.TryGetValue(symbol, dummy):
+        msg += ' C#\n'
+    now = datetime.now()
+    for i in range(0,1000000):
+        result = slice.TryGetValue(symbol, dummy)
+    span2 = (datetime.now()-now).total_seconds()
+    
+    msg += f'Py: {span1}\nC#: {span2}\nRatio: {span1/span2}'
+
+    msg += '\n\nitems()'
+
+    if slice.items():
+        msg += ' Py'
+    now = datetime.now()
+    for i in range(0,1000000):
+        result = list(slice.items())
+    span1 = (datetime.now()-now).total_seconds()
+
+    msg += ' C#\n'
+    now = datetime.now()
+    for i in range(0,1000000):
+        result = [x for x in slice]
+    span2 = (datetime.now()-now).total_seconds()
+    
+    msg += f'Py: {span1}\nC#: {span2}\nRatio: {span1/span2}'
+
+    return msg").GetAttr("Test");
+
+                var message = string.Empty;
+                Assert.DoesNotThrow(() => message = test(GetPythonSlice(), Symbols.SPY));
+
+                Assert.Ignore(message);
+            }
+        }
+
         [Test]
         public void PythonSlice_len()
         {
