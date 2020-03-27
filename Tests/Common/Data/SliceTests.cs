@@ -36,12 +36,18 @@ namespace QuantConnect.Tests.Common.Data
             var tradeBar = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.UtcNow };
             var quandl = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now };
             var quoteBar = new QuoteBar { Symbol = Symbols.SPY, Time = DateTime.Now };
+            var tick = new Tick(DateTime.Now, Symbols.SPY, 1.1m, 2.1m) {TickType = TickType.Trade};
+            var split = new Split(Symbols.SPY, DateTime.UtcNow, 1, 1, SplitType.SplitOccurred);
+            var delisting = new Delisting(Symbols.SPY, DateTime.UtcNow, 1, DelistingType.Delisted);
 
-            var slice = new Slice(DateTime.UtcNow, new BaseData[] { tradeBar, quoteBar, quandl });
+            var slice = new Slice(DateTime.UtcNow, new BaseData[] {quoteBar, tradeBar, quandl, tick, split, delisting });
 
             Assert.AreEqual(slice.Get(typeof(TradeBar))[Symbols.SPY], tradeBar);
             Assert.AreEqual(slice.Get(typeof(Quandl))[Symbols.SPY], quandl);
             Assert.AreEqual(slice.Get(typeof(QuoteBar))[Symbols.SPY], quoteBar);
+            Assert.AreEqual(slice.Get(typeof(Tick))[Symbols.SPY], tick);
+            Assert.AreEqual(slice.Get(typeof(Split))[Symbols.SPY], split);
+            Assert.AreEqual(slice.Get(typeof(Delisting))[Symbols.SPY], delisting);
         }
 
         [Test]
