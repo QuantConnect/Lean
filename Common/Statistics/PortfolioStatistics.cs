@@ -225,10 +225,7 @@ namespace QuantConnect.Statistics
 
             Alpha = Beta == 0 ? 0 : annualPerformance - (RiskFreeRate + Beta * (benchmarkAnnualPerformance - RiskFreeRate));
 
-            var correlation = Correlation.Pearson(listPerformance, listBenchmark);
-            var benchmarkAnnualVariance = benchmarkVariance * tradingDaysPerYear;
-            TrackingError = correlation.IsNaNOrZero() || benchmarkAnnualVariance.IsNaNOrZero() ? 0 :
-                (decimal)Math.Sqrt((double)AnnualVariance - 2 * correlation * (double)AnnualStandardDeviation * Math.Sqrt(benchmarkAnnualVariance) + benchmarkAnnualVariance);
+            TrackingError = (decimal)Statistics.TrackingError(listPerformance, listBenchmark, (double)tradingDaysPerYear);
 
             InformationRatio = TrackingError == 0 ? 0 : (annualPerformance - benchmarkAnnualPerformance) / TrackingError;
 
@@ -285,7 +282,7 @@ namespace QuantConnect.Statistics
         /// <returns>Double annual performance percentage</returns>
         private static decimal GetAnnualPerformance(List<double> performance, int tradingDaysPerYear = 252)
         {
-            return (decimal)performance.Average() * tradingDaysPerYear;
+            return (decimal)Statistics.AnnualPerformance(performance, (double)tradingDaysPerYear);
         }
 
         /// <summary>
@@ -299,6 +296,6 @@ namespace QuantConnect.Statistics
         {
             var variance = performance.Variance();
             return variance.IsNaNOrZero() ? 0 : (decimal)variance * tradingDaysPerYear;
-        }
+        }        
     }
 }
