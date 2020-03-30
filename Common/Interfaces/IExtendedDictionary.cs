@@ -78,7 +78,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <returns>Returns a view object that displays a list of all the keys.
         /// When the dictionary is changed, the view object also reflect these changes.</returns>
-        IEnumerable<TKey> keys();
+        PyList keys();
 
         /// <summary>
         /// Returns and removes an arbitrary element (key, value) pair from the dictionary.
@@ -133,6 +133,6 @@ namespace QuantConnect.Interfaces
         /// Returns a view object that displays a list of all the values in the dictionary.
         /// </summary>
         /// <returns>Returns a view object that displays a list of all values in a given dictionary.</returns>
-        IEnumerable<TValue> values();
+        PyList values();
     }
 }

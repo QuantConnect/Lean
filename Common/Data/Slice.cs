@@ -18,10 +18,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Python.Runtime;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
 using QuantConnect.Python;
 
 namespace QuantConnect.Data
@@ -29,7 +27,7 @@ namespace QuantConnect.Data
     /// <summary>
     /// Provides a data structure for all of an algorithm's data at a single time step
     /// </summary>
-    public class Slice : BaseDictionary<dynamic>, IEnumerable<KeyValuePair<Symbol, BaseData>>
+    public class Slice : ExtendedDictionary<dynamic>, IEnumerable<KeyValuePair<Symbol, BaseData>>
     {
         private readonly Ticks _ticks;
         private readonly TradeBars _bars;

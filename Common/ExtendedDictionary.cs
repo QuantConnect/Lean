@@ -25,7 +25,7 @@ namespace QuantConnect
     /// <summary>
     /// Provides a base class for types holding instances keyed by <see cref="Symbol"/>
     /// </summary>
-    public abstract class BaseDictionary<T> : IExtendedDictionary<Symbol, T>
+    public abstract class ExtendedDictionary<T> : IExtendedDictionary<Symbol, T>
     {
         /// <summary>
         /// Removes all items from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
@@ -72,10 +72,10 @@ namespace QuantConnect
         public virtual bool IsReadOnly => true;
 
         /// <summary>
-        /// 
+        /// Removes the value with the specified Symbol
         /// </summary>
-        /// <param name="symbol"></param>
-        /// <returns></returns>
+        /// <param name="symbol">The Symbol object of the element to remove.</param>
+        /// <returns>true if the element is successfully found and removed; otherwise, false.</returns>
         public virtual bool Remove(Symbol symbol)
         {
             if (IsReadOnly)
@@ -314,18 +314,18 @@ namespace QuantConnect
         /// </summary>
         /// <returns>Returns a view object that displays a list of all the Symbol objects.
         /// When the dictionary is changed, the view object also reflect these changes.</returns>
-        public IEnumerable<Symbol> keys()
+        public PyList keys()
         {
-            return GetKeys;
+            return GetKeys.ToPyList();
         }
 
         /// <summary>
         /// Returns a view object that displays a list of all the values in the dictionary.
         /// </summary>
         /// <returns>Returns a view object that displays a list of all values in a given dictionary.</returns>
-        public IEnumerable<T> values()
+        public PyList values()
         {
-            return GetValues.ToList();
+            return GetValues.ToPyList();
         }
     }
 }

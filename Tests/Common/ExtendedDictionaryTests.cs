@@ -19,7 +19,7 @@ using System.Collections.Generic;
 namespace QuantConnect.Tests.Common
 {
     [TestFixture]
-    public class BaseDictionaryTests
+    public class ExtendedDictionaryTests
     {
         [Test]
         public void RunPythonDictionaryFeatureRegressionAlgorithm()

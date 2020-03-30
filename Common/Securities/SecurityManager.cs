@@ -28,7 +28,7 @@ namespace QuantConnect.Securities
     /// Enumerable security management class for grouping security objects into an array and providing any common properties.
     /// </summary>
     /// <remarks>Implements IDictionary for the index searching of securities by symbol</remarks>
-    public class SecurityManager : BaseDictionary<Security>, IDictionary<Symbol, Security>, INotifyCollectionChanged
+    public class SecurityManager : ExtendedDictionary<Security>, IDictionary<Symbol, Security>, INotifyCollectionChanged
     {
         /// <summary>
         /// Event fired when a security is added or removed from this collection
