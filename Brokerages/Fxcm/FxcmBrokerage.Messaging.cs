@@ -392,6 +392,11 @@ namespace QuantConnect.Brokerages.Fxcm
                     // existing order
                     if (!OrderIsBeingProcessed(orderStatus.getCode()))
                     {
+                        var status = ConvertOrderStatus(orderStatus);
+
+                        int id;
+                        // if we get a Submitted status and we had placed an order update, this new event is flagged as an update
+                        var isUpdate = status == OrderStatus.Submitted && _orderUpdates.TryRemove(order.Id, out id);
                         var security = _securityProvider.GetSecurity(order.Symbol);
                         order.PriceCurrency = security.SymbolProperties.QuoteCurrency;
 
@@ -399,9 +404,10 @@ namespace QuantConnect.Brokerages.Fxcm
                             DateTime.UtcNow,
                             OrderFee.Zero)
                         {
-                            Status = ConvertOrderStatus(orderStatus),
+                            Status = status,
                             FillPrice = Convert.ToDecimal(message.getPrice()),
-                            FillQuantity = Convert.ToInt32(message.getSide() == SideFactory.BUY ? message.getLastQty() : -message.getLastQty())
+                            FillQuantity = Convert.ToInt32(message.getSide() == SideFactory.BUY ? message.getLastQty() : -message.getLastQty()),
+                            IsUpdate = isUpdate
                         };
 
                         // we're catching the first fill so we apply the fees only once

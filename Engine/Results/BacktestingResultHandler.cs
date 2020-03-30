@@ -156,9 +156,8 @@ namespace QuantConnect.Lean.Engine.Results
                 if (DateTime.UtcNow <= _nextUpdate || _daysProcessed < _daysProcessedFrontier) return;
 
                 var deltaOrders = GetDeltaOrders(LastDeltaOrderPosition, shouldStop: orderCount => orderCount >= 50);
-                var deltaOrderEvents = TransactionHandler.OrderEvents.Skip(LastDeltaOrderEventsPosition).Take(50).ToList();
                 // Deliberately skip to the end of order event collection to prevent overloading backtesting UX
-                LastDeltaOrderPosition = LastDeltaOrderEventsPosition=  TransactionHandler.OrderEvents.Count();
+                LastDeltaOrderPosition = TransactionHandler.OrderEvents.Count();
 
                 //Reset loop variables:
                 try
@@ -234,7 +233,7 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //2. Backtest Update -> Send the truncated packet to the backtester:
-                var splitPackets = SplitPackets(deltaCharts, deltaOrders, runtimeStatistics, progress, deltaOrderEvents);
+                var splitPackets = SplitPackets(deltaCharts, deltaOrders, runtimeStatistics, progress);
 
                 foreach (var backtestingPacket in splitPackets)
                 {
@@ -250,7 +249,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Run over all the data and break it into smaller packets to ensure they all arrive at the terminal
         /// </summary>
-        public IEnumerable<BacktestResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts, Dictionary<int, Order> deltaOrders, Dictionary<string, string> runtimeStatistics, decimal progress, List<OrderEvent> deltaOrderEvents)
+        public IEnumerable<BacktestResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts, Dictionary<int, Order> deltaOrders, Dictionary<string, string> runtimeStatistics, decimal progress)
         {
             // break the charts into groups
             var splitPackets = new List<BacktestResultPacket>();
@@ -269,7 +268,7 @@ namespace QuantConnect.Lean.Engine.Results
             splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { AlphaRuntimeStatistics = AlphaRuntimeStatistics }, Algorithm.EndDate, Algorithm.StartDate, progress));
 
             // Add the orders into the charting packet:
-            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { Orders = deltaOrders, OrderEvents = deltaOrderEvents}, Algorithm.EndDate, Algorithm.StartDate, progress));
+            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { Orders = deltaOrders }, Algorithm.EndDate, Algorithm.StartDate, progress));
 
             //Add any user runtime statistics into the backtest.
             splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { RuntimeStatistics = runtimeStatistics }, Algorithm.EndDate, Algorithm.StartDate, progress));

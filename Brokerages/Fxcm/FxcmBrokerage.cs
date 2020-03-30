@@ -56,6 +56,8 @@ namespace QuantConnect.Brokerages.Fxcm
         private DateTime _lastReadyMessageTime;
         private volatile bool _connectionLost;
 
+        // tracks requested order updates, so we can flag Submitted order events as updates
+        private readonly ConcurrentDictionary<int, int> _orderUpdates = new ConcurrentDictionary<int, int>();
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly ConcurrentQueue<OrderEvent> _orderEventQueue = new ConcurrentQueue<OrderEvent>();
         private readonly FxcmSymbolMapper _symbolMapper = new FxcmSymbolMapper();
@@ -582,6 +584,7 @@ namespace QuantConnect.Brokerages.Fxcm
             AutoResetEvent autoResetEvent;
             lock (_locker)
             {
+                _orderUpdates[order.Id] = order.Id;
                 _currentRequest = _gateway.sendMessage(orderReplaceRequest);
                 autoResetEvent = new AutoResetEvent(false);
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;

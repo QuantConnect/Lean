@@ -104,6 +104,11 @@ namespace QuantConnect.Orders
         public bool IsAssignment { get; set; }
 
         /// <summary>
+        /// True if the order event is an order update
+        /// </summary>
+        public bool IsUpdate { get; set; }
+
+        /// <summary>
         /// The current stop price
         /// </summary>
         public decimal? StopPrice
@@ -228,12 +233,17 @@ namespace QuantConnect.Orders
             }
 
             // attach the order fee so it ends up in logs properly.
-            if (OrderFee.Value.Amount != 0m) message += $" OrderFee: {OrderFee}";
+            if (OrderFee.Value.Amount != 0m) message += Invariant($" OrderFee: {OrderFee}");
+
+            if (IsUpdate)
+            {
+                message += Invariant($" IsUpdate: true");
+            }
 
             // add message from brokerage
             if (!string.IsNullOrEmpty(Message))
             {
-                message += $" Message: {Message}";
+                message += Invariant($" Message: {Message}");
             }
 
             return message;

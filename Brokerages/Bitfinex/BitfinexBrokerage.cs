@@ -70,7 +70,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 throw new NotSupportedException("BitfinexBrokerage.UpdateOrder: Multiple orders update not supported. Please cancel and re-create.");
             }
 
-            return SubmitOrder(GetEndpoint("order/cancel/replace"), order);
+            return SubmitOrder(GetOrderUpdateEndpoint(), order);
         }
 
         /// <summary>

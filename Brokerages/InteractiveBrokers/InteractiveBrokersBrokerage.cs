@@ -106,6 +106,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ManualResetEvent _accountHoldingsResetEvent = new ManualResetEvent(false);
         private Exception _accountHoldingsLastException;
 
+        // tracks requested order updates, so we can flag Submitted order events as updates
+        private readonly ConcurrentDictionary<int, int> _orderUpdates = new ConcurrentDictionary<int, int>();
         // tracks executions before commission reports, map: execId -> execution
         private readonly ConcurrentDictionary<string, Execution> _orderExecutions = new ConcurrentDictionary<string, Execution>();
         // tracks commission reports before executions, map: execId -> commission report
@@ -375,11 +377,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             try
             {
                 Log.Trace("InteractiveBrokersBrokerage.UpdateOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity + " Status: " + order.Status);
-
+                _orderUpdates[order.Id] = order.Id;
                 IBPlaceOrder(order, false);
             }
             catch (Exception err)
             {
+                int id;
+                _orderUpdates.TryRemove(order.Id, out id);
                 Log.Error("InteractiveBrokersBrokerage.UpdateOrder(): " + err);
                 return false;
             }
@@ -1412,8 +1416,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return;
                 }
 
+                int id;
+                // if we get a Submitted status and we had placed an order update, this new event is flagged as an update
+                var isUpdate = status == OrderStatus.Submitted && _orderUpdates.TryRemove(order.Id, out id);
+
                 // IB likes to duplicate/triplicate some events, so we fire non-fill events only if status changed
-                if (status != order.Status)
+                if (status != order.Status || isUpdate)
                 {
                     if (order.Status.IsClosed())
                     {
@@ -1430,7 +1438,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         // fire the event
                         OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Interactive Brokers Order Event")
                         {
-                            Status = status
+                            Status = status,
+                            IsUpdate = isUpdate
                         });
                     }
                 }
