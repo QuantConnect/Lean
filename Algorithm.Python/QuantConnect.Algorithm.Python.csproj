@@ -173,6 +173,7 @@
     <None Include="DividendAlgorithm.py" />
     <None Include="DropboxBaseDataUniverseSelectionAlgorithm.py" />
     <None Include="DropboxUniverseSelectionAlgorithm.py" />
+    <None Include="DropboxCoarseFineAlgorithm.py" />
     <None Include="EmaCrossUniverseSelectionAlgorithm.py" />
     <None Include="EmaCrossUniverseSelectionFrameworkAlgorithm.py" />
     <None Include="ETFGlobalRotationAlgorithm.py" />
