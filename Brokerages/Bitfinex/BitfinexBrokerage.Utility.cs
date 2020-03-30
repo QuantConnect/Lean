@@ -339,7 +339,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 var isUpdate = endpoint.Equals(GetOrderUpdateEndpoint());
 
                 // Generate submitted event
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Bitfinex Order Event") { Status = OrderStatus.Submitted, IsUpdate = isUpdate });
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Bitfinex Order Event") { Status = isUpdate ? OrderStatus.UpdateSubmitted : OrderStatus.Submitted });
                 Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
 
                 UnlockStream();

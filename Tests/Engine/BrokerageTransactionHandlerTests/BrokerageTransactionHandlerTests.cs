@@ -491,14 +491,15 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             transactionHandler.Process(updateRequest);
             Assert.AreEqual(updateRequest.Status, OrderRequestStatus.Processing);
             Assert.IsTrue(updateRequest.Response.IsSuccess);
-            Assert.AreEqual(orderTicket.Status, OrderStatus.Submitted);
+            Assert.AreEqual(OrderStatus.Submitted, orderTicket.Status);
 
             transactionHandler.HandleOrderRequest(updateRequest);
             Assert.IsTrue(updateRequest.Response.IsSuccess);
-            Assert.AreEqual(orderTicket.Status, OrderStatus.Submitted);
+            Assert.AreEqual(OrderStatus.UpdateSubmitted, orderTicket.Status);
 
             Assert.AreEqual(_algorithm.OrderEvents.Count, 2);
-            Assert.IsTrue(_algorithm.OrderEvents.TrueForAll(orderEvent => orderEvent.Status == OrderStatus.Submitted));
+            Assert.IsTrue(_algorithm.OrderEvents[0].Status == OrderStatus.Submitted);
+            Assert.IsTrue(_algorithm.OrderEvents[1].Status == OrderStatus.UpdateSubmitted);
         }
 
         [Test]

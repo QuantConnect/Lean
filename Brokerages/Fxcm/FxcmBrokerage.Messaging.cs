@@ -404,10 +404,9 @@ namespace QuantConnect.Brokerages.Fxcm
                             DateTime.UtcNow,
                             OrderFee.Zero)
                         {
-                            Status = status,
+                            Status = isUpdate ? OrderStatus.UpdateSubmitted : status,
                             FillPrice = Convert.ToDecimal(message.getPrice()),
                             FillQuantity = Convert.ToInt32(message.getSide() == SideFactory.BUY ? message.getLastQty() : -message.getLastQty()),
-                            IsUpdate = isUpdate
                         };
 
                         // we're catching the first fill so we apply the fees only once

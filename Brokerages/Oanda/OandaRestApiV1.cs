@@ -241,7 +241,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             if (UpdateOrder(Parse.Long(order.BrokerId.First()), requestParams))
             {
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Submitted, IsUpdate = true });
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.UpdateSubmitted });
             }
 
             return true;

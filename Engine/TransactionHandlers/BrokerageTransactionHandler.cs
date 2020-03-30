@@ -969,6 +969,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         }
                         break;
 
+                    case OrderStatus.UpdateSubmitted:
                     case OrderStatus.Submitted:
                         // submit events after the initial submission are all order updates
                         if (ticket.UpdateRequests.Count > 0)
