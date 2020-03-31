@@ -317,6 +317,7 @@
     <Compile Include="Brokerages\Alpaca\AlpacaBrokerageTests.cs" />
     <Compile Include="Common\Data\Auxiliary\FactorFileTests.cs" />
     <Compile Include="Common\Data\Auxiliary\MapFileTests.cs" />
+    <Compile Include="Common\Data\Custom\PsychSignalTests.cs" />
     <Compile Include="Common\Data\Custom\TradingEconomicsTests.cs" />
     <Compile Include="Common\Data\Fundamental\FineFundamentalTests.cs" />
     <Compile Include="Common\Orders\OrderSizingTests.cs" />
