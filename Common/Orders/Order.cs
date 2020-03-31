@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
@@ -117,11 +118,13 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Order Time In Force
         /// </summary>
+        [JsonIgnore]
         public TimeInForce TimeInForce => Properties.TimeInForce;
 
         /// <summary>
         /// Tag the order with some custom data
         /// </summary>
+        [DefaultValue(""), JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Tag { get; internal set; }
 
         /// <summary>
@@ -156,6 +159,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Get the absolute quantity for this order
         /// </summary>
+        [JsonIgnore]
         public decimal AbsoluteQuantity => Math.Abs(Quantity);
 
         /// <summary>

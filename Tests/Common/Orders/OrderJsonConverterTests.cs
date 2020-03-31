@@ -430,6 +430,53 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(expiry, gtd.Expiry);
         }
 
+        [Test]
+        public void JsonIgnores()
+        {
+            var json = JsonConvert.SerializeObject(new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today));
+
+            Assert.IsFalse(json.Contains("Tag"));
+            Assert.IsFalse(json.Contains("AbsoluteQuantity"));
+
+            json = JsonConvert.SerializeObject(new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today, "This is a Tag"));
+
+            Assert.IsTrue(json.Contains("Tag"));
+            Assert.IsTrue(json.Contains("This is a Tag"));
+        }
+
+        [Test]
+        public void TimeInForceInProperties()
+        {
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+            {
+                Converters = { new OrderJsonConverter() }
+            };
+
+            const string json = @"{'Type':0,
+'Value':99986.827413672,
+'Id':1,
+'ContingentId':0,
+'BrokerId':[1],
+'Symbol':{'Value':'SPY',
+'Permtick':'SPY'},
+'Price':100.086914328,
+'Time':'2010-03-04T14:31:00Z',
+'Quantity':999,
+'Status':3,
+'Properties': {
+    'TimeInForce': 1
+},
+'Tag':'',
+'SecurityType':1,
+'Direction':0,
+'AbsoluteQuantity':999}";
+
+            var order = JsonConvert.DeserializeObject<Order>(json);
+            Assert.IsInstanceOf<MarketOrder>(order);
+            Assert.AreEqual(Market.USA, order.Symbol.ID.Market);
+            Assert.IsTrue(order.TimeInForce is DayTimeInForce);
+        }
+
         private static T TestOrderType<T>(T expected)
             where T : Order
         {
