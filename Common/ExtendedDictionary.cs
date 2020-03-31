@@ -37,7 +37,7 @@ namespace QuantConnect
             {
                 throw new InvalidOperationException($"Clear/clear method call is an invalid operation. {GetType().Name} is a read-only collection.");
             }
-            throw new NotImplementedException("Types deriving from 'BaseDictionary' must implement the 'void Clear() method.");
+            throw new NotImplementedException("Types deriving from 'ExtendedDictionary' must implement the 'void Clear() method.");
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace QuantConnect
             {
                 throw new InvalidOperationException($"Remove/pop method call is an invalid operation. {GetType().Name} is a read-only collection.");
             }
-            throw new NotImplementedException("Types deriving from 'BaseDictionary' must implement the 'void Remove(Symbol) method.");
+            throw new NotImplementedException("Types deriving from 'ExtendedDictionary' must implement the 'void Remove(Symbol) method.");
         }
 
         /// <summary>
@@ -95,11 +95,11 @@ namespace QuantConnect
         {
             get
             {
-                throw new NotImplementedException("Types deriving from 'BaseDictionary' must implement the 'T this[Symbol] method.");
+                throw new NotImplementedException("Types deriving from 'ExtendedDictionary' must implement the 'T this[Symbol] method.");
             }
             set
             {
-                throw new NotImplementedException("Types deriving from 'BaseDictionary' must implement the 'T this[Symbol] method.");
+                throw new NotImplementedException("Types deriving from 'ExtendedDictionary' must implement the 'T this[Symbol] method.");
             }
         }
 
@@ -113,11 +113,21 @@ namespace QuantConnect
         {
             get
             {
-                throw new NotImplementedException("Types deriving from 'BaseDictionary' must implement the 'T this[string] method.");
+                Symbol symbol;
+                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
+                {
+                    throw new KeyNotFoundException($"The ticker {ticker} was not found in the SymbolCache. Use the Symbol object as key instead. Accessing the securities collection/slice object by string ticker is only available for securities added with the AddSecurity-family methods. For more details, please check out the documentation.");
+                }
+                return this[symbol];
             }
             set
             {
-                throw new NotImplementedException("Types deriving from 'BaseDictionary' must implement the 'T this[string] method.");
+                Symbol symbol;
+                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
+                {
+                    throw new KeyNotFoundException($"The ticker {ticker} was not found in the SymbolCache. Use the Symbol object as key instead. Accessing the securities collection/slice object by string ticker is only available for securities added with the AddSecurity-family methods. For more details, please check out the documentation.");
+                }
+                this[symbol] = value;
             }
         }
 

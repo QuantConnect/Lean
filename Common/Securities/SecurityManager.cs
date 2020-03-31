@@ -272,34 +272,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Indexer method for the security manager to access the securities objects by their symbol.
-        /// </summary>
-        /// <remarks>IDictionary implementation</remarks>
-        /// <param name="ticker">string ticker symbol indexer</param>
-        /// <returns>Security</returns>
-        public override Security this[string ticker]
-        {
-            get
-            {
-                Symbol symbol;
-                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
-                {
-                    throw new KeyNotFoundException($"This asset symbol ({ticker}) was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"{ticker}\")'");
-                }
-                return this[symbol];
-            }
-            set
-            {
-                Symbol symbol;
-                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
-                {
-                    throw new KeyNotFoundException($"This asset symbol ({ticker}) was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"{ticker}\")'");
-                }
-                this[symbol] = value;
-            }
-        }
-
-        /// <summary>
         /// Event invocator for the <see cref="CollectionChanged"/> event
         /// </summary>
         /// <param name="changedEventArgs">Event arguments for the <see cref="CollectionChanged"/> event</param>

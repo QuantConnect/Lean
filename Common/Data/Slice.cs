@@ -165,7 +165,7 @@ namespace QuantConnect.Data
         /// <returns>
         /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
-        protected override IEnumerable<Symbol> GetKeys => Keys;
+        protected override IEnumerable<Symbol> GetKeys => _data.Value.Keys;
 
         /// <summary>
         /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
@@ -173,7 +173,7 @@ namespace QuantConnect.Data
         /// <returns>
         /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
-        protected override IEnumerable<dynamic> GetValues => Values.Select(data => (dynamic)data);
+        protected override IEnumerable<dynamic> GetValues => GetKeyValuePairEnumerable().Select(data => (dynamic)data);
 
         /// <summary>
         /// Gets a list of all the data in this slice

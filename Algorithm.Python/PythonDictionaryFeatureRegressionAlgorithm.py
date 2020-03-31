@@ -49,8 +49,11 @@ class PythonDictionaryFeatureRegressionAlgorithm(QCAlgorithm):
         sliceData = ', '.join([f'{x}' for x in slice.values()])
         sliceBars = ', '.join([f'{x}' for x in slice.Bars.values()])
 
+        if "SPY" not in slice:
+            raise Exception('SPY (string) is not in Slice')
+
         if self.spySymbol not in slice:
-            raise Exception('SPY is not in Slice')
+            raise Exception('SPY (Symbol) is not in Slice')
 
         spy = slice.get(self.spySymbol)
         if spy is None:
@@ -65,7 +68,10 @@ class PythonDictionaryFeatureRegressionAlgorithm(QCAlgorithm):
         leverages = ', '.join([str(x.GetLastData()) for x in self.Securities.values()])
 
         if "IBM" not in self.Securities:
-            raise Exception('IBM is not in Securities')
+            raise Exception('IBM (string) is not in Securities')
+
+        if self.ibmSymbol not in self.Securities:
+            raise Exception('IBM (Symbol) is not in Securities')
 
         ibm = self.Securities.get(self.ibmSymbol)
         if ibm is None:
@@ -83,7 +89,10 @@ class PythonDictionaryFeatureRegressionAlgorithm(QCAlgorithm):
         leverages = ', '.join([f'{x.Symbol}: {x.Leverage}' for x in self.Portfolio.values()])
 
         if "AIG" not in self.Securities:
-            raise Exception('AIG is not in Portfolio')
+            raise Exception('AIG (string) is not in Portfolio')
+
+        if self.aigSymbol not in self.Securities:
+            raise Exception('AIG (Symbol) is not in Portfolio')
 
         aig = self.Portfolio.get(self.aigSymbol)
         if aig is None:

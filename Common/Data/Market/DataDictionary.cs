@@ -234,38 +234,6 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Gets or sets the element with the specified key.
-        /// </summary>
-        /// <returns>
-        /// The element with the specified key.
-        /// </returns>
-        /// <param name="ticker">The key of the element to get or set.</param>
-        /// <exception cref="T:System.ArgumentNullException"><paramref name="ticker"/> is null.</exception>
-        /// <exception cref="T:System.Collections.Generic.KeyNotFoundException">The property is retrieved and <paramref name="ticker"/> is not found.</exception>
-        /// <exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
-        public override T this[string ticker]
-        {
-            get
-            {
-                Symbol symbol;
-                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
-                {
-                    throw new KeyNotFoundException($"'{ticker}' wasn't found in the {GetType().GetBetterTypeName()} object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{ticker}\")");
-                }
-                return this[symbol];
-            }
-            set
-            {
-                Symbol symbol;
-                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
-                {
-                    throw new KeyNotFoundException($"'{ticker}' wasn't found in the {GetType().GetBetterTypeName()} object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{ticker}\")");
-                }
-                this[symbol] = value;
-            }
-        }
-
-        /// <summary>
         /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the keys of the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </summary>
         /// <returns>

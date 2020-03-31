@@ -529,17 +529,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Indexer for the PortfolioManager class to access the underlying security holdings objects.
-        /// </summary>
-        /// <param name="ticker">string ticker symbol indexer</param>
-        /// <returns>SecurityHolding class from the algorithm securities</returns>
-        public override SecurityHolding this[string ticker]
-        {
-            get { return Securities[ticker].Holdings; }
-            set { Securities[ticker].Holdings = value; }
-        }
-
-        /// <summary>
         /// Sets the account currency cash symbol this algorithm is to manage.
         /// </summary>
         /// <remarks>Has to be called before calling <see cref="SetCash(decimal)"/>
