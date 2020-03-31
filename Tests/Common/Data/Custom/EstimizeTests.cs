@@ -24,6 +24,7 @@ using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Lean.Engine.DataFeeds;
+using Type = QuantConnect.Data.Custom.Estimize.Type;
 
 namespace QuantConnect.Tests.Common.Data.Custom
 {
@@ -265,6 +266,112 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var rows = factory.Read(source).ToList();
 
             Assert.IsTrue(rows.Count > 0);
+        }
+
+        [Test]
+        public void SerializeRoundTripEstimizeRelease()
+        {
+            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+
+            var time = new DateTime(2020, 3, 19, 10, 0, 0);
+            var underlyingSymbol = Symbols.AAPL;
+            var symbol = Symbol.CreateBase(typeof(EstimizeRelease), underlyingSymbol, QuantConnect.Market.USA);
+
+            var item = new EstimizeRelease
+            {
+                Id = "123",
+                Symbol = symbol,
+                FiscalYear = 2020,
+                FiscalQuarter = 1,
+                Eps = 2,
+                Revenue = null,
+                ReleaseDate = time
+            };
+
+            var serialized = JsonConvert.SerializeObject(item, settings);
+            var deserialized = JsonConvert.DeserializeObject<EstimizeRelease>(serialized, settings);
+
+            Assert.AreEqual("123", deserialized.Id);
+            Assert.AreEqual(symbol, deserialized.Symbol);
+            Assert.AreEqual(2020, deserialized.FiscalYear);
+            Assert.AreEqual(1, deserialized.FiscalQuarter);
+            Assert.AreEqual(2, deserialized.Eps);
+            Assert.AreEqual(null, deserialized.Revenue);
+            Assert.AreEqual(time, deserialized.ReleaseDate);
+            Assert.AreEqual(time, deserialized.Time);
+            Assert.AreEqual(time, deserialized.EndTime);
+        }
+
+        [Test]
+        public void SerializeRoundTripEstimizeConsensus()
+        {
+            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+
+            var time = new DateTime(2020, 3, 19, 10, 0, 0);
+            var underlyingSymbol = Symbols.AAPL;
+            var symbol = Symbol.CreateBase(typeof(EstimizeConsensus), underlyingSymbol, QuantConnect.Market.USA);
+
+            var item = new EstimizeConsensus
+            {
+                Id = "123",
+                Symbol = symbol,
+                FiscalYear = 2020,
+                FiscalQuarter = 1,
+                Source = Source.WallStreet,
+                Type = Type.Eps,
+                Count = 3,
+                Mean = 2,
+                UpdatedAt = time
+            };
+
+            var serialized = JsonConvert.SerializeObject(item, settings);
+            var deserialized = JsonConvert.DeserializeObject<EstimizeConsensus>(serialized, settings);
+
+            Assert.AreEqual("123", deserialized.Id);
+            Assert.AreEqual(symbol, deserialized.Symbol);
+            Assert.AreEqual(2020, deserialized.FiscalYear);
+            Assert.AreEqual(1, deserialized.FiscalQuarter);
+            Assert.AreEqual(Source.WallStreet, deserialized.Source);
+            Assert.AreEqual(Type.Eps, deserialized.Type);
+            Assert.AreEqual(3, deserialized.Count);
+            Assert.AreEqual(2, deserialized.Mean);
+            Assert.AreEqual(time, deserialized.UpdatedAt);
+            Assert.AreEqual(time, deserialized.Time);
+            Assert.AreEqual(time, deserialized.EndTime);
+        }
+
+        [Test]
+        public void SerializeRoundTripEstimizeEstimate()
+        {
+            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+
+            var time = new DateTime(2020, 3, 19, 10, 0, 0);
+            var underlyingSymbol = Symbols.AAPL;
+            var symbol = Symbol.CreateBase(typeof(EstimizeEstimate), underlyingSymbol, QuantConnect.Market.USA);
+
+            var item = new EstimizeEstimate
+            {
+                Id = "123",
+                Symbol = symbol,
+                FiscalYear = 2020,
+                FiscalQuarter = 1,
+                Eps = 2,
+                Revenue = null,
+                CreatedAt = time
+            };
+
+            var serialized = JsonConvert.SerializeObject(item, settings);
+            var deserialized = JsonConvert.DeserializeObject<EstimizeEstimate>(serialized, settings);
+
+            Assert.AreEqual("123", deserialized.Id);
+            Assert.AreEqual(symbol, deserialized.Symbol);
+            Assert.AreEqual(2020, deserialized.FiscalYear);
+            Assert.AreEqual(1, deserialized.FiscalQuarter);
+            Assert.AreEqual(2, deserialized.Eps);
+            Assert.AreEqual(null, deserialized.Revenue);
+            Assert.AreEqual(time, deserialized.CreatedAt);
+            Assert.AreEqual(time, deserialized.Time);
+            Assert.AreEqual(time, deserialized.EndTime);
         }
     }
 }

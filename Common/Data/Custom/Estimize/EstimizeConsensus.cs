@@ -24,7 +24,6 @@ namespace QuantConnect.Data.Custom.Estimize
     /// <summary>
     /// Consensus of the specified release
     /// </summary>
-    [JsonObject(MemberSerialization.OptIn)]
     public class EstimizeConsensus : BaseData
     {
         /// <summary>

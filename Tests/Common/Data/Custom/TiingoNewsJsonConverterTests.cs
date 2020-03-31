@@ -108,5 +108,40 @@ namespace QuantConnect.Tests.Common.Data.Custom
             }
             Assert.AreEqual(result[0].EndTime, result[0].Time);
         }
+
+        [Test]
+        public void SerializeRoundTrip()
+        {
+            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+
+            var crawlDate = new DateTime(2020, 3, 19, 10, 0, 0);
+            var underlyingSymbol = Symbols.AAPL;
+            var symbol = Symbol.CreateBase(typeof(TiingoNews), underlyingSymbol, QuantConnect.Market.USA);
+            var symbolList = new List<Symbol> { underlyingSymbol };
+            var tags = new List<string> { "Stock", "Technology" };
+
+            var item = new TiingoNews
+            {
+                ArticleID = "123456",
+                Symbol = symbol,
+                Symbols = symbolList,
+                Tags = tags,
+                Title = "title",
+                CrawlDate = crawlDate,
+                Time = crawlDate
+            };
+
+            var serialized = JsonConvert.SerializeObject(item, settings);
+            var deserialized = JsonConvert.DeserializeObject<TiingoNews>(serialized, settings);
+
+            Assert.AreEqual("123456", deserialized.ArticleID);
+            Assert.AreEqual(symbol, deserialized.Symbol);
+            Assert.AreEqual(symbolList, deserialized.Symbols);
+            Assert.AreEqual(tags, deserialized.Tags);
+            Assert.AreEqual("title", deserialized.Title);
+            Assert.AreEqual(crawlDate, deserialized.CrawlDate);
+            Assert.AreEqual(crawlDate, deserialized.Time);
+            Assert.AreEqual(crawlDate, deserialized.EndTime);
+        }
     }
 }

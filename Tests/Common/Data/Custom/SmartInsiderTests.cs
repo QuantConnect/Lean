@@ -16,6 +16,7 @@
 using NUnit.Framework;
 using QuantConnect.Data.Custom.SmartInsider;
 using System;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Tests.Common.Data.Custom
 {
@@ -54,6 +55,80 @@ namespace QuantConnect.Tests.Common.Data.Custom
             {
                 SmartInsiderEvent.ParseDate("05/21/2019 00:00:00");
             });
+        }
+
+        [Test]
+        public void SerializeRoundTripSmartInsiderIntention()
+        {
+            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+
+            var time = new DateTime(2020, 3, 19, 10, 0, 0);
+            var underlyingSymbol = Symbols.AAPL;
+            var symbol = Symbol.CreateBase(typeof(SmartInsiderIntention), underlyingSymbol, QuantConnect.Market.USA);
+
+            var item = new SmartInsiderIntention
+            {
+                Symbol = symbol,
+                LastUpdate = time,
+                Time = time,
+                TransactionID = "123",
+                EventType = SmartInsiderEventType.Intention,
+                Execution = SmartInsiderExecution.Market,
+                ExecutionEntity = SmartInsiderExecutionEntity.Issuer,
+                ExecutionHolding = SmartInsiderExecutionHolding.NotReported,
+                Amount = null
+            };
+
+            var serialized = JsonConvert.SerializeObject(item, settings);
+            var deserialized = JsonConvert.DeserializeObject<SmartInsiderIntention>(serialized, settings);
+
+            Assert.AreEqual(symbol, deserialized.Symbol);
+            Assert.AreEqual("123", deserialized.TransactionID);
+            Assert.AreEqual(SmartInsiderEventType.Intention, deserialized.EventType);
+            Assert.AreEqual(SmartInsiderExecution.Market, deserialized.Execution);
+            Assert.AreEqual(SmartInsiderExecutionEntity.Issuer, deserialized.ExecutionEntity);
+            Assert.AreEqual(SmartInsiderExecutionHolding.NotReported, deserialized.ExecutionHolding);
+            Assert.AreEqual(null, deserialized.Amount);
+            Assert.AreEqual(time, deserialized.LastUpdate);
+            Assert.AreEqual(time, deserialized.Time);
+            Assert.AreEqual(time, deserialized.EndTime);
+        }
+
+        [Test]
+        public void SerializeRoundTripSmartInsiderTransaction()
+        {
+            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+
+            var time = new DateTime(2020, 3, 19, 10, 0, 0);
+            var underlyingSymbol = Symbols.AAPL;
+            var symbol = Symbol.CreateBase(typeof(SmartInsiderTransaction), underlyingSymbol, QuantConnect.Market.USA);
+
+            var item = new SmartInsiderTransaction
+            {
+                Symbol = symbol,
+                LastUpdate = time,
+                Time = time,
+                TransactionID = "123",
+                EventType = SmartInsiderEventType.Transaction,
+                Execution = SmartInsiderExecution.Market,
+                ExecutionEntity = SmartInsiderExecutionEntity.Issuer,
+                ExecutionHolding = SmartInsiderExecutionHolding.SatisfyEmployeeTax,
+                Amount = 1234
+            };
+
+            var serialized = JsonConvert.SerializeObject(item, settings);
+            var deserialized = JsonConvert.DeserializeObject<SmartInsiderTransaction>(serialized, settings);
+
+            Assert.AreEqual(symbol, deserialized.Symbol);
+            Assert.AreEqual("123", deserialized.TransactionID);
+            Assert.AreEqual(SmartInsiderEventType.Transaction, deserialized.EventType);
+            Assert.AreEqual(SmartInsiderExecution.Market, deserialized.Execution);
+            Assert.AreEqual(SmartInsiderExecutionEntity.Issuer, deserialized.ExecutionEntity);
+            Assert.AreEqual(SmartInsiderExecutionHolding.SatisfyEmployeeTax, deserialized.ExecutionHolding);
+            Assert.AreEqual(1234, deserialized.Amount);
+            Assert.AreEqual(time, deserialized.LastUpdate);
+            Assert.AreEqual(time, deserialized.Time);
+            Assert.AreEqual(time, deserialized.EndTime);
         }
     }
 }
