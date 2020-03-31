@@ -203,15 +203,25 @@ namespace QuantConnect
         /// Returns a view object that displays a list of dictionary's (Symbol, value) tuple pairs.
         /// </summary>
         /// <returns>Returns a view object that displays a list of a given dictionary's (Symbol, value) tuple pair.</returns>
-        public IEnumerable<PyTuple> items()
+        public PyList items()
         {
-            foreach (var key in GetKeys)
+            using (Py.GIL())
             {
-                object data = this[key];
-                using (Py.GIL())
+                var pyList = new PyList();
+                foreach (var key in GetKeys)
                 {
-                    yield return new PyTuple(new PyObject[] { key.ToPython(), data.ToPython() });
+                    using (var pyKey = key.ToPython())
+                    {
+                        using (var pyValue = this[key].ToPython())
+                        {
+                            using (var pyObject = new PyTuple(new PyObject[] { pyKey, pyValue }))
+                            {
+                                pyList.Append(pyObject);
+                            }
+                        }
+                    }
                 }
+                return pyList;
             }
         }
 

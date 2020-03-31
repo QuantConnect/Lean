@@ -14,7 +14,6 @@
 */
 
 using Python.Runtime;
-using System.Collections.Generic;
 
 namespace QuantConnect.Interfaces
 {
@@ -71,7 +70,7 @@ namespace QuantConnect.Interfaces
         /// Returns a view object that displays a list of dictionary's (key, value) tuple pairs.
         /// </summary>
         /// <returns>Returns a view object that displays a list of a given dictionary's (key, value) tuple pair.</returns>
-        IEnumerable<PyTuple> items();
+        PyList items();
 
         /// <summary>
         /// Returns a view object that displays a list of all the keys in the dictionary
