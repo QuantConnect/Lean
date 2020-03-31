@@ -202,7 +202,7 @@ namespace QuantConnect.Securities
         /// <returns>
         /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
-        protected override IEnumerable<Symbol> GetKeys => Keys;
+        protected override IEnumerable<Symbol> GetKeys => _securityManager.Select(pair => pair.Key);
 
         /// <summary>
         /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
@@ -210,7 +210,7 @@ namespace QuantConnect.Securities
         /// <returns>
         /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
-        protected override IEnumerable<Security> GetValues => Values;
+        protected override IEnumerable<Security> GetValues => _securityManager.Select(pair => pair.Value);
 
         /// <summary>
         /// Get a list of the security objects for this collection.

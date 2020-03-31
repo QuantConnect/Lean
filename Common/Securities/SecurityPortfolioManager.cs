@@ -207,7 +207,7 @@ namespace QuantConnect.Securities
         /// <returns>
         /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
-        protected override IEnumerable<Symbol> GetKeys => Keys;
+        protected override IEnumerable<Symbol> GetKeys => Securities.Select(pair => pair.Key);
 
         /// <summary>
         /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
@@ -215,7 +215,7 @@ namespace QuantConnect.Securities
         /// <returns>
         /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
-        protected override IEnumerable<SecurityHolding> GetValues => Values;
+        protected override IEnumerable<SecurityHolding> GetValues => Securities.Select(pair => pair.Value.Holdings);
 
         /// <summary>
         /// Symbol keys collection of the underlying assets in the portfolio.
