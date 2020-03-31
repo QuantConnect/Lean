@@ -46,6 +46,11 @@ namespace QuantConnect.Packets
         public IDictionary<int, Order> Orders { get; set; }
 
         /// <summary>
+        /// Order events updates since the last result packet
+        /// </summary>
+        public List<OrderEvent> OrderEvents { get; set; }
+
+        /// <summary>
         /// Statistics information sent during the algorithm operations.
         /// </summary>
         public IDictionary<string, string> Statistics { get; set; }

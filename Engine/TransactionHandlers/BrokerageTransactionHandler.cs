@@ -942,6 +942,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 // set the status of our order object based on the fill event
                 order.Status = fill.Status;
 
+                fill.Id = order.GetNewId();
 
                 // set the modified time of the order to the fill's timestamp
                 switch (fill.Status)
@@ -968,6 +969,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         }
                         break;
 
+                    case OrderStatus.UpdateSubmitted:
                     case OrderStatus.Submitted:
                         // submit events after the initial submission are all order updates
                         if (ticket.UpdateRequests.Count > 0)
@@ -977,10 +979,25 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         break;
                 }
 
-                // save that the order event took place, we're initializing the list with a capacity of 2 to reduce number of mallocs
-                //these hog memory
-                //List<OrderEvent> orderEvents = _orderEvents.GetOrAdd(orderEvent.OrderId, i => new List<OrderEvent>(2));
-                //orderEvents.Add(orderEvent);
+                // lets always set current Quantity, Limit and Stop prices in the order event so that it's easier for consumers
+                // to know the current state and detect any update
+                fill.Quantity = order.Quantity;
+                switch (order.Type)
+                {
+                    case OrderType.Limit:
+                        var limit = order as LimitOrder;
+                        fill.LimitPrice = limit.LimitPrice;
+                        break;
+                    case OrderType.StopMarket:
+                        var marketOrder = order as StopMarketOrder;
+                        fill.StopPrice = marketOrder.StopPrice;
+                        break;
+                    case OrderType.StopLimit:
+                        var stopLimitOrder = order as StopLimitOrder;
+                        fill.LimitPrice = stopLimitOrder.LimitPrice;
+                        fill.StopPrice = stopLimitOrder.StopPrice;
+                        break;
+                }
 
                 //Apply the filled order to our portfolio:
                 if (fill.Status == OrderStatus.Filled || fill.Status == OrderStatus.PartiallyFilled)

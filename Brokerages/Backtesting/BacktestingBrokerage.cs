@@ -187,7 +187,9 @@ namespace QuantConnect.Brokerages.Backtesting
             var updated = new OrderEvent(order,
                     Algorithm.UtcTime,
                     OrderFee.Zero)
-                { Status = OrderStatus.Submitted };
+            {
+                Status = OrderStatus.UpdateSubmitted
+            };
             OnOrderEvent(updated);
 
             return true;

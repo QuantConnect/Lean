@@ -969,7 +969,7 @@ namespace QuantConnect.Brokerages.Tradier
 
             // success
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
-                { Status = OrderStatus.Submitted});
+                { Status = OrderStatus.UpdateSubmitted });
 
             // if we have contingents, update them as well
             if (contingent != null)

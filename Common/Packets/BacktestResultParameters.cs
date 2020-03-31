@@ -45,6 +45,7 @@ namespace QuantConnect.Packets
             IDictionary<string, string> statistics,
             IDictionary<string, string> runtimeStatistics,
             Dictionary<string, AlgorithmPerformance> rollingWindow,
+            List<OrderEvent> orderEvents,
             AlgorithmPerformance totalPerformance = null,
             AlphaRuntimeStatistics alphaRuntimeStatistics = null)
         {
@@ -54,6 +55,7 @@ namespace QuantConnect.Packets
             Statistics = statistics;
             RuntimeStatistics = runtimeStatistics;
             RollingWindow = rollingWindow;
+            OrderEvents = orderEvents;
             TotalPerformance = totalPerformance;
             AlphaRuntimeStatistics = alphaRuntimeStatistics;
         }

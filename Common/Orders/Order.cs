@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
@@ -28,6 +29,7 @@ namespace QuantConnect.Orders
     /// </summary>
     public abstract class Order
     {
+        private volatile int _incrementalId;
         private decimal _quantity;
         private decimal _price;
 
@@ -245,6 +247,15 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="security">The security matching this order's symbol</param>
         protected abstract decimal GetValueImpl(Security security);
+
+        /// <summary>
+        /// Gets a new unique incremental id for this order
+        /// </summary>
+        /// <returns>Returns a new id for this order</returns>
+        internal int GetNewId()
+        {
+            return Interlocked.Increment(ref _incrementalId);
+        }
 
         /// <summary>
         /// Modifies the state of this order to match the update request

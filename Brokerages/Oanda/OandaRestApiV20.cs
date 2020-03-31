@@ -237,6 +237,8 @@ namespace QuantConnect.Brokerages.Oanda
             // replace the brokerage order id
             order.BrokerId[0] = response.Data.OrderCreateTransaction.Id;
 
+            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.UpdateSubmitted });
+
             // check if the updated (marketable) order was filled
             if (response.Data.OrderFillTransaction != null)
             {

@@ -224,6 +224,7 @@ namespace QuantConnect.Packets
             Statistics = parameters.Statistics;
             RuntimeStatistics = parameters.RuntimeStatistics;
             RollingWindow = parameters.RollingWindow;
+            OrderEvents = parameters.OrderEvents;
             TotalPerformance = parameters.TotalPerformance;
             AlphaRuntimeStatistics = parameters.AlphaRuntimeStatistics;
         }

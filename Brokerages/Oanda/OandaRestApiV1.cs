@@ -239,7 +239,10 @@ namespace QuantConnect.Brokerages.Oanda
             // we need the brokerage order id in order to perform an update
             PopulateOrderRequestParameters(order, requestParams);
 
-            UpdateOrder(Parse.Long(order.BrokerId.First()), requestParams);
+            if (UpdateOrder(Parse.Long(order.BrokerId.First()), requestParams))
+            {
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.UpdateSubmitted });
+            }
 
             return true;
         }
@@ -924,7 +927,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         /// <param name="orderId">the identifier of the order to update</param>
         /// <param name="requestParams">the parameters to update (name, value pairs)</param>
-        private void UpdateOrder(long orderId, Dictionary<string, string> requestParams)
+        private bool UpdateOrder(long orderId, Dictionary<string, string> requestParams)
         {
             var orderRequest = EndpointResolver.ResolveEndpoint(Environment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
 
@@ -933,6 +936,7 @@ namespace QuantConnect.Brokerages.Oanda
             {
                 var requestString = EndpointResolver.ResolveEndpoint(Environment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
                 MakeRequestWithBody<RestV1.DataType.Order>(requestString, "PATCH", requestParams);
+                return true;
             }
             else
             {
@@ -943,6 +947,7 @@ namespace QuantConnect.Brokerages.Oanda
                     Message = $"Order currently does not exist with order id: {orderId.ToStringInvariant()}."
                 });
             }
+            return false;
         }
 
         /// <summary>
