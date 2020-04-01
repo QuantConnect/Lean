@@ -1758,6 +1758,28 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Converts an IEnumerable to a PyList
+        /// </summary>
+        /// <param name="enumerable">IEnumerable object to convert</param>
+        /// <returns>PyList</returns>
+        public static PyList ToPyList(this IEnumerable enumerable)
+        {
+            using (Py.GIL())
+            {
+                var pyList = new PyList();
+                foreach (var item in enumerable)
+                {
+                    using (var pyObject = item.ToPython())
+                    {
+                        pyList.Append(pyObject);
+                    }
+                }
+
+                return pyList;
+            }
+        }
+
+        /// <summary>
         /// Converts the numeric value of one or more enumerated constants to an equivalent enumerated string.
         /// </summary>
         /// <param name="value">Numeric value</param>

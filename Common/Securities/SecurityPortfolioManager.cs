@@ -31,7 +31,7 @@ namespace QuantConnect.Securities
     /// Portfolio manager class groups popular properties and makes them accessible through one interface.
     /// It also provide indexing by the vehicle symbol to get the Security.Holding objects.
     /// </summary>
-    public class SecurityPortfolioManager : IDictionary<Symbol, SecurityHolding>, ISecurityProvider
+    public class SecurityPortfolioManager : ExtendedDictionary<SecurityHolding>, IDictionary<Symbol, SecurityHolding>, ISecurityProvider
     {
         // flips to true when the user called SetCash(), if true, SetAccountCurrency will throw
         private bool _setAccountCurrencyWasCalled;
@@ -118,7 +118,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public void Clear() { throw new NotImplementedException("Portfolio object is an adaptor for Security Manager and cannot be cleared."); }
+        public override void Clear() { throw new NotImplementedException("Portfolio object is an adaptor for Security Manager and cannot be cleared."); }
 
         /// <summary>
         /// Remove this keyvalue pair from the portfolio.
@@ -134,7 +134,7 @@ namespace QuantConnect.Securities
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <param name="symbol">Symbol of dictionary</param>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public bool Remove(Symbol symbol) { throw new NotImplementedException("Portfolio object is an adaptor for Security Manager and objects cannot be removed."); }
+        public override bool Remove(Symbol symbol) { throw new NotImplementedException("Portfolio object is an adaptor for Security Manager and objects cannot be removed."); }
 
         /// <summary>
         /// Check if the portfolio contains this symbol string.
@@ -173,7 +173,7 @@ namespace QuantConnect.Securities
         /// Check if the underlying securities array is read only.
         /// </summary>
         /// <remarks>IDictionary implementation calling the underlying Securities collection</remarks>
-        public bool IsReadOnly
+        public override bool IsReadOnly
         {
             get
             {
@@ -200,6 +200,22 @@ namespace QuantConnect.Securities
                 i++;
             }
         }
+
+        /// <summary>
+        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </returns>
+        protected override IEnumerable<Symbol> GetKeys => Securities.Select(pair => pair.Key);
+
+        /// <summary>
+        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </returns>
+        protected override IEnumerable<SecurityHolding> GetValues => Securities.Select(pair => pair.Value.Holdings);
 
         /// <summary>
         /// Symbol keys collection of the underlying assets in the portfolio.
@@ -233,7 +249,7 @@ namespace QuantConnect.Securities
         /// <param name="holding">Holdings object of this security</param>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Boolean true if successful locating and setting the holdings object</returns>
-        public bool TryGetValue(Symbol symbol, out SecurityHolding holding)
+        public override bool TryGetValue(Symbol symbol, out SecurityHolding holding)
         {
             Security security;
             var success = Securities.TryGetValue(symbol, out security);
@@ -506,21 +522,10 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="symbol">Symbol object indexer</param>
         /// <returns>SecurityHolding class from the algorithm securities</returns>
-        public SecurityHolding this[Symbol symbol]
+        public override SecurityHolding this[Symbol symbol]
         {
             get { return Securities[symbol].Holdings; }
             set { Securities[symbol].Holdings = value; }
-        }
-
-        /// <summary>
-        /// Indexer for the PortfolioManager class to access the underlying security holdings objects.
-        /// </summary>
-        /// <param name="ticker">string ticker symbol indexer</param>
-        /// <returns>SecurityHolding class from the algorithm securities</returns>
-        public SecurityHolding this[string ticker]
-        {
-            get { return Securities[ticker].Holdings; }
-            set { Securities[ticker].Holdings = value; }
         }
 
         /// <summary>

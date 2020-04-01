@@ -27,7 +27,7 @@ namespace QuantConnect.Data
     /// <summary>
     /// Provides a data structure for all of an algorithm's data at a single time step
     /// </summary>
-    public class Slice : IEnumerable<KeyValuePair<Symbol, BaseData>>
+    public class Slice : ExtendedDictionary<dynamic>, IEnumerable<KeyValuePair<Symbol, BaseData>>
     {
         private readonly Ticks _ticks;
         private readonly TradeBars _bars;
@@ -146,7 +146,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the number of symbols held in this slice
         /// </summary>
-        public int Count
+        public virtual int Count
         {
             get { return _data.Value.Count; }
         }
@@ -154,15 +154,31 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets all the symbols in this slice
         /// </summary>
-        public IReadOnlyList<Symbol> Keys
+        public virtual IReadOnlyList<Symbol> Keys
         {
             get { return new List<Symbol>(_data.Value.Keys); }
         }
 
         /// <summary>
+        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </returns>
+        protected override IEnumerable<Symbol> GetKeys => _data.Value.Keys;
+
+        /// <summary>
+        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </returns>
+        protected override IEnumerable<dynamic> GetValues => GetKeyValuePairEnumerable().Select(data => (dynamic)data.Value);
+
+        /// <summary>
         /// Gets a list of all the data in this slice
         /// </summary>
-        public IReadOnlyList<BaseData> Values
+        public virtual IReadOnlyList<BaseData> Values
         {
             get { return GetKeyValuePairEnumerable().Select(x => x.Value).ToList(); }
         }
@@ -274,7 +290,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="symbol">The data's symbols</param>
         /// <returns>The data for the specified symbol</returns>
-        public dynamic this[Symbol symbol]
+        public override dynamic this[Symbol symbol]
         {
             get
             {
@@ -396,7 +412,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="symbol">The symbol we seek data for</param>
         /// <returns>True if this instance contains data for the symbol, false otherwise</returns>
-        public bool ContainsKey(Symbol symbol)
+        public virtual bool ContainsKey(Symbol symbol)
         {
             return _data.Value.ContainsKey(symbol);
         }
@@ -407,7 +423,7 @@ namespace QuantConnect.Data
         /// <param name="symbol">The symbol we want data for</param>
         /// <param name="data">The data for the specifed symbol, or null if no data was found</param>
         /// <returns>True if data was found, false otherwise</returns>
-        public bool TryGetValue(Symbol symbol, out dynamic data)
+        public override bool TryGetValue(Symbol symbol, out dynamic data)
         {
             data = null;
             SymbolData symbolData;

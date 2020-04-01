@@ -22,7 +22,7 @@ namespace QuantConnect.Data.Market
     /// <summary>
     /// Provides a base class for types holding base data instances keyed by symbol
     /// </summary>
-    public class DataDictionary<T> : IDictionary<Symbol, T>
+    public class DataDictionary<T> : ExtendedDictionary<T>, IDictionary<Symbol, T>
     {
         // storage for the data
         private readonly IDictionary<Symbol, T> _data = new Dictionary<Symbol, T>();
@@ -76,7 +76,6 @@ namespace QuantConnect.Data.Market
         {
             return _data.GetEnumerator();
         }
-
         /// <summary>
         /// Returns an enumerator that iterates through a collection.
         /// </summary>
@@ -86,7 +85,7 @@ namespace QuantConnect.Data.Market
         /// <filterpriority>2</filterpriority>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable) _data).GetEnumerator();
+            return ((IEnumerable)_data).GetEnumerator();
         }
 
         /// <summary>
@@ -102,7 +101,7 @@ namespace QuantConnect.Data.Market
         /// Removes all items from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
         /// </summary>
         /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only. </exception>
-        public void Clear()
+        public override void Clear()
         {
             _data.Clear();
         }
@@ -157,7 +156,7 @@ namespace QuantConnect.Data.Market
         /// <returns>
         /// true if the <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only; otherwise, false.
         /// </returns>
-        public bool IsReadOnly
+        public override bool IsReadOnly
         {
             get { return _data.IsReadOnly; }
         }
@@ -190,7 +189,7 @@ namespace QuantConnect.Data.Market
         /// true if the element is successfully removed; otherwise, false.  This method also returns false if <paramref name="key"/> was not found in the original <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
         /// <param name="key">The key of the element to remove.</param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
-        public bool Remove(Symbol key)
+        public override bool Remove(Symbol key)
         {
             return _data.Remove(key);
         }
@@ -202,7 +201,7 @@ namespace QuantConnect.Data.Market
         /// true if the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/> contains an element with the specified key; otherwise, false.
         /// </returns>
         /// <param name="key">The key whose value to get.</param><param name="value">When this method returns, the value associated with the specified key, if the key is found; otherwise, the default value for the type of the <paramref name="value"/> parameter. This parameter is passed uninitialized.</param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception>
-        public bool TryGetValue(Symbol key, out T value)
+        public override bool TryGetValue(Symbol key, out T value)
         {
             return _data.TryGetValue(key, out value);
         }
@@ -217,7 +216,7 @@ namespace QuantConnect.Data.Market
         /// <exception cref="T:System.ArgumentNullException"><paramref name="symbol"/> is null.</exception>
         /// <exception cref="T:System.Collections.Generic.KeyNotFoundException">The property is retrieved and <paramref name="symbol"/> is not found.</exception>
         /// <exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
-        public T this[Symbol symbol]
+        public override T this[Symbol symbol]
         {
             get
             {
@@ -231,38 +230,6 @@ namespace QuantConnect.Data.Market
             set
             {
                 _data[symbol] = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the element with the specified key.
-        /// </summary>
-        /// <returns>
-        /// The element with the specified key.
-        /// </returns>
-        /// <param name="ticker">The key of the element to get or set.</param>
-        /// <exception cref="T:System.ArgumentNullException"><paramref name="ticker"/> is null.</exception>
-        /// <exception cref="T:System.Collections.Generic.KeyNotFoundException">The property is retrieved and <paramref name="ticker"/> is not found.</exception>
-        /// <exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
-        public T this[string ticker]
-        {
-            get
-            {
-                Symbol symbol;
-                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
-                {
-                    throw new KeyNotFoundException($"'{ticker}' wasn't found in the {GetType().GetBetterTypeName()} object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{ticker}\")");
-                }
-                return this[symbol];
-            }
-            set
-            {
-                Symbol symbol;
-                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
-                {
-                    throw new KeyNotFoundException($"'{ticker}' wasn't found in the {GetType().GetBetterTypeName()} object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{ticker}\")");
-                }
-                this[symbol] = value;
             }
         }
 
@@ -287,6 +254,22 @@ namespace QuantConnect.Data.Market
         {
             get { return _data.Values; }
         }
+
+        /// <summary>
+        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </returns>
+        protected override IEnumerable<Symbol> GetKeys => Keys;
+
+        /// <summary>
+        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </returns>
+        protected override IEnumerable<T> GetValues => Values;
 
         /// <summary>
         /// Gets the value associated with the specified key.

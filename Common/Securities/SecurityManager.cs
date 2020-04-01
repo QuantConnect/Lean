@@ -28,7 +28,7 @@ namespace QuantConnect.Securities
     /// Enumerable security management class for grouping security objects into an array and providing any common properties.
     /// </summary>
     /// <remarks>Implements IDictionary for the index searching of securities by symbol</remarks>
-    public class SecurityManager : IDictionary<Symbol, Security>, INotifyCollectionChanged
+    public class SecurityManager : ExtendedDictionary<Security>, IDictionary<Symbol, Security>, INotifyCollectionChanged
     {
         /// <summary>
         /// Event fired when a security is added or removed from this collection
@@ -98,7 +98,7 @@ namespace QuantConnect.Securities
         /// Clear the securities array to delete all the portfolio and asset information.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        public void Clear()
+        public override void Clear()
         {
             _securityManager.Clear();
         }
@@ -143,12 +143,12 @@ namespace QuantConnect.Securities
         public int Count => _securityManager.Skip(0).Count();
 
         /// <summary>
-        /// Flag indicating if the internal arrray is read only.
+        /// Flag indicating if the internal array is read only.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        public bool IsReadOnly
+        public override bool IsReadOnly
         {
-            get { return false;  }
+            get { return false; }
         }
 
         /// <summary>
@@ -167,7 +167,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="symbol">Symbol we're searching for</param>
         /// <returns>true success</returns>
-        public bool Remove(Symbol symbol)
+        public override bool Remove(Symbol symbol)
         {
             Security security;
             if (_securityManager.TryRemove(symbol, out security))
@@ -191,10 +191,26 @@ namespace QuantConnect.Securities
         /// <param name="security">Output Security object</param>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>True on successfully locating the security object</returns>
-        public bool TryGetValue(Symbol symbol, out Security security)
+        public override bool TryGetValue(Symbol symbol, out Security security)
         {
             return _securityManager.TryGetValue(symbol, out security);
         }
+
+        /// <summary>
+        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </returns>
+        protected override IEnumerable<Symbol> GetKeys => _securityManager.Select(pair => pair.Key);
+
+        /// <summary>
+        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </returns>
+        protected override IEnumerable<Security> GetValues => _securityManager.Select(pair => pair.Value);
 
         /// <summary>
         /// Get a list of the security objects for this collection.
@@ -228,7 +244,7 @@ namespace QuantConnect.Securities
         /// <remarks>IDictionary implementation</remarks>
         /// <param name="symbol">Symbol object indexer</param>
         /// <returns>Security</returns>
-        public Security this[Symbol symbol]
+        public override Security this[Symbol symbol]
         {
             get
             {
@@ -256,41 +272,12 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Indexer method for the security manager to access the securities objects by their symbol.
-        /// </summary>
-        /// <remarks>IDictionary implementation</remarks>
-        /// <param name="ticker">string ticker symbol indexer</param>
-        /// <returns>Security</returns>
-        public Security this[string ticker]
-        {
-            get
-            {
-                Symbol symbol;
-                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
-                {
-                    throw new KeyNotFoundException($"This asset symbol ({ticker}) was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"{ticker}\")'");
-                }
-                return this[symbol];
-            }
-            set
-            {
-                Symbol symbol;
-                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
-                {
-                    throw new KeyNotFoundException($"This asset symbol ({ticker}) was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"{ticker}\")'");
-                }
-                this[symbol] = value;
-            }
-        }
-
-        /// <summary>
         /// Event invocator for the <see cref="CollectionChanged"/> event
         /// </summary>
         /// <param name="changedEventArgs">Event arguments for the <see cref="CollectionChanged"/> event</param>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs changedEventArgs)
         {
-            var handler = CollectionChanged;
-            if (handler != null) handler(this, changedEventArgs);
+            CollectionChanged?.Invoke(this, changedEventArgs);
         }
 
         /// <summary>
