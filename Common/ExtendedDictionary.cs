@@ -315,7 +315,7 @@ namespace QuantConnect
         /// The update() method adds element(s) to the dictionary if the Symbol is not in the dictionary.If the Symbol is in the dictionary, it updates the Symbol with the new value.
         /// </summary>
         /// <param name="other">Takes either a dictionary or an iterable object of Symbol/value pairs (generally tuples).</param>
-        public void update(PyDict other)
+        public void update(PyObject other)
         {
             if (IsReadOnly)
             {

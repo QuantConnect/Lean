@@ -581,7 +581,7 @@ def Test(slice, symbol, default_value):
         }
 
         [Test]
-        public void PythonSlice_update()
+        public void PythonSlice_update_fails()
         {
             using (Py.GIL())
             {
@@ -592,10 +592,33 @@ AddReference(""QuantConnect.Common"")
 from QuantConnect import *
 
 def Test(slice, symbol):
-    item = {symbol, 1 }
+    item = { symbol: 1 }
     slice.update(item)").GetAttr("Test");
 
                 Assert.Throws<PythonException>(() => test(GetPythonSlice(), Symbols.SPY), "Slice is read-only: cannot update the collection");
+            }
+        }
+
+        [Test]
+        public void PythonSlice_update_success()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+from QuantConnect.Data.Market import TradeBar
+
+def Test(slice, symbol, bar):
+    item = { symbol: bar }
+    slice.Bars.update(item)").GetAttr("Test");
+
+                var expected = new TradeBar();
+                var pythonSlice = GetPythonSlice();
+                Assert.DoesNotThrow(() => test(pythonSlice, Symbols.SPY, expected));
+                Assert.AreEqual(expected, pythonSlice.Bars[Symbols.SPY]);
             }
         }
 

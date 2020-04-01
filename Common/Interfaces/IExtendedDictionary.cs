@@ -126,7 +126,7 @@ namespace QuantConnect.Interfaces
         /// The update() method adds element(s) to the dictionary if the key is not in the dictionary.If the key is in the dictionary, it updates the key with the new value.
         /// </summary>
         /// <param name="other">Takes either a dictionary or an iterable object of key/value pairs (generally tuples).</param>
-        void update(PyDict other);
+        void update(PyObject other);
 
         /// <summary>
         /// Returns a view object that displays a list of all the values in the dictionary.
