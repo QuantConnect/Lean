@@ -20,10 +20,13 @@ using Newtonsoft.Json;
 using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Packets;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 
@@ -32,6 +35,39 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class ExtensionsTests
     {
+        [Test]
+        public void BatchAlphaResultPacket()
+        {
+            var btcusd = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
+            var insights = new List<Insight>
+            {
+                new Insight(DateTime.UtcNow, btcusd, Time.OneMillisecond, InsightType.Price, InsightDirection.Up, 1, 2, "sourceModel1"),
+                new Insight(DateTime.UtcNow, btcusd, Time.OneSecond, InsightType.Price, InsightDirection.Down, 1, 2, "sourceModel1")
+            };
+            var orderEvents = new List<OrderEvent>
+            {
+                new OrderEvent(1, btcusd, DateTime.UtcNow, OrderStatus.Submitted, OrderDirection.Buy, 0, 0, OrderFee.Zero, message: "OrderEvent1"),
+                new OrderEvent(1, btcusd, DateTime.UtcNow, OrderStatus.Filled, OrderDirection.Buy, 1, 1000, OrderFee.Zero, message: "OrderEvent2")
+            };
+            var orders = new List<Order> { new MarketOrder(btcusd, 1000, DateTime.UtcNow, "ExpensiveOrder") { Id = 1 } };
+
+            var packet1 = new AlphaResultPacket("1", 1, insights: insights);
+            var packet2 = new AlphaResultPacket("1", 1, orders: orders);
+            var packet3 = new AlphaResultPacket("1", 1, orderEvents: orderEvents);
+
+            var result = new List<AlphaResultPacket> { packet1, packet2, packet3 }.Batch();
+
+            Assert.AreEqual(2, result.Insights.Count);
+            Assert.AreEqual(2, result.OrderEvents.Count);
+            Assert.AreEqual(1, result.Orders.Count);
+
+            Assert.IsTrue(result.Insights.SequenceEqual(insights));
+            Assert.IsTrue(result.OrderEvents.SequenceEqual(orderEvents));
+            Assert.IsTrue(result.Orders.SequenceEqual(orders));
+
+            Assert.IsNull(new List<AlphaResultPacket>().Batch());
+        }
+
         [Test]
         public void SeriesIsNotEmpty()
         {

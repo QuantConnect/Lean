@@ -23,13 +23,6 @@ namespace QuantConnect.Tests.Common.Securities
     public class CashAmountTests
     {
         [Test]
-        public void DoesNotInitializeWithInvalidArguments()
-        {
-            Assert.Throws<ArgumentNullException>(() => new CashAmount(100m, null));
-            Assert.Throws<ArgumentNullException>(() => new CashAmount(100m, ""));
-        }
-
-        [Test]
         public void InitializesProperlyUsingAccountCurrency()
         {
             var cashAmount = new CashAmount(1000m, Currencies.USD);

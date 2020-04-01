@@ -25,6 +25,7 @@ using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Alphas;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Tests.Engine.Alphas
@@ -79,7 +80,7 @@ namespace QuantConnect.Tests.Engine.Alphas
             var messagingHandler = new Mock<IMessagingHandler>();
             var api = new Mock<IApi>();
 
-            _defaultAlphaHandler.Initialize(packet, algorithm.Object, messagingHandler.Object, api.Object);
+            _defaultAlphaHandler.Initialize(packet, algorithm.Object, messagingHandler.Object, api.Object, new BacktestingTransactionHandler());
             
             // Act
             _defaultAlphaHandler.ExecuteStoreInsights();

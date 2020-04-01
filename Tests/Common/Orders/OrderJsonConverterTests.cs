@@ -263,6 +263,69 @@ namespace QuantConnect.Tests.Common.Orders
             TestOrderType(actual2);
         }
 
+        [TestCase("Day")]
+        [TestCase("GoodTilCanceled")]
+        [TestCase("GoodTilDate")]
+        public void RoundTripUsingJsonConverter(string  timeInForceStr)
+        {
+            TimeInForce timeInForce = null;
+            switch (timeInForceStr)
+            {
+                case "Day":
+                    timeInForce = TimeInForce.Day;
+                    break;
+                case "GoodTilCanceled":
+                    timeInForce = TimeInForce.GoodTilCanceled;
+                    break;
+                case "GoodTilDate":
+                    timeInForce = TimeInForce.GoodTilDate(DateTime.UtcNow);
+                    break;
+            }
+            var expected = new MarketOnOpenOrder(Symbol.Create("SPY", SecurityType.Equity, Market.USA), 1m, DateTime.UtcNow)
+            {
+                Id = 1,
+                ContingentId = 0,
+                BrokerId = new List<string> { "1" },
+                Price = 321.66m,
+                PriceCurrency = "USD",
+                LastFillTime = DateTime.UtcNow,
+                LastUpdateTime = DateTime.UtcNow,
+                CanceledTime = DateTime.UtcNow,
+                Status = OrderStatus.Filled,
+                OrderSubmissionData = new OrderSubmissionData(321.47m, 321.48m, 321.49m),
+                Properties = { TimeInForce = timeInForce }
+            };
+
+            var converter = new OrderJsonConverter();
+            var serialized = JsonConvert.SerializeObject(expected, converter);
+            var actual = JsonConvert.DeserializeObject<Order>(serialized, converter);
+
+            CollectionAssert.AreEqual(expected.BrokerId, actual.BrokerId);
+            Assert.AreEqual(expected.ContingentId, actual.ContingentId);
+            Assert.AreEqual(expected.Direction, actual.Direction);
+            Assert.AreEqual(expected.TimeInForce.GetType(), actual.TimeInForce.GetType());
+            Assert.AreEqual(expected.Id, actual.Id);
+            Assert.AreEqual(expected.Price, actual.Price);
+            Assert.AreEqual(expected.PriceCurrency, actual.PriceCurrency);
+            Assert.AreEqual(expected.SecurityType, actual.SecurityType);
+            Assert.AreEqual(expected.Status, actual.Status);
+            Assert.AreEqual(expected.Symbol, actual.Symbol);
+            Assert.AreEqual(expected.Tag, actual.Tag);
+            Assert.AreEqual(expected.Time, actual.Time);
+            Assert.AreEqual(expected.CreatedTime, actual.CreatedTime);
+            Assert.AreEqual(expected.LastFillTime, actual.LastFillTime);
+            Assert.AreEqual(expected.LastUpdateTime, actual.LastUpdateTime);
+            Assert.AreEqual(expected.CanceledTime, actual.CanceledTime);
+            Assert.AreEqual(expected.Type, actual.Type);
+            Assert.AreEqual(expected.Value, actual.Value);
+            Assert.AreEqual(expected.Quantity, actual.Quantity);
+            Assert.AreEqual(expected.TimeInForce.GetType(), actual.TimeInForce.GetType());
+            Assert.AreEqual(expected.Symbol.ID.Market, actual.Symbol.ID.Market);
+            Assert.AreEqual(expected.OrderSubmissionData.AskPrice, actual.OrderSubmissionData.AskPrice);
+            Assert.AreEqual(expected.OrderSubmissionData.BidPrice, actual.OrderSubmissionData.BidPrice);
+            Assert.AreEqual(expected.OrderSubmissionData.LastPrice, actual.OrderSubmissionData.LastPrice);
+        }
+
         [Test]
         public void DeserializesOldSymbol()
         {

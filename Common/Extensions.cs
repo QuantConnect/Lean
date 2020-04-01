@@ -30,12 +30,14 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NodaTime;
 using Python.Runtime;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Packets;
 using QuantConnect.Python;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
@@ -52,6 +54,58 @@ namespace QuantConnect
     {
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
+
+        /// <summary>
+        /// Helper method to batch a collection of <see cref="AlphaResultPacket"/> into 1 single instance.
+        /// Will return null if the provided list is empty
+        /// </summary>
+        public static AlphaResultPacket Batch(this List<AlphaResultPacket> resultPackets)
+        {
+            AlphaResultPacket resultPacket = null;
+
+            // batch result packets into a single packet
+            if (resultPackets.Count > 0)
+            {
+                // we will batch results into the first packet
+                resultPacket = resultPackets[0];
+                for (var i = 1; i < resultPackets.Count; i++)
+                {
+                    // only batch current packet if there actually is data
+                    if (resultPackets[i].Insights != null)
+                    {
+                        if (resultPacket.Insights == null)
+                        {
+                            // initialize the collection if it isn't there
+                            resultPacket.Insights = new List<Insight>();
+                        }
+                        resultPacket.Insights.AddRange(resultPackets[i].Insights);
+                    }
+
+                    // only batch current packet if there actually is data
+                    if (resultPackets[i].OrderEvents != null)
+                    {
+                        if (resultPacket.OrderEvents == null)
+                        {
+                            // initialize the collection if it isn't there
+                            resultPacket.OrderEvents = new List<OrderEvent>();
+                        }
+                        resultPacket.OrderEvents.AddRange(resultPackets[i].OrderEvents);
+                    }
+
+                    // only batch current packet if there actually is data
+                    if (resultPackets[i].Orders != null)
+                    {
+                        if (resultPacket.Orders == null)
+                        {
+                            // initialize the collection if it isn't there
+                            resultPacket.Orders = new List<Order>();
+                        }
+                        resultPacket.Orders.AddRange(resultPackets[i].Orders);
+                    }
+                }
+            }
+            return resultPacket;
+        }
 
         /// <summary>
         /// Helper method to safely stop a running thread

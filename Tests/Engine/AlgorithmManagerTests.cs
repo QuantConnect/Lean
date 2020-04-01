@@ -98,7 +98,7 @@ namespace QuantConnect.Tests.Engine
         {
             public bool IsActive { get; }
             public AlphaRuntimeStatistics RuntimeStatistics { get; }
-            public void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm, IMessagingHandler messagingHandler, IApi api)
+            public void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler)
             {
             }
 
