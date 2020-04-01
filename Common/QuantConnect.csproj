@@ -185,7 +185,6 @@
     <Compile Include="AlgorithmSettings.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Analysis\IInsightManager.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Analysis\ReadOnlySecurityValuesCollection.cs" />
-    <Compile Include="Algorithm\Framework\Alphas\OrderBasedInsightGenerator.cs" />
     <Compile Include="Algorithm\Framework\Alphas\IInsightManagerExtension.cs" />
     <Compile Include="Algorithm\Framework\Alphas\InsightCollection.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Serialization\InsightJsonConverter.cs" />

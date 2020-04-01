@@ -273,7 +273,6 @@
     <Compile Include="Algorithm\Framework\Alphas\EmaCrossAlphaModelTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\MacdAlphaModelTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\BasePairsTradingAlphaModelTests.cs" />
-    <Compile Include="Algorithm\Framework\Alphas\OrderBasedInsightGeneratorTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\RsiAlphaModelTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Serialization\AlphaRuntimeStatisticsTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Serialization\InsightJsonConverterTests.cs" />

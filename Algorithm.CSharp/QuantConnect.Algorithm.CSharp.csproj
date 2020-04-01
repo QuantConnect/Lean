@@ -225,11 +225,9 @@
     <Compile Include="ConvertToFrameworkAlgorithm.cs" />
     <Compile Include="HistoryWithSymbolChangesRegressionAlgorithm.cs" />
     <Compile Include="FeeModelNotUsingAccountCurrency.cs" />
-    <Compile Include="InvalidEmitInsightsAlgorithm.cs" />
     <Compile Include="InsightWeightingFrameworkAlgorithm.cs" />
     <Compile Include="MaximumPortfolioDrawdownFrameworkAlgorithm.cs" />
     <Compile Include="CompositeRiskManagementModelFrameworkAlgorithm.cs" />
-    <Compile Include="OrderBasedInsightGeneratedAlgorithm.cs" />
     <Compile Include="ProcessSplitSymbolsRegressionAlgorithm.cs" />
     <Compile Include="RawPricesUniverseRegressionAlgorithm.cs" />
     <Compile Include="SetAccountCurrencyCashBuyingPowerModelRegressionAlgorithm.cs" />
