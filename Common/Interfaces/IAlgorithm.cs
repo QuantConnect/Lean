@@ -696,12 +696,5 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="objectStore">The object store</param>
         void SetObjectStore(IObjectStore objectStore);
-
-        /// <summary>
-        /// Sets the order event provider
-        /// </summary>
-        /// <param name="newOrderEvent">The order event provider</param>
-        /// <remarks>Will be called before the <see cref="SecurityPortfolioManager"/></remarks>
-        void SetOrderEventProvider(IOrderEventProvider newOrderEvent);
     }
 }

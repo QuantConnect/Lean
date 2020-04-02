@@ -746,7 +746,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// Special case for insights where we do not know whats the
         /// <see cref="Period"/> or <see cref="CloseTimeUtc"/>.
         /// </summary>
-        /// <remarks><see cref="OrderBasedInsightGenerator"/></remarks>
         private class EndOfTimeCloseTimePeriodSpecification : IPeriodSpecification
         {
             public void SetPeriodAndCloseTime(Insight insight, SecurityExchangeHours exchangeHours)
