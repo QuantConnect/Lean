@@ -911,8 +911,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="newEvent">New event details</param>
         public override void OrderEvent(OrderEvent newEvent)
         {
+            var brokerIds = string.Empty;
+            var order = TransactionHandler.GetOrderById(newEvent.OrderId);
+            if (order != null && order.BrokerId.Count > 0) brokerIds = string.Join(", ", order.BrokerId);
+
             //Send the message to frontend as packet:
-            Log.Trace("LiveTradingResultHandler.OrderEvent(): " + newEvent, true);
+            Log.Trace("LiveTradingResultHandler.OrderEvent(): " + newEvent + " BrokerId: " + brokerIds, true);
             Messages.Enqueue(new OrderEventPacket(AlgorithmId, newEvent));
 
             var message = "New Order Event: " + newEvent;
