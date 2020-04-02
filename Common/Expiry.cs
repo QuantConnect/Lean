@@ -68,8 +68,8 @@ namespace QuantConnect
             {
                 return dt =>
                 {
-                    var value = 1 - dt.Day;
-                    return OneMonth(dt).AddDays(value).Date;
+                    var value = OneMonth(dt);
+                    return new DateTime(value.Year, value.Month, 1);
                 };
             }
         }
@@ -93,16 +93,6 @@ namespace QuantConnect
         /// <summary>
         /// Computes the end of year (1st of the next year) of given date/time
         /// </summary>
-        public static Func<DateTime, DateTime> EndOfYear
-        {
-            get
-            {
-                return dt =>
-                {
-                    var value = 1 - dt.DayOfYear;
-                    return OneYear(dt).AddDays(value).Date;
-                };
-            }
-        }
+        public static Func<DateTime, DateTime> EndOfYear => dt => new DateTime(dt.Year + 1, 1, 1);
     }
 }
