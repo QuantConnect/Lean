@@ -514,7 +514,7 @@ def Monthly(dt):
             var calendarInfo = quarterly(new DateTime(2020, 5, 1));
 
             Assert.AreEqual(new DateTime(2020, 1, 1), calendarInfo.Start);
-            Assert.AreEqual(TimeSpan.FromDays(365), calendarInfo.Period);
+            Assert.AreEqual(TimeSpan.FromDays(366), calendarInfo.Period);   // leap year
 
             calendarInfo = quarterly(new DateTime(2021, 11, 1));
 
