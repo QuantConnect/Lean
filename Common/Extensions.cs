@@ -57,7 +57,8 @@ namespace QuantConnect
 
         /// <summary>
         /// Helper method to batch a collection of <see cref="AlphaResultPacket"/> into 1 single instance.
-        /// Will return null if the provided list is empty
+        /// Will return null if the provided list is empty. Will keep the last Order instance per order id,
+        /// which is the latest. Implementations trusts the provided 'resultPackets' list to batch is in order
         /// </summary>
         public static AlphaResultPacket Batch(this List<AlphaResultPacket> resultPackets)
         {
@@ -70,37 +71,44 @@ namespace QuantConnect
                 resultPacket = resultPackets[0];
                 for (var i = 1; i < resultPackets.Count; i++)
                 {
+                    var newerPacket = resultPackets[i];
+
                     // only batch current packet if there actually is data
-                    if (resultPackets[i].Insights != null)
+                    if (newerPacket.Insights != null)
                     {
                         if (resultPacket.Insights == null)
                         {
                             // initialize the collection if it isn't there
                             resultPacket.Insights = new List<Insight>();
                         }
-                        resultPacket.Insights.AddRange(resultPackets[i].Insights);
+                        resultPacket.Insights.AddRange(newerPacket.Insights);
                     }
 
                     // only batch current packet if there actually is data
-                    if (resultPackets[i].OrderEvents != null)
+                    if (newerPacket.OrderEvents != null)
                     {
                         if (resultPacket.OrderEvents == null)
                         {
                             // initialize the collection if it isn't there
                             resultPacket.OrderEvents = new List<OrderEvent>();
                         }
-                        resultPacket.OrderEvents.AddRange(resultPackets[i].OrderEvents);
+                        resultPacket.OrderEvents.AddRange(newerPacket.OrderEvents);
                     }
 
                     // only batch current packet if there actually is data
-                    if (resultPackets[i].Orders != null)
+                    if (newerPacket.Orders != null)
                     {
                         if (resultPacket.Orders == null)
                         {
                             // initialize the collection if it isn't there
                             resultPacket.Orders = new List<Order>();
                         }
-                        resultPacket.Orders.AddRange(resultPackets[i].Orders);
+                        resultPacket.Orders.AddRange(newerPacket.Orders);
+
+                        // GroupBy guarantees to respect original order, so we want to get the last order instance per order id
+                        // this way we only keep the most updated version
+                        resultPacket.Orders = resultPacket.Orders.GroupBy(order => order.Id)
+                            .Select(ordersGroup => ordersGroup.Last()).ToList();
                     }
                 }
             }

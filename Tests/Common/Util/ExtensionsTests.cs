@@ -69,6 +69,39 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
+        public void BatchAlphaResultPacketDuplicateOrder()
+        {
+            var btcusd = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
+            var orders = new List<Order>
+            {
+                new MarketOrder(btcusd, 1000, DateTime.UtcNow, "ExpensiveOrder") { Id = 1 },
+                new MarketOrder(btcusd, 100, DateTime.UtcNow, "ExpensiveOrder") { Id = 2 },
+                new MarketOrder(btcusd, 2000, DateTime.UtcNow, "ExpensiveOrder") { Id = 1 },
+                new MarketOrder(btcusd, 10, DateTime.UtcNow, "ExpensiveOrder") { Id = 3 },
+                new MarketOrder(btcusd, 3000, DateTime.UtcNow, "ExpensiveOrder") { Id = 1 }
+            };
+            var orders2 = new List<Order>
+            {
+                new MarketOrder(btcusd, 200, DateTime.UtcNow, "ExpensiveOrder") { Id = 2 },
+                new MarketOrder(btcusd, 20, DateTime.UtcNow, "ExpensiveOrder") { Id = 3 }
+            };
+
+            var packet1 = new AlphaResultPacket("1", 1, orders: orders);
+            var packet2 = new AlphaResultPacket("1", 1, orders: orders2);
+
+            var result = new List<AlphaResultPacket> { packet1, packet2 }.Batch();
+
+            // we expect just 1 order instance per order id
+            Assert.AreEqual(3, result.Orders.Count);
+            Assert.IsTrue(result.Orders.Any(order => order.Id == 1 && order.Quantity == 3000));
+            Assert.IsTrue(result.Orders.Any(order => order.Id == 2 && order.Quantity == 200));
+            Assert.IsTrue(result.Orders.Any(order => order.Id == 3 && order.Quantity == 20));
+
+            var expected = new List<Order> { orders[4], orders2[0], orders2[1] };
+            Assert.IsTrue(result.Orders.SequenceEqual(expected));
+        }
+
+        [Test]
         public void SeriesIsNotEmpty()
         {
             var series = new Series("SadSeries")
