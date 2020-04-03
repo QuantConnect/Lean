@@ -18,6 +18,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Orders
 {
@@ -45,6 +46,44 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.IsTrue(json.Contains("This is a message"));
             Assert.IsTrue(json.Contains("LimitPrice"));
             Assert.IsTrue(json.Contains("StopPrice"));
+        }
+
+        [Test]
+        public void RoundTripSerialization()
+        {
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
+            var orderEvent = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
+            {
+                OrderFee = new OrderFee(new CashAmount(99, "EUR")),
+                Message = "Pepe",
+                Status = OrderStatus.PartiallyFilled,
+                StopPrice = 1,
+                LimitPrice = 2,
+                FillPrice = 11,
+                FillQuantity = 12,
+                FillPriceCurrency = "USD"
+            };
+
+            var serializeObject = JsonConvert.SerializeObject(orderEvent);
+            var deserializeObject = JsonConvert.DeserializeObject<OrderEvent>(serializeObject);
+
+            Assert.AreEqual(orderEvent.Symbol, deserializeObject.Symbol);
+            Assert.AreEqual(orderEvent.StopPrice, deserializeObject.StopPrice);
+            Assert.AreEqual(orderEvent.UtcTime, deserializeObject.UtcTime);
+            Assert.AreEqual(orderEvent.OrderId, deserializeObject.OrderId);
+            Assert.AreEqual(orderEvent.AbsoluteFillQuantity, deserializeObject.AbsoluteFillQuantity);
+            Assert.AreEqual(orderEvent.Direction, deserializeObject.Direction);
+            Assert.AreEqual(orderEvent.FillPrice, deserializeObject.FillPrice);
+            Assert.AreEqual(orderEvent.FillPriceCurrency, deserializeObject.FillPriceCurrency);
+            Assert.AreEqual(orderEvent.FillQuantity, deserializeObject.FillQuantity);
+            Assert.AreEqual(orderEvent.Id, deserializeObject.Id);
+            Assert.AreEqual(orderEvent.IsAssignment, deserializeObject.IsAssignment);
+            Assert.AreEqual(orderEvent.LimitPrice, deserializeObject.LimitPrice);
+            Assert.AreEqual(orderEvent.Message, deserializeObject.Message);
+            Assert.AreEqual(orderEvent.Quantity, deserializeObject.Quantity);
+            Assert.AreEqual(orderEvent.Status, deserializeObject.Status);
+            Assert.AreEqual(orderEvent.OrderFee.Value.Amount, deserializeObject.OrderFee.Value.Amount);
+            Assert.AreEqual(orderEvent.OrderFee.Value.Currency, deserializeObject.OrderFee.Value.Currency);
         }
     }
 }

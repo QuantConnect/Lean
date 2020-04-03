@@ -24,7 +24,7 @@ namespace QuantConnect.Orders.Fees
         /// <summary>
         /// Gets the order fee
         /// </summary>
-        public CashAmount Value { get; }
+        public CashAmount Value { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OrderFee"/> class
