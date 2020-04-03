@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                var subscription = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(_spy).Single();
+                var subscription = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(_spy).First(config => config.TickType == TickType.Trade);
 
                 // we expect 1 consolidator per indicator
                 if (subscription.Consolidators.Count != 2)
@@ -110,12 +110,32 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Fitness Score", "0"},
+            {"Total Trades", "1"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "263.153%"},
+            {"Drawdown", "2.200%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "1.663%"},
+            {"Sharpe Ratio", "8.637"},
+            {"Probabilistic Sharpe Ratio", "67.097%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "-0.029"},
+            {"Beta", "0.998"},
+            {"Annual Standard Deviation", "0.219"},
+            {"Annual Variance", "0.048"},
+            {"Information Ratio", "-44.117"},
+            {"Tracking Error", "0.001"},
+            {"Treynor Ratio", "1.898"},
+            {"Total Fees", "$3.26"},
+            {"Fitness Score", "0.248"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0"},
-            {"Return Over Maximum Drawdown", "0"},
-            {"Portfolio Turnover", "0"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "93.83"},
+            {"Portfolio Turnover", "0.248"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -129,7 +149,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "371857150"}
+            {"OrderListHash", "1462414266"}
         };
     }
 }
