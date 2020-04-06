@@ -18,6 +18,8 @@ using System.Linq;
 using Python.Runtime;
 using QuantConnect.Packets;
 using System;
+using QuantConnect.Util;
+using System.Collections.Generic;
 
 namespace QuantConnect.Report.ReportElements
 {
@@ -74,26 +76,59 @@ namespace QuantConnect.Report.ReportElements
                 var liveBenchmarkSeries = new Series<DateTime, double>(liveBenchmarkTime, liveBenchmarkStrategy);
 
                 // Equivalent in python using pandas for the following operations is:
-                //
-                // df.pct_change().cumsum().mul(100)
-                var backtestCumulativePercent = (backtestSeries.CumulativeReturns() * 100).FillMissing(Direction.Forward).DropMissing();
-                var backtestBenchmarkCumulativePercent = (backtestBenchmarkSeries.CumulativeReturns() * 100).FillMissing(Direction.Forward).DropMissing();
-
-                // Equivalent in python using pandas for the following operations is:
                 // --------------------------------------------------
-                // # note: [...] denotes the data we're passing in
-                // bt = pd.Series([...], index=time)
-                // df.pct_change().replace([np.inf, -np.inf], np.nan).dropna().cumsum().mul(100).add(bt.iloc[-1])
+                // >>> # note: [...] denotes the data we're passing in
+                // >>> df = pd.Series([...], index=time)
+                // >>> df_live = pd.Series([...], index=live_time)
+                // >>> df_live = df_live.mul(df.iloc[-1] / df_live.iloc[0]).fillna(method='ffill').dropna()
+                // >>> df_final = pd.concat([df, df_live], axis=0)
+                // >>> df_cumulative_returns = ((df_final.pct_change().dropna() + 1).cumprod() - 1)
                 // --------------------------------------------------
                 //
-                // We add the final value of the backtest and benchmark to have a continuous graph showing the performance out of sample
+                // We multiply the final value of the backtest and benchmark to have a continuous graph showing the performance out of sample
                 // as a continuation of the cumulative returns graph. Otherwise, we start plotting from 0% and not the last value of the backtest data
 
-                var backtestLastValue = backtestCumulativePercent.IsEmpty ? 0 : backtestCumulativePercent.LastValue();
-                var backtestBenchmarkLastValue = backtestBenchmarkCumulativePercent.IsEmpty ? 0 : backtestBenchmarkCumulativePercent.LastValue();
+                var backtestLastValue = backtestSeries.ValueCount == 0 ? 0 : backtestSeries.LastValue();
+                var backtestBenchmarkLastValue = backtestBenchmarkSeries.ValueCount == 0 ? 0 : backtestBenchmarkSeries.LastValue();
 
-                var liveCumulativePercent = (liveSeries.CumulativeReturns() * 100).FillMissing(Direction.Forward).DropMissing() + backtestLastValue;
-                var liveBenchmarkCumulativePercent = (liveBenchmarkSeries.CumulativeReturns() * 100).FillMissing(Direction.Forward).DropMissing() + backtestBenchmarkLastValue;
+                var liveContinuousEquity = liveSeries;
+                var liveBenchContinuousEquity = liveBenchmarkSeries;
+
+                if (liveSeries.ValueCount != 0)
+                {
+                    liveContinuousEquity = (liveSeries * (backtestLastValue / liveSeries.FirstValue()))
+                        .FillMissing(Direction.Forward)
+                        .DropMissing();
+                }
+                if (liveBenchmarkSeries.ValueCount != 0)
+                {
+                    liveBenchContinuousEquity = (liveBenchmarkSeries * (backtestBenchmarkLastValue / liveBenchmarkSeries.FirstValue()))
+                        .FillMissing(Direction.Forward)
+                        .DropMissing();
+                }
+
+                var liveStart = liveContinuousEquity.ValueCount == 0 ? DateTime.MaxValue : liveContinuousEquity.DropMissing().FirstKey();
+                var liveBenchStart = liveBenchContinuousEquity.ValueCount == 0 ? DateTime.MaxValue : liveBenchContinuousEquity.DropMissing().FirstKey();
+
+                var finalEquity = backtestSeries.Where(kvp => kvp.Key < liveStart).Observations.ToList();
+                var finalBenchEquity = backtestBenchmarkSeries.Where(kvp => kvp.Key < liveBenchStart).Observations.ToList();
+
+                finalEquity.AddRange(liveContinuousEquity.Observations);
+                finalBenchEquity.AddRange(liveBenchContinuousEquity.Observations);
+
+                var finalSeries = (new Series<DateTime, double>(finalEquity).CumulativeReturns() * 100)
+                    .FillMissing(Direction.Forward)
+                    .DropMissing();
+
+                var finalBenchSeries = (new Series<DateTime, double>(finalBenchEquity).CumulativeReturns() * 100)
+                    .FillMissing(Direction.Forward)
+                    .DropMissing();
+
+                var backtestCumulativePercent = finalSeries.Where(kvp => kvp.Key < liveStart);
+                var backtestBenchmarkCumulativePercent = finalBenchSeries.Where(kvp => kvp.Key < liveBenchStart);
+
+                var liveCumulativePercent = finalSeries.Where(kvp => kvp.Key >= liveStart);
+                var liveBenchmarkCumulativePercent = finalBenchSeries.Where(kvp => kvp.Key >= liveBenchStart);
 
                 backtestList.Append(backtestCumulativePercent.Keys.ToList().ToPython());
                 backtestList.Append(backtestCumulativePercent.Values.ToList().ToPython());
