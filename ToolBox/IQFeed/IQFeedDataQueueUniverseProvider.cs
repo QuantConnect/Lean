@@ -34,6 +34,7 @@ namespace QuantConnect.ToolBox.IQFeed
 {
     /// <summary>
     /// Class implements several interfaces to support IQFeed symbol mapping to LEAN and symbol lookup
+    /// Refer to IQFeed symbols guide for more info: http://www.iqfeed.net/symbolguide/index.cfm?symbolguide=guide
     /// </summary>
     public class IQFeedDataQueueUniverseProvider : IDataQueueUniverseProvider, ISymbolMapper
     {
@@ -374,7 +375,7 @@ namespace QuantConnect.ToolBox.IQFeed
                     case "FUTURE":
 
                         // we are not interested in designated continuous contracts
-                        if (columns[columnSymbol].EndsWith("#"))
+                        if (columns[columnSymbol].EndsWith("#") || columns[columnSymbol].EndsWith("#C"))
                             continue;
 
                         var futuresTicker = columns[columnSymbol].TrimStart(new[] { '@' });
