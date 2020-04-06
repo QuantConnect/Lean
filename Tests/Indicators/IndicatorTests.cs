@@ -14,14 +14,17 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using NUnit.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Logging;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -185,7 +188,41 @@ namespace QuantConnect.Tests.Indicators
             }
             Log.Trace($"{counter} indicators out of {indicators.Count} were tested.");
         }
-        
+
+        [Test]
+        public void IndicatorsOfDifferentTypeDiplaySameCurrentTime()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            var spy = algorithm.AddEquity("SPY");
+
+            var indicatorTimeList = new List<DateTime>();
+            // RSI is a DataPointIndicator
+            algorithm.RSI(spy.Symbol, 14).Updated += (_, e) => indicatorTimeList.Add(e.EndTime);
+            // STO is a BarIndicator
+            algorithm.STO(spy.Symbol, 14, 2, 2).Updated += (_, e) => indicatorTimeList.Add(e.EndTime);
+            // MFI is a TradeBarIndicator
+            algorithm.MFI(spy.Symbol, 14).Updated += (_, e) => indicatorTimeList.Add(e.EndTime);
+
+            var consolidators = spy.Subscriptions.SelectMany(x => x.Consolidators).ToList();
+            Assert.AreEqual(3, consolidators.Count);   // One consolidator for each indicator
+
+            var bars = new[] { 30, 31 }.Select(d =>
+                new TradeBar(new DateTime(2020, 03, 04, 9, d, 0),
+                             spy.Symbol, 100, 100, 100, 100, 1000));
+
+            foreach (var bar in bars)
+            {
+                foreach (var consolidator in consolidators)
+                {
+                    consolidator.Update(bar);
+                }
+            }
+
+            // All indicators should have the same EndTime
+            Assert.AreEqual(1, indicatorTimeList.Distinct().Count());
+        }
+
         private static void TestComparisonOperators<TValue>()
         {
             var indicator = new TestIndicator();
