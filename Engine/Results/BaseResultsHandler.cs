@@ -27,6 +27,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Serialization;
 using QuantConnect.Packets;
 using QuantConnect.Statistics;
 
@@ -166,7 +167,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// Directory location to store results
         /// </summary>
         protected string ResultsDestinationFolder;
-        
+
+        /// <summary>
+        /// The order event json converter instance to use
+        /// </summary>
+        protected OrderEventJsonConverter OrderEventJsonConverter { get; set; }
+
         /// <summary>
         /// Creates a new instance
         /// </summary>
@@ -204,7 +210,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             var path = $"{AlgorithmId}-order-events.json";
-            var data = JsonConvert.SerializeObject(orderEvents, Formatting.None);
+            var data = JsonConvert.SerializeObject(orderEvents, Formatting.None, OrderEventJsonConverter);
 
             File.WriteAllText(path, data);
         }
@@ -260,6 +266,7 @@ namespace QuantConnect.Lean.Engine.Results
             TransactionHandler = transactionHandler;
             CompileId = job.CompileId;
             AlgorithmId = job.AlgorithmId;
+            OrderEventJsonConverter = new OrderEventJsonConverter(AlgorithmId);
             _updateRunner = new Thread(Run, 0) { IsBackground = true, Name = "Result Thread" };
             _updateRunner.Start();
         }

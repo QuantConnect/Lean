@@ -18,6 +18,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Serialization;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Orders
@@ -29,7 +30,8 @@ namespace QuantConnect.Tests.Common.Orders
         public void JsonIgnores()
         {
             var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
-            var json = JsonConvert.SerializeObject(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero));
+            var json = JsonConvert.SerializeObject(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero),
+                new OrderEventJsonConverter("id"));
 
             Assert.IsFalse(json.Contains("Message"));
             Assert.IsFalse(json.Contains("Message"));
@@ -61,15 +63,18 @@ namespace QuantConnect.Tests.Common.Orders
                 LimitPrice = 2,
                 FillPrice = 11,
                 FillQuantity = 12,
-                FillPriceCurrency = "USD"
+                FillPriceCurrency = "USD",
+                Id = 55
             };
 
-            var serializeObject = JsonConvert.SerializeObject(orderEvent);
-            var deserializeObject = JsonConvert.DeserializeObject<OrderEvent>(serializeObject);
+            var converter = new OrderEventJsonConverter("id");
+            var serializeObject = JsonConvert.SerializeObject(orderEvent, converter);
+            var deserializeObject = JsonConvert.DeserializeObject<OrderEvent>(serializeObject, converter);
 
             Assert.AreEqual(orderEvent.Symbol, deserializeObject.Symbol);
             Assert.AreEqual(orderEvent.StopPrice, deserializeObject.StopPrice);
-            Assert.AreEqual(orderEvent.UtcTime, deserializeObject.UtcTime);
+            // there is a small loss of precision because we use double
+            Assert.AreEqual(orderEvent.UtcTime.Ticks, deserializeObject.UtcTime.Ticks, 5);
             Assert.AreEqual(orderEvent.OrderId, deserializeObject.OrderId);
             Assert.AreEqual(orderEvent.AbsoluteFillQuantity, deserializeObject.AbsoluteFillQuantity);
             Assert.AreEqual(orderEvent.Direction, deserializeObject.Direction);

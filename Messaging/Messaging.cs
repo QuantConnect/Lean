@@ -22,6 +22,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Notifications;
+using QuantConnect.Orders.Serialization;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 
@@ -35,6 +36,7 @@ namespace QuantConnect.Messaging
         private static readonly bool UpdateRegressionStatistics = Config.GetBool("regression-update-statistics", false);
 
         private AlgorithmNodePacket _job;
+        private OrderEventJsonConverter _orderEventJsonConverter;
 
         /// <summary>
         /// This implementation ignores the <seealso cref="HasSubscribers"/> flag and
@@ -60,6 +62,7 @@ namespace QuantConnect.Messaging
         public void SetAuthentication(AlgorithmNodePacket job)
         {
             _job = job;
+            _orderEventJsonConverter = new OrderEventJsonConverter(job.AlgorithmId);
         }
 
         /// <summary>
@@ -133,7 +136,7 @@ namespace QuantConnect.Messaging
 
             if (StreamingApi.IsEnabled)
             {
-                StreamingApi.Transmit(_job.UserId, _job.Channel, packet);
+                StreamingApi.Transmit(_job.UserId, _job.Channel, packet, _orderEventJsonConverter);
             }
         }
 

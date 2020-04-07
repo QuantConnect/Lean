@@ -56,6 +56,23 @@ namespace QuantConnect
             = new Dictionary<IntPtr, PythonActivator>();
 
         /// <summary>
+        /// Converts the provided string into camel case notation
+        /// </summary>
+        public static string ToCamelCase(this string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return value;
+            }
+
+            if (value.Length == 1)
+            {
+                return value.ToLowerInvariant();
+            }
+            return char.ToLowerInvariant(value[0]) + value.Substring(1);
+        }
+
+        /// <summary>
         /// Helper method to batch a collection of <see cref="AlphaResultPacket"/> into 1 single instance.
         /// Will return null if the provided list is empty. Will keep the last Order instance per order id,
         /// which is the latest. Implementations trusts the provided 'resultPackets' list to batch is in order

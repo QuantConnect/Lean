@@ -35,6 +35,16 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class ExtensionsTests
     {
+        [TestCase("A", "a")]
+        [TestCase("", "")]
+        [TestCase(null, null)]
+        [TestCase("Buy", "buy")]
+        [TestCase("BuyTheDip", "buyTheDip")]
+        public void ToCamelCase(string toConvert, string expected)
+        {
+            Assert.AreEqual(expected, toConvert.ToCamelCase());
+        }
+
         [Test]
         public void BatchAlphaResultPacket()
         {
