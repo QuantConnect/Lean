@@ -80,8 +80,11 @@ namespace QuantConnect.Tests.Common.Util
 
             var originalFactorFileInstance = FactorFile.Read(PermTick, Market);
 
+            // we limit events to the penultimate time in our factor file (last one is 2050)
+            var lastValidRow = originalFactorFileInstance.SortedFactorFileData.Reverse().Skip(1).First();
+
             // Act
-            var newFactorFileInstance = _factorFileGenerator.CreateFactorFile(yahooEvents.ToList());
+            var newFactorFileInstance = _factorFileGenerator.CreateFactorFile(yahooEvents.Where(data => data.Time.AddDays(-1) <= lastValidRow.Key).ToList());
 
             var earliestDate = originalFactorFileInstance.SortedFactorFileData.First().Key;
             var latestDate = originalFactorFileInstance.SortedFactorFileData.Last().Key;

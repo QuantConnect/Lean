@@ -58,7 +58,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
             var result = QuantConnect.Statistics.Statistics.AnnualPerformance(performance);
 
-            Assert.AreEqual(0.070349834404899392, result);
+            Assert.AreEqual(0.06675611425446748, result);
         }
 
         [Test]
@@ -78,7 +78,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
             var result = QuantConnect.Statistics.Statistics.AnnualPerformance(performance);
 
-            Assert.AreEqual(-0.41405447461285583, result);
+            Assert.AreEqual(-0.41399226172924952, result);
         }
 
         [Test]
@@ -98,7 +98,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
             var result = QuantConnect.Statistics.Statistics.AnnualPerformance(performance);
 
-            Assert.AreEqual(0.19728183468892757, result);
+            Assert.AreEqual(0.1972919176060528, result);
         }
 
         [Test]

@@ -58,7 +58,9 @@ namespace QuantConnect.Tests.Algorithm
             {
                 fillForwardResolution = resolution;
             }
-            Assert.AreEqual(1, _testHistoryProvider.HistryRequests.Count);
+
+            var expectedCount = resolution == Resolution.Hour || resolution == Resolution.Daily ? 1 : 2;
+            Assert.AreEqual(expectedCount, _testHistoryProvider.HistryRequests.Count);
             Assert.AreEqual(Symbols.SPY, _testHistoryProvider.HistryRequests.First().Symbol);
             Assert.AreEqual(resolution, _testHistoryProvider.HistryRequests.First().Resolution);
             Assert.IsFalse(_testHistoryProvider.HistryRequests.First().IncludeExtendedMarketHours);
@@ -83,7 +85,9 @@ namespace QuantConnect.Tests.Algorithm
             {
                 fillForwardResolution = resolution;
             }
-            Assert.AreEqual(1, _testHistoryProvider.HistryRequests.Count);
+
+            var expectedCount = resolution == Resolution.Hour || resolution == Resolution.Daily ? 1 : 2;
+            Assert.AreEqual(expectedCount, _testHistoryProvider.HistryRequests.Count);
             Assert.AreEqual(Symbols.SPY, _testHistoryProvider.HistryRequests.First().Symbol);
             Assert.AreEqual(resolution, _testHistoryProvider.HistryRequests.First().Resolution);
             Assert.IsFalse(_testHistoryProvider.HistryRequests.First().IncludeExtendedMarketHours);
@@ -99,7 +103,7 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm.SetStartDate(2013, 10, 07);
             _algorithm.History(new [] {Symbols.SPY}, new DateTime(1,1,1,1,1,1), new DateTime(1, 1, 1, 1, 1, 2), Resolution.Tick, fillForward: true);
 
-            Assert.AreEqual(1, _testHistoryProvider.HistryRequests.Count);
+            Assert.AreEqual(2, _testHistoryProvider.HistryRequests.Count);
             Assert.AreEqual(Symbols.SPY, _testHistoryProvider.HistryRequests.First().Symbol);
             Assert.AreEqual(Resolution.Tick, _testHistoryProvider.HistryRequests.First().Resolution);
             Assert.IsFalse(_testHistoryProvider.HistryRequests.First().IncludeExtendedMarketHours);

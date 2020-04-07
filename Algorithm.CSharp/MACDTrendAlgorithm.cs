@@ -99,14 +99,14 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "84"},
-            {"Average Win", "4.78%"},
+            {"Average Win", "4.79%"},
             {"Average Loss", "-4.16%"},
-            {"Compounding Annual Return", "2.958%"},
-            {"Drawdown", "34.800%"},
+            {"Compounding Annual Return", "2.963%"},
+            {"Drawdown", "34.700%"},
             {"Expectancy", "0.228"},
-            {"Net Profit", "37.831%"},
-            {"Sharpe Ratio", "0.273"},
-            {"Probabilistic Sharpe Ratio", "0.397%"},
+            {"Net Profit", "37.907%"},
+            {"Sharpe Ratio", "0.274"},
+            {"Probabilistic Sharpe Ratio", "0.399%"},
             {"Loss Rate", "43%"},
             {"Win Rate", "57%"},
             {"Profit-Loss Ratio", "1.15"},
@@ -115,13 +115,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Annual Standard Deviation", "0.113"},
             {"Annual Variance", "0.013"},
             {"Information Ratio", "-0.234"},
-            {"Tracking Error", "0.215"},
-            {"Treynor Ratio", "-0.773"},
-            {"Total Fees", "$443.57"},
+            {"Tracking Error", "0.214"},
+            {"Treynor Ratio", "-0.775"},
+            {"Total Fees", "$443.74"},
             {"Fitness Score", "0.013"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0.215"},
+            {"Sortino Ratio", "0.216"},
             {"Return Over Maximum Drawdown", "0.085"},
             {"Portfolio Turnover", "0.024"},
             {"Total Insights Generated", "0"},
@@ -137,7 +137,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "855287988"}
+            {"OrderListHash", "-1703572248"}
         };
     }
 }

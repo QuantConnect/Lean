@@ -31,11 +31,28 @@ namespace QuantConnect.Tests.Common.Data
     [TestFixture]
     public class SubscriptionManagerTests
     {
+        [TestCase(SecurityType.Forex, Resolution.Daily, 1, TickType.Quote)]
+        [TestCase(SecurityType.Forex, Resolution.Hour, 1, TickType.Quote)]
+        [TestCase(SecurityType.Cfd, Resolution.Daily, 1, TickType.Quote)]
+        [TestCase(SecurityType.Cfd, Resolution.Hour, 1, TickType.Quote)]
+        [TestCase(SecurityType.Crypto, Resolution.Daily, 2, TickType.Trade, TickType.Quote)]
+        [TestCase(SecurityType.Crypto, Resolution.Hour, 2, TickType.Trade, TickType.Quote)]
+        [TestCase(SecurityType.Equity, Resolution.Daily, 1, TickType.Trade)]
+        [TestCase(SecurityType.Equity, Resolution.Hour, 1, TickType.Trade)]
+        public void GetsSubscriptionDataTypesLowResolution(SecurityType securityType, Resolution resolution, int count, params TickType [] expectedTickTypes)
+        {
+            var types = GetSubscriptionDataTypes(securityType, resolution);
+
+            Assert.AreEqual(count, types.Count);
+            for (var i = 0; i < expectedTickTypes.Length; i++)
+            {
+                Assert.IsTrue(types[i].Item2 == expectedTickTypes[i]);
+            }
+        }
+
         [Test]
         [TestCase(SecurityType.Base, Resolution.Minute, typeof(TradeBar), TickType.Trade)]
         [TestCase(SecurityType.Base, Resolution.Tick, typeof(Tick), TickType.Trade)]
-        [TestCase(SecurityType.Equity, Resolution.Minute, typeof(TradeBar), TickType.Trade)]
-        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Trade)]
         [TestCase(SecurityType.Forex, Resolution.Minute, typeof(QuoteBar), TickType.Quote)]
         [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote)]
         [TestCase(SecurityType.Cfd, Resolution.Minute, typeof(QuoteBar), TickType.Quote)]
@@ -96,11 +113,15 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
-        [TestCase(Resolution.Minute)]
-        [TestCase(Resolution.Tick)]
-        public void GetsSubscriptionDataTypesCrypto(Resolution resolution)
+        [TestCase(SecurityType.Equity, Resolution.Minute)]
+        [TestCase(SecurityType.Equity, Resolution.Second)]
+        [TestCase(SecurityType.Equity, Resolution.Tick)]
+        [TestCase(SecurityType.Crypto, Resolution.Minute)]
+        [TestCase(SecurityType.Crypto, Resolution.Second)]
+        [TestCase(SecurityType.Crypto, Resolution.Tick)]
+        public void GetsSubscriptionDataTypes(SecurityType securityType, Resolution resolution)
         {
-            var types = GetSubscriptionDataTypes(SecurityType.Crypto, resolution);
+            var types = GetSubscriptionDataTypes(securityType, resolution);
 
             Assert.AreEqual(2, types.Count);
 

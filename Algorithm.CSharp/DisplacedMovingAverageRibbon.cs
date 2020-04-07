@@ -167,14 +167,14 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "7"},
-            {"Average Win", "19.15%"},
+            {"Average Win", "19.16%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "16.726%"},
-            {"Drawdown", "12.500%"},
+            {"Compounding Annual Return", "16.727%"},
+            {"Drawdown", "12.200%"},
             {"Expectancy", "0"},
-            {"Net Profit", "153.046%"},
-            {"Sharpe Ratio", "1.237"},
-            {"Probabilistic Sharpe Ratio", "66.233%"},
+            {"Net Profit", "153.058%"},
+            {"Sharpe Ratio", "1.239"},
+            {"Probabilistic Sharpe Ratio", "66.414%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
@@ -184,13 +184,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Annual Variance", "0.013"},
             {"Information Ratio", "-0.053"},
             {"Tracking Error", "0.204"},
-            {"Treynor Ratio", "-8.144"},
+            {"Treynor Ratio", "-8.165"},
             {"Total Fees", "$46.75"},
             {"Fitness Score", "0.002"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "1.605"},
-            {"Return Over Maximum Drawdown", "1.333"},
+            {"Sortino Ratio", "1.607"},
+            {"Return Over Maximum Drawdown", "1.366"},
             {"Portfolio Turnover", "0.003"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -205,7 +205,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "703760118"}
+            {"OrderListHash", "-807056289"}
         };
     }
 }

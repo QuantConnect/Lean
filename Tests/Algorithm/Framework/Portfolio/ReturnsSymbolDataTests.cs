@@ -120,7 +120,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                     {
                         time = time.AddMinutes(10);
                     }
-                    return new Tick(time, symbolsArray[i], (decimal)rnd.NextDouble(), 0, 0);
+                    return new Tick(time, symbolsArray[i], (decimal)rnd.NextDouble(), 0, 0) {TickType = TickType.Trade};
                 });
 
                 return new Slice(time, data);
