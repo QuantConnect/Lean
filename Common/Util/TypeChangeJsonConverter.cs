@@ -28,6 +28,14 @@ namespace QuantConnect.Util
     /// <typeparam name="TResult">The output serialized type</typeparam>
     public abstract class TypeChangeJsonConverter<T, TResult> : JsonConverter
     {
+        // we use a json serializer which allows using non public default constructor
+        private readonly JsonSerializer _jsonSerializer = new JsonSerializer {ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor};
+
+        /// <summary>
+        /// True will populate TResult object returned by <see cref="Convert(TResult)"/> with json properties
+        /// </summary>
+        protected virtual bool PopulateProperties => true;
+
         /// <summary>
         /// Reads the JSON representation of the object.
         /// </summary>
@@ -44,7 +52,7 @@ namespace QuantConnect.Util
             var target = Create(objectType, token);
 
             var targetType = target.GetType();
-            if (targetType.IsClass && targetType != typeof(string))
+            if (targetType.IsClass && targetType != typeof(string) && PopulateProperties)
             {
                 // Populate the object properties
                 serializer.Populate(token.CreateReader(), target);
@@ -88,7 +96,7 @@ namespace QuantConnect.Util
             // reads the token as an object type
             if (typeof(TResult).IsClass && typeof(T) != typeof(string))
             {
-                return Convert(token.ToObject<TResult>());
+                return Convert(token.ToObject<TResult>(_jsonSerializer));
             }
 
             // reads the token as a value type

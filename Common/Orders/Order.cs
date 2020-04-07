@@ -20,6 +20,8 @@ using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders.Serialization;
+using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using static QuantConnect.StringExtensions;
 
@@ -323,51 +325,117 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Creates a new Order instance from a SerializedOrder instance
+        /// </summary>
+        /// <remarks>Used by the <see cref="SerializedOrderJsonConverter"/></remarks>
+        public static Order FromSerialized(SerializedOrder serializedOrder)
+        {
+            var sid = SecurityIdentifier.Parse(serializedOrder.Symbol);
+            var symbol = new Symbol(sid, sid.Symbol);
+
+            TimeInForce timeInForce = null;
+            var type = System.Type.GetType($"QuantConnect.Orders.TimeInForces.{serializedOrder.TimeInForceType}", throwOnError: false, ignoreCase: true);
+            if (type != null)
+            {
+                timeInForce = (TimeInForce) Activator.CreateInstance(type, true);
+                if (timeInForce is GoodTilDateTimeInForce)
+                {
+                    var expiry = QuantConnect.Time.UnixTimeStampToDateTime(serializedOrder.TimeInForceExpiry.Value);
+                    timeInForce = new GoodTilDateTimeInForce(expiry);
+                }
+            }
+
+            var createdTime = QuantConnect.Time.UnixTimeStampToDateTime(serializedOrder.CreatedTime);
+
+            var order = CreateOrder(serializedOrder.OrderId, serializedOrder.Type, symbol, serializedOrder.Quantity,
+                DateTime.SpecifyKind(createdTime, DateTimeKind.Utc),
+                serializedOrder.Tag,
+                new OrderProperties { TimeInForce = timeInForce },
+                serializedOrder.LimitPrice ?? 0,
+                serializedOrder.StopPrice ?? 0);
+
+            order.OrderSubmissionData = new OrderSubmissionData(serializedOrder.SubmissionBidPrice,
+                serializedOrder.SubmissionAskPrice,
+                serializedOrder.SubmissionLastPrice);
+
+            order.BrokerId = serializedOrder.BrokerId;
+            order.ContingentId = serializedOrder.ContingentId;
+            order.Price = serializedOrder.Price;
+            order.PriceCurrency = serializedOrder.PriceCurrency;
+            order.Status = serializedOrder.Status;
+
+            if (serializedOrder.LastFillTime.HasValue)
+            {
+                var time = QuantConnect.Time.UnixTimeStampToDateTime(serializedOrder.LastFillTime.Value);
+                order.LastFillTime = DateTime.SpecifyKind(time, DateTimeKind.Utc);
+            }
+            if (serializedOrder.LastUpdateTime.HasValue)
+            {
+                var time = QuantConnect.Time.UnixTimeStampToDateTime(serializedOrder.LastUpdateTime.Value);
+                order.LastUpdateTime = DateTime.SpecifyKind(time, DateTimeKind.Utc);
+            }
+            if (serializedOrder.CanceledTime.HasValue)
+            {
+                var time = QuantConnect.Time.UnixTimeStampToDateTime(serializedOrder.CanceledTime.Value);
+                order.CanceledTime = DateTime.SpecifyKind(time, DateTimeKind.Utc);
+            }
+
+            return order;
+        }
+
+        /// <summary>
         /// Creates an <see cref="Order"/> to match the specified <paramref name="request"/>
         /// </summary>
         /// <param name="request">The <see cref="SubmitOrderRequest"/> to create an order for</param>
         /// <returns>The <see cref="Order"/> that matches the request</returns>
         public static Order CreateOrder(SubmitOrderRequest request)
         {
+            return CreateOrder(request.OrderId, request.OrderType, request.Symbol, request.Quantity, request.Time,
+                request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice);
+        }
+
+        private static Order CreateOrder(int orderId, OrderType type, Symbol symbol, decimal quantity, DateTime time,
+            string tag, IOrderProperties properties, decimal limitPrice, decimal stopPrice)
+        {
             Order order;
-            switch (request.OrderType)
+            switch (type)
             {
                 case OrderType.Market:
-                    order = new MarketOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
+                    order = new MarketOrder(symbol, quantity, time, tag, properties);
                     break;
 
                 case OrderType.Limit:
-                    order = new LimitOrder(request.Symbol, request.Quantity, request.LimitPrice, request.Time, request.Tag, request.OrderProperties);
+                    order = new LimitOrder(symbol, quantity, limitPrice, time, tag, properties);
                     break;
 
                 case OrderType.StopMarket:
-                    order = new StopMarketOrder(request.Symbol, request.Quantity, request.StopPrice, request.Time, request.Tag, request.OrderProperties);
+                    order = new StopMarketOrder(symbol, quantity, stopPrice, time, tag, properties);
                     break;
 
                 case OrderType.StopLimit:
-                    order = new StopLimitOrder(request.Symbol, request.Quantity, request.StopPrice, request.LimitPrice, request.Time, request.Tag, request.OrderProperties);
+                    order = new StopLimitOrder(symbol, quantity, stopPrice, limitPrice, time, tag, properties);
                     break;
 
                 case OrderType.MarketOnOpen:
-                    order = new MarketOnOpenOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
+                    order = new MarketOnOpenOrder(symbol, quantity, time, tag, properties);
                     break;
 
                 case OrderType.MarketOnClose:
-                    order = new MarketOnCloseOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
+                    order = new MarketOnCloseOrder(symbol, quantity, time, tag, properties);
                     break;
 
                 case OrderType.OptionExercise:
-                    order = new OptionExerciseOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
+                    order = new OptionExerciseOrder(symbol, quantity, time, tag, properties);
                     break;
 
                 default:
                     throw new ArgumentOutOfRangeException();
             }
             order.Status = OrderStatus.New;
-            order.Id = request.OrderId;
-            if (request.Tag != null)
+            order.Id = orderId;
+            if (tag != null)
             {
-                order.Tag = request.Tag;
+                order.Tag = tag;
             }
             return order;
         }

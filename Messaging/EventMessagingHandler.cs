@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Notifications;
+using QuantConnect.Orders.Serialization;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Messaging
@@ -27,6 +27,7 @@ namespace QuantConnect.Messaging
     /// </summary>
     public class EventMessagingHandler : IMessagingHandler
     {
+        private OrderEventJsonConverter _orderEventJsonConverter;
         private AlgorithmNodePacket _job;
         private volatile bool _loaded;
         private Queue<Packet> _queue; 
@@ -63,6 +64,7 @@ namespace QuantConnect.Messaging
         public void SetAuthentication(AlgorithmNodePacket job)
         {
             _job = job;
+            _orderEventJsonConverter = new OrderEventJsonConverter(job.AlgorithmId);
         }
 
         public delegate void DebugEventRaised(DebugPacket packet);
@@ -175,7 +177,7 @@ namespace QuantConnect.Messaging
 
             if (StreamingApi.IsEnabled)
             {
-                StreamingApi.Transmit(_job.UserId, _job.Channel, packet);
+                StreamingApi.Transmit(_job.UserId, _job.Channel, packet, _orderEventJsonConverter);
             }
         }
 

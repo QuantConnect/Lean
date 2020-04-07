@@ -46,11 +46,12 @@ namespace QuantConnect.Messaging
         /// <param name="userId">User Id</param>
         /// <param name="apiToken">API token for authentication</param>
         /// <param name="packet">Packet to transmit</param>
-        public static void Transmit(int userId, string apiToken, Packet packet)
+        /// <param name="jsonConverters">Optional json converters to use to convert the packet</param>
+        public static void Transmit(int userId, string apiToken, Packet packet, params JsonConverter[] jsonConverters)
         {
             try
             {
-                var tx = JsonConvert.SerializeObject(packet);
+                var tx = JsonConvert.SerializeObject(packet, jsonConverters);
                 if (tx.Length > 10000)
                 {
                     Log.Trace("StreamingApi.Transmit(): Packet too long: " + packet.GetType());
