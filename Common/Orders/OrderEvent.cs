@@ -285,7 +285,8 @@ namespace QuantConnect.Orders
                 LimitPrice = serializedOrderEvent.LimitPrice,
                 StopPrice = serializedOrderEvent.StopPrice,
                 FillPriceCurrency = serializedOrderEvent.FillPriceCurrency,
-                Id = serializedOrderEvent.OrderEventId
+                Id = serializedOrderEvent.OrderEventId,
+                Quantity = serializedOrderEvent.Quantity
             };
 
             return orderEvent;

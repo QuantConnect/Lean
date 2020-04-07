@@ -64,7 +64,8 @@ namespace QuantConnect.Tests.Common.Orders
                 FillPrice = 11,
                 FillQuantity = 12,
                 FillPriceCurrency = "USD",
-                Id = 55
+                Id = 55,
+                Quantity = 16
             };
 
             var converter = new OrderEventJsonConverter("id");
