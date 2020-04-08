@@ -13,9 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
-
 namespace QuantConnect.Orders
 {
     /// <summary>
@@ -38,40 +35,6 @@ namespace QuantConnect.Orders
         /// The current price at order submission time
         /// </summary>
         public decimal LastPrice { get; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="OrderSubmissionData"/> class
-        /// </summary>
-        public OrderSubmissionData(IBaseData lastData)
-        {
-            if (lastData == null)
-            {
-                return;
-            }
-
-            var tick = lastData as Tick;
-            if (tick != null)
-            {
-                LastPrice = tick.Value;
-                BidPrice = tick.BidPrice;
-                AskPrice = tick.AskPrice;
-                return;
-            }
-
-            var quoteBar = lastData as QuoteBar;
-            if (quoteBar != null)
-            {
-                LastPrice = quoteBar.Close;
-                BidPrice = quoteBar.Bid?.Close ?? lastData.Value;
-                AskPrice = quoteBar.Ask?.Close ?? lastData.Value;
-            }
-            else
-            {
-                LastPrice = lastData.Value;
-                BidPrice = lastData.Value;
-                AskPrice = lastData.Value;
-            }
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OrderSubmissionData"/> class

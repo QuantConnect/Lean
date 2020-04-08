@@ -249,7 +249,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void OldBaseFillModel_MarketOnOpenFill()
         {
             var model = new TestFillModelInheritBaseClass();
-            _security.SetMarketPrice(new Tick(orderDateTime, _security.Symbol, 88, 88));
+            _security.SetMarketPrice(new Tick(orderDateTime, _security.Symbol, 88, 88) {TickType = TickType.Trade});
 
             var result = model.Fill(
                 new FillModelParameters(_security,

@@ -267,5 +267,26 @@ namespace QuantConnect.Data
 
             return consolidator.InputType.IsAssignableFrom(subscription.Type);
         }
+
+        /// <summary>
+        /// Returns true if the provided data is the default data type associated with it's <see cref="SecurityType"/>.
+        /// This is useful to determine if a data point should be used/cached in an environment where consumers will not provider a data type and we want to preserve
+        /// determinism and backwards compatibility when there are multiple data types available per <see cref="SecurityType"/> or new ones added.
+        /// </summary>
+        /// <remarks>Temporary until we have a dictionary for the default data type per security type see GH issue 4196.
+        /// Internal so it's only accessible from this assembly.</remarks>
+        internal static bool IsDefaultDataType(BaseData data)
+        {
+            switch (data.Symbol.SecurityType)
+            {
+                case SecurityType.Equity:
+                    if (data.DataType == MarketDataType.QuoteBar || data.DataType == MarketDataType.Tick && (data as Tick).TickType == TickType.Quote)
+                    {
+                        return false;
+                    }
+                    break;
+            }
+            return true;
+        }
     }
 }
