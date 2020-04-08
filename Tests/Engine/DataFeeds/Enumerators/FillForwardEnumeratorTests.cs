@@ -30,7 +30,7 @@ using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Util;
 
-namespace QuantConnect.Tests.Engine.DataFeeds
+namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
     [TestFixture]
     public class FillForwardEnumeratorTests
