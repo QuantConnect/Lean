@@ -209,8 +209,8 @@ namespace QuantConnect.Securities
             var bar = data as IBar;
             if (bar != null)
             {
-                // we will only set OHLC values using the default data type to preserve determinism and backwards compatibility
-                // gives priority to QuoteBar over TradeBar, to be removed when default data type completely addressed GH issue 4196
+                // we will only set OHLC values using the default data type to preserve determinism and backwards compatibility.
+                // Gives priority to QuoteBar over TradeBar, to be removed when default data type completely addressed GH issue 4196
                 if ((_lastQuoteBarUpdate != data.EndTime || _lastOHLCUpdate != data.EndTime) && isDefaultDataType)
                 {
                     _lastOHLCUpdate = data.EndTime;
