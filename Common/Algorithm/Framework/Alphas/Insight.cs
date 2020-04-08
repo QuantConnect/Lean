@@ -288,7 +288,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// Creates a deep clone of this insight instance
         /// </summary>
         /// <returns>A new insight with identical values, but new instances</returns>
-        public Insight Clone()
+        public virtual Insight Clone()
         {
             return new Insight(Symbol, Period, Type, Direction, Magnitude, Confidence, weight:Weight)
             {

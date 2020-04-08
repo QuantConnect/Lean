@@ -271,6 +271,7 @@
     <Compile Include="Algorithm\Framework\Alphas\CommonAlphaModelTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\ConstantAlphaModelTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\EmaCrossAlphaModelTests.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\GeneratedInsightsCollectionTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\MacdAlphaModelTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\BasePairsTradingAlphaModelTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\RsiAlphaModelTests.cs" />
