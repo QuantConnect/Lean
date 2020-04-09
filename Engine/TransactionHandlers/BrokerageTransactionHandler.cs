@@ -675,8 +675,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // rounds the order prices
             RoundOrderPrices(order, security);
 
-            // save current security time and prices
-            order.OrderSubmissionData = new OrderSubmissionData(security.GetLastData());
+            // save current security prices
+            order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
 
             // update the ticket's internal storage with this new order reference
             ticket.SetOrder(order);

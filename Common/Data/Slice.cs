@@ -443,9 +443,8 @@ namespace QuantConnect.Data
             var allData = new DataDictionary<SymbolData>();
             foreach (var datum in data)
             {
-                // temporary until we have a dictionary for the default data type per security type see GH issue 4196
-                if (datum.Symbol.ID.SecurityType == SecurityType.Equity &&
-                    (datum.DataType == MarketDataType.QuoteBar || datum.DataType == MarketDataType.Tick && (datum as Tick).TickType == TickType.Quote))
+                // we only will cache the default data type to preserve determinism and backwards compatibility
+                if (!SubscriptionManager.IsDefaultDataType(datum))
                 {
                     continue;
                 }

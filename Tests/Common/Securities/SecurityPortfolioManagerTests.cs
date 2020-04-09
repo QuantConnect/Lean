@@ -2360,7 +2360,7 @@ namespace QuantConnect.Tests.Common.Securities
             var initialCash = algorithm.Portfolio.CashBook.TotalValueInAccountCurrency;
 
             var spy = algorithm.AddEquity("SPY");
-            spy.SetMarketPrice(new Tick(new DateTime(2000, 01, 01), Symbols.SPY, 100m, 99m, 101m));
+            spy.SetMarketPrice(new Tick(new DateTime(2000, 01, 01), Symbols.SPY, 100m, 99m, 101m) { TickType = TickType.Trade});
             spy.Holdings.SetHoldings(100m, 100);
 
             var split = new Split(Symbols.SPY, new DateTime(2000, 01, 01), 100, 0.5m, SplitType.SplitOccurred);

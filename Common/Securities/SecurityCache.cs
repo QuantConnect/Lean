@@ -34,6 +34,7 @@ namespace QuantConnect.Securities
     {
         // this is used to prefer quote bar data over the tradebar data
         private DateTime _lastQuoteBarUpdate;
+        private DateTime _lastOHLCUpdate;
         private BaseData _lastData;
         private ConcurrentDictionary<Type, IReadOnlyList<BaseData>> _dataByType = new ConcurrentDictionary<Type, IReadOnlyList<BaseData>>();
 
@@ -172,12 +173,16 @@ namespace QuantConnect.Securities
                 }
             }
 
+            var isDefaultDataType = SubscriptionManager.IsDefaultDataType(data);
+
             // don't set _lastData if receive quotebar then tradebar w/ same end time. this
             // was implemented to grant preference towards using quote data in the fill
             // models and provide a level of determinism on the values exposed via the cache.
-            if (_lastData == null
+            if ((_lastData == null
               || _lastQuoteBarUpdate != data.EndTime
               || data.DataType != MarketDataType.TradeBar)
+                // we will only set the default data type to preserve determinism and backwards compatibility
+                && isDefaultDataType)
             {
                 _lastData = data;
             }
@@ -204,8 +209,11 @@ namespace QuantConnect.Securities
             var bar = data as IBar;
             if (bar != null)
             {
-                if (_lastQuoteBarUpdate != data.EndTime)
+                // we will only set OHLC values using the default data type to preserve determinism and backwards compatibility.
+                // Gives priority to QuoteBar over TradeBar, to be removed when default data type completely addressed GH issue 4196
+                if ((_lastQuoteBarUpdate != data.EndTime || _lastOHLCUpdate != data.EndTime) && isDefaultDataType)
                 {
+                    _lastOHLCUpdate = data.EndTime;
                     if (bar.Open != 0) Open = bar.Open;
                     if (bar.High != 0) High = bar.High;
                     if (bar.Low != 0) Low = bar.Low;

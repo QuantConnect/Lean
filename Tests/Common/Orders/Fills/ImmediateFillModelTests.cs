@@ -759,8 +759,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
         [TestCase(OrderDirection.Sell, 11)]
         [TestCase(OrderDirection.Buy, 21)]
-        // 16 is the average between ask and bid
-        [TestCase(OrderDirection.Hold, 16)]
+        // uses the trade bar last close
+        [TestCase(OrderDirection.Hold, 291)]
         public void PriceReturnsQuoteBarsIfPresent(OrderDirection orderDirection, decimal expected)
         {
             var time = new DateTime(2018, 9, 24, 9, 30, 0);
