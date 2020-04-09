@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
@@ -30,6 +31,7 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Serialization;
 using QuantConnect.Packets;
 using QuantConnect.Statistics;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -88,6 +90,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// Lock to be used when accessing the chart collection
         /// </summary>
         protected object ChartLock { get; }
+
+        /// <summary>
+        /// The algorithm project id
+        /// </summary>
+        protected int ProjectId { get; set; }
 
         /// <summary>
         /// The algorithm unique compilation id
@@ -266,6 +273,7 @@ namespace QuantConnect.Lean.Engine.Results
             TransactionHandler = transactionHandler;
             CompileId = job.CompileId;
             AlgorithmId = job.AlgorithmId;
+            ProjectId = job.ProjectId;
             OrderEventJsonConverter = new OrderEventJsonConverter(AlgorithmId);
             _updateRunner = new Thread(Run, 0) { IsBackground = true, Name = "Result Thread" };
             _updateRunner.Start();
@@ -526,6 +534,62 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             return statisticsResults;
+        }
+
+        /// <summary>
+        /// Save an algorithm message to the log store. Uses a different timestamped method of adding messaging to interweve debug and logging messages.
+        /// </summary>
+        /// <param name="message">String message to store</param>
+        protected abstract void AddToLogStore(string message);
+
+        /// <summary>
+        /// Processes algorithm logs.
+        /// Logs of the same type are batched together one per line and are sent out
+        /// </summary>
+        protected void ProcessAlgorithmLogs(int? messageQueueLimit = null)
+        {
+            ProcessAlgorithmLogsImpl(Algorithm.DebugMessages, PacketType.Debug, messageQueueLimit);
+            ProcessAlgorithmLogsImpl(Algorithm.ErrorMessages, PacketType.HandledError, messageQueueLimit);
+            ProcessAlgorithmLogsImpl(Algorithm.LogMessages, PacketType.Log, messageQueueLimit);
+        }
+
+        private void ProcessAlgorithmLogsImpl(ConcurrentQueue<string> concurrentQueue, PacketType packetType, int? messageQueueLimit = null)
+        {
+            if (concurrentQueue.Count <= 0)
+            {
+                return;
+            }
+
+            var result = new List<string>();
+            var endTime = DateTime.UtcNow.AddMilliseconds(250).Ticks;
+            string message;
+            while (DateTime.UtcNow.Ticks < endTime && concurrentQueue.TryDequeue(out message))
+            {
+                if (messageQueueLimit.HasValue && Messages.Count > messageQueueLimit)
+                {
+                    //if too many in the queue already skip the logging and drop the messages
+                    continue;
+                }
+                AddToLogStore(message);
+                result.Add(message);
+            }
+
+            if (result.Count > 0)
+            {
+                message = string.Join(Environment.NewLine, result);
+                if (packetType == PacketType.Debug)
+                {
+                    Messages.Enqueue(new DebugPacket(ProjectId, AlgorithmId, CompileId, message));
+                }
+                else if (packetType == PacketType.Log)
+                {
+                    Messages.Enqueue(new LogPacket(AlgorithmId, message));
+                }
+                else if (packetType == PacketType.HandledError)
+                {
+                    Messages.Enqueue(new HandledErrorPacket(AlgorithmId, message));
+                }
+            }
         }
     }
 }
