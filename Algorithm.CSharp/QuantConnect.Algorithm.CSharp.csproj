@@ -185,6 +185,7 @@
     <Compile Include="MarginRemainingRegressionAlgorithm.cs" />
     <Compile Include="NoMarginCallExpectedRegressionAlgorithm.cs" />
     <Compile Include="ObjectStoreExampleAlgorithm.cs" />
+    <Compile Include="OrderSubmissionDataRegressionAlgorithm.cs" />
     <Compile Include="RegisterIndicatorRegressionAlgorithm.cs" />
     <Compile Include="ScheduledEventsOrderRegressionAlgorithm.cs" />
     <Compile Include="SectorWeightingFrameworkAlgorithm.cs" />
