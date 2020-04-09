@@ -146,7 +146,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         protected virtual void AddInsightManagerCustomExtensions(StatisticsInsightManagerExtension statistics)
         {
             // send scored insights to messaging handler
-            InsightManager.AddExtension(new AlphaResultPacketSender(Job, MessagingHandler, TimeSpan.FromSeconds(1), 50));
+            InsightManager.AddExtension(new AlphaResultPacketSender(Job, MessagingHandler, TimeSpan.FromSeconds(3), 50));
             InsightManager.AddExtension(new ChartingInsightManagerExtension(Algorithm, statistics));
         }
 

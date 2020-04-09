@@ -104,6 +104,10 @@ namespace QuantConnect.Tests.Engine.Results
             {
                 throw new NotImplementedException();
             }
+
+            protected override void AddToLogStore(string message)
+            {
+            }
         }
     }
 }

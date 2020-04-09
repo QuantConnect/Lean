@@ -133,6 +133,10 @@ namespace QuantConnect.Tests.Engine
             Charts[chartName].Series[seriesName].Values.Add(new ChartPoint(time, value));
         }
 
+        protected override void AddToLogStore(string message)
+        {
+        }
+
         protected void SampleRange(List<Chart> updates)
         {
             foreach (var update in updates)
