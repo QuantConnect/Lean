@@ -154,7 +154,16 @@ namespace QuantConnect.Brokerages.Tradier
         Multileg,
         /// TradierOrderClass: Combo
         [EnumMember(Value = "combo")]
-        Combo
+        Combo,
+        /// TradierOrderClass: Oto
+        [EnumMember(Value = "oto")]
+        Oto,
+        /// TradierOrderClass: Oco
+        [EnumMember(Value = "oco")]
+        Oco,
+        /// TradierOrderClass: Otoco
+        [EnumMember(Value = "otoco")]
+        Otoco
     }
 
     /// <summary>
