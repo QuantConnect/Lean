@@ -190,8 +190,5 @@ namespace QuantConnect.ToolBox.IQFeed
         private CultureInfo _enUS = new CultureInfo("en-US");
         #endregion
     }
- 
-
-
 }
  

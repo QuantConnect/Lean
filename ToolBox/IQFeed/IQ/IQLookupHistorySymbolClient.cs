@@ -63,6 +63,7 @@ namespace QuantConnect.ToolBox.IQFeed
         private CultureInfo _enUS = new CultureInfo("en-US");
         #endregion
     }
+
     public class LookupIntervalEventArgs : LookupEventArgs
     {
         public LookupIntervalEventArgs(string requestId, string line) :
@@ -101,6 +102,7 @@ namespace QuantConnect.ToolBox.IQFeed
         private CultureInfo _enUS = new CultureInfo("en-US");
         #endregion
     }
+
     public class LookupDayWeekMonthEventArgs : LookupEventArgs
     {
         public LookupDayWeekMonthEventArgs(string requestId, string line) :
@@ -166,6 +168,7 @@ namespace QuantConnect.ToolBox.IQFeed
         private string _description;
         #endregion
     }
+
     public class LookupSicSymbolEventArgs : LookupEventArgs
     {
         public LookupSicSymbolEventArgs(string requestId, string line) :
@@ -196,6 +199,7 @@ namespace QuantConnect.ToolBox.IQFeed
         private string _description;
         #endregion
     }
+
     public class LookupNaicSymbolEventArgs : LookupEventArgs
     {
         public LookupNaicSymbolEventArgs(string requestId, string line) :

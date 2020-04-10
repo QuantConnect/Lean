@@ -21,7 +21,6 @@ using System.Net.Sockets;
 
 namespace QuantConnect.ToolBox.IQFeed
 {
-
     public class TextLineEventArgs : EventArgs
     {
         public TextLineEventArgs(string textLine)
