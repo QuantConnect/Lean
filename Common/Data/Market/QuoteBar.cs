@@ -15,6 +15,7 @@
 
 using System;
 using System.Globalization;
+using System.IO;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
@@ -267,6 +268,52 @@ namespace QuantConnect.Data.Market
         /// QuoteBar Reader: Fetch the data from the QC storage and feed it line by line into the engine.
         /// </summary>
         /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="stream">The file data stream</param>
+        /// <param name="date">Date of this reader request</param>
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
+        /// <returns>Enumerable iterator for returning each line of the required data.</returns>
+        public override BaseData Reader(SubscriptionDataConfig config, StreamReader stream, DateTime date, bool isLiveMode)
+        {
+            try
+            {
+                switch (config.SecurityType)
+                {
+                    case SecurityType.Equity:
+                        return ParseEquity(config, stream, date);
+
+                    case SecurityType.Forex:
+                    case SecurityType.Crypto:
+                        return ParseForex(config, stream, date);
+
+                    case SecurityType.Cfd:
+                        return ParseCfd(config, stream, date);
+
+                    case SecurityType.Option:
+                        return ParseOption(config, stream, date);
+
+                    case SecurityType.Future:
+                        return ParseFuture(config, stream, date);
+
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(Invariant($"QuoteBar.Reader(): Error parsing stream, Symbol: {config.Symbol.Value}, SecurityType: {config.SecurityType}, ") +
+                          Invariant($"Resolution: {config.Resolution}, Date: {date.ToStringInvariant("yyyy-MM-dd")}, Message: {err}")
+                );
+            }
+
+            // we need to consume a line anyway, to advance the stream
+            stream.ReadLine();
+
+            // if we couldn't parse it above return a default instance
+            return new QuoteBar { Symbol = config.Symbol, Period = config.Increment };
+        }
+
+        /// <summary>
+        /// QuoteBar Reader: Fetch the data from the QC storage and feed it line by line into the engine.
+        /// </summary>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
         /// <param name="line">Line from the data file requested</param>
         /// <param name="date">Date of this reader request</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
@@ -379,6 +426,18 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
+        /// Parse a quotebar representing a future with a scaling factor
+        /// </summary>
+        /// <param name="config">Symbols, Resolution, DataType</param>
+        /// <param name="streamReader">The data stream of the requested file</param>
+        /// <param name="date">Date of this reader request</param>
+        /// <returns><see cref="QuoteBar"/> with the bid/ask set to same values</returns>
+        public QuoteBar ParseFuture(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        {
+            return ParseQuote(config, date, streamReader, false);
+        }
+
+        /// <summary>
         /// Parse a quotebar representing an option with a scaling factor
         /// </summary>
         /// <param name="config">Symbols, Resolution, DataType</param>
@@ -388,6 +447,18 @@ namespace QuantConnect.Data.Market
         public QuoteBar ParseOption(SubscriptionDataConfig config, string line, DateTime date)
         {
             return ParseQuote(config, date, line, true);
+        }
+
+        /// <summary>
+        /// Parse a quotebar representing an option with a scaling factor
+        /// </summary>
+        /// <param name="config">Symbols, Resolution, DataType</param>
+        /// <param name="streamReader">The data stream of the requested file</param>
+        /// <param name="date">Date of this reader request</param>
+        /// <returns><see cref="QuoteBar"/> with the bid/ask set to same values</returns>
+        public QuoteBar ParseOption(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        {
+            return ParseQuote(config, date, streamReader, true);
         }
 
         /// <summary>
@@ -403,6 +474,18 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
+        /// Parse a quotebar representing a cfd without a scaling factor
+        /// </summary>
+        /// <param name="config">Symbols, Resolution, DataType</param>
+        /// <param name="streamReader">The data stream of the requested file</param>
+        /// <param name="date">Date of this reader request</param>
+        /// <returns><see cref="QuoteBar"/> with the bid/ask set to same values</returns>
+        public QuoteBar ParseCfd(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        {
+            return ParseQuote(config, date, streamReader, false);
+        }
+
+        /// <summary>
         /// Parse a quotebar representing a forex without a scaling factor
         /// </summary>
         /// <param name="config">Symbols, Resolution, DataType</param>
@@ -412,6 +495,18 @@ namespace QuantConnect.Data.Market
         public QuoteBar ParseForex(SubscriptionDataConfig config, string line, DateTime date)
         {
             return ParseQuote(config, date, line, false);
+        }
+
+        /// <summary>
+        /// Parse a quotebar representing a forex without a scaling factor
+        /// </summary>
+        /// <param name="config">Symbols, Resolution, DataType</param>
+        /// <param name="streamReader">The data stream of the requested file</param>
+        /// <param name="date">Date of this reader request</param>
+        /// <returns><see cref="QuoteBar"/> with the bid/ask set to same values</returns>
+        public QuoteBar ParseForex(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        {
+            return ParseQuote(config, date, streamReader, false);
         }
 
         /// <summary>
@@ -426,6 +521,97 @@ namespace QuantConnect.Data.Market
             return ParseQuote(config, date, line, true);
         }
 
+        /// <summary>
+        /// Parse a quotebar representing an equity with a scaling factor
+        /// </summary>
+        /// <param name="config">Symbols, Resolution, DataType</param>
+        /// <param name="streamReader">The data stream of the requested file</param>
+        /// <param name="date">Date of this reader request</param>
+        /// <returns><see cref="QuoteBar"/> with the bid/ask set to same values</returns>
+        public QuoteBar ParseEquity(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
+        {
+            return ParseQuote(config, date, streamReader, true);
+        }
+
+        /// <summary>
+        /// "Scaffold" code - If the data being read is formatted as a QuoteBar, use this method to deserialize it
+        /// </summary>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="streamReader">The data stream of the requested file</param>
+        /// <param name="date">Date of this reader request</param>
+        /// <param name="useScaleFactor">Whether the data has a scaling factor applied</param>
+        /// <returns><see cref="QuoteBar"/> with the bid/ask prices set appropriately</returns>
+        private QuoteBar ParseQuote(SubscriptionDataConfig config, DateTime date, StreamReader streamReader, bool useScaleFactor)
+        {
+            var scaleFactor = useScaleFactor
+                              ? _scaleFactor
+                              : 1;
+
+            var quoteBar = new QuoteBar
+            {
+                Period = config.Increment,
+                Symbol = config.Symbol
+            };
+
+            if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
+            {
+                // hourly and daily have different time format, and can use slow, robust c# parser.
+                quoteBar.Time = streamReader.GetDateTime().ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+            else
+            {
+                // Using custom "ToDecimal" conversion for speed on high resolution data.
+                quoteBar.Time = date.Date.AddMilliseconds((double)streamReader.GetDecimal()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+
+            var open = streamReader.GetDecimal();
+            var high = streamReader.GetDecimal();
+            var low = streamReader.GetDecimal();
+            var close = streamReader.GetDecimal();
+            var lastSize = streamReader.GetDecimal();
+            // only create the bid if it exists in the file
+            if (open != 0 || high != 0 || low != 0 || close != 0)
+            {
+                quoteBar.Bid = new Bar
+                {
+                    Open = open * scaleFactor,
+                    High = high * scaleFactor,
+                    Low = low * scaleFactor,
+                    Close = close * scaleFactor
+                };
+                quoteBar.LastBidSize = lastSize;
+            }
+            else
+            {
+                quoteBar.Bid = null;
+            }
+
+            open = streamReader.GetDecimal();
+            high = streamReader.GetDecimal();
+            low = streamReader.GetDecimal();
+            close = streamReader.GetDecimal();
+            lastSize = streamReader.GetDecimal();
+            // only create the ask if it exists in the file
+            if (open != 0 || high != 0 || low != 0 || close != 0)
+            {
+                quoteBar.Ask = new Bar
+                {
+                    Open = open * scaleFactor,
+                    High = high * scaleFactor,
+                    Low = low * scaleFactor,
+                    Close = close * scaleFactor
+                };
+                quoteBar.LastAskSize = lastSize;
+            }
+            else
+            {
+                quoteBar.Ask = null;
+            }
+
+            quoteBar.Value = quoteBar.Close;
+
+            return quoteBar;
+        }
 
         /// <summary>
         /// "Scaffold" code - If the data being read is formatted as a QuoteBar, use this method to deserialize it

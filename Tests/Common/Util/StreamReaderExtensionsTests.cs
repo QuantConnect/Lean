@@ -248,8 +248,9 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(201900, smartStream.GetInt32());
         }
 
-        [Test]
-        public void Performance()
+        [TestCase(typeof(TradeBar), typeof(TradeBarTest), TickType.Trade)]
+        [TestCase(typeof(QuoteBar), typeof(QuoteBarTest), TickType.Quote)]
+        public void Performance(Type streamReaderType, Type readLineReaderType, TickType tickType)
         {
             var streamReaderMilliSeconds = 0L;
             var streamReaderCount = 0;
@@ -258,22 +259,24 @@ namespace QuantConnect.Tests.Common.Util
             var stopWatch = new Stopwatch();
             {
                 var config = new SubscriptionDataConfig(
-                    typeof(TradeBar),
+                    streamReaderType,
                     Symbols.SPY,
                     Resolution.Minute,
                     TimeZones.NewYork,
                     TimeZones.NewYork,
                     false,
                     true,
-                    false
+                    false,
+                    tickType: tickType
                 );
+                var zipCache = new ZipDataCacheProvider(new DefaultDataProvider());
                 var date = new DateTime(2013, 10, 07);
                 var reader = new TextSubscriptionDataSourceReader(
-                    new ZipDataCacheProvider(new DefaultDataProvider()),
+                    zipCache,
                     config,
                     date,
                     false);
-                var source = typeof(TradeBar).GetBaseDataInstance().GetSource(config, date, false);
+                var source = streamReaderType.GetBaseDataInstance().GetSource(config, date, false);
                 // warmup
                 streamReaderCount = reader.Read(source).Count();
                 streamReaderCount = 0;
@@ -286,26 +289,29 @@ namespace QuantConnect.Tests.Common.Util
                 }
                 stopWatch.Stop();
                 streamReaderMilliSeconds = stopWatch.ElapsedMilliseconds;
+                zipCache.DisposeSafely();
             }
 
             {
                 var config = new SubscriptionDataConfig(
-                    typeof(TradeBarTest),
+                    readLineReaderType,
                     Symbols.SPY,
                     Resolution.Minute,
                     TimeZones.NewYork,
                     TimeZones.NewYork,
                     false,
                     true,
-                    false
+                    false,
+                    tickType: tickType
                 );
+                var zipCache = new ZipDataCacheProvider(new DefaultDataProvider());
                 var date = new DateTime(2013, 10, 07);
                 var reader = new TextSubscriptionDataSourceReader(
-                    new ZipDataCacheProvider(new DefaultDataProvider()),
+                    zipCache,
                     config,
                     date,
                     false);
-                var source = typeof(TradeBarTest).GetBaseDataInstance().GetSource(config, date, false);
+                var source = readLineReaderType.GetBaseDataInstance().GetSource(config, date, false);
                 // warmup
                 getLineReaderCount = reader.Read(source).Count();
                 getLineReaderCount = 0;
@@ -318,6 +324,7 @@ namespace QuantConnect.Tests.Common.Util
                 }
                 stopWatch.Stop();
                 getLineReaderMilliSeconds = stopWatch.ElapsedMilliseconds;
+                zipCache.DisposeSafely();
             }
             Console.WriteLine($"StreamReader: {streamReaderMilliSeconds}ms. Count {streamReaderCount}");
             Console.WriteLine($"GetLine Reader: {getLineReaderMilliSeconds}ms. Count {getLineReaderCount}");
@@ -333,7 +340,14 @@ namespace QuantConnect.Tests.Common.Util
         /// </summary>
         private class TradeBarTest : TradeBar
         {
+        }
 
+        /// <summary>
+        /// Since this class does not implement <see cref="BaseData.Reader(SubscriptionDataConfig,StreamReader,DateTime,bool)"/>
+        /// directly it will fallback to get line reader
+        /// </summary>
+        private class QuoteBarTest : QuoteBar
+        {
         }
     }
 }

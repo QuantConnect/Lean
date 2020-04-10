@@ -279,7 +279,7 @@ namespace QuantConnect.Data.Market
             }
             catch (Exception err)
             {
-                Log.Error(Invariant($"TradeBar.Reader(): Error parsing line: '{stream}', Symbol: {config.Symbol.Value}, SecurityType: ") +
+                Log.Error(Invariant($"TradeBar.Reader(): Error parsing stream, Symbol: {config.Symbol.Value}, SecurityType: ") +
                           Invariant($"{config.SecurityType}, Resolution: {config.Resolution}, Date: {date:yyyy-MM-dd}, Message: {err}")
                 );
             }
