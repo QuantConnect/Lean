@@ -77,7 +77,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <summary>
         /// Creates a subscription to process the request
         /// </summary>
-        private Subscription CreateSubscription(HistoryRequest request, DateTime start, DateTime end)
+        protected virtual Subscription CreateSubscription(HistoryRequest request, DateTime start, DateTime end)
         {
             // data reader expects these values in local times
             start = start.ConvertFromUtc(request.ExchangeHours.TimeZone);
@@ -131,8 +131,16 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             dataReader.DownloadFailed += (sender, args) => { OnDownloadFailed(args); };
             dataReader.ReaderErrorDetected += (sender, args) => { OnReaderErrorDetected(args); };
 
-            var reader = CorporateEventEnumeratorFactory.CreateEnumerators(
-                dataReader,
+            IEnumerator<BaseData> reader = dataReader;
+            var intraday = GetIntradayDataEnumerator(dataReader, request);
+            if (intraday != null)
+            {
+                // we optionally concatenate the intraday data enumerator
+                reader = new ConcatEnumerator(true, reader, intraday);
+            }
+
+            reader = CorporateEventEnumeratorFactory.CreateEnumerators(
+                reader,
                 config,
                 _factorFileProvider,
                 dataReader,
@@ -175,6 +183,14 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader);
             }
             return SubscriptionUtils.Create(subscriptionRequest, reader);
+        }
+
+        /// <summary>
+        /// Gets the intraday data enumerator if any
+        /// </summary>
+        protected virtual IEnumerator<BaseData> GetIntradayDataEnumerator(IEnumerator<BaseData> rawData, HistoryRequest request)
+        {
+            return null;
         }
 
         private class FilterEnumerator<T> : IEnumerator<T>
