@@ -34,6 +34,8 @@
 
 # QC Cloud Setup Bash Files
 *.sh
+# Include docker build scripts for Mac/Linux
+!run_docker.sh
 
 # QC Config Files:
 # config.json
