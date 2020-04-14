@@ -60,52 +60,16 @@ namespace QuantConnect.Report
             var orderTypeValue = token["Type"].Value<string>();
             int orderTypeNumber;
             var orderType = Parse.TryParse(orderTypeValue, NumberStyles.Any, out orderTypeNumber) ?
-                (OrderType)orderTypeNumber :
-                (OrderType)Enum.Parse(typeof(OrderType), orderTypeValue.ToPascalCase());
+                orderTypeNumber :
+                (int)(OrderType)Enum.Parse(typeof(OrderType), orderTypeValue, true);
 
-            var typeOfOrder = TypeFromOrderTypeEnum(orderType);
-            token["Type"] = (int)orderType;
-            return JsonConvert.DeserializeObject(token.ToString(), typeOfOrder, _converter);
+            token["Type"] = orderType;
+            return OrderJsonConverter.CreateOrderFromJObject((JObject)token);
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Returns the object type belonging to the provided OrderType
-        /// </summary>
-        /// <param name="orderType">Order type</param>
-        /// <returns>Class type that supports the given OrderType</returns>
-        public static Type TypeFromOrderTypeEnum(OrderType orderType)
-        {
-            switch (orderType)
-            {
-                case OrderType.Market:
-                    return typeof(MarketOrder);
-
-                case OrderType.Limit:
-                    return typeof(LimitOrder);
-
-                case OrderType.StopMarket:
-                    return typeof(StopMarketOrder);
-
-                case OrderType.StopLimit:
-                    return typeof(StopLimitOrder);
-
-                case OrderType.MarketOnOpen:
-                    return typeof(MarketOnOpenOrder);
-
-                case OrderType.MarketOnClose:
-                    return typeof(MarketOnCloseOrder);
-
-                case OrderType.OptionExercise:
-                    return typeof(OptionExerciseOrder);
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
         }
     }
 }

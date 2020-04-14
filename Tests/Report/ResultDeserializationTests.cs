@@ -114,41 +114,41 @@ namespace QuantConnect.Tests.Report
             {
                 //var orderObjectType = OrderTypeNormalizingJsonConverter.TypeFromOrderTypeEnum(orderType);
                 var intValueJson = OrderJson.Replace(OrderTypeStringReplace, ((int)orderType).ToStringInvariant());
-                var pascalCaseJson = OrderJson.Replace(OrderTypeStringReplace, $"'{orderType.ToStringInvariant().ToPascalCase()}'");
+                var upperCaseJson = OrderJson.Replace(OrderTypeStringReplace, $"'{orderType.ToStringInvariant().ToUpperInvariant()}'");
                 var camelCaseJson = OrderJson.Replace(OrderTypeStringReplace, $"'{orderType.ToStringInvariant().ToCamelCase()}'");
 
                 var intValueLiveResult = InvalidLiveResultJson.Replace(OrderStringReplace, intValueJson);
-                var pascalCaseLiveResult = InvalidLiveResultJson.Replace(OrderStringReplace, pascalCaseJson);
+                var upperCaseLiveResult = InvalidLiveResultJson.Replace(OrderStringReplace, upperCaseJson);
                 var camelCaseLiveResult = InvalidLiveResultJson.Replace(OrderStringReplace, camelCaseJson);
 
                 var intInstance = JsonConvert.DeserializeObject<LiveResult>(intValueLiveResult, settings).Orders.Values.Single();
-                var pascalCaseInstance = JsonConvert.DeserializeObject<LiveResult>(pascalCaseLiveResult, settings).Orders.Values.Single();
+                var upperCaseInstance = JsonConvert.DeserializeObject<LiveResult>(upperCaseLiveResult, settings).Orders.Values.Single();
                 var camelCaseInstance = JsonConvert.DeserializeObject<LiveResult>(camelCaseLiveResult, settings).Orders.Values.Single();
 
-                CollectionAssert.AreEqual(intInstance.BrokerId, pascalCaseInstance.BrokerId);
-                Assert.AreEqual(intInstance.ContingentId, pascalCaseInstance.ContingentId);
-                Assert.AreEqual(intInstance.Direction, pascalCaseInstance.Direction);
-                Assert.AreEqual(intInstance.TimeInForce.GetType(), pascalCaseInstance.TimeInForce.GetType());
-                Assert.AreEqual(intInstance.Id, pascalCaseInstance.Id);
-                Assert.AreEqual(intInstance.Price, pascalCaseInstance.Price);
-                Assert.AreEqual(intInstance.PriceCurrency, pascalCaseInstance.PriceCurrency);
-                Assert.AreEqual(intInstance.SecurityType, pascalCaseInstance.SecurityType);
-                Assert.AreEqual(intInstance.Status, pascalCaseInstance.Status);
-                Assert.AreEqual(intInstance.Symbol, pascalCaseInstance.Symbol);
-                Assert.AreEqual(intInstance.Tag, pascalCaseInstance.Tag);
-                Assert.AreEqual(intInstance.Time, pascalCaseInstance.Time);
-                Assert.AreEqual(intInstance.CreatedTime, pascalCaseInstance.CreatedTime);
-                Assert.AreEqual(intInstance.LastFillTime, pascalCaseInstance.LastFillTime);
-                Assert.AreEqual(intInstance.LastUpdateTime, pascalCaseInstance.LastUpdateTime);
-                Assert.AreEqual(intInstance.CanceledTime, pascalCaseInstance.CanceledTime);
-                Assert.AreEqual(intInstance.Type, pascalCaseInstance.Type);
-                Assert.AreEqual(intInstance.Value, pascalCaseInstance.Value);
-                Assert.AreEqual(intInstance.Quantity, pascalCaseInstance.Quantity);
-                Assert.AreEqual(intInstance.TimeInForce.GetType(), pascalCaseInstance.TimeInForce.GetType());
-                Assert.AreEqual(intInstance.Symbol.ID.Market, pascalCaseInstance.Symbol.ID.Market);
-                Assert.AreEqual(intInstance.OrderSubmissionData?.AskPrice, pascalCaseInstance.OrderSubmissionData?.AskPrice);
-                Assert.AreEqual(intInstance.OrderSubmissionData?.BidPrice, pascalCaseInstance.OrderSubmissionData?.BidPrice);
-                Assert.AreEqual(intInstance.OrderSubmissionData?.LastPrice, pascalCaseInstance.OrderSubmissionData?.LastPrice);
+                CollectionAssert.AreEqual(intInstance.BrokerId, upperCaseInstance.BrokerId);
+                Assert.AreEqual(intInstance.ContingentId, upperCaseInstance.ContingentId);
+                Assert.AreEqual(intInstance.Direction, upperCaseInstance.Direction);
+                Assert.AreEqual(intInstance.TimeInForce.GetType(), upperCaseInstance.TimeInForce.GetType());
+                Assert.AreEqual(intInstance.Id, upperCaseInstance.Id);
+                Assert.AreEqual(intInstance.Price, upperCaseInstance.Price);
+                Assert.AreEqual(intInstance.PriceCurrency, upperCaseInstance.PriceCurrency);
+                Assert.AreEqual(intInstance.SecurityType, upperCaseInstance.SecurityType);
+                Assert.AreEqual(intInstance.Status, upperCaseInstance.Status);
+                Assert.AreEqual(intInstance.Symbol, upperCaseInstance.Symbol);
+                Assert.AreEqual(intInstance.Tag, upperCaseInstance.Tag);
+                Assert.AreEqual(intInstance.Time, upperCaseInstance.Time);
+                Assert.AreEqual(intInstance.CreatedTime, upperCaseInstance.CreatedTime);
+                Assert.AreEqual(intInstance.LastFillTime, upperCaseInstance.LastFillTime);
+                Assert.AreEqual(intInstance.LastUpdateTime, upperCaseInstance.LastUpdateTime);
+                Assert.AreEqual(intInstance.CanceledTime, upperCaseInstance.CanceledTime);
+                Assert.AreEqual(intInstance.Type, upperCaseInstance.Type);
+                Assert.AreEqual(intInstance.Value, upperCaseInstance.Value);
+                Assert.AreEqual(intInstance.Quantity, upperCaseInstance.Quantity);
+                Assert.AreEqual(intInstance.TimeInForce.GetType(), upperCaseInstance.TimeInForce.GetType());
+                Assert.AreEqual(intInstance.Symbol.ID.Market, upperCaseInstance.Symbol.ID.Market);
+                Assert.AreEqual(intInstance.OrderSubmissionData?.AskPrice, upperCaseInstance.OrderSubmissionData?.AskPrice);
+                Assert.AreEqual(intInstance.OrderSubmissionData?.BidPrice, upperCaseInstance.OrderSubmissionData?.BidPrice);
+                Assert.AreEqual(intInstance.OrderSubmissionData?.LastPrice, upperCaseInstance.OrderSubmissionData?.LastPrice);
 
                 CollectionAssert.AreEqual(intInstance.BrokerId, camelCaseInstance.BrokerId);
                 Assert.AreEqual(intInstance.ContingentId, camelCaseInstance.ContingentId);
