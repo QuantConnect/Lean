@@ -117,6 +117,7 @@
     <Compile Include="MovingAverageCrossAlgorithm.py" />
     <Compile Include="MultipleSymbolConsolidationAlgorithm.py" />
     <Compile Include="NLTKSentimentTradingAlgorithm.py" />
+    <Compile Include="ObjectStoreExampleAlgorithm.py" />
     <Compile Include="OnEndOfDayRegressionAlgorithm.py" />
     <Compile Include="OptionChainConsistencyRegressionAlgorithm.py" />
     <Compile Include="OptionChainProviderAlgorithm.py" />

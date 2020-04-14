@@ -92,6 +92,7 @@
     <None Include="PsychSignalSentimentRegressionAlgorithm.py" />
     <Content Include="CustomDataUsingMapFileRegressionAlgorithm.py" />
     <Content Include="LiquidETFUniverseFrameworkAlgorithm.py" />
+    <Content Include="ObjectStoreExampleAlgorithm.py" />
     <Content Include="LiveFeaturesAlgorithm.py" />
     <Content Include="PortfolioRebalanceOnCustomFuncRegressionAlgorithm.py" />
     <Content Include="PortfolioRebalanceOnDateRulesRegressionAlgorithm.py" />
