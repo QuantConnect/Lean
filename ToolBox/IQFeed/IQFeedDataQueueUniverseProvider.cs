@@ -503,8 +503,8 @@ namespace QuantConnect.ToolBox.IQFeed
                         break;
 
                     case "FUTURE":
-
-                        if (columns[columnSymbol].EndsWith("#"))
+                        // we are not interested in designated continuous contracts
+                        if ( columns[columnSymbol].EndsWith( "#" ) || columns[columnSymbol].EndsWith( "#C" ) )
                         {
                             continue;
                         }
