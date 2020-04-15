@@ -38,16 +38,6 @@ namespace QuantConnect.Report
     /// <typeparam name="T">Result type to deserialize into</typeparam>
     public class OrderTypeNormalizingJsonConverter : JsonConverter
     {
-        private readonly JsonConverter _converter;
-
-        /// <summary>
-        /// Creates an instance of the class
-        /// </summary>
-        public OrderTypeNormalizingJsonConverter()
-        {
-            _converter = new OrderJsonConverter();
-        }
-
         public override bool CanConvert(Type objectType)
         {
             return typeof(Order).IsAssignableFrom(objectType);
