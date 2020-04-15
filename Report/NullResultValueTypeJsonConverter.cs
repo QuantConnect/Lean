@@ -60,7 +60,7 @@ namespace QuantConnect.Report
             // Deserialize with OrderJsonConverter, otherwise it will fail. We convert the token back
             // to its JSON representation and use the `JsonConvert.DeserializeObject<T>(...)` method instead
             // of using `token.ToObject<T>()` since it can be provided a JsonConverter in its arguments.
-            return JsonConvert.DeserializeObject<T>(token.ToString(), new Orders.OrderJsonConverter());
+            return JsonConvert.DeserializeObject<T>(token.ToString(), new OrderTypeNormalizingJsonConverter());
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
