@@ -56,7 +56,6 @@ namespace QuantConnect.Tests.Common.Orders
             var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
             var orderEvent = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
             {
-                OrderFee = new OrderFee(new CashAmount(99, "EUR")),
                 Message = "Pepe",
                 Status = OrderStatus.PartiallyFilled,
                 StopPrice = 1,
@@ -70,6 +69,12 @@ namespace QuantConnect.Tests.Common.Orders
 
             var converter = new OrderEventJsonConverter("id");
             var serializeObject = JsonConvert.SerializeObject(orderEvent, converter);
+
+            // OrderFee zero uses null currency and should be ignored when serializing
+            Assert.IsFalse(serializeObject.Contains(Currencies.NullCurrency));
+            Assert.IsFalse(serializeObject.Contains("order-fee-amount"));
+            Assert.IsFalse(serializeObject.Contains("order-fee-currency"));
+
             var deserializeObject = JsonConvert.DeserializeObject<OrderEvent>(serializeObject, converter);
 
             Assert.AreEqual(orderEvent.Symbol, deserializeObject.Symbol);
@@ -88,6 +93,23 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(orderEvent.Message, deserializeObject.Message);
             Assert.AreEqual(orderEvent.Quantity, deserializeObject.Quantity);
             Assert.AreEqual(orderEvent.Status, deserializeObject.Status);
+            Assert.AreEqual(orderEvent.OrderFee.Value.Amount, deserializeObject.OrderFee.Value.Amount);
+            Assert.AreEqual(orderEvent.OrderFee.Value.Currency, deserializeObject.OrderFee.Value.Currency);
+        }
+
+        [Test]
+        public void NonNullOrderFee()
+        {
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
+            var orderEvent = new OrderEvent(order, DateTime.UtcNow, new OrderFee(new CashAmount(88, Currencies.USD)));
+
+            var converter = new OrderEventJsonConverter("id");
+            var serializeObject = JsonConvert.SerializeObject(orderEvent, converter);
+            var deserializeObject = JsonConvert.DeserializeObject<OrderEvent>(serializeObject, converter);
+
+            Assert.IsTrue(serializeObject.Contains("order-fee-amount"));
+            Assert.IsTrue(serializeObject.Contains("order-fee-currency"));
+
             Assert.AreEqual(orderEvent.OrderFee.Value.Amount, deserializeObject.OrderFee.Value.Amount);
             Assert.AreEqual(orderEvent.OrderFee.Value.Currency, deserializeObject.OrderFee.Value.Currency);
         }
