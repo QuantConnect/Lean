@@ -393,6 +393,7 @@
     <Compile Include="Engine\DataFeeds\BacktestingFutureChainProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\DataManagerStub.cs" />
     <Compile Include="Engine\DataFeeds\DataManagerTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\ConcatEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\Factories\OptionChainUniverseSubscriptionEnumeratorFactoryTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\DelistingEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\Factories\FuturesChainUniverseSubscriptionEnumeratorFactoryTests.cs" />
