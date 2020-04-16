@@ -64,21 +64,27 @@ namespace QuantConnect
         public string CurrencySymbol;
 
         /// Average Price of our Holding in the currency the symbol is traded in
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal AveragePrice;
 
         /// Quantity of Symbol We Hold.
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal Quantity;
 
         /// Current Market Price of the Asset in the currency the symbol is traded in
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal MarketPrice;
 
         /// Current market conversion rate into the account currency
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal? ConversionRate;
 
         /// Current market value of the holding
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal MarketValue;
 
         /// Current unrealized P/L of the holding
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal UnrealizedPnL;
 
         /// Create a new default holding:
