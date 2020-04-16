@@ -69,13 +69,13 @@ namespace QuantConnect.Orders.Serialization
         /// <summary>
         /// The fee amount associated with the order
         /// </summary>
-        [JsonProperty("order-fee-amount")]
-        public decimal OrderFeeAmount { get; set; }
+        [JsonProperty("order-fee-amount", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public decimal? OrderFeeAmount { get; set; }
 
         /// <summary>
         /// The fee currency associated with the order
         /// </summary>
-        [JsonProperty("order-fee-currency")]
+        [JsonProperty("order-fee-currency", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string OrderFeeCurrency { get; set; }
 
         /// <summary>
@@ -151,8 +151,11 @@ namespace QuantConnect.Orders.Serialization
             Symbol = orderEvent.Symbol.ID.ToString();
             Time = QuantConnect.Time.DateTimeToUnixTimeStamp(orderEvent.UtcTime);
             Status = orderEvent.Status;
-            OrderFeeAmount = orderEvent.OrderFee.Value.Amount;
-            OrderFeeCurrency = orderEvent.OrderFee.Value.Currency;
+            if (orderEvent.OrderFee.Value.Currency != Currencies.NullCurrency)
+            {
+                OrderFeeAmount = orderEvent.OrderFee.Value.Amount;
+                OrderFeeCurrency = orderEvent.OrderFee.Value.Currency;
+            }
             FillPrice = orderEvent.FillPrice;
             FillPriceCurrency = orderEvent.FillPriceCurrency;
             FillQuantity = orderEvent.FillQuantity;

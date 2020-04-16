@@ -271,6 +271,13 @@ namespace QuantConnect.Orders
             var sid = SecurityIdentifier.Parse(serializedOrderEvent.Symbol);
             var symbol = new Symbol(sid, sid.Symbol);
 
+            var orderFee = OrderFee.Zero;
+            if (serializedOrderEvent.OrderFeeAmount.HasValue)
+            {
+                orderFee = new OrderFee(new CashAmount(serializedOrderEvent.OrderFeeAmount.Value,
+                    serializedOrderEvent.OrderFeeCurrency));
+            }
+
             var orderEvent = new OrderEvent(serializedOrderEvent.OrderId,
                 symbol,
                 DateTime.SpecifyKind(Time.UnixTimeStampToDateTime(serializedOrderEvent.Time), DateTimeKind.Utc),
@@ -278,7 +285,7 @@ namespace QuantConnect.Orders
                 serializedOrderEvent.Direction,
                 serializedOrderEvent.FillPrice,
                 serializedOrderEvent.FillQuantity,
-                new OrderFee(new CashAmount(serializedOrderEvent.OrderFeeAmount, serializedOrderEvent.OrderFeeCurrency)),
+                orderFee,
                 serializedOrderEvent.Message)
             {
                 IsAssignment = serializedOrderEvent.IsAssignment,
