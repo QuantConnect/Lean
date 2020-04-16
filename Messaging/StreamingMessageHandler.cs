@@ -46,8 +46,8 @@ namespace QuantConnect.Messaging
         public void SetAuthentication(AlgorithmNodePacket job)
         {
             _job = job;
-            Transmit(_job);
             _orderEventJsonConverter = new OrderEventJsonConverter(job.AlgorithmId);
+            Transmit(_job);
         }
 
         /// <summary>
