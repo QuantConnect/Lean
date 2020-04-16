@@ -112,7 +112,7 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="trade">The event object</param>
         private void OnTradeUpdate(ITradeUpdate trade)
         {
-            Log.Trace($"AlpacaBrokerage.OnTradeUpdate(): Event:{trade.Event} OrderId:{trade.Order.OrderId} OrderStatus:{trade.Order.OrderStatus} FillQuantity: {trade.Order.FilledQuantity} Price: {trade.Price}");
+            Log.Trace($"AlpacaBrokerage.OnTradeUpdate(): Event:{trade.Event} OrderId:{trade.Order.OrderId} Symbol:{trade.Order.Symbol} OrderStatus:{trade.Order.OrderStatus} FillQuantity:{trade.Order.FilledQuantity} FillPrice:{trade.Price} Quantity:{trade.Order.Quantity} LimitPrice:{trade.Order.LimitPrice} StopPrice:{trade.Order.StopPrice}");
 
             Order order;
             OrderTicket ticket = null;
