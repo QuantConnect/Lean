@@ -30,6 +30,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         {
             using (var brokerage = GetBrokerage())
             {
+                brokerage.Connect();
                 Assert.IsTrue(brokerage.IsConnected);
 
                 for (var i = 0; i < 50; i++)
@@ -44,12 +45,29 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         {
             using (var brokerage = GetBrokerage())
             {
+                brokerage.Connect();
                 Assert.IsTrue(brokerage.IsConnected);
 
                 for (var i = 0; i < 50; i++)
                 {
                     Assert.DoesNotThrow(() => brokerage.GetOpenOrders());
                 }
+            }
+        }
+
+        [Test]
+        public void ClientConnects()
+        {
+            using (var brokerage = GetBrokerage())
+            {
+                var hasError = false;
+
+                brokerage.Message += (s, e) => { hasError = true; };
+
+                brokerage.Connect();
+                Assert.IsTrue(brokerage.IsConnected);
+
+                Assert.IsFalse(hasError);
             }
         }
 
@@ -66,10 +84,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             var userToken = Config.Get("api-access-token");
             var priceProvider = new ApiPriceProvider(userId, userToken);
 
-            var brokerage = new GDAXBrokerage(wssUrl, webSocketClient, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider);
-            brokerage.Connect();
-
-            return brokerage;
+            return new GDAXBrokerage(wssUrl, webSocketClient, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider);
         }
     }
 }

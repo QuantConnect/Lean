@@ -56,10 +56,6 @@ namespace QuantConnect.Brokerages.GDAX
         private readonly RateGate _publicEndpointRateLimiter = new RateGate(6, TimeSpan.FromSeconds(1));
         private readonly RateGate _privateEndpointRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
 
-        // order ids needed for market order fill tracking
-        private string _pendingGdaxMarketOrderId;
-        private int _pendingLeanMarketOrderId;
-
         private readonly IPriceProvider _priceProvider;
 
         #endregion
@@ -67,7 +63,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// The list of websocket channels to subscribe
         /// </summary>
-        protected virtual string[] ChannelNames { get; } = { "heartbeat", "user", "matches" };
+        protected virtual string[] ChannelNames { get; } = { "heartbeat", "user" };
 
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
@@ -195,13 +191,19 @@ namespace QuantConnect.Brokerages.GDAX
                 else if (raw.Type == "error")
                 {
                     Log.Error($"GDAXBrokerage.OnMessage.error(): Data: {Environment.NewLine}{e.Message}");
+
                     var error = JsonConvert.DeserializeObject<Messages.Error>(e.Message, JsonSettings);
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, $"GDAXBrokerage.OnMessage: {error.Message} {error.Reason}"));
-                    return;
+                    var messageType = error.Message.Equals("Failed to subscribe", StringComparison.InvariantCultureIgnoreCase) ||
+                                      error.Message.Equals("Authentication Failed", StringComparison.InvariantCultureIgnoreCase)
+                        ? BrokerageMessageType.Error
+                        : BrokerageMessageType.Warning;
+                    var message = $"Message:{error.Message} - Reason:{error.Reason}";
+
+                    OnMessage(new BrokerageMessageEvent(messageType, -1, $"GDAXBrokerage.OnMessage: {message}"));
                 }
                 else if (raw.Type == "match")
                 {
-                    OrderMatch(e.Message);
+                    OnMatch(e.Message);
                     return;
                 }
                 else if (raw.Type == "open" || raw.Type == "change" || raw.Type == "done" || raw.Type == "received" || raw.Type == "subscriptions" || raw.Type == "last_match")
@@ -321,65 +323,37 @@ namespace QuantConnect.Brokerages.GDAX
             }
         }
 
-        private void OrderMatch(string data)
+        private void OnMatch(string data)
         {
             // deserialize the current match (trade) message
             var message = JsonConvert.DeserializeObject<Messages.Matched>(data, JsonSettings);
 
-            if (_isDataQueueHandler)
+            if (string.IsNullOrEmpty(message.UserId))
             {
-                EmitTradeTick(message);
+                // message received from the "matches" channel
+                if (_isDataQueueHandler)
+                {
+                    EmitTradeTick(message);
+                }
+                return;
             }
+
+            // message received from the "user" channel, this trade is ours
 
             // check the list of currently active orders, if the current trade is ours we are either a maker or a taker
             var currentOrder = CachedOrderIDs
                 .FirstOrDefault(o => o.Value.BrokerId.Contains(message.MakerOrderId) || o.Value.BrokerId.Contains(message.TakerOrderId));
 
-            if (_pendingGdaxMarketOrderId != null &&
-                // order fill for other users
-                (currentOrder.Value == null ||
-                // order fill for other order of ours (less likely but may happen)
-                currentOrder.Value.BrokerId[0] != _pendingGdaxMarketOrderId))
-            {
-                // process all fills for our pending market order
-                var fills = FillSplit[_pendingLeanMarketOrderId];
-                var fillMessages = fills.Messages;
-
-                for (var i = 0; i < fillMessages.Count; i++)
-                {
-                    var fillMessage = fillMessages[i];
-                    var isFinalFill = i == fillMessages.Count - 1;
-
-                    // emit all order events with OrderStatus.PartiallyFilled except for the last one which has OrderStatus.Filled
-                    EmitFillOrderEvent(fillMessage, fills.Order.Symbol, fills, isFinalFill);
-                }
-
-                // clear the pending market order
-                _pendingGdaxMarketOrderId = null;
-                _pendingLeanMarketOrderId = 0;
-            }
-
             if (currentOrder.Value == null)
             {
-                // not our order, nothing else to do here
+                // should never happen, log just in case
+                Log.Error($"GDAXBrokerage.OrderMatch(): Unexpected match: {message.ProductId} {data}");
                 return;
             }
 
             Log.Trace($"GDAXBrokerage.OrderMatch(): Match: {message.ProductId} {data}");
 
             var order = currentOrder.Value;
-
-            if (order.Type == OrderType.Market)
-            {
-                // Fill events for this order will be delayed until we receive messages for a different order,
-                // so we can know which is the last fill.
-                // The market order total filled quantity can be less than the total order quantity,
-                // details here: https://github.com/QuantConnect/Lean/issues/1751
-
-                // do not process market order fills immediately, save off the order ids
-                _pendingGdaxMarketOrderId = order.BrokerId[0];
-                _pendingLeanMarketOrderId = order.Id;
-            }
 
             if (!FillSplit.ContainsKey(order.Id))
             {
@@ -389,15 +363,12 @@ namespace QuantConnect.Brokerages.GDAX
             var split = FillSplit[order.Id];
             split.Add(message);
 
-            if (order.Type != OrderType.Market)
-            {
-                var symbol = ConvertProductId(message.ProductId);
+            var symbol = ConvertProductId(message.ProductId);
 
-                // is this the total order at once? Is this the last split fill?
-                var isFinalFill = Math.Abs(message.Size) == Math.Abs(order.Quantity) || Math.Abs(split.OrderQuantity) == Math.Abs(split.TotalQuantity);
+            // is this the total order at once? Is this the last split fill?
+            var isFinalFill = Math.Abs(message.Size) == Math.Abs(order.Quantity) || Math.Abs(split.OrderQuantity) == Math.Abs(split.TotalQuantity);
 
-                EmitFillOrderEvent(message, symbol, split, isFinalFill);
-            }
+            EmitFillOrderEvent(message, symbol, split, isFinalFill);
         }
 
         private void EmitFillOrderEvent(Messages.Matched message, Symbol symbol, GDAXFill split, bool isFinalFill)
@@ -549,17 +520,17 @@ namespace QuantConnect.Brokerages.GDAX
                 return;
             }
 
-            var token = GetAuthenticationToken(JsonConvert.SerializeObject(payload), "GET", "/users/self/verify");
+            var token = GetAuthenticationToken(string.Empty, "GET", "/users/self/verify");
 
             var json = JsonConvert.SerializeObject(new
             {
                 type = payload.type,
                 channels = payload.channels,
                 product_ids = payload.product_ids,
-                SignHeader = token.Signature,
-                KeyHeader = ApiKey,
-                PassHeader = _passPhrase,
-                TimeHeader = token.Timestamp
+                timestamp = token.Timestamp,
+                key = ApiKey,
+                passphrase = _passPhrase,
+                signature = token.Signature,
             });
 
             WebSocket.Send(json);
