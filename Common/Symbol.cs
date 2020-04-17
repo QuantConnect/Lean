@@ -515,7 +515,7 @@ namespace QuantConnect
                 return new Symbol(sid, sid.Symbol);
             }
 
-            return Empty;
+            return new Symbol(new SecurityIdentifier(ticker, 0), ticker);
         }
 
         #endregion

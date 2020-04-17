@@ -99,6 +99,7 @@
     <Content Include="RegisterIndicatorRegressionAlgorithm.py" />
     <Content Include="SectorWeightingFrameworkAlgorithm.py" />
     <Content Include="SetHoldingsMultipleTargetsRegressionAlgorithm.py" />
+    <Content Include="StringToSymbolImplicitConversionRegressionAlgorithm.py" />
     <Content Include="TradingEconomicsCalendarIndicatorAlgorithm.py" />
     <Content Include="OnEndOfDayRegressionAlgorithm.py" />
     <Content Include="SECReportDataAlgorithm.py" />

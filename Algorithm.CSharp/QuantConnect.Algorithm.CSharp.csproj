@@ -197,6 +197,7 @@
     <Compile Include="PortfolioRebalanceOnSecurityChangesRegressionAlgorithm.cs" />
     <Compile Include="ResolutionSwitchingAlgorithm.cs" />
     <Compile Include="SetHoldingsFutureRegressionAlgorithm.cs" />
+    <Compile Include="StringToSymbolImplicitConversionRegressionAlgorithm.cs" />
     <Compile Include="TimeRulesDefaultTimeZoneRegressionAlgorithm.cs" />
     <Compile Include="SetHoldingsMultipleTargetsRegressionAlgorithm.cs" />
     <Compile Include="SetHoldingsMarketOnOpenRegressionAlgorithm.cs" />
