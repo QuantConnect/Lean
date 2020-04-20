@@ -84,6 +84,7 @@ usa,[*],option,,USD,100,0.01,1
 
 usa,[*],equity,,USD,1,0.01,1
 
+# for backwards compatibility, order here is important for futures, since we could have the same symbol for more than 1 market in which case Lean will use the first
 usa,BCF,future,,USD,50,0.25,1
 usa,ZC,future,,USD,50,0.25,1
 usa,ZW,future,,USD,50,0.25,1

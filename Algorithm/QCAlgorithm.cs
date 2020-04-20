@@ -77,6 +77,11 @@ namespace QuantConnect.Algorithm
         /// </summary>
         protected MarketHoursDatabase MarketHoursDatabase { get; }
 
+        /// <summary>
+        /// Gets the symbol properties database in use by this algorithm
+        /// </summary>
+        protected SymbolPropertiesDatabase SymbolPropertiesDatabase { get; }
+
         // used for calling through to void OnData(Slice) if no override specified
         private bool _checkedForOnDataSlice;
         private Action<Slice> _onDataSlice;
@@ -139,6 +144,7 @@ namespace QuantConnect.Algorithm
 
             // get exchange hours loaded from the market-hours-database.csv in /Data/market-hours
             MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            SymbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
             // universe selection
             UniverseManager = new UniverseManager();
@@ -1528,7 +1534,8 @@ namespace QuantConnect.Algorithm
         {
             if (market == null)
             {
-                if (!BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Future, out market))
+                if (!SymbolPropertiesDatabase.TryGetMarket(ticker, SecurityType.Future, out market)
+                    && !BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Future, out market))
                 {
                     throw new KeyNotFoundException($"No default market set for security type: {SecurityType.Future}");
                 }
