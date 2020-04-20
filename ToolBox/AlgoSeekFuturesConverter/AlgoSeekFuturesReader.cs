@@ -22,7 +22,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using System.Globalization;
-using QuantConnect.Data;
 using QuantConnect.Securities.Future;
 
 namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
@@ -84,23 +83,23 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
         private string GetExchangeFromRawFileName(string file)
         {
-            if (file.startsWith("cbot"))
+            if (file.StartsWith("cbot"))
             {
                 return Market.CBOT;
             }
-            else if (file.startsWith("cme"))
+            else if (file.StartsWith("cme"))
             {
                 return Market.CME;
             }
-            else if (file.startsWith("comex"))
+            else if (file.StartsWith("comex"))
             {
                 return Market.COMEX;
             }
-            else if (file.startsWith("nymex"))
+            else if (file.StartsWith("nymex"))
             {
                 return Market.NYMEX;
             }
-            else if (file.startsWith("VX"))
+            else if (file.StartsWith("VX"))
             {
                 return Market.CBOE;
             }

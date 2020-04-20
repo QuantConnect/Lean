@@ -15,6 +15,8 @@
 
 using System;
 using System.Reflection;
+using QuantConnect.Brokerages;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests
 {
@@ -101,7 +103,12 @@ namespace QuantConnect.Tests
         }
         private static Symbol CreateFutureSymbol(string symbol, DateTime expiry)
         {
-            return Symbol.CreateFuture(symbol, Market.USA, expiry);
+            string market;
+            if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(symbol, SecurityType.Future, out market))
+            {
+                market = DefaultBrokerageModel.DefaultMarketMap[SecurityType.Future];
+            }
+            return Symbol.CreateFuture(symbol, market, expiry);
         }
 
         private static Symbol CreateCfdSymbol(string symbol, string market)

@@ -29,6 +29,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Net;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.IQFeed
 {
@@ -81,9 +82,11 @@ namespace QuantConnect.ToolBox.IQFeed
 
         // futures fundamental data resolver
         private readonly SymbolFundamentalData _symbolFundamentalData;
+        private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
 
         public IQFeedDataQueueUniverseProvider()
         {
+            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _symbolFundamentalData = new SymbolFundamentalData();
             _symbolFundamentalData.Connect();
             _symbolFundamentalData.SetClientName("SymbolFundamentalData");
@@ -402,7 +405,7 @@ namespace QuantConnect.ToolBox.IQFeed
                             }
                         }
 
-                        var market = _futuresExchanges.ContainsKey(columns[columnExchange]) ? _futuresExchanges[columns[columnExchange]] : Market.USA;
+                        var market = GetFutureMarket(underlyingString, columns[columnExchange]);
                         canonicalSymbol = Symbol.Create(underlyingString, SecurityType.Future, market);
 
                         if (!symbolCache.ContainsKey(canonicalSymbol))
@@ -443,7 +446,6 @@ namespace QuantConnect.ToolBox.IQFeed
 
             return symbolUniverse;
         }
-
 
         /// <summary>
         /// Private method loads all option or future contracts for a particular underlying
@@ -513,7 +515,6 @@ namespace QuantConnect.ToolBox.IQFeed
 
                         var parsed = SymbolRepresentation.ParseFutureTicker(futuresTicker);
                         var underlyingString = parsed.Underlying;
-                        var market = Market.USA;
 
                         if (_iqFeedNameMap.ContainsKey(underlyingString))
                             underlyingString = _iqFeedNameMap[underlyingString];
@@ -523,6 +524,7 @@ namespace QuantConnect.ToolBox.IQFeed
                             continue;
                         }
 
+                        var market = GetFutureMarket(underlyingString, columns[columnExchange]);
                         // Futures contracts have different idiosyncratic expiration dates that IQFeed symbol universe file doesn't contain
                         // We request IQFeed explicitly for the exact expiration data of each contract
 
@@ -555,6 +557,20 @@ namespace QuantConnect.ToolBox.IQFeed
             return symbolUniverse;
         }
 
+        private string GetFutureMarket(string symbol, string exchange)
+        {
+            string market;
+            if (_futuresExchanges.ContainsKey(exchange))
+            {
+                market = _futuresExchanges[exchange];
+            }
+            else if (!_symbolPropertiesDatabase.TryGetMarket(symbol, SecurityType.Future, out market))
+            {
+                market = DefaultBrokerageModel.DefaultMarketMap[SecurityType.Future];
+            }
+
+            return market;
+        }
 
         // Class stores symbol data in memory if symbol is loaded in memory by default (e.g. Equity, FX),
         // and stores quick access parameters for those symbols that are loaded in memory on demand (e.g. Equity/Index options, Futures)
