@@ -212,7 +212,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 var expirationMonth = parsed.ExpirationMonth;
                 var expirationYear = GetExpirationYear(time, expirationYearShort);
 
-                var expiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(underlying);
+                var expiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(Symbol.Create(underlying, SecurityType.Future, Market.USA));
                 var expiryDate = expiryFunc(new DateTime(expirationYear, expirationMonth, 1));
                 var symbol = Symbol.CreateFuture(underlying, Market.USA, expiryDate);
 
