@@ -367,57 +367,8 @@
         "12/24/2020": "13:00:00"
       }
     },
-
-    "Future-usa-[*]": {
-      "dataTimeZone": "UTC",
-      "exchangeTimeZone": "America/Chicago",
-      "sunday": [
-        {
-          "start": "17:00:00",
-          "end": "1.00:00:00",
-          "state": "market"
-        }
-      ],
-      "monday": [
-        {
-          "start": "00:00:00",
-          "end": "1.00:00:00",
-          "state": "market"
-        }
-      ],
-      "tuesday": [
-        {
-          "start": "00:00:00",
-          "end": "1.00:00:00",
-          "state": "market"
-        }
-      ],
-      "wednesday": [
-        {
-          "start": "00:00:00",
-          "end": "1.00:00:00",
-          "state": "market"
-        }
-      ],
-      "thursday": [
-        {
-          "start": "00:00:00",
-          "end": "1.00:00:00",
-          "state": "market"
-        }
-      ],
-      "friday": [
-        {
-          "start": "00:00:00",
-          "end": "16:00:00",
-          "state": "market"
-        }
-      ],
-      "saturday": [],
-      "holidays": []
-    },
-
-    "Future-usa-ZW": {
+    
+    "Future-cbot-ZW": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -510,7 +461,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-KE": {
+    "Future-cbot-KE": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -861,7 +812,7 @@
         "01/04/2021": "08:30:00"
       }
     },
-    "Future-usa-LBS": {
+    "Future-cme-LBS": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "monday": [
@@ -1002,7 +953,7 @@
         "12/24/2020": "12:05:00"
       }
     },
-    "Future-usa-ZC": {
+    "Future-cbot-ZC": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -1095,7 +1046,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-ZS": {
+    "Future-cbot-ZS": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -1188,7 +1139,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-ZM": {
+    "Future-cbot-ZM": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -1281,7 +1232,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-ZL": {
+    "Future-cbot-ZL": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -1374,7 +1325,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-ZO": {
+    "Future-cbot-ZO": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -1467,7 +1418,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-DX": {
+    "Future-ice-DX": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -1716,7 +1667,7 @@
         "1/20/2020": "13:00:00"
       }
     },
-    "Future-usa-6B": {
+    "Future-cme-6B": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -1784,7 +1735,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-6C": {
+    "Future-cme-6C": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -1852,7 +1803,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-6J": {
+    "Future-cme-6J": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -1920,7 +1871,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-6S": {
+    "Future-cme-6S": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -1988,7 +1939,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-6E": {
+    "Future-cme-6E": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -2056,7 +2007,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-6A": {
+    "Future-cme-6A": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -2124,7 +2075,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-6N": {
+    "Future-cme-6N": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -2192,7 +2143,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-1S": {
+    "Future-nymex-1S": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -2391,7 +2342,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-22": {
+    "Future-nymex-22": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -2595,7 +2546,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-6L": {
+    "Future-cme-6L": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -2833,7 +2784,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-6M": {
+    "Future-cme-6M": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -3063,7 +3014,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-6R": {
+    "Future-cme-6R": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -3278,7 +3229,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-6Z": {
+    "Future-cme-6Z": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -3496,7 +3447,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-A0D": {
+    "Future-nymex-A0D": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -3697,7 +3648,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-A0F": {
+    "Future-nymex-A0F": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -3899,7 +3850,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-A1L": {
+    "Future-nymex-A1L": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -4098,7 +4049,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-A1M": {
+    "Future-nymex-A1M": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -4297,7 +4248,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-A1R": {
+    "Future-nymex-A1R": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -4496,7 +4447,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-A32": {
+    "Future-nymex-A32": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -4695,7 +4646,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-A3G": {
+    "Future-nymex-A3G": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -4896,7 +4847,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-A7E": {
+    "Future-nymex-A7E": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -5095,7 +5046,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-A7I": {
+    "Future-nymex-A7I": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -5294,7 +5245,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-A7Q": {
+    "Future-nymex-A7Q": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -5493,7 +5444,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-A8J": {
+    "Future-nymex-A8J": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -5692,7 +5643,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-A8K": {
+    "Future-nymex-A8K": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -5891,7 +5842,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-A8O": {
+    "Future-nymex-A8O": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -6090,7 +6041,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-A91": {
+    "Future-nymex-A91": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -6292,7 +6243,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-A9N": {
+    "Future-nymex-A9N": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -6493,7 +6444,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-AA6": {
+    "Future-nymex-AA6": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -6692,7 +6643,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-AA8": {
+    "Future-nymex-AA8": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -6891,7 +6842,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-ABS": {
+    "Future-nymex-ABS": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -7090,7 +7041,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-ABT": {
+    "Future-nymex-ABT": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -7289,7 +7240,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-AC0": {
+    "Future-nymex-AC0": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -7488,7 +7439,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-ACD": {
+    "Future-cme-ACD": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -7703,7 +7654,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-AD0": {
+    "Future-nymex-AD0": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -7902,7 +7853,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-ADB": {
+    "Future-nymex-ADB": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -8105,7 +8056,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-AE5": {
+    "Future-nymex-AE5": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -8309,7 +8260,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-AGA": {
+    "Future-nymex-AGA": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -8511,7 +8462,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-AJL": {
+    "Future-nymex-AJL": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -8710,7 +8661,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-AJS": {
+    "Future-nymex-AJS": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -8909,7 +8860,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-AJY": {
+    "Future-cme-AJY": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -9124,7 +9075,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-AKL": {
+    "Future-nymex-AKL": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -9323,7 +9274,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-AKZ": {
+    "Future-nymex-AKZ": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -9522,7 +9473,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-ANE": {
+    "Future-cme-ANE": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -9737,7 +9688,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-APS": {
+    "Future-nymex-APS": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -9938,7 +9889,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-AR0": {
+    "Future-nymex-AR0": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -10137,7 +10088,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-ARE": {
+    "Future-nymex-ARE": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -10336,7 +10287,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-AUP": {
+    "Future-comex-AUP": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -10538,7 +10489,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-AVZ": {
+    "Future-nymex-AVZ": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -10737,7 +10688,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-AW": {
+    "Future-cbot-AW": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [],
@@ -10904,7 +10855,7 @@
         "12/24/2019": "12:00:00"
       }
     },
-    "Future-usa-AYV": {
+    "Future-nymex-AYV": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -11103,7 +11054,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-AYX": {
+    "Future-nymex-AYX": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -11304,7 +11255,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-AZ1": {
+    "Future-nymex-AZ1": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -11505,7 +11456,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-B0": {
+    "Future-nymex-B0": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -11704,7 +11655,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-B7H": {
+    "Future-nymex-B7H": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -11905,7 +11856,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-BCF": {
+    "Future-cbot-BCF": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -11999,7 +11950,7 @@
         "12/24/2019": "12:45:00"
       }
     },
-    "Future-usa-BIO": {
+    "Future-cme-BIO": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -12194,7 +12145,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-BK": {
+    "Future-nymex-BK": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -12398,7 +12349,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-BOO": {
+    "Future-nymex-BOO": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -12600,7 +12551,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-BR7": {
+    "Future-nymex-BR7": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -12799,7 +12750,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-BTC": {
+    "Future-cme-BTC": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -12895,7 +12846,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-BWF": {
+    "Future-cbot-BWF": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -12989,7 +12940,7 @@
         "12/24/2019": "12:45:00"
       }
     },
-    "Future-usa-BZ": {
+    "Future-nymex-BZ": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -13205,7 +13156,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-CB": {
+    "Future-cme-CB": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -13418,7 +13369,7 @@
         "12/31/2019": "13:55:00"
       }
     },
-    "Future-usa-CJY": {
+    "Future-cme-CJY": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -13633,7 +13584,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-CL": {
+    "Future-nymex-CL": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -13701,7 +13652,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-CNH": {
+    "Future-cme-CNH": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -13923,7 +13874,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-CRB": {
+    "Future-nymex-CRB": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -14122,7 +14073,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-CSC": {
+    "Future-cme-CSC": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -14335,7 +14286,7 @@
         "12/31/2019": "13:55:00"
       }
     },
-    "Future-usa-CSW": {
+    "Future-nymex-CSW": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -14534,7 +14485,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-CSX": {
+    "Future-nymex-CSX": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -14736,7 +14687,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-CU": {
+    "Future-nymex-CU": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -14935,7 +14886,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-D1N": {
+    "Future-nymex-D1N": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -15136,7 +15087,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-DC": {
+    "Future-cme-DC": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -15349,7 +15300,7 @@
         "12/31/2019": "13:55:00"
       }
     },
-    "Future-usa-DCB": {
+    "Future-nymex-DCB": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -15553,7 +15504,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-DY": {
+    "Future-cme-DY": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -15766,7 +15717,7 @@
         "12/31/2019": "13:55:00"
       }
     },
-    "Future-usa-E6": {
+    "Future-nymex-E6": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -15965,7 +15916,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-E7": {
+    "Future-cme-E7": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -16180,7 +16131,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-EAD": {
+    "Future-cme-EAD": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -16395,7 +16346,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-ECD": {
+    "Future-cme-ECD": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -16610,7 +16561,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-EDP": {
+    "Future-comex-EDP": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -16812,7 +16763,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-EH": {
+    "Future-cbot-EH": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -16989,7 +16940,7 @@
         "12/24/2019": "12:45:00"
       }
     },
-    "Future-usa-EI": {
+    "Future-cme-EI": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -17184,7 +17135,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-EMD": {
+    "Future-cme-EMD": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -17404,7 +17355,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-EN": {
+    "Future-nymex-EN": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -17605,7 +17556,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-EPN": {
+    "Future-nymex-EPN": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -17806,7 +17757,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-ESK": {
+    "Future-cme-ESK": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -18021,7 +17972,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-EVC": {
+    "Future-nymex-EVC": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -18222,7 +18173,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-EWG": {
+    "Future-nymex-EWG": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -18421,7 +18372,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-EWN": {
+    "Future-nymex-EWN": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -18623,7 +18574,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-EXR": {
+    "Future-nymex-EXR": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -18822,7 +18773,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-F1U": {
+    "Future-cbot-F1U": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -18896,7 +18847,7 @@
       "holidays": [],
       "earlyCloses": {}
     },
-    "Future-usa-UB": {
+    "Future-cbot-UB": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -19117,7 +19068,7 @@
         "12/24/2020": "12:15:00"
       }
     },
-    "Future-usa-TN": {
+    "Future-cbot-TN": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -19248,7 +19199,7 @@
         "12/24/2020": "12:15:00"
       }
     },
-    "Future-usa-FO": {
+    "Future-nymex-FO": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -19449,7 +19400,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-FRC": {
+    "Future-nymex-FRC": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -19651,7 +19602,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-FSS": {
+    "Future-nymex-FSS": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -19853,7 +19804,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-GCU": {
+    "Future-nymex-GCU": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -20055,7 +20006,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-GD": {
+    "Future-cme-GD": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -20124,7 +20075,7 @@
       "holidays": [],
       "earlyCloses": {}
     },
-    "Future-usa-GDK": {
+    "Future-cme-GDK": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -20337,7 +20288,7 @@
         "12/31/2019": "13:55:00"
       }
     },
-    "Future-usa-GNF": {
+    "Future-cme-GNF": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -20550,7 +20501,7 @@
         "12/31/2019": "13:55:00"
       }
     },
-    "Future-usa-HCL": {
+    "Future-nymex-HCL": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -20749,7 +20700,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-HG": {
+    "Future-comex-HG": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -20950,7 +20901,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-HH": {
+    "Future-nymex-HH": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -21159,7 +21110,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-HO": {
+    "Future-nymex-HO": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -21227,7 +21178,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-HP": {
+    "Future-nymex-HP": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -21429,7 +21380,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-HRC": {
+    "Future-nymex-HRC": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -21628,7 +21579,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-HTT": {
+    "Future-nymex-HTT": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -21827,7 +21778,7 @@
         "12/24/2019": "13:45:00"
       }
     },
-    "Future-usa-IBV": {
+    "Future-cme-IBV": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -22022,7 +21973,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-J7": {
+    "Future-cme-J7": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -22237,7 +22188,7 @@
         "12/24/2019": "12:15:00"
       }
     },
-    "Future-usa-RB": {
+    "Future-nymex-RB": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -22305,7 +22256,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-NG": {
+    "Future-nymex-NG": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -22373,7 +22324,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-ZB": {
+    "Future-cbot-ZB": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -22441,7 +22392,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-ZN": {
+    "Future-cbot-ZN": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -22509,7 +22460,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-ZF": {
+    "Future-cbot-ZF": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -22577,7 +22528,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-ZT": {
+    "Future-cbot-ZT": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -22645,7 +22596,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-GE": {
+    "Future-cme-GE": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -22890,7 +22841,7 @@
         "12/24/2020": "12:15:00"
       }
     },
-    "Future-usa-ES": {
+    "Future-cme-ES": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -22983,7 +22934,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-NQ": {
+    "Future-cme-NQ": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -23076,7 +23027,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-YM": {
+    "Future-cbot-YM": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -23169,7 +23120,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-VX": {
+    "Future-cboe-VX": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -23237,7 +23188,6 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-NTY": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -23330,7 +23280,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-NKD": {
+    "Future-cme-NKD": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -23398,7 +23348,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-LE": {
+    "Future-cme-LE": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [],
@@ -23440,7 +23390,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-GF": {
+    "Future-cme-GF": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [],
@@ -23482,7 +23432,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-HE": {
+    "Future-cme-HE": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [],
@@ -23524,7 +23474,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-GC": {
+    "Future-comex-GC": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -23592,7 +23542,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-SI": {
+    "Future-comex-SI": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -23660,7 +23610,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-PL": {
+    "Future-nymex-PL": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -23728,7 +23678,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-PA": {
+    "Future-nymex-PA": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -23796,7 +23746,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-CT": {
+    "Future-ice-CT": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -24033,7 +23983,7 @@
         "12/24/2019": "13:05:00"
       }
     },
-    "Future-usa-OJ": {
+    "Future-ice-OJ": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [],
@@ -24222,7 +24172,7 @@
         "12/24/2019": "13:05:00"
       }
     },
-    "Future-usa-KC": {
+    "Future-ice-KC": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [],
@@ -24430,7 +24380,7 @@
         "12/24/2019": "13:05:00"
       }
     },
-    "Future-usa-SB": {
+    "Future-ice-SB": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [],
@@ -24631,7 +24581,7 @@
         "12/24/2013": "13:00:00"
       }
     },
-    "Future-usa-YO": {
+    "Future-nymex-YO": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -24699,7 +24649,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Future-usa-CC": {
+    "Future-ice-CC": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [],
@@ -24911,7 +24861,7 @@
         "12/24/2019": "13:05:00"
       }
     },
-    "Future-usa-B": {
+    "Future-ice-B": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
@@ -25069,7 +25019,7 @@
         "12/31/2020": "15:00:00"
       }
     },
-    "Future-usa-G": {
+    "Future-ice-G": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
