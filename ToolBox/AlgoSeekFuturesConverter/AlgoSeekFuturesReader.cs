@@ -45,6 +45,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         private readonly int _columnQuantity = -1;
         private readonly int _columnPrice = -1;
         private readonly int _columnsCount = -1;
+        private readonly string _exchange;
 
         /// <summary>
         /// Enumerate through the lines of the algoseek files.
@@ -78,6 +79,35 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             //Prime the data pump, set the current.
             Current = null;
             MoveNext();
+            var exchange = GetExchangeFromRawFileName(file);
+        }
+
+        private string GetExchangeFromRawFileName(string file)
+        {
+            if (file.startsWith("cbot"))
+            {
+                return Market.CBOT;
+            }
+            else if (file.startsWith("cme"))
+            {
+                return Market.CME;
+            }
+            else if (file.startsWith("comex"))
+            {
+                return Market.COMEX;
+            }
+            else if (file.startsWith("nymex"))
+            {
+                return Market.NYMEX;
+            }
+            else if (file.startsWith("VX"))
+            {
+                return Market.CBOE;
+            }
+            else
+            {
+                return Market.USA;
+            }
         }
 
         /// <summary>
@@ -93,6 +123,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 // If line is invalid continue looping to find next valid line.
                 tick = Parse(line);
             }
+
             Current = tick;
             return Current != null;
         }
@@ -100,10 +131,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// <summary>
         /// Current top of the tick file.
         /// </summary>
-        public Tick Current
-        {
-            get; private set;
-        }
+        public Tick Current { get; private set; }
 
         /// <summary>
         /// Gets the current element in the collection.
@@ -215,9 +243,9 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             isAsk = true;
                             break;
                         default:
-                            {
-                                return null;
-                            }
+                        {
+                            return null;
+                        }
                     }
                 }
                 else
@@ -242,7 +270,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             Symbol = symbol,
                             Time = time,
                             TickType = tickType,
-                            Exchange = Market.USA,
+                            Exchange = _exchange,
                             Value = price
                         };
 
@@ -256,6 +284,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             tick.BidPrice = price;
                             tick.BidSize = quantity;
                         }
+
                         return tick;
 
                     case TickType.Trade:
@@ -265,7 +294,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             Symbol = symbol,
                             Time = time,
                             TickType = tickType,
-                            Exchange = Market.USA,
+                            Exchange = _exchange,
                             Value = price,
                             Quantity = quantity
                         };
@@ -278,7 +307,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             Symbol = symbol,
                             Time = time,
                             TickType = tickType,
-                            Exchange = Market.USA,
+                            Exchange = _exchange,
                             Value = quantity
                         };
                         return tick;
@@ -301,6 +330,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             {
                 baseNum += 10;
             }
+
             return baseNum + year;
         }
     }
