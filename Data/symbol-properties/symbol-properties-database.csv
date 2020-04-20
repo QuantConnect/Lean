@@ -84,6 +84,7 @@ usa,[*],option,,USD,100,0.01,1
 
 usa,[*],equity,,USD,1,0.01,1
 
+# for backwards compatibility, order here is important for futures, since we could have the same symbol for more than 1 market in which case Lean will use the first
 cbot,BCF,future,Black Sea Corn Financially Settled (Platts) Futures,USD,50.0,0.25,1.0
 cbot,ZC,future,Corn Futures,USD,50.0,0.25,1.0
 cbot,ZW,future,Chicago SRW Wheat Futures,USD,50.0,0.25,1.0
