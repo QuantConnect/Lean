@@ -83,23 +83,24 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
         private string GetExchangeFromRawFileName(string file)
         {
-            if (file.StartsWith("cbot"))
+            var fileName = Path.GetFileName(file);
+            if (fileName.StartsWith("cbot"))
             {
                 return Market.CBOT;
             }
-            else if (file.StartsWith("cme"))
+            else if (fileName.StartsWith("cme"))
             {
                 return Market.CME;
             }
-            else if (file.StartsWith("comex"))
+            else if (fileName.StartsWith("comex"))
             {
                 return Market.COMEX;
             }
-            else if (file.StartsWith("nymex"))
+            else if (fileName.StartsWith("nymex"))
             {
                 return Market.NYMEX;
             }
-            else if (file.StartsWith("VX"))
+            else if (fileName.StartsWith("VX"))
             {
                 return Market.CBOE;
             }
