@@ -185,7 +185,7 @@ nymex,EPN,future,European Propane CIF ARA (Argus) vs. Naphtha Cargoes CIF NWE (P
 nymex,EVC,future,Singapore Fuel Oil 380 cst (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,1000.0,0.001,1.0
 nymex,EWG,future,East-West Gasoline Spread (Platts-Argus) Futures,USD,1000.0,0.001,1.0
 nymex,EWN,future,East-West Naphtha: Japan C&F vs. Cargoes CIF NWE Spread (Platts) Futures,USD,1000.0,0.001,1.0
-nymex,EXR,future,RBOB Gasoline vs. Euro-bob Oxy NWE Barges (Argus) (350,000 gallons) Futures,USD,350000.0,0.0001,1.0
+nymex,EXR,future,RBOB Gasoline vs. Euro-bob Oxy NWE Barges (Argus) (350000 gallons) Futures,USD,350000.0,0.0001,1.0
 nymex,FO,future,3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread Futures,USD,1000.0,0.001,1.0
 nymex,FRC,future,Freight Route TC14 (Baltic) Futures,USD,1000.0,0.0001,1.0
 nymex,FSS,future,1% Fuel Oil Cargoes FOB NWE (Platts) vs. 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,1000.0,0.001,1.0
@@ -197,7 +197,6 @@ nymex,HP,future,Natural Gas (Henry Hub) Penultimate Financial Futures,USD,10000.
 nymex,HTT,future,WTI Houston (Argus) vs. WTI Trade Month Futures,USD,1000.0,0.01,1.0
 nymex,RB,future,RBOB Gasoline Futures,USD,42000.0,0.0001,1.0
 nymex,NG,future,Henry Hub Natural Gas Futures,USD,10000.0,0.001,1.0
-usa,AC,future,,USD,29000.0,0.001,1.0
 cbot,ZB,future,U.S. Treasury Bond Futures,USD,1000.0,0.03125,1.0
 cbot,ZN,future,10-Year T-Note Futures,USD,1000.0,0.015625,1.0
 cbot,ZF,future,5-Year T-Note Futures,USD,1000.0,0.0078125,1.0
