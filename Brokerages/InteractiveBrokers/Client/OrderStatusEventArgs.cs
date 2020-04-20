@@ -25,63 +25,69 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// <summary>
         /// The order Id that was specified previously in the call to placeOrder()
         /// </summary>
-        public int OrderId { get; private set; }
+        public int OrderId { get; }
 
         /// <summary>
         /// The order status.
         /// </summary>
-        public string Status { get; private set; }
+        public string Status { get; }
 
         /// <summary>
         /// Specifies the number of shares that have been executed.
         /// </summary>
-        public int Filled { get; private set; }
+        public int Filled { get; }
 
         /// <summary>
         /// Specifies the number of shares still outstanding.
         /// </summary>
-        public int Remaining { get; private set; }
+        public int Remaining { get; }
 
         /// <summary>
         /// The average price of the shares that have been executed.
         /// This parameter is valid only if the filled parameter value is greater than zero.
         /// Otherwise, the price parameter will be zero.
         /// </summary>
-        public double AverageFillPrice { get; private set; }
+        public double AverageFillPrice { get; }
 
         /// <summary>
         /// The TWS id used to identify orders. Remains the same over TWS sessions.
         /// </summary>
-        public int PermId { get; private set; }
+        public int PermId { get; }
 
         /// <summary>
         /// The order ID of the parent order, used for bracket and auto trailing stop orders.
         /// </summary>
-        public int ParentId { get; private set; }
+        public int ParentId { get; }
 
         /// <summary>
         /// The last price of the shares that have been executed.
         /// This parameter is valid only if the filled parameter value is greater than zero.
         /// Otherwise, the price parameter will be zero.
         /// </summary>
-        public double LastFillPrice { get; private set; }
+        public double LastFillPrice { get; }
 
         /// <summary>
         /// The ID of the client (or TWS) that placed the order.
         /// Note that TWS orders have a fixed clientId and orderId of 0 that distinguishes them from API orders.
         /// </summary>
-        public int ClientId { get; private set; }
+        public int ClientId { get; }
 
         /// <summary>
         /// This field is used to identify an order held when TWS is trying to locate shares for a short sell.
         /// The value used to indicate this is 'locate'.
         /// </summary>
-        public string WhyHeld { get; private set; }
+        public string WhyHeld { get; }
+
+        /// <summary>
+        /// If an order has been capped, this indicates the current capped price.
+        /// Requires TWS 967+ and API v973.04+. Python API specifically requires API v973.06+.
+        /// </summary>
+        public double MktCapPrice { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OrderStatusEventArgs"/> class
         /// </summary>
-        public OrderStatusEventArgs(int orderId, string status, int filled, int remaining, double averageFillPrice, int permId, int parentId, double lastFillPrice, int clientId, string whyHeld)
+        public OrderStatusEventArgs(int orderId, string status, int filled, int remaining, double averageFillPrice, int permId, int parentId, double lastFillPrice, int clientId, string whyHeld, double mktCapPrice)
         {
             OrderId = orderId;
             Status = status;
@@ -93,6 +99,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
             LastFillPrice = lastFillPrice;
             ClientId = clientId;
             WhyHeld = whyHeld;
+            MktCapPrice = mktCapPrice;
         }
 
         /// <summary>
@@ -112,7 +119,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
                    $"ParentId: {ParentId.ToStringInvariant()}, " +
                    $"LastFillPrice: {LastFillPrice.ToStringInvariant()}, " +
                    $"ClientId: {ClientId.ToStringInvariant()}, " +
-                   $"WhyHeld: {WhyHeld}";
+                   $"WhyHeld: {WhyHeld}," +
+                   $"MktCapPrice: {MktCapPrice}";
         }
     }
 }
