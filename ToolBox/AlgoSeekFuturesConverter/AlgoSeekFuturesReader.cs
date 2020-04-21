@@ -59,6 +59,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             _streamReader = new StreamReader(_stream);
             _symbolFilter = symbolFilter;
             _symbolMultipliers = symbolMultipliers.ToDictionary();
+            _exchange = GetExchangeFromRawFileName(file);
 
             // detecting column order in the file
             var headerLine = _streamReader.ReadLine();
@@ -78,7 +79,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             //Prime the data pump, set the current.
             Current = null;
             MoveNext();
-            var exchange = GetExchangeFromRawFileName(file);
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
             if (fileName.StartsWith("comex"))
             {
-                return Market.COMEX;
+                return Market.COMEX; 
             }
 
             if (fileName.StartsWith("nymex"))
