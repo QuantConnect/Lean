@@ -684,12 +684,23 @@ namespace QuantConnect.Tests.Common.Securities
                     new MarketOrder(futureSecurity.Symbol, quantity, DateTime.UtcNow))).IsSufficient);
         }
 
-        [Test]
-        public void FutureMarginModel_MarginEntriesValid()
+        [TestCase(Market.CME)]
+        [TestCase(Market.ICE)]
+        [TestCase(Market.CBOT)]
+        [TestCase(Market.CBOE)]
+        [TestCase(Market.COMEX)]
+        [TestCase(Market.NYMEX)]
+        [TestCase(Market.NSE)]
+        [TestCase(Market.Globex)]
+        public void FutureMarginModel_MarginEntriesValid(string market)
         {
-            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", Market.USA, "margins"));
+            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", market, "margins"));
             var minimumDate = new DateTime(1990, 1, 1);
 
+            if (!marginsDirectory.Exists)
+            {
+                return;
+            }
             foreach (var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly))
             {
                 var lineNumber = 0;
@@ -738,11 +749,22 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
-        [Test]
-        public void FutureMarginModel_MarginEntriesHaveIncrementingDates()
+        [TestCase(Market.CME)]
+        [TestCase(Market.ICE)]
+        [TestCase(Market.CBOT)]
+        [TestCase(Market.CBOE)]
+        [TestCase(Market.COMEX)]
+        [TestCase(Market.NYMEX)]
+        [TestCase(Market.NSE)]
+        [TestCase(Market.Globex)]
+        public void FutureMarginModel_MarginEntriesHaveIncrementingDates(string market)
         {
-            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", Market.USA, "margins"));
+            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", market, "margins"));
 
+            if (!marginsDirectory.Exists)
+            {
+                return;
+            }
             foreach (var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly))
             {
                 var csv = File.ReadLines(marginFile.FullName).Where(x => !x.StartsWithInvariant("#") && !string.IsNullOrWhiteSpace(x)).Skip(1).Select(x =>
@@ -766,10 +788,21 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
-        [Test]
-        public void FutureMarginModel_MarginEntriesAreContinuous()
+        [TestCase(Market.CME)]
+        [TestCase(Market.ICE)]
+        [TestCase(Market.CBOT)]
+        [TestCase(Market.CBOE)]
+        [TestCase(Market.COMEX)]
+        [TestCase(Market.NYMEX)]
+        [TestCase(Market.NSE)]
+        [TestCase(Market.Globex)]
+        public void FutureMarginModel_MarginEntriesAreContinuous(string market)
         {
-            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", Market.USA, "margins"));
+            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", market, "margins"));
+            if (!marginsDirectory.Exists)
+            {
+                return;
+            }
             var exclusions = new Dictionary<string, int>
             {
                 { "6E.csv", 1 },
@@ -831,11 +864,22 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
-        [Test]
-        public void FutureMarginModel_InitialMarginGreaterThanMaintenance()
+        [TestCase(Market.CME)]
+        [TestCase(Market.ICE)]
+        [TestCase(Market.CBOT)]
+        [TestCase(Market.CBOE)]
+        [TestCase(Market.COMEX)]
+        [TestCase(Market.NYMEX)]
+        [TestCase(Market.NSE)]
+        [TestCase(Market.Globex)]
+        public void FutureMarginModel_InitialMarginGreaterThanMaintenance(string market)
         {
-            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", Market.USA, "margins"));
+            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", market, "margins"));
 
+            if (!marginsDirectory.Exists)
+            {
+                return;
+            }
             foreach (var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly))
             {
                 var errorMessage = $"Initial value greater than maintenance value in {marginFile.Name}";

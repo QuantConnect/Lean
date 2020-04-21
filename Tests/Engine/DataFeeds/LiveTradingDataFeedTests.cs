@@ -2133,7 +2133,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             foreach (var timeSlice in synchronizer.StreamData(cancellationTokenSource.Token))
             {
-                if (timeSlice.IsTimePulse)
+                if (timeSlice.IsTimePulse || !timeSlice.Slice.HasData && timeSlice.SecurityChanges == SecurityChanges.None)
                 {
                     continue;
                 }
