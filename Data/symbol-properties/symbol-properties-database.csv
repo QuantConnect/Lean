@@ -159,7 +159,7 @@ ice,DX,future,US Dollar Index Futures,USD,1000.0,0.005,1.0
 ice,G,future,Low Sulfur Gasoil,USD,100.0,0.25,1.0
 ice,KC,future,Coffee C Arabica Futures,USD,37500.0,0.0005,1.0
 ice,OJ,future,Frozen Concentrated Orange Juice,USD,15000.0,0.0005,1.0
-ice,SB,future,Sugar ,,,,
+ice,SB,future,Sugar No. 11 Futures,USD,112000,0.0001,1
 nymex,1S,future,Propane Non-LDH Mont Belvieu (OPIS) BALMO Futures,USD,42000.0,1e-05,1.0
 nymex,22,future,Argus Propane Far East Index BALMO Futures,USD,1000.0,0.001,1.0
 nymex,A0D,future,Mini European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,100.0,0.001,1.0
