@@ -236,7 +236,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             {
                 if (_windowsRestrictedNames.Contains(symbol.Value.ToLowerInvariant()))
                 {
-                    symbol = Symbol.CreateFuture(SafeName(symbol.Underlying.Value), Market.USA, symbol.ID.Date);
+                    symbol = Symbol.CreateFuture(SafeName(symbol.Underlying.Value), symbol.ID.Market, symbol.ID.Date);
                 }
             }
             return symbol;

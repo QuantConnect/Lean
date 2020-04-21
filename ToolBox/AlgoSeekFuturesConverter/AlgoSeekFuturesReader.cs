@@ -16,13 +16,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-using QuantConnect.Data.Market;
-using QuantConnect.Util;
-using QuantConnect.Logging;
 using System.Globalization;
+using System.IO;
+using System.Linq;
+using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 using QuantConnect.Securities.Future;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 {
@@ -73,7 +73,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 _columnQuantity = header.FindIndex(x => x == "Quantity");
                 _columnPrice = header.FindIndex(x => x == "Price");
 
-                _columnsCount = Enumerable.Max(new[] { _columnTimestamp, _columnTicker, _columnType, _columnSide, _columnSecID, _columnQuantity, _columnPrice });
+                _columnsCount = new[] { _columnTimestamp, _columnTicker, _columnType, _columnSide, _columnSecID, _columnQuantity, _columnPrice }.Max();
             }
             //Prime the data pump, set the current.
             Current = null;
@@ -81,6 +81,12 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             var exchange = GetExchangeFromRawFileName(file);
         }
 
+        /// <summary>
+        /// Get the exchange from the raw data filename.
+        /// </summary>
+        /// <param name="file">string withe raw data file path.</param>
+        /// <returns>The exchange</returns>
+        /// <exception cref="NotImplementedException">If a raw data file has not the expected name convention.</exception>
         private string GetExchangeFromRawFileName(string file)
         {
             var fileName = Path.GetFileName(file);
@@ -88,26 +94,29 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             {
                 return Market.CBOT;
             }
-            else if (fileName.StartsWith("cme"))
+
+            if (fileName.StartsWith("cme"))
             {
                 return Market.CME;
             }
-            else if (fileName.StartsWith("comex"))
+
+            if (fileName.StartsWith("comex"))
             {
                 return Market.COMEX;
             }
-            else if (fileName.StartsWith("nymex"))
+
+            if (fileName.StartsWith("nymex"))
             {
                 return Market.NYMEX;
             }
-            else if (fileName.StartsWith("VX"))
+
+            if (fileName.StartsWith("VX"))
             {
                 return Market.CBOE;
             }
-            else
-            {
-                return Market.USA;
-            }
+
+            Log.Error($"AlgoSeekFuturesReader.GetExchangeFromRawFileName(): Exchange not recognized from the raw data file at {file}");
+            throw new NotImplementedException($"Exchange not recognized from the raw data file at {file}");
         }
 
         /// <summary>
@@ -189,7 +198,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                     return null;
                 }
 
-                ticker = ticker.Trim(new char[] { '"' });
+                ticker = ticker.Trim('"');
 
                 if (string.IsNullOrEmpty(ticker))
                 {
@@ -213,9 +222,9 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 var expirationMonth = parsed.ExpirationMonth;
                 var expirationYear = GetExpirationYear(time, expirationYearShort);
 
-                var expiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(Symbol.Create(underlying, SecurityType.Future, Market.USA));
+                var expiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(Symbol.Create(underlying, SecurityType.Future, _exchange));
                 var expiryDate = expiryFunc(new DateTime(expirationYear, expirationMonth, 1));
-                var symbol = Symbol.CreateFuture(underlying, Market.USA, expiryDate);
+                var symbol = Symbol.CreateFuture(underlying, _exchange, expiryDate);
 
                 // detecting tick type (trade or quote)
                 TickType tickType;

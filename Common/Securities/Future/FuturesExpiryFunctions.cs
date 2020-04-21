@@ -221,7 +221,7 @@ namespace QuantConnect.Securities.Future
         /// It does not matter what the day and time of day are passed into the Functions.
         /// The Functions is responsible for calculating the day and time of day given a year and month
         /// </summary>
-        private static readonly Dictionary<Symbol, Func<DateTime, DateTime>> FuturesExpiryDictionary = new Dictionary<Symbol, Func<DateTime, DateTime>>()
+        public static readonly Dictionary<Symbol, Func<DateTime, DateTime>> FuturesExpiryDictionary = new Dictionary<Symbol, Func<DateTime, DateTime>>()
         {
             // Metals
             // Gold (GC): http://www.cmegroup.com/trading/metals/precious/gold_contract_specifications.html
