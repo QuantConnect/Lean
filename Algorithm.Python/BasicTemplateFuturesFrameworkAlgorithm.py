@@ -56,8 +56,10 @@ class BasicTemplateFuturesFrameworkAlgorithm(QCAlgorithm):
 
     def SelectFutureChainSymbols(self, utcTime):
         newYorkTime = Extensions.ConvertFromUtc(utcTime, TimeZones.NewYork)
-        ticker = Futures.Indices.SP500EMini if newYorkTime.date() < date(2013, 10, 9) else Futures.Metals.Gold
-        return [ Symbol.Create(ticker, SecurityType.Future, Market.USA) ]
+        if newYorkTime.date() < date(2013, 10, 9):
+            return [ Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME) ]
+        else:
+            return [ Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.COMEX) ]
 
 class FrontMonthFutureUniverseSelectionModel(FutureUniverseSelectionModel):
     '''Creates futures chain universes that select the front month contract and runs a user

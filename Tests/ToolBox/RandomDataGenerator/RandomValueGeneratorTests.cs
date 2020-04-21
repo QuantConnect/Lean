@@ -329,9 +329,9 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         {
             var minExpiry = new DateTime(2000, 01, 01);
             var maxExpiry = new DateTime(2001, 01, 01);
-            var symbol = randomValueGenerator.NextFuture(Market.USA, minExpiry, maxExpiry);
+            var symbol = randomValueGenerator.NextFuture(Market.CME, minExpiry, maxExpiry);
 
-            Assert.AreEqual(Market.USA, symbol.ID.Market);
+            Assert.AreEqual(Market.CME, symbol.ID.Market);
             Assert.AreEqual(SecurityType.Future, symbol.SecurityType);
         }
         [Test]
@@ -339,7 +339,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         {
             var minExpiry = new DateTime(2000, 01, 01);
             var maxExpiry = new DateTime(2001, 01, 01);
-            var symbol = randomValueGenerator.NextFuture(Market.USA, minExpiry, maxExpiry);
+            var symbol = randomValueGenerator.NextFuture(Market.CME, minExpiry, maxExpiry);
 
             var expiry = symbol.ID.Date;
             Assert.Greater(expiry, minExpiry);

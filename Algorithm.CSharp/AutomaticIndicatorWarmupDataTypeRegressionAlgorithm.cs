@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 08);
             SetEndDate(2013, 10, 09);
 
-            var SP500 = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.USA);
+            var SP500 = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
             _symbol = FutureChainProvider.GetFutureContractList(SP500, StartDate).First();
 
             // Test case: custom IndicatorBase<QuoteBar> indicator using Future unsubscribed symbol
@@ -187,7 +187,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "1088232772"}
+            {"OrderListHash", "-1453269600"}
         };
     }
 }
