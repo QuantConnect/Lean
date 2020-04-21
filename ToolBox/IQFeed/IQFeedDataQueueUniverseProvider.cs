@@ -23,9 +23,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Net;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -71,7 +69,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
         // Map of IQFeed exchange names to QC markets
         // Prioritized list of exchanges used to find right futures contract
-        private readonly Dictionary<string, string> _futuresExchanges = new Dictionary<string, string>
+        public static readonly Dictionary<string, string> FuturesExchanges = new Dictionary<string, string>
         {
             { "CME", Market.Globex },
             { "NYMEX", Market.NYMEX },
@@ -157,7 +155,7 @@ namespace QuantConnect.ToolBox.IQFeed
             if (onDemandRequests)
             {
                 var exchanges = securityType == SecurityType.Future ?
-                                    _futuresExchanges.Values.Reverse().ToArray() :
+                                    FuturesExchanges.Values.Reverse().ToArray() :
                                     new string[] { };
 
                 // sorting list of available contracts by exchange priority, taking the top 1
@@ -560,9 +558,9 @@ namespace QuantConnect.ToolBox.IQFeed
         private string GetFutureMarket(string symbol, string exchange)
         {
             string market;
-            if (_futuresExchanges.ContainsKey(exchange))
+            if (FuturesExchanges.ContainsKey(exchange))
             {
-                market = _futuresExchanges[exchange];
+                market = FuturesExchanges[exchange];
             }
             else if (!_symbolPropertiesDatabase.TryGetMarket(symbol, SecurityType.Future, out market))
             {
