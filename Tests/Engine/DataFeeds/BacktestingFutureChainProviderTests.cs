@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void CorrectlyDeterminesContractList()
         {
-            var symbol = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.USA, DateTime.Today);
+            var symbol = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, DateTime.Today);
             var result = _provider.GetFutureContractList(symbol, new DateTime(2013, 10, 11));
 
             Assert.IsNotEmpty(result);

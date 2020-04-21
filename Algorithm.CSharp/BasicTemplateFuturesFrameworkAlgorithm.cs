@@ -53,12 +53,12 @@ namespace QuantConnect.Algorithm.CSharp
             var newYorkTime = utcTime.ConvertFromUtc(TimeZones.NewYork);
             if (newYorkTime.Date < new DateTime(2013, 10, 09))
             {
-                yield return QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.USA);
+                yield return QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
             }
 
             if (newYorkTime.Date >= new DateTime(2013, 10, 09))
             {
-                yield return QuantConnect.Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.USA);
+                yield return QuantConnect.Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.COMEX);
             }
         }
 

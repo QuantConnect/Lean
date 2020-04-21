@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
@@ -28,7 +27,6 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 using QuantConnect.Tests.Engine.DataFeeds;
-using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -70,7 +68,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // For this symbol we dont have any history, but only one date and margins line
             var ticker = QuantConnect.Securities.Futures.Softs.Coffee;
-            var symbol = Symbol.CreateFuture(ticker, Market.USA, expDate);
+            var symbol = Symbol.CreateFuture(ticker, Market.ICE, expDate);
 
             var futureSecurity = new Future(
                 SecurityExchangeHours.AlwaysOpen(tz),
@@ -122,7 +120,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // For this symbol we dont have history
             var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
-            var symbol = Symbol.CreateFuture(ticker, Market.USA, expDate);
+            var symbol = Symbol.CreateFuture(ticker, Market.CME, expDate);
 
             var futureSecurity = new Future(
                 SecurityExchangeHours.AlwaysOpen(tz),

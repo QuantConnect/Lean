@@ -48,8 +48,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             return new []
             {
-                QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.USA),
-                QuantConnect.Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.USA)
+                QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME),
+                QuantConnect.Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.COMEX)
             };
         }
 

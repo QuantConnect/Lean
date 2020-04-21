@@ -1914,8 +1914,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var optionSymbol1 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 192m, new DateTime(2019, 12, 19));
             var optionSymbol2 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 192m, new DateTime(2019, 12, 19));
 
-            var futureSymbol1 = Symbol.CreateFuture("SPY", Market.USA, new DateTime(2019, 12, 19));
-            var futureSymbol2 = Symbol.CreateFuture("SPY", Market.USA, new DateTime(2020, 3, 19));
+            var futureSymbol1 = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2019, 12, 19));
+            var futureSymbol2 = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 19));
 
             Symbol canonicalOptionSymbol = null;
             Exception lookupSymbolsException = null;
@@ -2091,7 +2091,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             else if (securityType == SecurityType.Future)
             {
-                var future = algorithm.AddFuture("SPY", Resolution.Minute, Market.USA);
+                var future = algorithm.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute);
                 future.SetFilter(x => x);
                 exchangeTimeZone = future.Exchange.TimeZone;
             }

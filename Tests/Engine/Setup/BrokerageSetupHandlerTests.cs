@@ -401,7 +401,7 @@ namespace QuantConnect.Tests.Engine.Setup
                 new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
-                            new Holding { Type = SecurityType.Base, Symbol = Symbol.Create("XYZ", SecurityType.Base, Market.USA), Quantity = 1 }
+                            new Holding { Type = SecurityType.Base, Symbol = Symbol.Create("XYZ", SecurityType.Base, Market.CME), Quantity = 1 }
                         }),
                         new Func<List<Order>>(() => new List<Order>
                         {

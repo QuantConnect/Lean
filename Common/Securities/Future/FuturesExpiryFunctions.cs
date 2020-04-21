@@ -254,7 +254,7 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates on the last business day of the contract month.
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Metals.AluminumMWUSTransactionPremiumPlatts25MT, SecurityType.Future)
+                        .GetEntry(Market.COMEX, Futures.Metals.AluminumMWUSTransactionPremiumPlatts25MT, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -272,7 +272,7 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates on the last business day of the contract month
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Metals.AluminiumEuropeanPremiumDutyPaidMetalBulletin, SecurityType.Future)
+                        .GetEntry(Market.COMEX, Futures.Metals.AluminiumEuropeanPremiumDutyPaidMetalBulletin, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -289,7 +289,7 @@ namespace QuantConnect.Securities.Future
                 {
                     // Trading terminates at 12:00 Noon CT on the third last business day of the contract month.
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Metals.Copper, SecurityType.Future)
+                        .GetEntry(Market.COMEX, Futures.Metals.Copper, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -375,7 +375,7 @@ namespace QuantConnect.Securities.Future
                     // 3rd Wednesday of the contract month/ 1:30pm
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Indices.BloombergCommodityIndex, SecurityType.Future)
+                        .GetEntry(Market.CBOT, Futures.Indices.BloombergCommodityIndex, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -393,7 +393,7 @@ namespace QuantConnect.Securities.Future
                     // Trading can occur up to 9:30 a.m. ET on the 3rd Friday of the contract month
                     var thirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Indices.NASDAQ100BiotechnologyEMini, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Indices.NASDAQ100BiotechnologyEMini, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -424,7 +424,7 @@ namespace QuantConnect.Securities.Future
                 {
                     // Trading terminates on the11th business day of the contract month, 1:40pm.
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Indices.SPGSCICommodity, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Indices.SPGSCICommodity, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -436,7 +436,7 @@ namespace QuantConnect.Securities.Future
                 {
                     // 5:00 p.m. Sao Paulo Time on the Wednesday closest to the 15th calendar day of the contract month. If it is a non-trading day at BM&amp;F Bovespa, trading shall terminate on the next trading day.
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Indices.USDDenominatedIbovespa, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Indices.USDDenominatedIbovespa, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -535,7 +535,7 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates on the last business day of the contract month which is also a Platts publication date for the price assessment.
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Currencies.AUDNZD, SecurityType.Future)
+                        .GetEntry(Market.CBOT, Futures.Grains.BlackSeaWheatFinanciallySettledPlatts, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -647,7 +647,7 @@ namespace QuantConnect.Securities.Future
                 {
                     // On the last business day of the month, at 9:15 a.m. CT, immediately preceding the contract month, on which the Central Bank of Brazil is scheduled to publish its final end-of-month (EOM), "Commercial exchange rate for Brazilian reais per U.S. dollar for cash delivery" (PTAX rate).
                     var lastPrecedingBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(time, -1);
-                    var symbolHolidays = MarketHoursDatabase.FromDataFolder().GetEntry("usa", Futures.Currencies.BRL, SecurityType.Future)
+                    var symbolHolidays = MarketHoursDatabase.FromDataFolder().GetEntry(Market.CME, Futures.Currencies.BRL, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -666,7 +666,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday,-2);
 
-                    var symbolHolidays = MarketHoursDatabase.FromDataFolder().GetEntry("usa", Futures.Currencies.MXN, SecurityType.Future)
+                    var symbolHolidays = MarketHoursDatabase.FromDataFolder().GetEntry(Market.CME, Futures.Currencies.MXN, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -685,7 +685,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
 
-                    var symbolHolidays = MarketHoursDatabase.FromDataFolder().GetEntry("usa", Futures.Currencies.ZAR, SecurityType.Future)
+                    var symbolHolidays = MarketHoursDatabase.FromDataFolder().GetEntry(Market.CME, Futures.Currencies.ZAR, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -704,7 +704,7 @@ namespace QuantConnect.Securities.Future
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
 
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Currencies.AUDCAD, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.AUDCAD, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -723,7 +723,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Currencies.AUDJPY, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.AUDJPY, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -742,7 +742,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Currencies.AUDNZD, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.AUDNZD, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -763,7 +763,7 @@ namespace QuantConnect.Securities.Future
                                       select new DateTime(time.Year, time.Month, day)).Last();
 
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Currencies.AUDNZD, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.AUDNZD, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -782,7 +782,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Currencies.CADJPY, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.CADJPY, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -801,7 +801,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = thirdWednesday.AddDays(-2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Currencies.StandardSizeUSDOffshoreRMBCNH, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.StandardSizeUSDOffshoreRMBCNH, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -820,7 +820,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Currencies.EuroFXEmini, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.EuroFXEmini, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -839,7 +839,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Currencies.EURAUD, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.EURAUD, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -858,7 +858,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Currencies.EURCAD, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.EURCAD, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -877,7 +877,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Currencies.EURSEK, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.EURSEK, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -896,7 +896,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Currencies.JapaneseYenEmini, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.JapaneseYenEmini, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -950,7 +950,7 @@ namespace QuantConnect.Securities.Future
                     // Second London bank business day before 3rd Wednesday of the contract month. Trading
                     // in expiring contracts terminates at 11:00 a.m. London time on the last trading day.
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Financials.EuroDollar, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Financials.EuroDollar, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -964,7 +964,7 @@ namespace QuantConnect.Securities.Future
                     // Second London business day before 3rd Wednesday of futures Delivery Month. Trading in expiring contracts closes at 2:00 p.m. on the last trading day.
                     var secondBusinessDayBeforeThirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time).AddDays(-2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Financials.FiveYearUSDMACSwap, SecurityType.Future)
+                        .GetEntry(Market.CBOT, Futures.Financials.FiveYearUSDMACSwap, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1015,7 +1015,7 @@ namespace QuantConnect.Securities.Future
                     // Trading shall cease on the last business day of the contract month.
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.MiniEuropeanThreePointPercentFiveFuelOilBargesPlatts, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.MiniEuropeanThreePointPercentFiveFuelOilBargesPlatts, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1035,7 +1035,7 @@ namespace QuantConnect.Securities.Future
                     // In order to fix that case, we will start from the last day of the month and go backwards checking if it's a weekday and a holiday
                     var lastDay = new DateTime(time.Year, time.Month, DateTime.DaysInMonth(time.Year, time.Month));
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.MiniSingaporeFuelOil180CstPlatts, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.MiniSingaporeFuelOil180CstPlatts, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1080,7 +1080,7 @@ namespace QuantConnect.Securities.Future
                 {
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.PremiumUnleadedGasoline10ppmFOBMEDPlatts, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.PremiumUnleadedGasoline10ppmFOBMEDPlatts, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1140,7 +1140,7 @@ namespace QuantConnect.Securities.Future
                     // Trading shall cease on the last business day of the contract month.
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.ArgusPropaneFarEastIndexVsEuropeanPropaneCIFARAArgus, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.ArgusPropaneFarEastIndexVsEuropeanPropaneCIFARAArgus, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1161,7 +1161,7 @@ namespace QuantConnect.Securities.Future
                     var previousMonth = time.AddMonths(-1);
                     var lastDay = new DateTime(previousMonth.Year, previousMonth.Month, DateTime.DaysInMonth(previousMonth.Year, previousMonth.Month));
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.ArgusPropaneSaudiAramco, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.ArgusPropaneSaudiAramco, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1221,7 +1221,7 @@ namespace QuantConnect.Securities.Future
                     // Trading shall cease on the last London and Singapore business day of the contract month.
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.BrentCrudeOilVsDubaiCrudeOilPlatts, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.BrentCrudeOilVsDubaiCrudeOilPlatts, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1240,7 +1240,7 @@ namespace QuantConnect.Securities.Future
                     var previousMonth = time.AddMonths(-1);
                     var twentyFifthDay = new DateTime(previousMonth.Year, previousMonth.Month, 25);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.ArgusLLSvsWTIArgusTradeMonth, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.ArgusLLSvsWTIArgusTradeMonth, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1258,7 +1258,7 @@ namespace QuantConnect.Securities.Future
                     // Trading ceases on the last business day of the contract month
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.SingaporeGasoilPlattsVsLowSulphurGasoilFutures, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.SingaporeGasoilPlattsVsLowSulphurGasoilFutures, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1304,7 +1304,7 @@ namespace QuantConnect.Securities.Future
                     // Trading shall cease on the last business day of the contract month
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.EuropeanPropaneCIFARAArgus, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.EuropeanPropaneCIFARAArgus, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1345,7 +1345,7 @@ namespace QuantConnect.Securities.Future
                     // first business day prior to the 25th calendar day.
                     var twentyFifthDayPriorMonth = new DateTime(time.Year, time.Month, 25).AddMonths(-1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.MarsArgusVsWTITradeMonth, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.MarsArgusVsWTITradeMonth, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1363,7 +1363,7 @@ namespace QuantConnect.Securities.Future
                     // Trading shall cease on the last business day of the contract month
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.MarsArgusVsWTIFinancial, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.MarsArgusVsWTIFinancial, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1381,7 +1381,7 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates on the last business day of the contract month
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.EthanolT2FOBRdamIncludingDutyPlatts, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.EthanolT2FOBRdamIncludingDutyPlatts, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1406,7 +1406,7 @@ namespace QuantConnect.Securities.Future
                     // Trading shall cease on the last business day of the contract month
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.GasolineEurobobOxyNWEBargesArgus, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.GasolineEurobobOxyNWEBargesArgus, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1424,7 +1424,7 @@ namespace QuantConnect.Securities.Future
                     // Trading shall cease on the last business day of the contract month
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.WTIBrentFinancial, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.WTIBrentFinancial, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1442,7 +1442,7 @@ namespace QuantConnect.Securities.Future
                     // Trading shall cease on the last business day of the contract month
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread1000mt, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread1000mt, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1467,7 +1467,7 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates the last London business day of the month, 2 months prior to the contract month except for the February contract month which terminates the 2nd last London business day of the month, 2 months prior to the contract month.
                     var twoMonthsPriorToContractMonth = time.AddMonths(-2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.BrentLastDayFinancial, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.BrentLastDayFinancial, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1542,7 +1542,7 @@ namespace QuantConnect.Securities.Future
                     // Trading shall cease on the last business day of the contract month
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.WTIFinancial, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.WTIFinancial, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1567,7 +1567,7 @@ namespace QuantConnect.Securities.Future
                     // Trading shall cease on the last business day of the contract month
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.SingaporeMogas92UnleadedPlattsBrentCrackSpread, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.SingaporeMogas92UnleadedPlattsBrentCrackSpread, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1585,7 +1585,7 @@ namespace QuantConnect.Securities.Future
                     // Trading shall cease on the last London and Singapore business day of the contract month
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry("usa", Futures.Energies.DubaiCrudeOilPlattsFinancial, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.DubaiCrudeOilPlattsFinancial, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1609,7 +1609,7 @@ namespace QuantConnect.Securities.Future
                 {
                     // Trading terminates on 3rd business day of the contract month in "ctm"
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Energies.Ethanol, SecurityType.Future)
+                        .GetEntry(Market.CBOT, Futures.Energies.Ethanol, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1622,7 +1622,7 @@ namespace QuantConnect.Securities.Future
                     // Trading ceases on the last business day of the contract month.
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Energies.EuropeanNaphthaPlattsCrackSpread, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.EuropeanNaphthaPlattsCrackSpread, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1640,7 +1640,7 @@ namespace QuantConnect.Securities.Future
                     // Trading shall cease on the last business day of the contract month.
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Energies.EuropeanPropaneCIFARAArgusVsNaphthaCargoesCIFNWEPlatts, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.EuropeanPropaneCIFARAArgusVsNaphthaCargoesCIFNWEPlatts, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1658,7 +1658,7 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates on the last business day of the contract month.
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Energies.SingaporeFuelOil380cstPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.SingaporeFuelOil380cstPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1683,7 +1683,7 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates on the last business day of the contract month.
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Energies.EastWestNaphthaJapanCFvsCargoesCIFNWESpreadPlatts, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.EastWestNaphthaJapanCFvsCargoesCIFNWESpreadPlatts, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1708,7 +1708,7 @@ namespace QuantConnect.Securities.Future
                     // Trading ceases on the last business day of the contract month.
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Energies.ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1726,7 +1726,7 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates on the last business day of the contract month
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Energies.FreightRouteTC14Baltic, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.FreightRouteTC14Baltic, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1744,7 +1744,7 @@ namespace QuantConnect.Securities.Future
                     // Trading ceases on the last business day of the contract month.
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Energies.OnePercentFuelOilCargoesFOBNWEPlattsVsThreePointFivePercentFuelOilBargesFOBRdamPlatts, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.OnePercentFuelOilCargoesFOBNWEPlattsVsThreePointFivePercentFuelOilBargesFOBRdamPlatts, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1762,7 +1762,7 @@ namespace QuantConnect.Securities.Future
                     // Trading shall cease on the last business day of the contract month.
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Energies.GulfCoastHSFOPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.GulfCoastHSFOPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1780,7 +1780,7 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates 3 business days prior to the twenty-fifth calendar day of the month prior to the contract month.  If the twenty-fifth calendar day is not a business day, trading terminates 3 business days prior to the business day preceding the twenty-fifth calendar day of the month prior to the contract month.
                     var twentyFifthDayInPriorMonth = new DateTime(time.Year, time.Month, 25).AddMonths(-1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Energies.WTIHoustonCrudeOil, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.WTIHoustonCrudeOil, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
                     var i = 0;
@@ -1806,7 +1806,7 @@ namespace QuantConnect.Securities.Future
                     var previousMonth = time.AddMonths(-1);
                     previousMonth = new DateTime(previousMonth.Year, previousMonth.Month, DateTime.DaysInMonth(previousMonth.Year, previousMonth.Month));
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Energies.NaturalGasHenryHubLastDayFinancial, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.NaturalGasHenryHubLastDayFinancial, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1827,7 +1827,7 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates on the 4th last business day of the month prior to the contract month.
                     var previousMonth = time.AddMonths(-1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Energies.NaturalGasHenryHubPenultimateFinancial, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.NaturalGasHenryHubPenultimateFinancial, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1840,7 +1840,7 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates on the last business day that falls on or before the 25th calendar day of the month prior to the contract month. If the 25th calendar day is a weekend or holiday, trading shall cease on the first business day prior to the 25th calendar day.
                     var twentyFifthPreviousMonth = new DateTime(time.Year, time.Month, 25).AddMonths(-1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Energies.WTIHoustonArgusVsWTITradeMonth, SecurityType.Future)
+                        .GetEntry(Market.NYMEX, Futures.Energies.WTIHoustonArgusVsWTITradeMonth, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1955,7 +1955,7 @@ namespace QuantConnect.Securities.Future
                     // Last Trading Day:
                     // Seventeen business days from end of spot month.
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Softs.Cotton2, SecurityType.Future)
+                        .GetEntry(Market.ICE, Futures.Softs.Cotton2, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1968,7 +1968,7 @@ namespace QuantConnect.Securities.Future
                     // Last Trading Day:
                     // 14th business day prior to the last business day of the month
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Softs.OrangeJuice, SecurityType.Future)
+                        .GetEntry(Market.ICE, Futures.Softs.OrangeJuice, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1984,7 +1984,7 @@ namespace QuantConnect.Securities.Future
                     // Last Notice Day:
                     // Seven business days prior to the last business day off the delivery month
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Softs.Coffee, SecurityType.Future)
+                        .GetEntry(Market.ICE, Futures.Softs.Coffee, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -1997,7 +1997,7 @@ namespace QuantConnect.Securities.Future
                     // Last Trading Day:
                     // Last business day of the month preceding the delivery month
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Softs.Sugar11, SecurityType.Future)
+                        .GetEntry(Market.ICE, Futures.Softs.Sugar11, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -2021,7 +2021,7 @@ namespace QuantConnect.Securities.Future
                     // Last Notice Day:
                     // Ten business days prior to last business day of delivery month
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, Futures.Softs.Cocoa, SecurityType.Future)
+                        .GetEntry(Market.ICE, Futures.Softs.Cocoa, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 

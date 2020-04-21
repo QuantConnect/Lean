@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Common.Securities
                 )
             );
 
-            var future2 = Symbol.CreateFuture("ES", Market.USA, new DateTime(2016, 02, 19));
+            var future2 = Symbol.CreateFuture(QuantConnect.Securities.Futures.Indices.SP500EMini, Market.CME, new DateTime(2016, 02, 19));
             securities.Add(
                 future2,
                 new Future(
