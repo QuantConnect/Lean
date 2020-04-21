@@ -770,7 +770,7 @@ namespace QuantConnect.Tests.Common.Securities
             }
             else if (securityType == SecurityType.Future)
             {
-                security = algo.AddFuture(symbol);
+                security = algo.AddFuture(symbol == "SPY" ? "ES" : symbol);
                 _symbol = security.Symbol;
             }
             else

@@ -29,12 +29,14 @@ namespace QuantConnect.Securities.Future
         /// </summary>
         public static Func<DateTime, DateTime> FuturesExpiryFunction(Symbol symbol)
         {
+            var symbolToUse = symbol;
             if (!symbol.IsCanonical())
             {
-                throw new ArgumentException($"Expiry function only supports canonical symbols, {symbol} is not");
+                symbolToUse = Symbol.Create(symbol.ID.Symbol, SecurityType.Future, symbol.ID.Market);
             }
+
             Func<DateTime, DateTime> result;
-            if (FuturesExpiryDictionary.TryGetValue(symbol, out result))
+            if (FuturesExpiryDictionary.TryGetValue(symbolToUse, out result))
             {
                 return result;
             }

@@ -44,7 +44,7 @@ namespace QuantConnect.Securities
                     throw new DuplicateNameException($"Encountered duplicate key while processing file: {file}. Key: {keyValuePair.Key}");
                 }
                 // we wildcard the market, so per security type and symbol we will keep the *first* instance
-                // this allows us to fetch deterministically, in O(n), an entry without knowing the market, see 'TryGetMarket()'
+                // this allows us to fetch deterministically, in O(1), an entry without knowing the market, see 'TryGetMarket()'
                 var key = new SecurityDatabaseKey(SecurityDatabaseKey.Wildcard, keyValuePair.Key.Symbol, keyValuePair.Key.SecurityType);
                 if (!entriesBySecurityType.ContainsKey(key))
                 {
