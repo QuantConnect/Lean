@@ -8,5 +8,6 @@
     "product_id": "BTC-USD",
     "size": "5.23512",
     "price": "400.23",
-    "side": "sell"
+    "side": "sell",
+    "user_id": "xyz"
 }
