@@ -13,14 +13,12 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 using QuantConnect.Storage;
+using System;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -34,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class ObjectStoreExampleAlgorithm : QCAlgorithm
     {
         private const string SPY_Close_ObjectStore_Key = "spy_close";
-        private Security SPY;
+        private Symbol SPY;
         private Identity SPY_Close;
         private ExponentialMovingAverage SPY_Close_EMA10;
         private ExponentialMovingAverage SPY_Close_EMA50;
@@ -49,10 +47,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
 
-            SPY = AddEquity("SPY", Resolution.Minute);
+            SPY = AddEquity("SPY", Resolution.Minute).Symbol;
 
             // define indicators on SPY daily closing prices
-            SPY_Close = Identity(SPY.Symbol, Resolution.Daily);
+            SPY_Close = Identity(SPY, Resolution.Daily);
             SPY_Close_EMA10 = SPY_Close.EMA(10);
             SPY_Close_EMA50 = SPY_Close.EMA(50);
 
@@ -73,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var values = ObjectStore.ReadJson<IndicatorDataPoint[]>(SPY_Close_ObjectStore_Key);
                 Debug($"{SPY_Close_ObjectStore_Key} key exists in object store. Count: {values.Length}");
 
-                foreach (var value in values.OrderBy(x => x.EndTime))
+                foreach (var value in values)
                 {
                     SPY_Close.Update(value);
                 }
@@ -84,15 +82,15 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // if our object store doesn't have our data, fetch the history to initialize
                 // we're pulling the last year's worth of SPY daily trade bars to fee into our indicators
-                var history = History(new[] {SPY.Symbol}, TimeSpan.FromDays(365), Resolution.Daily).Get(SPY.Symbol);
+                var history = History(SPY, TimeSpan.FromDays(365), Resolution.Daily);
 
-                foreach (var tradeBar in history.OrderBy(x => x.EndTime))
+                foreach (var tradeBar in history)
                 {
                     SPY_Close.Update(tradeBar.EndTime, tradeBar.Close);
                 }
 
                 // save our warm up data so next time we don't need to issue the history request
-                var array = SPY_Close_History.OrderBy(x => x.EndTime).ToArray();
+                var array = SPY_Close_History.Reverse().ToArray();
                 ObjectStore.SaveJson(SPY_Close_ObjectStore_Key, array);
 
                 // Can also use ObjectStore.SaveBytes(key, byte[])
@@ -108,24 +106,24 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (SPY_Close_EMA10 > SPY_Close && SPY_Close_EMA10 > SPY_Close_EMA50)
             {
-                SetHoldings(SPY.Symbol, 1m);
+                SetHoldings(SPY, 1m);
             }
             else if (SPY_Close_EMA10 < SPY_Close && SPY_Close_EMA10 < SPY_Close_EMA50)
             {
-                SetHoldings(SPY.Symbol, -1m);
+                SetHoldings(SPY, -1m);
             }
-            else if (Portfolio[SPY.Symbol].IsLong)
+            else if (Portfolio[SPY].IsLong)
             {
                 if (SPY_Close_EMA10 < SPY_Close_EMA50)
                 {
-                    Liquidate(SPY.Symbol);
+                    Liquidate(SPY);
                 }
             }
-            else if (Portfolio[SPY.Symbol].IsShort)
+            else if (Portfolio[SPY].IsShort)
             {
                 if (SPY_Close_EMA10 > SPY_Close_EMA50)
                 {
-                    Liquidate(SPY.Symbol);
+                    Liquidate(SPY);
                 }
             }
         }
