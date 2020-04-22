@@ -27,6 +27,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Alphas;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Engine.Alphas
 {
@@ -60,8 +61,8 @@ namespace QuantConnect.Tests.Engine.Alphas
             // Arrange
             var insights = new []
             {
-                Insight.Price(Symbol.Create("ES", SecurityType.Future, Market.USA), DateTime.Now.AddMinutes(1), InsightDirection.Down),
-                Insight.Price(Symbol.Create("GC", SecurityType.Future, Market.USA), DateTime.Now.AddMinutes(5), InsightDirection.Up)
+                Insight.Price(Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME), DateTime.Now.AddMinutes(1), InsightDirection.Down),
+                Insight.Price(Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.COMEX), DateTime.Now.AddMinutes(5), InsightDirection.Up)
             };
             _insightManager.Setup(x => x.AllInsights).Returns(insights);
             
