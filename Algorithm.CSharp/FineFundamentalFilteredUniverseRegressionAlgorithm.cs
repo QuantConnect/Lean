@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,9 +13,11 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 
@@ -36,18 +38,16 @@ namespace QuantConnect.Algorithm.CSharp
 
             UniverseSettings.Resolution = Resolution.Daily;
 
-            AddUniverse(new ConstituentsUniverse(
-                    QuantConnect.Symbol.Create("constituents-universe-qctest", SecurityType.Equity, Market.USA),
-                    UniverseSettings),
-                enumerable =>
-                {
-                    return enumerable
-                            // it would be nice not to receive these null fine data points
-                        .Where(fundamental => fundamental.CompanyProfile.HeadquarterCity != null &&
-                                              fundamental.CompanyProfile.HeadquarterCity.Equals("Cupertino")
-                        )
-                        .Select(fundamental => fundamental.Symbol);
-                });
+            AddUniverse(
+                // we use test ConstituentsUniverse
+                new ConstituentsUniverse(QuantConnect.Symbol.Create("constituents-universe-qctest", SecurityType.Equity, Market.USA), UniverseSettings),
+                FineSelectionFunction);
+        }
+
+        private IEnumerable<Symbol> FineSelectionFunction(IEnumerable<FineFundamental> data)
+        {
+            return data.Where(fundamental => fundamental.CompanyProfile.HeadquarterCity.Equals("Cupertino"))
+                .Select(fundamental => fundamental.Symbol);
         }
 
         /// <summary>
@@ -58,6 +58,10 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
+                if (data.Keys.Single().Value != "AAPL")
+                {
+                    throw new Exception($"Unexpected symbol was added to the universe: {data.Keys.Single()}");
+                }
                 SetHoldings(data.Keys.Single(), 1);
             }
         }
@@ -84,18 +88,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0.300%"},
             {"Expectancy", "0"},
             {"Net Profit", "1.984%"},
-            {"Sharpe Ratio", "7.523"},
+            {"Sharpe Ratio", "14.933"},
             {"Probabilistic Sharpe Ratio", "90.520%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.844"},
-            {"Beta", "-0.466"},
+            {"Alpha", "2.211"},
+            {"Beta", "-0.467"},
             {"Annual Standard Deviation", "0.166"},
             {"Annual Variance", "0.028"},
-            {"Information Ratio", "5.383"},
-            {"Tracking Error", "0.395"},
-            {"Treynor Ratio", "-2.686"},
+            {"Information Ratio", "7.778"},
+            {"Tracking Error", "0.394"},
+            {"Treynor Ratio", "-5.313"},
             {"Total Fees", "$5.40"},
             {"Fitness Score", "0.244"},
             {"Kelly Criterion Estimate", "0"},
@@ -103,10 +107,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Sortino Ratio", "79228162514264337593543950335"},
             {"Return Over Maximum Drawdown", "1748.254"},
             {"Portfolio Turnover", "0.244"},
-            {"Total Insights Generated", "1"},
+            {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "1"},
+            {"Long Insight Count", "0"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
             {"Estimated Monthly Alpha Value", "$0"},
@@ -116,7 +120,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "2130921361"}
+            {"OrderListHash", "-423205673"}
         };
     }
 }

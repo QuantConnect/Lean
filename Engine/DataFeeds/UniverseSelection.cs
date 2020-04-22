@@ -114,9 +114,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // Remove selected symbols that does not have fine fundamental data
                     var anyDoesNotHaveFundamentalData = false;
-                    // only filter if there actually is any coarse data, this way we can support custom universe filtered by fine fundamental data
-                    // should we filter these later? maybe in the FineFundamentalSubscriptionEnumeratorFactory so that 'nul' fine fundamental
-                    // data points are not emitted even for custom universes with no coarse data
+                    // only pre filter selected symbols if there actually is any coarse data. This way we can support custom universe filtered by fine fundamental data
+                    // which do not use coarse data as underlying, in which case it could happen that we try to load fine fundamental data that is missing, but no problem,
+                    // 'FineFundamentalSubscriptionEnumeratorFactory' won't emit it
                     if (allCoarse.Any())
                     {
                         selectSymbolsResult = selectSymbolsResult
