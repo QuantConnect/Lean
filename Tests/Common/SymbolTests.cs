@@ -422,8 +422,14 @@ namespace QuantConnect.Tests.Common
             string stringEurusd = eurusd;
             Assert.AreEqual(eurusd.ID.ToString(), stringEurusd);
 
-            Symbol notASymbol = "this will not resolve to a proper Symbol instance";
-            Assert.AreEqual(Symbol.Empty, notASymbol);
+            Assert.Throws<ArgumentException>(() =>
+            {
+                Symbol symbol = "this will not resolve to a proper Symbol instance";
+            });
+
+            Symbol notASymbol = "NotASymbol";
+            Assert.AreNotEqual(Symbol.Empty, notASymbol);
+            Assert.IsTrue(notASymbol.ToString().Contains("NotASymbol"));
 #pragma warning restore 0618
         }
 
