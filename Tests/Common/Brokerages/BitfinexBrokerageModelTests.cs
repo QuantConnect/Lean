@@ -23,7 +23,7 @@ using QuantConnect.Securities.Crypto;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class BitfinexBrokerageModelTests
     {
         protected Symbol Symbol => Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);

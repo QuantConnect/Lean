@@ -20,7 +20,7 @@ using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Tests.Common.Securities.Futures
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class FuturesExpiryUtilityFunctionsTests
     {
         [TestCase("08/05/2017", 4, "12/05/2017")]

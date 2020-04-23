@@ -28,7 +28,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Data
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class SubscriptionManagerTests
     {
         [TestCase(SecurityType.Forex, Resolution.Daily, 1, TickType.Quote)]

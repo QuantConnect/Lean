@@ -26,7 +26,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Securities
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class SecurityCacheTests
     {
         private static readonly DateTime ReferenceTime = new DateTime(2000, 01, 01);

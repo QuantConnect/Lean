@@ -32,7 +32,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class RealTimePriceUpdateTests
     {
         private TestableLiveTradingDataFeed _liveTradingDataFeed;

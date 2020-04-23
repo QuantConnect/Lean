@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Algorithm
     /// <summary>
     /// Test mixed call order combinations of SetSecurityInitializer, SetBrokerageModel and AddSecurity
     /// </summary>
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class AlgorithmInitializeTests
     {
         private const string Ticker = "EURUSD";

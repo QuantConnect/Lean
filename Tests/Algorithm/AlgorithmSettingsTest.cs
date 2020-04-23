@@ -22,7 +22,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class AlgorithmSettingsTest
     {
         [Test]
@@ -130,11 +130,11 @@ namespace QuantConnect.Tests.Algorithm
             algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
             algo.SetFinishedWarmingUp();
             algo.SetCash(100000);
-            algo.AddEquity("SPY");
+            var symbol = algo.AddEquity("SPY").Symbol;
             var fakeOrderProcessor = new FakeOrderProcessor();
             algo.Transactions.SetOrderProcessor(fakeOrderProcessor);
-            algo.Portfolio["SPY"].SetHoldings(1, 10);
-            var security = algo.Securities["SPY"];
+            algo.Portfolio[symbol].SetHoldings(1, 10);
+            var security = algo.Securities[symbol];
             security.SetMarketPrice(new TradeBar
             {
                 Time = DateTime.Now,

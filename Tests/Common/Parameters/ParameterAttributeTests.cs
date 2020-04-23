@@ -21,7 +21,7 @@ using QuantConnect.Parameters;
 
 namespace QuantConnect.Tests.Common.Parameters
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class ParameterAttributeTests
     {
         [Test]

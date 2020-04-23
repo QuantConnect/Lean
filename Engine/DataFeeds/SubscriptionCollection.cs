@@ -155,7 +155,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // Due to performance implications let's be jealous in updating the _fillForwardResolution
             if (ValidateFillForwardResolution(configuration) &&
                 (
-                    (new[] { FillForwardResolutionOperation.BeforeAdd, FillForwardResolutionOperation.AfterAdd }.Contains(operation)
+                    ((FillForwardResolutionOperation.BeforeAdd == operation || FillForwardResolutionOperation.AfterAdd == operation)
                      && configuration.Increment != _fillForwardResolution.Value) // check if the new Increment is different
                 ||
                     (operation == FillForwardResolutionOperation.AfterRemove // We are removing

@@ -162,7 +162,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(data2.Price, 3);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void OnEndOfTimeStepDoesNotThrowWhenSeedsSameUnderlyingForTwoSecurities()
         {
             var qcAlgorithm = new QCAlgorithm();

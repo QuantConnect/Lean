@@ -29,7 +29,7 @@ using QuantConnect.Data.Consolidators;
 
 namespace QuantConnect.Tests.ToolBox
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class LeanDataReaderTests
     {
         string _dataDirectory = "../../../Data/";

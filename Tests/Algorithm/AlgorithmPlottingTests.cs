@@ -20,7 +20,7 @@ using QuantConnect.Algorithm;
 
 namespace QuantConnect.Tests.Algorithm
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class AlgorithmPlottingTests
     {
         [Test]

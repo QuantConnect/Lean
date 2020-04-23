@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Algorithm
     [TestFixture, Category("TravisExclude")]
     public class AlgorithmDownloadTests
     {
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void Download_Without_Parameters_Successfully()
         {
             var algo = new QCAlgorithm();
@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsNotEmpty(content);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void Download_With_CSharp_Parameter_Successfully()
         {
             var algo = new QCAlgorithm();

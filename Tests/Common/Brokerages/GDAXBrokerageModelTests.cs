@@ -26,7 +26,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class GDAXBrokerageModelTests
     {
         private readonly GDAXBrokerageModel _unit = new GDAXBrokerageModel();

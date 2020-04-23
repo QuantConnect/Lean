@@ -20,6 +20,7 @@ using QuantConnect.Notifications;
 
 namespace QuantConnect.Tests.Common.Notifications
 {
+    [Parallelizable(ParallelScope.Fixtures)]
     [TestFixture(true)]
     [TestFixture(false)]
     public class NotificationManagerTests

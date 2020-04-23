@@ -32,7 +32,7 @@ using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class GDAXBrokerageTests
     {
         #region Declarations

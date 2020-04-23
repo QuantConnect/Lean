@@ -30,6 +30,7 @@ using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Tests.Algorithm
 {
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class AlgorithmHistoryTests
     {
         private QCAlgorithm _algorithm;

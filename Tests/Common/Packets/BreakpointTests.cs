@@ -21,7 +21,7 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Tests.Common.Packets
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class BreakpointTests
     {
         [Test]

@@ -21,7 +21,7 @@ using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class AlphaRuntimeStatisticsTests
     {
         [Test]

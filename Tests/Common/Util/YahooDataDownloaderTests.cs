@@ -20,7 +20,7 @@ using QuantConnect.ToolBox.YahooDownloader;
 
 namespace QuantConnect.Tests.Common.Util
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class YahooDataDownloaderTests
     {
         private const string PermTick = "AAPL";

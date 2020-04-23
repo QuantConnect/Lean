@@ -31,7 +31,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class AlgorithmLiveTradingTests
     {
         [Test]

@@ -14,18 +14,15 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Logging;
 using QuantConnect.Util;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace QuantConnect.Tests.Common.Util
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class RateGateTests
     {
         [Test, Ignore("Running multiple tests at once causes this test to fail")]

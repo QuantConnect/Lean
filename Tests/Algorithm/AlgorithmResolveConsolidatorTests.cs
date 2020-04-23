@@ -22,7 +22,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class AlgorithmResolveConsolidatorTests
     {
         [TestCase(SecurityType.Equity, TickType.Trade, "SPY")]

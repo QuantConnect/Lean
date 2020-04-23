@@ -24,7 +24,7 @@ using System.IO;
 
 namespace QuantConnect.Tests.Common.Securities.Futures
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class FuturesExpiryFunctionsTests
     {
         private IDictionary<String, List<Dates>> _data = new Dictionary<String, List<Dates>>();

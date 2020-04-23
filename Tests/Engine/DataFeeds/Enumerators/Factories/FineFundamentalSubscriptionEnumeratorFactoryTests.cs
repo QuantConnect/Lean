@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Data;
@@ -35,6 +36,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
     [TestFixture]
     public class FineFundamentalSubscriptionEnumeratorFactoryTests
     {
+        [Parallelizable(ParallelScope.Self)]
         [TestCaseSource(nameof(GetFineFundamentalTestParametersBacktest))]
         [TestCaseSource(nameof(GetFineFundamentalTestParametersLive))]
         public void ReadsFineFundamental(FineFundamentalTestParameters parameters)
@@ -91,7 +93,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             enumerator.Dispose();
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void DeserializesAssetClassificationAndCompanyProfile()
         {
             var symbol = Symbols.AAPL;
@@ -119,7 +121,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             enumerator.Dispose();
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void DeserializesUpdatedFileFormat()
         {
             var json = File.ReadAllText("./TestData/aapl_fine_fundamental.json");
@@ -133,6 +135,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         [Test, Category("TravisExclude")]
         public void DoesNotLeakMemory()
         {
+            // allow system to stabilize
+            Thread.Sleep(250);
             var symbol = Symbols.AAPL;
             var startDate = new DateTime(2014, 4, 30);
             var endDate = new DateTime(2014, 4, 30);

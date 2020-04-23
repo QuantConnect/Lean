@@ -19,13 +19,12 @@ using System.Linq;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class LiveEquityDataSynchronizingEnumeratorTests
     {
         // this test case generates data points in the past, will complete very quickly

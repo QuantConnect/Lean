@@ -23,7 +23,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Algorithm.Framework
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class InsightTests
     {
         [Test]

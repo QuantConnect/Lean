@@ -28,7 +28,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
-    [TestFixture, Category("TravisExclude")]
+    [TestFixture, Category("TravisExclude"), Parallelizable(ParallelScope.All)]
     public class SubscriptionSynchronizerTests
     {
         [Test]

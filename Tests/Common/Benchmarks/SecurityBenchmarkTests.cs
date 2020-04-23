@@ -22,7 +22,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Benchmarks
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class SecurityBenchmarkTests
     {
         [TestCase(1)]

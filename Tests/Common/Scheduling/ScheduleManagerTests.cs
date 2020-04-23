@@ -24,7 +24,7 @@ using QuantConnect.Util.RateLimit;
 
 namespace QuantConnect.Tests.Common.Scheduling
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class ScheduleManagerTests
     {
         [Test]

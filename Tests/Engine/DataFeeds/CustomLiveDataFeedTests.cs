@@ -39,7 +39,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class CustomLiveDataFeedTests
     {
         private LiveSynchronizer _synchronizer;
