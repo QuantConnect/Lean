@@ -104,8 +104,8 @@ namespace QuantConnect.Orders.Fees
                 case SecurityType.Future:
                     if (market == Market.Globex || market == Market.NYMEX
                         || market == Market.CBOT || market == Market.ICE
-                        || market == Market.CBOE || market == Market.NSE
-                        || market == Market.CME || market == Market.COMEX)
+                        || market == Market.CBOE || market == Market.COMEX
+                        || market == Market.CME)
                     {
                         // just in case...
                         market = Market.USA;

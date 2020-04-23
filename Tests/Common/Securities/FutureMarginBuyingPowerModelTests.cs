@@ -690,7 +690,6 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(Market.CBOE)]
         [TestCase(Market.COMEX)]
         [TestCase(Market.NYMEX)]
-        [TestCase(Market.NSE)]
         [TestCase(Market.Globex)]
         public void FutureMarginModel_MarginEntriesValid(string market)
         {
@@ -755,7 +754,6 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(Market.CBOE)]
         [TestCase(Market.COMEX)]
         [TestCase(Market.NYMEX)]
-        [TestCase(Market.NSE)]
         [TestCase(Market.Globex)]
         public void FutureMarginModel_MarginEntriesHaveIncrementingDates(string market)
         {
@@ -794,7 +792,6 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(Market.CBOE)]
         [TestCase(Market.COMEX)]
         [TestCase(Market.NYMEX)]
-        [TestCase(Market.NSE)]
         [TestCase(Market.Globex)]
         public void FutureMarginModel_MarginEntriesAreContinuous(string market)
         {
@@ -870,7 +867,6 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(Market.CBOE)]
         [TestCase(Market.COMEX)]
         [TestCase(Market.NYMEX)]
-        [TestCase(Market.NSE)]
         [TestCase(Market.Globex)]
         public void FutureMarginModel_InitialMarginGreaterThanMaintenance(string market)
         {

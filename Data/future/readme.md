@@ -18,7 +18,7 @@ The markets we currently support are:
 * NYMEX
 * COMEX
 * CBOE
-* ICE (soon)
+* ICE
 
 `tickType` in this documentation can refer to one of the following:
 

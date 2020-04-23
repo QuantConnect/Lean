@@ -206,7 +206,7 @@ namespace QuantConnect.Securities
                         if (SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(symbol, SecurityType.Future, out market))
                         {
                             // let's suggest a market
-                            exception += $" Suggested market based on the provided ticket 'Market.{market.ToUpperInvariant()}'.";
+                            exception += $" Suggested market based on the provided ticker 'Market.{market.ToUpperInvariant()}'.";
                         }
 
                         throw new ArgumentException(exception);
