@@ -167,8 +167,6 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        //[ExpectedException(typeof(InvalidOperationException), MatchType = MessageMatch.Contains,
-            //ExpectedMessage = )]
         public void OptionRightThrowsOnNonOptionSecurityType()
         {
             Assert.Throws<InvalidOperationException>(() =>

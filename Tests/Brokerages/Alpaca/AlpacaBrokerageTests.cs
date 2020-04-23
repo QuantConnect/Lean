@@ -61,30 +61,20 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
         /// </summary>
         private static TestCaseData[] OrderParameters => new[]
         {
-            new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
-            new TestCaseData(new NonUpdateableLimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
-            new TestCaseData(new NonUpdateableStopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder")
+            new TestCaseData(new MarketOrderTestParameters(Symbols.SPY)).SetName("MarketOrder"),
+            new TestCaseData(new NonUpdateableLimitOrderTestParameters(Symbols.SPY, 1000m,  0.1m)).SetName("LimitOrder"),
+            new TestCaseData(new NonUpdateableStopMarketOrderTestParameters(Symbols.SPY, 1000m,  0.1m)).SetName("StopMarketOrder")
         };
 
         /// <summary>
         /// Gets the symbol to be traded, must be shortable
         /// </summary>
-        private static Symbol Symbol { get; } = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        protected override Symbol Symbol => Symbols.SPY;
 
         /// <summary>
         /// Gets the security type associated with the <see cref="BrokerageTests.Symbol" />
         /// </summary>
         protected override SecurityType SecurityType => Symbol.SecurityType;
-
-        /// <summary>
-        /// Gets a high price for the specified symbol so a limit sell won't fill
-        /// </summary>
-        private static decimal HighPrice => 1000m;
-
-        /// <summary>
-        /// Gets a low price for the specified symbol so a limit buy won't fill
-        /// </summary>
-        private static decimal LowPrice => 0.1m;
 
         /// <summary>
         /// Returns whether or not the brokers order methods implementation are async
@@ -110,6 +100,36 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             var alpaca = (AlpacaBrokerage)Brokerage;
             var quote = alpaca.GetRates(symbol.Value);
             return quote.AskPrice;
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CancelOrders(OrderTestParameters parameters)
+        {
+            base.CancelOrders(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromZero(OrderTestParameters parameters)
+        {
+            base.LongFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromLong(OrderTestParameters parameters)
+        {
+            base.CloseFromLong(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromZero(OrderTestParameters parameters)
+        {
+            base.ShortFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromShort(OrderTestParameters parameters)
+        {
+            base.CloseFromShort(parameters);
         }
 
         [Test, TestCaseSource(nameof(OrderParameters))]

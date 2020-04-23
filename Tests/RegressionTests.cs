@@ -71,6 +71,8 @@ namespace QuantConnect.Tests
 
         private static TestCaseData[] GetRegressionTestParameters()
         {
+            // nunit 3 sets the current folder to a temp folder we need it to be the test bin output folder
+            // since these are static test cases, they are executed before test setup
             var dir = TestContext.CurrentContext.TestDirectory;
             Environment.CurrentDirectory = dir;
             Directory.SetCurrentDirectory(dir);

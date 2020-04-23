@@ -31,6 +31,20 @@ namespace QuantConnect.Tests.Brokerages.Tradier
     public class TradierBrokerageTests : BrokerageTests
     {
         /// <summary>
+        /// Provides the data required to test each order type in various cases
+        /// </summary>
+        private static TestCaseData[] OrderParameters()
+        {
+            return new[]
+            {
+                new TestCaseData(new MarketOrderTestParameters(Symbols.AAPL)).SetName("MarketOrder"),
+                new TestCaseData(new LimitOrderTestParameters(Symbols.AAPL, 1000m, 0.01m)).SetName("LimitOrder"),
+                new TestCaseData(new StopMarketOrderTestParameters(Symbols.AAPL, 1000m, 0.01m)).SetName("StopMarketOrder"),
+                new TestCaseData(new StopLimitOrderTestParameters(Symbols.AAPL, 1000m, 0.01m)).SetName("StopLimitOrder")
+            };
+        }
+
+        /// <summary>
         /// Creates the brokerage under test
         /// </summary>
         /// <returns>A connected brokerage instance</returns>
@@ -55,34 +69,12 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         /// <summary>
         /// Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected static Symbol Symbol
-        {
-            get { return Symbols.AAPL; }
-        }
+        protected override Symbol Symbol => Symbols.AAPL;
 
         /// <summary>
         /// Gets the security type associated with the <see cref="BrokerageTests.Symbol"/>
         /// </summary>
-        protected override SecurityType SecurityType
-        {
-            get { return SecurityType.Equity; }
-        }
-
-        /// <summary>
-        /// Gets a high price for the specified symbol so a limit sell won't fill
-        /// </summary>
-        protected static decimal HighPrice
-        {
-            get { return 1000m; }
-        }
-
-        /// <summary>
-        /// Gets a low price for the specified symbol so a limit buy won't fill
-        /// </summary>
-        protected static decimal LowPrice
-        {
-            get { return 0.01m; }
-        }
+        protected override SecurityType SecurityType => SecurityType.Equity;
 
         /// <summary>
         /// Returns wether or not the brokers order methods implementation are async
@@ -138,6 +130,48 @@ namespace QuantConnect.Tests.Brokerages.Tradier
 
             // wait for output to be generated
             Thread.Sleep(20*1000);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CancelOrders(OrderTestParameters parameters)
+        {
+            base.CancelOrders(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromZero(OrderTestParameters parameters)
+        {
+            base.LongFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromLong(OrderTestParameters parameters)
+        {
+            base.CloseFromLong(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromZero(OrderTestParameters parameters)
+        {
+            base.ShortFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromShort(OrderTestParameters parameters)
+        {
+            base.CloseFromShort(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromLong(OrderTestParameters parameters)
+        {
+            base.ShortFromLong(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromShort(OrderTestParameters parameters)
+        {
+            base.LongFromShort(parameters);
         }
     }
 }

@@ -50,42 +50,20 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         /// </summary>
         public static TestCaseData[] OrderParameters => new[]
         {
-            new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
-            new TestCaseData(new StopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder")
+            new TestCaseData(new MarketOrderTestParameters(Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda))).SetName("MarketOrder"),
+            new TestCaseData(new LimitOrderTestParameters(Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda), 5m, 0.32m)).SetName("LimitOrder"),
+            new TestCaseData(new StopMarketOrderTestParameters(Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda), 5m, 0.32m)).SetName("StopMarketOrder")
         };
 
         /// <summary>
         ///     Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected static Symbol Symbol
-        {
-            get { return Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda); }
-        }
+        protected override Symbol Symbol => Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda);
 
         /// <summary>
         ///     Gets the security type associated with the <see cref="BrokerageTests.Symbol" />
         /// </summary>
-        protected override SecurityType SecurityType
-        {
-            get { return SecurityType.Forex; }
-        }
-
-        /// <summary>
-        ///     Gets a high price for the specified symbol so a limit sell won't fill
-        /// </summary>
-        protected static decimal HighPrice
-        {
-            get { return 5m; }
-        }
-
-        /// <summary>
-        ///     Gets a low price for the specified symbol so a limit buy won't fill
-        /// </summary>
-        protected static decimal LowPrice
-        {
-            get { return 0.32m; }
-        }
+        protected override SecurityType SecurityType => SecurityType.Forex;
 
         /// <summary>
         /// Returns wether or not the brokers order methods implementation are async
@@ -297,5 +275,46 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             }
         }
 
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CancelOrders(OrderTestParameters parameters)
+        {
+            base.CancelOrders(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromZero(OrderTestParameters parameters)
+        {
+            base.LongFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromLong(OrderTestParameters parameters)
+        {
+            base.CloseFromLong(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromZero(OrderTestParameters parameters)
+        {
+            base.ShortFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromShort(OrderTestParameters parameters)
+        {
+            base.CloseFromShort(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromLong(OrderTestParameters parameters)
+        {
+            base.ShortFromLong(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromShort(OrderTestParameters parameters)
+        {
+            base.LongFromShort(parameters);
+        }
     }
 }

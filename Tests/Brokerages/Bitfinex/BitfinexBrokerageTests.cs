@@ -66,7 +66,8 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         /// <summary>
         /// Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected static Symbol Symbol => Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);
+        protected override Symbol Symbol => StaticSymbol;
+        private static Symbol StaticSymbol => Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);
 
         /// <summary>
         /// Gets the security type associated with the <see cref="BrokerageTests.Symbol" />
@@ -76,20 +77,10 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         //no stop limit support in v1
         private static TestCaseData[] OrderParameters => new[]
         {
-            new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
-            new TestCaseData(new StopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder"),
+            new TestCaseData(new MarketOrderTestParameters(StaticSymbol)).SetName("MarketOrder"),
+            new TestCaseData(new LimitOrderTestParameters(StaticSymbol, 1000m, 100m)).SetName("LimitOrder"),
+            new TestCaseData(new StopMarketOrderTestParameters(StaticSymbol, 1000m, 100m)).SetName("StopMarketOrder"),
         };
-
-        /// <summary>
-        /// Gets a high price for the specified symbol so a limit sell won't fill
-        /// </summary>
-        protected static decimal HighPrice => 1000m;
-
-        /// <summary>
-        /// Gets a low price for the specified symbol so a limit buy won't fill
-        /// </summary>
-        protected static decimal LowPrice => 100m;
 
         /// <summary>
         /// Gets the current market price of the specified security
@@ -109,5 +100,47 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         /// Gets the default order quantity
         /// </summary>
         protected override decimal GetDefaultQuantity() => 0.04m;
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CancelOrders(OrderTestParameters parameters)
+        {
+            base.CancelOrders(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromZero(OrderTestParameters parameters)
+        {
+            base.LongFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromLong(OrderTestParameters parameters)
+        {
+            base.CloseFromLong(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromZero(OrderTestParameters parameters)
+        {
+            base.ShortFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromShort(OrderTestParameters parameters)
+        {
+            base.CloseFromShort(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromLong(OrderTestParameters parameters)
+        {
+            base.ShortFromLong(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromShort(OrderTestParameters parameters)
+        {
+            base.LongFromShort(parameters);
+        }
     }
 }
