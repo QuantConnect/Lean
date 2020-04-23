@@ -245,7 +245,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             Symbol = symbol,
                             Time = time,
                             TickType = tickType,
-                            Exchange = exchange,
                             Value = price
                         };
 
@@ -269,7 +268,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             Symbol = symbol,
                             Time = time,
                             TickType = tickType,
-                            Exchange = exchange,
                             Value = price,
                             Quantity = quantity
                         };
