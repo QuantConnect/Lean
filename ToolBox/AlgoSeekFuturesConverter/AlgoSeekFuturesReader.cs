@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using QuantConnect.Util;
 
@@ -31,10 +32,11 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
     /// </summary>
     public class AlgoSeekFuturesReader : IEnumerator<Tick>
     {
-        private Stream _stream;
-        private StreamReader _streamReader;
-        private HashSet<string> _symbolFilter;
-        private Dictionary<string, decimal> _symbolMultipliers;
+        private readonly Stream _stream;
+        private readonly StreamReader _streamReader;
+        private readonly HashSet<string> _symbolFilter;
+        private readonly Dictionary<string, decimal> _symbolMultipliers;
+        private readonly SymbolPropertiesDatabase _symbolProperties;
 
         private readonly int _columnTimestamp = -1;
         private readonly int _columnSecID = -1;
@@ -44,12 +46,11 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         private readonly int _columnQuantity = -1;
         private readonly int _columnPrice = -1;
         private readonly int _columnsCount = -1;
-        private readonly string _exchange;
 
         /// <summary>
         /// Enumerate through the lines of the algoseek files.
         /// </summary>
-        /// <param name="file">BZ File for algoseek</param>
+        /// <param name="file">BZ File for AlgoSeek</param>
         /// <param name="symbolMultipliers">Symbol price multiplier</param>
         /// <param name="symbolFilter">Symbol filter to apply, if any</param>
         public AlgoSeekFuturesReader(string file, Dictionary<string, decimal> symbolMultipliers, HashSet<string> symbolFilter = null)
@@ -59,7 +60,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             _streamReader = new StreamReader(_stream);
             _symbolFilter = symbolFilter;
             _symbolMultipliers = symbolMultipliers.ToDictionary();
-            _exchange = GetExchangeFromRawFileName(file);
+            _symbolProperties = SymbolPropertiesDatabase.FromDataFolder();
 
             // detecting column order in the file
             var headerLine = _streamReader.ReadLine();
@@ -80,45 +81,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             Current = null;
             MoveNext();
         }
-
-        /// <summary>
-        /// Get the exchange from the raw data filename.
-        /// </summary>
-        /// <param name="file">string withe raw data file path.</param>
-        /// <returns>The exchange</returns>
-        /// <exception cref="NotImplementedException">If a raw data file has not the expected name convention.</exception>
-        private string GetExchangeFromRawFileName(string file)
-        {
-            var fileName = Path.GetFileName(file);
-            if (fileName.StartsWith("cbot"))
-            {
-                return Market.CBOT;
-            }
-
-            if (fileName.StartsWith("cme"))
-            {
-                return Market.CME;
-            }
-
-            if (fileName.StartsWith("comex"))
-            {
-                return Market.COMEX; 
-            }
-
-            if (fileName.StartsWith("nymex"))
-            {
-                return Market.NYMEX;
-            }
-
-            if (fileName.StartsWith("VX"))
-            {
-                return Market.CBOE;
-            }
-
-            Log.Error($"AlgoSeekFuturesReader.GetExchangeFromRawFileName(): Exchange not recognized from the raw data file at {file}");
-            throw new NotImplementedException($"Exchange not recognized from the raw data file at {file}");
-        }
-
+        
         /// <summary>
         /// Parse the next line of the algoseek future file.
         /// </summary>
@@ -222,9 +185,12 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 var expirationMonth = parsed.ExpirationMonth;
                 var expirationYear = GetExpirationYear(time, expirationYearShort);
 
-                var expiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(Symbol.Create(underlying, SecurityType.Future, _exchange));
+                string exchange;
+                _symbolProperties.TryGetMarket(underlying, SecurityType.Future, out exchange);
+                
+                var expiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(Symbol.Create(underlying, SecurityType.Future, exchange));
                 var expiryDate = expiryFunc(new DateTime(expirationYear, expirationMonth, 1));
-                var symbol = Symbol.CreateFuture(underlying, _exchange, expiryDate);
+                var symbol = Symbol.CreateFuture(underlying, exchange, expiryDate);
 
                 // detecting tick type (trade or quote)
                 TickType tickType;
@@ -279,7 +245,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             Symbol = symbol,
                             Time = time,
                             TickType = tickType,
-                            Exchange = _exchange,
+                            Exchange = exchange,
                             Value = price
                         };
 
@@ -303,7 +269,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             Symbol = symbol,
                             Time = time,
                             TickType = tickType,
-                            Exchange = _exchange,
+                            Exchange = exchange,
                             Value = price,
                             Quantity = quantity
                         };
@@ -316,7 +282,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             Symbol = symbol,
                             Time = time,
                             TickType = tickType,
-                            Exchange = _exchange,
+                            Exchange = exchange,
                             Value = quantity
                         };
                         return tick;
