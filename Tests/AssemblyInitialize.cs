@@ -14,6 +14,8 @@
  *
 */
 
+using System;
+using System.IO;
 using NUnit.Framework;
 using QuantConnect.Logging;
 
@@ -25,5 +27,10 @@ public class AssemblyInitialize
     {
         // save output to file as well
         Log.LogHandler = new ConsoleLogHandler();
+
+        // nunit 3 sets the current folder to a temp folder we need it to be the test bin output folder
+        var dir = TestContext.CurrentContext.TestDirectory;
+        Environment.CurrentDirectory = dir;
+        Directory.SetCurrentDirectory(dir);
     }
 }

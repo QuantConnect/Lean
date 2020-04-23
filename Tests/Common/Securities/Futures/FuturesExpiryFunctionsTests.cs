@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         private const string TwelveOne = "12:01:00";
         private const string FourPmLondonTime = "15:00:00";
 
-        [SetUp]
+        [OneTimeSetUp]
         public void Init()
         {
             var path = Path.Combine("TestData", "FuturesExpiryFunctionsTestData.xml");

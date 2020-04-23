@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
         public virtual double? Weight => Algorithm.Securities.Count == 0 ? default(double) : 1d / Algorithm.Securities.Count;
 
-        [SetUp]
+        [OneTimeSetUp]
         public virtual void SetUp()
         {
             Algorithm = new QCAlgorithm();

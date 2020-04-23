@@ -55,7 +55,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         /// <summary>
         /// Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected override Symbol Symbol
+        protected static Symbol Symbol
         {
             get { return Symbols.AAPL; }
         }
@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         /// <summary>
         /// Gets a high price for the specified symbol so a limit sell won't fill
         /// </summary>
-        protected override decimal HighPrice
+        protected static decimal HighPrice
         {
             get { return 1000m; }
         }
@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         /// <summary>
         /// Gets a low price for the specified symbol so a limit buy won't fill
         /// </summary>
-        protected override decimal LowPrice
+        protected static decimal LowPrice
         {
             get { return 0.01m; }
         }

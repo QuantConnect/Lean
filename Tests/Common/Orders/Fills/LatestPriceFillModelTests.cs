@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         private TradeBar _trade;
         private TestableLatestFillModel _fillModel;
 
-        [SetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             var time = new DateTime(2017, 1, 3, 0, 0, 0);

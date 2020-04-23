@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Common.Data
         private Dictionary<Language, dynamic> _weeklyFuncDictionary;
         private Dictionary<Language, dynamic> _monthlyFuncDictionary;
 
-        [SetUp]
+        [OneTimeSetUp]
         public void SetUp()
         {
             _dailyFuncDictionary = new Dictionary<Language, dynamic> { { Language.CSharp, TimeSpan.FromDays(1) } };

@@ -107,7 +107,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(key.GetHashCode(), key2.GetHashCode());
         }
 
-        [Test]//, ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = )]
+        [Test]
         public void ThrowsOnWildcardSecurityType()
         {
             const string input = "[*]-usa-SPY";
@@ -117,11 +117,11 @@ namespace QuantConnect.Tests.Common.Securities
             }, "as a SecurityType");
         }
 
-        [Test]//, ExpectedException(typeof (FormatException), MatchType = MessageMatch.Contains, ExpectedMessage = )]
+        [Test]
         public void ThrowsOnInvalidFormat()
         {
             const string input = "Equity-[*]";
-            Assert.Throws<ArgumentNullException>(() =>
+            Assert.Throws<FormatException>(() =>
             {
                 SecurityDatabaseKey.Parse(input);
             }, "expected format");

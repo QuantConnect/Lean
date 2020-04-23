@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Util;
 using QuantConnect.Data.Market;
-using System.Globalization;
 
 namespace QuantConnect.Tests.Common.Statistics
 {
@@ -30,7 +29,7 @@ namespace QuantConnect.Tests.Common.Statistics
         private List<double> _spyPerformance = new List<double>();
         private List<double> _aaplPerformance = new List<double>();
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void GetData()
         {
             var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
@@ -64,7 +63,7 @@ namespace QuantConnect.Tests.Common.Statistics
             }
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void Delete()
         {
             _spy.Clear();

@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Algorithm
     public class AlgorithmTradingTests
     {
         private static FakeOrderProcessor _fakeOrderProcessor;
-        public TestCaseData[] TestParameters
+        private static TestCaseData[] TestParameters
         {
             get
             {
@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        public TestCaseData[] TestParametersDifferentMargins
+        private static TestCaseData[] TestParametersDifferentMargins
         {
             get
             {
@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Algorithm
         //  Isostatic market conditions tests.
         /*****************************************************/
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ZeroToLong(decimal leverage)
         {
             Security msft;
@@ -74,7 +74,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ZeroToLong_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -87,7 +87,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ZeroToLong_HighConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ZeroToShort(decimal leverage)
         {
             Security msft;
@@ -113,7 +113,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ZeroToShort_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -125,7 +125,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ZeroToShort_HighConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -139,7 +139,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongToLonger(decimal leverage)
         {
             Security msft;
@@ -155,7 +155,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongToLonger_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -171,7 +171,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongToLonger_HighConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -187,7 +187,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongerToLong(decimal leverage)
         {
             Security msft;
@@ -203,7 +203,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongerToLong_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -219,7 +219,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongerToLong_HighConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -235,7 +235,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongToZero(decimal leverage)
         {
             Security msft;
@@ -251,7 +251,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongToZero_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -267,7 +267,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongToZero_HighConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -283,7 +283,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongToShort(decimal leverage)
         {
             Security msft;
@@ -300,7 +300,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongToShort_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -317,7 +317,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongToShort_HighConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -334,7 +334,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_HalfLongToFullShort(decimal leverage)
         {
             Security msft;
@@ -351,7 +351,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_HalfLongToFullShort_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -368,7 +368,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_HalfLongToFullShort_HighConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -386,7 +386,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ShortToZero(decimal leverage)
         {
             Security msft;
@@ -402,7 +402,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ShortToZero_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -418,7 +418,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ShortToZero_HighConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -434,7 +434,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ShortToShorter(decimal leverage)
         {
             Security msft;
@@ -457,7 +457,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ShortToShorter_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -479,7 +479,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ShortToShorter_HighConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -501,7 +501,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ShortToLong(decimal leverage)
         {
             Security msft;
@@ -517,7 +517,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ShortToLong_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -533,7 +533,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ShortToLong_HighConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -549,7 +549,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParametersDifferentMargins")]
+        [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
         public void SetHoldings_HalfLongToHalfShort_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
         {
             Security msft;
@@ -567,7 +567,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParametersDifferentMargins")]
+        [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
         public void SetHoldings_HalfLongToHalfShort_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
         {
             Security msft;
@@ -585,7 +585,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParametersDifferentMargins")]
+        [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
         public void SetHoldings_HalfLongToHalfShort_HighConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
         {
             Security msft;
@@ -603,7 +603,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParametersDifferentMargins")]
+        [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
         public void SetHoldings_HalfLongToFullShort_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
         {
             Security msft;
@@ -620,7 +620,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParametersDifferentMargins")]
+        [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
         public void SetHoldings_HalfLongToFullShort_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
         {
             Security msft;
@@ -637,7 +637,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParametersDifferentMargins")]
+        [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
         public void SetHoldings_HalfLongToFullShort_HighConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
         {
             Security msft;
@@ -655,7 +655,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParametersDifferentMargins")]
+        [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
         public void SetHoldings_HalfLongToFull2xShort_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
         {
             Security msft;
@@ -673,7 +673,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParametersDifferentMargins")]
+        [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
         public void SetHoldings_HalfLongToFull2xShort_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
         {
             Security msft;
@@ -691,7 +691,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParametersDifferentMargins")]
+        [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
         public void SetHoldings_HalfLongToFull2xShort_HighConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
         {
             Security msft;
@@ -709,7 +709,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParametersDifferentMargins")]
+        [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
         public void SetHoldings_ZeroToFullShort_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
         {
             Security msft;
@@ -723,7 +723,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParametersDifferentMargins")]
+        [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
         public void SetHoldings_ZeroToAlmostFullShort_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
         {
             Security msft;
@@ -737,7 +737,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParametersDifferentMargins")]
+        [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
         public void SetHoldings_ZeroToFullLong_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
         {
             Security msft;
@@ -751,7 +751,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParametersDifferentMargins")]
+        [Test, TestCaseSource(nameof(TestParametersDifferentMargins))]
         public void SetHoldings_ZeroToAlmostFullLong_SmallConstantFeeStructure_DifferentMargins(decimal initialMarginRequirement, decimal maintenanceMarginRequirement)
         {
             Security msft;
@@ -770,7 +770,7 @@ namespace QuantConnect.Tests.Algorithm
         //  Rising market conditions tests.
         /*****************************************************/
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongFixed_PriceRise(decimal leverage)
         {
             Security msft;
@@ -797,7 +797,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongFixed_PriceRise_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -824,7 +824,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongFixed_PriceRise_HighConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -852,7 +852,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongToLonger_PriceRise(decimal leverage)
         {
             Security msft;
@@ -878,7 +878,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongToLonger_PriceRise_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -904,7 +904,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongToLonger_PriceRise_HighConstantFeeStructure(decimal leverage)
         {
             Security msft;
@@ -930,7 +930,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongerToLong_PriceRise(decimal leverage)
         {
             Security msft;
@@ -957,7 +957,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_LongToShort_PriceRise(decimal leverage)
         {
             Security msft;
@@ -982,7 +982,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ShortToShorter_PriceRise(decimal leverage)
         {
             Security msft;
@@ -1012,7 +1012,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ShortToLong_PriceRise_ZeroValue(decimal leverage)
         {
             Security msft;
@@ -1037,7 +1037,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, msft, algo));
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ShortToLong_PriceRise(decimal leverage)
         {
             Security msft;
@@ -1073,7 +1073,7 @@ namespace QuantConnect.Tests.Algorithm
         //  Falling market conditions tests.
         /*****************************************************/
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void SetHoldings_ShortFixed_PriceFall(decimal leverage)
         {
             Security msft;

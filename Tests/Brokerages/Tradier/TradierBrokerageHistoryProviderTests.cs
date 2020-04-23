@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
     [TestFixture, Ignore("This test requires a configured and active Tradier account")]
     public class TradierBrokerageHistoryProviderTests
     {
-        public TestCaseData[] TestParameters
+        private static TestCaseData[] TestParameters
         {
             get
             {
@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
             }
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void GetsHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool throwsException)
         {
             TestDelegate test = () =>

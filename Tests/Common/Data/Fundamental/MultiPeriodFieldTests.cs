@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
         {
             Assert.IsTrue(_field.HasValue);
 
-            Assert.AreEqual(5, _field);
+            Assert.AreEqual(5, (decimal)_field);
             Assert.AreEqual(5, _field.Value);
         }
 
@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
 
             Assert.IsFalse(field.HasValue);
 
-            Assert.AreEqual(1, field);
+            Assert.AreEqual(1, (decimal)field);
             Assert.AreEqual(1, field.Value);
         }
 

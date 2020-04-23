@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         /// <summary>
         /// Provides the data required to test each order type in various cases
         /// </summary>
-        public override TestCaseData[] OrderParameters
+        public static TestCaseData[] OrderParameters
         {
             get
             {
@@ -72,7 +72,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         /// <summary>
         /// Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected override Symbol Symbol
+        protected static Symbol Symbol
         {
             get { return Symbols.EURUSD; }
         }
@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         /// <summary>
         /// Gets a high price for the specified symbol so a limit sell won't fill
         /// </summary>
-        protected override decimal HighPrice
+        protected static decimal HighPrice
         {
             // FXCM requires order prices to be not more than 5600 pips from the market price (at least for EURUSD)
             get { return 1.5m; }
@@ -97,7 +97,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         /// <summary>
         /// Gets a low price for the specified symbol so a limit buy won't fill
         /// </summary>
-        protected override decimal LowPrice
+        protected static decimal LowPrice
         {
             // FXCM requires order prices to be not more than 5600 pips from the market price (at least for EURUSD)
             get { return 0.7m; }

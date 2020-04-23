@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
         /// <summary>
         /// Provides the data required to test each order type in various cases
         /// </summary>
-        public override TestCaseData[] OrderParameters => new[]
+        private static TestCaseData[] OrderParameters => new[]
         {
             new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
             new TestCaseData(new NonUpdateableLimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
         /// <summary>
         /// Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected override Symbol Symbol { get; } = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        private static Symbol Symbol { get; } = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
         /// <summary>
         /// Gets the security type associated with the <see cref="BrokerageTests.Symbol" />
@@ -79,12 +79,12 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
         /// <summary>
         /// Gets a high price for the specified symbol so a limit sell won't fill
         /// </summary>
-        protected override decimal HighPrice => 1000m;
+        private static decimal HighPrice => 1000m;
 
         /// <summary>
         /// Gets a low price for the specified symbol so a limit buy won't fill
         /// </summary>
-        protected override decimal LowPrice => 0.1m;
+        private static decimal LowPrice => 0.1m;
 
         /// <summary>
         /// Returns whether or not the brokers order methods implementation are async

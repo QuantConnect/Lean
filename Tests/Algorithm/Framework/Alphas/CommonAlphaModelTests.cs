@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
     {
         private QCAlgorithm _algorithm;
 
-        [SetUp]
+        [OneTimeSetUp]
         public void Initialize()
         {
             PythonInitializer.Initialize();

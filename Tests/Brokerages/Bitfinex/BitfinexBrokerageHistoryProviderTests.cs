@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         // the last two bools in params order are:
         // 1) whether or not 'GetHistory' is expected to return an empty result
         // 2) whether or not an ArgumentException is expected to be thrown during 'GetHistory' execution
-        public TestCaseData[] History => new[]
+        private static TestCaseData[] History => new[]
         {
             // valid
             new TestCaseData(Symbol, Resolution.Minute, Time.OneMinute, false, false),

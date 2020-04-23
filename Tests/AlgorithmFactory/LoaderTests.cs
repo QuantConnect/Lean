@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.AlgorithmFactory
             _workerThread.Dispose();
         }
 
-        [Test, Ignore("TODO: Why is this ignored")]
+        [Test]
         public void LoadsSamePythonAlgorithmTwice()
         {
             var assemblyPath = "../../../Algorithm.Python/BasicTemplateAlgorithm.py";
@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.AlgorithmFactory
             Assert.AreNotEqual(algorithm1.ToString(), algorithm2.ToString());
         }
 
-        [Test, Ignore("TODO: Why is this ignored")]
+        [Test]
         public void LoadsTwoDifferentPythonAlgorithm()
         {
             var assemblyPath1 = "../../../Algorithm.Python/BasicTemplateAlgorithm.py";

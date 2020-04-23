@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         /// <summary>
         /// Provides the data required to test each order type in various cases
         /// </summary>
-        public override TestCaseData[] OrderParameters => new[]
+        public static TestCaseData[] OrderParameters => new[]
         {
             new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
             new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
@@ -58,7 +58,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         /// <summary>
         ///     Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected override Symbol Symbol
+        protected static Symbol Symbol
         {
             get { return Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda); }
         }
@@ -74,7 +74,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         /// <summary>
         ///     Gets a high price for the specified symbol so a limit sell won't fill
         /// </summary>
-        protected override decimal HighPrice
+        protected static decimal HighPrice
         {
             get { return 5m; }
         }
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         /// <summary>
         ///     Gets a low price for the specified symbol so a limit buy won't fill
         /// </summary>
-        protected override decimal LowPrice
+        protected static decimal LowPrice
         {
             get { return 0.32m; }
         }

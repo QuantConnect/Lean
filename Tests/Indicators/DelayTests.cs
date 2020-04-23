@@ -23,7 +23,7 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture]
     public class DelayTests
     {
-        //[Test, ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = )]
+        [Test]
         public void DelayZeroThrowsArgumentException()
         {
             Assert.Throws<ArgumentException>(() =>

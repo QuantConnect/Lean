@@ -52,7 +52,6 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
-        //[ExpectedException(typeof(ArgumentException))]
         public void GetMethod_WithNonDailyResolution_ShouldThrowException()
         {
             Assert.Throws<ArgumentException>(() =>
@@ -62,7 +61,6 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
-        //[ExpectedException(typeof(ArgumentException))]
         public void GetMethod_WithReveseDate_ShouldThrowException()
         {
             Assert.Throws<ArgumentException>(() =>
@@ -72,7 +70,6 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
-        //[ExpectedException(typeof(NotSupportedException))]
         public void GetMethod_WithNonEquitySecurity_ShouldThrowException()
         {
             Assert.Throws<NotSupportedException>(() =>

@@ -199,10 +199,19 @@ namespace QuantConnect.Util
                     {
                         // we want to get the requested part without instantiating each one of that type
                         var selectedPart = _composableParts.Result
-                            .Select(x => new { part = x, Type = ReflectionModelServices.GetPartType(x).Value })
-                            .Where(x => type.IsAssignableFrom(x.Type))
-                            .Where(x => x.Type.MatchesTypeName(typeName))
-                            .Select(x => x.part)
+                            .Where(x =>
+                                {
+                                    try
+                                    {
+                                        var xType =  ReflectionModelServices.GetPartType(x).Value;
+                                        return type.IsAssignableFrom(xType) && xType.MatchesTypeName(typeName);
+                                    }
+                                    catch
+                                    {
+                                        return false;
+                                    }
+                                }
+                            )
                             .FirstOrDefault();
 
                         if (selectedPart == null)

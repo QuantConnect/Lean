@@ -24,14 +24,14 @@ namespace QuantConnect.Tests.Engine
     [TestFixture]
     public class AlgorithmTimeLimitManagerTests
     {
-        [SetUp]
+        [OneTimeSetUp]
         public void TearUp()
         {
             // clear the config
             Config.Reset();
         }
 
-        [TearDown]
+        [OneTimeTearDown]
         public void TearDown()
         {
             // clear the config

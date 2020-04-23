@@ -24,23 +24,13 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
     [Ignore("These tests require the IBGateway to be installed.")]
     public class InteractiveBrokersForexOrderTests : BrokerageTests
     {
-        [SetUp]
-        public void InitializeBrokerage()
-        {
-        }
-
-        [TearDown]
-        public void DisposeBrokerage()
-        {
-        }
-
-        protected override Symbol Symbol => Symbols.USDJPY;
+        protected static Symbol Symbol => Symbols.USDJPY;
 
         protected override SecurityType SecurityType => SecurityType.Forex;
 
-        protected override decimal HighPrice => 10000m;
+        protected static decimal HighPrice => 10000m;
 
-        protected override decimal LowPrice => 0.01m;
+        protected static decimal LowPrice => 0.01m;
 
         /// <summary>
         /// Returns wether or not the brokers order methods implementation are async

@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using NUnit.Framework;
 using System.Linq;
 using QuantConnect.Algorithm.CSharp;
@@ -70,6 +71,10 @@ namespace QuantConnect.Tests
 
         private static TestCaseData[] GetRegressionTestParameters()
         {
+            var dir = TestContext.CurrentContext.TestDirectory;
+            Environment.CurrentDirectory = dir;
+            Directory.SetCurrentDirectory(dir);
+
             var nonDefaultStatuses = new Dictionary<string, AlgorithmStatus>
             {
                 {"TrainingInitializeRegressionAlgorithm", AlgorithmStatus.RuntimeError}

@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         /// <summary>
         /// Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected override Symbol Symbol => Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);
+        protected static Symbol Symbol => Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);
 
         /// <summary>
         /// Gets the security type associated with the <see cref="BrokerageTests.Symbol" />
@@ -74,7 +74,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         protected override SecurityType SecurityType => SecurityType.Crypto;
 
         //no stop limit support in v1
-        public override TestCaseData[] OrderParameters => new[]
+        private static TestCaseData[] OrderParameters => new[]
         {
             new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
             new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
@@ -84,12 +84,12 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         /// <summary>
         /// Gets a high price for the specified symbol so a limit sell won't fill
         /// </summary>
-        protected override decimal HighPrice => 1000m;
+        protected static decimal HighPrice => 1000m;
 
         /// <summary>
         /// Gets a low price for the specified symbol so a limit buy won't fill
         /// </summary>
-        protected override decimal LowPrice => 100m;
+        protected static decimal LowPrice => 100m;
 
         /// <summary>
         /// Gets the current market price of the specified security

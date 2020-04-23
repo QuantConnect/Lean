@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Common.Util
             }
         }
 
-        public TestCaseData[] GetTestCases()
+        private static TestCaseData[] GetTestCases()
         {
             var referenceDate = new DateTime(2016, 11, 1);
 
@@ -76,7 +76,7 @@ namespace QuantConnect.Tests.Common.Util
             return results;
         }
 
-        [Test, TestCaseSource("GetTestCases")]
+        [Test, TestCaseSource(nameof(GetTestCases))]
         public void DecomposesAccordingToLeanDataFileGeneration(Arguments args)
         {
             var sourceString = LeanData.GenerateRelativeZipFilePath(args.Symbol, args.Date, args.Resolution, args.TickType);

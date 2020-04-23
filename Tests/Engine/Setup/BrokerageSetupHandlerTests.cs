@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Engine.Setup
 
         private TestableBrokerageSetupHandler _brokerageSetupHandler;
 
-        [SetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             _algorithm = new QCAlgorithm();
@@ -287,7 +287,7 @@ namespace QuantConnect.Tests.Engine.Setup
             Assert.Greater(algorithm.UtcTime, time);
         }
 
-        public TestCaseData[] GetExistingHoldingsAndOrdersTestCaseData()
+        private static TestCaseData[] GetExistingHoldingsAndOrdersTestCaseData()
         {
             return new[]
             {

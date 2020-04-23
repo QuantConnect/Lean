@@ -210,8 +210,6 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        //[ExpectedException(typeof(InvalidOperationException), MatchType = MessageMatch.Contains,
-            //ExpectedMessage = )]
         public void OptionStyleThrowsOnNonOptionSecurityType()
         {
             Assert.Throws<InvalidOperationException>(() =>
@@ -326,7 +324,6 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Theory, TestCase("|"), TestCase(" ")]
-        //[ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = )]
         public void ThrowsOnInvalidSymbolCharacters(string input)
         {
             Assert.Throws<ArgumentException>(() =>

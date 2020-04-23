@@ -18,9 +18,9 @@ before_install:
   - conda install -y wrapt=1.10.11
 install:
   - nuget restore QuantConnect.Lean.sln
-  - nuget install NUnit.Runners -Version 2.6.4 -OutputDirectory testrunner
+  - nuget install NUnit.Runners -Version 3.11.1 -OutputDirectory testrunner
 script:
   - msbuild /p:Configuration=Release /p:VbcToolExe=vbnc.exe QuantConnect.Lean.sln
-  - mono ./testrunner/NUnit.Runners.2.6.4/tools/nunit-console.exe ./Tests/bin/Release/QuantConnect.Tests.dll --exclude:TravisExclude --labels
+  - mono ./testrunner/NUnit.Runners.3.11.1/tools/nunit-console.exe ./Tests/bin/Release/QuantConnect.Tests.dll --exclude:TravisExclude --labels
 after_success:
   - coveralls

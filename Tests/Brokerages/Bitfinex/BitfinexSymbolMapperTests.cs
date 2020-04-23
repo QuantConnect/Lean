@@ -24,28 +24,28 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
     public class BitfinexSymbolMapperTests
     {
         #region data
-        public TestCaseData[] CryptoPairs => new[]
+        private static TestCaseData[] CryptoPairs => new[]
         {
             new TestCaseData("ethusd"),
             new TestCaseData("btcusd"),
             new TestCaseData("ethbtc")
         };
 
-        public TestCaseData[] RawCryptoSymbols => new[]
+        private static TestCaseData[] RawCryptoSymbols => new[]
         {
             new TestCaseData("ETHUSD", SecurityType.Crypto, Market.Bitfinex),
             new TestCaseData("ETHBTC", SecurityType.Crypto, Market.Bitfinex),
             new TestCaseData("BTCUSD", SecurityType.Crypto, Market.Bitfinex),
         };
 
-        public TestCaseData[] CryptoSymbols => new[]
+        private static TestCaseData[] CryptoSymbols => new[]
         {
             new TestCaseData(Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex)),
             new TestCaseData(Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex)),
             new TestCaseData(Symbol.Create("ETHBTC", SecurityType.Crypto, Market.Bitfinex))
         };
 
-        public TestCaseData[] CurrencyPairs => new[]
+        private static TestCaseData[] CurrencyPairs => new[]
         {
             new TestCaseData(""),
             new TestCaseData("eurusd"),
@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             new TestCaseData("usdjpy")
         };
 
-        public TestCaseData[] UnknownSymbols => new[]
+        private static TestCaseData[] UnknownSymbols => new[]
         {
             new TestCaseData("eth-usd", SecurityType.Crypto, Market.Bitfinex),
             new TestCaseData("BTC/USD", SecurityType.Crypto, Market.Bitfinex),
@@ -63,12 +63,12 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             new TestCaseData("btceth", SecurityType.Crypto, Market.Bitfinex)
         };
 
-        public TestCaseData[] UnknownSecurityType => new[]
+        private static TestCaseData[] UnknownSecurityType => new[]
         {
             new TestCaseData("BTCUSD", SecurityType.Forex, Market.Bitfinex),
         };
 
-        public TestCaseData[] UnknownMarket => new[]
+        private static TestCaseData[] UnknownMarket => new[]
         {
             new TestCaseData("ethusd", SecurityType.Crypto, Market.GDAX)
         };

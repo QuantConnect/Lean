@@ -47,8 +47,7 @@ namespace QuantConnect.Tests.Common.Securities.Cryptos
             Assert.AreEqual(symbol.Value.RemoveFromEnd(quote), crypto.BaseCurrencySymbol);
         }
 
-        [Test]
-        //[TestCase("BTCEUR", "USD", ExpectedException = typeof(InvalidOperationException), MatchType = MessageMatch.Contains, ExpectedMessage = )]
+        [TestCase("BTCEUR", "USD")]
         public void ConstructorThrowOnWrongQuoteCurrency(string ticker, string quote)
         {
             Assert.Throws<InvalidOperationException>(() =>

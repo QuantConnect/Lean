@@ -904,7 +904,17 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Returns a <see cref = "string"/> that represents the current <see cref = "AlgorithmPythonWrapper"/> object.
         /// </summary>
         /// <returns></returns>
-        public override string ToString() => _algorithm == null ? base.ToString() : _algorithm.Repr();
+        public override string ToString()
+        {
+            if (_algorithm == null)
+            {
+                return base.ToString();
+            }
+            using (Py.GIL())
+            {
+                return _algorithm.Repr();
+            }
+        }
 
         /// <summary>
         /// Sets the current slice

@@ -116,7 +116,6 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        //[ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = )]
         public void ThrowOnCreateCryptoNotDescribedInCSV()
         {
             var symbol = Symbol.Create("ABCDEFG", SecurityType.Crypto, Market.GDAX);
