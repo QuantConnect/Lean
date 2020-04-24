@@ -154,8 +154,6 @@ namespace QuantConnect
                 { "CPU Usage", Invariant($"{CpuUsage:0.0}%")},
                 { "Used RAM (MB)", TotalPhysicalMemoryUsed.ToStringInvariant() },
                 { "Total RAM (MB)", "" },
-                { "Used Disk Space (MB)", DriveSpaceUsed.ToStringInvariant() },
-                { "Total Disk Space (MB)", DriveTotalSpace.ToStringInvariant() },
                 { "Hostname", Environment.MachineName },
                 { "LEAN Version", $"v{Globals.Version}"}
             };
