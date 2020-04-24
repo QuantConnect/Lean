@@ -29,13 +29,13 @@ namespace QuantConnect.Tests.Common
     {
         private TimeMonitor _timeMonitor;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             _timeMonitor = new TimeMonitor(monitorIntervalMs:3);
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void TearDown()
         {
             _timeMonitor.DisposeSafely();

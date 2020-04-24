@@ -1283,8 +1283,8 @@ def Test(dataFrame, symbol):
             }
         }
 
-        private object[] SpotMarketCases => LeanDataReaderTests.SpotMarketCases;
-        private object[] OptionAndFuturesCases => LeanDataReaderTests.OptionAndFuturesCases;
+        private static  object[] SpotMarketCases => LeanDataReaderTests.SpotMarketCases;
+        private static object[] OptionAndFuturesCases => LeanDataReaderTests.OptionAndFuturesCases;
 
         [Test, TestCaseSource(nameof(SpotMarketCases))]
         public void HandlesLeanDataReaderOutputForSpotMarkets(string securityType, string market, string resolution, string ticker, string fileName, int rowsInfile, double sumValue)

@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Engine
         private SecurityExchangeHours _exchangeHours;
         private SubscriptionDataConfig _config;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             var sunday = new LocalMarketHours(DayOfWeek.Sunday, new TimeSpan(17, 0, 0), TimeSpan.FromTicks(Time.OneDay.Ticks - 1));
@@ -95,7 +95,7 @@ namespace QuantConnect.Tests.Engine
         }
 
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void TearDown()
         {
             _liveTradingDataFeed.Exit();

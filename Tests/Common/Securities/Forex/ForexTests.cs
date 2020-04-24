@@ -25,32 +25,38 @@ namespace QuantConnect.Tests.Common.Securities.Forex
     public class ForexTests
     {
         [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must be exactly 6 characters")]
         public void DecomposeThrowsOnSymbolTooShort()
         {
             string symbol = "12345";
             Assert.AreEqual(5, symbol.Length);
             string basec, quotec;
-            QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out basec, out quotec);
+            Assert.Throws<ArgumentException>(() =>
+            {
+                QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out basec, out quotec);
+            }, "Currency pairs must be exactly 6 characters");
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must be exactly 6 characters")]
         public void DecomposeThrowsOnSymbolTooLong()
         {
             string symbol = "1234567";
             Assert.AreEqual(7, symbol.Length);
             string basec, quotec;
-            QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out basec, out quotec);
+            Assert.Throws<ArgumentException>(() =>
+            {
+                QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out basec, out quotec);
+            }, "Currency pairs must be exactly 6 characters");
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Currency pairs must be exactly 6 characters")]
         public void DecomposeThrowsOnNullSymbol()
         {
             string symbol = null;
             string basec, quotec;
-            QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out basec, out quotec);
+            Assert.Throws<ArgumentException>(() =>
+            {
+                QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out basec, out quotec);
+            }, "Currency pairs must be exactly 6 characters");
         }
 
         [Test]

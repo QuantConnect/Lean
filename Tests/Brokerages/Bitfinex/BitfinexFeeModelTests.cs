@@ -27,8 +27,8 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
     [TestFixture]
     public class BitfinexFeeModelTests
     {
-        protected Symbol Symbol => Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);
-        protected Security Security
+        private static Symbol Symbol => Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);
+        private static Security Security
         {
             get
             {
@@ -55,14 +55,12 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
                 return security;
             }
         }
-        protected OrderSubmissionData OrderSubmissionData => new OrderSubmissionData(Security.BidPrice, Security.AskPrice, (Security.BidPrice + Security.AskPrice) / 2);
+        private static OrderSubmissionData OrderSubmissionData => new OrderSubmissionData(Security.BidPrice, Security.AskPrice, (Security.BidPrice + Security.AskPrice) / 2);
+        private static decimal HighPrice = 1000m;
+        private static decimal LowPrice = 100m;
+        private static decimal Quantity = 1m;
 
-        protected decimal HighPrice => 1000m;
-        protected decimal LowPrice => 100m;
-
-        protected decimal Quantity => 1m;
-
-        public TestCaseData[] MakerOrders => new[]
+        private static TestCaseData[] MakerOrders => new[]
         {
             new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
             new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice) { OrderSubmissionData = OrderSubmissionData}),
@@ -71,7 +69,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BitfinexOrderProperties() { PostOnly = true }))
         };
 
-        public TestCaseData[] TakerOrders => new[]
+        private static TestCaseData[] TakerOrders => new[]
         {
             new TestCaseData(new MarketOrderTestParameters(Symbol)),
             new TestCaseData(new MarketOrderTestParameters(Symbol, new BitfinexOrderProperties() { PostOnly = true })),
@@ -88,7 +86,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         }
 
         [Test]
-        [TestCaseSource("MakerOrders")]
+        [TestCaseSource(nameof(MakerOrders))]
         public void ReturnShortOrderMakerFees(OrderTestParameters parameters)
         {
             IFeeModel feeModel = new BitfinexFeeModel();
@@ -103,7 +101,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         }
 
         [Test]
-        [TestCaseSource("TakerOrders")]
+        [TestCaseSource(nameof(TakerOrders))]
         public void ReturnShortOrderTakerFees(OrderTestParameters parameters)
         {
             IFeeModel feeModel = new BitfinexFeeModel();
@@ -119,7 +117,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         }
 
         [Test]
-        [TestCaseSource("MakerOrders")]
+        [TestCaseSource(nameof(MakerOrders))]
         public void ReturnLongOrderMakerFees(OrderTestParameters parameters)
         {
             IFeeModel feeModel = new BitfinexFeeModel();
@@ -135,7 +133,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         }
 
         [Test]
-        [TestCaseSource("TakerOrders")]
+        [TestCaseSource(nameof(TakerOrders))]
         public void ReturnLongOrderTakerFees(OrderTestParameters parameters)
         {
             IFeeModel feeModel = new BitfinexFeeModel();

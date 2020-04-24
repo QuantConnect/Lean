@@ -65,12 +65,13 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "expected to be of type")]
         public void ThrowsOnDifferentDataType()
         {
             var target = new TestIndicator();
-
-            target.Update(new Tick());
+            Assert.Throws<ArgumentException>(() =>
+            {
+                target.Update(new Tick());
+            }, "expected to be of type");
         }
 
         [Test]

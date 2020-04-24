@@ -32,19 +32,19 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         // the last two bools in params order are:
         // 1) whether or not 'GetHistory' is expected to return an empty result
         // 2) whether or not an ArgumentException is expected to be thrown during 'GetHistory' execution
-        public TestCaseData[] History => new[]
+        private static TestCaseData[] History => new[]
         {
             // valid
-            new TestCaseData(Symbol, Resolution.Minute, Time.OneMinute, false, false),
-            new TestCaseData(Symbol, Resolution.Hour, Time.OneDay, false, false),
-            new TestCaseData(Symbol, Resolution.Daily, TimeSpan.FromDays(15), false, false),
+            new TestCaseData(StaticSymbol, Resolution.Minute, Time.OneMinute, false, false),
+            new TestCaseData(StaticSymbol, Resolution.Hour, Time.OneDay, false, false),
+            new TestCaseData(StaticSymbol, Resolution.Daily, TimeSpan.FromDays(15), false, false),
 
             // invalid resolution, no error, empty result
-            new TestCaseData(Symbol, Resolution.Tick, TimeSpan.FromSeconds(15), true, false),
-            new TestCaseData(Symbol, Resolution.Second, Time.OneMinute, true, false),
+            new TestCaseData(StaticSymbol, Resolution.Tick, TimeSpan.FromSeconds(15), true, false),
+            new TestCaseData(StaticSymbol, Resolution.Second, Time.OneMinute, true, false),
 
             // invalid period, no error, empty result
-            new TestCaseData(Symbol, Resolution.Daily, TimeSpan.FromDays(-15), true, false),
+            new TestCaseData(StaticSymbol, Resolution.Daily, TimeSpan.FromDays(-15), true, false),
 
             // invalid symbol, throws "System.ArgumentException : Unknown symbol: XYZ"
             new TestCaseData(Symbol.Create("XYZ", SecurityType.Crypto, Market.Bitfinex), 

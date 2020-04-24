@@ -56,15 +56,15 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         /// <summary>
         /// Provides the data required to test each order type in various cases
         /// </summary>
-        public override TestCaseData[] OrderParameters
+        public static TestCaseData[] OrderParameters
         {
             get
             {
                 return new[]
                 {
-                    new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
-                    new TestCaseData(new FxcmLimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
-                    new TestCaseData(new FxcmStopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder"),
+                    new TestCaseData(new MarketOrderTestParameters(Symbols.EURUSD)).SetName("MarketOrder"),
+                    new TestCaseData(new FxcmLimitOrderTestParameters(Symbols.EURUSD, 1.5m, 0.7m)).SetName("LimitOrder"),
+                    new TestCaseData(new FxcmStopMarketOrderTestParameters(Symbols.EURUSD, 1.5m, 0.7m)).SetName("StopMarketOrder"),
                 };
             }
         }
@@ -72,36 +72,12 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         /// <summary>
         /// Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected override Symbol Symbol
-        {
-            get { return Symbols.EURUSD; }
-        }
+        protected override Symbol Symbol => Symbols.EURUSD;
 
         /// <summary>
         /// Gets the security type associated with the <see cref="BrokerageTests.Symbol"/>
         /// </summary>
-        protected override SecurityType SecurityType
-        {
-            get { return SecurityType.Forex; }
-        }
-
-        /// <summary>
-        /// Gets a high price for the specified symbol so a limit sell won't fill
-        /// </summary>
-        protected override decimal HighPrice
-        {
-            // FXCM requires order prices to be not more than 5600 pips from the market price (at least for EURUSD)
-            get { return 1.5m; }
-        }
-
-        /// <summary>
-        /// Gets a low price for the specified symbol so a limit buy won't fill
-        /// </summary>
-        protected override decimal LowPrice
-        {
-            // FXCM requires order prices to be not more than 5600 pips from the market price (at least for EURUSD)
-            get { return 0.7m; }
-        }
+        protected override SecurityType SecurityType => SecurityType.Forex;
 
         /// <summary>
         /// Returns wether or not the brokers order methods implementation are async
@@ -203,5 +179,46 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             }
         }
 
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CancelOrders(OrderTestParameters parameters)
+        {
+            base.CancelOrders(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromZero(OrderTestParameters parameters)
+        {
+            base.LongFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromLong(OrderTestParameters parameters)
+        {
+            base.CloseFromLong(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromZero(OrderTestParameters parameters)
+        {
+            base.ShortFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromShort(OrderTestParameters parameters)
+        {
+            base.CloseFromShort(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromLong(OrderTestParameters parameters)
+        {
+            base.ShortFromLong(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromShort(OrderTestParameters parameters)
+        {
+            base.LongFromShort(parameters);
+        }
     }
 }

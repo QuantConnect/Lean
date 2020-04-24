@@ -85,7 +85,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             Log.Trace("Data points retrieved: " + historyProvider.DataPointCount);
         }
 
-        public TestCaseData[] TestParameters
+        private static TestCaseData[] TestParameters
         {
             get
             {

@@ -25,12 +25,12 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
     [TestFixture]
     public class CandlestickPatternTests
     {
-        private readonly string[] _testFileNames =
+        private static readonly string[] _testFileNames =
         {
             "spy_candle_patterns.txt", "ewz_candle_patterns.txt", "eurusd_candle_patterns.txt"
         };
 
-        public virtual TestCaseData[] PatternTestParameters
+        private static TestCaseData[] PatternTestParameters
         {
             get
             {
@@ -133,13 +133,13 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
             }
         }
 
-        [Test, TestCaseSource("PatternTestParameters")]
+        [Test, TestCaseSource(nameof(PatternTestParameters))]
         public void ComparesAgainstExternalData(IndicatorBase<IBaseDataBar> indicator, string columnName, string testFileName)
         {
             TestHelper.TestIndicator(indicator, testFileName, columnName, Assertion);
         }
 
-        [Test, TestCaseSource("PatternTestParameters")]
+        [Test, TestCaseSource(nameof(PatternTestParameters))]
         public void ComparesAgainstExternalDataAfterReset(CandlestickPattern indicator, string columnName, string testFileName)
         {
             TestHelper.TestIndicator(indicator, testFileName, columnName, Assertion);
@@ -147,7 +147,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
             TestHelper.TestIndicator(indicator, testFileName, columnName, Assertion);
         }
 
-        [Test, TestCaseSource("PatternTestParameters")]
+        [Test, TestCaseSource(nameof(PatternTestParameters))]
         public void ResetsProperly(CandlestickPattern indicator, string columnName, string testFileName)
         {
             TestHelper.TestIndicatorReset(indicator, testFileName);

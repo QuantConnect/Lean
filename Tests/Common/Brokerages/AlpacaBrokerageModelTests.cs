@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             }
         }
 
-        public TestCaseData[] GetOrderTestData()
+        private static TestCaseData[] GetOrderTestData()
         {
             return new[]
             {

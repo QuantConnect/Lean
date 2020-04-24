@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private LiveSynchronizer _synchronizer;
         private DateTime _startDate;
         private DataManager _dataManager;
-        private readonly Dictionary<Type, BaseData> _instances = new Dictionary<Type, BaseData>
+        private static readonly Dictionary<Type, BaseData> _instances = new Dictionary<Type, BaseData>
         {
             {typeof(BaseData), typeof(TradeBar).GetBaseDataInstance() },
             {typeof(PsychSignalSentiment), typeof(PsychSignalSentiment).GetBaseDataInstance() },
@@ -1304,7 +1304,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
-        public TestCaseData[] DataTypeTestCases => new[]
+        private static TestCaseData[] DataTypeTestCases => new[]
         {
             // Equity - Hourly resolution
             // We expect 7 hourly bars for 6.5 hours in open market hours

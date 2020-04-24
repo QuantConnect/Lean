@@ -34,13 +34,13 @@ namespace QuantConnect.Tests.Common
         };
 
         [Theory]
-        [TestCaseSource("GetSymbolCreateTestCaseData")]
+        [TestCaseSource(nameof(GetSymbolCreateTestCaseData))]
         public void SymbolCreate(string ticker, SecurityType securityType, string market, Symbol expected)
         {
             Assert.AreEqual(Symbol.Create(ticker, securityType, market), expected);
         }
 
-        private TestCaseData[] GetSymbolCreateTestCaseData()
+        private static TestCaseData[] GetSymbolCreateTestCaseData()
         {
             return new []
             {

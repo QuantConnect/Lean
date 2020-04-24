@@ -402,7 +402,7 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
-        private TestCaseData[] GetSecurityCacheInitialStates()
+        private static TestCaseData[] GetSecurityCacheInitialStates()
         {
             var defaultInstance = new SecurityCache();
 

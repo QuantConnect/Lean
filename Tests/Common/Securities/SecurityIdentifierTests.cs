@@ -167,11 +167,12 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException), MatchType = MessageMatch.Contains,
-            ExpectedMessage = "OptionRight is only defined for SecurityType.Option")]
         public void OptionRightThrowsOnNonOptionSecurityType()
         {
-            var OptionRight = SPY.OptionRight;
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var OptionRight = SPY.OptionRight;
+            }, "OptionRight is only defined for SecurityType.Option");
         }
 
         [Test]
@@ -207,11 +208,12 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException), MatchType = MessageMatch.Contains,
-            ExpectedMessage = "OptionStyle is only defined for SecurityType.Option")]
         public void OptionStyleThrowsOnNonOptionSecurityType()
         {
-            var optionStyle = SPY.OptionStyle;
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var optionStyle = SPY.OptionStyle;
+            }, "OptionStyle is only defined for SecurityType.Option");
         }
 
         [Test]
@@ -320,10 +322,12 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Theory, TestCase("|"), TestCase(" ")]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "must not contain the characters")]
         public void ThrowsOnInvalidSymbolCharacters(string input)
         {
-            new SecurityIdentifier(input, 0);
+            Assert.Throws<ArgumentException>(() =>
+            {
+                new SecurityIdentifier(input, 0);
+            }, "must not contain the characters");
         }
 
         [Test]

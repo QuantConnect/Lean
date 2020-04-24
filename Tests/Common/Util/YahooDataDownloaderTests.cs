@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Util
         readonly Symbol _symbol = new Symbol(SecurityIdentifier.GenerateEquity(PermTick, Market), PermTick);
 
         private YahooDataDownloader _yahooDataDownloader;
-        [TestFixtureSetUp]
+        [SetUp]
         public void Setup()
         {
             _yahooDataDownloader = new YahooDataDownloader();
@@ -52,24 +52,30 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException))]
         public void GetMethod_WithNonDailyResolution_ShouldThrowException()
         {
-            _yahooDataDownloader.Get(_symbol, Resolution.Minute, new DateTime(2017,2,1), new DateTime(2017, 2, 2));
+            Assert.Throws<ArgumentException>(() =>
+            {
+                _yahooDataDownloader.Get(_symbol, Resolution.Minute, new DateTime(2017, 2, 1), new DateTime(2017, 2, 2));
+            });
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException))]
         public void GetMethod_WithReveseDate_ShouldThrowException()
         {
-            _yahooDataDownloader.Get(_symbol, Resolution.Daily, new DateTime(2017, 2, 2), new DateTime(2017, 2, 1));
+            Assert.Throws<ArgumentException>(() =>
+            {
+                _yahooDataDownloader.Get(_symbol, Resolution.Daily, new DateTime(2017, 2, 2), new DateTime(2017, 2, 1));
+            });
         }
 
         [Test]
-        [ExpectedException(typeof(NotSupportedException))]
         public void GetMethod_WithNonEquitySecurity_ShouldThrowException()
         {
-            _yahooDataDownloader.Get(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", "USA"), "EURUSD"), Resolution.Daily, new DateTime(2017, 2, 1), new DateTime(2017, 2, 2));
+            Assert.Throws<NotSupportedException>(() =>
+            {
+                _yahooDataDownloader.Get(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", "USA"), "EURUSD"), Resolution.Daily, new DateTime(2017, 2, 1), new DateTime(2017, 2, 2));
+            });
         }
 
     }

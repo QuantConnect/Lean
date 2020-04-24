@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
     [TestFixture, Ignore("This test requires a configured and testable Alpaca practice account. Since it uses the Polygon API, the account needs to be funded.")]
     public class AlpacaBrokerageHistoryProviderTests
     {
-        public TestCaseData[] TestParameters
+        private static TestCaseData[] TestParameters
         {
             get
             {

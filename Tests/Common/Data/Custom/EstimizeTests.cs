@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             DateTimeZoneHandling = DateTimeZoneHandling.Utc
         };
 
-        [Test, Ignore]
+        [Test, Ignore("Requires Estimize credentials")]
         public void EstimizeDownloadDoesNotThrow()
         {
             var tickers = new List<EstimizeDataDownloader.Company>();

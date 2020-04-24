@@ -21,7 +21,7 @@ namespace QuantConnect.Tests
     [SetUpFixture]
     public class PythonSetup
     {
-        [SetUp]
+        [OneTimeSetUp]
         public void SetUp()
         {
             var pythonPath = string.Join(
@@ -40,11 +40,6 @@ namespace QuantConnect.Tests
                 "../../../Algorithm.Python");
 
             Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath);
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
         }
     }
 }

@@ -44,12 +44,14 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual("LOW", cash.Symbol);
         }
 
-        [Test]
-        [TestCase(null, ExpectedException = typeof(ArgumentException), MatchType = MessageMatch.Exact, ExpectedMessage = "Cash symbols cannot be null or empty.")]
-        [TestCase("", ExpectedException = typeof(ArgumentException), MatchType = MessageMatch.Exact, ExpectedMessage = "Cash symbols cannot be null or empty.")]
+        [TestCase(null)]
+        [TestCase("")]
         public void ConstructorThrowsOnEmptySymbol(string currency)
         {
-            var cash = new Cash(currency, 0, 0);
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var cash = new Cash(currency, 0, 0);
+            }, "Cash symbols cannot be null or empty.");
         }
 
         [Test]

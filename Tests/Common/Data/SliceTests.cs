@@ -672,7 +672,7 @@ def Test(slice, symbol):
             }
         }
 
-        [Test, Ignore]
+        [Test, Ignore("Performance test")]
         public void PythonSlice_performance()
         {
             using (Py.GIL())

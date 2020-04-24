@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Common.Data.Market
     {
         private QuoteBar _quoteBar;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             _quoteBar = new QuoteBar();

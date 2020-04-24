@@ -29,34 +29,12 @@ namespace QuantConnect.Tests.Brokerages.GDAX
     public class GDAXBrokerageIntegrationTests : BrokerageTests
     {
         #region Properties
-        protected override Symbol Symbol
-        {
-            get { return Symbol.Create("ETHBTC", SecurityType, Market.GDAX); }
-        }
+        protected override Symbol Symbol => Symbol.Create("ETHBTC", SecurityType.Crypto, Market.GDAX);
 
         /// <summary>
         ///     Gets the security type associated with the <see cref="BrokerageTests.Symbol" />
         /// </summary>
-        protected override SecurityType SecurityType
-        {
-            get { return SecurityType.Crypto; }
-        }
-
-        /// <summary>
-        ///     Gets a high price for the specified symbol so a limit sell won't fill
-        /// </summary>
-        protected override decimal HighPrice
-        {
-            get { return 1m; }
-        }
-
-        /// <summary>
-        /// Gets a low price for the specified symbol so a limit buy won't fill
-        /// </summary>
-        protected override decimal LowPrice
-        {
-            get { return 0.0001m; }
-        }
+        protected override SecurityType SecurityType => SecurityType.Crypto;
 
         protected override decimal GetDefaultQuantity()
         {
@@ -99,11 +77,53 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         }
 
         //no stop limit support
-        public override TestCaseData[] OrderParameters => new[]
+        private static TestCaseData[] OrderParameters => new[]
         {
-            new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
-            new TestCaseData(new StopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder"),
+            new TestCaseData(new MarketOrderTestParameters(Symbol.Create("ETHBTC", SecurityType.Crypto, Market.GDAX))).SetName("MarketOrder"),
+            new TestCaseData(new LimitOrderTestParameters(Symbol.Create("ETHBTC", SecurityType.Crypto, Market.GDAX), 1m, 0.0001m)).SetName("LimitOrder"),
+            new TestCaseData(new StopMarketOrderTestParameters(Symbol.Create("ETHBTC", SecurityType.Crypto, Market.GDAX), 1m, 0.0001m)).SetName("StopMarketOrder"),
         };
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CancelOrders(OrderTestParameters parameters)
+        {
+            base.CancelOrders(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromZero(OrderTestParameters parameters)
+        {
+            base.LongFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromLong(OrderTestParameters parameters)
+        {
+            base.CloseFromLong(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromZero(OrderTestParameters parameters)
+        {
+            base.ShortFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromShort(OrderTestParameters parameters)
+        {
+            base.CloseFromShort(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromLong(OrderTestParameters parameters)
+        {
+            base.ShortFromLong(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromShort(OrderTestParameters parameters)
+        {
+            base.LongFromShort(parameters);
+        }
     }
 }

@@ -20,7 +20,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -29,7 +28,7 @@ namespace QuantConnect.Tests.Common.Brokerages
     {
         private SymbolPropertiesDatabase _symbolPropertiesDatabase;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
@@ -79,7 +78,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             );
         }
 
-        public TestCaseData[] GetOrderTestData()
+        private static TestCaseData[] GetOrderTestData()
         {
             return new[]
             {

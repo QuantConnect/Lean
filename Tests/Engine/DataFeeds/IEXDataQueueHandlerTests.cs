@@ -219,7 +219,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         #region History provider tests
 
-        public TestCaseData[] TestParameters
+        public static TestCaseData[] TestParameters
         {
             get
             {
@@ -240,18 +240,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(365*5.5), false), // beyond 5 years
 
                     // invalid symbol: XYZ
-                    new TestCaseData(Symbol.Create("XYZ", SecurityType.Equity, Market.FXCM), Resolution.Daily, TimeSpan.FromDays(15), false)
-                        .Throws("System.Net.WebException"),
+                    new TestCaseData(Symbol.Create("XYZ", SecurityType.Equity, Market.FXCM), Resolution.Daily, TimeSpan.FromDays(15), false, true),
 
                     // invalid security type, throws "System.ArgumentException : Invalid security type: Forex"
-                    new TestCaseData(Symbols.EURUSD, Resolution.Daily, TimeSpan.FromDays(15), false)
-                        .Throws("System.Net.WebException")
+                    new TestCaseData(Symbols.EURUSD, Resolution.Daily, TimeSpan.FromDays(15), false, true)
                 };
             }
         }
 
-        [Test, TestCaseSource("TestParameters")]
-        public void IEXCouldGetHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool received)
+        [Test, TestCaseSource(nameof(TestParameters))]
+        public void IEXCouldGetHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool received, bool throwsException = false)
         {
             var historyProvider = new IEXDataQueueHandler();
             historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false));

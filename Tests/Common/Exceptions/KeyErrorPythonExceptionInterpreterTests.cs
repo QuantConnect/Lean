@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Common.Exceptions
     {
         private PythonException _pythonException;
 
-        [TestFixtureSetUp]
+        [SetUp]
         public void Setup()
         {
             using (Py.GIL())
