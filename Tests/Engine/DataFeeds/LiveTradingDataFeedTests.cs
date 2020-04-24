@@ -754,6 +754,64 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
+        public void CustomUniverseFineFundamentalDataGetsPipedCorrectly()
+        {
+            _startDate = new DateTime(2014, 10, 07);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+
+            // we use test ConstituentsUniverse, we have daily data for it
+            var customUniverseSymbol = new Symbol(
+                SecurityIdentifier.GenerateConstituentIdentifier(
+                    "constituents-universe-qctest",
+                    SecurityType.Equity,
+                    Market.USA),
+                "constituents-universe-qctest");
+            var customUniverse = new ConstituentsUniverse(customUniverseSymbol,
+                new UniverseSettings(Resolution.Daily, 1, false, true, TimeSpan.Zero));
+
+            var started = new ManualResetEvent(false);
+            var feed = RunDataFeed(getNextTicksFunction: handler =>
+            {
+                started.Set();
+                return new BaseData[0];
+            });
+            started.WaitOne();
+
+            var fineWasCalled = false;
+            _algorithm.AddUniverse(customUniverse,
+                fine =>
+                {
+                    var symbol = fine.First().Symbol;
+                    if (symbol == Symbols.AAPL)
+                    {
+                        fineWasCalled = true;
+                    }
+                    return new[] { symbol };
+                });
+            SecurityChanges securityChanges = null;
+            var receivedFundamentalsData = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(7), ts =>
+            {
+                if (ts.UniverseData.Count > 0 &&
+                    ts.UniverseData.First().Value.Data.First() is Fundamentals)
+                {
+                    securityChanges = ts.SecurityChanges;
+                    receivedFundamentalsData = true;
+                    // short cut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                }
+            }, secondsTimeStep: 60 * 60 * 6, // 6 hour time step
+                alwaysInvoke: true,
+                sendUniverseData: true,
+                endDate:_startDate.AddDays(10));
+
+            Assert.IsNotNull(securityChanges);
+            Assert.IsTrue(securityChanges.AddedSecurities.Single().Symbol.Value == "AAPL");
+            Assert.IsTrue(receivedFundamentalsData);
+            Assert.IsTrue(fineWasCalled);
+        }
+
+        [Test]
         public void FineCoarseFundamentalDataGetsPipedCorrectly()
         {
             var lck = new object();
@@ -1274,6 +1332,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     feed.Exit();
                     cancellationTokenSource.Cancel();
+                    // allow LTDF tasks to finish
+                    Thread.Sleep(10);
                     return;
                 }
             }

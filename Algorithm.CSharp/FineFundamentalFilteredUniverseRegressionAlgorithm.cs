@@ -38,10 +38,14 @@ namespace QuantConnect.Algorithm.CSharp
 
             UniverseSettings.Resolution = Resolution.Daily;
 
-            AddUniverse(
-                // we use test ConstituentsUniverse
-                new ConstituentsUniverse(QuantConnect.Symbol.Create("constituents-universe-qctest", SecurityType.Equity, Market.USA), UniverseSettings),
-                FineSelectionFunction);
+            var customUniverseSymbol = new Symbol(SecurityIdentifier.GenerateConstituentIdentifier(
+                    "constituents-universe-qctest",
+                    SecurityType.Equity,
+                    Market.USA),
+                "constituents-universe-qctest");
+
+            // we use test ConstituentsUniverse
+            AddUniverse(new ConstituentsUniverse(customUniverseSymbol, UniverseSettings), FineSelectionFunction);
         }
 
         private IEnumerable<Symbol> FineSelectionFunction(IEnumerable<FineFundamental> data)

@@ -39,9 +39,13 @@ class ConstituentsUniverseRegressionAlgorithm(QCAlgorithm):
 
         self.UniverseSettings.Resolution = Resolution.Daily
 
-        self.AddUniverse(ConstituentsUniverse(
-            Symbol.Create("constituents-universe-qctest", SecurityType.Equity, Market.USA),
-            self.UniverseSettings))
+        customUniverseSymbol = Symbol(SecurityIdentifier.GenerateConstituentIdentifier(
+                    "constituents-universe-qctest",
+                    SecurityType.Equity,
+                    Market.USA),
+                "constituents-universe-qctest")
+
+        self.AddUniverse(ConstituentsUniverse(customUniverseSymbol, self.UniverseSettings))
 
     def OnData(self, data):
         self._step = self._step + 1
