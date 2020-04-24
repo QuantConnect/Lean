@@ -43,9 +43,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             UniverseSettings.Resolution = Resolution.Daily;
 
-            AddUniverse(new ConstituentsUniverse(
-                QuantConnect.Symbol.Create("constituents-universe-qctest", SecurityType.Equity, Market.USA),
-                UniverseSettings));
+            var customUniverseSymbol = new Symbol(SecurityIdentifier.GenerateConstituentIdentifier(
+                    "constituents-universe-qctest",
+                    SecurityType.Equity,
+                    Market.USA),
+                "constituents-universe-qctest");
+
+            AddUniverse(new ConstituentsUniverse(customUniverseSymbol, UniverseSettings));
         }
 
         /// <summary>

@@ -168,6 +168,7 @@
     <Compile Include="DefaultResolutionRegressionAlgorithm.cs" />
     <Compile Include="BasicPythonIntegrationTemplateAlgorithm.cs" />
     <Compile Include="BasicSetAccountCurrencyAlgorithm.cs" />
+    <Compile Include="FineFundamentalFilteredUniverseRegressionAlgorithm.cs" />
     <Compile Include="LongOnlyAlphaStreamAlgorithm.cs" />
     <Compile Include="Benchmarks\SECReportBenchmarkAlgorithm.cs" />
     <Compile Include="Benchmarks\SmartInsiderEventBenchmarkAlgorithm.cs" />

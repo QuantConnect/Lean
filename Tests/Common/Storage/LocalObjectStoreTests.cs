@@ -21,6 +21,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.Storage;
 using QuantConnect.Packets;
 using QuantConnect.Storage;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Storage
 {
@@ -44,6 +45,7 @@ namespace QuantConnect.Tests.Common.Storage
         [OneTimeTearDown]
         public void Cleanup()
         {
+            _store.DisposeSafely();
             Config.Set("object-store-root", StorageRootConfigurationValue);
             try
             {

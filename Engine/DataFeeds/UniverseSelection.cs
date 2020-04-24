@@ -107,22 +107,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // Create a dictionary of CoarseFundamental keyed by Symbol that also has FineFundamental
                     // Coarse raw data has SID collision on: CRHCY R735QTJ8XC9X
-                    var coarseData = universeData.Data.OfType<CoarseFundamental>()
-                        .Where(c => c.HasFundamentalData)
+                    var allCoarse = universeData.Data.OfType<CoarseFundamental>();
+                    var coarseData = allCoarse.Where(c => c.HasFundamentalData)
                         .DistinctBy(c => c.Symbol)
                         .ToDictionary(c => c.Symbol);
 
                     // Remove selected symbols that does not have fine fundamental data
                     var anyDoesNotHaveFundamentalData = false;
-                    selectSymbolsResult = selectSymbolsResult
-                        .Where(
-                            symbol =>
-                            {
-                                var result = coarseData.ContainsKey(symbol);
-                                anyDoesNotHaveFundamentalData |= !result;
-                                return result;
-                            }
-                        );
+                    // only pre filter selected symbols if there actually is any coarse data. This way we can support custom universe filtered by fine fundamental data
+                    // which do not use coarse data as underlying, in which case it could happen that we try to load fine fundamental data that is missing, but no problem,
+                    // 'FineFundamentalSubscriptionEnumeratorFactory' won't emit it
+                    if (allCoarse.Any())
+                    {
+                        selectSymbolsResult = selectSymbolsResult
+                            .Where(
+                                symbol =>
+                                {
+                                    var result = coarseData.ContainsKey(symbol);
+                                    anyDoesNotHaveFundamentalData |= !result;
+                                    return result;
+                                }
+                            );
+                    }
 
                     if (!_anyDoesNotHaveFundamentalDataWarningLogged && anyDoesNotHaveFundamentalData)
                     {
@@ -179,7 +185,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             FinancialStatements = fine.FinancialStatements,
                             OperationRatios = fine.OperationRatios,
                             SecurityReference = fine.SecurityReference,
-                            ValuationRatios = fine.ValuationRatios
+                            ValuationRatios = fine.ValuationRatios,
+                            Market = fine.Symbol.ID.Market
                         };
 
                         CoarseFundamental coarse;
@@ -189,7 +196,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // doesn't use the data provided, and instead returns a constant list of
                             // symbols -- coupled with a potential hole in the data
                             fundamentals.Value = coarse.Value;
-                            fundamentals.Market = coarse.Market;
                             fundamentals.Volume = coarse.Volume;
                             fundamentals.DollarVolume = coarse.DollarVolume;
                             fundamentals.HasFundamentalData = coarse.HasFundamentalData;

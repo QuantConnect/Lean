@@ -262,14 +262,19 @@ namespace QuantConnect.Algorithm
         /// Creates a new universe and adds it to the algorithm. This is for coarse and fine fundamental US Equity data and
         /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
         /// </summary>
-        /// <param name="pycoarse">Defines an initial coarse selection</param>
+        /// <param name="pyObject">Defines an initial coarse selection or a universe</param>
         /// <param name="pyfine">Defines a more detailed selection with access to more data</param>
-        public void AddUniverse(PyObject pycoarse, PyObject pyfine)
+        public void AddUniverse(PyObject pyObject, PyObject pyfine)
         {
             Func<IEnumerable<CoarseFundamental>, object> coarseFunc;
             Func<IEnumerable<FineFundamental>, object> fineFunc;
+            Universe universe;
 
-            if (pycoarse.TryConvertToDelegate(out coarseFunc) && pyfine.TryConvertToDelegate(out fineFunc))
+            if (pyObject.TryConvert(out universe) && pyfine.TryConvertToDelegate(out fineFunc))
+            {
+                AddUniverse(universe, fineFunc.ConvertToUniverseSelectionSymbolDelegate());
+            }
+            else if (pyObject.TryConvertToDelegate(out coarseFunc) && pyfine.TryConvertToDelegate(out fineFunc))
             {
                 AddUniverse(coarseFunc.ConvertToUniverseSelectionSymbolDelegate(),
                     fineFunc.ConvertToUniverseSelectionSymbolDelegate());
@@ -278,7 +283,7 @@ namespace QuantConnect.Algorithm
             {
                 using (Py.GIL())
                 {
-                    throw new ArgumentException($"QCAlgorithm.AddUniverse: {pycoarse.Repr()} or {pyfine.Repr()} is not a valid argument.");
+                    throw new ArgumentException($"QCAlgorithm.AddUniverse: {pyObject.Repr()} or {pyfine.Repr()} is not a valid argument.");
                 }
             }
         }

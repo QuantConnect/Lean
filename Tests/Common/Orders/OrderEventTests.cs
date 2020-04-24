@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(orderEvent.Symbol, deserializeObject.Symbol);
             Assert.AreEqual(orderEvent.StopPrice, deserializeObject.StopPrice);
             // there is a small loss of precision because we use double
-            Assert.AreEqual(orderEvent.UtcTime.Ticks, deserializeObject.UtcTime.Ticks, 5);
+            Assert.AreEqual(orderEvent.UtcTime.Ticks, deserializeObject.UtcTime.Ticks, 50);
             Assert.AreEqual(orderEvent.OrderId, deserializeObject.OrderId);
             Assert.AreEqual(orderEvent.AbsoluteFillQuantity, deserializeObject.AbsoluteFillQuantity);
             Assert.AreEqual(orderEvent.Direction, deserializeObject.Direction);

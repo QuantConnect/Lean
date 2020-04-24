@@ -74,21 +74,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     var fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode, FineFundamental);
                     var fineFundamentalForDate = (FineFundamental)fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault();
 
-                    yield return new FineFundamental
+                    // directly do not emit null points. Null points won't happen when used with Coarse data since we are pre filtering based on Coarse.HasFundamentalData
+                    // but could happen when fine filtering custom universes
+                    if (fineFundamentalForDate != null)
                     {
-                        DataType = MarketDataType.Auxiliary,
-                        Symbol = request.Configuration.Symbol,
-                        Time = date,
-                        CompanyReference = fineFundamentalForDate != null ? fineFundamentalForDate.CompanyReference : new CompanyReference(),
-                        SecurityReference = fineFundamentalForDate != null ? fineFundamentalForDate.SecurityReference : new SecurityReference(),
-                        FinancialStatements = fineFundamentalForDate != null ? fineFundamentalForDate.FinancialStatements : new FinancialStatements(),
-                        EarningReports = fineFundamentalForDate != null ? fineFundamentalForDate.EarningReports : new EarningReports(),
-                        OperationRatios = fineFundamentalForDate != null ? fineFundamentalForDate.OperationRatios : new OperationRatios(),
-                        EarningRatios = fineFundamentalForDate != null ? fineFundamentalForDate.EarningRatios : new EarningRatios(),
-                        ValuationRatios = fineFundamentalForDate != null ? fineFundamentalForDate.ValuationRatios : new ValuationRatios(),
-                        AssetClassification = fineFundamentalForDate != null ? fineFundamentalForDate.AssetClassification : new AssetClassification(),
-                        CompanyProfile = fineFundamentalForDate != null ? fineFundamentalForDate.CompanyProfile : new CompanyProfile()
-                    };
+                        yield return new FineFundamental
+                        {
+                            DataType = MarketDataType.Auxiliary,
+                            Symbol = request.Configuration.Symbol,
+                            Time = date,
+                            CompanyReference = fineFundamentalForDate.CompanyReference,
+                            SecurityReference = fineFundamentalForDate.SecurityReference,
+                            FinancialStatements = fineFundamentalForDate.FinancialStatements,
+                            EarningReports = fineFundamentalForDate.EarningReports,
+                            OperationRatios = fineFundamentalForDate.OperationRatios,
+                            EarningRatios = fineFundamentalForDate.EarningRatios,
+                            ValuationRatios = fineFundamentalForDate.ValuationRatios,
+                            AssetClassification = fineFundamentalForDate.AssetClassification,
+                            CompanyProfile = fineFundamentalForDate.CompanyProfile
+                        };
+                    }
                 }
             }
         }

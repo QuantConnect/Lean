@@ -135,6 +135,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
 
             var postDividendCash = algorithm.Portfolio.CashBook[Currencies.USD].Amount;
 
+            results.Exit();
             Assert.AreEqual(initializedCash + dividend.Distribution, postDividendCash);
         }
 
