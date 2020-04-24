@@ -70,5 +70,11 @@ namespace QuantConnect
         /// </summary>
         [JsonProperty(PropertyName = "RuntimeStatistics", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, string> RuntimeStatistics;
+
+        /// <summary>
+        /// Server status information, including CPU/RAM usage, ect...
+        /// </summary>
+        [JsonProperty(PropertyName = "ServerStatistics", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, string> ServerStatistics;
     }
 }

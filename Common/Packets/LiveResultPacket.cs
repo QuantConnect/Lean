@@ -145,12 +145,6 @@ namespace QuantConnect.Packets
         public CashBook Cash;
 
         /// <summary>
-        /// Server status information, including CPU/RAM usage, ect...
-        /// </summary>
-        [JsonProperty(PropertyName = "ServerStatistics", NullValueHandling = NullValueHandling.Ignore)]
-        public IDictionary<string, string> ServerStatistics;
-
-        /// <summary>
         /// Default Constructor
         /// </summary>
         public LiveResult()
