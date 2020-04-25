@@ -81,6 +81,7 @@
     <None Include="CustomPartialFillModelAlgorithm.py" />
     <Content Include="BasicTemplateConstituentUniverseAlgorithm.py" />
     <Content Include="BasicTemplateOptionsConsolidationAlgorithm.py" />
+    <None Include="BasicTemplateOptionsPriceModel.py" />
     <Content Include="Benchmarks\SECReportBenchmarkAlgorithm.py" />
     <Content Include="Benchmarks\SmartInsiderEventBenchmarkAlgorithm.py" />
     <Content Include="ConsolidateRegressionAlgorithm.py" />
