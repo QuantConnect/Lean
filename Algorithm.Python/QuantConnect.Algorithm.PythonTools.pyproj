@@ -35,6 +35,7 @@
     <Compile Include="BasicTemplateIntrinioEconomicData.py" />
     <Compile Include="BasicTemplateOptionsConsolidationAlgorithm.py" />
     <Compile Include="BasicTemplateOptionsFrameworkAlgorithm.py" />
+    <Compile Include="BasicTemplateOptionsPriceModel.py" />
     <Compile Include="BlackLittermanPortfolioOptimizationFrameworkAlgorithm.py" />
     <Compile Include="CapmAlphaRankingFrameworkAlgorithm.py" />
     <Compile Include="CoarseFundamentalTop3Algorithm.py" />
