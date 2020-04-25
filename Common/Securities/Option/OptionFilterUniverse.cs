@@ -127,7 +127,7 @@ namespace QuantConnect.Securities
 
                 if (memoizedMap.ContainsKey(dt))
                     return memoizedMap[dt];
-                var res = OptionSymbol.IsStandardContract(symbol);
+                var res = OptionSymbol.IsStandard(symbol);
                 memoizedMap[dt] = res;
 
                 return res;

@@ -29,6 +29,16 @@ namespace QuantConnect.Securities.Option
         /// <returns></returns>
         public static bool IsStandardContract(Symbol symbol)
         {
+            return IsStandard(symbol);
+        }
+
+        /// <summary>
+        /// Returns true if the option is a standard contract that expires 3rd Friday of the month
+        /// </summary>
+        /// <param name="symbol">Option symbol</param>
+        /// <returns></returns>
+        public static bool IsStandard(Symbol symbol)
+        {
             var date = symbol.ID.Date;
 
             // first we find out the day of week of the first day in the month
@@ -40,6 +50,16 @@ namespace QuantConnect.Securities.Option
             // check if the expiration date is within the week containing 3rd Friday
             // we exclude monday, wednesday, and friday weeklys
             return firstFriday + 7 + 5 /*sat -> wed */ < date.Day && date.Day < firstFriday + 2 * 7 + 2 /* sat, sun*/;
+        }
+
+        /// <summary>
+        /// Returns true if the option is a weekly contract that expires on Friday , except 3rd Friday of the month
+        /// </summary>
+        /// <param name="symbol">Option symbol</param>
+        /// <returns></returns>
+        public static bool IsWeekly(Symbol symbol)
+        {
+            return !IsStandard(symbol) && symbol.ID.Date.DayOfWeek == DayOfWeek.Friday;
         }
 
         /// <summary>
@@ -56,7 +76,7 @@ namespace QuantConnect.Securities.Option
             int daysBefore = 0;
             var symbolDateTime = symbol.ID.Date;
 
-            if (IsStandardContract(symbol) &&
+            if (IsStandard(symbol) &&
                 symbolDateTime.DayOfWeek == DayOfWeek.Saturday &&
                 symbolDateTime < new DateTime(2015, 2, 1))
             {
