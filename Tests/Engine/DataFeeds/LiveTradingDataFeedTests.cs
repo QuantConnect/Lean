@@ -1887,8 +1887,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             timeProvider.SetCurrentTime(startDate);
 
             var lastTime = DateTime.MinValue;
-            var timeAdvanceStep = TimeSpan.FromMinutes(60);
+            var timeAdvanceStep = TimeSpan.FromMinutes(120);
             var timeAdvanced = new AutoResetEvent(true);
+            var started = new ManualResetEvent(false);
+            var canAdvanceTimeCalled = new ManualResetEvent(false);
             var lookupCount = 0;
 
             var optionSymbol1 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 192m, new DateTime(2019, 12, 19));
@@ -1903,17 +1905,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var futureSymbols = new HashSet<Symbol>();
             var optionSymbols = new HashSet<Symbol>();
 
-            var timer = new Timer(
-                _ =>
-                {
-                    timeProvider.Advance(timeAdvanceStep);
-                    Log.Debug($"Time advanced to {timeProvider.GetUtcNow()} (UTC)");
-                    timeAdvanced.Set();
-                }, null, Time.OneSecond, TimeSpan.FromMilliseconds(50));
-
             var dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(
                 fdqh =>
                 {
+                    started.Set();
                     timeAdvanced.WaitOne();
 
                     var utcTime = timeProvider.GetUtcNow();
@@ -2019,6 +2014,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 // CanAdvanceTime
                 secType =>
                 {
+                    canAdvanceTimeCalled.Set();
                     var time = timeProvider.GetUtcNow().ConvertFromUtc(algorithmTimeZone);
                     var result = time.Hour >= 1 && time.Hour < 23 && time.Day != 21;
 
@@ -2063,7 +2059,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
             algorithm.Transactions.SetOrderProcessor(mock.Object);
 
-            var synchronizer = new TestableLiveSynchronizer(timeProvider, TimeSpan.FromMilliseconds(25));
+            var synchronizer = new TestableLiveSynchronizer(timeProvider, TimeSpan.FromMilliseconds(10));
             synchronizer.Initialize(algorithm, dataManager);
 
             if (securityType == SecurityType.Option)
@@ -2096,6 +2092,26 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.PostInitialize();
 
             DateTime? lastSecurityChangedTime = null;
+
+            started.WaitOne();
+
+            var interval = TimeSpan.FromMilliseconds(50);
+            Timer timer = null;
+            timer = new Timer(
+                _ =>
+                {
+                    // stop the timer to prevent reentrancy
+                    timer.Change(Timeout.Infinite, Timeout.Infinite);
+
+                    timeProvider.Advance(timeAdvanceStep);
+                    Log.Debug($"Time advanced to {timeProvider.GetUtcNow()} (UTC)");
+                    timeAdvanced.Set();
+
+                    canAdvanceTimeCalled.WaitOne();
+
+                    // restart the timer
+                    timer.Change(interval, interval);
+                }, null, interval, interval);
 
             foreach (var timeSlice in synchronizer.StreamData(cancellationTokenSource.Token))
             {
@@ -2223,6 +2239,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             dataManager.RemoveAllSubscriptions();
 
+            timeAdvanced.DisposeSafely();
+            started.DisposeSafely();
             timer.DisposeSafely();
         }
     }
