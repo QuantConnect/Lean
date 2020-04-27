@@ -279,11 +279,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         #region IAlgorithmSubscriptionManager
 
         /// <summary>
-        /// Flags the existence of custom data in the subscriptions
-        /// </summary>
-        public bool HasCustomData { get; set; }
-
-        /// <summary>
         /// Gets all the current data config subscriptions that are being processed for the SubscriptionManager
         /// </summary>
         public IEnumerable<SubscriptionDataConfig> SubscriptionManagerSubscriptions =>
@@ -329,9 +324,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 // add the time zone to our time keeper
                 _timeKeeper.AddTimeZone(newConfig.ExchangeTimeZone);
-
-                // if is custom data, sets HasCustomData to true
-                HasCustomData = HasCustomData || newConfig.IsCustomData;
             }
 
             return config;
@@ -344,14 +336,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="subscription">The <see cref="Subscription"/> owning the configuration to remove</param>
         private void RemoveSubscriptionDataConfig(Subscription subscription)
         {
-            SubscriptionDataConfig config;
-            if (subscription.RemovedFromUniverse.Value
-                && _subscriptionManagerSubscriptions.TryRemove(subscription.Configuration, out config))
+            if (subscription.RemovedFromUniverse.Value)
             {
-                if (HasCustomData && config.IsCustomData)
-                {
-                    HasCustomData = _subscriptionManagerSubscriptions.Any(x => x.Key.IsCustomData);
-                }
+                SubscriptionDataConfig config;
+                _subscriptionManagerSubscriptions.TryRemove(subscription.Configuration, out config);
             }
         }
 

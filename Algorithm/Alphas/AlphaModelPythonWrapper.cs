@@ -18,6 +18,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using System;
 using System.Collections.Generic;
+using QuantConnect.Python;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
@@ -79,7 +80,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         {
             using (Py.GIL())
             {
-                var insights = _model.Update(algorithm, data) as PyObject;
+                var insights = _model.Update(algorithm, new PythonSlice(data)) as PyObject;
                 var iterator = insights.GetIterator();
                 foreach (PyObject insight in iterator)
                 {
