@@ -1194,6 +1194,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 errorMsg += ". Origin: " + requestMessage;
             }
 
+            // historical data request with no data returned
+            if (errorCode == 162 && errorMsg.Contains("HMDS query returned no data"))
+            {
+                return;
+            }
+
             Log.Trace($"InteractiveBrokersBrokerage.HandleError(): RequestId: {requestId} ErrorCode: {errorCode} - {errorMsg}");
 
             // figure out the message type based on our code collections below
