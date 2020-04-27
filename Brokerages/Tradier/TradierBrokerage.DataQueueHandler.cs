@@ -28,6 +28,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 using RestSharp;
 using Timer = System.Timers.Timer;
 
@@ -131,6 +132,7 @@ namespace QuantConnect.Brokerages.Tradier
         private void Refresh()
         {
             if (_refreshDelay.Enabled) _refreshDelay.Stop();
+            _refreshDelay.DisposeSafely();
             _refreshDelay = new Timer(5000);
             _refreshDelay.Elapsed += (sender, args) =>
             {

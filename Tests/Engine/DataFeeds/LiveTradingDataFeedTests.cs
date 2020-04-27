@@ -631,23 +631,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var lck = new object();
             BaseDataCollection list = null;
-            var timer = new Timer(state =>
-            {
-                var currentTime = _manualTimeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
-                lock (state)
-                {
-                    list = new BaseDataCollection { Symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA, false) };
-                    list.Data.Add(new CoarseFundamental
-                    {
-                        Symbol = Symbols.SPY,
-                        Time = currentTime - Time.OneDay, // hard-coded coarse period of one day
-                    });
-                }
-            },
-            lck,
-            // we need to give the universe time to be added
-            TimeSpan.FromSeconds(1),
-            TimeSpan.FromMilliseconds(-1));
 
             _algorithm.AddUniverse(coarse => coarse.Take(10).Select(x => x.Symbol));
             var yieldedUniverseData = new ManualResetEvent(false);
@@ -669,22 +652,38 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 return Enumerable.Empty<BaseData>();
             });
-            yieldedUniverseData.WaitOne(TimeSpan.FromSeconds(3));
 
             var receivedCoarseData = false;
-            ConsumeBridge(feed, TimeSpan.FromSeconds(2), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(3), ts =>
             {
+                if (list == null)
+                {
+                    lock (lck)
+                    {
+                        var currentTime = _manualTimeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
+                        list = new BaseDataCollection { Symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA, false) };
+                        list.Data.Add(new CoarseFundamental
+                        {
+                            Symbol = Symbols.SPY,
+                            Time = currentTime - Time.OneDay, // hard-coded coarse period of one day
+                        });
+                    }
+                    yieldedUniverseData.WaitOne(TimeSpan.FromSeconds(3));
+                }
+
                 if (ts.UniverseData.Count > 0 &&
                     ts.UniverseData.First().Value.Data.First() is CoarseFundamental)
                 {
                     receivedCoarseData = true;
+                    // we got what we wanted, end unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
                 }
-            }, sendUniverseData: true);
+            }, sendUniverseData: true, alwaysInvoke:true, endDate:_startDate.AddDays(10));
 
             yieldedUniverseData.DisposeSafely();
-            timer.Dispose();
             Assert.IsTrue(receivedCoarseData, "receivedCoarseData");
         }
+
         [Test]
         public void CoarseFundamentalDataIsHoldUntilTimeIsRight()
         {
@@ -746,10 +745,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Assert.IsTrue(now.Hour < 23 && now.Hour > 5, $"Unexpected now value: {now}");
                     receivedCoarseData = true;
                 }
+
+                if (yieldedUniverseData && receivedCoarseData)
+                {
+                    // we got what we wanted, end unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                }
             }, sendUniverseData: true,
                 alwaysInvoke: true,
                 secondsTimeStep: 3600,
                 endDate: startDate.AddDays(1));
+            emittedData.DisposeSafely();
 
             Console.WriteLine($"EndTime {_manualTimeProvider.GetUtcNow()}");
 
@@ -816,30 +822,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsTrue(fineWasCalled);
         }
 
+
         [Test]
         public void FineCoarseFundamentalDataGetsPipedCorrectly()
         {
             var lck = new object();
             BaseDataCollection list = null;
-            var timer = new Timer(state =>
-            {
-                lock (state)
-                {
-                    list = new BaseDataCollection { Symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA, false) };
-                    list.Data.Add(new CoarseFundamental
-                    {
-                        Symbol = Symbols.AAPL,
-                        Time = new DateTime(2014, 04, 24),
-                        HasFundamentalData = true
-                    });
-                }
-            },
-            lck,
-            // we need to give the universe time to be added
-            TimeSpan.FromSeconds(1),
-            TimeSpan.FromMilliseconds(-1));
 
             var yieldedUniverseData = false;
+            var manualResetEvent = new ManualResetEvent(false);
             var feed = RunDataFeed(getNextTicksFunction: fdqh =>
             {
                 lock (lck)
@@ -847,6 +838,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     if (list != null)
                         try
                         {
+                            manualResetEvent.Set();
                             var tmp = list;
                             return new List<BaseData> { tmp };
                         }
@@ -872,16 +864,36 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 });
 
             var receivedFundamentalsData = false;
-            ConsumeBridge(feed, TimeSpan.FromSeconds(1.5), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
+                if (list == null)
+                {
+                    // we emit the data in the first loop
+                    lock (lck)
+                    {
+                        list = new BaseDataCollection { Symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA, false) };
+                        list.Data.Add(new CoarseFundamental
+                        {
+                            Symbol = Symbols.AAPL,
+                            Time = new DateTime(2014, 04, 24),
+                            HasFundamentalData = true
+                        });
+                    }
+
+                    // we wait for the data to be emitted by the DQH
+                    manualResetEvent.WaitOne(TimeSpan.FromSeconds(10));
+                }
+
                 if (ts.UniverseData.Count > 0 &&
                     ts.UniverseData.First().Value.Data.First() is Fundamentals)
                 {
                     receivedFundamentalsData = true;
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
                 }
-            }, sendUniverseData: true);
+            }, sendUniverseData: true, alwaysInvoke: true, endDate: _startDate.AddDays(10));
 
-            timer.Dispose();
+            manualResetEvent.DisposeSafely();
             Assert.IsTrue(yieldedUniverseData);
             Assert.IsTrue(receivedFundamentalsData);
             Assert.IsTrue(fineWasCalled);
@@ -987,6 +999,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         Assert.IsTrue(data.Data.Any(baseData => baseData.Symbol == Symbols.AAPL));
                         Assert.IsTrue(data.Data.Any(baseData => baseData.Symbol == _qqq));
                         yieldedSymbols = true;
+                    }
+
+                    if (yieldedSymbols && yieldedNoneSymbol)
+                    {
+                        // we got what we wanted, end unit test
+                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
                     }
                 }
             }, secondsTimeStep: 60 * 60 * 6, // 6 hour time step
@@ -2059,7 +2077,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
             algorithm.Transactions.SetOrderProcessor(mock.Object);
 
-            var synchronizer = new TestableLiveSynchronizer(timeProvider, TimeSpan.FromMilliseconds(10));
+            var synchronizer = new TestableLiveSynchronizer(timeProvider, TimeSpan.FromMilliseconds(25));
             synchronizer.Initialize(algorithm, dataManager);
 
             if (securityType == SecurityType.Option)
@@ -2095,7 +2113,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             started.WaitOne();
 
-            var interval = TimeSpan.FromMilliseconds(50);
+            var interval = TimeSpan.FromMilliseconds(100);
             Timer timer = null;
             timer = new Timer(
                 _ =>
@@ -2239,6 +2257,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             dataManager.RemoveAllSubscriptions();
 
+            canAdvanceTimeCalled.DisposeSafely();
             timeAdvanced.DisposeSafely();
             started.DisposeSafely();
             timer.DisposeSafely();

@@ -89,6 +89,8 @@ namespace QuantConnect.Tests.Engine
             algorithmManager.Run(job, algorithm, nullSynchronizer, transactions, results, realtime, leanManager, alphas, token);
             sw.Stop();
 
+            realtime.Exit();
+            results.Exit();
             var thousands = nullSynchronizer.Count / 1000d;
             var seconds = sw.Elapsed.TotalSeconds;
             Log.Trace("COUNT: " + nullSynchronizer.Count + "  KPS: " + thousands/seconds);

@@ -63,11 +63,11 @@ namespace QuantConnect.Tests.Common.Orders.Serialization
             Assert.AreEqual(expected.Symbol, actual.Symbol);
             Assert.AreEqual(expected.Tag, actual.Tag);
             // there is a small loss of precision because we use double
-            Assert.AreEqual(expected.Time.Ticks, actual.Time.Ticks, 5);
-            Assert.AreEqual(expected.CreatedTime.Ticks, actual.CreatedTime.Ticks, 5);
-            Assert.AreEqual(expected.LastFillTime.Value.Ticks, actual.LastFillTime.Value.Ticks, 5);
-            Assert.AreEqual(expected.LastUpdateTime.Value.Ticks, actual.LastUpdateTime.Value.Ticks, 5);
-            Assert.AreEqual(expected.CanceledTime.Value.Ticks, actual.CanceledTime.Value.Ticks, 5);
+            Assert.AreEqual(expected.Time.Ticks, actual.Time.Ticks, 50);
+            Assert.AreEqual(expected.CreatedTime.Ticks, actual.CreatedTime.Ticks, 50);
+            Assert.AreEqual(expected.LastFillTime.Value.Ticks, actual.LastFillTime.Value.Ticks, 50);
+            Assert.AreEqual(expected.LastUpdateTime.Value.Ticks, actual.LastUpdateTime.Value.Ticks, 50);
+            Assert.AreEqual(expected.CanceledTime.Value.Ticks, actual.CanceledTime.Value.Ticks, 50);
             Assert.AreEqual(expected.Type, actual.Type);
             Assert.AreEqual(expected.Value, actual.Value);
             Assert.AreEqual(expected.Quantity, actual.Quantity);

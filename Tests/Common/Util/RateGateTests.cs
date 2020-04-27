@@ -103,6 +103,8 @@ namespace QuantConnect.Tests.Common.Util
             timer.Stop();
 
             Assert.LessOrEqual(timer.Elapsed, TimeSpan.FromSeconds(10));
+
+            gate.Dispose();
         }
     }
 }

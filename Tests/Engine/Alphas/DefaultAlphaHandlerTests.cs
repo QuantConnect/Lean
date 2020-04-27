@@ -46,6 +46,12 @@ namespace QuantConnect.Tests.Engine.Alphas
             _defaultAlphaHandler = new DefaultAlphaHandlerTestable(_insightManager.Object, AlgorithmId);
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _defaultAlphaHandler.Exit();
+        }
+
         [TestCase(true, "IGNORED")]
         [TestCase(false, "./NewDirectory")]
         [Test]

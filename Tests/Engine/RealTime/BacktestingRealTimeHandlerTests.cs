@@ -69,6 +69,8 @@ namespace QuantConnect.Tests.Engine.RealTime
                 null);
 
             realTimeHandler.SetTime(startDate.AddMinutes(1));
+            realTimeHandler.Exit();
+
             Assert.IsTrue(secondCalled);
             // 'first' should of been called and should be moved behind 'second' after setup
             Assert.IsFalse(firstCalled);
@@ -91,6 +93,7 @@ namespace QuantConnect.Tests.Engine.RealTime
                 null);
 
             realTimeHandler.SetTime(DateTime.UtcNow);
+            realTimeHandler.Exit();
             Assert.IsTrue(algo.OnEndOfDayFired);
         }
 
@@ -111,6 +114,7 @@ namespace QuantConnect.Tests.Engine.RealTime
                 null);
 
             realTimeHandler.ScanPastEvents(DateTime.UtcNow);
+            realTimeHandler.Exit();
             Assert.IsTrue(algo.OnEndOfDayFired);
         }
 
@@ -139,6 +143,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             }
 
             realTimeHandler.SetTime(DateTime.UtcNow);
+            realTimeHandler.Exit();
             Assert.AreEqual(100, count);
         }
 
@@ -201,6 +206,7 @@ namespace QuantConnect.Tests.Engine.RealTime
                 realTimeHandler.SetTime(date.AddMinutes(2));
                 realTimeHandler.SetTime(date.AddMinutes(10));
             }
+            realTimeHandler.Exit();
             Assert.AreEqual(4, count);
             Assert.AreEqual(4, asserts);
         }
@@ -340,6 +346,7 @@ namespace QuantConnect.Tests.Engine.RealTime
                 realTimeHandler.ScanPastEvents(date.AddMinutes(2).AddMilliseconds(1));
                 realTimeHandler.ScanPastEvents(date.AddMinutes(10).AddMilliseconds(1));
             }
+            realTimeHandler.Exit();
             Assert.AreEqual(4, count);
             Assert.AreEqual(4, asserts);
         }
@@ -381,6 +388,8 @@ namespace QuantConnect.Tests.Engine.RealTime
                 new SecurityChanges(new[] { security }, Enumerable.Empty<Security>()));
 
             Assert.AreEqual(1, realTimeHandler.GetScheduledEventsCount);
+
+            realTimeHandler.Exit();
         }
 
         [TestCase(Language.CSharp)]
@@ -420,6 +429,7 @@ namespace QuantConnect.Tests.Engine.RealTime
                 new SecurityChanges(new[] { security }, Enumerable.Empty<Security>()));
 
             Assert.AreEqual(2, realTimeHandler.GetScheduledEventsCount);
+            realTimeHandler.Exit();
         }
 
         private class TestTimeLimitManager : IIsolatorLimitResultProvider

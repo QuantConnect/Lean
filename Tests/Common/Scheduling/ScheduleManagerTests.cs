@@ -54,6 +54,7 @@ namespace QuantConnect.Tests.Common.Scheduling
                 time = time.AddHours(1);
             }
 
+            handler.Exit();
             Assert.AreEqual(timeSteps, count1);
             Assert.AreEqual(timeSteps, count2);
         }
