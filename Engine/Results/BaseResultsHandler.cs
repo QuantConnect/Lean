@@ -97,6 +97,11 @@ namespace QuantConnect.Lean.Engine.Results
         protected int ProjectId { get; set; }
 
         /// <summary>
+        /// The maximum amount of RAM (in MB) this algorithm is allowed to utilize
+        /// </summary>
+        protected string RamAllocation { get; set; }
+
+        /// <summary>
         /// The algorithm unique compilation id
         /// </summary>
         protected string CompileId { get; set; }
@@ -205,6 +210,18 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Gets the current Server statistics
+        /// </summary>
+        protected virtual Dictionary<string, string> GetServerStatistics(DateTime utcNow)
+        {
+            var serverStatistics = OS.GetServerStatistics();
+            var upTime = utcNow - StartTime;
+            serverStatistics["Up Time"] = $"{upTime.Days}d {upTime:hh\\:mm\\:ss}";
+            serverStatistics["Total RAM (MB)"] = RamAllocation;
+            return serverStatistics;
+        }
+
+        /// <summary>
         /// Stores the order events
         /// </summary>
         /// <param name="utcTime">The utc date associated with these order events</param>
@@ -274,6 +291,7 @@ namespace QuantConnect.Lean.Engine.Results
             CompileId = job.CompileId;
             AlgorithmId = job.AlgorithmId;
             ProjectId = job.ProjectId;
+            RamAllocation = job.RamAllocation.ToStringInvariant();
             OrderEventJsonConverter = new OrderEventJsonConverter(AlgorithmId);
             _updateRunner = new Thread(Run, 0) { IsBackground = true, Name = "Result Thread" };
             _updateRunner.Start();

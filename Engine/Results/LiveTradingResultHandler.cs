@@ -188,10 +188,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var holdings = new Dictionary<string, Holding>();
                     var deltaStatistics = new Dictionary<string, string>();
                     var runtimeStatistics = new Dictionary<string, string>();
-                    var serverStatistics = OS.GetServerStatistics();
-                    var upTime = utcNow - StartTime;
-                    serverStatistics["Up Time"] = $"{upTime.Days}d {upTime:hh\\:mm\\:ss}";
-                    serverStatistics["Total RAM (MB)"] = _job.Controls.RamAllocation.ToStringInvariant();
+                    var serverStatistics = GetServerStatistics(utcNow);
 
                     // Only send holdings updates when we have changes in orders, except for first time, then we want to send all
                     foreach (var kvp in Algorithm.Securities.OrderBy(x => x.Key.Value))
