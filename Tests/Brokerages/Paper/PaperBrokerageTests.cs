@@ -121,13 +121,14 @@ namespace QuantConnect.Tests.Brokerages.Paper
             results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
             transactions.Initialize(algorithm, brokerage, results);
 
+            var realTime = new BacktestingRealTimeHandler();
             // run algorithm manager
             manager.Run(job,
                 algorithm,
                 synchronizer,
                 transactions,
                 results,
-                new BacktestingRealTimeHandler(),
+                realTime,
                 new AlgorithmManagerTests.NullLeanManager(),
                 new AlgorithmManagerTests.NullAlphaHandler(),
                 new CancellationToken()
@@ -135,6 +136,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
 
             var postDividendCash = algorithm.Portfolio.CashBook[Currencies.USD].Amount;
 
+            realTime.Exit();
             results.Exit();
             Assert.AreEqual(initializedCash + dividend.Distribution, postDividendCash);
         }

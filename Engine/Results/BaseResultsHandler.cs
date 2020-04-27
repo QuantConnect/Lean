@@ -19,7 +19,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
@@ -31,7 +30,6 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Serialization;
 using QuantConnect.Packets;
 using QuantConnect.Statistics;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Results
 {

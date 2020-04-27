@@ -29,7 +29,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class CashModelAlgorithmTradingTests
     {
         private static readonly Symbol _symbol = Symbols.BTCUSD;

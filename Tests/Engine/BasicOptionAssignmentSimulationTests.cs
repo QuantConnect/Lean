@@ -28,7 +28,7 @@ using QuantConnect.Data;
 
 namespace QuantConnect.Tests.Engine
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class BasicOptionAssignmentSimulationTests
     {
         private static readonly SecurityExchangeHours SecurityExchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);

@@ -107,7 +107,7 @@ namespace QuantConnect.Tests.Common.Packets
                 endDate: new DateTime(2014, 03, 25));
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void RoundTripNullJobDates()
         {
             var job = new BacktestNodePacket(1, 2, "3", null, 9m, $"{nameof(BacktestNodePacketTests)}.Pepe");
@@ -126,7 +126,7 @@ namespace QuantConnect.Tests.Common.Packets
             Assert.AreEqual(job.Language, job2.Language);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void RoundTripWithJobDates()
         {
             var job = new BacktestNodePacket(1, 2, "3", null, 9m, $"{nameof(BacktestNodePacketTests)}.Pepe");
@@ -140,7 +140,7 @@ namespace QuantConnect.Tests.Common.Packets
             Assert.AreEqual(job.PeriodFinish, job2.PeriodFinish);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void RoundTripWithInitialCashAmount()
         {
             var job = new BacktestNodePacket(1, 2, "3", null, 9m, $"{nameof(BacktestNodePacketTests)}.Pepe");
@@ -152,7 +152,7 @@ namespace QuantConnect.Tests.Common.Packets
             Assert.AreEqual(job.CashAmount, job2.CashAmount);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void RoundTripWithNullInitialCashAmount()
         {
             var job = new BacktestNodePacket(1, 2, "3", null, $"{nameof(BacktestNodePacketTests)}.Pepe");

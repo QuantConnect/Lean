@@ -23,7 +23,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class MapFileResolverTests
     {
         private readonly MapFileResolver _resolver = CreateMapFileResolver();

@@ -24,7 +24,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Securities.Options
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class OptionChainProviderTests
     {
         [Test]

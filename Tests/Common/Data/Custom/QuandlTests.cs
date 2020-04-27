@@ -25,7 +25,7 @@ using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
 namespace QuantConnect.Tests.Common.Data.Custom
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class QuandlTests
     {
         [Test]

@@ -22,7 +22,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Scheduling
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class ScheduledEventTests
     {
         [Test]

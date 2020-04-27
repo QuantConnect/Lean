@@ -25,7 +25,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Scheduling
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class TimeRulesTests
     {
         [Test]

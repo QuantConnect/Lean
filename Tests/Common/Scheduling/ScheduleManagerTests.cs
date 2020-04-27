@@ -24,7 +24,7 @@ using QuantConnect.Util.RateLimit;
 
 namespace QuantConnect.Tests.Common.Scheduling
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class ScheduleManagerTests
     {
         [Test]
@@ -54,6 +54,7 @@ namespace QuantConnect.Tests.Common.Scheduling
                 time = time.AddHours(1);
             }
 
+            handler.Exit();
             Assert.AreEqual(timeSteps, count1);
             Assert.AreEqual(timeSteps, count2);
         }

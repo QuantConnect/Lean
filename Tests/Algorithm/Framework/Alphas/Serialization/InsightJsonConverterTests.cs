@@ -22,7 +22,7 @@ using QuantConnect.Algorithm.Framework.Alphas.Serialization;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class InsightJsonConverterTests
     {
         [Test]

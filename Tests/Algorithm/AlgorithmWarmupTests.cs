@@ -26,7 +26,7 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Tests.Algorithm
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class AlgorithmWarmupTests
     {
         private TestWarmupAlgorithm _algorithm;

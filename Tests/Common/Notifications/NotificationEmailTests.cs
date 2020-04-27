@@ -19,7 +19,7 @@ using QuantConnect.Notifications;
 
 namespace QuantConnect.Tests.Common.Notifications
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class NotificationEmailTests
     {
         [Test]

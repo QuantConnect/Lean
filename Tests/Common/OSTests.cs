@@ -19,18 +19,13 @@ using System.Reflection;
 
 namespace QuantConnect.Tests.Common
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class OSTests
     {
         [Test]
-        public void GetServerStatisticsDoesntThrow()
+        public void GetServerStatistics()
         {
-            var serverStatistics = OS.GetServerStatistics();
-            //var maxKeyLength = serverStatistics.Keys.Max(x => x.Length);
-            //foreach (var statistic in serverStatistics)
-            //{
-            //    Console.WriteLine("{0, -" + maxKeyLength + "} - {1}", statistic.Key, statistic.Value);
-            //}
+            Assert.DoesNotThrow(() => OS.GetServerStatistics());
         }
         
         [Test]

@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture]
     public class IndicatorExtensionsTests
     {
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void PipesDataUsingOfFromFirstToSecond()
         {
             var first = new SimpleMovingAverage(2);
@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(2.5m, second.Current.Value);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void PipesDataFirstWeightedBySecond()
         {
             const int period = 4;
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(current, third.Current.Value);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void NewDataPushesToDerivedIndicators()
         {
             var identity = new Identity("identity");
@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(2m, (decimal)sma);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void MultiChainSMA()
         {
             var identity = new Identity("identity");
@@ -134,7 +134,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(1.5m, (decimal)sma);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void MultiChainEMA()
         {
             var identity = new Identity("identity");
@@ -165,7 +165,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsTrue(ema.IsReady);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void MultiChainMAX()
         {
             var identity = new Identity("identity");
@@ -195,7 +195,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsTrue(max.IsReady);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void MultiChainMIN()
         {
             var identity = new Identity("identity");
@@ -225,7 +225,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsTrue(min.IsReady);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void PlusAddsLeftAndRightAfterBothUpdated()
         {
             var left = new Identity("left");
@@ -246,7 +246,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(7m, composite.Current.Value);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void PlusAddsLeftAndConstant()
         {
             var left = new Identity("left");
@@ -259,7 +259,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(7m, composite.Current.Value);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void MinusSubtractsLeftAndRightAfterBothUpdated()
         {
             var left = new Identity("left");
@@ -280,7 +280,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(-1m, composite.Current.Value);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void MinusSubtractsLeftAndConstant()
         {
             var left = new Identity("left");
@@ -293,7 +293,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(1m, composite.Current.Value);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void OverDividesLeftAndRightAfterBothUpdated()
         {
             var left = new Identity("left");
@@ -314,7 +314,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(3m / 4m, composite.Current.Value);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void OverDividesLeftAndConstant()
         {
             var left = new Identity("left");
@@ -327,7 +327,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(2m, composite.Current.Value);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void OverHandlesDivideByZero()
         {
             var left = new Identity("left");
@@ -348,7 +348,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsTrue(updatedEventFired);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void TimesMultipliesLeftAndRightAfterBothUpdated()
         {
             var left = new Identity("left");
@@ -369,7 +369,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(12m, composite.Current.Value);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void TimesMultipliesLeftAndConstant()
         {
             var left = new Identity("left");
@@ -383,7 +383,7 @@ namespace QuantConnect.Tests.Indicators
 
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void WorksForIndicatorsOfDifferentTypes()
         {
             var indicatorA1 = new TestIndicatorA("1");

@@ -28,7 +28,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class SubscriptionUtilsTests
     {
         private Security _security;
@@ -113,7 +113,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Assert.IsFalse(subscription.MoveNext());
             Assert.IsTrue(subscription.EndOfStream);
-            Assert.IsTrue(enumerator.Disposed);
+
+            // enumerator is disposed by the producer
+            count = 0;
+            while (!enumerator.Disposed)
+            {
+                if (count++ > 100)
+                {
+                    Assert.Fail("Timeout waiting for producer");
+                }
+                Thread.Sleep(1);
+            }
         }
 
         [Test]

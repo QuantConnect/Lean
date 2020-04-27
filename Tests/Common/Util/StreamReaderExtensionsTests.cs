@@ -25,7 +25,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Util
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class StreamReaderExtensionsTests
     {
         [Test]

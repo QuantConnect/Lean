@@ -22,7 +22,7 @@ using QuantConnect.Indicators.CandlestickPatterns;
 
 namespace QuantConnect.Tests.Indicators.CandlestickPatterns
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class CandlestickPatternTests
     {
         private static readonly string[] _testFileNames =

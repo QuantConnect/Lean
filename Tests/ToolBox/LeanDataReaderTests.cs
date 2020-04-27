@@ -29,7 +29,7 @@ using QuantConnect.Data.Consolidators;
 
 namespace QuantConnect.Tests.ToolBox
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class LeanDataReaderTests
     {
         string _dataDirectory = "../../../Data/";
@@ -105,8 +105,7 @@ namespace QuantConnect.Tests.ToolBox
             {
                 var leanDataReader = new LeanDataReader(config, future, res, date, _dataDirectory);
 
-                var data = leanDataReader.Parse().ToList();
-                foreach (var bar in data)
+                foreach (var bar in leanDataReader.Parse())
                 {
                     //write base data type back to string
                     sb.AppendLine(LeanData.GenerateLine(bar, SecurityType.Future, res));
@@ -185,10 +184,9 @@ namespace QuantConnect.Tests.ToolBox
 
                     var leanDataReader = new LeanDataReader(configs[future.Value], future, inputResolution, date, _dataDirectory);
 
-                    var data = leanDataReader.Parse().ToList();
                     var consolidator = consolidators[future.Value];
 
-                    foreach (var bar in data)
+                    foreach (var bar in leanDataReader.Parse())
                     {
                         consolidator.Update(bar);
                     }
@@ -227,10 +225,10 @@ namespace QuantConnect.Tests.ToolBox
         {
             // Act
             var ldr = new LeanDataReader(composedFilePath);
-            var data = ldr.Parse().ToArray();
+            var data = ldr.Parse().ToList();
             // Assert
             Assert.True(symbol.Equals(data.First().Symbol));
-            Assert.AreEqual(rowsInfile, data.Length);
+            Assert.AreEqual(rowsInfile, data.Count);
             Assert.AreEqual(sumValue, data.Sum(c => c.Value));
         }
 
@@ -337,10 +335,10 @@ namespace QuantConnect.Tests.ToolBox
 
             // Act
             var ldr = new LeanDataReader(filepath);
-            var data = ldr.Parse().ToArray();
+            var data = ldr.Parse().ToList();
             // Assert
             Assert.True(symbol.Equals(data.First().Symbol));
-            Assert.AreEqual(rowsInfile, data.Length);
+            Assert.AreEqual(rowsInfile, data.Count);
             Assert.AreEqual(sumValue, data.Sum(c => c.Value));
         }
 

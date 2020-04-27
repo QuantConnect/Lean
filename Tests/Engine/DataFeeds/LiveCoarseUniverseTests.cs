@@ -33,7 +33,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class LiveCoarseUniverseTests
     {
         [Test]
@@ -56,10 +56,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var coarseUsaSymbol = CoarseFundamental.CreateUniverseSymbol(Market.USA, false);
 
+            var emitted = new ManualResetEvent(false);
             var coarseDataEmittedCount = 0;
             var lastTime = DateTime.MinValue;
+            var dataQueueHandlerStarted = new ManualResetEvent(false);
             var dataQueueHandler = new FuncDataQueueHandler(fdqh =>
             {
+                dataQueueHandlerStarted.Set();
                 var time = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
                 if (time != lastTime)
                 {
@@ -109,6 +112,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 coarse =>
                 {
                     coarseUniverseSelectionCount++;
+                    emitted.Set();
 
                     // rotate single symbol in universe
                     if (symbolIndex == coarseSymbols.Count) symbolIndex = 0;
@@ -122,8 +126,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Exception exceptionThrown = null;
 
+            dataQueueHandlerStarted.WaitOne();
+
             // create a timer to advance time much faster than realtime
-            var timerInterval = TimeSpan.FromMilliseconds(50);
+            var timerInterval = TimeSpan.FromMilliseconds(15);
             var timer = Ref.Create<Timer>(null);
             timer.Value = new Timer(state =>
             {
@@ -141,8 +147,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         return;
                     }
 
+                    emitted.Reset();
+
                     timeProvider.Advance(TimeSpan.FromHours(1));
 
+                    var time = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
+                    if (coarseTimes.Contains(time))
+                    {
+                        // lets wait for coarse to emit
+                        emitted.WaitOne();
+                    }
                     var activeSecuritiesCount = algorithm.ActiveSecurities.Count;
 
                     Assert.That(activeSecuritiesCount <= 1);
@@ -170,8 +184,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 throw new Exception("Exception in timer: ", exceptionThrown);
             }
 
-            Assert.AreEqual(coarseTimes.Count, coarseDataEmittedCount);
-            Assert.AreEqual(coarseTimes.Count, coarseUniverseSelectionCount);
+            emitted.DisposeSafely();
+            dataQueueHandlerStarted.DisposeSafely();
+
+            Assert.AreEqual(coarseTimes.Count, coarseDataEmittedCount, message: "coarseDataEmittedCount");
+            Assert.AreEqual(coarseTimes.Count, coarseUniverseSelectionCount, message: "coarseUniverseSelectionCount");
 
             algorithm.DataManager.RemoveAllSubscriptions();
         }

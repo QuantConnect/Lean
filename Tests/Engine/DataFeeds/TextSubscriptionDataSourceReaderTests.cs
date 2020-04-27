@@ -25,7 +25,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class TextSubscriptionDataSourceReaderTests
     {
         private SubscriptionDataConfig _config;

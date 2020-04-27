@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -224,6 +225,14 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             base.ProcessSynchronousEvents(forceProcess);
+        }
+
+        /// <summary>
+        /// Save the results to disk
+        /// </summary>
+        public override void SaveResults(string name, Result result)
+        {
+            File.WriteAllText(GetResultsPath(name), JsonConvert.SerializeObject(result));
         }
 
         /// <summary>

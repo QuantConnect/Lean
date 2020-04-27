@@ -28,11 +28,12 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using QuantConnect.Brokerages.GDAX.Messages;
+using QuantConnect.Util;
 using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class GDAXBrokerageTests
     {
         #region Declarations
@@ -179,6 +180,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
             //if not our order should get no event
             Assert.AreEqual(raised.WaitOne(1000), expectedQuantity != 99);
+            raised.DisposeSafely();
         }
 
         [Test]
