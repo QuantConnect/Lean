@@ -25,6 +25,18 @@ namespace QuantConnect.Tests.Configuration
     [TestFixture]
     public class ConfigTests
     {
+        [OneTimeSetUp]
+        public void SetUp()
+        {
+            Config.Reset();
+        }
+
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            Config.Reset();
+        }
+
         [Test]
         public void SetRespectsEnvironment()
         {
@@ -40,6 +52,8 @@ namespace QuantConnect.Tests.Configuration
         [Test]
         public void ChangeConfigurationFileNameWrites()
         {
+            // we need to load the current config, since it's lazy we get the current env to load it up
+            var env = Config.GetEnvironment();
             var tempFile = Path.GetTempFileName();
             Config.SetConfigurationFile(tempFile);
             Config.Write();
