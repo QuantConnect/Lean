@@ -34,6 +34,7 @@ using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -503,7 +504,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Adds the specified element to the collection with the specified key. If an entry does not exist for th
+        /// Adds the specified element to the collection with the specified key. If an entry does not exist for the
         /// specified key then one will be created.
         /// </summary>
         /// <typeparam name="TKey">The key type</typeparam>
@@ -522,6 +523,24 @@ namespace QuantConnect
                 dictionary.Add(key, list);
             }
             list.Add(element);
+        }
+
+        /// <summary>
+        /// Adds the specified Tick to the Ticks collection. If an entry does not exist for the specified key then one will be created.
+        /// </summary>
+        /// <param name="dictionary">The ticks dictionary</param>
+        /// <param name="key">The symbol</param>
+        /// <param name="tick">The tick to add</param>
+        /// <remarks>For performance we implement this method based on <see cref="Add{TKey,TElement,TCollection}"/></remarks>
+        public static void Add(this Ticks dictionary, Symbol key, Tick tick)
+        {
+            List<Tick> list;
+            if (!dictionary.TryGetValue(key, out list))
+            {
+                list = new List<Tick>(1);
+                dictionary.Add(key, list);
+            }
+            list.Add(tick);
         }
 
         /// <summary>

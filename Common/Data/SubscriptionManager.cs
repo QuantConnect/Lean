@@ -43,15 +43,6 @@ namespace QuantConnect.Data
         public IEnumerable<SubscriptionDataConfig> Subscriptions => _subscriptionManager.SubscriptionManagerSubscriptions.Where(config => !config.IsInternalFeed);
 
         /// <summary>
-        ///     Flags the existence of custom data in the subscriptions
-        /// </summary>
-        public bool HasCustomData
-        {
-            get { return _subscriptionManager.HasCustomData; }
-            set { _subscriptionManager.HasCustomData = value; }
-        }
-
-        /// <summary>
         ///     The different <see cref="TickType" /> each <see cref="SecurityType" /> supports
         /// </summary>
         public Dictionary<SecurityType, List<TickType>> AvailableDataTypes => _subscriptionManager.AvailableDataTypes;

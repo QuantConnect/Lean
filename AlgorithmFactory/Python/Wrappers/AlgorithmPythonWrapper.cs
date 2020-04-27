@@ -559,7 +559,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             {
                 using (Py.GIL())
                 {
-                    _onData(SubscriptionManager.HasCustomData ? new PythonSlice(slice) : slice);
+                    _onData(new PythonSlice(slice));
                 }
             }
         }
@@ -570,10 +570,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="slice">The current data slice</param>
         public void OnFrameworkData(Slice slice)
         {
-            using (Py.GIL())
-            {
-                _algorithm.OnFrameworkData(SubscriptionManager.HasCustomData ? new PythonSlice(slice) : slice);
-            }
+            _baseAlgorithm.OnFrameworkData(slice);
         }
 
         /// <summary>

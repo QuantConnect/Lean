@@ -18,7 +18,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Python
 {
