@@ -81,7 +81,6 @@
     <Compile Include="EventMessagingHandler.cs" />
     <Compile Include="Messaging.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StreamingApi.cs" />
     <Compile Include="StreamingMessageHandler.cs" />
   </ItemGroup>
   <ItemGroup>
