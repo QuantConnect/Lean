@@ -23,6 +23,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 using Timer = System.Timers.Timer;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Queues
@@ -131,6 +132,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// </summary>
         public void Dispose()
         {
+            _timer.Stop();
+            _timer.DisposeSafely();
         }
 
         /// <summary>
