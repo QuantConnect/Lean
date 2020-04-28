@@ -198,7 +198,20 @@ namespace QuantConnect.Securities
                     var keys = string.Join(", ", _entries.Keys);
                     Log.Error($"MarketHoursDatabase.GetExchangeHours(): Unable to locate exchange hours for {key}.Available keys: {keys}");
 
-                    // there was nothing that really matched exactly... what should we do here?
+                    if (securityType == SecurityType.Future && market == Market.USA)
+                    {
+                        var exception =
+                            "Future.Usa market type is no longer supported as we mapped each ticker to its actual exchange. " +
+                            "Please find your specific market in the symbol-properties database.";
+                        if (SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(symbol, SecurityType.Future, out market))
+                        {
+                            // let's suggest a market
+                            exception += $" Suggested market based on the provided ticker 'Market.{market.ToUpperInvariant()}'.";
+                        }
+
+                        throw new ArgumentException(exception);
+                    }
+                    // there was nothing that really matched exactly
                     throw new ArgumentException($"Unable to locate exchange hours for {key}");
                 }
             }

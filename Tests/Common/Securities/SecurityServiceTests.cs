@@ -155,9 +155,8 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void CanCreate_ConcreteFutures_WithCorrectSubscriptions()
         {
-            var identifier = SecurityIdentifier.GenerateFuture(new DateTime(2020, 12, 15), "ED", Market.USA);
+            var identifier = SecurityIdentifier.GenerateFuture(new DateTime(2020, 12, 15), "ED", Market.CME);
             var symbol = new Symbol(identifier, "ED", Symbol.Empty);
-            _marketHoursDatabase.SetEntryAlwaysOpen(Market.USA, "ED", SecurityType.Future, TimeZones.NewYork);
 
             var subscriptionTypes = new List<Tuple<Type, TickType>>
             {

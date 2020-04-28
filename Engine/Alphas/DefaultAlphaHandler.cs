@@ -232,6 +232,11 @@ namespace QuantConnect.Lean.Engine.Alphas
             {
                 try
                 {
+                    if (InsightManager == null)
+                    {
+                        // could be null if we are not initialized and exit is called
+                        return;
+                    }
                     // default save all results to disk and don't remove any from memory
                     // this will result in one file with all of the insights/results in it
                     var insights = InsightManager.AllInsights.OrderBy(insight => insight.GeneratedTimeUtc).ToList();

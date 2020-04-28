@@ -218,7 +218,7 @@ namespace QuantConnect.Tests.Jupyter
         {
             using (Py.GIL())
             {
-                var symbol = Symbol.CreateFuture("ES", Market.USA, new DateTime(2014, 12, 19));
+                var symbol = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2014, 12, 19));
                 var startDate = new DateTime(2013, 10, 11);
                 var securityTestHistory = _module.FutureContractHistoryTest(startDate, SecurityType.Future, symbol);
 

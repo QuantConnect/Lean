@@ -16,14 +16,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-using QuantConnect.Data.Market;
-using QuantConnect.Util;
-using QuantConnect.Logging;
 using System.Globalization;
-using QuantConnect.Data;
+using System.IO;
+using System.Linq;
+using QuantConnect.Data.Market;
+using QuantConnect.Logging;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 {
@@ -32,10 +32,11 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
     /// </summary>
     public class AlgoSeekFuturesReader : IEnumerator<Tick>
     {
-        private Stream _stream;
-        private StreamReader _streamReader;
-        private HashSet<string> _symbolFilter;
-        private Dictionary<string, decimal> _symbolMultipliers;
+        private readonly Stream _stream;
+        private readonly StreamReader _streamReader;
+        private readonly HashSet<string> _symbolFilter;
+        private readonly Dictionary<string, decimal> _symbolMultipliers;
+        private readonly SymbolPropertiesDatabase _symbolProperties;
 
         private readonly int _columnTimestamp = -1;
         private readonly int _columnSecID = -1;
@@ -49,7 +50,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// <summary>
         /// Enumerate through the lines of the algoseek files.
         /// </summary>
-        /// <param name="file">BZ File for algoseek</param>
+        /// <param name="file">BZ File for AlgoSeek</param>
         /// <param name="symbolMultipliers">Symbol price multiplier</param>
         /// <param name="symbolFilter">Symbol filter to apply, if any</param>
         public AlgoSeekFuturesReader(string file, Dictionary<string, decimal> symbolMultipliers, HashSet<string> symbolFilter = null)
@@ -59,6 +60,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             _streamReader = new StreamReader(_stream);
             _symbolFilter = symbolFilter;
             _symbolMultipliers = symbolMultipliers.ToDictionary();
+            _symbolProperties = SymbolPropertiesDatabase.FromDataFolder();
 
             // detecting column order in the file
             var headerLine = _streamReader.ReadLine();
@@ -73,13 +75,13 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 _columnQuantity = header.FindIndex(x => x == "Quantity");
                 _columnPrice = header.FindIndex(x => x == "Price");
 
-                _columnsCount = Enumerable.Max(new[] { _columnTimestamp, _columnTicker, _columnType, _columnSide, _columnSecID, _columnQuantity, _columnPrice });
+                _columnsCount = new[] { _columnTimestamp, _columnTicker, _columnType, _columnSide, _columnSecID, _columnQuantity, _columnPrice }.Max();
             }
             //Prime the data pump, set the current.
             Current = null;
             MoveNext();
         }
-
+        
         /// <summary>
         /// Parse the next line of the algoseek future file.
         /// </summary>
@@ -93,6 +95,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 // If line is invalid continue looping to find next valid line.
                 tick = Parse(line);
             }
+
             Current = tick;
             return Current != null;
         }
@@ -100,10 +103,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// <summary>
         /// Current top of the tick file.
         /// </summary>
-        public Tick Current
-        {
-            get; private set;
-        }
+        public Tick Current { get; private set; }
 
         /// <summary>
         /// Gets the current element in the collection.
@@ -161,7 +161,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                     return null;
                 }
 
-                ticker = ticker.Trim(new char[] { '"' });
+                ticker = ticker.Trim('"');
 
                 if (string.IsNullOrEmpty(ticker))
                 {
@@ -185,9 +185,12 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 var expirationMonth = parsed.ExpirationMonth;
                 var expirationYear = GetExpirationYear(time, expirationYearShort);
 
-                var expiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(underlying);
+                string exchange;
+                _symbolProperties.TryGetMarket(underlying, SecurityType.Future, out exchange);
+                
+                var expiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(Symbol.Create(underlying, SecurityType.Future, exchange));
                 var expiryDate = expiryFunc(new DateTime(expirationYear, expirationMonth, 1));
-                var symbol = Symbol.CreateFuture(underlying, Market.USA, expiryDate);
+                var symbol = Symbol.CreateFuture(underlying, exchange, expiryDate);
 
                 // detecting tick type (trade or quote)
                 TickType tickType;
@@ -215,9 +218,9 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             isAsk = true;
                             break;
                         default:
-                            {
-                                return null;
-                            }
+                        {
+                            return null;
+                        }
                     }
                 }
                 else
@@ -242,7 +245,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             Symbol = symbol,
                             Time = time,
                             TickType = tickType,
-                            Exchange = Market.USA,
                             Value = price
                         };
 
@@ -256,6 +258,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             tick.BidPrice = price;
                             tick.BidSize = quantity;
                         }
+
                         return tick;
 
                     case TickType.Trade:
@@ -265,7 +268,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             Symbol = symbol,
                             Time = time,
                             TickType = tickType,
-                            Exchange = Market.USA,
                             Value = price,
                             Quantity = quantity
                         };
@@ -278,7 +280,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             Symbol = symbol,
                             Time = time,
                             TickType = tickType,
-                            Exchange = Market.USA,
+                            Exchange = exchange,
                             Value = quantity
                         };
                         return tick;
@@ -301,6 +303,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             {
                 baseNum += 10;
             }
+
             return baseNum + year;
         }
     }

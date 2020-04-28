@@ -587,8 +587,8 @@ namespace QuantConnect.Tests.Common.Securities
             var model = security.BuyingPowerModel = new SecurityMarginModel(1, requiredFreeBuyingPowerPercent);
 
             var actual = algo.CalculateOrderQuantity(_symbol, 1m * model.GetLeverage(security));
-            // ((100000 - 5) * 1 * 0.95 * 0.9975 / (25)
-            Assert.AreEqual(3790m, actual);
+            // ((100000 - 5) * 1 * 0.95 * 0.9975 / (25 * 50)
+            Assert.AreEqual(75m, actual);
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, security, algo));
             var expectedBuyingPower = algo.Portfolio.Cash * (1 - requiredFreeBuyingPowerPercent);
             Assert.AreEqual(expectedBuyingPower, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
@@ -604,8 +604,8 @@ namespace QuantConnect.Tests.Common.Securities
             var model = security.BuyingPowerModel = new SecurityMarginModel(2, requiredFreeBuyingPowerPercent);
 
             var actual = algo.CalculateOrderQuantity(_symbol, 1m * model.GetLeverage(security));
-            // ((100000 - 5) * 2 * 0.95 * 0.9975 / (25)
-            Assert.AreEqual(7580m, actual);
+            // ((100000 - 5) * 2 * 0.95 * 0.9975 / (25 * 50)
+            Assert.AreEqual(151m, actual);
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, security, algo));
             var expectedBuyingPower = algo.Portfolio.Cash * (1 - requiredFreeBuyingPowerPercent);
             Assert.AreEqual(expectedBuyingPower, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
@@ -770,7 +770,7 @@ namespace QuantConnect.Tests.Common.Securities
             }
             else if (securityType == SecurityType.Future)
             {
-                security = algo.AddFuture(symbol);
+                security = algo.AddFuture(symbol == "SPY" ? "ES" : symbol);
                 _symbol = security.Symbol;
             }
             else

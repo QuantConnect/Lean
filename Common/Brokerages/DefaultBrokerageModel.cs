@@ -42,7 +42,7 @@ namespace QuantConnect.Brokerages
             {SecurityType.Base, Market.USA},
             {SecurityType.Equity, Market.USA},
             {SecurityType.Option, Market.USA},
-            {SecurityType.Future, Market.USA},
+            {SecurityType.Future, Market.CME},
             {SecurityType.Forex, Market.FXCM},
             {SecurityType.Cfd, Market.FXCM},
             {SecurityType.Crypto, Market.GDAX}

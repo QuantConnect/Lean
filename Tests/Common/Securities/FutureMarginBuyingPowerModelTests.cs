@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
@@ -28,7 +27,6 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 using QuantConnect.Tests.Engine.DataFeeds;
-using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -70,7 +68,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // For this symbol we dont have any history, but only one date and margins line
             var ticker = QuantConnect.Securities.Futures.Softs.Coffee;
-            var symbol = Symbol.CreateFuture(ticker, Market.USA, expDate);
+            var symbol = Symbol.CreateFuture(ticker, Market.ICE, expDate);
 
             var futureSecurity = new Future(
                 SecurityExchangeHours.AlwaysOpen(tz),
@@ -122,7 +120,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // For this symbol we dont have history
             var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
-            var symbol = Symbol.CreateFuture(ticker, Market.USA, expDate);
+            var symbol = Symbol.CreateFuture(ticker, Market.CME, expDate);
 
             var futureSecurity = new Future(
                 SecurityExchangeHours.AlwaysOpen(tz),
@@ -686,12 +684,22 @@ namespace QuantConnect.Tests.Common.Securities
                     new MarketOrder(futureSecurity.Symbol, quantity, DateTime.UtcNow))).IsSufficient);
         }
 
-        [Test]
-        public void FutureMarginModel_MarginEntriesValid()
+        [TestCase(Market.CME)]
+        [TestCase(Market.ICE)]
+        [TestCase(Market.CBOT)]
+        [TestCase(Market.CBOE)]
+        [TestCase(Market.COMEX)]
+        [TestCase(Market.NYMEX)]
+        [TestCase(Market.Globex)]
+        public void FutureMarginModel_MarginEntriesValid(string market)
         {
-            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", Market.USA, "margins"));
+            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", market, "margins"));
             var minimumDate = new DateTime(1990, 1, 1);
 
+            if (!marginsDirectory.Exists)
+            {
+                return;
+            }
             foreach (var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly))
             {
                 var lineNumber = 0;
@@ -740,11 +748,21 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
-        [Test]
-        public void FutureMarginModel_MarginEntriesHaveIncrementingDates()
+        [TestCase(Market.CME)]
+        [TestCase(Market.ICE)]
+        [TestCase(Market.CBOT)]
+        [TestCase(Market.CBOE)]
+        [TestCase(Market.COMEX)]
+        [TestCase(Market.NYMEX)]
+        [TestCase(Market.Globex)]
+        public void FutureMarginModel_MarginEntriesHaveIncrementingDates(string market)
         {
-            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", Market.USA, "margins"));
+            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", market, "margins"));
 
+            if (!marginsDirectory.Exists)
+            {
+                return;
+            }
             foreach (var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly))
             {
                 var csv = File.ReadLines(marginFile.FullName).Where(x => !x.StartsWithInvariant("#") && !string.IsNullOrWhiteSpace(x)).Skip(1).Select(x =>
@@ -768,10 +786,20 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
-        [Test]
-        public void FutureMarginModel_MarginEntriesAreContinuous()
+        [TestCase(Market.CME)]
+        [TestCase(Market.ICE)]
+        [TestCase(Market.CBOT)]
+        [TestCase(Market.CBOE)]
+        [TestCase(Market.COMEX)]
+        [TestCase(Market.NYMEX)]
+        [TestCase(Market.Globex)]
+        public void FutureMarginModel_MarginEntriesAreContinuous(string market)
         {
-            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", Market.USA, "margins"));
+            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", market, "margins"));
+            if (!marginsDirectory.Exists)
+            {
+                return;
+            }
             var exclusions = new Dictionary<string, int>
             {
                 { "6E.csv", 1 },
@@ -833,11 +861,21 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
-        [Test]
-        public void FutureMarginModel_InitialMarginGreaterThanMaintenance()
+        [TestCase(Market.CME)]
+        [TestCase(Market.ICE)]
+        [TestCase(Market.CBOT)]
+        [TestCase(Market.CBOE)]
+        [TestCase(Market.COMEX)]
+        [TestCase(Market.NYMEX)]
+        [TestCase(Market.Globex)]
+        public void FutureMarginModel_InitialMarginGreaterThanMaintenance(string market)
         {
-            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", Market.USA, "margins"));
+            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", market, "margins"));
 
+            if (!marginsDirectory.Exists)
+            {
+                return;
+            }
             foreach (var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly))
             {
                 var errorMessage = $"Initial value greater than maintenance value in {marginFile.Name}";
