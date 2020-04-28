@@ -560,8 +560,8 @@ namespace QuantConnect.Data.Market
             }
             else
             {
-                // Using custom "ToDecimal" conversion for speed on high resolution data.
-                quoteBar.Time = date.Date.AddMilliseconds((double)streamReader.GetDecimal()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                // Using custom int conversion for speed on high resolution data.
+                quoteBar.Time = date.Date.AddMilliseconds(streamReader.GetInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
             }
 
             var open = streamReader.GetDecimal();

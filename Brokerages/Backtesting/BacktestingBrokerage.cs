@@ -275,9 +275,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
-                    var fills = new[] { new OrderEvent(order,
-                        Algorithm.UtcTime,
-                        OrderFee.Zero) };
+                    var fills = new OrderEvent[0];
 
                     Security security;
                     if (!Algorithm.Securities.TryGetValue(order.Symbol, out security))
