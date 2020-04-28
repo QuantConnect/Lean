@@ -582,16 +582,18 @@ namespace QuantConnect.Lean.Engine.Results
             var currentMessageCount = -1;
             while (DateTime.UtcNow.Ticks < endTime && concurrentQueue.TryDequeue(out message))
             {
-                if (currentMessageCount == -1)
+                if (messageQueueLimit.HasValue)
                 {
-                    // this is expensive, so let's get it once
-                    currentMessageCount = Messages.Count;
-                }
-
-                if (messageQueueLimit.HasValue && currentMessageCount > messageQueueLimit)
-                {
-                    //if too many in the queue already skip the logging and drop the messages
-                    continue;
+                    if (currentMessageCount == -1)
+                    {
+                        // this is expensive, so let's get it once
+                        currentMessageCount = Messages.Count;
+                    }
+                    if (currentMessageCount > messageQueueLimit)
+                    {
+                        //if too many in the queue already skip the logging and drop the messages
+                        continue;
+                    }
                 }
                 AddToLogStore(message);
                 result.Add(message);
