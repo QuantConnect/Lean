@@ -83,7 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 && !DataCacheProvider.IsDataEphemeral;
 
             // we know these type implement the streamReader interface lets avoid dynamic reflection call to figure it out
-            if (_config.Type == typeof(TradeBar) || _config.Type == typeof(QuoteBar))
+            if (_config.Type == typeof(TradeBar) || _config.Type == typeof(QuoteBar) || _config.Type == typeof(Tick))
             {
                 _implementsStreamReader = true;
             }

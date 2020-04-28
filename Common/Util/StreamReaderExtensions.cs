@@ -40,6 +40,20 @@ namespace QuantConnect.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static decimal GetDecimal(this StreamReader stream, char delimiter = DefaultDelimiter)
         {
+            bool pastEndLine;
+            return GetDecimal(stream, out pastEndLine, delimiter);
+        }
+
+        /// <summary>
+        /// Gets a decimal from the provided stream reader
+        /// </summary>
+        /// <param name="stream">The data stream</param>
+        /// <param name="delimiter">The data delimiter character to use, default is ','</param>
+        /// <param name="pastEndLine">True if end line was past, useful for consumers to know a line ended</param>
+        /// <returns>The decimal read from the stream</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static decimal GetDecimal(this StreamReader stream, out bool pastEndLine, char delimiter = DefaultDelimiter)
+        {
             long value = 0;
             var decimalPlaces = 0;
             var hasDecimals = false;
@@ -56,7 +70,8 @@ namespace QuantConnect.Util
                 current = (char)stream.Read();
             }
 
-            while (!(current == delimiter || current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData || current == ' '))
+            pastEndLine = current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData;
+            while (!(current == delimiter || pastEndLine || current == ' '))
             {
                 if (current == '.')
                 {
@@ -69,6 +84,7 @@ namespace QuantConnect.Util
                     decimalPlaces++;
                 }
                 current = (char)stream.Read();
+                pastEndLine = current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData;
             }
 
             var lo = (int)value;
@@ -133,6 +149,31 @@ namespace QuantConnect.Util
                 current = (char)stream.Read();
             }
             return isNegative ? result * -1 : result;
+        }
+
+        /// <summary>
+        /// Gets a string from a stream reader
+        /// </summary>
+        /// <param name="stream">The data stream</param>
+        /// <param name="delimiter">The data delimiter character to use, default is ','</param>
+        /// <returns>The string instance read</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string GetString(this StreamReader stream, char delimiter = DefaultDelimiter)
+        {
+            StringBuilder result = null;
+            var current = (char)stream.Read();
+
+            while (!(current == delimiter || current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData))
+            {
+                if (result == null)
+                {
+                    result = new StringBuilder();
+                }
+                result.Append(current);
+                current = (char)stream.Read();
+            }
+
+            return result == null ? string.Empty : result.ToString();
         }
     }
 }
