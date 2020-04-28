@@ -121,6 +121,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         }
 
         /// <summary>
+        /// Returns whether the data provider is connected
+        /// </summary>
+        /// <returns>true if the data provider is connected</returns>
+        public bool IsConnected => true;
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+        }
+
+        /// <summary>
         /// Pumps a bunch of ticks into the queue
         /// </summary>
         private void PopulateQueue()
