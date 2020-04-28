@@ -270,8 +270,7 @@ namespace QuantConnect.Data.Market
                     case SecurityType.Cfd:
                         {
                             TickType = TickType.Quote;
-                            var ticks = (long)(reader.GetDecimal() * TimeSpan.TicksPerMillisecond);
-                            Time = date.Date.AddTicks(ticks)
+                            Time = date.Date.AddMilliseconds((double) reader.GetDecimal())
                                 .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                             BidPrice = reader.GetDecimal();
                             AskPrice = reader.GetDecimal();
