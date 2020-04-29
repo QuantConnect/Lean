@@ -11,11 +11,11 @@ before_install:
   - sudo ln -s $HOME/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so
   - conda update -y python conda pip
   - conda install -y python=3.6.8
-  - conda install -y numpy=1.16.1
-  - conda install -y pandas=0.23.4
-  - conda install -y cython=0.29.11
-  - conda install -y scipy=1.2.1
-  - conda install -y wrapt=1.10.11
+  - conda install -y numpy=1.18.1
+  - conda install -y pandas=0.25.3
+  - conda install -y cython=0.29.15
+  - conda install -y scipy=1.4.1
+  - conda install -y wrapt=1.12.1
 install:
   - nuget restore QuantConnect.Lean.sln
   - nuget install NUnit.Runners -Version 3.11.1 -OutputDirectory testrunner
