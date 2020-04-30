@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Packets
@@ -139,9 +140,9 @@ namespace QuantConnect.Packets
             BacktestingMaxInsights = 10000;
             MaximumDataPointsPerChartSeries = 4000;
             SecondTimeOut = 300;
-            StorageLimitMB = 5;
-            StorageFileCount = 100;
-            PersistenceIntervalSeconds = 5;
+            StorageLimitMB = Config.GetInt("storage-limit-mb", 5);
+            StorageFileCount = Config.GetInt("storage-file-count", 100);
+            PersistenceIntervalSeconds = Config.GetInt("persistence-interval-seconds", 5);
 
             // initialize to default leaky bucket values in case they're not specified
             TrainingLimits = new LeakyBucketControlParameters();

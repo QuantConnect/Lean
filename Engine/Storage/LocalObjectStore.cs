@@ -85,8 +85,12 @@ namespace QuantConnect.Lean.Engine.Storage
 
             Controls = controls;
 
-            _persistenceInterval = TimeSpan.FromSeconds(controls.PersistenceIntervalSeconds);
-            _persistenceTimer = new Timer(_ => Persist(), null, _persistenceInterval, _persistenceInterval);
+            // if <= 0 we disable periodic persistence and make it synchronous
+            if (controls.PersistenceIntervalSeconds > 0)
+            {
+                _persistenceInterval = TimeSpan.FromSeconds(controls.PersistenceIntervalSeconds);
+                _persistenceTimer = new Timer(_ => Persist(), null, _persistenceInterval, _persistenceInterval);
+            }
         }
 
         /// <summary>
@@ -171,6 +175,12 @@ namespace QuantConnect.Lean.Engine.Storage
 
             _dirty = true;
             _storage.AddOrUpdate(key, k => contents, (k, v) => contents);
+
+            // if <= 0 we disable periodic persistence and make it synchronous
+            if (Controls.PersistenceIntervalSeconds <= 0)
+            {
+                Persist();
+            }
             return true;
         }
 
@@ -190,6 +200,12 @@ namespace QuantConnect.Lean.Engine.Storage
             if (_storage.TryRemove(key, out _))
             {
                 _dirty = true;
+
+                // if <= 0 we disable periodic persistence and make it synchronous
+                if (Controls.PersistenceIntervalSeconds <= 0)
+                {
+                    Persist();
+                }
                 return true;
             }
 
@@ -225,11 +241,14 @@ namespace QuantConnect.Lean.Engine.Storage
         {
             try
             {
-                _persistenceTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                if (_persistenceTimer != null)
+                {
+                    _persistenceTimer.Change(Timeout.Infinite, Timeout.Infinite);
 
-                Persist();
+                    Persist();
 
-                _persistenceTimer?.DisposeSafely();
+                    _persistenceTimer.DisposeSafely();
+                }
 
                 // if the object store was not used, delete the empty storage directory created in Initialize
                 if (!Directory.EnumerateFileSystemEntries(AlgorithmStorageRoot).Any())
@@ -273,7 +292,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
 
                 // pause timer will persisting
-                _persistenceTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                _persistenceTimer?.Change(Timeout.Infinite, Timeout.Infinite);
 
                 if (PersistData(this))
                 {
@@ -289,7 +308,7 @@ namespace QuantConnect.Lean.Engine.Storage
             finally
             {
                 // restart timer following end of persistence
-                _persistenceTimer.Change(_persistenceInterval, _persistenceInterval);
+                _persistenceTimer?.Change(_persistenceInterval, _persistenceInterval);
             }
         }
 

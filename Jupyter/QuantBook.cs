@@ -83,6 +83,17 @@ namespace QuantConnect.Jupyter
                     new AlgorithmManager(false));
                 systemHandlers.LeanManager.SetAlgorithm(this);
 
+                algorithmHandlers.ObjectStore.Initialize("QuantBook",
+                    Config.GetInt("job-user-id"),
+                    Config.GetInt("project-id"),
+                    Config.Get("api-access-token"),
+                    new Controls
+                    {
+                        // if <= 0 we disable periodic persistence and make it synchronous
+                        PersistenceIntervalSeconds = -1
+                    });
+                SetObjectStore(algorithmHandlers.ObjectStore);
+
                 _dataCacheProvider = new ZipDataCacheProvider(algorithmHandlers.DataProvider);
 
                 var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
