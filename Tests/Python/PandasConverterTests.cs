@@ -488,7 +488,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
 def Test(dataFrame, symbol):
-    data = dataFrame.lastprice.get(str(symbol))
+    data = dataFrame.lastprice.get(symbol)
     if data.empty:
         raise Exception('Data is empty')").GetAttr("Test");
 
@@ -576,7 +576,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
 def Test(dataFrame, symbol):
-    data = dataFrame.loc[str(symbol)]").GetAttr("Test");
+    data = dataFrame.loc[symbol]").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
@@ -590,7 +590,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
 def Test(dataFrame, symbol):
-    data = dataFrame.lastprice.loc[str(symbol)]").GetAttr("Test");
+    data = dataFrame.lastprice.loc[symbol]").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
@@ -618,7 +618,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
 def Test(dataFrame, symbol):
-    data = dataFrame.at[(str(symbol),), 'lastprice']").GetAttr("Test");
+    data = dataFrame.at[(symbol,), 'lastprice']").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
@@ -661,7 +661,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
 def Test(dataFrame, symbol):
-    data = dataFrame.xs(str(symbol))").GetAttr("Test");
+    data = dataFrame.xs(symbol)").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
@@ -708,7 +708,7 @@ def Test(dataFrame, symbol):
 def Test(dataFrame, symbol):
     time = dataFrame.index.get_level_values('time')[0]
     dataFrame = dataFrame.xs(time, level='time')
-    data = dataFrame.loc[str(symbol)]").GetAttr("Test");
+    data = dataFrame.loc[symbol]").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
@@ -755,7 +755,7 @@ def Test(dataFrame, symbol):
                     @"
 def Test(dataFrame, symbol):
     df2 = dataFrame.lastprice.unstack(level=0)
-    data = df2.get(str(symbol))").GetAttr("Test");
+    data = df2.get(symbol)").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
@@ -801,7 +801,56 @@ def Test(dataFrame, symbol):
                     @"
 def Test(dataFrame, symbol):
     df2 = dataFrame.lastprice.unstack(level=0)
-    data = df2[str(symbol)]").GetAttr("Test");
+    data = df2[symbol]").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [Test]
+        public void BackwardsCompatibilityDataFrame_unstack_loc_loc_NewWay()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+def Test(dataFrame, symbol):
+    df2 = dataFrame.unstack(level=0)
+    df3 = df2.loc[:,'lastprice']
+    data = df3.loc[:, str(symbol.ID)]").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [Test]
+        public void BackwardsCompatibilityDataFrame_unstack_loc_loc_UsingTickerInCache()
+        {
+            using (Py.GIL())
+            {
+                SymbolCache.Set("SPY", Symbols.SPY);
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+def Test(dataFrame, symbol):
+    df2 = dataFrame.unstack(level=0)
+    df3 = df2.loc[:,'lastprice']
+    data = df3.loc[:, 'SPY']").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [Test]
+        public void BackwardsCompatibilityDataFrame_unstack_loc_loc_UsingSymbol()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+def Test(dataFrame, symbol):
+    df2 = dataFrame.unstack(level=0)
+    df3 = df2.loc[:,'lastprice']
+    data = df3.loc[:, symbol]").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
@@ -847,7 +896,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
 def Test(dataFrame, symbol):
-    data = dataFrame['lastprice'][str(symbol)]").GetAttr("Test");
+    data = dataFrame['lastprice'][symbol]").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
@@ -892,7 +941,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
 def Test(dataFrame, symbol):
-    if str(symbol) not in dataFrame.index.levels[0]:
+    if symbol not in dataFrame.index.levels[0]:
         raise ValueError('SPY was not found')").GetAttr("Test");
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
@@ -906,7 +955,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
 def Test(dataFrame, symbol):
-    if str(symbol) not in dataFrame.index.levels[0]:
+    if symbol not in dataFrame.index.levels[0]:
         raise ValueError('SPY was not found')").GetAttr("Test");
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
@@ -923,7 +972,7 @@ import pandas as pd
 from datetime import datetime as dt
 def Test(dataFrame, symbol):
     close = dataFrame.lastprice.unstack(0)
-    to_append = pd.Series([100], name=str(symbol), index=pd.Index([dt.now()], name='time'))
+    to_append = pd.Series([100], name=symbol, index=pd.Index([dt.now()], name='time'))
     result = pd.concat([close, to_append], ignore_index=True)
     return str([result[x] for x in [symbol]])").GetAttr("Test");
                 var result = "Remapper";
@@ -945,7 +994,7 @@ import pandas as pd
 from datetime import datetime as dt
 def Test(dataFrame, symbol):
     close = dataFrame.lastprice.unstack(0)
-    to_append = pd.Series([100], name=str(symbol), index=pd.Index([dt.now()], name='time'))
+    to_append = pd.Series([100], name=symbol, index=pd.Index([dt.now()], name='time'))
     result = pd.concat([close, to_append], ignore_index=True)
     return repr([result[x] for x in [symbol]])").GetAttr("Test");
                 var result = "Remapper";

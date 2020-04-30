@@ -82,39 +82,26 @@ class Remapper(wrapt.ObjectProxy):
     def __init__(self, wrapped):
         super(Remapper, self).__init__(wrapped)
 
-    # Our remapping method. Originally implemented in C# but some cases were not working
-    # correctly and using Py did the trick
     def _self_mapper(self, key):
-        # this is to improve user experience, they can use Symbol
-        # as key and we convert it to string for pandas
+        ''' Our remapping method.
+        Originally implemented in C# but some cases were not working correctly and using Py did the trick.
+        This is to improve user experience, they can use Symbol as key and we convert it to string for pandas
+        '''
         if isinstance(key, Symbol):
-            key = str(key.ID)
+            return str(key.ID)
+
         # this is the most normal use case
-        elif isinstance(key, str):
+        if isinstance(key, str):
             tupleResult = SymbolCache.TryGetSymbol(key, None)
             if tupleResult[0]:
                 return str(tupleResult[1].ID)
 
-        # this case is required to cover 'df.at[]'
-        elif isinstance(key, tuple) and 2 >= len(key) >= 1:
-            keyElement = key[0]
+        # If the key is a tuple, convert the items
+        if isinstance(key, tuple) and 2 >= len(key) >= 1:
+            item0 = self._self_mapper(key[0])
+            return (item0,) if len(key) == 1 else \
+                (item0, self._self_mapper(key[1]))
 
-            if isinstance(keyElement, tuple) and 2 >= len(keyElement) >= 1:
-                keyElement = keyElement[0]
-
-                if isinstance(keyElement, str):
-                    tupleResult = SymbolCache.TryGetSymbol(keyElement, None)
-                    if tupleResult[0]:
-                        result = str(tupleResult[1].ID)
-                        # tuples can not be modified in Py so we generate new ones
-                        if len(key[0]) == 1:
-                            firstTuple = (result,)
-                        else:
-                            firstTuple = (result, key[0][1])
-                        if len(key[1]) == 1:
-                            return (firstTuple,)
-                        else:
-                            return (firstTuple, key[1])
         return key
 
     def __contains__(self, key):
@@ -125,7 +112,7 @@ class Remapper(wrapt.ObjectProxy):
         name = self._self_mapper(name)
         result = self.__wrapped__.__getitem__(name)
 
-        if isinstance(result, (pandas.Series, pandas.Index)):
+        if isinstance(result, (pandas.Series, pandas.Index, pandas.DataFrame)):
             # For these cases we wrap the result too. Can't apply the wrap around all
             # results because it causes issues in pandas for some of our use cases
             # specifically pandas timestamp type
