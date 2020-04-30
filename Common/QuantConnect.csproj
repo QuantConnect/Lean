@@ -813,6 +813,7 @@
     <Compile Include="Util\PythonUtil.cs" />
     <Compile Include="Util\RateGate.cs" />
     <Compile Include="Util\RateLimit\TokenBucket.cs" />
+    <Compile Include="Util\ReferenceWrapper.cs" />
     <Compile Include="Util\SecurityExtensions.cs" />
     <Compile Include="Util\SecurityIdentifierJsonConverter.cs" />
     <Compile Include="Util\SeriesJsonConverter.cs" />
