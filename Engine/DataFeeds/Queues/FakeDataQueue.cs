@@ -23,6 +23,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 using Timer = System.Timers.Timer;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Queues
@@ -118,6 +119,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                     _symbols.Remove(symbol);
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns whether the data provider is connected
+        /// </summary>
+        /// <returns>true if the data provider is connected</returns>
+        public bool IsConnected => true;
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            _timer.Stop();
+            _timer.DisposeSafely();
         }
 
         /// <summary>

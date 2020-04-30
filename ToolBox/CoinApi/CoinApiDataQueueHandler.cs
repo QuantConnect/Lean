@@ -125,6 +125,12 @@ namespace QuantConnect.ToolBox.CoinApi
         }
 
         /// <summary>
+        /// Returns whether the data provider is connected
+        /// </summary>
+        /// <returns>true if the data provider is connected</returns>
+        public bool IsConnected => true;
+
+        /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public void Dispose()
