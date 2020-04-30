@@ -41,6 +41,9 @@ namespace QuantConnect.Tests.Common.Util
                 var original = originalListing[kvp.Key];
                 Assert.AreEqual(original.DataTimeZone, kvp.Value.DataTimeZone);
                 CollectionAssert.AreEqual(original.ExchangeHours.Holidays, kvp.Value.ExchangeHours.Holidays);
+                CollectionAssert.AreEqual(original.ExchangeHours.EarlyCloses, kvp.Value.ExchangeHours.EarlyCloses);
+                CollectionAssert.AreEqual(original.ExchangeHours.LateOpens, kvp.Value.ExchangeHours.LateOpens);
+
                 foreach (var value in Enum.GetValues(typeof(DayOfWeek)))
                 {
                     var day = (DayOfWeek) value;
