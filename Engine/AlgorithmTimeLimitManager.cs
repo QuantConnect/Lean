@@ -171,13 +171,14 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         private TimeSpan GetCurrentTimeStepElapsed()
         {
-            if (_currentTimeStepTime.Value == DateTime.MinValue)
+            var currentValue = _currentTimeStepTime.Value;
+            if (currentValue == DateTime.MinValue)
             {
                 _currentTimeStepTime = new ReferenceWrapper<DateTime>(DateTime.UtcNow);
                 return TimeSpan.Zero;
             }
-
-            return DateTime.UtcNow - _currentTimeStepTime.Value;
+            // here we use currentValue on purpose since '_currentTimeStepTime' could have been overwritten to 'DateTime.MinValue'
+            return DateTime.UtcNow - currentValue;
         }
 
         private string GetErrorMessage(TimeSpan currentTimeStepElapsed)
