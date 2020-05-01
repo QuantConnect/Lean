@@ -1,5 +1,5 @@
 #
-#    LEAN Jupyter Docker Container 20190206
+#    LEAN Jupyter Docker Container 20190428
 #
 
 # Use base system for cleaning up wayward processes
@@ -16,10 +16,6 @@ RUN wget --quiet https://github.com/krallin/tini/releases/download/v0.10.0/tini 
 # Install Lean/PythonToolbox
 RUN git clone https://github.com/QuantConnect/Lean.git && cd Lean/PythonToolbox && \
     python setup.py install && cd ../.. && rm -irf Lean
-
-#Install Jupyter and other packages
-RUN conda install -c plotly plotly=4.1.0
-RUN conda install -c conda-forge jupyterlab
 
 #Install ICSharp (Jupyter C# Kernel)
 RUN wget https://cdn.quantconnect.com/icsharp/ICSharp.Kernel.20180820.zip && \
