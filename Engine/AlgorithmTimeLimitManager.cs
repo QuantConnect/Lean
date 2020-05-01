@@ -16,6 +16,7 @@
 using System;
 using System.Threading;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 using QuantConnect.Util.RateLimit;
 
 namespace QuantConnect.Lean.Engine
@@ -32,7 +33,7 @@ namespace QuantConnect.Lean.Engine
         private volatile bool _stopped;
         private long _additionalMinutes;
 
-        private DateTime _currentTimeStepTime;
+        private volatile ReferenceWrapper<DateTime> _currentTimeStepTime;
         private readonly TimeSpan _timeLoopMaximum;
 
         /// <summary>
@@ -55,6 +56,7 @@ namespace QuantConnect.Lean.Engine
         {
             _timeLoopMaximum = timeLoopMaximum;
             AdditionalTimeBucket = additionalTimeBucket;
+            _currentTimeStepTime = new ReferenceWrapper<DateTime>(DateTime.MinValue);
         }
 
         /// <summary>
@@ -76,7 +78,7 @@ namespace QuantConnect.Lean.Engine
             // when the isolator pings IsWithinLimit, invocation of CurrentTimeStepElapsed will cause
             // it to update to the current time. This was done as a performance improvement and moved
             // accessing DateTime.UtcNow from the algorithm manager thread to the isolator thread
-            _currentTimeStepTime = DateTime.MinValue;
+            _currentTimeStepTime = new ReferenceWrapper<DateTime>(DateTime.MinValue);
             Interlocked.Exchange(ref _additionalMinutes, 0L);
         }
 
@@ -169,13 +171,14 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         private TimeSpan GetCurrentTimeStepElapsed()
         {
-            if (_currentTimeStepTime == DateTime.MinValue)
+            var currentValue = _currentTimeStepTime.Value;
+            if (currentValue == DateTime.MinValue)
             {
-                _currentTimeStepTime = DateTime.UtcNow;
+                _currentTimeStepTime = new ReferenceWrapper<DateTime>(DateTime.UtcNow);
                 return TimeSpan.Zero;
             }
-
-            return DateTime.UtcNow - _currentTimeStepTime;
+            // here we use currentValue on purpose since '_currentTimeStepTime' could have been overwritten to 'DateTime.MinValue'
+            return DateTime.UtcNow - currentValue;
         }
 
         private string GetErrorMessage(TimeSpan currentTimeStepElapsed)

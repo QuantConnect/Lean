@@ -94,8 +94,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Dictionary<Universe, BaseDataCollection> universeData = null; // lazy construction for performance
                 var universeDataForTimeSliceCreate = new Dictionary<Universe, BaseDataCollection>();
 
-                _frontierTimeProvider.SetCurrentTimeUtc(_timeProvider.GetUtcNow());
-                var frontierUtc = _frontierTimeProvider.GetUtcNow();
+                var frontierUtc = _timeProvider.GetUtcNow();
+                _frontierTimeProvider.SetCurrentTimeUtc(frontierUtc);
 
                 SecurityChanges newChanges;
                 do
