@@ -32,6 +32,7 @@ namespace QuantConnect.Lean.Engine
         private volatile bool _stopped;
         private long _additionalMinutes;
 
+        private readonly object _locker = new object();
         private DateTime _currentTimeStepTime;
         private readonly TimeSpan _timeLoopMaximum;
 
@@ -76,8 +77,11 @@ namespace QuantConnect.Lean.Engine
             // when the isolator pings IsWithinLimit, invocation of CurrentTimeStepElapsed will cause
             // it to update to the current time. This was done as a performance improvement and moved
             // accessing DateTime.UtcNow from the algorithm manager thread to the isolator thread
-            _currentTimeStepTime = DateTime.MinValue;
-            Interlocked.Exchange(ref _additionalMinutes, 0L);
+            lock (_locker)
+            {
+                _currentTimeStepTime = DateTime.MinValue;
+                Interlocked.Exchange(ref _additionalMinutes, 0L);
+            }
         }
 
         /// <summary>
@@ -95,9 +99,12 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public IsolatorLimitResult IsWithinLimit()
         {
-            TimeSpan currentTimeStepElapsed;
-            var message = IsOutOfTime(out currentTimeStepElapsed) ? GetErrorMessage(currentTimeStepElapsed) : string.Empty;
-            return new IsolatorLimitResult(currentTimeStepElapsed, message);
+            lock (_locker)
+            {
+                TimeSpan currentTimeStepElapsed;
+                var message = IsOutOfTime(out currentTimeStepElapsed) ? GetErrorMessage(currentTimeStepElapsed) : string.Empty;
+                return new IsolatorLimitResult(currentTimeStepElapsed, message);
+            }
         }
 
         /// <summary>
