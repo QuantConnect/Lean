@@ -83,7 +83,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                                     Value = 100
                                 });
                         }
-                        coarseDataEmittedCount++;
+                        Interlocked.Increment(ref coarseDataEmittedCount);
                         return new List<BaseData> { coarseData };
                     }
                 }
@@ -111,7 +111,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.AddUniverse(
                 coarse =>
                 {
-                    coarseUniverseSelectionCount++;
+                    Interlocked.Increment(ref coarseUniverseSelectionCount);
                     emitted.Set();
 
                     // rotate single symbol in universe
@@ -129,15 +129,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             dataQueueHandlerStarted.WaitOne();
 
             // create a timer to advance time much faster than realtime
-            var timerInterval = TimeSpan.FromMilliseconds(15);
+            var timerInterval = TimeSpan.FromMilliseconds(5);
             var timer = Ref.Create<Timer>(null);
             timer.Value = new Timer(state =>
             {
                 try
                 {
-                    // stop the timer to prevent reentrancy
-                    timer.Value.Change(Timeout.Infinite, Timeout.Infinite);
-
                     var currentTime = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
 
                     if (currentTime.Date > endDate.Date)
@@ -162,7 +159,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Assert.That(activeSecuritiesCount <= 1);
 
                     // restart the timer
-                    timer.Value.Change(timerInterval, timerInterval);
+                    timer.Value.Change(timerInterval, Timeout.InfiniteTimeSpan);
                 }
                 catch (Exception exception)
                 {
@@ -173,7 +170,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     cancellationTokenSource.Cancel();
                 }
 
-            }, null, TimeSpan.FromSeconds(1), timerInterval);
+            }, null, timerInterval, Timeout.InfiniteTimeSpan);
 
             foreach (var _ in synchronizer.StreamData(cancellationTokenSource.Token)) { }
 
