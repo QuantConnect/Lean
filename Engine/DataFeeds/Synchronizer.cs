@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using NodaTime;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -53,9 +52,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected TimeSliceFactory TimeSliceFactory;
 
         /// <summary>
-        /// Continuous UTC time provider
+        /// Continuous UTC time provider, only valid for live trading see <see cref="LiveSynchronizer"/>
         /// </summary>
-        public ITimeProvider TimeProvider { get; protected set; }
+        public virtual ITimeProvider TimeProvider => null;
 
         /// <summary>
         /// Time provider which returns current UTC frontier time
@@ -84,8 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // GetTimeProvider() will call GetInitialFrontierTime() which
             // will consume added subscriptions so we need to do this after initialization
-            TimeProvider = GetTimeProvider();
-            SubscriptionSynchronizer.SetTimeProvider(TimeProvider);
+            SubscriptionSynchronizer.SetTimeProvider(GetTimeProvider());
 
             var previousEmitTime = DateTime.MaxValue;
 
@@ -161,8 +159,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             SubscriptionSynchronizer.SubscriptionFinished += (sender, subscription) =>
             {
                 SubscriptionManager.RemoveSubscription(subscription.Configuration);
-                Log.Debug("Synchronizer.SubscriptionFinished(): Finished subscription:" +
-                    $"{subscription.Configuration} at {FrontierTimeProvider.GetUtcNow()} UTC");
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug("Synchronizer.SubscriptionFinished(): Finished subscription:" +
+                              $"{subscription.Configuration} at {FrontierTimeProvider.GetUtcNow()} UTC");
+                }
             };
 
             // this is set after the algorithm initializes

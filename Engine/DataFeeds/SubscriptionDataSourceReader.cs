@@ -89,10 +89,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // create cache directory if not existing
             if (!Directory.Exists(Globals.Cache)) Directory.CreateDirectory(Globals.Cache);
 
+            var frontierToDelete = DateTime.Now.AddHours(-24);
             // clean old files out of the cache
             foreach (var file in Directory.EnumerateFiles(Globals.Cache))
             {
-                if (File.GetCreationTime(file) < DateTime.Now.AddHours(-24)) File.Delete(file);
+                if (File.GetCreationTime(file) < frontierToDelete) File.Delete(file);
             }
         }
     }

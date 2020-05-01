@@ -35,8 +35,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly IEnumerator<BaseData> _enumerator;
         private readonly TimeZoneOffsetProvider _offsetProvider;
 
-        private BaseData _lastEmittedValue;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="FrontierAwareEnumerator"/> class
         /// </summary>
@@ -71,7 +69,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     // we can now emit the underlyingCurrent as part of this time slice
                     _current = underlyingCurrent;
                     _needsMoveNext = true;
-                    _lastEmittedValue = _current;
                 }
                 else
                 {
@@ -96,7 +93,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             {
                 _needsMoveNext = true;
                 _current = underlyingCurrent;
-                _lastEmittedValue = _current;
             }
             else
             {

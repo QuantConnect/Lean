@@ -19,6 +19,7 @@ using System.IO;
 using NUnit.Framework;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Transport
 {
@@ -73,8 +74,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
         [TestCase(false)]
         public void ZipDataCacheProviderEphemeralDataIsRespected(bool isDataEphemeral)
         {
+            var cacheProvider = new ZipDataCacheProvider(new DefaultDataProvider(), isDataEphemeral: isDataEphemeral);
             var remoteReader = new RemoteFileSubscriptionStreamReader(
-                new ZipDataCacheProvider(new DefaultDataProvider(), isDataEphemeral: isDataEphemeral),
+                cacheProvider,
                 @"https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm",
                 Globals.Cache,
                 null);
@@ -83,7 +85,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
             Assert.AreEqual(1, TestDownloadProvider.DownloadCount);
 
             var remoteReader2 = new RemoteFileSubscriptionStreamReader(
-                new ZipDataCacheProvider(new DefaultDataProvider(), isDataEphemeral: isDataEphemeral),
+                cacheProvider,
                 @"https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm",
                 Globals.Cache,
                 null);
@@ -93,6 +95,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
 
             remoteReader.Dispose();
             remoteReader2.Dispose();
+            cacheProvider.DisposeSafely();
         }
 
         private class TestDownloadProvider : Api.Api
