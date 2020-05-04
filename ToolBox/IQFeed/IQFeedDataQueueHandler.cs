@@ -26,6 +26,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using Timer = System.Timers.Timer;
 
@@ -336,6 +337,7 @@ namespace QuantConnect.ToolBox.IQFeed
         /// </summary>
         public void Dispose()
         {
+            _symbolUniverse.DisposeSafely();
         }
     }
 

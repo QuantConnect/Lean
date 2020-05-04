@@ -16,7 +16,6 @@
 
 using System;
 using System.IO;
-using QuantConnect.Data;
 
 namespace QuantConnect.Interfaces
 {

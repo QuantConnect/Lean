@@ -47,8 +47,8 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextUpdate;
         private DateTime _nextS3Update;
         private string _errorMessage;
-        private double _daysProcessed;
-        private double _daysProcessedFrontier;
+        private int _daysProcessed;
+        private int _daysProcessedFrontier;
         private readonly HashSet<string> _chartSeriesExceededDataPoints;
 
         //Processing Time:
@@ -560,8 +560,14 @@ namespace QuantConnect.Lean.Engine.Results
         {
             base.SampleEquity(time, value);
 
-            //Recalculate the days processed:
-            _daysProcessed = (time - Algorithm.StartDate).TotalDays;
+            try
+            {
+                //Recalculate the days processed. We use 'int' so it's thread safe
+                _daysProcessed = (int) (time - Algorithm.StartDate).TotalDays;
+            }
+            catch (OverflowException)
+            {
+            }
         }
 
         /// <summary>

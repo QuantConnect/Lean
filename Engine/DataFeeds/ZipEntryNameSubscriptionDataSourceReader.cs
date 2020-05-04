@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using Ionic.Zip;
 using QuantConnect.Data;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {

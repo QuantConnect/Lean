@@ -21,6 +21,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// A time provider which updates 'now' time based on the current data emit time of all subscriptions
     /// </summary>
+    /// <remarks>This class is not thread safe but there is no need for it to be since it's only consumed by the
+    /// <see cref="SubscriptionSynchronizer"/></remarks>
     public class SubscriptionFrontierTimeProvider : ITimeProvider
     {
         private static readonly long MaxDateTimeTicks = DateTime.MaxValue.Ticks;

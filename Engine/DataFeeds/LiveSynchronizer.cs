@@ -29,12 +29,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class LiveSynchronizer : Synchronizer
     {
+        private ITimeProvider _timeProvider;
         private readonly AutoResetEvent _newLiveDataEmitted = new AutoResetEvent(false);
 
         /// <summary>
         /// Maximum time to wait for new live data before synchronizing the data feed subscriptions
         /// </summary>
         protected virtual TimeSpan NewLiveDataTimeout { get; } = TimeSpan.FromMilliseconds(500);
+
+        /// <summary>
+        /// Continuous UTC time provider
+        /// </summary>
+        public override ITimeProvider TimeProvider => _timeProvider;
 
         /// <summary>
         /// Initializes the instance of the Synchronizer class
@@ -45,7 +51,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             base.Initialize(algorithm, dataFeedSubscriptionManager);
 
-            TimeProvider = GetTimeProvider();
+            _timeProvider = GetTimeProvider();
             SubscriptionSynchronizer.SetTimeProvider(TimeProvider);
 
             // attach event handlers to subscriptions

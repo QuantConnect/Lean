@@ -29,7 +29,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class RealTimeScheduleEventService : IDisposable
     {
         private readonly Timer _timer;
-        private readonly Ref<DateTime> _nextUtcScheduledEvent;
+        private readonly Ref<ReferenceWrapper<DateTime>> _nextUtcScheduledEvent;
 
         /// <summary>
         /// Event fired when the scheduled time is past
@@ -42,11 +42,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="timeProvider">The time provider to use</param>
         public RealTimeScheduleEventService(ITimeProvider timeProvider)
         {
-            _nextUtcScheduledEvent = Ref.Create(DateTime.MinValue);
+            _nextUtcScheduledEvent = Ref.Create(new ReferenceWrapper<DateTime>(DateTime.MinValue));
             _timer = new Timer(
                 async state =>
                 {
-                    var nextUtcScheduledEvent = ((Ref<DateTime>)state).Value;
+                    var nextUtcScheduledEvent = ((Ref<ReferenceWrapper<DateTime>>)state).Value.Value;
                     var diff = nextUtcScheduledEvent - timeProvider.GetUtcNow();
                     // we need to guarantee we trigger the event after the requested due time
                     // has past, if we got called earlier lets wait until time is right
@@ -74,7 +74,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// but it is not guaranteed.</remarks>
         public void ScheduleEvent(TimeSpan dueTime, DateTime utcNow)
         {
-            _nextUtcScheduledEvent.Value = utcNow + dueTime;
+            _nextUtcScheduledEvent.Value = new ReferenceWrapper<DateTime>(utcNow + dueTime);
             _timer.Change(dueTime, Timeout.InfiniteTimeSpan);
         }
 

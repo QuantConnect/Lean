@@ -36,8 +36,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         // ZipArchive cache used by the class
         private readonly ConcurrentDictionary<string, CachedZipFile> _zipFileCache = new ConcurrentDictionary<string, CachedZipFile>();
-        private DateTime _nextCacheScan = DateTime.MinValue;
         private readonly IDataProvider _dataProvider;
+        private readonly Timer _cacheCleaner;
 
         /// <summary>
         /// Property indicating the data is temporary in nature and should not be cached.
@@ -51,6 +51,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             IsDataEphemeral = isDataEphemeral;
             _dataProvider = dataProvider;
+            _cacheCleaner = new Timer(state => CleanCache(), null, TimeSpan.FromSeconds(CacheSeconds), Timeout.InfiniteTimeSpan);
         }
 
         /// <summary>
@@ -72,19 +73,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 Stream stream = null;
 
-                // scan the cache once every CacheSeconds
-                var utcNow = DateTime.UtcNow;
-                if (_nextCacheScan < utcNow)
-                {
-                    CleanCache(utcNow);
-                }
-
                 try
                 {
                     CachedZipFile existingEntry;
                     if (!_zipFileCache.TryGetValue(filename, out existingEntry))
                     {
-                        stream = CacheAndCreateStream(filename, entryName, utcNow);
+                        stream = CacheAndCreateStream(filename, entryName);
                     }
                     else
                     {
@@ -97,7 +91,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     // bad luck, thread race condition
                                     // it was disposed and removed after we got it
                                     // so lets create it again and add it
-                                    stream = CacheAndCreateStream(filename, entryName, utcNow);
+                                    stream = CacheAndCreateStream(filename, entryName);
                                 }
                                 else
                                 {
@@ -147,12 +141,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
+            // stop the cache cleaner timer
+            _cacheCleaner.DisposeSafely();
             CachedZipFile zip;
             foreach (var zipFile in _zipFileCache)
             {
                 if (_zipFileCache.TryRemove(zipFile.Key, out zip))
                 {
-                    zip.Dispose();
+                    zip.DisposeSafely();
                 }
             }
         }
@@ -160,50 +156,45 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Remove items in the cache that are older than the cutoff date
         /// </summary>
-        private void CleanCache(DateTime utcNow)
+        private void CleanCache()
         {
-            // we just want one thread cleaning the cache at the same time
-            if (Monitor.TryEnter(_zipFileCache))
+            var utcNow = DateTime.UtcNow;
+            try
             {
-                try
+                var clearCacheIfOlderThan = utcNow.AddSeconds(-CacheSeconds);
+                // clean all items that that are older than CacheSeconds than the current date
+                foreach (var zip in _zipFileCache)
                 {
-                    var clearCacheIfOlderThan = utcNow.AddSeconds(-CacheSeconds);
-                    // clean all items that that are older than CacheSeconds than the current date
-                    foreach (var zip in _zipFileCache)
+                    if (zip.Value.Uncache(clearCacheIfOlderThan))
                     {
-                        if (zip.Value.Uncache(clearCacheIfOlderThan))
+                        // only clear items if they are not being used
+                        if (Monitor.TryEnter(zip.Value))
                         {
-                            // only clear items if they are not being used
-                            if (Monitor.TryEnter(zip.Value))
+                            try
                             {
-                                try
+                                // removing it from the cache
+                                CachedZipFile removed;
+                                if (_zipFileCache.TryRemove(zip.Key, out removed))
                                 {
-                                    // removing it from the cache
-                                    CachedZipFile removed;
-                                    if (_zipFileCache.TryRemove(zip.Key, out removed))
-                                    {
-                                        // disposing zip archive
-                                        removed.Dispose();
-                                    }
+                                    // disposing zip archive
+                                    removed.Dispose();
                                 }
-                                finally
-                                {
-                                    Monitor.Exit(zip.Value);
-                                }
+                            }
+                            finally
+                            {
+                                Monitor.Exit(zip.Value);
                             }
                         }
                     }
                 }
-                finally
-                {
-                    Monitor.Exit(_zipFileCache);
-                }
-
-                _nextCacheScan = utcNow.AddSeconds(CacheSeconds);
+            }
+            finally
+            {
+                _cacheCleaner.Change(TimeSpan.FromSeconds(CacheSeconds), Timeout.InfiniteTimeSpan);
             }
         }
 
-        private Stream CacheAndCreateStream(string filename, string entryName, DateTime utcNow)
+        private Stream CacheAndCreateStream(string filename, string entryName)
         {
             Stream stream = null;
             var dataStream = _dataProvider.Fetch(filename);
@@ -212,7 +203,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 try
                 {
-                    var newItem = new CachedZipFile(dataStream, filename, utcNow);
+                    var newItem = new CachedZipFile(dataStream, DateTime.UtcNow);
 
                     // here we don't need to lock over the cache item
                     // because it was still not added in the cache
@@ -308,80 +299,72 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             return null;
         }
-    }
 
-
-    /// <summary>
-    /// Type for storing zipfile in cache
-    /// </summary>
-    public class CachedZipFile : IDisposable
-    {
-        private readonly DateTime _dateCached;
-        private readonly Stream _dataStream;
 
         /// <summary>
-        /// The ZipFile this object represents
+        /// Type for storing zipfile in cache
         /// </summary>
-        private readonly ZipFile _zipFile;
-
-        /// <summary>
-        /// Contains all entries of the zip file by filename
-        /// </summary>
-        public readonly Dictionary<string, ZipEntry> EntryCache = new Dictionary<string, ZipEntry>(StringComparer.OrdinalIgnoreCase);
-
-        /// <summary>
-        /// Path to the ZipFile
-        /// </summary>
-        public string Key { get; private set; }
-
-        /// <summary>
-        /// Returns if this cached zip file is disposed
-        /// </summary>
-        public bool Disposed { get; private set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CachedZipFile"/>
-        /// </summary>
-        /// <param name="dataStream">Stream containing the zip file</param>
-        /// <param name="key">Key that represents the path to the data</param>
-        /// <param name="utcNow">Current utc time</param>
-        public CachedZipFile(Stream dataStream, string key, DateTime utcNow)
+        private class CachedZipFile : IDisposable
         {
-            _dataStream = dataStream;
-            _zipFile = ZipFile.Read(dataStream);
-            foreach (var entry in _zipFile.Entries)
+            private readonly DateTime _dateCached;
+            private readonly Stream _dataStream;
+
+            /// <summary>
+            /// The ZipFile this object represents
+            /// </summary>
+            private readonly ZipFile _zipFile;
+
+            /// <summary>
+            /// Contains all entries of the zip file by filename
+            /// </summary>
+            public readonly Dictionary<string, ZipEntry> EntryCache = new Dictionary<string, ZipEntry>(StringComparer.OrdinalIgnoreCase);
+
+            /// <summary>
+            /// Returns if this cached zip file is disposed
+            /// </summary>
+            public bool Disposed { get; private set; }
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="CachedZipFile"/>
+            /// </summary>
+            /// <param name="dataStream">Stream containing the zip file</param>
+            /// <param name="utcNow">Current utc time</param>
+            public CachedZipFile(Stream dataStream, DateTime utcNow)
             {
-                EntryCache[entry.FileName] = entry;
+                _dataStream = dataStream;
+                _zipFile = ZipFile.Read(dataStream);
+                foreach (var entry in _zipFile.Entries)
+                {
+                    EntryCache[entry.FileName] = entry;
+                }
+                _dateCached = utcNow;
             }
-            Key = key;
-            _dateCached = utcNow;
-        }
 
-        /// <summary>
-        /// Method used to check if this object was created before a certain time
-        /// </summary>
-        /// <param name="date">DateTime which is compared to the DateTime this object was created</param>
-        /// <returns>Bool indicating whether this object is older than the specified time</returns>
-        public bool Uncache(DateTime date)
-        {
-            return _dateCached < date;
-        }
-
-        /// <summary>
-        /// Dispose of the ZipFile
-        /// </summary>
-        public void Dispose()
-        {
-            if (Disposed)
+            /// <summary>
+            /// Method used to check if this object was created before a certain time
+            /// </summary>
+            /// <param name="date">DateTime which is compared to the DateTime this object was created</param>
+            /// <returns>Bool indicating whether this object is older than the specified time</returns>
+            public bool Uncache(DateTime date)
             {
-                throw new ObjectDisposedException("CachedZipFile instance is already disposed");
+                return _dateCached < date;
             }
-            EntryCache.Clear();
-            _zipFile?.DisposeSafely();
-            _dataStream?.DisposeSafely();
 
-            Key = null;
-            Disposed = true;
+            /// <summary>
+            /// Dispose of the ZipFile
+            /// </summary>
+            public void Dispose()
+            {
+                if (Disposed)
+                {
+                    return;
+                }
+                EntryCache.Clear();
+                _zipFile?.DisposeSafely();
+                _dataStream?.DisposeSafely();
+
+                Disposed = true;
+            }
         }
     }
 }
