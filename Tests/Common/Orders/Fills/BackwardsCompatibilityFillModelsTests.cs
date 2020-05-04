@@ -219,7 +219,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var model = new TestFillModelInheritBaseClass();
             var result = model.Fill(
                 new FillModelParameters(_security,
-                    new StopLimitOrder(_security.Symbol, 1, 12345, 12346, orderDateTime),
+                    new StopLimitOrder(_security.Symbol, 1, 12344, 12346, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
                     Time.OneHour));
 
