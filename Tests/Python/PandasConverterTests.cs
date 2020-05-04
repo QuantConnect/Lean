@@ -274,7 +274,6 @@ def Test(dataFrame, symbol):
 
             using (Py.GIL())
             {
-                SymbolCache.Set("SPY", Symbols.SPY);
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
@@ -293,7 +292,6 @@ def Test(dataFrame, symbol):
 
             using (Py.GIL())
             {
-                SymbolCache.Set("SPY", Symbols.SPY);
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
@@ -314,7 +312,6 @@ def Test(dataFrame, symbol):
 
             using (Py.GIL())
             {
-                SymbolCache.Set("SPY", Symbols.SPY);
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
@@ -534,7 +531,9 @@ def Test(dataFrame, symbol):
                     $@"
 def Test(dataFrame, symbol):
     df2 = dataFrame.lastprice.unstack(level=0)
-    data = df2.get({index})").GetAttr("Test");
+    data = df2.get({index})
+    if data.empty:
+        raise Exception('Data is empty')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
@@ -558,18 +557,21 @@ def Test(dataFrame, symbol):
             }
         }
 
-        [Test]
-        public void BackwardsCompatibilitySeries__str__()
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol)")]
+        public void BackwardsCompatibilitySeries__str__(string symbol, bool cache = false)
         {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
             using (Py.GIL())
             {
                 dynamic test = PythonEngine.ModuleFromString("testModule",
-                    @"
+                    $@"
 import pandas as pd
 from datetime import datetime as dt
 def Test(dataFrame, symbol):
     close = dataFrame.lastprice.unstack(0)
-    to_append = pd.Series([100], name=symbol, index=pd.Index([dt.now()], name='time'))
+    to_append = pd.Series([100], name={symbol}, index=pd.Index([dt.now()], name='time'))
     result = pd.concat([close, to_append], ignore_index=True)
     return str([result[x] for x in [symbol]])").GetAttr("Test");
                 var result = "Remapper";
@@ -580,18 +582,21 @@ def Test(dataFrame, symbol):
             }
         }
 
-        [Test]
-        public void BackwardsCompatibilitySeries__repr__()
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol)")]
+        public void BackwardsCompatibilitySeries__repr__(string symbol, bool cache = false)
         {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
             using (Py.GIL())
             {
                 dynamic test = PythonEngine.ModuleFromString("testModule",
-                    @"
+                    $@"
 import pandas as pd
 from datetime import datetime as dt
 def Test(dataFrame, symbol):
     close = dataFrame.lastprice.unstack(0)
-    to_append = pd.Series([100], name=symbol, index=pd.Index([dt.now()], name='time'))
+    to_append = pd.Series([100], name={symbol}, index=pd.Index([dt.now()], name='time'))
     result = pd.concat([close, to_append], ignore_index=True)
     return repr([result[x] for x in [symbol]])").GetAttr("Test");
                 var result = "Remapper";
