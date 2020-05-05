@@ -108,7 +108,7 @@ class Remapper(wrapt.ObjectProxy):
         ''' For these cases we wrap the result too. Can't apply the wrap around all
         results because it causes issues in pandas for some of our use cases
         specifically pandas timestamp type'''
-        if isinstance(result, (pandas.Series, pandas.DataFrame, pandas.Index)):
+        if isinstance(result, (pandas.Series, pandas.DataFrame, pandas.Index, pandas.MultiIndex)):
             return Remapper(result)
         return result
 
@@ -195,6 +195,66 @@ class Remapper(wrapt.ObjectProxy):
         result = self.__wrapped__.applymap(func)
         return Remapper(result)
 
+    def asfreq(self, freq, method=None, how=None, normalize=False, fill_value=None):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.asfreq.html'''
+        result = self.__wrapped__.asfreq(freq, method=method, how=how, normalize=normalize, fill_value=fill_value)
+        return self._wrap_if_pandas_object(result)
+
+    def asof(self, where, subset=None):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.asof.html'''
+        result = self.__wrapped__.asof(where, subset=subset)
+        return self._wrap_if_pandas_object(result)
+
+    def assign(self, **kwargs):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.assign.html'''
+        result = self.__wrapped__.assign(**kwargs)
+        return Remapper(result)
+
+    def astype(self, dtype, copy=True, errors='raise', **kwargs):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.astype.html'''
+        result = self.__wrapped__.astype(dtype, copy=copy, errors=errors, **kwargs)
+        return self._wrap_if_pandas_object(result)
+
+    @property
+    def at(self):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.at.html'''
+        return Remapper(self.__wrapped__.at)
+
+    def at_time(self, time, asof=False, axis=None):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.at_time.html'''
+        result = self.__wrapped__.at_time(time, asof=asof, axis=axis)
+        return Remapper(result)
+
+    @property
+    def axes(self):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.axes.html'''
+        return [self._wrap_if_pandas_object(result) for result in self.__wrapped__.axes]
+
+    def between_time(self, start_time, end_time, include_start=True, include_end=True, axis=None):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.between_time.html'''
+        result = self.__wrapped__.between_time(start_time, end_time, include_start=include_start, include_end=include_end, axis=axis)
+        return Remapper(result)
+
+    def bfill(self, axis=None, inplace=False, limit=None, downcast=None):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.bfill.html'''
+        result = self.__wrapped__.bfill(axis=axis, inplace=inplace, limit=limit, downcast=downcast)
+        return Remapper(result)
+
+    def clip(self, lower=None, upper=None, axis=None, inplace=False, *args, **kwargs):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.clip.html'''
+        result = self.__wrapped__.clip(lower=lower, upper=upper, axis=axis, inplace=inplace, *args, **kwargs)
+        return Remapper(result)
+
+    def clip_lower(self, threshold, axis=None, inplace=False):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.clip_lower.html'''
+        result = self.__wrapped__.clip_lower(threshold, axis=axis, inplace=inplace)
+        return Remapper(result)
+
+    def clip_upper(self, threshold, axis=None, inplace=False):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.clip_upper.html'''
+        result = self.__wrapped__.clip_upper(threshold, axis=axis, inplace=inplace)
+        return Remapper(result)
+
     def get(self, key, default=None):
         key = self._self_mapper(key)
         return self.__wrapped__.get(key=key, default=default)
@@ -230,10 +290,6 @@ class Remapper(wrapt.ObjectProxy):
     @property
     def iloc(self):
         return Remapper(self.__wrapped__.iloc)
-
-    @property
-    def at(self):
-        return Remapper(self.__wrapped__.at)
 
     @property
     def index(self):
