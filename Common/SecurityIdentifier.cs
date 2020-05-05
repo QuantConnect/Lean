@@ -109,7 +109,10 @@ namespace QuantConnect
         private readonly ulong _properties;
         private readonly SidBox _underlying;
         private readonly int _hashCode;
-        private decimal _strikePrice;
+        private decimal? _strikePrice;
+        private OptionStyle? _optionStyle;
+        private OptionRight? _optionRight;
+        private DateTime? _date;
 
         #endregion
 
@@ -152,17 +155,24 @@ namespace QuantConnect
         {
             get
             {
-                var stype = SecurityType;
-                switch (stype)
+                try
                 {
-                    case SecurityType.Base:
-                    case SecurityType.Equity:
-                    case SecurityType.Option:
-                    case SecurityType.Future:
-                        var oadate = ExtractFromProperties(DaysOffset, DaysWidth);
-                        return DateTime.FromOADate(oadate);
-                    default:
-                        throw new InvalidOperationException("Date is only defined for SecurityType.Equity, SecurityType.Option, SecurityType.Future, and SecurityType.Base");
+                    return _date.Value;
+                }
+                catch (InvalidOperationException)
+                {
+                    switch (SecurityType)
+                    {
+                        case SecurityType.Base:
+                        case SecurityType.Equity:
+                        case SecurityType.Option:
+                        case SecurityType.Future:
+                            var oadate = ExtractFromProperties(DaysOffset, DaysWidth);
+                            _date = DateTime.FromOADate(oadate);
+                            return _date.Value;
+                        default:
+                            throw new InvalidOperationException("Date is only defined for SecurityType.Equity, SecurityType.Option, SecurityType.Future, and SecurityType.Base");
+                    }
                 }
             }
         }
@@ -207,20 +217,26 @@ namespace QuantConnect
         {
             get
             {
-                if (SecurityType != SecurityType.Option)
+                try
                 {
-                    throw new InvalidOperationException("OptionType is only defined for SecurityType.Option");
+                    // will throw 'InvalidOperationException' if not set
+                    return _strikePrice.Value;
                 }
-
-                // performance: lets calculate strike price once
-                if (_strikePrice == -1)
+                catch (InvalidOperationException)
                 {
+                    if (SecurityType != SecurityType.Option)
+                    {
+                        throw new InvalidOperationException("OptionType is only defined for SecurityType.Option");
+                    }
+
+                    // performance: lets calculate strike price once
                     var scale = ExtractFromProperties(StrikeScaleOffset, StrikeScaleWidth);
                     var unscaled = ExtractFromProperties(StrikeOffset, StrikeWidth);
                     var pow = Math.Pow(10, (int)scale - StrikeDefaultScale);
                     _strikePrice = unscaled * (decimal)pow;
+
+                    return _strikePrice.Value;
                 }
-                return _strikePrice;
             }
         }
 
@@ -233,11 +249,20 @@ namespace QuantConnect
         {
             get
             {
-                if (SecurityType != SecurityType.Option)
+                try
                 {
-                    throw new InvalidOperationException("OptionRight is only defined for SecurityType.Option");
+                    // will throw 'InvalidOperationException' if not set
+                    return _optionRight.Value;
                 }
-                return (OptionRight)ExtractFromProperties(PutCallOffset, PutCallWidth);
+                catch (InvalidOperationException)
+                {
+                    if (SecurityType != SecurityType.Option)
+                    {
+                        throw new InvalidOperationException("OptionRight is only defined for SecurityType.Option");
+                    }
+                    _optionRight = (OptionRight)ExtractFromProperties(PutCallOffset, PutCallWidth);
+                    return _optionRight.Value;
+                }
             }
         }
 
@@ -250,11 +275,21 @@ namespace QuantConnect
         {
             get
             {
-                if (SecurityType != SecurityType.Option)
+                try
                 {
-                    throw new InvalidOperationException("OptionStyle is only defined for SecurityType.Option");
+                    // will throw 'InvalidOperationException' if not set
+                    return _optionStyle.Value;
                 }
-                return (OptionStyle)(ExtractFromProperties(OptionStyleOffset, OptionStyleWidth));
+                catch (InvalidOperationException)
+                {
+                    if (SecurityType != SecurityType.Option)
+                    {
+                        throw new InvalidOperationException("OptionStyle is only defined for SecurityType.Option");
+                    }
+
+                    _optionStyle = (OptionStyle)(ExtractFromProperties(OptionStyleOffset, OptionStyleWidth));
+                    return _optionStyle.Value;
+                }
             }
         }
 
@@ -281,9 +316,12 @@ namespace QuantConnect
             _symbol = symbol;
             _properties = properties;
             _underlying = null;
-            _strikePrice = -1;
+            _strikePrice = null;
+            _optionStyle = null;
+            _optionRight = null;
+            _date = null;
             SecurityType = (SecurityType)ExtractFromProperties(SecurityTypeOffset, SecurityTypeWidth, properties);
-            if (!Enum.IsDefined(typeof(SecurityType), SecurityType))
+            if (!SecurityType.IsValid())
             {
                 throw new ArgumentException($"The provided properties do not match with a valid {nameof(SecurityType)}", "properties");
             }
@@ -526,7 +564,24 @@ namespace QuantConnect
 
             var otherData = putcall + days + style + strk + strikeScale + marketCode + (ulong)securityType;
 
-            return new SecurityIdentifier(symbol, otherData, underlying ?? Empty);
+            var result = new SecurityIdentifier(symbol, otherData, underlying ?? Empty);
+
+            // we already have these so lets set them
+            switch (securityType)
+            {
+                case SecurityType.Base:
+                case SecurityType.Equity:
+                case SecurityType.Future:
+                    result._date = date;
+                    break;
+                case SecurityType.Option:
+                    result._date = date;
+                    result._strikePrice = strike;
+                    result._optionRight = optionRight;
+                    result._optionStyle = optionStyle;
+                    break;
+            }
+            return result;
         }
 
         /// <summary>

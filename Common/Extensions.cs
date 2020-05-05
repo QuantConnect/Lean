@@ -1356,6 +1356,50 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Asserts the specified <paramref name="securityType"/> value is valid
+        /// </summary>
+        /// <remarks>This method provides faster performance than <see cref="Enum.IsDefined"/> which uses reflection</remarks>
+        /// <param name="securityType">The SecurityType value</param>
+        /// <returns>True if valid security type value</returns>
+        public static bool IsValid(this SecurityType securityType)
+        {
+            switch (securityType)
+            {
+                case SecurityType.Base:
+                case SecurityType.Equity:
+                case SecurityType.Option:
+                case SecurityType.Commodity:
+                case SecurityType.Forex:
+                case SecurityType.Future:
+                case SecurityType.Cfd:
+                case SecurityType.Crypto:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Converts the specified <paramref name="optionRight"/> value to its corresponding string representation
+        /// </summary>
+        /// <remarks>This method provides faster performance than enum <see cref="ToString"/></remarks>
+        /// <param name="optionRight">The optionRight value</param>
+        /// <returns>A string representation of the specified OptionRight value</returns>
+        public static string ToStringPerformance(this OptionRight optionRight)
+        {
+            switch (optionRight)
+            {
+                case OptionRight.Call:
+                    return "Call";
+                case OptionRight.Put:
+                    return "Put";
+                default:
+                    // just in case
+                    return optionRight.ToString();
+            }
+        }
+
+        /// <summary>
         /// Converts the specified <paramref name="securityType"/> value to its corresponding lower-case string representation
         /// </summary>
         /// <remarks>This method provides faster performance than <see cref="ToLower"/></remarks>

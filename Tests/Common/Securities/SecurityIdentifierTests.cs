@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
@@ -158,6 +159,24 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var sid = new SecurityIdentifier("some-symbol", 0357960000000009901);
             Assert.AreEqual("99", sid.Market);
+        }
+
+        [Test]
+        public void InvalidSecurityType()
+        {
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var sid = new SecurityIdentifier("some-symbol", 0357960000000009915);
+            }, $"The provided properties do not match with a valid {nameof(SecurityType)}");
+        }
+
+        [TestCaseSource(nameof(ValidSecurityTypes))]
+        public void ValidSecurityType(ulong properties)
+        {
+            Assert.DoesNotThrow(() =>
+            {
+                var sid = new SecurityIdentifier("some-symbol", properties);
+            });
         }
 
         [Test]
@@ -374,5 +393,8 @@ namespace QuantConnect.Tests.Common.Securities
         {
             public SecurityIdentifier sid;
         }
+        private static List<TestCaseData> ValidSecurityTypes =>
+            (from object value in Enum.GetValues(typeof(SecurityType)) select new TestCaseData((ulong)(0357960000000009900 + (int)value))).ToList();
+
     }
 }

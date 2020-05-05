@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using System.Linq;
 using System.Collections;
-using QuantConnect.Util;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Securities
@@ -125,15 +124,16 @@ namespace QuantConnect.Securities
             {
                 var dt = symbol.ID.Date;
 
-                if (memoizedMap.ContainsKey(dt))
-                    return memoizedMap[dt];
+                bool result;
+                if (memoizedMap.TryGetValue(dt, out result))
+                    return result;
                 var res = OptionSymbol.IsStandard(symbol);
                 memoizedMap[dt] = res;
 
                 return res;
             };
 
-            var filtered = _allSymbols.Where(x =>
+            _allSymbols = _allSymbols.Where(x =>
             {
                 switch (_type)
                 {
@@ -146,9 +146,8 @@ namespace QuantConnect.Securities
                     default:
                         return false;
                 }
-            });
+            }).ToList();
 
-            _allSymbols = filtered.ToList();
             return this;
         }
 
@@ -158,8 +157,8 @@ namespace QuantConnect.Securities
         /// <returns></returns>
         public OptionFilterUniverse FrontMonth()
         {
-            if (!_allSymbols.Any()) return this;
             var ordered = this.OrderBy(x => x.ID.Date).ToList();
+            if (ordered.Count == 0) return this;
             var frontMonth = ordered.TakeWhile(x => ordered[0].ID.Date == x.ID.Date);
 
             _allSymbols = frontMonth.ToList();
@@ -172,8 +171,8 @@ namespace QuantConnect.Securities
         /// <returns></returns>
         public OptionFilterUniverse BackMonths()
         {
-            if (!_allSymbols.Any()) return this;
             var ordered = this.OrderBy(x => x.ID.Date).ToList();
+            if (ordered.Count == 0) return this;
             var backMonths = ordered.SkipWhile(x => ordered[0].ID.Date == x.ID.Date);
 
             _allSymbols = backMonths.ToList();
@@ -205,10 +204,10 @@ namespace QuantConnect.Securities
             if (_underlying.Time.Date != _uniqueStrikesResolveDate)
             {
                 // each day we need to recompute the unique strikes list
-                _uniqueStrikes = _allSymbols
-                    .DistinctBy(x => x.ID.StrikePrice)
-                    .OrderBy(x => x.ID.StrikePrice)
-                    .ToList(symbol => symbol.ID.StrikePrice);
+                _uniqueStrikes = _allSymbols.Select(x => x.ID.StrikePrice)
+                    .Distinct()
+                    .OrderBy(strikePrice => strikePrice)
+                    .ToList();
 
                 _uniqueStrikesResolveDate = _underlying.Time.Date;
             }
@@ -286,8 +285,7 @@ namespace QuantConnect.Securities
                         var price = symbol.ID.StrikePrice;
                         return price >= minPrice && price <= maxPrice;
                     }
-                )
-                .ToList();
+                ).ToList();
 
             return this;
         }

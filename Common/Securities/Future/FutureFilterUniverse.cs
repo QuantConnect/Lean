@@ -69,8 +69,8 @@ namespace QuantConnect.Securities
         /// <returns></returns>
         public FutureFilterUniverse FrontMonth()
         {
-            if (_allSymbols.Count() == 0) return this;
             var ordered = this.OrderBy(x => x.ID.Date).ToList();
+            if (ordered.Count == 0) return this;
             var frontMonth = ordered.TakeWhile(x => ordered[0].ID.Date == x.ID.Date);
 
             _allSymbols = frontMonth.ToList();
@@ -83,8 +83,8 @@ namespace QuantConnect.Securities
         /// <returns></returns>
         public FutureFilterUniverse BackMonths()
         {
-            if (_allSymbols.Count() == 0) return this;
             var ordered = this.OrderBy(x => x.ID.Date).ToList();
+            if (ordered.Count == 0) return this;
             var backMonths = ordered.SkipWhile(x => ordered[0].ID.Date == x.ID.Date);
 
             _allSymbols = backMonths.ToList();
