@@ -195,10 +195,10 @@ class Remapper(wrapt.ObjectProxy):
         result = self.__wrapped__.applymap(func)
         return Remapper(result)
 
-    def asfreq(self, freq, method=None, how=None, normalize=False):
+    def asfreq(self, freq, method=None, how=None, normalize=False, fill_value=None):
         '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.asfreq.html'''
-        result = self.__wrapped__.asfreq(freq, method=method, how=how, normalize=normalize)
-        return Remapper(result)
+        result = self.__wrapped__.asfreq(freq, method=method, how=how, normalize=normalize, fill_value=fill_value)
+        return self._wrap_if_pandas_object(result)
 
     def asof(self, where, subset=None):
         '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.asof.html'''
@@ -213,7 +213,7 @@ class Remapper(wrapt.ObjectProxy):
     def astype(self, dtype, copy=True, errors='raise', **kwargs):
         '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.astype.html'''
         result = self.__wrapped__.astype(dtype, copy=copy, errors=errors, **kwargs)
-        return Remapper(result)
+        return self._wrap_if_pandas_object(result)
 
     @property
     def at(self):
@@ -238,11 +238,6 @@ class Remapper(wrapt.ObjectProxy):
     def bfill(self, axis=None, inplace=False, limit=None, downcast=None):
         '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.bfill.html'''
         result = self.__wrapped__.bfill(axis=axis, inplace=inplace, limit=limit, downcast=downcast)
-        return Remapper(result)
-
-    def bool(self):
-        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.bool.html'''
-        result = self.__wrapped__.bfill()
         return Remapper(result)
 
     def clip(self, lower=None, upper=None, axis=None, inplace=False, *args, **kwargs):

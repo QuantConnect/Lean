@@ -636,27 +636,6 @@ def Test(dataFrame, symbol):
         [TestCase("'SPY'", true)]
         [TestCase("symbol")]
         [TestCase("str(symbol.ID)")]
-        public void BackwardsCompatibilityDataFrame_bool(string index, bool cache = false)
-        {
-            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
-
-            using (Py.GIL())
-            {
-                dynamic test = PythonEngine.ModuleFromString("testModule",
-                    $@"
-def Test(dataFrame, symbol):
-    data = dataFrame.lastprice.unstack(level=0).bool()
-    data = data[{index}]
-    if data is 0:
-        raise Exception('Data is zero')").GetAttr("Test");
-
-                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
-            }
-        }
-
-        [TestCase("'SPY'", true)]
-        [TestCase("symbol")]
-        [TestCase("str(symbol.ID)")]
         public void BackwardsCompatibilityDataFrame_clip(string index, bool cache = false)
         {
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
