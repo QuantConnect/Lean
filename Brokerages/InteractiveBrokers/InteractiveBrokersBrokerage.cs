@@ -128,13 +128,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // Prioritized list of exchanges used to find right futures contract
         private readonly Dictionary<string, string> _futuresExchanges = new Dictionary< string, string>
         {
-            { Market.Globex, "GLOBEX" },
+            { Market.CME, "GLOBEX" },
             { Market.NYMEX, "NYMEX" },
+            { Market.COMEX, "NYMEX" },
             { Market.CBOT, "ECBOT" },
             { Market.ICE, "NYBOT" },
             { Market.CBOE, "CFE" }
         };
-        private SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+
+        private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
         // exchange time zones by symbol
         private readonly Dictionary<Symbol, DateTimeZone> _symbolExchangeTimeZones = new Dictionary<Symbol, DateTimeZone>();
@@ -1116,7 +1118,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     .FirstOrDefault();
         }
 
-        private IEnumerable<ContractDetails> FindContracts(Contract contract, string ticker)
+        public IEnumerable<ContractDetails> FindContracts(Contract contract, string ticker)
         {
             const int timeout = 60; // sec
 
