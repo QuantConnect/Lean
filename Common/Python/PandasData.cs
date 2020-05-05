@@ -255,6 +255,71 @@ class Remapper(wrapt.ObjectProxy):
         result = self.__wrapped__.clip_upper(threshold, axis=axis, inplace=inplace)
         return Remapper(result)
 
+    @property
+    def columns(self):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.columns.html'''
+        return Remapper(self.__wrapped__.columns)
+
+    def combine(self, other, func, fill_value=None, overwrite=True):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.combine.html'''
+        result = self.__wrapped__.combine(other, func, fill_value=fill_value, overwrite=overwrite)
+        return Remapper(result)
+
+    def combine_first(self, other):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.combine_first.html'''
+        result = self.__wrapped__.combine_first(other)
+        return Remapper(result)
+
+    def compound(self, axis=None, skipna=None, level=None):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.compound.html'''
+        result = self.__wrapped__.compound(axis=axis, skipna=skipna, level=level)
+        return Remapper(result)
+
+    def copy(self, deep=True):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.copy.html'''
+        result = self.__wrapped__.copy(deep=deep)
+        return Remapper(result)
+
+    def corr(self, method='pearson', min_periods=1):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.corr.html'''
+        result = self.__wrapped__.corr(method=method, min_periods=min_periods)
+        return Remapper(result)
+
+    def corrwith(self, other, axis=0, drop=False, method='pearson'):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.corrwith.html'''
+        result = self.__wrapped__.corrwith(other, axis=axis, drop=drop, method=method)
+        return Remapper(result)
+
+    def count(self, axis=0, level=None, numeric_only=False):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.count.html'''
+        result = self.__wrapped__.count(axis=axis, level=level, numeric_only=numeric_only)
+        return Remapper(result)
+
+    def cov(self, min_periods=None):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.cov.html'''
+        result = self.__wrapped__.cov(min_periods=min_periods)
+        return Remapper(result)
+
+    def cummax(self, axis=None, skipna=True, *args, **kwargs):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.cummax.html'''
+        result = self.__wrapped__.cummax(axis=axis, skipna=skipna, *args, **kwargs)
+        return Remapper(result)
+
+    def cummin(self, axis=None, skipna=True, *args, **kwargs):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.cummin.html'''
+        result = self.__wrapped__.cummin(axis=axis, skipna=skipna, *args, **kwargs)
+        return Remapper(result)
+
+    def cumprod(self, axis=None, skipna=True, *args, **kwargs):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.cumprod.html'''
+        result = self.__wrapped__.cumprod(axis=axis, skipna=skipna, *args, **kwargs)
+        return Remapper(result)
+
+    def cumsum(self, axis=None, skipna=True, *args, **kwargs):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.cumsum.html'''
+        result = self.__wrapped__.cumsum(axis=axis, skipna=skipna, *args, **kwargs)
+        return Remapper(result)
+
     def get(self, key, default=None):
         key = self._self_mapper(key)
         return self.__wrapped__.get(key=key, default=default)
