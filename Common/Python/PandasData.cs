@@ -365,7 +365,58 @@ class Remapper(wrapt.ObjectProxy):
         result = self.__wrapped__.duplicated(subset=subset, keep=keep)
         return Remapper(result)
 
+    def eq(self, other, axis='columns', level=None):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.eq.html'''
+        result = self.__wrapped__.eq(other, axis=axis, level=level)
+        return Remapper(result)
+
+    def eval(self, expr, inplace=False, **kwargs):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.eval.html'''
+        result = self.__wrapped__.eval(expr, inplace=inplace, **kwargs)
+        return Remapper(result)
+
+    def explode(self, column):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.explode.html'''
+        result = self.__wrapped__.explode(column)
+        return Remapper(result)
+
+    def ffill(self, axis=None, inplace=False, limit=None, downcast=None):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.ffill.html'''
+        result = self.__wrapped__.ffill(axis=axis, inplace=inplace, limit=limit, downcast=downcast)
+        return Remapper(result)
+
+    def fillna(self, value=None, method=None, axis=None, inplace=False, limit=None, downcast=None, **kwargs):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.fillna.html'''
+        result = self.__wrapped__.fillna(value=value, method=method, axis=axis, inplace=inplace, limit=limit, downcast=downcast, **kwargs)
+        return Remapper(result)
+
+    def filter(self, items=None, like=None, regex=None, axis=None):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.filter.html'''
+        result = self.__wrapped__.filter(items=items, like=like, regex=regex, axis=axis)
+        return self._wrap_if_pandas_object(result)
+
+    def first(self, offset):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.first.html'''
+        result = self.__wrapped__.first(offset)
+        return self._wrap_if_pandas_object(result)
+
+    def floordiv(self, other, axis='columns', level=None, fill_value=None):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.floordiv.html'''
+        result = self.__wrapped__.floordiv(other, axis=axis, level=level, fill_value=fill_value)
+        return Remapper(result)
+
+    @property
+    def ftypes(self):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.ftypes.html'''
+        return Remapper(self.__wrapped__.ftypes)
+
+    def ge(self, other, axis='columns', level=None):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.ge.html'''
+        result = self.__wrapped__.ge(other, axis=axis, level=level)
+        return Remapper(result)
+
     def get(self, key, default=None):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.get.html'''
         key = self._self_mapper(key)
         return self.__wrapped__.get(key=key, default=default)
 
