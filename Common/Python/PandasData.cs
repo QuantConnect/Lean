@@ -391,7 +391,7 @@ class Remapper(wrapt.ObjectProxy):
         return Remapper(result)
 
     def filter(self, items=None, like=None, regex=None, axis=None):
-        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.fillna.html'''
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.filter.html'''
         result = self.__wrapped__.filter(items=items, like=like, regex=regex, axis=axis)
         return self._wrap_if_pandas_object(result)
 
@@ -399,11 +399,6 @@ class Remapper(wrapt.ObjectProxy):
         '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.first.html'''
         result = self.__wrapped__.first(offset)
         return self._wrap_if_pandas_object(result)
-
-    def first_valid_index(self):
-        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.first_valid_index.html'''
-        result = self.__wrapped__.first_valid_index()
-        return self._self_mapper(result)
 
     def floordiv(self, other, axis='columns', level=None, fill_value=None):
         '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.floordiv.html'''
