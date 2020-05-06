@@ -320,6 +320,51 @@ class Remapper(wrapt.ObjectProxy):
         result = self.__wrapped__.cumsum(axis=axis, skipna=skipna, *args, **kwargs)
         return Remapper(result)
 
+    def diff(self, periods=1, axis=0):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.diff.html'''
+        result = self.__wrapped__.diff(periods=periods, axis=axis)
+        return Remapper(result)
+
+    def div(self, other, axis='columns', level=None, fill_value=None):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.div.html'''
+        result = self.__wrapped__.div(other, axis=axis, level=level, fill_value=fill_value)
+        return Remapper(result)
+
+    def divide(self, other, axis='columns', level=None, fill_value=None):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.divide.html'''
+        result = self.__wrapped__.divide(other, axis=axis, level=level, fill_value=fill_value)
+        return Remapper(result)
+
+    def drop(self, labels=None, axis=0, index=None, columns=None, level=None, inplace=False, errors='raise'):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.drop.html'''
+        result = self.__wrapped__.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors)
+        return Remapper(result)
+
+    def drop_duplicates(self, subset=None, keep='first', inplace=False):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.drop_duplicates.html'''
+        result = self.__wrapped__.drop_duplicates(subset=subset, keep=keep, inplace=inplace)
+        return Remapper(result)
+
+    def droplevel(self, level, axis=0):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.droplevel.html'''
+        result = self.__wrapped__.droplevel(level, axis=axis)
+        return Remapper(result)
+
+    def dropna(self, axis=0, how='any', thresh=None, subset=None, inplace=False):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.dropna.html'''
+        result = self.__wrapped__.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace)
+        return Remapper(result)
+
+    @property
+    def dtypes(self):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.dtypes.html'''
+        return Remapper(self.__wrapped__.dtypes)
+
+    def duplicated(self, subset=None, keep='first'):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.duplicated.html'''
+        result = self.__wrapped__.duplicated(subset=subset, keep=keep)
+        return Remapper(result)
+
     def get(self, key, default=None):
         key = self._self_mapper(key)
         return self.__wrapped__.get(key=key, default=default)
