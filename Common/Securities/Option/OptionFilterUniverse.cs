@@ -60,35 +60,48 @@ namespace QuantConnect.Securities
             }
         }
 
-        internal BaseData _underlying;
+        private BaseData _underlying;
 
         /// <summary>
         /// True if the universe is dynamic and filter needs to be reapplied
         /// </summary>
-        public bool IsDynamic
-        {
-            get
-            {
-                return _isDynamic;
-            }
-        }
+        public bool IsDynamic => _isDynamic;
 
         internal bool _isDynamic;
-        internal Type _type = Type.Standard;
 
+        private Type _type = Type.Standard;
         // Fields used in relative strikes filter
         private List<decimal> _uniqueStrikes;
-        private DateTime _uniqueStrikesResolveDate;
+        private bool _refreshUniqueStrikes;
+
+        /// <summary>
+        /// Constructs OptionFilterUniverse
+        /// </summary>
+        public OptionFilterUniverse()
+        {
+        }
 
         /// <summary>
         /// Constructs OptionFilterUniverse
         /// </summary>
         public OptionFilterUniverse(IEnumerable<Symbol> allSymbols, BaseData underlying)
         {
+            Refresh(allSymbols, underlying, exchangeDateChange: true);
+        }
+
+        /// <summary>
+        /// Refreshes this option filter universe and allows specifying if the exchange date changed from last call
+        /// </summary>
+        /// <param name="allSymbols">All the options contract symbols</param>
+        /// <param name="underlying">The current underlying last data point</param>
+        /// <param name="exchangeDateChange">True if the exchange data has chanced since the last call or construction</param>
+        public void Refresh(IEnumerable<Symbol> allSymbols, BaseData underlying, bool exchangeDateChange = true)
+        {
             _allSymbols = allSymbols;
             _underlying = underlying;
             _type = Type.Standard;
             _isDynamic = false;
+            _refreshUniqueStrikes = exchangeDateChange;
         }
 
         /// <summary>
@@ -201,15 +214,14 @@ namespace QuantConnect.Securities
                 return this;
             }
 
-            if (_underlying.Time.Date != _uniqueStrikesResolveDate)
+            if (_refreshUniqueStrikes || _uniqueStrikes == null)
             {
                 // each day we need to recompute the unique strikes list
                 _uniqueStrikes = _allSymbols.Select(x => x.ID.StrikePrice)
                     .Distinct()
                     .OrderBy(strikePrice => strikePrice)
                     .ToList();
-
-                _uniqueStrikesResolveDate = _underlying.Time.Date;
+                _refreshUniqueStrikes = false;
             }
 
             // new universe is dynamic
