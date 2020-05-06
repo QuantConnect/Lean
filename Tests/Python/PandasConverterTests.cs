@@ -1722,6 +1722,27 @@ def Test(dataFrame, dataFrame2, symbol):
         [TestCase("'SPY'", true)]
         [TestCase("symbol")]
         [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_T(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.T.iloc[0]
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
         public void BackwardsCompatibilityDataFrame_unstack(string index, bool cache = false)
         {
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
@@ -1862,6 +1883,27 @@ def Test(dataFrame, symbol):
                 // result should not contain "Remapper" string because the test
                 // returns the string representation of a Series object
                 Assert.False(result.Contains("Remapper"));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_dropna(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.T.iloc[0].dropna()
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
         }
 

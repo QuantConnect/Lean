@@ -78,6 +78,9 @@ def PandasConcatWrapper(objs, axis=0, join='outer', join_axes=None, ignore_index
 
 pandas.concat = PandasConcatWrapper
 
+def is_Series(obj):
+    return isinstance(obj, pandas.Series)
+
 class Remapper(wrapt.ObjectProxy):
     def __init__(self, wrapped):
         super(Remapper, self).__init__(wrapped)
@@ -350,9 +353,13 @@ class Remapper(wrapt.ObjectProxy):
         result = self.__wrapped__.droplevel(level, axis=axis)
         return Remapper(result)
 
-    def dropna(self, axis=0, how='any', thresh=None, subset=None, inplace=False):
-        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.dropna.html'''
-        result = self.__wrapped__.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace)
+    def dropna(self, axis=0, how='any', thresh=None, subset=None, inplace=False, **kwargs):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.Series.dropna.html
+           https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.dropna.html'''
+        if is_Series(self.__wrapped__):
+            result = self.__wrapped__.dropna(axis=axis, inplace=inplace, **kwargs)
+        else:
+            result = self.__wrapped__.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace)
         return Remapper(result)
 
     @property
@@ -509,6 +516,11 @@ class Remapper(wrapt.ObjectProxy):
     def merge(self, right, how='inner', on=None, left_on=None, right_on=None, left_index=False, right_index=False, sort=False, suffixes=('_x', '_y'), copy=True, indicator=False, validate=None):
         result = self.__wrapped__.merge(right=right, how=how, on=on, left_on=left_on, right_on=right_on, left_index=left_index, right_index=right_index, sort=sort, suffixes=suffixes, copy=copy, indicator=indicator, validate=validate)
         return Remapper(result)
+
+    @property
+    def T(self):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.T.html'''
+        return Remapper(self.__wrapped__.T)
 
     # we wrap the result of 'unstack'
     def unstack(self, level=-1, fill_value=None):
