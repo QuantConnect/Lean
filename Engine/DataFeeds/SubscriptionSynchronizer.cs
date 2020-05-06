@@ -176,7 +176,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     }
                                     else
                                     {
-                                        collection = new BaseDataCollection(frontierUtc, subscription.Configuration.Symbol, packetData);
+                                        collection = new BaseDataCollection(frontierUtc, frontierUtc, subscription.Configuration.Symbol, packetData);
                                     }
 
                                     if (universeData == null)

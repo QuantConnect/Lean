@@ -394,7 +394,7 @@ namespace QuantConnect.Securities
                 {
                     decimal totalHoldingsValueWithoutForexCryptoFutureCfd = 0;
                     decimal totalFuturesAndCfdHoldingsValue = 0;
-                    foreach (var kvp in Securities)
+                    foreach (var kvp in Securities.Where((pair, i) => pair.Value.Holdings.Quantity != 0))
                     {
                         var position = kvp.Value;
                         var securityType = position.Type;
@@ -477,13 +477,9 @@ namespace QuantConnect.Securities
             get
             {
                 decimal sum = 0;
-                foreach (var kvp in Securities)
+                foreach (var kvp in Securities.Where((pair, i) => pair.Value.Holdings.Quantity != 0))
                 {
                     var security = kvp.Value;
-                    if (security.Holdings.Quantity == 0)
-                    {
-                        continue;
-                    }
                     var context = new ReservedBuyingPowerForPositionParameters(security);
                     var reservedBuyingPower = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(context);
                     sum += reservedBuyingPower.AbsoluteUsedBuyingPower;

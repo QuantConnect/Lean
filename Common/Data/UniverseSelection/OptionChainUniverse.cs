@@ -29,12 +29,13 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class OptionChainUniverse : Universe
     {
+        private readonly OptionFilterUniverse _optionFilterUniverse;
         private readonly UniverseSettings _universeSettings;
         private readonly bool _liveMode;
         // as an array to make it easy to prepend to selected symbols
         private readonly Symbol[] _underlyingSymbol;
-
         private DateTime _cacheDate;
+        private DateTime _lastExchangeDate;
 
         // used for time-based removals in live mode
         private readonly TimeSpan _minimumTimeInUniverse = TimeSpan.FromMinutes(15);
@@ -55,6 +56,7 @@ namespace QuantConnect.Data.UniverseSelection
             _underlyingSymbol = new[] { Option.Symbol.Underlying };
             _universeSettings = universeSettings;
             _liveMode = liveMode;
+            _optionFilterUniverse = new OptionFilterUniverse();
         }
 
         /// <summary>
@@ -75,6 +77,7 @@ namespace QuantConnect.Data.UniverseSelection
             _underlyingSymbol = new[] { Option.Symbol.Underlying };
             _universeSettings = universeSettings;
             _liveMode = liveMode;
+            _optionFilterUniverse = new OptionFilterUniverse();
         }
 
         /// <summary>
@@ -105,13 +108,18 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             // date change detection needs to be done in exchange time zone
-            if (_cacheDate == data.Time.ConvertFromUtc(Option.Exchange.TimeZone).Date)
+            var exchangeDate = data.Time.ConvertFromUtc(Option.Exchange.TimeZone).Date;
+            if (_cacheDate == exchangeDate)
             {
                 return Unchanged;
             }
 
             var availableContracts = optionsUniverseDataCollection.Data.Select(x => x.Symbol);
-            var results = Option.ContractFilter.Filter(new OptionFilterUniverse(availableContracts, optionsUniverseDataCollection.Underlying));
+            // we will only update unique strikes when there is an exchange date change
+            _optionFilterUniverse.Refresh(availableContracts, optionsUniverseDataCollection.Underlying, _lastExchangeDate != exchangeDate);
+            _lastExchangeDate = exchangeDate;
+
+            var results = Option.ContractFilter.Filter(_optionFilterUniverse);
 
             // if results are not dynamic, we cache them and won't call filtering till the end of the day
             if (!results.IsDynamic)

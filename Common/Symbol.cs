@@ -161,7 +161,7 @@ namespace QuantConnect
 
             if (expiry == SecurityIdentifier.DefaultDate)
             {
-                alias = alias ?? "?" + underlyingSymbol.Value.LazyToUpper();
+                alias = alias ?? $"?{underlyingSymbol.Value.LazyToUpper()}";
             }
             else
             {

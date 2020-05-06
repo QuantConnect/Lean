@@ -44,7 +44,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="time">The time of this data</param>
         /// <param name="symbol">A common identifier for all data in this packet</param>
         /// <param name="data">The data to add to this collection</param>
-        public FuturesChainUniverseDataCollection(DateTime time, Symbol symbol, IEnumerable<BaseData> data = null)
+        public FuturesChainUniverseDataCollection(DateTime time, Symbol symbol, List<BaseData> data = null)
             : this(time, time, symbol, data)
         {
         }
@@ -56,7 +56,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="endTime">The end time of this data</param>
         /// <param name="symbol">A common identifier for all data in this packet</param>
         /// <param name="data">The data to add to this collection</param>
-        public FuturesChainUniverseDataCollection(DateTime time, DateTime endTime, Symbol symbol, IEnumerable<BaseData> data = null)
+        public FuturesChainUniverseDataCollection(DateTime time, DateTime endTime, Symbol symbol, List<BaseData> data = null)
             : base(time, endTime, symbol, data)
         {
         }
