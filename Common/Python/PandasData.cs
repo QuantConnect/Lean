@@ -104,14 +104,6 @@ class Remapper(wrapt.ObjectProxy):
 
         return key
 
-    def _wrap_if_pandas_object(self, result):
-        ''' For these cases we wrap the result too. Can't apply the wrap around all
-        results because it causes issues in pandas for some of our use cases
-        specifically pandas timestamp type'''
-        if isinstance(result, (pandas.Series, pandas.DataFrame, pandas.Index)):
-            return Remapper(result)
-        return result
-
     def __contains__(self, key):
         key = self._self_mapper(key)
         return self.__wrapped__.__contains__(key)
@@ -119,7 +111,13 @@ class Remapper(wrapt.ObjectProxy):
     def __getitem__(self, name):
         name = self._self_mapper(name)
         result = self.__wrapped__.__getitem__(name)
-        return self._wrap_if_pandas_object(result)
+
+        if isinstance(result, (pandas.Series, pandas.Index, pandas.DataFrame)):
+            # For these cases we wrap the result too. Can't apply the wrap around all
+            # results because it causes issues in pandas for some of our use cases
+            # specifically pandas timestamp type
+            return Remapper(result)
+        return result
 
     def __setitem__(self, name, value):
         name = self._self_mapper(name)
@@ -135,87 +133,31 @@ class Remapper(wrapt.ObjectProxy):
     def __repr__(self):
         return self.__wrapped__.__repr__()
 
-    def abs(self):
-        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.abs.html'''
-        result = self.__wrapped__.abs()
-        return Remapper(result)
-
-    def add(self, other, axis='columns', level=None, fill_value=None):
-        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.add.html'''
-        result = self.__wrapped__.add(other, axis=axis, level=level, fill_value=fill_value)
-        return Remapper(result)
-
-    def add_prefix(self, prefix):
-        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.add_prefix.html'''
-        result = self.__wrapped__.add_prefix(prefix)
-        return Remapper(result)
-
-    def add_suffix(self, suffix):
-        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.add_suffix.html'''
-        result = self.__wrapped__.add_suffix(suffix)
-        return Remapper(result)
-    
-    def agg(self, func, axis=0, *args, **kwargs):
-        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.agg.html'''
-        result = self.__wrapped__.agg(func, axis=axis, *args, **kwargs)
-        return self._wrap_if_pandas_object(result)
-
-    def aggregate(self, func, axis=0, *args, **kwargs):
-        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.aggregate.html'''
-        result = self.__wrapped__.aggregate(func, axis=axis, *args, **kwargs)
-        return self._wrap_if_pandas_object(result)
-
-    def align(self, other, join='outer', axis=None, level=None, copy=True, fill_value=None, method=None, limit=None, fill_axis=0, broadcast_axis=None):
-        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.align.html'''
-        df1, df2 = self.__wrapped__.align(other, join=join, axis=axis, level=level, copy=copy, fill_value=fill_value, method=method, limit=limit, fill_axis=fill_axis, broadcast_axis=broadcast_axis)
-        return self._wrap_if_pandas_object(df1), self._wrap_if_pandas_object(df2)
-
-    def all(self, axis=0, bool_only=None, skipna=True, level=None, **kwargs):
-        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.all.html'''
-        result = self.__wrapped__.all(axis=axis, bool_only=bool_only, skipna=skipna, level=level, **kwargs)
-        return Remapper(result)
-
-    def any(self, axis=0, bool_only=None, skipna=True, level=None, **kwargs):
-        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.any.html'''
-        result = self.__wrapped__.any(axis=axis, bool_only=bool_only, skipna=skipna, level=level, **kwargs)
-        return Remapper(result)
-
-    def append(self, other, ignore_index=False, verify_integrity=False, sort=None):
-        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.append.html'''
-        result = self.__wrapped__.append(other, ignore_index=ignore_index, verify_integrity=verify_integrity, sort=sort)
-        return Remapper(result)
-
-    def apply(self, func, axis=0, broadcast=None, raw=False, reduce=None, result_type=None, args=(), **kwds):
-        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.apply.html'''
-        result = self.__wrapped__.apply(func, axis=axis, broadcast=broadcast, raw=raw, reduce=reduce,  result_type= result_type, args=args, **kwds)
-        return Remapper(result)
-
-    def applymap(self, func):
-        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.applymap.html'''
-        result = self.__wrapped__.applymap(func)
+    # we wrap the result and input of 'xs'
+    def xs(self, key, axis=0, level=None, drop_level=True):
+        key = self._self_mapper(key)
+        result = self.__wrapped__.xs(key=key, axis=axis, level=level, drop_level=drop_level)
         return Remapper(result)
 
     def get(self, key, default=None):
         key = self._self_mapper(key)
         return self.__wrapped__.get(key=key, default=default)
 
-    def join(self, other, on=None, how='left', lsuffix='', rsuffix='', sort=False):
-        result = self.__wrapped__.join(other=other, on=on, how=how, lsuffix=lsuffix, rsuffix=rsuffix, sort=sort)
-        return Remapper(result)
-
-    def merge(self, right, how='inner', on=None, left_on=None, right_on=None, left_index=False, right_index=False, sort=False, suffixes=('_x', '_y'), copy=True, indicator=False, validate=None):
-        result = self.__wrapped__.merge(right=right, how=how, on=on, left_on=left_on, right_on=right_on, left_index=left_index, right_index=right_index, sort=sort, suffixes=suffixes, copy=copy, indicator=indicator, validate=validate)
-        return Remapper(result)
-
     # we wrap the result of 'unstack'
     def unstack(self, level=-1, fill_value=None):
         result = self.__wrapped__.unstack(level=level, fill_value=fill_value)
         return Remapper(result)
 
-    # we wrap the result and input of 'xs'
-    def xs(self, key, axis=0, level=None, drop_level=True):
-        key = self._self_mapper(key)
-        result = self.__wrapped__.xs(key=key, axis=axis, level=level, drop_level=drop_level)
+    def join(self, other, on=None, how='left', lsuffix='', rsuffix='', sort=False):
+        result = self.__wrapped__.join(other=other, on=on, how=how, lsuffix=lsuffix, rsuffix=rsuffix, sort=sort)
+        return Remapper(result)
+
+    def append(self, other, ignore_index=False, verify_integrity=False, sort=None):
+        result = self.__wrapped__.append(other=other, ignore_index=ignore_index, verify_integrity=verify_integrity, sort=sort)
+        return Remapper(result)
+
+    def merge(self, right, how='inner', on=None, left_on=None, right_on=None, left_index=False, right_index=False, sort=False, suffixes=('_x', '_y'), copy=True, indicator=False, validate=None):
+        result = self.__wrapped__.merge(right=right, how=how, on=on, left_on=left_on, right_on=right_on, left_index=left_index, right_index=right_index, sort=sort, suffixes=suffixes, copy=copy, indicator=indicator, validate=validate)
         return Remapper(result)
 
     # we wrap 'loc' to cover the: df.loc['SPY'] case
