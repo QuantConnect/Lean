@@ -420,7 +420,89 @@ class Remapper(wrapt.ObjectProxy):
         key = self._self_mapper(key)
         return self.__wrapped__.get(key=key, default=default)
 
+    def get_value(self, index, col, takeable=False):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.get_value.html'''
+        index = self._self_mapper(index)
+        col = self._self_mapper(col)
+        return self.__wrapped__.get_value(index, col, takeable=takeable)
+
+    def gt(self, other, axis='columns', level=None):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.gt.html'''
+        result = self.__wrapped__.gt(other, axis=axis, level=level)
+        return Remapper(result)
+
+    def head(self, n=5):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.head.html'''
+        result = self.__wrapped__.head(n=n)
+        return Remapper(result)
+
+    def idxmax(self, axis=0, skipna=True):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.idxmax.html'''
+        result = self.__wrapped__.idxmax(axis=axis, skipna=skipna)
+        return Remapper(result)
+
+    def idxmin(self, axis=0, skipna=True):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.idxmin.html'''
+        result = self.__wrapped__.idxmin(axis=axis, skipna=skipna)
+        return Remapper(result)
+
+    @property
+    def iloc(self):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.iloc.html'''
+        return Remapper(self.__wrapped__.iloc)
+
+    @property
+    def index(self):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.index.html'''
+        return Remapper(self.__wrapped__.index)
+
+    def infer_objects(self):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.infer_objects.html'''
+        result = self.__wrapped__.infer_objects()
+        return Remapper(result)
+
+    def interpolate(self, method='linear', axis=0, limit=None, inplace=False, limit_direction='forward', limit_area=None, downcast=None, **kwargs):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.interpolate.html'''
+        result = self.__wrapped__.interpolate(method=method, axis=axis, limit=limit, inplace=inplace, limit_direction=limit_direction, limit_area=limit_area, downcast=downcast, **kwargs)
+        return Remapper(result)
+
+    def isin(self, values):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.isin.html'''
+        result = self.__wrapped__.isin(values)
+        return Remapper(result)
+
+    def isna(self):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.isna.html'''
+        result = self.__wrapped__.isna()
+        return Remapper(result)
+
+    def isnull(self):
+        '''Alias of isna
+        https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.isnull.html'''
+        return self.isna()
+
+    def items(self):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.items.html'''
+        for index, value in self.__wrapped__.items():
+            yield self._wrap_if_pandas_object(index), self._wrap_if_pandas_object(value)
+
+    def iteritems(self):
+        '''Alias of items
+        https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.iteritems.html'''
+        return self.items()
+
+    def iterrows(self):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.iterrows.html'''
+        for index, value in self.__wrapped__.iterrows():
+            yield self._wrap_if_pandas_object(index), self._wrap_if_pandas_object(value)
+
+    @property
+    def ix(self):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.ix.html'''
+        return Remapper(self.__wrapped__.ix)
+
     def join(self, other, on=None, how='left', lsuffix='', rsuffix='', sort=False):
+        '''https://pandas.pydata.org/pandas-docs/version/0.25.3/reference/api/pandas.DataFrame.join.html'''
         result = self.__wrapped__.join(other=other, on=on, how=how, lsuffix=lsuffix, rsuffix=rsuffix, sort=sort)
         return Remapper(result)
 
@@ -443,18 +525,6 @@ class Remapper(wrapt.ObjectProxy):
     @property
     def loc(self):
         return Remapper(self.__wrapped__.loc)
-
-    @property
-    def ix(self):
-        return Remapper(self.__wrapped__.ix)
-
-    @property
-    def iloc(self):
-        return Remapper(self.__wrapped__.iloc)
-
-    @property
-    def index(self):
-        return Remapper(self.__wrapped__.index)
 
     @property
     def levels(self):
