@@ -155,6 +155,7 @@
     <Compile Include="SmaCrossUniverseSelectionAlgorithm.py" />
     <Compile Include="SmartInsiderDataAlgorithm.py" />
     <Compile Include="StandardDeviationExecutionModelRegressionAlgorithm.py" />
+    <Compile Include="TalibIndicatorsAlgorithm.py" />
     <Compile Include="TensorFlowNeuralNetworkAlgorithm.py" />
     <Compile Include="TiingoPriceAlgorithm.py" />
     <Compile Include="TimeInForceAlgorithm.py" />
