@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -40,6 +41,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly DateTimeZone _dataTimeZone;
         private readonly bool _isExtendedMarketHours;
         private readonly DateTime _subscriptionEndTime;
+        private readonly DateTime _subscriptionEndTimeRoundDownByDataResolution;
         private readonly IEnumerator<BaseData> _enumerator;
         private readonly IReadOnlyRef<TimeSpan> _fillForwardResolution;
         private readonly TimeZoneOffsetProvider _offsetProvider;
@@ -83,6 +85,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _offsetProvider = new TimeZoneOffsetProvider(Exchange.TimeZone,
                 subscriptionStartTime.ConvertToUtc(Exchange.TimeZone),
                 subscriptionEndTime.ConvertToUtc(Exchange.TimeZone));
+            // '_dataResolution' and '_subscriptionEndTime' are readonly they won't change, so lets calculate this once here since it's expensive
+            _subscriptionEndTimeRoundDownByDataResolution = RoundDown(_subscriptionEndTime, _dataResolution);
         }
 
         /// <summary>
@@ -156,7 +160,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                     // we can fill forward the rest of this subscription if required
                     var endOfSubscription = (Current ?? _previous).Clone(true);
-                    endOfSubscription.Time = _subscriptionEndTime.RoundDownInTimeZone(_dataResolution, Exchange.TimeZone, _dataTimeZone);
+                    endOfSubscription.Time = _subscriptionEndTimeRoundDownByDataResolution;
                     endOfSubscription.EndTime = endOfSubscription.Time + _dataResolution;
                     if (RequiresFillForwardData(_fillForwardResolution.Value, _previous, endOfSubscription, out fillForward))
                     {
@@ -311,12 +315,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             return GetReferenceDateIntervals(previous.EndTime, fillForwardResolution);
         }
 
+        /// <summary>
+        /// Get potential next fill forward bars.
+        /// </summary>
+        /// <remarks>Special case where fill forward resolution and data resolution are equal</remarks>
         private IEnumerable<ReferenceDateInterval> GetReferenceDateIntervals(DateTime previousEndTime, TimeSpan resolution)
         {
-            // special case where the fill forward resolution and data resolution are equal
-            if (Exchange.IsOpenDuringBar(previousEndTime - resolution, previousEndTime, _isExtendedMarketHours))
+            if (Exchange.IsOpenDuringBar(previousEndTime, previousEndTime + resolution, _isExtendedMarketHours))
             {
-                // if we were previous in market, then try another in market
+                // if next in market us it
                 yield return new ReferenceDateInterval(previousEndTime, resolution);
             }
 
@@ -325,30 +332,44 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             yield return new ReferenceDateInterval(marketOpen, resolution);
         }
 
+        /// <summary>
+        /// Get potential next fill forward bars.
+        /// </summary>
         private IEnumerable<ReferenceDateInterval> GetReferenceDateIntervals(DateTime previousEndTime, TimeSpan smallerResolution, TimeSpan largerResolution)
         {
-            if (Exchange.IsOpenDuringBar(previousEndTime - smallerResolution, previousEndTime, _isExtendedMarketHours))
+            if (Exchange.IsOpenDuringBar(previousEndTime, previousEndTime + smallerResolution, _isExtendedMarketHours))
             {
-                // if the previous small resolution bar was inside market hours, then continue with the
-                // intuitive progresson of next in market bars and then next bars after market open
                 yield return new ReferenceDateInterval(previousEndTime, smallerResolution);
-                yield return new ReferenceDateInterval(previousEndTime, largerResolution);
-
-                var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, _isExtendedMarketHours);
-                yield return new ReferenceDateInterval(marketOpen, smallerResolution);
-                yield return new ReferenceDateInterval(marketOpen, largerResolution);
             }
-            else
+
+            var result = new List<ReferenceDateInterval>(3);
+            // we need to round down because previous end time could be of the smaller resolution, in data TZ!
+            var start = RoundDown(previousEndTime, largerResolution);
+            if (Exchange.IsOpenDuringBar(start, start + largerResolution, _isExtendedMarketHours))
             {
-                // this is typically daily data being filled forward on a higher resolution
-                // since the previous bar was not in market hours then we can just fast forward
-                // to the next market open
-                var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, _isExtendedMarketHours);
-                yield return new ReferenceDateInterval(marketOpen, smallerResolution);
-                yield return new ReferenceDateInterval(marketOpen, largerResolution);
+                result.Add(new ReferenceDateInterval(start, largerResolution));
+            }
+
+            // this is typically daily data being filled forward on a higher resolution
+            // since the previous bar was not in market hours then we can just fast forward
+            // to the next market open
+            var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, _isExtendedMarketHours);
+            result.Add(new ReferenceDateInterval(marketOpen, smallerResolution));
+            result.Add(new ReferenceDateInterval(marketOpen, largerResolution));
+
+            // we need to order them because they might not be in an incremental order and consumer expects them to be
+            foreach(var referenceDateInterval in result.OrderBy(interval => interval.ReferenceDateTime + interval.Interval))
+            {
+                yield return referenceDateInterval;
             }
         }
 
+        /// <summary>
+        /// We need to round down in data timezone.
+        /// For example GH issue 4392: Forex daily data, exchange tz time is 8PM, but time in data tz is 12AM
+        /// so rounding down on exchange tz will crop it, while rounding on data tz will return the same data point time.
+        /// Why are we even doing this? being able to determine the next valid data point for a resolution from a data point that might be in another resolution
+        /// </summary>
         private DateTime RoundDown(DateTime value, TimeSpan interval)
         {
             return value.RoundDownInTimeZone(interval, Exchange.TimeZone, _dataTimeZone);
