@@ -190,7 +190,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             finally
             {
-                _cacheCleaner.Change(TimeSpan.FromSeconds(CacheSeconds), Timeout.InfiniteTimeSpan);
+                try
+                {
+                    _cacheCleaner.Change(TimeSpan.FromSeconds(CacheSeconds), Timeout.InfiniteTimeSpan);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
             }
         }
 
