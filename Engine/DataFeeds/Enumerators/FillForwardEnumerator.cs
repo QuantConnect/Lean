@@ -41,6 +41,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly DateTimeZone _dataTimeZone;
         private readonly bool _isExtendedMarketHours;
         private readonly DateTime _subscriptionEndTime;
+        private readonly DateTime _subscriptionEndTimeRoundDownByDataResolution;
         private readonly IEnumerator<BaseData> _enumerator;
         private readonly IReadOnlyRef<TimeSpan> _fillForwardResolution;
         private readonly TimeZoneOffsetProvider _offsetProvider;
@@ -84,6 +85,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _offsetProvider = new TimeZoneOffsetProvider(Exchange.TimeZone,
                 subscriptionStartTime.ConvertToUtc(Exchange.TimeZone),
                 subscriptionEndTime.ConvertToUtc(Exchange.TimeZone));
+            // '_dataResolution' and '_subscriptionEndTime' are readonly they won't change, so lets calculate this once here since it's expensive
+            _subscriptionEndTimeRoundDownByDataResolution = RoundDown(_subscriptionEndTime, _dataResolution);
         }
 
         /// <summary>
@@ -157,7 +160,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                     // we can fill forward the rest of this subscription if required
                     var endOfSubscription = (Current ?? _previous).Clone(true);
-                    endOfSubscription.Time = RoundDown(_subscriptionEndTime, _dataResolution);
+                    endOfSubscription.Time = _subscriptionEndTimeRoundDownByDataResolution;
                     endOfSubscription.EndTime = endOfSubscription.Time + _dataResolution;
                     if (RequiresFillForwardData(_fillForwardResolution.Value, _previous, endOfSubscription, out fillForward))
                     {
@@ -361,6 +364,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
         }
 
+        /// <summary>
+        /// We need to round down in data timezone.
+        /// For example GH issue 4392: Forex daily data, exchange tz time is 8PM, but time in data tz is 12AM
+        /// so rounding down on exchange tz will crop it, while rounding on data tz will return the same data point time.
+        /// Why are we even doing this? being able to determine the next valid data point for a resolution from a data point that might be in another resolution
+        /// </summary>
         private DateTime RoundDown(DateTime value, TimeSpan interval)
         {
             return value.RoundDownInTimeZone(interval, Exchange.TimeZone, _dataTimeZone);
