@@ -17,7 +17,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -312,15 +311,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             return GetReferenceDateIntervals(previous.EndTime, fillForwardResolution);
         }
 
-        /// <summary>
-        /// Get potential next fill forward bars.
-        /// </summary>
-        /// <remarks>Special case where fill forward resolution and data resolution are equal</remarks>
         private IEnumerable<ReferenceDateInterval> GetReferenceDateIntervals(DateTime previousEndTime, TimeSpan resolution)
         {
-            if (Exchange.IsOpenDuringBar(previousEndTime, previousEndTime + resolution, _isExtendedMarketHours))
+            // special case where the fill forward resolution and data resolution are equal
+            if (Exchange.IsOpenDuringBar(previousEndTime - resolution, previousEndTime, _isExtendedMarketHours))
             {
-                // if next in market us it
+                // if we were previous in market, then try another in market
                 yield return new ReferenceDateInterval(previousEndTime, resolution);
             }
 
@@ -329,35 +325,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             yield return new ReferenceDateInterval(marketOpen, resolution);
         }
 
-        /// <summary>
-        /// Get potential next fill forward bars.
-        /// </summary>
         private IEnumerable<ReferenceDateInterval> GetReferenceDateIntervals(DateTime previousEndTime, TimeSpan smallerResolution, TimeSpan largerResolution)
         {
-            if (Exchange.IsOpenDuringBar(previousEndTime, previousEndTime + smallerResolution, _isExtendedMarketHours))
+            if (Exchange.IsOpenDuringBar(previousEndTime - smallerResolution, previousEndTime, _isExtendedMarketHours))
             {
+                // if the previous small resolution bar was inside market hours, then continue with the
+                // intuitive progresson of next in market bars and then next bars after market open
                 yield return new ReferenceDateInterval(previousEndTime, smallerResolution);
+                yield return new ReferenceDateInterval(previousEndTime, largerResolution);
+
+                var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, _isExtendedMarketHours);
+                yield return new ReferenceDateInterval(marketOpen, smallerResolution);
+                yield return new ReferenceDateInterval(marketOpen, largerResolution);
             }
-
-            var result = new List<ReferenceDateInterval>(3);
-            // we need to round down because previous end time could be of the smaller resolution
-            var start = previousEndTime.RoundDown(largerResolution);
-            if (Exchange.IsOpenDuringBar(start, start + largerResolution, _isExtendedMarketHours))
+            else
             {
-                result.Add(new ReferenceDateInterval(start, largerResolution));
-            }
-
-            // this is typically daily data being filled forward on a higher resolution
-            // since the previous bar was not in market hours then we can just fast forward
-            // to the next market open
-            var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, _isExtendedMarketHours);
-            result.Add(new ReferenceDateInterval(marketOpen, smallerResolution));
-            result.Add(new ReferenceDateInterval(marketOpen, largerResolution));
-
-            // we need to order them because they might not be in an incremental order and consumer expects them to be
-            foreach(var referenceDateInterval in result.OrderBy(interval => interval.ReferenceDateTime + interval.Interval))
-            {
-                yield return referenceDateInterval;
+                // this is typically daily data being filled forward on a higher resolution
+                // since the previous bar was not in market hours then we can just fast forward
+                // to the next market open
+                var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, _isExtendedMarketHours);
+                yield return new ReferenceDateInterval(marketOpen, smallerResolution);
+                yield return new ReferenceDateInterval(marketOpen, largerResolution);
             }
         }
 
