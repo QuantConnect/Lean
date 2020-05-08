@@ -157,7 +157,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                     // we can fill forward the rest of this subscription if required
                     var endOfSubscription = (Current ?? _previous).Clone(true);
-                    endOfSubscription.Time = _subscriptionEndTime.RoundDownInTimeZone(_dataResolution, Exchange.TimeZone, _dataTimeZone);
+                    endOfSubscription.Time = RoundDown(_subscriptionEndTime, _dataResolution);
                     endOfSubscription.EndTime = endOfSubscription.Time + _dataResolution;
                     if (RequiresFillForwardData(_fillForwardResolution.Value, _previous, endOfSubscription, out fillForward))
                     {
@@ -340,8 +340,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
 
             var result = new List<ReferenceDateInterval>(3);
-            // we need to round down because previous end time could be of the smaller resolution
-            var start = previousEndTime.RoundDown(largerResolution);
+            // we need to round down because previous end time could be of the smaller resolution, in data TZ!
+            var start = RoundDown(previousEndTime, largerResolution);
             if (Exchange.IsOpenDuringBar(start, start + largerResolution, _isExtendedMarketHours))
             {
                 result.Add(new ReferenceDateInterval(start, largerResolution));

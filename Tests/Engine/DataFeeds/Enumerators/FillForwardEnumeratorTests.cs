@@ -36,6 +36,44 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
     public class FillForwardEnumeratorTests
     {
         [Test]
+        // reproduces GH issue 4392 causing fill forward bars not to advance
+        // the nature of the bug was rounding down in exchange tz versus data timezone
+        public void GetReferenceDateIntervals_RoundDown()
+        {
+            var dataResolution = Time.OneDay;
+            var fillForwardResolution = Time.OneMinute;
+
+            var previous = new DateTime(2017, 7, 20, 20, 0, 0);
+            var next = new DateTime(2017, 7, 22, 20, 0, 0);
+            var enumerator = new List<BaseData>
+            {
+                new TradeBar { Time = previous, Value = 1, Period = dataResolution, Volume = 100},
+                new TradeBar { Time = next, Value = 2, Period = dataResolution, Volume = 100}
+            }.GetEnumerator();
+
+            var dataTimeZone = TimeZones.Utc;
+            var exchange = new ForexExchange();
+            // to reproduce this bug it's important for data tz to be UTC and exchange tz NewYork.
+            Assert.AreEqual(TimeZones.NewYork, exchange.TimeZone);
+            var isExtendedMarketHours = false;
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(fillForwardResolution), isExtendedMarketHours, next.AddDays(1), dataResolution, dataTimeZone, previous);
+
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(previous, fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
+            Assert.AreEqual(100, (fillForwardEnumerator.Current as TradeBar).Volume);
+
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            // Time should advance!
+            Assert.AreEqual(new DateTime(2017, 7, 22, 17, 1, 0), fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(new DateTime(2017, 7, 23, 17, 1, 0), fillForwardEnumerator.Current.EndTime);
+            Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
+            Assert.AreEqual(0, (fillForwardEnumerator.Current as TradeBar).Volume);
+
+            fillForwardEnumerator.Dispose();
+        }
+
+        [Test]
         public void FillsForwardMidDay()
         {
             var dataResolution = Time.OneMinute;
