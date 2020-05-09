@@ -18,12 +18,18 @@ using QuantConnect.Data.Custom.Robintrack;
 
 namespace QuantConnect.Algorithm.CSharp.AltData
 {
+    /// <summary>
+    /// Looks at users holding the stock AAPL at a given point in time
+    /// and keeps track of changes in retail investor sentiment.
+    ///
+    /// We go long if the sentiment increases by 0.5%, and short if it decreases by -0.5%
+    /// </summary>
     public class RobintrackHoldingsAlgorithm : QCAlgorithm
     {
-        Symbol aapl;
-        Symbol aaplHoldings;
-        decimal lastValue;
-        bool isLong;
+        private Symbol _aapl;
+        private Symbol _aaplHoldings;
+        private decimal _lastValue;
+        private bool _isLong;
 
         public override void Initialize()
         {
@@ -31,9 +37,9 @@ namespace QuantConnect.Algorithm.CSharp.AltData
             SetEndDate(2020, 5, 5);
             SetCash(100000);
 
-            aapl = AddEquity("AAPL", Resolution.Daily).Symbol;
-            aaplHoldings = AddData<RobintrackHoldings>(aapl).Symbol;
-            isLong = false;
+            _aapl = AddEquity("AAPL", Resolution.Daily).Symbol;
+            _aaplHoldings = AddData<RobintrackHoldings>(_aapl).Symbol;
+            _isLong = false;
         }
 
         public override void OnData(Slice data)
@@ -42,27 +48,26 @@ namespace QuantConnect.Algorithm.CSharp.AltData
             {
                 var holdings = kvp.Value;
 
-                if (lastValue != 0)
+                if (_lastValue != 0)
                 {
-                    var percentChange = (holdings.UsersHolding - lastValue) / lastValue;
+                    var percentChange = (holdings.UsersHolding - _lastValue) / _lastValue;
                     var holdingInfo = $"There are {holdings.UsersHolding} unique users holding {kvp.Key.Underlying} - users holding % of U.S. equities universe: {holdings.UniverseHoldingPercent * 100m}%";
 
-                    if (percentChange >= 0.005m && !isLong)
+                    if (percentChange >= 0.005m && !_isLong)
                     {
-
                         Log($"{UtcTime} - Buying AAPL - {holdingInfo}");
-                        SetHoldings(aapl, 0.5);
-                        isLong = true;
+                        SetHoldings(_aapl, 0.5);
+                        _isLong = true;
                     }
-                    else if (percentChange <= -0.005m && isLong)
+                    else if (percentChange <= -0.005m && _isLong)
                     {
                         Log($"{UtcTime} - Shorting AAPL - {holdingInfo}");
-                        SetHoldings(aapl, -0.5);
-                        isLong = false;
+                        SetHoldings(_aapl, -0.5);
+                        _isLong = false;
                     }
                 }
 
-                lastValue = holdings.UsersHolding;
+                _lastValue = holdings.UsersHolding;
             }
         }
     }

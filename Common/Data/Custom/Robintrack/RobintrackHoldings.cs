@@ -28,6 +28,14 @@ namespace QuantConnect.Data.Custom.Robintrack
     /// </summary>
     public class RobintrackHoldings : BaseData
     {
+        private static List<Resolution> _supportedResolutions = new List<Resolution>
+        {
+            Resolution.Second,
+            Resolution.Minute,
+            Resolution.Hour,
+            Resolution.Daily
+        };
+
         /// <summary>
         /// Number of unique users holding a given stock
         /// </summary>
@@ -49,7 +57,6 @@ namespace QuantConnect.Data.Custom.Robintrack
         public override decimal Value
         {
             get { return UsersHolding; }
-            set { UsersHolding = (int)value; }
         }
 
         /// <summary>
@@ -61,6 +68,11 @@ namespace QuantConnect.Data.Custom.Robintrack
         /// <returns>Subscription data source</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
+            if (isLiveMode)
+            {
+                throw new NotImplementedException("Live trading currently is not implemented for this data set");
+            }
+
             return new SubscriptionDataSource(
                 Path.Combine(
                     Globals.DataFolder,
@@ -84,6 +96,11 @@ namespace QuantConnect.Data.Custom.Robintrack
         /// <returns>Instance of <see cref="RobintrackHoldings"/> casted as <see cref="BaseData"/></returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
+            if (isLiveMode)
+            {
+                throw new NotImplementedException("Live trading currently is not implemented for this data set");
+            }
+
             var instance = Read(line);
             instance.Symbol = config.Symbol;
 
@@ -100,7 +117,7 @@ namespace QuantConnect.Data.Custom.Robintrack
             {
                 EndTime = EndTime,
                 Symbol = Symbol,
-                Value = Value,
+                UsersHolding = UsersHolding,
                 TotalUniqueHoldings = TotalUniqueHoldings,
             };
         }
@@ -116,13 +133,13 @@ namespace QuantConnect.Data.Custom.Robintrack
             var i = 0;
             var csv = line.ToCsvData(size: 3);
             var timestamp = Parse.DateTimeExact(csv[i++], dateFormat, DateTimeStyles.AdjustToUniversal);
-            var usersHolding = Parse.Decimal(csv[i++]);
+            var usersHolding = Parse.Int(csv[i++]);
             var totalUniqueHoldings = Parse.Decimal(csv[i]);
 
             return new RobintrackHoldings
             {
                 EndTime = timestamp,
-                Value = usersHolding,
+                UsersHolding = usersHolding,
                 TotalUniqueHoldings = totalUniqueHoldings
             };
         }
@@ -152,13 +169,7 @@ namespace QuantConnect.Data.Custom.Robintrack
         /// <returns>List of supported resolutions</returns>
         public override List<Resolution> SupportedResolutions()
         {
-            return new List<Resolution>
-            {
-                Resolution.Second,
-                Resolution.Minute,
-                Resolution.Hour,
-                Resolution.Daily
-            };
+            return _supportedResolutions;
         }
     }
 }

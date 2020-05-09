@@ -24,6 +24,12 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Custom.Robintrack import *
 
+### <summary>
+### Looks at users holding the stock AAPL at a given point in time
+### and keeps track of changes in retail investor sentiment.
+###
+### We go long if the sentiment increases by 0.5%, and short if it decreases by -0.5%
+### </summary>
 class RobintrackHoldingsAlgorithm(QCAlgorithm):
 
     def Initialize(self):
