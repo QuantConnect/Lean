@@ -373,5 +373,17 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual(time, deserialized.Time);
             Assert.AreEqual(time, deserialized.EndTime);
         }
+
+        [TestCase("ENRN-defunct", "ENRN", true)]
+        [TestCase("SUNE_defunct", "SUNE", true)]
+        [TestCase("SHLD defunct", "", false)]
+        public void NormalizesDefunctTickerValues(string ticker, string expectedTicker, bool expectedSuccess)
+        {
+            string actualTicker;
+            var actualSuccess = EstimizeDataDownloader.TryNormalizeDefunctTicker(ticker, out actualTicker);
+
+            Assert.AreEqual(expectedSuccess, actualSuccess);
+            Assert.AreEqual(expectedTicker, actualTicker);
+        }
     }
 }

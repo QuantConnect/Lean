@@ -78,20 +78,15 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                     // This is separate from the NormalizeTicker(...) method since
                     // we don't convert tickers with `-`s into the format we can successfully
                     // index mapfiles with.
-                    var ticker = company.Ticker;
-                    if (ticker.IndexOf("defunct", StringComparison.OrdinalIgnoreCase) > 0)
-                    {
-                        var length = ticker.IndexOf('-');
-                        length = length == -1 ? ticker.IndexOf('_') : length;
-                        if (length == -1)
-                        {
-                            Log.Error($"EstimizeReleaseDataDownloader(): Defunct ticker {ticker} is unable to be parsed. Continuing...");
-                            continue;
-                        }
+                    var estimizeTicker = company.Ticker;
+                    string ticker;
 
-                        ticker = ticker.Substring(0, length).Trim();
+                    if (!TryNormalizeDefunctTicker(estimizeTicker, out ticker))
+                    {
+                        Log.Error($"EstimizeReleaseDataDownloader(): Defunct ticker {estimizeTicker} is unable to be parsed. Continuing...");
                     }
 
+                    // Begin processing ticker with a normalized value
                     Log.Trace($"EstimizeReleaseDataDownloader.Run(): Processing {ticker}");
 
                     tasks.Add(
