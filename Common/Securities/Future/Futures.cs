@@ -96,7 +96,7 @@ namespace QuantConnect.Securities
             /// U.S. Dollar Index Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            // public const string USD = "DX";
+            public const string USD = "DX";
 
             /// <summary>
             /// British Pound Futures
