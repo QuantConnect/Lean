@@ -244,17 +244,19 @@ namespace QuantConnect
         /// <returns>The zipped file as a byte array</returns>
         public static byte[] ZipBytes(byte[] bytes, string zipEntryName)
         {
-            var memoryStream = new MemoryStream();
-            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+            using (var memoryStream = new MemoryStream())
             {
-                var entry = archive.CreateEntry(zipEntryName);
-                using (var entryStream = entry.Open())
+                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
                 {
-                    entryStream.Write(bytes, 0, bytes.Length);
+                    var entry = archive.CreateEntry(zipEntryName);
+                    using (var entryStream = entry.Open())
+                    {
+                        entryStream.Write(bytes, 0, bytes.Length);
+                    }
                 }
+                // 'ToArray' after disposing of 'ZipArchive' since it finishes writing all the data
+                return memoryStream.ToArray();
             }
-
-            return memoryStream.ToArray();
         }
 
         /// <summary>
