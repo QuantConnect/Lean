@@ -61,6 +61,7 @@
     <Content Include="Alphas\ShareClassMeanReversionAlpha.py" />
     <Content Include="Alphas\TripleLeverageETFPairVolatilityDecayAlpha.py" />
     <Content Include="Alphas\VIXDualThrustAlpha.py" />
+    <Content Include="AltData\RobintrackHoldingsAlgorithm.py" />
     <Content Include="AltData\CachedAlternativeDataAlgorithm.py" />
     <Content Include="AltData\BenzingaNewsAlgorithm.py" />
     <Content Include="AltData\SECReport8KAlgorithm.py" />
