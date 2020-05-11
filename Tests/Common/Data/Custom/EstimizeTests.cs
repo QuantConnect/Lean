@@ -375,8 +375,12 @@ namespace QuantConnect.Tests.Common.Data.Custom
         }
 
         [TestCase("ENRN-defunct", "ENRN", true)]
+        [TestCase("ENRN - defunct", "ENRN", true)]
         [TestCase("SUNE_defunct", "SUNE", true)]
+        [TestCase("SUNE -defunct", "SUNE", true)]
+        [TestCase("SHLD -- defunct", "SHLD", true)]
         [TestCase("SHLD defunct", "", false)]
+        [TestCase("AAPL", "AAPL", true)]
         public void NormalizesDefunctTickerValues(string ticker, string expectedTicker, bool expectedSuccess)
         {
             string actualTicker;

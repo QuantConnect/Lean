@@ -84,6 +84,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                     if (!TryNormalizeDefunctTicker(estimizeTicker, out ticker))
                     {
                         Log.Error($"EstimizeReleaseDataDownloader(): Defunct ticker {estimizeTicker} is unable to be parsed. Continuing...");
+                        continue;
                     }
 
                     // Begin processing ticker with a normalized value
