@@ -157,7 +157,6 @@
     <Compile Include="AltData\SECReport8KAlgorithm.cs" />
     <Compile Include="AltData\SmartInsiderTransactionAlgorithm.cs" />
     <Compile Include="AltData\USTreasuryYieldCurveRateAlgorithm.cs" />
-    <Compile Include="AltData\PsychSignalSentimentAlgorithm.cs" />
     <Compile Include="AltData\TradingEconomicsAlgorithm.cs" />
     <Compile Include="AltData\TiingoNewsAlgorithm.cs" />
     <Compile Include="AutomaticIndicatorWarmupDataTypeRegressionAlgorithm.cs" />
@@ -245,7 +244,6 @@
     <Compile Include="StopLossOnOrderEventRegressionAlgorithm.cs" />
     <Compile Include="TotalPortfolioValueRegressionAlgorithm.cs" />
     <Compile Include="TradingEconomicsCalendarIndicatorAlgorithm.cs" />
-    <Compile Include="PsychSignalSentimentRegressionAlgorithm.cs" />
     <Compile Include="TrailingStopRiskFrameworkAlgorithm.cs" />
     <Compile Include="BasicTemplateFuturesFrameworkAlgorithm.cs" />
     <Compile Include="BasicTemplateOptionsFrameworkAlgorithm.cs" />
