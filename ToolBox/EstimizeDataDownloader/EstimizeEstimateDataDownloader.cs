@@ -70,19 +70,21 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
                 foreach (var company in companies)
                 {
-                    var ticker = company.Ticker;
-
                     // Include tickers that are "defunct".
                     // Remove the tag because it cannot be part of the API endpoint.
                     // This is separate from the NormalizeTicker(...) method since
                     // we don't convert tickers with `-`s into the format we can successfully
                     // index mapfiles with.
-                    if (ticker.IndexOf("defunct", StringComparison.OrdinalIgnoreCase) > 0)
+                    var estimizeTicker = company.Ticker;
+                    string ticker;
+
+                    if (!TryNormalizeDefunctTicker(estimizeTicker, out ticker))
                     {
-                        var length = ticker.IndexOf('-');
-                        ticker = ticker.Substring(0, length).Trim();
+                        Log.Error($"EstimizeEstimateDataDownloader(): Defunct ticker {estimizeTicker} is unable to be parsed. Continuing...");
+                        continue;
                     }
 
+                    // Begin processing ticker with a normalized value
                     Log.Trace($"EstimizeEstimateDataDownloader.Run(): Processing {ticker}");
 
                     // Makes sure we don't overrun Estimize rate limits accidentally
