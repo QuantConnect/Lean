@@ -549,25 +549,6 @@ namespace QuantConnect.Securities.Future
                     return lastBusinessDay;
                 })
             },
-            // Currencies group
-            // U.S. Dollar Index(R) Futures (DX): https://www.theice.com/products/194/US-Dollar-Index-Futures
-            {Symbol.Create(Futures.Currencies.USD, SecurityType.Future, Market.ICE), (time =>
-                {
-                    // Last Trading Day:
-                    // Trading ceases at 10:16 Eastern time two days prior to settlement
-                    //
-                    // Final Settlement:
-                    // The US Dollar Index is physically settled on the third Wednesday of the expiration month
-                    // against six component currencies (euro, Japanese yen, British pound, Canadian dollar, Swedish
-                    // krona and Swiss franc) in their respective percentage weights in the Index.
-                    // Settlement rates may be quoted to three decimal places.
-
-                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
-                    var twoDaysPrior = thirdWednesday.AddDays(-2);
-
-                    return twoDaysPrior.Add(new TimeSpan(10, 16, 0));
-                })
-            },
             //  GBP (6B): http://www.cmegroup.com/trading/fx/g10/british-pound_contract_specifications.html
             {Symbol.Create(Futures.Currencies.GBP, SecurityType.Future, Market.CME), (time =>
                 {

@@ -125,7 +125,6 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             }
         }
 
-        [TestCase(QuantConnect.Securities.Futures.Currencies.USD, TenSixteen)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.GBP, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.CAD, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.JPY, NineSixteenCentralTime)]
