@@ -52,9 +52,10 @@ class OptionHistoryTest(SecurityHistoryTest):
         return history.GetAllData()
 
 class FutureHistoryTest(SecurityHistoryTest):
-    def test_daterange_overload(self, end, start = None):
+    def test_daterange_overload(self, end, start = None, maxFilter = 182):
         if start is None:
             start = end - timedelta(1)
+        self.qb.Securities[self.symbol].SetFilter(0, maxFilter) # default is 35 days
         history = self.qb.GetFutureHistory(self.symbol, start, end)
         return history.GetAllData()
 

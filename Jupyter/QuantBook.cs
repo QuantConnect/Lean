@@ -279,7 +279,10 @@ namespace QuantConnect.Jupyter
                 {
                     if (future.Exchange.DateIsOpen(date))
                     {
-                        allSymbols.UnionWith(FutureChainProvider.GetFutureContractList(future.Symbol, date));
+                        var underlying = new Tick { Time = date };
+                        var allList = FutureChainProvider.GetFutureContractList(future.Symbol, date);
+
+                        allSymbols.UnionWith(future.ContractFilter.Filter(new FutureFilterUniverse(allList, underlying)));
                     }
                 }
             }
