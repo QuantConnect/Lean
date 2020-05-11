@@ -80,6 +80,13 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                     if (ticker.IndexOf("defunct", StringComparison.OrdinalIgnoreCase) > 0)
                     {
                         var length = ticker.IndexOf('-');
+                        length = length == -1 ? ticker.IndexOf('_') : length;
+                        if (length == -1)
+                        {
+                            Log.Error($"EstimizeEstimateDataDownloader(): Defunct ticker {ticker} is unable to be parsed. Continuing...");
+                            continue;
+                        }
+
                         ticker = ticker.Substring(0, length).Trim();
                     }
 
