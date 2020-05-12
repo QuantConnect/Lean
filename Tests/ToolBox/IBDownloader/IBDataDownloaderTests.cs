@@ -16,6 +16,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Logging;
 using QuantConnect.ToolBox.IBDownloader;
 
 namespace QuantConnect.Tests.ToolBox.IBDownloader
@@ -24,16 +25,20 @@ namespace QuantConnect.Tests.ToolBox.IBDownloader
     [Ignore("These tests require the IBGateway to be installed.")]
     public class IBDataDownloaderTests
     {
-        [TestCase("ES", Resolution.Minute)]
-        public void DownloadsFuturesData(string ticker, Resolution resolution)
+        [TestCase("ES", Resolution.Daily, 15)]
+        [TestCase("ES", Resolution.Hour, 15)]
+        [TestCase("ES", Resolution.Minute, 15)]
+        public void DownloadsFuturesData(string ticker, Resolution resolution, int days)
         {
+            Log.LogHandler = new ConsoleLogHandler();
+
             const SecurityType securityType = SecurityType.Future;
 
             using (var downloader = new IBDataDownloader())
             {
                 var symbols = downloader.GetChainSymbols(ticker, securityType, true).ToList();
 
-                var startDate = DateTime.UtcNow.Date.AddDays(-15);
+                var startDate = DateTime.UtcNow.Date.AddDays(-days);
                 var endDate = DateTime.UtcNow.Date;
 
                 downloader.DownloadAndSave(symbols, resolution, securityType, TickType.Trade, startDate, endDate);
