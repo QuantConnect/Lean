@@ -27,21 +27,16 @@ namespace QuantConnect.Data.Custom.Tiingo
     /// </summary>
     public class TiingoNewsJsonConverter : JsonConverter
     {
-        private static readonly DateTime Epoch =
-            new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        private readonly bool _liveMode;
+        private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         private readonly Symbol _symbol;
 
         /// <summary>
         /// Creates a new instance of the json converter
         /// </summary>
         /// <param name="symbol">The <see cref="Symbol"/> instance associated with this news</param>
-        /// <param name="liveMode">True if live mode, false for backtesting</param>
-        public TiingoNewsJsonConverter(Symbol symbol = null,
-            bool liveMode = false)
+        public TiingoNewsJsonConverter(Symbol symbol = null)
         {
             _symbol = symbol;
-            _liveMode = liveMode;
         }
 
         /// <summary>
@@ -70,7 +65,7 @@ namespace QuantConnect.Data.Custom.Tiingo
                 foreach (var token in data)
                 {
                     var dataPoint = DeserializeNews(token);
-                    SetSymbolAndTime(dataPoint);
+                    dataPoint.Symbol = _symbol;
                     result.Add(dataPoint);
                 }
                 // we need to reverse the news data since it has newest data first
@@ -79,7 +74,7 @@ namespace QuantConnect.Data.Custom.Tiingo
             else
             {
                 var dataPoint = DeserializeNews(data);
-                SetSymbolAndTime(dataPoint);
+                dataPoint.Symbol = _symbol;
                 result.Add(dataPoint);
             }
 
@@ -116,6 +111,9 @@ namespace QuantConnect.Data.Custom.Tiingo
             var crawlDate = GetDateTime(token["crawlDate"]);
             var articleID = token["id"].ToString();
             var tickers = token["tickers"];
+            // 'time' is QC time which could be crawl time or published data + offset (see converter) this is not present in live
+            // which will use 'crawlDate'
+            var time = GetDateTime(token["time"], defaultValue: crawlDate);
 
             var symbols = new List<Symbol>();
             foreach (var tiingoTicker in tickers)
@@ -137,7 +135,7 @@ namespace QuantConnect.Data.Custom.Tiingo
                 CrawlDate = crawlDate,
                 Description = description,
                 PublishedDate = publishedDate,
-                Time = publishedDate,
+                Time = time,
                 Source = source,
                 Tags = tags,
                 Symbols = symbols,
@@ -152,11 +150,11 @@ namespace QuantConnect.Data.Custom.Tiingo
         /// Depending on the source Tiingo provides
         /// times as a string or an int
         /// </summary>
-        private static DateTime GetDateTime(JToken jToken)
+        private static DateTime GetDateTime(JToken jToken, DateTime defaultValue = default(DateTime))
         {
             if (jToken == null)
             {
-                return default(DateTime);
+                return defaultValue;
             }
             else if (jToken.Type == JTokenType.Integer)
             {
@@ -164,32 +162,6 @@ namespace QuantConnect.Data.Custom.Tiingo
                 return Epoch.AddSeconds(value);
             }
             return jToken.ToObject<DateTime>();
-        }
-
-        private void SetSymbolAndTime(TiingoNews dataPoint)
-        {
-            if (_symbol != null)
-            {
-                dataPoint.Symbol = _symbol;
-                if (_liveMode)
-                {
-                    // for live use crawl date
-                    dataPoint.Time = dataPoint.CrawlDate;
-                }
-                else
-                {
-                    if ((dataPoint.CrawlDate - dataPoint.PublishedDate) > Time.OneDay)
-                    {
-                        // old data (eg 2014 PublishedDate) can have newer crawl date (eg 2019)
-                        // for these cases, for backtesting, use published time + 'TiingoNews.HistoricalCrawlOffset'
-                        dataPoint.Time = dataPoint.PublishedDate.Add(TiingoNews.HistoricalCrawlOffset);
-                    }
-                    else
-                    {
-                        dataPoint.Time = dataPoint.CrawlDate;
-                    }
-                }
-            }
         }
     }
 }

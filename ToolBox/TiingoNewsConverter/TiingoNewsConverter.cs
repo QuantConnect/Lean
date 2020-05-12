@@ -23,11 +23,26 @@ using QuantConnect.Util;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Logging;
 using Newtonsoft.Json.Linq;
+using QuantConnect.Data;
 
 namespace QuantConnect.ToolBox.TiingoNewsConverter
 {
     public class TiingoNewsConverter
     {
+        /// <summary>
+        /// For backtesting, an offset to add to <see cref="BaseData.Time"/>
+        /// </summary>
+        /// <remarks>
+        /// Old data (eg 2014 PublishedDate) can have newer crawl date (eg 2019)
+        /// for these cases, where the diff is > 1 day, for backtesting,
+        /// we use as <see cref="BaseData.Time"/> the published date of a piece of news.
+        /// But doing so would be optimistic since it means algorithms
+        /// will get the news immediately, so we add this offset.
+        /// Live trading uses as <see cref="BaseData.Time"/> the crawler date.
+        /// <see cref="TiingoNewsJsonConverter"/>
+        /// </remarks>
+        public static TimeSpan HistoricalCrawlOffset { get; } = TimeSpan.FromHours(1);
+
         private const int TaskCountLimit = 200;
         private readonly DirectoryInfo _sourceDirectory;
         private readonly DirectoryInfo _rootDestinationDirectory;
@@ -54,10 +69,17 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
             try
             {
                 // supposing sourceFiles are the different daily files, eg: bulkfile_2014-01-11_2014-01-12.tar.gz
+                // when a date is specified we load 2 files, eg for 20140112, load file_2014-01-11_2014-01-12 & file_2014-01-12_2014-01-13
                 var sourceFiles = _sourceDirectory.EnumerateFiles()
                     .OrderBy(info => info.Name)
                     .Where(info => !_date.HasValue || info.Name.Contains(_date.ToStringInvariant("yyyy-MM-dd")))
                     .ToList(info => info);
+
+                if (_date.HasValue && sourceFiles.Count != 2)
+                {
+                    throw new InvalidOperationException(
+                        $"Expected exactly 2 source files for date {_date.Value} but found: {string.Join(",", sourceFiles)}");
+                }
 
                 var ioTasks = new Queue<Task>();
                 var indexesPerTicker = new Dictionary<TickerIndex, List<Article>>();
@@ -91,9 +113,22 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                     foreach (var jNews in jsonNews2)
                     {
                         var singleNewsData = TiingoNewsJsonConverter.DeserializeNews(jNews);
-                        var newsPublishDate = singleNewsData.PublishedDate.Date;
 
-                        if (_date.HasValue && newsPublishDate.Date != _date)
+                        singleNewsData.Time = singleNewsData.CrawlDate;
+                        if (singleNewsData.CrawlDate - singleNewsData.PublishedDate > Time.OneDay)
+                        {
+                            // old data (eg 2014 PublishedDate) can have newer crawl date (eg 2019)
+                            // for these cases, for backtesting, use published time + 'HistoricalCrawlOffset'
+                            singleNewsData.Time = singleNewsData.PublishedDate.Add(HistoricalCrawlOffset);
+                        }
+                        // we add the QC time into the news, this will be serialized and stored in the content.zip
+                        // in backtesting this time will be used as time/endtime
+                        jNews["time"] = singleNewsData.Time;
+
+                        // we use QC time date
+                        var newsDate = singleNewsData.Time.Date;
+
+                        if (_date.HasValue && newsDate.Date != _date)
                         {
                             // skip news that were published another date than the one we want to process
                             continue;
@@ -103,7 +138,7 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                         // raw data is not really ordered and can have jumps +-1 day
                         // files are generated at 12am EST and PublishDate is UTC
                         // we store files by UTC
-                        if (singleNewsData.PublishedDate.Date > (currentDate + Time.OneDay))
+                        if (newsDate > (currentDate + Time.OneDay))
                         {
                             var newsToStore = newsPerDateCollection.Where(kvp => kvp.Key < currentDate).ToList();
                             foreach (var news in newsToStore)
@@ -113,15 +148,15 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                                 newsPerDateCollection.Remove(news.Key);
                             }
 
-                            currentDate = singleNewsData.PublishedDate.Date;
+                            currentDate = newsDate;
                         }
 
                         // just in case: we don't expect published dates to go back in time more than 1 day
                         // if they do we want to know about it
-                        if (singleNewsData.PublishedDate.Date < (currentDate - Time.OneDay))
+                        if (newsDate < (currentDate - Time.OneDay))
                         {
                             throw new InvalidOperationException(
-                                $"Unexpected date {singleNewsData.PublishedDate.Date} current at {currentDate} file {bulkFilePerDate.Name}"
+                                $"Unexpected date {newsDate} current at {currentDate} file {bulkFilePerDate.Name}"
                             );
                         }
 
@@ -133,16 +168,16 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
 
                         var article = new Article(
                             singleNewsData.ArticleID + ".json",
-                            singleNewsData.PublishedDate,
+                            singleNewsData.Time, // QC time
                             // Formatting.None -> 1 line
                             jNews.ToString(Formatting.None)
                         );
 
-                        // store article by PublishDate
+                        // store article by QC date time
                         List<Article> newsForDate;
-                        if (!newsPerDateCollection.TryGetValue(newsPublishDate, out newsForDate))
+                        if (!newsPerDateCollection.TryGetValue(newsDate, out newsForDate))
                         {
-                            newsPerDateCollection[newsPublishDate] = newsForDate = new List<Article>();
+                            newsPerDateCollection[newsDate] = newsForDate = new List<Article>();
                         }
                         newsForDate.Add(article);
 
@@ -151,7 +186,7 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                             // skip symbols which only have numbers as Value
                             .Where(symbol => !symbol.Value.All(char.IsDigit)))
                         {
-                            var indexCacheKey = new TickerIndex(newsDataSymbol.Value, newsPublishDate);
+                            var indexCacheKey = new TickerIndex(newsDataSymbol.Value, newsDate);
 
                             List<Article> articles;
                             if (!indexesPerTicker.TryGetValue(indexCacheKey, out articles))
@@ -198,9 +233,8 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                 {
                     try
                     {
-                        // we have to order the articles here when we are about to store them
-                        // by publish date
-                        var orderedArticles = kvp.Value.OrderBy(article => article.PublishDate).ToList();
+                        // we have to order the articles here when we are about to store them by QC time
+                        var orderedArticles = kvp.Value.OrderBy(article => article.Time).ToList();
                         var data = string.Join(Environment.NewLine, orderedArticles.Select(article => article.ID));
 
                         // the ticker directory
@@ -246,14 +280,25 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
         /// </summary>
         private class Article
         {
+            /// <summary>
+            /// The news article ID, used for creating indexes
+            /// </summary>
             public string ID { get; }
-            public string RawData { get; }
-            public DateTime PublishDate { get; }
 
-            public Article(string id, DateTime date, string rawData)
+            /// <summary>
+            /// The news json raw data to store
+            /// </summary>
+            public string RawData { get; }
+
+            /// <summary>
+            /// This is the QC time
+            /// </summary>
+            public DateTime Time { get; }
+
+            public Article(string id, DateTime time, string rawData)
             {
                 ID = id;
-                PublishDate = date;
+                Time = time;
                 RawData = rawData;
             }
         }
@@ -285,6 +330,11 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                 if (objectAsType == null) return false;
                 return Ticker == objectAsType.Ticker
                        && Date == objectAsType.Date;
+            }
+
+            public override string ToString()
+            {
+                return $"{Ticker}.{Date}";
             }
         }
 

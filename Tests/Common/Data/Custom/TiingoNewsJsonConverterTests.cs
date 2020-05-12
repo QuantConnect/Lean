@@ -19,6 +19,7 @@ using System.Globalization;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Data.Custom.Tiingo;
+using QuantConnect.ToolBox.TiingoNewsConverter;
 
 namespace QuantConnect.Tests.Common.Data.Custom
 {
@@ -37,7 +38,8 @@ namespace QuantConnect.Tests.Common.Data.Custom
     ""tags"":[ ""tag1"", ""tag2""],
     ""tickers"":[""aapl""],
     ""id"":1,
-    ""title"":""title""
+    ""title"":""title"",
+    ""time"":""2019-01-29T23:17:00Z"",
 },
 {
     ""source"":""source"",
@@ -45,7 +47,8 @@ namespace QuantConnect.Tests.Common.Data.Custom
     ""publishedDate"":""2019-01-29T22:20:01.696871Z"",
     ""tickers"":[],
     ""id"":2,
-    ""title"":""title""
+    ""title"":""title"",
+    ""time"":""2019-01-29T23:20:01.696871Z""
 }]";
             var result = JsonConvert.DeserializeObject<List<TiingoNews>>(content,
                 new TiingoNewsJsonConverter(Symbols.SPY));
@@ -60,6 +63,8 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual("title", result[0].Title);
             Assert.AreEqual(new List<Symbol>(), result[0].Symbols);
             Assert.AreEqual(new List<string>(), result[0].Tags);
+            Assert.AreEqual(result[0].PublishedDate.Add(TiingoNewsConverter.HistoricalCrawlOffset), result[0].Time);
+            Assert.AreEqual(result[0].PublishedDate.Add(TiingoNewsConverter.HistoricalCrawlOffset), result[0].EndTime);
 
             Assert.AreEqual(2, result.Count);
 
@@ -77,6 +82,8 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual("title", result[1].Title);
             Assert.AreEqual("url", result[1].Url);
             Assert.AreEqual(Symbols.SPY, result[1].Symbol);
+            Assert.AreEqual(result[1].PublishedDate.Add(TiingoNewsConverter.HistoricalCrawlOffset), result[1].Time);
+            Assert.AreEqual(result[1].PublishedDate.Add(TiingoNewsConverter.HistoricalCrawlOffset), result[1].EndTime);
         }
 
         [TestCase(true)]
@@ -92,10 +99,16 @@ namespace QuantConnect.Tests.Common.Data.Custom
     ""tags"":[ ""tag1"", ""tag2""],
     ""tickers"":[""aapl""],
     ""id"":1,
-    ""title"":""title""
-}]";
+    ""title"":""title"",";
+            if (!liveMode)
+            {
+                // live mode does not have 'time', this is added by the converter
+                content += @" ""time"":""2018-01-29T23:17:00Z""";
+            }
+            content += @"}]";
+
             var result = JsonConvert.DeserializeObject<List<TiingoNews>>(content,
-                new TiingoNewsJsonConverter(Symbols.SPY, liveMode));
+                new TiingoNewsJsonConverter(Symbols.SPY));
 
             if (liveMode)
             {
@@ -103,8 +116,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             }
             else
             {
-                Assert.AreEqual(result[0].PublishedDate.Add(TiingoNews.HistoricalCrawlOffset),
-                    result[0].Time);
+                Assert.AreEqual(result[0].PublishedDate.Add(TiingoNewsConverter.HistoricalCrawlOffset), result[0].Time);
             }
             Assert.AreEqual(result[0].EndTime, result[0].Time);
         }
