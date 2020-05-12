@@ -145,7 +145,7 @@ namespace QuantConnect.ToolBox
                     exchangeHours,
                     dataTimeZone,
                     _resolution == Resolution.Tick ? (Resolution?)null : _resolution,
-                    false,
+                    true,
                     false,
                     DataNormalizationMode.Raw,
                     _tickType
