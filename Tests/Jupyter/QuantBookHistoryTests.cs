@@ -181,8 +181,9 @@ namespace QuantConnect.Tests.Jupyter
             }
         }
 
-        [Test]
-        public void CanonicalFutureQuantBookHistory()
+        [TestCase(182, 2)]
+        [TestCase(120, 1)]
+        public void CanonicalFutureQuantBookHistory(int maxFilter, int numberOfFutureContracts)
         {
             using (Py.GIL())
             {
@@ -191,15 +192,20 @@ namespace QuantConnect.Tests.Jupyter
                 var securityTestHistory = _module.FutureHistoryTest(startDate, SecurityType.Future, symbol);
 
                 // Get the one day of data, ending on start date
-                var startEndHistory = securityTestHistory.test_daterange_overload(startDate);
+                var startEndHistory = securityTestHistory.test_daterange_overload(startDate, startDate.AddDays(-1), maxFilter);
+
+                Console.WriteLine(startEndHistory.index.levels[1].size.ToString());
+                Assert.AreEqual(numberOfFutureContracts, (int)startEndHistory.index.levels[1].size);
+
                 Console.WriteLine(startEndHistory.ToString());
                 var firstIndex = (DateTime)(startEndHistory.index.values[0][2] as PyObject).AsManagedObject(typeof(DateTime));
                 Assert.GreaterOrEqual(startDate.AddDays(-1).Date, firstIndex.Date);
             }
         }
 
-        [Test]
-        public void CanonicalFutureIntradayQuantBookHistory()
+        [TestCase(182, 2)]
+        [TestCase(120, 1)]
+        public void CanonicalFutureIntradayQuantBookHistory(int maxFilter, int numberOfFutureContracts)
         {
             using (Py.GIL())
             {
@@ -207,7 +213,11 @@ namespace QuantConnect.Tests.Jupyter
                 var currentDate = new DateTime(2013, 10, 11, 18, 0, 0);
                 var securityTestHistory = _module.FutureHistoryTest(new DateTime(2013, 10, 12), SecurityType.Future, symbol);
 
-                var startEndHistory = securityTestHistory.test_daterange_overload(currentDate, new DateTime(2013, 10, 11, 10, 0, 0));
+                var startEndHistory = securityTestHistory.test_daterange_overload(currentDate, new DateTime(2013, 10, 11, 10, 0, 0), maxFilter);
+
+                Console.WriteLine(startEndHistory.index.levels[1].size.ToString());
+                Assert.AreEqual(numberOfFutureContracts, (int)startEndHistory.index.levels[1].size);
+
                 Console.WriteLine(startEndHistory.ToString());
                 Assert.IsFalse((bool)startEndHistory.empty);
             }
