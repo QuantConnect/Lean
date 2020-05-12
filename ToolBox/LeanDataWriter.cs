@@ -15,14 +15,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Ionic.Zip;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox
@@ -33,9 +33,8 @@ namespace QuantConnect.ToolBox
     public class LeanDataWriter
     {
         private readonly Symbol _symbol;
-        private readonly string _market;
         private readonly string _dataDirectory;
-        private readonly TickType _dataType;
+        private readonly TickType _tickType;
         private readonly Resolution _resolution;
         private readonly SecurityType _securityType;
 
@@ -45,25 +44,39 @@ namespace QuantConnect.ToolBox
         /// <param name="symbol">Symbol string</param>
         /// <param name="dataDirectory">Base data directory</param>
         /// <param name="resolution">Resolution of the desired output data</param>
-        /// <param name="dataType">Write the data to trade files</param>
-        public LeanDataWriter(Resolution resolution, Symbol symbol, string dataDirectory, TickType dataType = TickType.Trade)
+        /// <param name="tickType">The tick type</param>
+        public LeanDataWriter(Resolution resolution, Symbol symbol, string dataDirectory, TickType tickType = TickType.Trade)
         {
             _securityType = symbol.ID.SecurityType;
             _dataDirectory = dataDirectory;
             _resolution = resolution;
             _symbol = symbol;
-            _market = symbol.ID.Market.ToLowerInvariant();
-            _dataType = dataType;
+            _tickType = tickType;
             // All fx data is quote data.
             if (_securityType == SecurityType.Forex || _securityType == SecurityType.Cfd)
             {
-                _dataType = TickType.Quote;
+                _tickType = TickType.Quote;
             }
 
             if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex && _securityType != SecurityType.Cfd && _securityType != SecurityType.Crypto && _securityType != SecurityType.Future && _securityType != SecurityType.Option)
             {
                 throw new Exception("Sorry this security type is not yet supported by the LEAN data writer: " + _securityType);
             }
+        }
+
+        /// <summary>
+        /// Create a new lean data writer to this base data directory.
+        /// </summary>
+        /// <param name="dataDirectory">Base data directory</param>
+        /// <param name="resolution">Resolution of the desired output data</param>
+        /// <param name="securityType">The security type</param>
+        /// <param name="tickType">The tick type</param>
+        public LeanDataWriter(string dataDirectory, Resolution resolution, SecurityType securityType, TickType tickType)
+        {
+            _dataDirectory = dataDirectory;
+            _resolution = resolution;
+            _securityType = securityType;
+            _tickType = tickType;
         }
 
         /// <summary>
@@ -88,6 +101,128 @@ namespace QuantConnect.ToolBox
         }
 
         /// <summary>
+        /// Downloads historical data from the brokerage and saves it in LEAN format.
+        /// </summary>
+        /// <param name="brokerage">The brokerage from where to fetch the data</param>
+        /// <param name="symbols">The list of symbols</param>
+        /// <param name="startTimeUtc">The starting date/time (UTC)</param>
+        /// <param name="endTimeUtc">The ending date/time (UTC)</param>
+        public void DownloadAndSave(IBrokerage brokerage, List<Symbol> symbols, DateTime startTimeUtc, DateTime endTimeUtc)
+        {
+            if (symbols.Count == 0)
+            {
+                throw new Exception("The symbol list cannot be empty.");
+            }
+
+            if (_tickType != TickType.Trade && _tickType != TickType.Quote)
+            {
+                throw new Exception("The tick type must be Trade or Quote.");
+            }
+
+            if (_resolution == Resolution.Daily || _resolution == Resolution.Hour)
+            {
+                // TODO:
+                throw new NotImplementedException();
+            }
+
+            var dataType = LeanData.GetDataType(_resolution, _tickType);
+
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+
+            var ticker = symbols.First().ID.Symbol;
+            var market = symbols.First().ID.Market;
+
+            var canonicalSymbol = Symbol.CreateFuture(ticker, market, SecurityIdentifier.DefaultDate);
+            var securityType = canonicalSymbol.ID.SecurityType;
+
+            var historyBySymbol = new Dictionary<Symbol, List<IGrouping<DateTime, BaseData>>>();
+
+            foreach (var symbol in symbols)
+            {
+                var exchangeHours = marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, securityType);
+                var dataTimeZone = marketHoursDatabase.GetDataTimeZone(symbol.ID.Market, symbol, securityType);
+
+                var historyRequest = new HistoryRequest(
+                    startTimeUtc,
+                    endTimeUtc,
+                    dataType,
+                    symbol,
+                    _resolution,
+                    exchangeHours,
+                    dataTimeZone,
+                    _resolution == Resolution.Tick ? (Resolution?)null : _resolution,
+                    false,
+                    false,
+                    DataNormalizationMode.Raw,
+                    _tickType
+                );
+
+                var history = brokerage.GetHistory(historyRequest)
+                    .Select(
+                        x =>
+                        {
+                            x.Time = x.Time.ConvertTo(exchangeHours.TimeZone, dataTimeZone);
+                            return x;
+                        })
+                    .ToList();
+
+                // group by date in DataTimeZone
+                var historyByDate = history.GroupBy(x => x.Time.Date).ToList();
+
+                historyBySymbol.Add(symbol, historyByDate);
+            }
+
+            var date = startTimeUtc;
+            while (date <= endTimeUtc)
+            {
+                var zipFileName = Path.Combine(
+                    Globals.DataFolder,
+                    LeanData.GenerateRelativeZipFilePath(canonicalSymbol, date, _resolution, _tickType));
+
+                var folder = Path.GetDirectoryName(zipFileName);
+                if (!Directory.Exists(folder))
+                {
+                    Directory.CreateDirectory(folder);
+                }
+
+                if (File.Exists(zipFileName))
+                {
+                    File.Delete(zipFileName);
+                }
+
+                using (var zip = new ZipFile(zipFileName))
+                {
+                    foreach (var symbol in symbols)
+                    {
+                        var zipEntryName = LeanData.GenerateZipEntryName(symbol, date, _resolution, _tickType);
+
+                        foreach (var group in historyBySymbol[symbol])
+                        {
+                            if (group.Key == date)
+                            {
+                                var sb = new StringBuilder();
+                                foreach (var row in group)
+                                {
+                                    var line = LeanData.GenerateLine(row, securityType, _resolution);
+                                    sb.AppendLine(line);
+                                }
+                                zip.AddEntry(zipEntryName, sb.ToString());
+                                break;
+                            }
+                        }
+                    }
+
+                    if (zip.Count > 0)
+                    {
+                        zip.Save();
+                    }
+                }
+
+                date = date.AddDays(1);
+            }
+        }
+
+        /// <summary>
         /// Write out the data in LEAN format (minute, second or tick resolutions)
         /// </summary>
         /// <param name="source">IEnumerable source of the data: sorted from oldest to newest.</param>
@@ -96,7 +231,6 @@ namespace QuantConnect.ToolBox
         {
             var sb = new StringBuilder();
             var lastTime = new DateTime();
-
 
             // Loop through all the data and write to file as we go
             foreach (var data in source)
@@ -223,7 +357,7 @@ namespace QuantConnect.ToolBox
             Directory.CreateDirectory(Path.GetDirectoryName(filePath));
 
             // Write out this data string to a zip file
-            Compression.Zip(data, tempFilePath, LeanData.GenerateZipEntryName(_symbol, date, _resolution, _dataType));
+            Compression.Zip(data, tempFilePath, LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType));
 
             // Move temp file to the final destination with the appropriate name
             File.Move(tempFilePath, filePath);
@@ -239,7 +373,7 @@ namespace QuantConnect.ToolBox
         /// <returns>The full path to the output zip file</returns>
         private string GetZipOutputFileName(string baseDirectory, DateTime time)
         {
-            return LeanData.GenerateZipFilePath(baseDirectory, _symbol, time, _resolution, _dataType);
+            return LeanData.GenerateZipFilePath(baseDirectory, _symbol, time, _resolution, _tickType);
         }
 
     }
