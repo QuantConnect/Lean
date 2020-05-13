@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Logging;
@@ -25,13 +26,17 @@ namespace QuantConnect.Tests.ToolBox.IBDownloader
     [Ignore("These tests require the IBGateway to be installed.")]
     public class IBDataDownloaderTests
     {
+        [SetUp]
+        public void Setup()
+        {
+            Log.LogHandler = new ConsoleLogHandler();
+        }
+
         [TestCase("ES", Resolution.Daily, 15)]
         [TestCase("ES", Resolution.Hour, 15)]
         [TestCase("ES", Resolution.Minute, 15)]
         public void DownloadsFuturesData(string ticker, Resolution resolution, int days)
         {
-            Log.LogHandler = new ConsoleLogHandler();
-
             const SecurityType securityType = SecurityType.Future;
 
             using (var downloader = new IBDataDownloader())
@@ -45,5 +50,40 @@ namespace QuantConnect.Tests.ToolBox.IBDownloader
                 downloader.DownloadAndSave(symbols, resolution, securityType, TickType.Quote, startDate, endDate);
             }
         }
+
+        [Test]
+        public void ThrowsIfDifferentSecurityType()
+        {
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    using (var downloader = new IBDataDownloader())
+                    {
+                        var startDate = DateTime.UtcNow.Date.AddDays(-1);
+                        var endDate = DateTime.UtcNow.Date;
+
+                        var symbols = new List<Symbol> { Symbols.SPY_C_192_Feb19_2016 };
+                        downloader.DownloadAndSave(symbols, Resolution.Minute, SecurityType.Future, TickType.Trade, startDate, endDate);
+                    }
+                });
+        }
+
+        [Test]
+        public void ThrowsIfDifferentRootSymbols()
+        {
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    using (var downloader = new IBDataDownloader())
+                    {
+                        var startDate = DateTime.UtcNow.Date.AddDays(-1);
+                        var endDate = DateTime.UtcNow.Date;
+
+                        var symbols = new List<Symbol> { Symbols.Future_ESZ18_Dec2018, Symbols.Future_CLF19_Jan2019 };
+                        downloader.DownloadAndSave(symbols, Resolution.Minute, SecurityType.Future, TickType.Trade, startDate, endDate);
+                    }
+                });
+        }
+
     }
 }

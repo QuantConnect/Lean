@@ -111,12 +111,27 @@ namespace QuantConnect.ToolBox
         {
             if (symbols.Count == 0)
             {
-                throw new Exception("The symbol list cannot be empty.");
+                throw new ArgumentException("DownloadAndSave(): The symbol list cannot be empty.");
             }
 
             if (_tickType != TickType.Trade && _tickType != TickType.Quote)
             {
-                throw new Exception("The tick type must be Trade or Quote.");
+                throw new ArgumentException("DownloadAndSave(): The tick type must be Trade or Quote.");
+            }
+
+            if (_securityType != SecurityType.Future && _securityType != SecurityType.Option)
+            {
+                throw new ArgumentException($"DownloadAndSave(): The security type must be {SecurityType.Future} or {SecurityType.Option}.");
+            }
+
+            if (symbols.Any(x => x.SecurityType != _securityType))
+            {
+                throw new ArgumentException($"DownloadAndSave(): All symbols must have {_securityType} security type.");
+            }
+
+            if (symbols.DistinctBy(x => x.ID.Symbol).Count() > 1)
+            {
+                throw new ArgumentException("DownloadAndSave(): All symbols must have the same root ticker.");
             }
 
             var dataType = LeanData.GetDataType(_resolution, _tickType);
@@ -126,16 +141,16 @@ namespace QuantConnect.ToolBox
             var ticker = symbols.First().ID.Symbol;
             var market = symbols.First().ID.Market;
 
-            var canonicalSymbol = Symbol.CreateFuture(ticker, market, SecurityIdentifier.DefaultDate);
+            var canonicalSymbol = Symbol.Create(ticker, _securityType, market);
+
+            var exchangeHours = marketHoursDatabase.GetExchangeHours(canonicalSymbol.ID.Market, canonicalSymbol, _securityType);
+            var dataTimeZone = marketHoursDatabase.GetDataTimeZone(canonicalSymbol.ID.Market, canonicalSymbol, _securityType);
 
             var historyBySymbol = new Dictionary<Symbol, List<IGrouping<DateTime, BaseData>>>();
             var historyBySymbolDailyOrHour = new Dictionary<Symbol, List<BaseData>>();
 
             foreach (var symbol in symbols)
             {
-                var exchangeHours = marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, _securityType);
-                var dataTimeZone = marketHoursDatabase.GetDataTimeZone(symbol.ID.Market, symbol, _securityType);
-
                 var historyRequest = new HistoryRequest(
                     startTimeUtc,
                     endTimeUtc,
@@ -144,7 +159,7 @@ namespace QuantConnect.ToolBox
                     _resolution,
                     exchangeHours,
                     dataTimeZone,
-                    _resolution == Resolution.Tick ? (Resolution?)null : _resolution,
+                    _resolution,
                     true,
                     false,
                     DataNormalizationMode.Raw,
@@ -174,15 +189,15 @@ namespace QuantConnect.ToolBox
 
             if (_resolution == Resolution.Daily || _resolution == Resolution.Hour)
             {
-                DownloadAndSaveDailyOrHour(symbols, canonicalSymbol, historyBySymbolDailyOrHour);
+                SaveDailyOrHour(symbols, canonicalSymbol, historyBySymbolDailyOrHour);
             }
             else
             {
-                DownloadAndSaveMinuteOrSecondOrTick(symbols, startTimeUtc, endTimeUtc, canonicalSymbol, historyBySymbol);
+                SaveMinuteOrSecondOrTick(symbols, startTimeUtc, endTimeUtc, canonicalSymbol, historyBySymbol);
             }
         }
 
-        private void DownloadAndSaveDailyOrHour(
+        private void SaveDailyOrHour(
             List<Symbol> symbols,
             Symbol canonicalSymbol,
             IReadOnlyDictionary<Symbol, List<BaseData>> historyBySymbol)
@@ -266,7 +281,7 @@ namespace QuantConnect.ToolBox
             }
         }
 
-        private void DownloadAndSaveMinuteOrSecondOrTick(
+        private void SaveMinuteOrSecondOrTick(
             List<Symbol> symbols,
             DateTime startTimeUtc,
             DateTime endTimeUtc,
