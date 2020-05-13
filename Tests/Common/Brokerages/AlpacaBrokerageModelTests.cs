@@ -105,10 +105,10 @@ namespace QuantConnect.Tests.Common.Brokerages
                 new TestCaseData(OrderType.Market, Symbols.SPY, 2m, 0m, 0m, -1m, 0m, false, "does not support reversing the position (from short to long)"),
 
                 // cannot open a short sell while a long buy order is open
-                new TestCaseData(OrderType.Market, Symbols.SPY, -1m, 0m, 0m, 0m, 1m, false, "does not support shorting with open buy orders"),
+                new TestCaseData(OrderType.Market, Symbols.SPY, -1m, 0m, 0m, 0m, 1m, false, "does not support submitting sell orders with open buy orders"),
 
                 // cannot open a long buy while a short sell order is open
-                new TestCaseData(OrderType.Market, Symbols.SPY, 1m, 0m, 0m, 0m, -1m, false, "does not support buying with open sell orders"),
+                new TestCaseData(OrderType.Market, Symbols.SPY, 1m, 0m, 0m, 0m, -1m, false, "does not support submitting buy orders with open sell orders"),
 
                 // cannot submit sell order with long position and open sell order
                 new TestCaseData(OrderType.Market, Symbols.SPY, -1m, 0m, 0m, 1m, -1m, false, "does not support submitting orders which could potentially reverse the position (from long to short)"),
