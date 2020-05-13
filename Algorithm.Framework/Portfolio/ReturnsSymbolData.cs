@@ -56,13 +56,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="value">The value to use to update this window</param>
         public void Add(DateTime time, decimal value)
         {
-            if (_window.Samples > 0 && _window[0].EndTime == time)
-            {
-                return;
-            }
-
             var item = new IndicatorDataPoint(_symbol, time, value);
-            _window.Add(item);
+            AddToWindow(item);
         }
 
         /// <summary>
@@ -96,8 +91,19 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         {
             if (_roc.IsReady)
             {
-                _window.Add(updated);
+                AddToWindow(updated);
             }
+        }
+
+        private void AddToWindow(IndicatorDataPoint updated)
+        {
+            if (_window.Samples > 0 && _window[0].EndTime == updated.EndTime)
+            {
+                // this could happen with fill forward bars in the history request
+                return;
+            }
+
+            _window.Add(updated);
         }
     }
 
@@ -113,7 +119,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="symbols">List of <see cref="Symbol"/> to be included in the matrix</param>
         public static double[,] FormReturnsMatrix(this Dictionary<Symbol, ReturnsSymbolData> symbolData, IEnumerable<Symbol> symbols)
         {
-            var returnsByDate = from s in symbols join sd in symbolData on s equals sd.Key select sd.Value.Returns;
+            var returnsByDate = (from s in symbols join sd in symbolData on s equals sd.Key select sd.Value.Returns).ToList();
 
             // Consolidate by date
             var alldates = returnsByDate.SelectMany(r => r.Keys).Distinct().ToList();
@@ -124,16 +130,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             if (max == alldates.Count)
             {
                 return Accord.Math.Matrix.Create(alldates
+                    // if a return date isn't found for a symbol we use 'double.NaN'
                     .Select(d => returnsByDate.Select(s => s.GetValueOrDefault(d, double.NaN)).ToArray())
                     .Where(r => !r.Select(Math.Abs).Sum().IsNaNOrZero()) // remove empty rows
                     .ToArray());
             }
 
             // If it is not a match, we assume that each index correspond to the same point in time
-            var returnsByIndex = from s in symbols join sd in symbolData on s equals sd.Key select sd.Value.Returns.Values.ToArray();
+            var returnsByIndex = returnsByDate.Select((doubles, i) => doubles.Values.ToArray());
 
             return Accord.Math.Matrix.Create(Enumerable.Range(0, max)
-                .Select(d => returnsByIndex.Select(s => s[d]).ToArray())
+                // there is no guarantee that all symbols have the same amount of returns so we need to check range and use 'double.NaN' if required as above
+                .Select(d => returnsByIndex.Select(s => s.Length < (d + 1) ? double.NaN : s[d]).ToArray())
                 .Where(r => !r.Select(Math.Abs).Sum().IsNaNOrZero()) // remove empty rows
                 .ToArray());
         }

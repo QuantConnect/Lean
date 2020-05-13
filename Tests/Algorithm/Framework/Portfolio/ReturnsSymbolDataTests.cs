@@ -34,6 +34,50 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
     public class ReturnsSymbolDataTests
     {
         [Test]
+        public void ReturnsDoesNotThrowIndexOutOfRangeException()
+        {
+            var dateTime = new DateTime(2020, 02, 01);
+
+            var returnsSymbolData = new ReturnsSymbolData(Symbols.EURGBP, 1, 5);
+            returnsSymbolData.Add(dateTime, 10);
+            returnsSymbolData.Add(dateTime.AddDays(1), 100);
+            returnsSymbolData.Add(dateTime.AddDays(2), 5);
+
+            var returnsSymbolData2 = new ReturnsSymbolData(Symbols.BTCUSD, 1, 5);
+            returnsSymbolData2.Add(dateTime.AddDays(1), 33);
+            returnsSymbolData2.Add(dateTime.AddDays(2), 2);
+
+            var returnsSymbolDatas = new Dictionary<Symbol, ReturnsSymbolData>
+            {
+                {Symbols.EURGBP, returnsSymbolData},
+                {Symbols.BTCUSD, returnsSymbolData2},
+            };
+
+            var result = returnsSymbolDatas.FormReturnsMatrix(new List<Symbol> {Symbols.EURGBP, Symbols.BTCUSD });
+
+            Assert.AreEqual(4, result.Length);
+
+            Assert.AreEqual(5m, result[0, 0]);
+            Assert.AreEqual(2m, result[0, 1]);
+
+            Assert.AreEqual(100m, result[1, 0]);
+            Assert.AreEqual(33m, result[1, 1]);
+        }
+
+        [Test]
+        public void ReturnsDoesNotThrowKeyAlreadyExistsException()
+        {
+            var returnsSymbolData = new ReturnsSymbolData(Symbols.EURGBP, 1, 5);
+
+            var dateTime = new DateTime(2020, 02, 01);
+            returnsSymbolData.Add(dateTime, 10);
+            returnsSymbolData.Add(dateTime, 100);
+
+            Assert.AreEqual(1, returnsSymbolData.Returns.Count);
+            Assert.AreEqual(returnsSymbolData.Returns[dateTime], 10);
+        }
+
+        [Test]
         [TestCase(false)]
         [TestCase(true)]
         public void ReturnsSymbolDataMatrixIsSimilarToPandasDataFrame(bool odd)
