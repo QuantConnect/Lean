@@ -151,7 +151,7 @@ namespace QuantConnect.Brokerages
                     var openBuyQuantity = openOrders.Where(x => x.Direction == OrderDirection.Buy).Sum(x => x.Quantity);
 
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        $"The {nameof(AlpacaBrokerageModel)} does not support shorting with open buy orders" +
+                        $"The {nameof(AlpacaBrokerageModel)} does not support submitting sell orders with open buy orders" +
                         $" [position:{security.Holdings.Quantity}, order quantity:{order.Quantity}, " +
                         $"open buy orders quantity:{openBuyQuantity}]."
                     );
@@ -165,7 +165,7 @@ namespace QuantConnect.Brokerages
                     var openSellQuantity = openOrders.Where(x => x.Direction == OrderDirection.Sell).Sum(x => x.Quantity);
 
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        $"The {nameof(AlpacaBrokerageModel)} does not support buying with open sell orders" +
+                        $"The {nameof(AlpacaBrokerageModel)} does not support submitting buy orders with open sell orders" +
                         $" [position:{security.Holdings.Quantity}, order quantity:{order.Quantity}, " +
                         $"open sell orders quantity:{openSellQuantity}]."
                     );
