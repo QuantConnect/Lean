@@ -20,6 +20,7 @@ using NUnit.Framework;
 using QuantConnect;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
+using QuantConnect.Python;
 
 [SetUpFixture]
 public class AssemblyInitialize
@@ -40,5 +41,21 @@ public class AssemblyInitialize
         Directory.SetCurrentDirectory(dir);
         Config.Reset();
         Globals.Reset();
+        PythonInitializer.SetPythonPathEnvironmentVariable(
+            new[]
+            {
+                "./Alphas",
+                "./Execution",
+                "./Portfolio",
+                "./Risk",
+                "./Selection",
+                "./RegressionAlgorithms",
+                "./Jupyter/RegressionScripts",
+                "../../../Algorithm",
+                "../../../Algorithm/Selection",
+                "../../../Algorithm.Framework",
+                "../../../Algorithm.Framework/Selection",
+                "../../../Algorithm.Python"
+            });
     }
 }
