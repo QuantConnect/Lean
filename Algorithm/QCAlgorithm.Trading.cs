@@ -696,7 +696,7 @@ namespace QuantConnect.Algorithm
 
             if (price == 0)
             {
-                return OrderResponse.Error(request, OrderResponseErrorCode.SecurityPriceZero, request.Symbol.ToString() + ": asset price is $0. If using custom data make sure you've set the 'Value' property.");
+                return OrderResponse.Error(request, OrderResponseErrorCode.SecurityPriceZero, request.Symbol.GetZeroPriceMessage());
             }
 
             // check quote currency existence/conversion rate on all orders

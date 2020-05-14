@@ -218,7 +218,7 @@ namespace QuantConnect.Securities
                 }
 
                 // security.Price == 0
-                return new GetMaximumOrderQuantityResult(0, $"The price of the {parameters.Security.Symbol.Value} security is zero because it does not have any market data yet. When the security price is set this security will be ready for trading.");
+                return new GetMaximumOrderQuantityResult(0, parameters.Security.Symbol.GetZeroPriceMessage());
             }
 
             // continue iterating while we do not have enough cash for the order

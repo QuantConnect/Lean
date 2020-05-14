@@ -57,6 +57,20 @@ namespace QuantConnect
             = new Dictionary<IntPtr, PythonActivator>();
 
         /// <summary>
+        /// Extension method to get security price is 0 messages for users
+        /// </summary>
+        /// <remarks>The value of this method is normalization</remarks>
+        public static string GetZeroPriceMessage(this Symbol symbol)
+        {
+            return $"{symbol}: The security does not have an accurate price as it has not yet received a bar of data. " +
+                   "Before placing a trade (or using SetHoldings) warm up your algorithm with SetWarmup, or use slice.Contains(symbol)" +
+                   " to confirm the Slice object has price before using the data. Data does not necessarily all arrive at the same" +
+                   " time so your algorithm should confirm the data is ready before using it. In live trading this can mean you do" +
+                   " not have an active subscription to the asset class you're trying to trade. If using custom data make sure you've" +
+                   " set the 'Value' property.";
+        }
+
+        /// <summary>
         /// Converts the provided string into camel case notation
         /// </summary>
         public static string ToCamelCase(this string value)

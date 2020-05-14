@@ -96,10 +96,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             if (security.Price == 0)
             {
-                algorithm.Error(Invariant(
-                    $"The order quantity for {symbol.Value} cannot be calculated: the price of the security is zero."
-                ));
-
+                algorithm.Error(symbol.GetZeroPriceMessage());
                 return null;
             }
 
