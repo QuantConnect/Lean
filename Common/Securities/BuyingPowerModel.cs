@@ -366,9 +366,7 @@ namespace QuantConnect.Securities
             var absUnitMargin = GetInitialMarginRequirement(parameters.Security, 1);
             if (absUnitMargin == 0)
             {
-                var reason = $"The price of the {parameters.Security.Symbol.Value} security is zero because it does not have any market " +
-                    "data yet. When the security price is set this security will be ready for trading.";
-                return new GetMaximumOrderQuantityResult(0, reason);
+                return new GetMaximumOrderQuantityResult(0, parameters.Security.Symbol.GetZeroPriceMessage());
             }
 
             var minimumValue = absUnitMargin * parameters.Security.SymbolProperties.LotSize;
