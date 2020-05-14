@@ -201,7 +201,7 @@ namespace QuantConnect.Logging
                             if (value is string) displayValue = String.Concat('"', displayValue, '"');
 
                             // Add property name and value to return string
-                            result.AppendFormat("{0}{1} = {2}\n", indent, property.Name, displayValue);
+                            result.AppendFormat(CultureInfo.InvariantCulture, "{0}{1} = {2}\n", indent, property.Name, displayValue);
 
                             try
                             {
@@ -224,7 +224,7 @@ namespace QuantConnect.Logging
                                         indent = new StringBuilder(trail).Insert(0, spaces, recursion).ToString();
 
                                         // Display the collection element name and type
-                                        result.AppendFormat("{0}{1} = {2}\n", indent, elementName, element.ToString());
+                                        result.AppendFormat(CultureInfo.InvariantCulture, "{0}{1} = {2}\n", indent, elementName, element.ToString());
 
                                         // Display the child properties
                                         result.Append(VarDump(element, recursion + 2));
@@ -238,7 +238,7 @@ namespace QuantConnect.Logging
                         else
                         {
                             // Add empty (null) property to return string
-                            result.AppendFormat("{0}{1} = {2}\n", indent, property.Name, "null");
+                            result.AppendFormat(CultureInfo.InvariantCulture, "{0}{1} = {2}\n", indent, property.Name, "null");
                         }
                     }
                     catch
