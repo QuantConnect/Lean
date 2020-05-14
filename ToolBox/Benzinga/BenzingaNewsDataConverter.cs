@@ -328,19 +328,23 @@ namespace QuantConnect.ToolBox.Benzinga
         private void CompressData(BenzingaNewsFiltered filtered)
         {
             // Now compress all of the data we have for a given day
+            var compressedProcessedDirectory = new DirectoryInfo(Path.Combine(_processedFilesDirectory.FullName, "content"));
+            var compressedProcessed = new FileInfo(Path.Combine(compressedProcessedDirectory.FullName, $"{filtered.Date:yyyyMMdd}.zip"));
+            var compressedProcessedExists = compressedProcessed.Exists;
+
             var compressedDirectory = new DirectoryInfo(Path.Combine(_destinationDirectory.FullName, "content"));
-            var compressedFinal = new FileInfo(Path.Combine(compressedDirectory.FullName, $"{filtered.Date:yyyyMMdd}.zip"));
             var compressedTemp = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.zip"));
+            var compressedFinal = new FileInfo(Path.Combine(compressedDirectory.FullName, $"{filtered.Date:yyyyMMdd}.zip"));
             var compressedFinalExists = compressedFinal.Exists;
             var compressedFinalBackup = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.zip"));
 
             compressedDirectory.Create();
 
-            if (compressedFinalExists)
+            if (compressedProcessedExists)
             {
                 // First, get the manifest of existing articles contained within the ZIP file
                 // to determine what articles we need to write to the new ZIP file
-                var existingArticles = Compression.GetZipEntryFileNames(compressedFinal.FullName);
+                var existingArticles = Compression.GetZipEntryFileNames(compressedProcessed.FullName);
                 var missingArticles = filtered.ArticleContents.Keys.Except(existingArticles).ToList();
 
                 // nop, all the articles we have are already included inside the zip file
@@ -350,7 +354,7 @@ namespace QuantConnect.ToolBox.Benzinga
                     return;
                 }
 
-                Log.Trace($"BenzingaNewsDataConverter.CompressData(): Loading data from existing ZIP file {compressedFinal.FullName}");
+                Log.Trace($"BenzingaNewsDataConverter.CompressData(): Loading data from existing ZIP file {compressedProcessed.FullName}");
 
                 // Takes all articles that are missing from the existing articles contained within the ZIP file
                 // and creates a new dictionary only containing the files that are missing in the ZIP file.
@@ -360,7 +364,7 @@ namespace QuantConnect.ToolBox.Benzinga
                 var instance = new BenzingaNewsFiltered(filtered.Date);
 
                 // Dispose of the handle before attempting to move the file, otherwise File.Move will throw
-                using (var zipFile = compressedFinal.OpenRead())
+                using (var zipFile = compressedProcessed.OpenRead())
                 {
                     var ms = new MemoryStream();
                     zipFile.CopyTo(ms);
@@ -378,9 +382,12 @@ namespace QuantConnect.ToolBox.Benzinga
                 // Guaranteed to preserve original data, i.e. not mutate the original collection
                 filtered = instance;
 
-                Log.Trace($"BenzingaDataConverter.WriteToFile(): Moving existing zip file for {filtered.Date:yyyyMMdd} to temp directory as: {compressedFinalBackup.Name}");
-                File.Move(compressedFinal.FullName, compressedFinalBackup.FullName);
-                compressedFinal.Refresh();
+                if (compressedFinal.FullName == compressedProcessed.FullName)
+                {
+                    Log.Trace($"BenzingaDataConverter.WriteToFile(): Moving existing zip file for {filtered.Date:yyyyMMdd} to temp directory as: {compressedFinalBackup.Name}");
+                    File.Move(compressedFinal.FullName, compressedFinalBackup.FullName);
+                    compressedFinal.Refresh();
+                }
             }
 
             try
