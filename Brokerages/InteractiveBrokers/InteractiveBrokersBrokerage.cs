@@ -959,7 +959,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 exchange = Market.CBOE.ToUpperInvariant();
             }
 
-            var contract = CreateContract(order.Symbol, exchange);
+            var contract = CreateContract(order.Symbol, false, exchange);
 
             int ibOrderId;
             if (needsNewId)
@@ -1839,9 +1839,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Creates an IB contract from the order.
         /// </summary>
         /// <param name="symbol">The symbol whose contract we need to create</param>
+        /// <param name="includeExpired">Include expired contracts</param>
         /// <param name="exchange">The exchange where the order will be placed, defaults to 'Smart'</param>
         /// <returns>A new IB contract for the order</returns>
-        private Contract CreateContract(Symbol symbol, string exchange = null)
+        private Contract CreateContract(Symbol symbol, bool includeExpired, string exchange = null)
         {
             var securityType = ConvertSecurityType(symbol.ID.SecurityType);
             var ibSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
@@ -1873,6 +1874,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.Symbol = ibSymbol;
                 contract.Multiplier = _securityProvider.GetSecurity(symbol)?.SymbolProperties.ContractMultiplier.ToString(CultureInfo.InvariantCulture) ?? "100";
                 contract.TradingClass = GetTradingClass(contract, symbol);
+
+                contract.IncludeExpired = includeExpired;
             }
 
             if (symbol.ID.SecurityType == SecurityType.Future)
@@ -1885,6 +1888,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.Exchange = _futuresExchanges.ContainsKey(symbol.ID.Market) ?
                                         _futuresExchanges[symbol.ID.Market] :
                                         symbol.ID.Market;
+
+                contract.IncludeExpired = includeExpired;
             }
 
             return contract;
@@ -2435,7 +2440,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                                 }
 
                                 var id = GetNextTickerId();
-                                var contract = CreateContract(subscribeSymbol);
+                                var contract = CreateContract(subscribeSymbol, false);
 
                                 _requestInformation[id] = $"Subscribe: {symbol.Value} ({contract})";
 
@@ -2802,10 +2807,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         /// <param name="lookupName">String representing the name to lookup</param>
         /// <param name="securityType">Expected security type of the returned symbols (if any)</param>
+        /// <param name="includeExpired">Include expired contracts</param>
         /// <param name="securityCurrency">Expected security currency(if any)</param>
         /// <param name="securityExchange">Expected security exchange name(if any)</param>
         /// <returns></returns>
-        public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, string securityCurrency = null, string securityExchange = null)
+        public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, bool includeExpired, string securityCurrency = null, string securityExchange = null)
         {
             // setting up exchange defaults and filters
             var exchangeSpecifier = securityType == SecurityType.Future ? securityExchange ?? "" : securityExchange ?? "Smart";
@@ -2818,7 +2824,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Symbol = _symbolMapper.GetBrokerageRootSymbol(lookupName),
                 Currency = securityCurrency ?? Currencies.USD,
                 Exchange = exchangeSpecifier,
-                SecType = ConvertSecurityType(securityType)
+                SecType = ConvertSecurityType(securityType),
+                IncludeExpired = includeExpired
             };
 
             Log.Trace($"InteractiveBrokersBrokerage.LookupSymbols(): Requesting symbol list for {contract.Symbol} ...");
@@ -2852,15 +2859,19 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // Try to remove options or futures contracts that have expired
-            if (securityType == SecurityType.Option || securityType == SecurityType.Future)
+            if (!includeExpired)
             {
-                var removedSymbols = symbols.Where(x => x.ID.Date < GetRealTimeTickTime(x).Date).ToHashSet();
-
-                if (symbols.RemoveAll(x => removedSymbols.Contains(x)) > 0)
+                if (securityType == SecurityType.Option || securityType == SecurityType.Future)
                 {
-                    Log.Trace("InteractiveBrokersBrokerage.LookupSymbols(): Removed contract(s) for having expiry in the past: {0}", string.Join(",", removedSymbols.Select(x => x.Value)));
+                    var removedSymbols = symbols.Where(x => x.ID.Date < GetRealTimeTickTime(x).Date).ToHashSet();
+
+                    if (symbols.RemoveAll(x => removedSymbols.Contains(x)) > 0)
+                    {
+                        Log.Trace("InteractiveBrokersBrokerage.LookupSymbols(): Removed contract(s) for having expiry in the past: {0}", string.Join(",", removedSymbols.Select(x => x.Value)));
+                    }
                 }
             }
+
             Log.Trace($"InteractiveBrokersBrokerage.LookupSymbols(): Returning {symbols.Count} contract(s) for {contract.Symbol}");
 
             return symbols;
@@ -2898,10 +2909,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 yield break;
             }
 
-            // only trades can be requested (except for FX/CFD)
-            if (request.Symbol.SecurityType != SecurityType.Forex &&
+            // skip invalid security types
+            if (request.Symbol.SecurityType != SecurityType.Equity &&
+                request.Symbol.SecurityType != SecurityType.Forex &&
                 request.Symbol.SecurityType != SecurityType.Cfd &&
-                request.TickType != TickType.Trade)
+                request.Symbol.SecurityType != SecurityType.Future &&
+                request.Symbol.SecurityType != SecurityType.Option)
             {
                 yield break;
             }
@@ -2916,13 +2929,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // preparing the data for IB request
-            var contract = CreateContract(request.Symbol);
+            var contract = CreateContract(request.Symbol, true);
             var resolution = ConvertResolution(request.Resolution);
             var duration = ConvertResolutionToDuration(request.Resolution);
             var startTime = request.Resolution == Resolution.Daily ? request.StartTimeUtc.Date : request.StartTimeUtc;
             var endTime = request.Resolution == Resolution.Daily ? request.EndTimeUtc.Date : request.EndTimeUtc;
 
-            Log.Trace($"InteractiveBrokersBrokerage::GetHistory(): Submitting request: {request.Symbol.Value} ({contract}): {request.Resolution} {startTime} UTC -> {endTime} UTC");
+            Log.Trace($"InteractiveBrokersBrokerage::GetHistory(): Submitting request: {request.Symbol.Value} ({contract}): {request.Resolution}/{request.TickType} {startTime} UTC -> {endTime} UTC");
 
             DateTimeZone exchangeTimeZone;
             if (!_symbolExchangeTimeZones.TryGetValue(request.Symbol, out exchangeTimeZone))
@@ -2933,9 +2946,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             IEnumerable<BaseData> history;
-            if (request.Symbol.SecurityType == SecurityType.Forex || request.Symbol.SecurityType == SecurityType.Cfd)
+            if (request.TickType == TickType.Quote)
             {
-                // Forex and CFD need two separate IB requests for Bid and Ask,
+                // Quotes need two separate IB requests for Bid and Ask,
                 // each pair of TradeBars will be joined into a single QuoteBar
                 var historyBid = GetHistory(request, contract, startTime, endTime, exchangeTimeZone, duration, resolution, HistoricalDataType.Bid);
                 var historyAsk = GetHistory(request, contract, startTime, endTime, exchangeTimeZone, duration, resolution, HistoricalDataType.Ask);

@@ -1995,7 +1995,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 },
 
                 // LookupSymbols
-                (lookupName, secType, securityCurrency, securityExchange) =>
+                (lookupName, secType, includeExpired, securityCurrency, securityExchange) =>
                 {
                     lookupCount++;
 

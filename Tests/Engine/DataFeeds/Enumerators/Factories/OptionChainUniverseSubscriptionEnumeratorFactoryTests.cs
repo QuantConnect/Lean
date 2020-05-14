@@ -263,7 +263,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 _timeProvider = timeProvider;
             }
 
-            public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, string securityCurrency = null, string securityExchange = null)
+            public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, bool includeExpired, string securityCurrency = null, string securityExchange = null)
             {
                 TotalLookupCalls++;
 
