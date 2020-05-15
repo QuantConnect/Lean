@@ -65,6 +65,18 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// Total cancellation of the plan
         /// </summary>
         [EnumMember(Value = "Programme Cancellation")]
-        Cancellation
+        Cancellation,
+
+        /// <summary>
+        /// Waiting on vendor reply for summary
+        /// </summary>
+        [EnumMember(Value = "Seek Authorisation")]
+        SeekAuthorization,
+
+        /// <summary>
+        /// Announcement by a company that a plan of repurchase has been suspended. Further details of the suspension are included in the note.
+        /// </summary>
+        [EnumMember(Value = "Plan Suspension")]
+        PlanSuspension
     }
 }
