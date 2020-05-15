@@ -32,7 +32,6 @@ namespace QuantConnect.Python
     public class PandasData
     {
         private static dynamic _pandas;
-        private static dynamic _remapperFactory;
         private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
         private readonly static ConcurrentDictionary<Type, List<MemberInfo>> _membersByType = new ConcurrentDictionary<Type, List<MemberInfo>>();
 
@@ -60,199 +59,242 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
-                    _pandas = Py.Import("pandas");
-
                     // this python Remapper class will work as a proxy and adjust the
                     // input to its methods using the provided 'mapper' callable object
-                    _remapperFactory = PythonEngine.ModuleFromString("remapper",
-                        @"import wrapt
-import pandas
+                    _pandas = PythonEngine.ModuleFromString("remapper",
+                        @"import pandas as pd
+from pandas.core.resample import Resampler, DatetimeIndexResampler, PeriodIndexResampler, TimedeltaIndexResampler
+from pandas.core.groupby.generic import DataFrameGroupBy, SeriesGroupBy
+from pandas.core.indexes.frozen import FrozenList as pdFrozenList
+from pandas.core.window import Expanding, EWM, Rolling, Window
+from inspect import getmembers, isfunction, isgenerator
+from functools import partial
+from sys import modules
+
 from clr import AddReference
 AddReference(""QuantConnect.Common"")
-from QuantConnect import *
+from QuantConnect import Symbol, SymbolCache
 
-originalConcat = pandas.concat
+def mapper(key):
+    '''Maps a Symbol object or a Symbol Ticker (string) to the string representation of
+    Symbol SecurityIdentifier. If cannot map, returns the object
+    '''
+    keyType = type(key)
+    if keyType is Symbol:
+        return str(key.ID)
+    if keyType is str:
+        kvp = SymbolCache.TryGetSymbol(key, None)
+        if kvp[0]:
+            return str(kvp[1].ID)
+    if keyType is tuple:
+        return tuple([mapper(x) for x in key])
+    if keyType is dict:
+        return {k:mapper(v) for k,v in key.items()}
+    return key
 
-def PandasConcatWrapper(objs, axis=0, join='outer', join_axes=None, ignore_index=False, keys=None, levels=None, names=None, verify_integrity=False, sort=None, copy=True):
-    return Remapper(originalConcat(objs, axis, join, join_axes, ignore_index, keys, levels, names, verify_integrity, sort, copy))
+def try_wrap_as_index(obj):
+    '''Tries to wrap object if it is one of pandas' index objects.'''
 
-pandas.concat = PandasConcatWrapper
+    objType = type(obj)
 
-class Remapper(wrapt.ObjectProxy):
-    def __init__(self, wrapped):
-        super(Remapper, self).__init__(wrapped)
+    if objType is pd.Index:
+        return True, Index(obj)
 
-    def _self_mapper(self, key):
-        ''' Our remapping method.
-        Originally implemented in C# but some cases were not working correctly and using Py did the trick.
-        This is to improve user experience, they can use Symbol as key and we convert it to string for pandas
-        '''
-        if isinstance(key, Symbol):
-            return str(key.ID)
+    if objType is pd.MultiIndex:
+        result = object.__new__(MultiIndex)
+        result._set_levels(obj.levels, copy=obj.copy, validate=False)
+        result._set_codes(obj.codes, copy=obj.copy, validate=False)
+        result._set_names(obj.names)
+        result.sortorder = obj.sortorder
+        return True, result
 
-        # this is the most normal use case
-        if isinstance(key, str):
-            tupleResult = SymbolCache.TryGetSymbol(key, None)
-            if tupleResult[0]:
-                return str(tupleResult[1].ID)
+    if objType is pdFrozenList:
+        return True, FrozenList(obj)
 
-        # If the key is a tuple, convert the items
-        if isinstance(key, tuple) and 2 >= len(key) >= 1:
-            item0 = self._self_mapper(key[0])
-            return (item0,) if len(key) == 1 else \
-                (item0, self._self_mapper(key[1]))
+    return False, obj
 
-        return key
+def try_wrap_as_pandas(obj):
+    '''Tries to wrap object if it is a pandas' object.'''
 
-    def __contains__(self, key):
-        key = self._self_mapper(key)
-        return self.__wrapped__.__contains__(key)
+    success, obj = try_wrap_as_index(obj)
+    if success:
+        return success, obj
 
-    def __getitem__(self, name):
-        name = self._self_mapper(name)
-        result = self.__wrapped__.__getitem__(name)
+    objType = type(obj)
 
-        if isinstance(result, (pandas.Series, pandas.Index, pandas.DataFrame)):
-            # For these cases we wrap the result too. Can't apply the wrap around all
-            # results because it causes issues in pandas for some of our use cases
-            # specifically pandas timestamp type
-            return Remapper(result)
+    if objType is pd.DataFrame:
+        return True, DataFrame(data=obj)
+
+    if objType is pd.Series:
+        return True, Series(data=obj)
+
+    if objType is tuple:
+        anySuccess = False
+        results = list()
+        for item in obj:
+            success, result = try_wrap_as_pandas(item)
+            anySuccess |= success
+            results.append(result)
+        if anySuccess:
+            return True, tuple(results)
+
+    return False, obj
+
+def try_wrap_resampler(obj, self):
+    '''Tries to wrap object if it is a pandas' Resampler object.'''
+
+    if not isinstance(obj, Resampler):
+        return False, obj
+
+    klass = CreateWrapperClass(type(obj))
+    return True, klass(self, groupby=obj.groupby, kind=obj.kind, axis=obj.axis)
+
+def wrap_function(f):
+    '''Wraps function f with g.
+    Function g converts the args/kwargs to use alternative index keys
+    and the result of the f function call to the wrapper objects
+    '''
+    def g(*args, **kwargs):
+
+        if len(args) > 1:
+            args = mapper(args)
+        if len(kwargs) > 0:
+            kwargs = mapper(kwargs)
+
+        result = f(*args, **kwargs)
+
+        success, result = try_wrap_as_pandas(result)
+        if success:
+            return result
+
+        success, result = try_wrap_resampler(result, args[0])
+        if success:
+            return result
+
+        if isgenerator(result):
+            return ( (k, try_wrap_as_pandas(v)[1]) for k, v in result)
+
         return result
 
-    def __setitem__(self, name, value):
-        name = self._self_mapper(name)
-        return self.__wrapped__.__setitem__(name, value)
+    g.__name__ = f.__name__
+    return g
 
-    def __delitem__(self, name):
-        name = self._self_mapper(name)
-        return self.__wrapped__.__delitem__(name)
+def wrap_special_function(name, cls, fcls, gcls = None):
+    '''Replaces the special function of a given class by g that wraps fcls
+    This is how pandas implements them.
+    gcls represents an alternative for fcls
+    if the keyword argument has 'win_type' key for the Rolling/Window case
+    '''
+    fcls = CreateWrapperClass(fcls)
+    if gcls is not None:
+        gcls = CreateWrapperClass(fcls)
 
-    def __str__(self):
-        return self.__wrapped__.__str__()
+    def g(*args, **kwargs):
+        if kwargs.get('win_type', None):
+            return gcls(*args, **kwargs)
+        return fcls(*args, **kwargs)
+    g.__name__ = name
+    setattr(cls, g.__name__, g)
 
-    def __repr__(self):
-        return self.__wrapped__.__repr__()
+def CreateWrapperClass(cls: type):
+    '''Creates wrapper classes.
+    Members of the original class are wrapped to allow alternative index look-up
+    '''
+    # Define a new class
+    klass = type(f'{cls.__name__}', (cls,) + cls.__bases__, dict(cls.__dict__))
 
-    # we wrap the result and input of 'xs'
-    def xs(self, key, axis=0, level=None, drop_level=True):
-        key = self._self_mapper(key)
-        result = self.__wrapped__.xs(key=key, axis=axis, level=level, drop_level=drop_level)
-        return Remapper(result)
+    def g(self, name):
+        '''Wrap '__getattribute__' to handle indices
+        Only need to wrap columns, index and levels attributes
+        '''
+        attr = object.__getattribute__(self, name)
+        if name in ['columns', 'index', 'levels']:
+            _, attr = try_wrap_as_index(attr)
+        return attr
+    g.__name__ =  '__getattribute__'
+    g.__qualname__ =  g.__name__
+    setattr(klass, g.__name__, g)
 
-    def get(self, key, default=None):
-        key = self._self_mapper(key)
-        return self.__wrapped__.get(key=key, default=default)
+    def wrap_union(f):
+        '''Wraps function f (union) with g.
+        Special case: The union method from index objects needs to
+        receive pandas' index objects to avoid infity recursion.
+        Function g converts the args/kwargs objects to one of pandas index objects
+        and the result of the f function call back to wrapper indexes objects
+        '''
+        def unwrap_index(obj):
+            '''Tries to unwrap object if it is one of this module wrapper's index objects.'''
+            objType = type(obj)
 
-    # we wrap the result of 'unstack'
-    def unstack(self, level=-1, fill_value=None):
-        result = self.__wrapped__.unstack(level=level, fill_value=fill_value)
-        return Remapper(result)
+            if objType is Index:
+                return pd.Index(obj)
 
-    def join(self, other, on=None, how='left', lsuffix='', rsuffix='', sort=False):
-        result = self.__wrapped__.join(other=other, on=on, how=how, lsuffix=lsuffix, rsuffix=rsuffix, sort=sort)
-        return Remapper(result)
+            if objType is MultiIndex:
+                result = object.__new__(pd.MultiIndex)
+                result._set_levels(obj.levels, copy=obj.copy, validate=False)
+                result._set_codes(obj.codes, copy=obj.copy, validate=False)
+                result._set_names(obj.names)
+                result.sortorder = obj.sortorder
+                return result
 
-    def append(self, other, ignore_index=False, verify_integrity=False, sort=None):
-        result = self.__wrapped__.append(other=other, ignore_index=ignore_index, verify_integrity=verify_integrity, sort=sort)
-        return Remapper(result)
+            if objType is FrozenList:
+                return pdFrozenList(obj)
 
-    def merge(self, right, how='inner', on=None, left_on=None, right_on=None, left_index=False, right_index=False, sort=False, suffixes=('_x', '_y'), copy=True, indicator=False, validate=None):
-        result = self.__wrapped__.merge(right=right, how=how, on=on, left_on=left_on, right_on=right_on, left_index=left_index, right_index=right_index, sort=sort, suffixes=suffixes, copy=copy, indicator=indicator, validate=validate)
-        return Remapper(result)
+            return obj
 
-    # we wrap 'loc' to cover the: df.loc['SPY'] case
-    @property
-    def loc(self):
-        return Remapper(self.__wrapped__.loc)
+        def g(*args, **kwargs):
 
-    @property
-    def ix(self):
-        return Remapper(self.__wrapped__.ix)
+            args = tuple([unwrap_index(x) for x in args])
+            result = f(*args, **kwargs)
+            _, result = try_wrap_as_index(result)
+            return result
 
-    @property
-    def iloc(self):
-        return Remapper(self.__wrapped__.iloc)
+        g.__name__ = f.__name__
+        return g
 
-    @property
-    def at(self):
-        return Remapper(self.__wrapped__.at)
+    # We allow the wraopping of slot methods that are not inherited from object
+    # It will include operation methods like __add__ and __contains__
+    allow_list = set(x for x in dir(klass) if x.startswith('__')) - set(dir(object))
 
-    @property
-    def index(self):
-        return Remapper(self.__wrapped__.index)
+    # Wrap class members of the newly created class 
+    for name, member in getmembers(klass):
+        if name.startswith('_') and name not in allow_list:
+            continue
 
-    @property
-    def levels(self):
-        return Remapper(self.__wrapped__.levels)
+        if isfunction(member):
+            if name == 'union':
+                member = wrap_union(member)
+            else:
+                member = wrap_function(member)
+            setattr(klass, name, member)
 
-    # we wrap the following properties so that when 'unstack', 'loc' are called we wrap them
-    @property
-    def open(self):
-        return Remapper(self.__wrapped__.open)
-    @property
-    def high(self):
-        return Remapper(self.__wrapped__.high)
-    @property
-    def close(self):
-        return Remapper(self.__wrapped__.close)
-    @property
-    def low(self):
-        return Remapper(self.__wrapped__.low)
-    @property
-    def lastprice(self):
-        return Remapper(self.__wrapped__.lastprice)
-    @property
-    def volume(self):
-        return Remapper(self.__wrapped__.volume)
-    @property
-    def askopen(self):
-        return Remapper(self.__wrapped__.askopen)
-    @property
-    def askhigh(self):
-        return Remapper(self.__wrapped__.askhigh)
-    @property
-    def asklow(self):
-        return Remapper(self.__wrapped__.asklow)
-    @property
-    def askclose(self):
-        return Remapper(self.__wrapped__.askclose)
-    @property
-    def askprice(self):
-        return Remapper(self.__wrapped__.askprice)
-    @property
-    def asksize(self):
-        return Remapper(self.__wrapped__.asksize)
-    @property
-    def quantity(self):
-        return Remapper(self.__wrapped__.quantity)
-    @property
-    def suspicious(self):
-        return Remapper(self.__wrapped__.suspicious)
-    @property
-    def bidopen(self):
-        return Remapper(self.__wrapped__.bidopen)
-    @property
-    def bidhigh(self):
-        return Remapper(self.__wrapped__.bidhigh)
-    @property
-    def bidlow(self):
-        return Remapper(self.__wrapped__.bidlow)
-    @property
-    def bidclose(self):
-        return Remapper(self.__wrapped__.bidclose)
-    @property
-    def bidprice(self):
-        return Remapper(self.__wrapped__.bidprice)
-    @property
-    def bidsize(self):
-        return Remapper(self.__wrapped__.bidsize)
-    @property
-    def exchange(self):
-        return Remapper(self.__wrapped__.exchange)
-    @property
-    def openinterest(self):
-        return Remapper(self.__wrapped__.openinterest)
-").GetAttr("Remapper");
+        elif type(member) is property:
+            if type(member.fget) is partial:
+                func = CreateWrapperClass(member.fget.func)
+                fget = partial(func, name)
+            else:
+                fget = wrap_function(member.fget)
+            member = property(fget, member.fset, member.fdel, member.__doc__)
+            setattr(klass, name, member)
+
+    return klass
+
+FrozenList = CreateWrapperClass(pdFrozenList)
+Index = CreateWrapperClass(pd.Index)
+MultiIndex = CreateWrapperClass(pd.MultiIndex)
+Series = CreateWrapperClass(pd.Series)
+DataFrame = CreateWrapperClass(pd.DataFrame)
+
+wrap_special_function('groupby', Series, SeriesGroupBy)
+wrap_special_function('groupby', DataFrame, DataFrameGroupBy)
+wrap_special_function('ewm', Series, EWM)
+wrap_special_function('ewm', DataFrame, EWM)
+wrap_special_function('expanding', Series, Expanding)
+wrap_special_function('expanding', DataFrame, Expanding)
+wrap_special_function('rolling', Series, Rolling, Window)
+wrap_special_function('rolling', DataFrame, Rolling, Window)
+
+setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 }
             }
 
@@ -498,7 +540,7 @@ class Remapper(wrapt.ObjectProxy):
                     pyDict.SetItem(kvp.Key, _pandas.Series(values, index));
                 }
                 _series.Clear();
-                return ApplySymbolMapper(_pandas.DataFrame(pyDict));
+                return _pandas.DataFrame(pyDict);
             }
         }
 
@@ -535,14 +577,6 @@ class Remapper(wrapt.ObjectProxy):
             return baseType.IsAssignableFrom(type)
                 ? baseType.GetProperties().Select(x => x.Name.ToLowerInvariant())
                 : Enumerable.Empty<string>();
-        }
-
-        /// <summary>
-        /// Will wrap the provided pandas data frame using the <see cref="_remapperFactory"/>
-        /// </summary>
-        internal static dynamic ApplySymbolMapper(dynamic pandasDataFrame)
-        {
-            return _remapperFactory.Invoke(pandasDataFrame);
         }
     }
 }
