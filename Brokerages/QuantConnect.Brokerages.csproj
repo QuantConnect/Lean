@@ -386,6 +386,7 @@
     <Compile Include="WebSocketCloseData.cs" />
     <Compile Include="WebSocketError.cs" />
     <Compile Include="WebSocketMessage.cs" />
+    <Compile Include="WebSocketClientWrapper.cs" />
     <Compile Include="WebSocketWrapper.cs" />
     <Compile Include="InteractiveBrokers\Client\AccountDownloadEndEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\ActionSide.cs" />

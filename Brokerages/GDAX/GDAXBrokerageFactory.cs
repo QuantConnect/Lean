@@ -76,7 +76,7 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
             var restClient = new RestClient("https://api.pro.coinbase.com");
-            var webSocketClient = new WebSocketWrapper();
+            var webSocketClient = new WebSocketClientWrapper();
             var priceProvider = new ApiPriceProvider(job.UserId, job.UserToken);
 
             IBrokerage brokerage;
