@@ -657,6 +657,7 @@
     <Compile Include="Messaging\StreamingMessageHandlerTests.cs" />
     <Compile Include="Python\AlgorithmPythonWrapperTests.cs" />
     <Compile Include="Python\MethodOverloadTests.cs" />
+    <Compile Include="Python\PandasConverterTests.BackwardsCompatibility.cs" />
     <Compile Include="Python\PortfolioCustomModelTests.cs" />
     <Compile Include="Python\PythonPackagesTests.cs" />
     <Compile Include="Python\PythonSliceGetByTypeTest.cs" />
