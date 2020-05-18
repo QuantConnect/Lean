@@ -14,7 +14,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>QuantConnect.Compression</RootNamespace>
     <AssemblyName>QuantConnect.Compression</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <LangVersion>6</LangVersion>
     <TargetFrameworkProfile />
@@ -58,9 +58,6 @@
     </Reference>
     <Reference Include="ICSharpCode.SharpZipLib">
       <HintPath>..\packages\ICSharpCode.SharpZipLib.dll.0.85.4.369\lib\net20\ICSharpCode.SharpZipLib.dll</HintPath>
-    </Reference>
-    <Reference Include="StringInterpolationBridge, Version=0.9.1.0, Culture=neutral, PublicKeyToken=761dcf67ba0bf74d, processorArchitecture=MSIL">
-      <HintPath>..\packages\StringInterpolationBridgeStrong.0.9.1\lib\net40\StringInterpolationBridge.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

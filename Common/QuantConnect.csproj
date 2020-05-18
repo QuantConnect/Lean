@@ -15,7 +15,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>QuantConnect</RootNamespace>
     <AssemblyName>QuantConnect.Common</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -107,7 +107,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CloneExtensions, Version=1.3.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\CloneExtensions.1.3.0\lib\net45\CloneExtensions.dll</HintPath>
+      <HintPath>..\packages\CloneExtensions.1.3.0\lib\net461\CloneExtensions.dll</HintPath>
     </Reference>
     <Reference Include="DotNetZip, Version=1.13.3.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
       <HintPath>..\packages\DotNetZip.1.13.3\lib\net40\DotNetZip.dll</HintPath>
@@ -126,9 +126,6 @@
     </Reference>
     <Reference Include="QLNet, Version=1.11.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\QLNet.1.11.3\lib\net452\QLNet.dll</HintPath>
-    </Reference>
-    <Reference Include="StringInterpolationBridge, Version=0.9.1.0, Culture=neutral, PublicKeyToken=761dcf67ba0bf74d, processorArchitecture=MSIL">
-      <HintPath>..\packages\StringInterpolationBridgeStrong.0.9.1\lib\net40\StringInterpolationBridge.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
