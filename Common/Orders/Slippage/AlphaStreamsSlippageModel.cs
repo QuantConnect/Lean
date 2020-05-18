@@ -23,16 +23,7 @@ namespace QuantConnect.Orders.Slippage
     /// </summary>
     public class AlphaStreamsSlippageModel : ISlippageModel
     {
-        private const decimal _slippagePercent = 0.0001m;
-
-        /// <summary>
-        /// Unfortunate dictionary of ETFs and their spread on 10/10 so that we can better approximate
-        /// slippage for the competition
-        /// </summary>
-        private readonly IDictionary<string, decimal> _spreads = new Dictionary<string, decimal>
-        {
-            {"PPLT",  0.13m}, {"DGAZ", 0.135m}, {"EDV", 0.085m}, {"SOXL", 0.1m}
-        };
+        private const decimal _slippagePercent = 0;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AlphaStreamsSlippageModel"/> class
@@ -49,14 +40,7 @@ namespace QuantConnect.Orders.Slippage
                 return 0;
             }
 
-            decimal slippageValue;
-
-            if (!_spreads.TryGetValue(asset.Symbol.Value, out slippageValue))
-            {
-                return _slippagePercent * asset.GetLastData()?.Value ?? 0;
-            }
-
-            return slippageValue;
+            return _slippagePercent * asset.GetLastData()?.Value ?? 0;
         }
     }
 }
