@@ -145,6 +145,7 @@
     <Compile Include="Alphas\ConstantAlphaModel.cs" />
     <Compile Include="Alphas\MacdAlphaModel.cs" />
     <Compile Include="Selection\FutureUniverseSelectionModel.cs" />
+    <Compile Include="Selection\OpenInterestFutureUniverseSelectionModel.cs" />
     <Compile Include="Selection\OptionUniverseSelectionModel.cs" />
     <Compile Include="Selection\ScheduledUniverseSelectionModel.cs" />
     <Compile Include="Selection\QC500UniverseSelectionModel.cs" />
