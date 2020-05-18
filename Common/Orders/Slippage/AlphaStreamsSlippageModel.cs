@@ -23,7 +23,7 @@ namespace QuantConnect.Orders.Slippage
     /// </summary>
     public class AlphaStreamsSlippageModel : ISlippageModel
     {
-        private const decimal _slippagePercent = 0;
+        private const decimal _slippagePercent = 0.0001m;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AlphaStreamsSlippageModel"/> class

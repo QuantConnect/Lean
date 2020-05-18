@@ -142,7 +142,7 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
         [Test]
         public void AlphaStreamsSlippageModel_EquityTest()
         {
-            decimal slippagePercent = 0;
+            decimal slippagePercent = 0.0001m;
 
             var model = new AlphaStreamsSlippageModel();
 
