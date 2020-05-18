@@ -73,7 +73,7 @@ from sys import modules
 
 from clr import AddReference
 AddReference(""QuantConnect.Common"")
-from QuantConnect import Symbol, SymbolCache
+from QuantConnect import *
 
 def mapper(key):
     '''Maps a Symbol object or a Symbol Ticker (string) to the string representation of

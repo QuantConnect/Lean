@@ -872,7 +872,7 @@ def Test(df, other, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    data = dataFrame['lastprice'].unstack(level=0).ix[-1][{index}]
+    data = dataFrame['lastprice'].unstack(level=0).iloc[-1][{index}]
     if data is 0:
         raise Exception('Data is zero')").GetAttr("Test");
 
@@ -979,7 +979,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    data = dataFrame['lastprice'].unstack(level=0).iloc[-1][{index}]
+    data = dataFrame['lastprice'].unstack(level=0).ix[-1][{index}]
     if data is 0:
         raise Exception('Data is zero')").GetAttr("Test");
 
