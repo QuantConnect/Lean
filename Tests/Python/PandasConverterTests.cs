@@ -33,8 +33,10 @@ using QuantConnect.Util;
 namespace QuantConnect.Tests.Python
 {
     [TestFixture]
-    public class PandasConverterTests
+    public partial class PandasConverterTests
     {
+        private PandasConverter _converter = new PandasConverter();
+
         [SetUp]
         public void Setup()
         {
@@ -184,7 +186,136 @@ namespace QuantConnect.Tests.Python
         [TestCase("'SPY'", true)]
         [TestCase("symbol")]
         [TestCase("str(symbol.ID)")]
-        public void BackwardsCompatibilityDataFrame_append(string index, bool cache = false)
+        public void BackwardsCompatibilityDataFrame_add_prefix(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.add_prefix('price_')['price_lastprice'].unstack(level=0)
+    data = data.iloc[-1][{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_add_suffix(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.add_suffix('_tick')['lastprice_tick'].unstack(level=0)
+    data = data.iloc[-1][{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_align(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, other, symbol):
+    data = dataFrame.lastprice.unstack(level=0)
+    other = other.lastprice.unstack(level=0)
+    data, other = data.align(other, axis=0)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), GetTestDataFrame(Symbols.AAPL), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_apply(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+import numpy as np
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.unstack(level=0).apply(np.sqrt)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_applymap(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.unstack(level=0).applymap(lambda x: x*2)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_asfreq(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.unstack(level=0).asfreq(freq='30S')
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_asof(string index, bool cache = false)
         {
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
 
@@ -193,14 +324,56 @@ namespace QuantConnect.Tests.Python
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
 import pandas as pd
-
-def Test(dataFrame, dataFrame2, symbol):
-    newDataFrame = dataFrame.append(dataFrame2)
-    data = newDataFrame['lastprice'].unstack(level=0).ix[-1][{index}]
+def Test(dataFrame, symbol):
+    idx = pd.DatetimeIndex(['2018-02-27 09:03:30'])
+    data = dataFrame.lastprice.unstack(level=0).asof(idx)
+    data = data[{index}]
     if data is 0:
         raise Exception('Data is zero')").GetAttr("Test");
 
-                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), GetTestDataFrame(Symbols.AAPL), Symbols.SPY));
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_assign(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.assign(tmp=lambda x: x.lastprice * 1.1)['tmp'].unstack(level=0)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_astype(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.unstack(level=0).astype('float16')
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
         }
 
@@ -225,6 +398,112 @@ def Test(dataFrame, symbol):
         [TestCase("'SPY'", true)]
         [TestCase("symbol")]
         [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_at_time(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.unstack(level=0).at_time('04:00')
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_axes(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    axes = dataFrame.axes[0]
+    if {index} not in axes.levels[0]:
+        raise ValueError('SPY was not found')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_between_time(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.unstack(level=0).between_time('02:00', '06:00')
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_columns(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    columns = dataFrame.lastprice.unstack(level=0).columns
+    if {index} not in columns:
+        raise ValueError('SPY was not found')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_combine(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+import numpy as np
+def Test(dataFrame, other, symbol):
+    dataFrame = dataFrame.lastprice.unstack(level=0)
+    other = other.lastprice.unstack(level=0)
+    data = dataFrame.combine(other, np.minimum)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), GetTestDataFrame(Symbols.AAPL), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
         public void BackwardsCompatibilityDataFrame_concat(string index, bool cache = false)
         {
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
@@ -234,7 +513,6 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
 import pandas as pd
-
 def Test(dataFrame, dataFrame2, symbol):
     newDataFrame = pd.concat([dataFrame, dataFrame2])
     data = newDataFrame['lastprice'].unstack(level=0).ix[-1][{index}]
@@ -242,6 +520,240 @@ def Test(dataFrame, dataFrame2, symbol):
         raise Exception('Data is zero')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), GetTestDataFrame(Symbols.AAPL), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_corrwith(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+import numpy as np
+def Test(dataFrame, other, symbol):
+    other = other.lastprice.unstack(level=0)
+    data = dataFrame.lastprice.unstack(level=0).corrwith(other)
+    data = data.loc[{index}]
+    if not np.isnan(data):
+        raise Exception('Data should be NaN')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), GetTestDataFrame(Symbols.AAPL), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_drop(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.drop(columns=['exchange']).lastprice.unstack(level=0)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_droplevel(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.droplevel('time').lastprice
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_dtypes(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+import numpy as np
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.unstack(level=0).dtypes
+    data = data.loc[{index}]
+    if data != np.float64:
+        raise Exception('Data type is ' + str(data))").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_eval(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.eval('tmp=lastprice * 1.1')['tmp'].unstack(level=0)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_equals(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, other, symbol):
+    if not dataFrame.equals(other):
+        raise Exception('Dataframe are not equal')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_ewm(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.unstack(level=0)
+    data = data.ewm(com=0.5).mean()
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_expanding(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.unstack(level=0)
+    data = data.expanding(2).sum()
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_explode(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.explode('lastprice').lastprice.unstack(level=0)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_filter(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.filter(items=['lastprice']).lastprice.unstack(level=0)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_ftypes(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.unstack(level=0).ftypes
+    data = data.loc[{index}]
+    if str(data) != 'float64:dense':
+        raise Exception('Data type is ' + str(data))").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
         }
 
@@ -286,6 +798,71 @@ def Test(dataFrame, symbol):
         [TestCase("'SPY'", true)]
         [TestCase("symbol")]
         [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_get_value_index(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.get_value(({index},), 'lastprice')
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_get_value_column(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.unstack(level=0)
+    idx = data.index[0]
+    data = data.get_value(idx, {index})
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_groupby(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+import pandas as pd
+def Test(df, other, symbol):
+    df = pd.concat([df, other])
+    df = df.groupby(level=0).mean()
+    data = df.lastprice.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), GetTestDataFrame(Symbols.AAPL, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
         public void BackwardsCompatibilityDataFrame_iloc(string index, bool cache = false)
         {
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
@@ -295,10 +872,31 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    data = dataFrame['lastprice'].unstack(level=0).ix[-1][{index}]
+    data = dataFrame['lastprice'].unstack(level=0).iloc[-1][{index}]
     if data is 0:
         raise Exception('Data is zero')").GetAttr("Test");
 
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_insert(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.unstack(level=0)
+    data.insert(0, 'nine', 999)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
         }
@@ -321,6 +919,54 @@ def Test(dataFrame, symbol):
             }
         }
 
+
+        [TestCase("items", "'SPY'", true)]
+        [TestCase("items", "symbol")]
+        [TestCase("items", "str(symbol.ID)")]
+        [TestCase("iteritems", "'SPY'", true)]
+        [TestCase("iteritems", "symbol")]
+        [TestCase("iteritems", "str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_items(string method, string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    for index, data in dataFrame.{method}():
+        pass
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_iterrows(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    for index, data in dataFrame.lastprice.unstack(level=0).iterrows():
+        pass
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
         [TestCase("'SPY'", true)]
         [TestCase("symbol")]
         [TestCase("str(symbol.ID)")]
@@ -333,7 +979,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    data = dataFrame['lastprice'].unstack(level=0).iloc[-1][{index}]
+    data = dataFrame['lastprice'].unstack(level=0).ix[-1][{index}]
     if data is 0:
         raise Exception('Data is zero')").GetAttr("Test");
 
@@ -352,8 +998,6 @@ def Test(dataFrame, symbol):
             {
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
-import pandas as pd
-
 def Test(dataFrame, dataFrame2, symbol):
     newDataFrame = dataFrame.join(dataFrame2, lsuffix='_')
     data = newDataFrame['lastprice'].unstack(level=0).ix[-1][{index}]
@@ -441,7 +1085,29 @@ def Test(dataFrame, symbol):
         [TestCase("'SPY'", true)]
         [TestCase("symbol")]
         [TestCase("str(symbol.ID)")]
-        public void BackwardsCompatibilityDataFrame_merge(string index, bool cache = false)
+        public void BackwardsCompatibilityDataFrame_mask(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.unstack(0)
+    data = data.mask(data > 0)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_pivot_table(string index, bool cache = false)
         {
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
 
@@ -450,7 +1116,29 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
 import pandas as pd
+def Test(dataFrame, symbol):
+    df = dataFrame.reset_index()
+    table = pd.pivot_table(df, index=['symbol', 'time'])
+    data = table.lastprice.unstack(0)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
 
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_merge(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
 def Test(dataFrame, dataFrame2, symbol):
     newDataFrame = dataFrame.merge(dataFrame2, on='symbol', how='outer')
     data = newDataFrame.loc[{index}]
@@ -461,10 +1149,13 @@ def Test(dataFrame, dataFrame2, symbol):
             }
         }
 
-        [TestCase("'SPY'", true)]
-        [TestCase("symbol")]
-        [TestCase("str(symbol.ID)")]
-        public void BackwardsCompatibilityDataFrame_unstack(string index, bool cache = false)
+        [TestCase("nlargest", "'SPY'", true)]
+        [TestCase("nlargest", "symbol")]
+        [TestCase("nlargest", "str(symbol.ID)")]
+        [TestCase("nsmallest", "'SPY'", true)]
+        [TestCase("nsmallest", "symbol")]
+        [TestCase("nsmallest", "str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_nlarg_smallest(string method, string index, bool cache = false)
         {
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
 
@@ -473,8 +1164,463 @@ def Test(dataFrame, dataFrame2, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    df2 = dataFrame.lastprice.unstack(level=0)
-    data = df2[{index}]").GetAttr("Test");
+    data = dataFrame.{method}(3, 'lastprice')
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_pipe(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+import pandas as pd
+def Test(dataFrame, other, symbol):
+    def mean_by_group(dataframe, level):
+        return dataframe.groupby(level=level).mean()
+
+    df = pd.concat([dataFrame, other])
+    data = df.pipe(mean_by_group, level=0)
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), GetTestDataFrame(Symbols.AAPL, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_pop(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.pop('lastprice')
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_query(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.query('lastprice > 100').lastprice.unstack(0)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_reindex_like(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, other, symbol):
+    data = other.reindex_like(dataFrame)
+    data = data.lastprice.unstack(0)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), GetTestDataFrame(Symbols.AAPL), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_rename(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            var rename = "columns={'lastprice': 'price', 'B': 'c'}";
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.rename({rename})['price'].unstack(0)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_reorder_levels(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.reorder_levels(['time', 'symbol']).lastprice.unstack(1)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_resample(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.unstack(0) 
+    data = data.resample('2S').sum()
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_reset_index(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.unstack(0).reset_index('time')
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_rolling(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.rolling(2).sum()
+    data = data.lastprice.unstack(0)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_select_dtypes(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.select_dtypes(exclude=['int']).lastprice.unstack(0)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_set_value(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    idx = dataFrame.first_valid_index()
+    data = dataFrame.set_value(idx, 'lastprice', 100).lastprice.unstack(0)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 3), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_slice_shift(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.slice_shift().lastprice.unstack(0)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_sort_values(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.sort_values(by=['lastprice']).lastprice.unstack(0)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_swapaxes(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.unstack(0).swapaxes('index', 'columns')
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_swaplevel(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.swaplevel().lastprice.unstack(1)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_take(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.take([0, 3]).lastprice.unstack(0)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_transform(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+import numpy as np
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.unstack(0).transform(np.sqrt)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_T(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.T.iloc[0]
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_transpose(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.transpose().iloc[0]
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_tshift(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+from datetime import timedelta as d
+def Test(dataFrame, symbol):
+    series = dataFrame.droplevel(0)
+    data = series.tshift(freq=d(1))").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_tz_localize_convert(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.tz_localize('UTC', level=1)
+    data = data.tz_convert('America/New_York', level=1)
+    data = data.lastprice.unstack(0)[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
@@ -536,6 +1682,53 @@ def Test(dataFrame, symbol):
         raise Exception('Data is empty')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_update(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            var other = "{'lastprice': ['d', 'e', 'f']}";
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+import pandas as pd
+def Test(dataFrame, symbol):
+    other = pd.DataFrame({other}, index=dataFrame.index)
+    dataFrame.update(other)
+    data = dataFrame.lastprice.unstack(0)[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 3), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilityDataFrame_where(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    dataFrame = dataFrame.lastprice.unstack(0)
+    data = dataFrame.where(dataFrame > 167)
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 3), Symbols.SPY));
             }
         }
 
@@ -606,6 +1799,962 @@ def Test(dataFrame, symbol):
                 Assert.False(result.Contains("Remapper"));
             }
         }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_align(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, other, symbol):
+    data = dataFrame.lastprice
+    other = other.lastprice
+    data, other = data.align(other, axis=0)
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), GetTestDataFrame(Symbols.AAPL), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_apply(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+import numpy as np
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.apply(np.sqrt)
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_asfreq(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice.droplevel(0) 
+    data = series.asfreq(freq='30S')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_asof(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+import pandas as pd
+def Test(dataFrame, symbol):
+    idx = pd.DatetimeIndex(['2018-02-27 09:03:30'])
+    series = dataFrame.lastprice.droplevel(0)
+    data = series.asof(idx)").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_astype(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.astype('float16')
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_at_time(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice.droplevel(0) 
+    data = series.at_time('04:00')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_between(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.between(100, 200)").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_between_time(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice.droplevel(0) 
+    data = series.between_time('02:00', '06:00')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_combine(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+import numpy as np
+def Test(dataFrame, other, symbol):
+    series = dataFrame.lastprice
+    other = other.lastprice
+    data = series.combine(other, np.minimum)
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), GetTestDataFrame(Symbols.AAPL), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_drop(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    dt = series.first_valid_index()[1]
+    data = series.drop(dt, level=1)
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 2), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_droplevel(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.droplevel('time')
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_equals(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, other, symbol):
+    series = dataFrame.lastprice
+    other = other.lastprice
+    if not series.equals(other):
+        raise Exception('Dataframe are not equal')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_ewm(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.ewm(com=0.5).mean()
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_expanding(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.expanding(2).sum()
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_filter(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.filter(like='04:00')
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_first(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice.droplevel(0) 
+    data = series.first('2S')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_get(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.get({index})
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_get_value(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    dt = series.first_valid_index()[1]
+    data = series.get_value(({index}, dt))
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_groupby(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+import pandas as pd
+def Test(df, other, symbol):
+    series = pd.concat([df, other]).lastprice
+    data = series.groupby(level=0).mean()
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), GetTestDataFrame(Symbols.AAPL, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_last(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice.droplevel(0) 
+    data = series.last('2S')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_map(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            var map = "map({167: 100})";
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.{map}
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_mask(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.mask(series > 0)
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_pipe(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+import pandas as pd
+def Test(dataFrame, other, symbol):
+    def mean_by_group(dataframe, level):
+        return dataframe.groupby(level=level).mean()
+
+    df = pd.concat([dataFrame, other]).lastprice
+    data = df.pipe(mean_by_group, level=0)
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), GetTestDataFrame(Symbols.AAPL, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_pop(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.pop({index})
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_reindex_like(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, other, symbol):
+    series = dataFrame.lastprice
+    other = other.lastprice
+    data = other.reindex_like(series)
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), GetTestDataFrame(Symbols.AAPL), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_rename(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.rename('price')
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_repeat(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.repeat(3)
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_reorder_levels(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.reorder_levels(['time', 'symbol'])
+    data = data.unstack(1)[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_resample(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.resample('2S', level=1).mean()").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_reset_index(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.reset_index('time')
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_rolling(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.rolling(2).sum()
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
+            }
+        }
+
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_set_value(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    idx = series.first_valid_index()
+    data = series.set_value(idx, 100)
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_slice_shift(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.slice_shift()
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_swapaxes(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.swapaxes('index', 'index')
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_swaplevel(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.swaplevel()
+    data = data.unstack(0).loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_take(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.take([0, 3])
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_transform(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+import numpy as np
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.transform([np.sqrt, np.exp])
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_T(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.T
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_transpose(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.transpose()
+    data = data[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_tshift(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+from datetime import timedelta as d
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice.droplevel(0)
+    data = series.tshift(freq=d(1))").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_tz_localize_convert(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.tz_localize('UTC', level=1)
+    data = data.tz_convert('America/New_York', level=1)
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_update(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+import pandas as pd
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    other = pd.Series(['d', 'e', 'f'], index=series.index)
+    series.update(other)
+    data = series.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 3), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_where(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.where(series > 167)
+    data = data.loc[{index}]
+    if data is 0:
+        raise Exception('Data is zero')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 3), Symbols.SPY));
+            }
+        }
+
+        [TestCase("'SPY'", true)]
+        [TestCase("symbol")]
+        [TestCase("str(symbol.ID)")]
+        public void BackwardsCompatibilitySeries_xs(string index, bool cache = false)
+        {
+            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbol):
+    series = dataFrame.lastprice
+    data = series.xs({index})").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
 
         [Test]
         public void NotBackwardsCompatibilityDataFrame_index_levels_contains_ticker_notInCache()
@@ -934,7 +3083,7 @@ def Test(dataFrame, symbol):
             }
         }
 
-        private static  object[] SpotMarketCases => LeanDataReaderTests.SpotMarketCases;
+        private static object[] SpotMarketCases => LeanDataReaderTests.SpotMarketCases;
         private static object[] OptionAndFuturesCases => LeanDataReaderTests.OptionAndFuturesCases;
 
         [Test, TestCaseSource(nameof(SpotMarketCases))]
@@ -1034,14 +3183,13 @@ def Test(dataFrame, symbol):
             );
         }
 
-        private dynamic GetTestDataFrame(Symbol symbol)
+        private dynamic GetTestDataFrame(Symbol symbol, int count = 1)
         {
-            var converter = new PandasConverter();
             var rawBars = Enumerable
-                .Range(0, 1)
-                .Select(i => new Tick(symbol, $"1440{i:D2}00,167{i:D2}00,1{i:D2},T,T,0", new DateTime(2013, 10, 7)))
+                .Range(0, count)
+                .Select(i => new Tick(symbol, $"144{i:D2}000,167{i:D2}00,1{i:D2},T,T,0", new DateTime(2013, 10, 7)))
                 .ToArray();
-            return converter.GetDataFrame(rawBars);
+            return _converter.GetDataFrame(rawBars);
         }
 
         internal class SubTradeBar : TradeBar

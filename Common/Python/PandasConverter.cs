@@ -87,7 +87,7 @@ namespace QuantConnect.Python
                     return _pandas.DataFrame();
                 }
                 var dataFrames = sliceDataDict.Select(x => x.Value.ToPandasDataFrame(maxLevels));
-                return PandasData.ApplySymbolMapper(_pandas.concat(dataFrames.ToArray(), Py.kw("sort", true)));
+                return _pandas.concat(dataFrames.ToArray(), Py.kw("sort", true));
             }
         }
 
@@ -118,7 +118,7 @@ namespace QuantConnect.Python
                 {
                     return _pandas.DataFrame();
                 }
-                return PandasData.ApplySymbolMapper(sliceData.ToPandasDataFrame());
+                return sliceData.ToPandasDataFrame();
             }
         }
 
