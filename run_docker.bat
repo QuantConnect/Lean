@@ -14,33 +14,22 @@ REM See the License for the specific language governing permissions and
 REM limitations under the License.
 
 set current_dir=%~dp0
-set default_image=quantconnect/lean:foundation
-set default_launcher_dir=%current_dir%Launcher\bin\Release\
+set default_image=quantconnect/lean:latest
 set default_data_dir=%current_dir%Data\
 set default_results_dir=%current_dir%
-set default_config_file=%default_launcher_dir%config.json
+set default_config_file=%current_dir%Launcher\bin\Debug\config.json
 
 if exist "%~1" (
     for /f "eol=- delims=" %%a in (%~1) do set "%%a"
 ) else (
     set /p image="Enter docker image [default: %default_image%]: "
-    set /p launcher_dir="Enter absolute path to Lean binaries [default: %default_launcher_dir%]: "
     set /p config_file="Enter absolute path to Lean config file [default: %default_config_file%]: "
     set /p data_dir="Enter absolute path to Data folder [default: %default_data_dir%]: "
     set /p results_dir="Enter absolute path to store results [default: %default_results_dir%]: "
 )
 
 if "%image%" == "" (
-    set image=quantconnect/lean:foundation
-)
-
-if "%launcher_dir%" == "" (
-    set launcher_dir=%default_launcher_dir%
-)
-
-if not exist "%launcher_dir%" (
-    echo Lean binaries directory '%launcher_dir%' does not exist
-    goto script_exit
+    set image=%default_image%
 )
 
 if "%config_file%" == "" (
@@ -70,15 +59,13 @@ if not exist "%results_dir%" (
     goto script_exit
 )
 
-docker run --rm --mount type=bind,source=%launcher_dir%,target=/root/Lean^
- --mount type=bind,source=%data_dir%,target=/Data^
+docker run --rm --mount type=bind,source=%config_file%,target=/Lean/config.json,readonly^
+ --mount type=bind,source=%data_dir%,target=/Data,readonly^
  --mount type=bind,source=%results_dir%,target=/Results^
- -w /root/Lean %image%^
- mono QuantConnect.Lean.Launcher.exe --data-folder /Data --results-destination-folder /Results --config %config_file%
+ %image% --data-folder /Data --results-destination-folder /Results --config /Lean/config.json
 
 :script_exit
 set image=
-set launcher_dir=
 set data_dir=
 set results_dir=
 set config_file=
