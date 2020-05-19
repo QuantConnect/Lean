@@ -26,11 +26,14 @@ namespace QuantConnect.Tests.Common.Data.Custom
         [Test]
         public void ErrorGetsMappedToSatisfyStockVesting()
         {
-            var intentionLine = "BIXYZ	Downwards Revision	20190101	20190101	USXYZ		1	Some Random Industry																		US	Off Market Agreement	Issuer	Missing Lookup Formula for BuybackHoldingTypeId 10.00										";
-            var transactionLine = "BIXYZ	Downwards Revision	20190101	20190101	USXYZ		1	Some Random Industry																				Off Market Agreement	Issuer	Missing Lookup Formula for BuybackHoldingTypeId 10.00																														";
+            var intentionLine = "20200101 01:02:03	BIXYZ	Downwards Revision	20190101	20190101	USXYZ		1	Some Random Industry																	US	Off Market Agreement	Issuer	Missing Lookup Formula for BuybackHoldingTypeId 10.00										";
+            var transactionLine = "20200101 01:02:03	BIXYZ	Downwards Revision	20190101	20190101	USXYZ		1	Some Random Industry																			Off Market Agreement	Issuer	Missing Lookup Formula for BuybackHoldingTypeId 10.00																														";
 
             var intention = new SmartInsiderIntention(intentionLine);
             var transaction = new SmartInsiderTransaction(transactionLine);
+
+            Assert.AreEqual(new DateTime(2020, 1, 1, 1, 2, 3), intention.Time);
+            Assert.AreEqual(new DateTime(2020, 1, 1, 1, 2, 3), transaction.Time);
 
             Assert.IsTrue(intention.ExecutionHolding.HasValue);
             Assert.IsTrue(transaction.ExecutionHolding.HasValue);

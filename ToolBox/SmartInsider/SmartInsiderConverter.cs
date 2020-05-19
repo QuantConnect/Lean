@@ -255,7 +255,7 @@ namespace QuantConnect.ToolBox.SmartInsider
                 fileContents.AddRange(kvp.Value);
 
                 var tsvContents = fileContents
-                    .OrderBy(x => x.LastUpdate)
+                    .OrderBy(x => x.TimeProcessedUtc.Value)
                     .Select(x => x.ToLine())
                     .Distinct();
 
