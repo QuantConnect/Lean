@@ -21,6 +21,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
@@ -116,6 +117,8 @@ namespace QuantConnect.Brokerages
                 _cts?.Cancel();
 
                 _taskConnect?.Wait();
+
+                _cts.DisposeSafely();
             }
             catch (Exception e)
             {

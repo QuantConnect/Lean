@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
@@ -75,8 +74,6 @@ namespace QuantConnect.Tests.Brokerages.GDAX
                 Log.Trace("Disconnect #1");
                 brokerage.Disconnect();
                 Assert.IsFalse(brokerage.IsConnected);
-
-                Thread.Sleep(2000);
 
                 Log.Trace("Connect #2");
                 brokerage.Connect();
