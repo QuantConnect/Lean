@@ -68,7 +68,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
         Cancellation,
 
         /// <summary>
-        /// Waiting on vendor reply for summary
+        /// Announcement by a company that the board of directors or management will be seeking to obtain authorisation for a repurchase plan.
         /// </summary>
         [EnumMember(Value = "Seek Authorisation")]
         SeekAuthorization,
