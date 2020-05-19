@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
             var restClient = new RestClient("https://api.pro.coinbase.com");
-            var webSocketClient = new WebSocketWrapper();
+            var webSocketClient = new WebSocketClientWrapper();
 
             var algorithm = new Mock<IAlgorithm>();
             algorithm.Setup(a => a.BrokerageModel).Returns(new GDAXBrokerageModel(AccountType.Cash));

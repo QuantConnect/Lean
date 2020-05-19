@@ -13,11 +13,13 @@
  * limitations under the License.
 */
 
+using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.GDAX;
 using QuantConnect.Configuration;
+using QuantConnect.Logging;
 using RestSharp;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
@@ -64,17 +66,32 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
                 brokerage.Message += (s, e) => { hasError = true; };
 
+                Log.Trace("Connect #1");
                 brokerage.Connect();
                 Assert.IsTrue(brokerage.IsConnected);
 
                 Assert.IsFalse(hasError);
+
+                Log.Trace("Disconnect #1");
+                brokerage.Disconnect();
+                Assert.IsFalse(brokerage.IsConnected);
+
+                Thread.Sleep(2000);
+
+                Log.Trace("Connect #2");
+                brokerage.Connect();
+                Assert.IsTrue(brokerage.IsConnected);
+
+                Log.Trace("Disconnect #2");
+                brokerage.Disconnect();
+                Assert.IsFalse(brokerage.IsConnected);
             }
         }
 
         private static GDAXBrokerage GetBrokerage()
         {
             var wssUrl = Config.Get("gdax-url", "wss://ws-feed.pro.coinbase.com");
-            var webSocketClient = new WebSocketWrapper();
+            var webSocketClient = new WebSocketClientWrapper();
             var restClient = new RestClient("https://api.pro.coinbase.com");
             var apiKey = Config.Get("gdax-api-key");
             var apiSecret = Config.Get("gdax-api-secret");
