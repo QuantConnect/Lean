@@ -48,8 +48,12 @@ namespace QuantConnect.Report
 
             // Parse content from source files into result objects
             Log.Trace($"QuantConnect.Report.Main(): Parsing source files...{backtestDataFile}, {liveDataFile}");
-            var backtestConverter = new NullResultValueTypeJsonConverter<BacktestResult>();
-            var backtest = JsonConvert.DeserializeObject<BacktestResult>(File.ReadAllText(backtestDataFile), backtestConverter);
+            var backtestSettings = new JsonSerializerSettings
+            {
+                Converters = new List<JsonConverter> { new NullResultValueTypeJsonConverter<BacktestResult>() },
+                FloatParseHandling = FloatParseHandling.Decimal
+            };
+            var backtest = JsonConvert.DeserializeObject<BacktestResult>(File.ReadAllText(backtestDataFile), backtestSettings);
 
             LiveResult live = null;
             if (liveDataFile != string.Empty)
