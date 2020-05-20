@@ -28,6 +28,16 @@ namespace QuantConnect.Report
     public class NullResultValueTypeJsonConverter<T> : JsonConverter
         where T : Result
     {
+        private JsonSerializerSettings _settings;
+
+        public NullResultValueTypeJsonConverter()
+        {
+            _settings = new JsonSerializerSettings
+            {
+                Converters = new List<JsonConverter> { new OrderTypeNormalizingJsonConverter() },
+                FloatParseHandling = FloatParseHandling.Decimal
+            };
+        }
         public override bool CanConvert(Type objectType)
         {
             return true;
@@ -60,7 +70,7 @@ namespace QuantConnect.Report
             // Deserialize with OrderJsonConverter, otherwise it will fail. We convert the token back
             // to its JSON representation and use the `JsonConvert.DeserializeObject<T>(...)` method instead
             // of using `token.ToObject<T>()` since it can be provided a JsonConverter in its arguments.
-            return JsonConvert.DeserializeObject<T>(token.ToString(), new OrderTypeNormalizingJsonConverter());
+            return JsonConvert.DeserializeObject<T>(token.ToString(), _settings);
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
