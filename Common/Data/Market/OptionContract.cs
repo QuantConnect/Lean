@@ -60,7 +60,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the option style
         /// </summary>
-        public OptionStyle Stype => Symbol.ID.OptionStyle;
+        public OptionStyle Style => Symbol.ID.OptionStyle;
 
         /// <summary>
         /// Gets the theoretical price of this option contract as computed by the <see cref="IOptionPriceModel"/>
