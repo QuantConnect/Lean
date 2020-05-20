@@ -15,7 +15,6 @@
 
 using System;
 using System.IO;
-using System.Net;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -37,15 +36,6 @@ namespace QuantConnect.Brokerages
         private ClientWebSocket _client;
         private Task _taskConnect;
         private readonly object _locker = new object();
-
-        /// <summary>
-        /// Static constructor for the <see cref="WebSocketClientWrapper"/> class
-        /// </summary>
-        static WebSocketClientWrapper()
-        {
-            // NET 4.5.2 and below does not enable these more secure protocols by default, so we add them in here
-            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-        }
 
         /// <summary>
         /// Wraps constructor
@@ -73,7 +63,7 @@ namespace QuantConnect.Brokerages
         {
             lock (_locker)
             {
-                if (!IsOpen)
+                if (_cts == null)
                 {
                     _cts = new CancellationTokenSource();
 
@@ -116,7 +106,7 @@ namespace QuantConnect.Brokerages
 
                 _cts?.Cancel();
 
-                _taskConnect?.Wait();
+                _taskConnect?.Wait(TimeSpan.FromSeconds(5));
 
                 _cts.DisposeSafely();
             }
@@ -124,6 +114,8 @@ namespace QuantConnect.Brokerages
             {
                 Log.Error($"WebSocketClientWrapper.Close(): {e}");
             }
+
+            _cts = null;
 
             OnClose(new WebSocketCloseData(0, string.Empty, true));
         }
