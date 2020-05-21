@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("QuantConnect.Jupyter")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("QuantConnect LEAN Engine: Jupyter Project - Core implementation for jupyter research environment")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("QuantConnect.Jupyter")]
