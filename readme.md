@@ -180,3 +180,4 @@ Ryan H, Pravin B, Jimmie B, Nick C, Sam C, Mattias S, Michael H, Mark M, Madhan,
   [6]: https://www.quantconnect.com/forum/discussions/1/lean
   [7]: https://github.com/QuantConnect/Lean/blob/master/CONTRIBUTING.md
   [8]: https://github.com/QuantConnect/Lean/blob/master/VisualStudioPlugin/readme.md
+
