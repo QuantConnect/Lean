@@ -294,6 +294,8 @@ wrap_special_function('expanding', DataFrame, Expanding)
 wrap_special_function('rolling', Series, Rolling, Window)
 wrap_special_function('rolling', DataFrame, Rolling, Window)
 
+CreateSeries = pd.Series
+
 setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 }
             }
@@ -537,9 +539,18 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         indexCache[kvp.Value.Item1] = index;
                     }
 
-                    pyDict.SetItem(kvp.Key, _pandas.Series(values, index));
+                    // Adds pandas.Series value keyed by the column name
+                    // CreateSeries will create an original pandas.Series
+                    // We are not using the wrapper class to avoid unnecessary and expensive
+                    // index wrapping operations when the Series are packed into a DataFrame
+                    pyDict.SetItem(kvp.Key, _pandas.CreateSeries(values, index));
                 }
                 _series.Clear();
+
+                // Create a DataFrame with wrapper class.
+                // This is the starting point. The types of all DataFrame and Series that result from any operation will
+                // be wrapper classes. Index and MultiIndex will be converted when required by index operations such as 
+                // stack, unstack, merge, union, etc.
                 return _pandas.DataFrame(pyDict);
             }
         }
