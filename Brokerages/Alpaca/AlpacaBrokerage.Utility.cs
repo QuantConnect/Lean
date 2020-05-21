@@ -277,26 +277,24 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>The list of ticks</returns>
         private IEnumerable<Tick> DownloadTradeTicks(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, DateTimeZone requestedTimeZone)
         {
-            var startTime = startTimeUtc;
+            // The Polygon API only accepts nanosecond level resolution for the expected epoch time.
+            // It is also an inclusive time, so we must increment this by one in order to get the
+            // expected results when paginating.
+            var previousTimestamp = (long?)(DateTimeHelper.GetUnixTimeMilliseconds(startTimeUtc) * 1000000);
 
-            while (startTime < endTimeUtc)
+            while (startTimeUtc < endTimeUtc)
             {
                 CheckRateLimiting();
 
-                var date = startTime.ConvertFromUtc(requestedTimeZone).Date;
-
-                var task = _polygonDataClient.ListHistoricalTradesAsync(new HistoricalRequest(symbol.Value, date));
-
-                var time = startTime;
-                var items = task.SynchronouslyAwaitTaskResult()
-                    .Items
-                    .Where(x => x.Timestamp >= time)
-                    .ToList();
-
-                if (!items.Any())
+                var dateUtc = startTimeUtc.Date;
+                var date = startTimeUtc.ConvertFromUtc(requestedTimeZone).Date;
+                var task = _polygonDataClient.ListHistoricalTradesAsync(new HistoricalRequest(symbol.Value, date)
                 {
-                    break;
-                }
+                    Timestamp = previousTimestamp
+                });
+
+                var rawItems = task.SynchronouslyAwaitTaskResult().Items;
+                var items = rawItems.Where(x => x.Timestamp >= startTimeUtc && x.Timestamp <= endTimeUtc);
 
                 foreach (var item in items)
                 {
@@ -310,7 +308,13 @@ namespace QuantConnect.Brokerages.Alpaca
                     };
                 }
 
-                startTime = items.Last().Timestamp;
+                // Cache the timestamp we're planning on using so we don't null check twice.
+                var nextTime = rawItems.LastOrDefault()?.Timestamp ?? dateUtc.AddDays(1);
+
+                // Timestamp of items are in UTC, and so should the date we're incrementing.
+                startTimeUtc = nextTime;
+                // Convert milliseconds to nanoseconds and add one nanosecond to the time (timestamp is inclusive)
+                previousTimestamp = (DateTimeHelper.GetUnixTimeMilliseconds(nextTime) * 1000000) + 1;
             }
         }
 
