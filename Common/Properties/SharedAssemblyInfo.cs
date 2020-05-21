@@ -1,8 +1,6 @@
 ﻿using System.Reflection;
 
 // common assembly attributes
-[assembly: AssemblyDescription("Lean Engine is an open-source, platform agnostic C# and Python algorithmic trading engine. " +
-                               "Allows strategy research, backtesting and live trading with Equities, FX, CFD, Crypto, Options and Futures Markets.")]
 [assembly: AssemblyCopyright("QuantConnect™ 2018. All Rights Reserved")]
 [assembly: AssemblyCompany("QuantConnect Corporation")]
 [assembly: AssemblyVersion("2.4")]

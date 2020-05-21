@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("QuantConnect.Algorithm.Python")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("QuantConnect LEAN Engine: Algorithm.Python Project - A collection of Py algorithm demonstrations for how to use the API")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("QuantConnect.Algorithm.Python")]

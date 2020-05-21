@@ -20,6 +20,7 @@ using System.Runtime.InteropServices;
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("a6f998dd-5a08-4a8e-ad94-96749b61df9e")]
+[assembly: AssemblyDescription("QuantConnect LEAN Engine: Algorithm.AlgorithmFactory Project - Factory for instantiation of QCAlgorithm algorithm objects to be used with LEAN")]
 
 // Version information for an assembly consists of the following four values:
 //
