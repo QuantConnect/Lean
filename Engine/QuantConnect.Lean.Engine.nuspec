@@ -20,16 +20,16 @@
         <dependency id="Newtonsoft.Json" version="10.0.3" exclude="Build,Analyzers" />
         <dependency id="NodaTime" version="1.3.4" exclude="Build,Analyzers" />
         <dependency id="QLNet" version="1.9.2" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Algorithm" version="2.4.0.1" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Algorithm.Framework" version="2.4.0.1" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Api" version="2.4.0.1" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Brokerages" version="2.4.0.1" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Common" version="2.4.0.1" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Compression" version="2.4.0.1" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Configuration" version="2.4.0.1" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Indicators" version="2.4.0.1" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Logging" version="2.4.0.1" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.pythonnet" version="1.0.5.7" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Algorithm" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Algorithm.Framework" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Api" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Brokerages" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Common" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Compression" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Configuration" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Indicators" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Logging" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.pythonnet" version="1.0.5.30" exclude="Build,Analyzers" />
         <dependency id="RestSharp" version="105.2.3" exclude="Build,Analyzers" />
         <dependency id="SharpZipLib" version="0.86.0" exclude="Build,Analyzers"/>
         <dependency id="fasterflect" version="2.1.3" exclude="Build,Analyzers" />
