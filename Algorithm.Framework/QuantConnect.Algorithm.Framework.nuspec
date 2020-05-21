@@ -2,12 +2,12 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
   <metadata>
     <id>QuantConnect.Algorithm.Framework</id>
-    <version>2.4.0.3493</version>
+    <version>$version$</version>
     <title>QuantConnect.Algorithm.Framework</title>
     <authors>QuantConnect Corporation</authors>
     <owners>QuantConnect Corporation</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Lean Engine is an open-source, plataform agnostic C# and Python algorithmic trading engine. Allows strategy research, backtesting and live trading with Equities, FX, CFD, Crypto, Options and Futures Markets.</description>
+    <description>QuantConnect LEAN Engine: Algorithm.Framework Project - The core QCAlgorithm framework implementation</description>
     <copyright>QuantConnect™ 2018. All Rights Reserved</copyright>
     <dependencies>
       <dependency id="NodaTime" version="1.3.4" />

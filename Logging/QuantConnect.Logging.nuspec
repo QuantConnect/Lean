@@ -9,8 +9,8 @@
     <projectUrl>https://github.com/QuantConnect/Lean</projectUrl>
     <iconUrl>https://github.com/QuantConnect/Lean/blob/master/lean.ico</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>$description$</description>
-    <copyright>$copyright$</copyright>
+    <description>QuantConnect LEAN Engine: Logging Project - The logging library implementation</description>
+    <copyright>QuantConnect™ 2018. All Rights Reserved</copyright>
     <tags>algorithm algorithmic-trading-engine bitcoins broker c-sharp cfd crypto finance future forex fxcm gdax hft hft-trading interactive-brokers lean-engine markets nasdaq oanda options python quant quantconnect quantitative-finance stock-indicators trading trading-algorithms trading-bot trading-platform trading-robots trading-strategies</tags>
     <dependencies>
       <group targetFramework=".NETFramework4.5.2">
