@@ -14,10 +14,10 @@
     <tags>algorithm algorithmic-trading-engine bitcoins broker c-sharp cfd crypto finance future forex fxcm gdax hft hft-trading interactive-brokers lean-engine markets nasdaq oanda options python quant quantconnect quantitative-finance stock-indicators trading trading-algorithms trading-bot trading-platform trading-robots trading-strategies</tags>
     <dependencies>
       <group targetFramework=".NETFramework4.5.2">
-        <dependency id="QuantConnect.Queues" version="2.4.0.1" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Lean.Engine" version="2.4.0.1" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Messaging" version="2.4.0.1" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Algorithm.CSharp" version="2.4.0.1" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Queues" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Lean.Engine" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Messaging" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Algorithm.CSharp" version="$version$" exclude="Build,Analyzers" />
       </group>
     </dependencies>
   </metadata>

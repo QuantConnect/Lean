@@ -15,7 +15,7 @@
     <dependencies>
       <group targetFramework=".NETFramework4.5.2">
         <dependency id="Newtonsoft.Json" version="10.0.3" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Logging" version="2.4.0.1" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Logging" version="$version$" exclude="Build,Analyzers" />
       </group>
     </dependencies>    
   </metadata>
