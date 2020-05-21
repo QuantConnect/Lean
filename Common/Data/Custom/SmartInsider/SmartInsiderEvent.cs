@@ -14,6 +14,7 @@
 */
 
 using Newtonsoft.Json;
+using NodaTime;
 using System;
 using System.Globalization;
 
@@ -261,6 +262,15 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// </summary>
         /// <param name="line">Line of raw TSV (raw with fields 46, 36, 14, 7 removed in descending order)</param>
         public abstract void FromRawData(string line);
+
+        /// <summary>
+        /// Specifies the timezone of this data source
+        /// </summary>
+        /// <returns>Timezone</returns>
+        public override DateTimeZone DataTimeZone()
+        {
+            return TimeZones.Utc;
+        }
 
         /// <summary>
         /// Attempts to normalize and parse SmartInsider dates that include a time component.

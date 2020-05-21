@@ -233,13 +233,10 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// <returns>Instance of the object</returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            var transaction = new SmartInsiderTransaction(line)
+            return new SmartInsiderTransaction(line)
             {
                 Symbol = config.Symbol
             };
-
-            transaction.Time.ConvertFromUtc(config.DataTimeZone);
-            return transaction;
         }
 
         /// <summary>
