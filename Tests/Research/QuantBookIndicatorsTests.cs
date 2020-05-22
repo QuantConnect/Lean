@@ -18,7 +18,7 @@ using Python.Runtime;
 using System;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Tests.Jupyter
+namespace QuantConnect.Tests.Research
 {
     [TestFixture]
     public class QuantBookIndicatorsTests

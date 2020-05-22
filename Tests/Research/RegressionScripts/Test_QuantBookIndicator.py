@@ -12,13 +12,13 @@
 # limitations under the License.
 
 from clr import AddReference
-AddReference("QuantConnect.Jupyter")
+AddReference("QuantConnect.Research")
 AddReference("QuantConnect.Indicators")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Data import *
-from QuantConnect.Jupyter import *
+from QuantConnect.Research import *
 from QuantConnect.Indicators import *
 
 class IndicatorTest():

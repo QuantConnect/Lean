@@ -685,8 +685,8 @@
     <Compile Include="Indicators\RateOfChangePercentTests.cs" />
     <Compile Include="Indicators\RateOfChangeTests.cs" />
     <Compile Include="Indicators\StochasticTests.cs" />
-    <Compile Include="Jupyter\QuantBookIndicatorsTests.cs" />
-    <Compile Include="Jupyter\QuantBookHistoryTests.cs" />
+    <Compile Include="Research\QuantBookIndicatorsTests.cs" />
+    <Compile Include="Research\QuantBookHistoryTests.cs" />
     <Compile Include="Messaging\StreamingMessageHandlerTests.cs" />
     <Compile Include="Python\AlgorithmPythonWrapperTests.cs" />
     <Compile Include="Python\MethodOverloadTests.cs" />
@@ -717,7 +717,7 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
-    <Content Include="Jupyter\RegressionScripts\Test_QuantBookIndicator.py">
+    <Content Include="Research\RegressionScripts\Test_QuantBookIndicator.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="RegressionAlgorithms\Test_Cash.cs" />
@@ -782,10 +782,10 @@
     <None Include="TestData\CashTestingStrategy.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Content Include="Jupyter\RegressionScripts\custom_data.py">
+    <Content Include="Research\RegressionScripts\custom_data.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Jupyter\RegressionScripts\Test_QuantBookHistory.py">
+    <Content Include="Research\RegressionScripts\Test_QuantBookHistory.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Python\Indicators\IndicatorExtensionsTests.py" />
@@ -963,9 +963,9 @@
       <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>
       <Name>QuantConnect.Indicators</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Jupyter\QuantConnect.Jupyter.csproj">
+    <ProjectReference Include="..\Research\QuantConnect.Research.csproj">
       <Project>{9561d14a-467e-40ad-928e-ee9f758d7d98}</Project>
-      <Name>QuantConnect.Jupyter</Name>
+      <Name>QuantConnect.Research</Name>
     </ProjectReference>
     <ProjectReference Include="..\Launcher\QuantConnect.Lean.Launcher.csproj">
       <Project>{09e7b916-e58b-4021-bd8b-c10b4446e226}</Project>

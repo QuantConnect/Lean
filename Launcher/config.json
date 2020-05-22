@@ -21,7 +21,7 @@
   //"algorithm-location": "QuantConnect.Algorithm.VisualBasic.dll",
   //"algorithm-location": "QuantConnect.Algorithm.Java.dll",
 
-  //Jupyter notebook
+  //Research notebook
   //"composer-dll-directory": ".",
 
   // engine

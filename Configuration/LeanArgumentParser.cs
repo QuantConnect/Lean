@@ -45,7 +45,7 @@ namespace QuantConnect.Configuration
                 //Physical DLL location
                 new CommandLineOption("algorithm-location", CommandOptionType.SingleValue),
 
-                //Jupyter notebook
+                //Research notebook
                 new CommandLineOption("composer-dll-directory", CommandOptionType.SingleValue),
 
                 // engine

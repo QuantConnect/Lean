@@ -17,9 +17,8 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Securities;
 using System;
-using QuantConnect.Logging;
 
-namespace QuantConnect.Tests.Jupyter
+namespace QuantConnect.Tests.Research
 {
     [TestFixture]
     public class QuantBookHistoryTests

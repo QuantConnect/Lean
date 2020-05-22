@@ -14,13 +14,13 @@
 from clr import AddReference
 import pandas
 AddReference("System")
-AddReference("QuantConnect.Jupyter")
+AddReference("QuantConnect.Research")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Data import *
-from QuantConnect.Jupyter import *
+from QuantConnect.Research import *
 from datetime import datetime, timedelta
 from custom_data import QuandlFuture, Nifty
 import pandas as pd

@@ -36,7 +36,7 @@ using System.Linq;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 
-namespace QuantConnect.Jupyter
+namespace QuantConnect.Research
 {
     /// <summary>
     /// Provides access to data for quantitative analysis
