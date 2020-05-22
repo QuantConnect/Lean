@@ -29,6 +29,8 @@
         <dependency id="QuantConnect.Configuration" version="$version$" exclude="Build,Analyzers" />
         <dependency id="QuantConnect.Indicators" version="$version$" exclude="Build,Analyzers" />
         <dependency id="QuantConnect.Logging" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Algorithm.CSharp" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.AlgorithmFactory" version="$version$" exclude="Build,Analyzers" />
         <dependency id="QuantConnect.pythonnet" version="1.0.5.30" exclude="Build,Analyzers" />
         <dependency id="RestSharp" version="105.2.3" exclude="Build,Analyzers" />
         <dependency id="SharpZipLib" version="0.86.0" exclude="Build,Analyzers"/>
