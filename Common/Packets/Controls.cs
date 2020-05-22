@@ -140,9 +140,9 @@ namespace QuantConnect.Packets
             BacktestingMaxInsights = 10000;
             MaximumDataPointsPerChartSeries = 4000;
             SecondTimeOut = 300;
-            StorageLimitMB = Config.GetInt("storage-limit-mb", 5);
-            StorageFileCount = Config.GetInt("storage-file-count", 100);
-            PersistenceIntervalSeconds = Config.GetInt("persistence-interval-seconds", 5);
+            StorageLimitMB = 5;
+            StorageFileCount = 100;
+            PersistenceIntervalSeconds = 5;
 
             // initialize to default leaky bucket values in case they're not specified
             TrainingLimits = new LeakyBucketControlParameters();

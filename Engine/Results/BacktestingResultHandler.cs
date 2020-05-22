@@ -636,12 +636,14 @@ namespace QuantConnect.Lean.Engine.Results
             // Only process the logs once
             if (!ExitTriggered)
             {
+                Log.Trace("BacktestingResultHandler.Exit(): starting...");
                 List<LogEntry> copy;
                 lock (LogStore)
                 {
                     copy = LogStore.ToList();
                 }
                 ProcessSynchronousEvents(true);
+                Log.Trace("BacktestingResultHandler.Exit(): Saving logs...");
                 var logLocation = SaveLogs(_algorithmId, copy);
                 SystemDebugMessage("Your log was successfully created and can be retrieved from: " + logLocation);
 
