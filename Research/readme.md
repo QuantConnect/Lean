@@ -1,5 +1,5 @@
 ﻿
-QuantConnect Jupyter Project:
+QuantConnect Research Project:
 =============
 Before we enable Jupyter support, follow [Lean installation](https://github.com/QuantConnect/Lean#installation-instructions)
 and [Python installation](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#quantconnect-python-algorithm-project) to get LEAN running Python algorithms in your machine. 

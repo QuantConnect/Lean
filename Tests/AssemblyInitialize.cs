@@ -50,7 +50,7 @@ public class AssemblyInitialize
                 "./Risk",
                 "./Selection",
                 "./RegressionAlgorithms",
-                "./Jupyter/RegressionScripts",
+                "./Research/RegressionScripts",
                 "../../../Algorithm",
                 "../../../Algorithm/Selection",
                 "../../../Algorithm.Framework",

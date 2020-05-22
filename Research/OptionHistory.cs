@@ -19,7 +19,7 @@ using QuantConnect.Python;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace QuantConnect.Jupyter
+namespace QuantConnect.Research
 {
     /// <summary>
     /// Class to manage information from History Request of Options

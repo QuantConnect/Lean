@@ -3,7 +3,7 @@
 #r "QuantConnect.Algorithm.Framework.dll"
 #r "QuantConnect.Common.dll"
 #r "QuantConnect.Indicators.dll"
-#r "QuantConnect.Jupyter.dll"
+#r "QuantConnect.Research.dll"
 #r "NodaTime.dll"
 #r "Accord.dll"
 #r "Accord.Fuzzy.dll"
@@ -60,7 +60,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using QuantConnect.Indicators;
-using QuantConnect.Jupyter;
+using QuantConnect.Research;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Custom;

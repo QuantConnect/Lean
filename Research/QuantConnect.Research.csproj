@@ -12,8 +12,8 @@
     <ProjectGuid>{9561D14A-467E-40AD-928E-EE9F758D7D98}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>QuantConnect.Jupyter</RootNamespace>
-    <AssemblyName>QuantConnect.Jupyter</AssemblyName>
+    <RootNamespace>QuantConnect.Research</RootNamespace>
+    <AssemblyName>QuantConnect.Research</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <LangVersion>6</LangVersion>
     <FileAlignment>512</FileAlignment>
@@ -160,16 +160,16 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="BasicCSharpQuantBookTemplate.ipynb">
+    <Content Include="BasicCSharpQuantBookTemplate.ipynb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="BasicQuantBookTemplate.ipynb">
+    </Content>
+    <Content Include="BasicQuantBookTemplate.ipynb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
     <None Include="packages.config" />
-    <None Include="QuantConnect.csx">
+    <Content Include="QuantConnect.csx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
     <None Include="readme.md" />
   </ItemGroup>
   <ItemGroup>
