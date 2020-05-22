@@ -256,7 +256,7 @@ def CreateWrapperClass(cls: type):
     # It will include operation methods like __add__ and __contains__
     allow_list = set(x for x in dir(klass) if x.startswith('__')) - set(dir(object))
 
-    # Wrap class members of the newly created class 
+    # Wrap class members of the newly created class
     for name, member in getmembers(klass):
         if name.startswith('_') and name not in allow_list:
             continue
@@ -375,8 +375,21 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             {
                 var key = member.Name.ToLowerInvariant();
                 var endTime = ((IBaseData) baseData).EndTime;
-                AddToSeries(key, endTime, (member as FieldInfo)?.GetValue(baseData));
-                AddToSeries(key, endTime, (member as PropertyInfo)?.GetValue(baseData));
+                var fieldMember = member as FieldInfo;
+                var propertyMember = member as PropertyInfo;
+                if (fieldMember == null && propertyMember == null)
+                {
+                    // The member we're on is not a field or property, so let's skip it.
+                    continue;
+                }
+                if (fieldMember != null)
+                {
+                    AddToSeries(key, endTime, fieldMember.GetValue(baseData));
+                }
+                else
+                {
+                    AddToSeries(key, endTime, propertyMember.GetValue(baseData));
+                }
             }
 
             var storage = (baseData as DynamicData)?.GetStorageDictionary();
@@ -549,7 +562,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
                 // Create a DataFrame with wrapper class.
                 // This is the starting point. The types of all DataFrame and Series that result from any operation will
-                // be wrapper classes. Index and MultiIndex will be converted when required by index operations such as 
+                // be wrapper classes. Index and MultiIndex will be converted when required by index operations such as
                 // stack, unstack, merge, union, etc.
                 return _pandas.DataFrame(pyDict);
             }
@@ -560,11 +573,9 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
         /// </summary>
         /// <param name="key">The key of the value to get</param>
         /// <param name="time"><see cref="DateTime"/> object to add to the value associated with the specific key</param>
-        /// <param name="input"><see cref="Object"/> to add to the value associated with the specific key</param>
+        /// <param name="input"><see cref="Object"/> to add to the value associated with the specific key. Can be null.</param>
         private void AddToSeries(string key, DateTime time, object input)
         {
-            if (input == null) return;
-
             Tuple<List<DateTime>, List<object>> value;
             if (_series.TryGetValue(key, out value))
             {
@@ -578,7 +589,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
         }
 
         /// <summary>
-        /// Get the lower-invariant name of properties of the type that a another type is assignable from 
+        /// Get the lower-invariant name of properties of the type that a another type is assignable from
         /// </summary>
         /// <param name="baseType">The type that is assignable from</param>
         /// <param name="type">The type that is assignable by</param>
