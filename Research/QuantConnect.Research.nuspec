@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
   <metadata>
     <id>QuantConnect.Research</id>
@@ -12,22 +12,22 @@
     <copyright>QuantConnect™ 2018. All Rights Reserved</copyright>
     <tags>algorithm algorithmic-trading-engine bitcoins broker c-sharp cfd crypto finance future forex fxcm gdax hft hft-trading interactive-brokers lean-engine markets nasdaq oanda options python quant quantconnect quantitative-finance stock-indicators trading trading-algorithms trading-bot trading-platform trading-robots trading-strategies jupyter</tags>
     <dependencies>
-        <dependency id="Microsoft.CodeAnalysis.FxCopAnalyzers" version="2.9.3" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.CodeAnalysis.VersionCheckAnalyzer" version="2.9.3" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.CodeQuality.Analyzers" version="2.9.3" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.NetCore.Analyzers" version="2.9.3" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.NetFramework.Analyzers" version="2.9.3" exclude="Build,Analyzers" />
-        <dependency id="NodaTime" version="1.3.4" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.pythonnet" version="1.0.5.30" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Common" version="$version$" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Algorithm" version="$version$" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Algorithm.Framework" version="$version$" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Api" version="$version$" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Configuration" version="$version$" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Indicators" version="$version$" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Lean.Engine" version="$version$" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Logging" version="$version$" exclude="Build,Analyzers" />
-        <dependency id="QuantConnect.Queues" version="$version$" exclude="Build,Analyzers" />
+      <dependency id="Microsoft.CodeAnalysis.FxCopAnalyzers" version="3.0.0" exclude="Build,Analyzers" />
+      <dependency id="Microsoft.CodeAnalysis.VersionCheckAnalyzer" version="3.0.0" exclude="Build,Analyzers" />
+      <dependency id="Microsoft.CodeQuality.Analyzers" version="3.0.0" exclude="Build,Analyzers" />
+      <dependency id="Microsoft.NetCore.Analyzers" version="3.0.0" exclude="Build,Analyzers" />
+      <dependency id="Microsoft.NetFramework.Analyzers" version="3.0.0" exclude="Build,Analyzers" />
+      <dependency id="NodaTime" version="1.3.4" exclude="Build,Analyzers" />
+      <dependency id="QuantConnect.pythonnet" version="1.0.5.30" exclude="Build,Analyzers" />
+      <dependency id="QuantConnect.Common" version="$version$" exclude="Build,Analyzers" />
+      <dependency id="QuantConnect.Algorithm" version="$version$" exclude="Build,Analyzers" />
+      <dependency id="QuantConnect.Algorithm.Framework" version="$version$" exclude="Build,Analyzers" />
+      <dependency id="QuantConnect.Api" version="$version$" exclude="Build,Analyzers" />
+      <dependency id="QuantConnect.Configuration" version="$version$" exclude="Build,Analyzers" />
+      <dependency id="QuantConnect.Indicators" version="$version$" exclude="Build,Analyzers" />
+      <dependency id="QuantConnect.Lean.Engine" version="$version$" exclude="Build,Analyzers" />
+      <dependency id="QuantConnect.Logging" version="$version$" exclude="Build,Analyzers" />
+      <dependency id="QuantConnect.Queues" version="$version$" exclude="Build,Analyzers" />
     </dependencies>
     <frameworkAssemblies>
       <frameworkAssembly assemblyName="Microsoft.CSharp" targetFramework=".NETFramework4.5.2" />
