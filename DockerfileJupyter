@@ -17,6 +17,8 @@ RUN wget --quiet https://github.com/krallin/tini/releases/download/v0.10.0/tini 
 RUN git clone https://github.com/QuantConnect/Lean.git && cd Lean/PythonToolbox && \
     python setup.py install && cd ../.. && rm -irf Lean
 
+RUN conda install -y -c conda-forge notebook=6.0.3
+
 #Install ICSharp (Jupyter C# Kernel)
 RUN wget https://cdn.quantconnect.com/icsharp/ICSharp.Kernel.20180820.zip && \
     unzip ICSharp.Kernel.20180820.zip && rm -irf ICSharp.Kernel.20180820.zip && cd icsharp && \

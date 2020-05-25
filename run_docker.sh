@@ -15,11 +15,10 @@
 
 full_path=$(realpath $0)
 current_dir=$(dirname $full_path)
-default_image=quantconnect/lean:foundation
-default_launcher_dir=$current_dir/Launcher/bin/Debug
+default_image=quantconnect/lean:latest
 default_data_dir=$current_dir/Data
 default_results_dir=$current_dir
-default_config_file=$default_launcher_dir/config.json
+default_config_file=$current_dir/Launcher/bin/Debug/config.json
 
 if [ -f "$1" ]; then
     IFS="="
@@ -28,23 +27,13 @@ if [ -f "$1" ]; then
     done < $1
 else
     read -p "Enter docker image [default: $default_image]: " image
-    read -p "Enter absolute path to Lean binaries [default: $default_launcher_dir]: " launcher_dir
     read -p "Enter absolute path to Lean config file [default: $default_config_file]: " config_file
     read -p "Enter absolute path to Data folder [default: $default_data_dir]: " data_dir
     read -p "Enter absolute path to store results [default: $default_results_dir]: " results_dir
 fi
 
 if [ -z "$image" ]; then
-    image="quantconnect/lean:foundation"
-fi
-
-if [ -z "$launcher_dir" ]; then
-    launcher_dir=$default_launcher_dir
-fi
-
-if [ ! -d "$launcher_dir" ]; then
-    echo "Lean binaries directory $launcher_dir does not exist"
-    exit 1
+    image=$default_image
 fi
 
 if [ -z "$config_file" ]; then
@@ -74,8 +63,7 @@ if [ ! -d "$results_dir" ]; then
     exit 1
 fi
 
-docker run --rm --mount type=bind,source=$launcher_dir,target=/root/Lean \
- --mount type=bind,source=$data_dir,target=/Data \
+docker run --rm --mount type=bind,source=$config_file,target=/Lean/config.json,readonly \
+ --mount type=bind,source=$data_dir,target=/Data,readonly \
  --mount type=bind,source=$results_dir,target=/Results \
- -w /root/Lean $image \
- mono QuantConnect.Lean.Launcher.exe --data-folder /Data --results-destination-folder /Results --config $config_file
+ $image --data-folder /Data --results-destination-folder /Results --config /Lean/config.json
