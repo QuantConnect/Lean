@@ -67,6 +67,7 @@ from pandas.core.resample import Resampler, DatetimeIndexResampler, PeriodIndexR
 from pandas.core.groupby.generic import DataFrameGroupBy, SeriesGroupBy
 from pandas.core.indexes.frozen import FrozenList as pdFrozenList
 from pandas.core.window import Expanding, EWM, Rolling, Window
+from pandas.core.computation.ops import UndefinedVariableError
 from inspect import getmembers, isfunction, isgenerator
 from functools import partial
 from sys import modules
@@ -161,7 +162,13 @@ def wrap_function(f):
         if len(kwargs) > 0:
             kwargs = mapper(kwargs)
 
-        result = f(*args, **kwargs)
+        try:
+            result = f(*args, **kwargs)
+        except UndefinedVariableError as e:
+            # query/eval methods needs to look for a scope variable at a higher level
+            # since the wrapper classes are children of pandas classes
+            kwargs['level'] = kwargs.pop('level', 0) + 1
+            result = f(*args, **kwargs)
 
         success, result = try_wrap_as_pandas(result)
         if success:
