@@ -50,10 +50,13 @@ namespace QuantConnect.Brokerages
         /// Wraps send method
         /// </summary>
         /// <param name="data"></param>
-        public async void Send(string data)
+        public void Send(string data)
         {
-            var buffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(data));
-            await _client.SendAsync(buffer, WebSocketMessageType.Text, true, _cts.Token);
+            lock (_locker)
+            {
+                var buffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(data));
+                _client.SendAsync(buffer, WebSocketMessageType.Text, true, _cts.Token).SynchronouslyAwaitTask();
+            }
         }
 
         /// <summary>
