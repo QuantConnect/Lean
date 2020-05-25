@@ -375,20 +375,16 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             {
                 var key = member.Name.ToLowerInvariant();
                 var endTime = ((IBaseData) baseData).EndTime;
-                var fieldMember = member as FieldInfo;
                 var propertyMember = member as PropertyInfo;
-                if (fieldMember == null && propertyMember == null)
+                if (propertyMember != null)
                 {
-                    // The member we're on is not a field or property, so let's skip it.
+                    AddToSeries(key, endTime, propertyMember.GetValue(baseData));
                     continue;
                 }
+                var fieldMember = member as FieldInfo;
                 if (fieldMember != null)
                 {
                     AddToSeries(key, endTime, fieldMember.GetValue(baseData));
-                }
-                else
-                {
-                    AddToSeries(key, endTime, propertyMember.GetValue(baseData));
                 }
             }
 
