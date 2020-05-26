@@ -8,3 +8,5 @@ REM Copy to the Lean Algorithm Project
 copy *.pyc ..\..\..\Launcher\bin\Debug >NUL
 copy *.pyc ..\..\..\Launcher\bin\Release >NUL
 copy *.pyc ..\..\..\Tests\bin\Debug >NUL
+
+REM Script intentionally discards errors. This line ensures the exit code is 0.

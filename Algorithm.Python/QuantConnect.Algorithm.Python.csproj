@@ -311,10 +311,10 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' ">
-      build
+      $(ProjectDir)build
     </PostBuildEvent>
     <PostBuildEvent Condition="'$(OS)' != 'Windows_NT'">
-      ./build.sh
+      $(ProjectDir)build.sh
     </PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets')" />
