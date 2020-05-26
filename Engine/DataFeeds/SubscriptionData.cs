@@ -62,7 +62,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             data = data.Clone(data.IsFillForward);
             var emitTimeUtc = offsetProvider.ConvertToUtc(data.EndTime);
-            data.Time = data.Time.ExchangeRoundDownInTimeZone(configuration.Increment, exchangeHours, configuration.DataTimeZone, configuration.ExtendedMarketHours);
+
+            // Let's round down for any data source that implements a time delta between
+            // the start of the data and end of the data (usually used with Bars).
+            // The time delta ensures that the time collected from `EndTime` has
+            // no look-ahead bias, and is point-in-time.
+            if (data.Time != data.EndTime)
+            {
+                data.Time = data.Time.ExchangeRoundDownInTimeZone(configuration.Increment, exchangeHours, configuration.DataTimeZone, configuration.ExtendedMarketHours);
+            }
+
             return new SubscriptionData(data, emitTimeUtc);
         }
     }
