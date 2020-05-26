@@ -16,14 +16,11 @@ The core of the LEAN Engine is written in C#; but it operates seamlessly on Linu
 
 
 ## QuantConnect is Hiring! ##
-Join the team and solve some of the most difficult challenges in quantitative finance. If you are passionate about algorithmic trading we'd like to hear from you. The below roles are open in our Seattle, WA office. When applying, make sure to mention you came through GitHub:
+Join the team and solve some of the most difficult challenges in quantitative finance. If you are passionate about algorithmic trading we'd like to hear from you. The below roles are open in our Seattle, WA office. When applying, make sure to mention you came through GitHub: 
 
+- [**Senior UX Developer**](mailto:jared@quantconnect.com): Collaborate with QuantConnect to develop a world leading online experience for a community of developers from all over the world. 
 
-- [**Developer Advocate**](https://www.indeed.com/viewjob?jk=e5691f056eb5e2c4&q=developer+advocate): How can we educate 80k+ quants at scale? Strategize and create video content, documentation, interactive tutorials, and other content to empower the community.
-
-- [**Quantitative Developer**](https://www.indeed.com/viewjob?t=quantitative+developer&jk=ec111ccc63730500&_ga=2.110607745.587290046.1560181815-1738808679.1551121684): Work daily with a brilliant community of developers, scientists, mathematicians, and traders as you enable them to bring their strategies to life.
-
-- [**Quantitative Development Intern**](https://www.indeed.com/cmp/QuantConnect/jobs/Quantitative-Development-Intern-b4b2572decd2e602): If you are a recent or current graduate with a knack for quantitative finance, consider applying for an internship!
+- [**Quantitative Development Intern**](mailto:jared@quantconnect.com): If you are a recent or current graduate with a knack for quantitative finance, consider applying for an internship!
 
 ## System Overview ##
 
@@ -48,13 +45,14 @@ The most important plugins are:
  - **Algorithm State Setup** (ISetupHandler)
    > Configure the algorithm cash, portfolio and data requested. Initialize all state parameters required.
 
-For more information on the system design and contributing please see the Lean Website Documentation.
+These are all configurable from the config.json file in the Launcher Project.
 
 ## Installation Instructions ##
 
-Download the zip file with the [latest master](https://github.com/QuantConnect/Lean/archive/master.zip) and unzip it to your favorite location.
+*We recommend using the docker image.* This is perfectly configured to run out of the box without interfering with your development environment. You can pull this image with `docker pull quantconnect/lean`
 
-Alternatively, install [Git](https://git-scm.com/downloads) and clone the repo:
+To install locally, download the zip file with the [latest master](https://github.com/QuantConnect/Lean/archive/master.zip) and unzip it to your favorite location. Alternatively, install [Git](https://git-scm.com/downloads) and clone the repo:
+
 ```
 git clone https://github.com/QuantConnect/Lean.git
 cd Lean
@@ -137,19 +135,9 @@ Nuget packages not being restored is the most common build issue. By default Vis
 
 A full explanation of the Python installation process can be found in the [Algorithm.Python](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#quantconnect-python-algorithm-project) project.
 
-### R Support
+### Local-Cloud Hybrid Development. 
 
-- Install R-base if you need to call R in your algorithm.
-For Linux users:
-```
-sudo apt-get update && apt-get install -y r-base && apt-get install -y pandoc && apt-get install -y libcurl4-openssl-dev
-```
-For Windows and macOs users:
-Please visit the official [R website](https://www.r-project.org/) to download R. 
-
-### QuantConnect Visual Studio Plugin
-
-For more information please see the QuantConnect Visual Studio Plugin [Documentation][8]
+You can develop in your IDE and synchronize to the cloud with Skylight. For more information please see the [Skylight Home](https://www.quantconnect.com/skylight).
 
 ## Issues and Feature Requests ##
 
