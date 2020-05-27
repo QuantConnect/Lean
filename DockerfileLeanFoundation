@@ -1,5 +1,5 @@
 #
-#   LEAN Foundation Docker Container 20200428
+#   LEAN Foundation Docker Container 20200527
 #   Cross platform deployment for multiple brokerages
 #   Intended to be used in conjunction with Dockerfile. This is just the foundation common OS+Dependencies required.
 #
@@ -61,7 +61,7 @@ RUN conda clean -y --all
 
 # Install essential packages
 RUN conda install -y                \
-    cython=0.29.15                  \
+    cython=0.29.17                  \
     numpy=1.18.1                    \
     pandas=0.25.3                   \
     wrapt=1.12.1
@@ -80,13 +80,14 @@ RUN conda install -y                \
     xarray=0.15.1
 
 RUN conda install -y -c plotly      \
-    plotly=4.6.0
+    plotly=4.7.1
 
 RUN conda install -y -c conda-forge \
-    jupyterlab=2.1.0
+    jupyterlab=2.1.2
 
 # Install TensorFlow 1.15.2
-RUN pip install tensorflow==1.15.2
+RUN conda install -y -c intel       \
+    tensorflow==1.15.2
 
 # Install math/ML packages
 RUN conda install -y                \
@@ -95,6 +96,7 @@ RUN conda install -y                \
     gensim=3.8.0                    \
     keras=2.3.1                     \
     lightgbm=2.3.0                  \
+    mpi4py=3.0.3                    \
     nltk=3.4.5                      \
     pomegranate=0.11.1              \
     tensorflow-base=1.15.0          \
@@ -105,9 +107,10 @@ RUN pip install cmdstanpy==0.4
 
 # Install math/ML from conda-forge
 RUN conda install -y -c conda-forge \
-    copulae=0.3.1                   \
-    featuretools=0.13.4             \
+    copulae=0.3.1                   \ 
+    featuretools=0.14.0             \
     fbprophet=0.6                   \
+    openmpi=4.0.3                   \
     pulp=1.6.8                      \
     pymc3=3.8                       \
     rauth=0.7.3                     \
@@ -119,7 +122,7 @@ RUN conda install -y -c conda-forge \
     tslearn=0.3.1                   \
     tweepy=3.8.0                    \
     pywavelets=1.1.1                \
-    umap-learn=0.4.1
+    umap-learn=0.4.3
 
 # Install math/ML from pytorch
 RUN conda install -y -c pytorch     \
@@ -129,7 +132,7 @@ RUN conda install -y -c pytorch     \
 # Install math/ML from fastai
 RUN conda install -y -c fastai      \
     nvidia-ml-py3=7.352.0           \
-    fastai=1.0.60
+    fastai=1.0.61
 
 RUN conda clean -y --all
 
@@ -139,99 +142,98 @@ RUN pip install arch==4.14          \
     copulas==0.3.0                  \
     creme==0.5.1                    \
     cufflinks==0.17.3               \
-    gym==0.17.1                     \
+    gym==0.17.2                     \
     ipywidgets==7.5.1
 
 # Install from PIP II
 RUN pip install deap==1.3.1         \
-    cvxpy==1.1.0a3                  \
-    mlfinlab==0.9.3                 \
+    cvxpy==1.0.31                   \
+    mlfinlab==0.10.0                \
     pykalman==0.9.5                 \
-    pyportfolioopt==1.1.0           \
+    pyportfolioopt==1.2.2           \
     pyramid-arima==0.9.0            \
     pyro-ppl==1.3.1                 \
-    riskparityportfolio==0.1.6
+    riskparityportfolio==0.2
 
 # Install from PIP III
 RUN pip install sklearn==0.0        \
+    sklearn-json==0.1.0             \
     stable-baselines==2.10.0        \
     statistics==1.0.3.5             \
     statsmodels==0.11.1             \
     tensorforce==0.5.4              \
     QuantLib-Python==1.18           \
-    xgboost==1.0.2                  \
+    xgboost==1.1.0                  \
     dtw-python==1.0.5
 
 # Install from PIP IV
 RUN pip install cntk==2.7           \
     mxnet==1.6                      \
-    gluonts==0.4.3                  \
+    gluonts==0.5.0                  \
     gplearn==0.4.1                  \
-    jax==0.1.64                     \
-    jaxlib==0.1.45                  \
+    jax==0.1.68                     \
+    jaxlib==0.1.47                  \
     keras-rl==0.4.2                 \
-    pennylane==0.8.1
+    pennylane==0.9.0
+
+# Install from PIP V
+RUN pip install catboost==0.23.2    \
+    fastai2==0.0.17                 \
+    ppscore==0.0.2                  \
+    scikit-tda==0.0.3
 
 # Install Google Neural Tangents after JAX
 RUN pip install neural-tangents==0.2.1
 
-RUN pip install --upgrade mplfinance==0.12.3a3
+RUN pip install --upgrade mplfinance==0.12.4a0
 RUN pip install --upgrade hmmlearn==0.2.3
 RUN python -m nltk.downloader -d /usr/share/nltk_data punkt
 RUN python -m nltk.downloader -d /usr/share/nltk_data vader_lexicon
+
+# Update ODO
+RUN conda remove --force-remove -y odo
+RUN pip install git+git://github.com/blaze/odo.git@9fce6690b3666160681833540de6c55e922de5eb
+
+# Install DX Analytics
+RUN pip install git+git://github.com/yhilpisch/dx.git@4c47c258acddf966be5082530764d8115831dcb3
+
+# Install Auto-KS
+RUN pip install git+git://github.com/cvxgrp/auto_ks.git@b39e8f39eec33d6c55a92e2a781d62a8439f32a6
+
+# Install Pyrb
+RUN pip install git+git://github.com/jcrichard/pyrb.git@d02b56ae91f67b73f39e5e474fa90b0523f6638b
+
+# Install SSM
+RUN pip install git+git://github.com/slinderman/ssm.git@9fd66aeddf74059c934c8b214f8f7757b9bef214
 
 # Install TA-lib for python
 RUN wget http://cdn.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     tar -zxvf ta-lib-0.4.0-src.tar.gz && cd ta-lib && \
     ./configure --prefix=/usr && make && make install && \
-    pip install TA-lib && cd .. && rm -irf ta-lib
-
-# Install DX Analytics
-RUN wget https://cdn.quantconnect.com/dx/dx-master-9fab393.zip && \
-    unzip -q dx-master-9fab393 && cd dx-master && \
-    python setup.py install && cd .. && rm -irf dx-master
+    wget https://github.com/mrjbq7/ta-lib/archive/TA_Lib-0.4.18.zip && \
+    unzip -q TA_Lib-0.4.18.zip && cd ta-lib-TA_Lib-0.4.18 && \
+    python setup.py install && cd ../.. && rm -irf ta-lib
 
 # Install py-earth
-RUN wget https://cdn.quantconnect.com/py-earth/py-earth-master-b209d19.zip && \
-    unzip -q py-earth-master-b209d19.zip && cd py-earth-master && \
-    python setup.py install && cd .. && rm -irf py-earth-master
+RUN wget https://github.com/scikit-learn-contrib/py-earth/archive/0.1.0.zip && \
+    unzip -q 0.1.0.zip && cd py-earth-0.1.0 && \
+    python setup.py install && cd .. && rm -irf py-earth-0.1.0
 
 # Install fastText
-RUN wget https://cdn.quantconnect.com/fastText/fastText-master-6d7c77c.zip && \
-    unzip -q fastText-master-6d7c77c.zip && cd fastText-master && \
-    python setup.py install && cd .. && rm -irf fastText-master
-
-# Update ODO
-RUN conda remove --force-remove -y odo
-RUN wget https://cdn.quantconnect.com/odo/odo-master-9fce669.zip && \
-    unzip -q odo-master-9fce669.zip && cd odo-master && \
-    python setup.py install && cd .. && rm -irf odo-master
-
-# Install Auto-KS
-RUN wget https://cdn.quantconnect.com/auto_ks/auto_ks-master-b39e8f3.zip && \
-    unzip -q auto_ks-master-b39e8f3.zip && cd auto_ks-master && \
-    python setup.py install && cd .. && rm -irf auto_ks-master
-
-# Install Pyrb
-RUN wget https://cdn.quantconnect.com/pyrb/pyrb-master-d02b56a.zip && \
-    unzip -q pyrb-master-d02b56a.zip && cd pyrb-master && \
-    python setup.py install && cd .. && rm -irf pyrb-master
-
-# Install SSM
-RUN wget https://cdn.quantconnect.com/ssm/ssm-master-34b50d4.zip && \
-    unzip -q ssm-master-34b50d4.zip && cd ssm-master && \
-    python setup.py install && cd .. && rm -irf ssm-master
+RUN wget https://github.com/facebookresearch/fastText/archive/v0.9.2.zip && \
+    unzip -q v0.9.2.zip && cd fastText-0.9.2 && \
+    python setup.py install && cd .. && rm -irf fastText-0.9.2
 
 # Install Tigramite
-RUN wget https://cdn.quantconnect.com/tigramite/tigramite-master-eee4809.zip && \
-    unzip -q tigramite-master-eee4809.zip && cd tigramite-master && \
-    python setup.py install && cd .. && rm -irf tigramite-master
+RUN wget https://github.com/jakobrunge/tigramite/archive/4.1.zip && \ 
+    unzip -q 4.1.zip && cd tigramite-4.1 && \
+    python setup.py install && cd .. && rm -irf tigramite-4.1
 
-# Install H2O
-RUN wget https://cdn.quantconnect.com/h2o/h2o-3.30.0.1.zip && \
-    unzip -q h2o-3.30.0.1.zip && \
-    pip install h2o-3.30.0.1/python/h2o-3.30.0.1-py2.py3-none-any.whl && \
-    rm -irf h2o-3.30.0.1
+# Install H2O: https://www.h2o.ai/download/
+RUN wget https://cdn.quantconnect.com/h2o/h2o-3.30.0.3.zip && \
+    unzip -q h2o-3.30.0.3.zip && \
+    pip install h2o-3.30.0.3/python/h2o-3.30.0.3-py2.py3-none-any.whl && \
+    rm -irf h2o-3.30.0.3
 
 # Delete temporary zip files
 RUN rm -irf *.zip *.gz

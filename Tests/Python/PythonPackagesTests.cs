@@ -461,6 +461,19 @@ def RunTest():
         }
 
         [Test]
+        public void FastAiTest2()
+        {
+            AssetCode(
+                @"
+from fastai.tabular import *
+from fastai2.tabular.all import *
+def RunTest():
+    return 'Test is only importing the module, since available tests take too long'"
+            );
+        }
+
+
+        [Test]
         public void PyramidArimaTest()
         {
             AssetCode(
@@ -858,6 +871,57 @@ def RunTest():
             );
         }
 
+        [Test]
+        public void CatboostTest()
+        {
+            AssetCode(
+                @"
+from catboost import CatBoostRegressor
+
+def RunTest():
+    # Initialize data
+
+    train_data = [[1, 4, 5, 6],
+                  [4, 5, 6, 7],
+                  [30, 40, 50, 60]]
+
+    eval_data = [[2, 4, 6, 8],
+                 [1, 4, 50, 60]]
+
+    train_labels = [10, 20, 30]
+    # Initialize CatBoostRegressor
+    model = CatBoostRegressor(iterations=2,
+                              learning_rate=1,
+                              depth=2)
+    # Fit model
+    model.fit(train_data, train_labels)
+    # Get predictions
+    return model.predict(eval_data)"
+            );
+        }
+
+        [Test]
+        public void PpsscoreTest()
+        {
+            AssetCode(
+                @"
+import pandas as pd
+import numpy as np
+import ppscore as pps
+
+def RunTest():
+    df = pd.DataFrame()
+    df['x'] = np.random.uniform(-2, 2, 1_000_000)
+    df['error'] = np.random.uniform(-0.5, 0.5, 1_000_000)
+    df['y'] = df['x'] * df['x'] + df['error']
+
+    pps.score(df, 'x', 'y')
+    pps.matrix(df)
+
+    return pps"
+            );
+        }
+
         /// <summary>
         /// Simple test for modules that don't have short test example
         /// </summary>
@@ -870,18 +934,18 @@ def RunTest():
         [TestCase("tslearn", "0.3.1", "__version__")]
         [TestCase("tweepy", "3.8.0", "__version__")]
         [TestCase("pywt", "1.1.1", "__version__")]
-        [TestCase("umap", "0.4.1", "__version__")]
+        [TestCase("umap", "0.4.3", "__version__")]
         [TestCase("dtw", "1.0.5", "__version__")]
-        [TestCase("mplfinance", "0.12.3a3", "__version__")]
+        [TestCase("mplfinance", "0.12.4a0", "__version__")]
         [TestCase("cufflinks", "0.17.3", "__version__")]
         [TestCase("ipywidgets", "7.5.1", "__version__")]
         [TestCase("astropy", "4.0.1.post1", "__version__")]
-        [TestCase("gluonts", "0.4.3", "__version__")]
+        [TestCase("gluonts", "0.5.0", "__version__")]
         [TestCase("gplearn", "0.4.1", "__version__")]
-        [TestCase("h2o", "3.30.0.1", "__version__")]
+        [TestCase("h2o", "3.30.0.3", "__version__")]
         [TestCase("cntk", "2.7", "__version__")]
-        [TestCase("featuretools", "0.13.4", "__version__")]
-        [TestCase("pennylane", "0.8.1", "version()")]
+        [TestCase("featuretools", "0.14.0", "__version__")]
+        [TestCase("pennylane", "0.9.0", "version()")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
             AssetCode(
