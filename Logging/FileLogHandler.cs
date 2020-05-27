@@ -49,7 +49,7 @@ namespace QuantConnect.Logging
         /// Initializes a new instance of the <see cref="FileLogHandler"/> class using 'log.txt' for the filepath.
         /// </summary>
         public FileLogHandler()
-            : this("log.txt")
+            : this(Log.FilePath)
         {
         }
 

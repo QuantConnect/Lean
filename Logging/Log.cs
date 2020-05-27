@@ -52,6 +52,12 @@ namespace QuantConnect.Logging
         }
 
         /// <summary>
+        /// Global flag to specify file based log path
+        /// </summary>
+        /// <remarks>Only valid for file based loggers</remarks>
+        public static string FilePath { get; set; } = "log.txt";
+
+        /// <summary>
         /// Set the minimum message level:
         /// </summary>
         public static int DebuggingLevel
