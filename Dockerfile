@@ -8,7 +8,7 @@ FROM quantconnect/lean:foundation
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
-COPY ./Launcher/bin/Debug/* /Lean/Launcher/bin/Debug/
+COPY ./Launcher/bin/Debug/ /Lean/Launcher/bin/Debug/
 
 # Can override with '-w'
 WORKDIR /Lean/Launcher/bin/Debug
