@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Initialize a new instance of <see cref="AccumulativeInsightPortfolioConstructionModel"/>
         /// </summary>
-        /// <param name="rebalancingParam">Rebalancing func or if a date rule, timedelta will be converted into func.
+        /// <param name="rebalance">Rebalancing func or if a date rule, timedelta will be converted into func.
         /// For a given algorithm UTC DateTime the func returns the next expected rebalance time
         /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
         /// will trigger rebalance. If null will be ignored</param>
@@ -107,14 +107,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="percent">The percentage amount of the portfolio value to allocate
         /// to a single insight. The value of percent should be in the range [0,1].
         /// The default value is 0.03.</param>
-        public AccumulativeInsightPortfolioConstructionModel(PyObject rebalancingParam,
+        public AccumulativeInsightPortfolioConstructionModel(PyObject rebalance,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
             double percent = 0.03)
             : this((Func<DateTime, DateTime?>)null,
                 portfolioBias,
                 percent)
         {
-            SetRebalancingFunc(rebalancingParam);
+            SetRebalancingFunc(rebalance);
         }
 
         /// <summary>

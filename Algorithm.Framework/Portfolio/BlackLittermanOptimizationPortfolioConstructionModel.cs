@@ -161,7 +161,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Initialize the model
         /// </summary>
-        /// <param name="rebalancingParam">Rebalancing func or if a date rule, timedelta will be converted into func.
+        /// <param name="rebalance">Rebalancing func or if a date rule, timedelta will be converted into func.
         /// For a given algorithm UTC DateTime the func returns the next expected rebalance time
         /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
         /// will trigger rebalance. If null will be ignored</param>
@@ -176,7 +176,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <remarks>This is required since python net can not convert python methods into func nor resolve the correct
         /// constructor for the date rules parameter.
         /// For performance we prefer python algorithms using the C# implementation</remarks>
-        public BlackLittermanOptimizationPortfolioConstructionModel(PyObject rebalancingParam,
+        public BlackLittermanOptimizationPortfolioConstructionModel(PyObject rebalance,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
             int lookback = 1,
             int period = 63,
@@ -187,7 +187,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             IPortfolioOptimizer optimizer = null)
             : this((Func<DateTime, DateTime?>)null, portfolioBias, lookback, period, resolution, riskFreeRate, delta, tau, optimizer)
         {
-            SetRebalancingFunc(rebalancingParam);
+            SetRebalancingFunc(rebalance);
         }
 
         /// <summary>

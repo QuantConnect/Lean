@@ -35,7 +35,7 @@ import pandas as pd
 ### </summary>
 class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionModel):
     def __init__(self,
-                 rebalancingParam = Resolution.Daily,
+                 rebalance = Resolution.Daily,
                  portfolioBias = PortfolioBias.LongShort,
                  lookback = 1,
                  period = 63,
@@ -44,7 +44,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
                  optimizer = None):
         """Initialize the model
         Args:
-            rebalancingParam: Rebalancing parameter. If it is a timedelta, date rules or Resolution, it will be converted into a function.
+            rebalance: Rebalancing parameter. If it is a timedelta, date rules or Resolution, it will be converted into a function.
                               If None will be ignored.
                               The function returns the next expected rebalance time for a given algorithm UTC DateTime.
                               The function returns null if unknown, in which case the function will be called again in the
@@ -68,11 +68,11 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
 
         # If the argument is an instance of Resolution or Timedelta
         # Redefine rebalancingFunc
-        rebalancingFunc = rebalancingParam
-        if isinstance(rebalancingParam, int):
-            rebalancingParam = Extensions.ToTimeSpan(rebalancingParam)
-        if isinstance(rebalancingParam, timedelta):
-            rebalancingFunc = lambda dt: dt + rebalancingParam
+        rebalancingFunc = rebalance
+        if isinstance(rebalance, int):
+            rebalance = Extensions.ToTimeSpan(rebalance)
+        if isinstance(rebalance, timedelta):
+            rebalancingFunc = lambda dt: dt + rebalance
         if rebalancingFunc:
             self.SetRebalancingFunc(rebalancingFunc)
 
