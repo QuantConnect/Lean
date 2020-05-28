@@ -225,24 +225,24 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// the correct constructor for the date rules, timespan parameter.
         /// For performance we prefer python algorithms using the C# implementation
         /// </summary>
-        /// <param name="rebalancingParam">Rebalancing func or if a date rule, timedelta will be converted into func.
+        /// <param name="rebalance">Rebalancing func or if a date rule, timedelta will be converted into func.
         /// For a given algorithm UTC DateTime the func returns the next expected rebalance time
         /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
         /// will trigger rebalance. If null will be ignored</param>
-        protected void SetRebalancingFunc(PyObject rebalancingParam)
+        protected void SetRebalancingFunc(PyObject rebalance)
         {
             IDateRule dateRules;
             TimeSpan timeSpan;
-            if (rebalancingParam.TryConvert(out dateRules))
+            if (rebalance.TryConvert(out dateRules))
             {
                 _rebalancingFunc = dateRules.ToFunc();
             }
-            else if (!rebalancingParam.TryConvertToDelegate(out _rebalancingFunc))
+            else if (!rebalance.TryConvertToDelegate(out _rebalancingFunc))
             {
                 try
                 {
                     // try convert does not work for timespan
-                    timeSpan = rebalancingParam.As<TimeSpan>();
+                    timeSpan = rebalance.As<TimeSpan>();
                     if (timeSpan != default(TimeSpan))
                     {
                         _rebalancingFunc = time => time.Add(timeSpan);

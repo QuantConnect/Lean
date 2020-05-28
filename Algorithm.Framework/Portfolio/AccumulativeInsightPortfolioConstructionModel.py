@@ -30,17 +30,17 @@ class AccumulativeInsightPortfolioConstructionModel(EqualWeightingPortfolioConst
         3. On active Flat insight, move by percent towards 0
         4. On expired insight, and no other active insight, emits a 0 target'''
 
-    def __init__(self,  rebalancingParam = None, portfolioBias = PortfolioBias.LongShort, percent = 0.03):
+    def __init__(self,  rebalance = None, portfolioBias = PortfolioBias.LongShort, percent = 0.03):
         '''Initialize a new instance of AccumulativeInsightPortfolioConstructionModel
         Args:
-            rebalancingParam: Rebalancing parameter. If it is a timedelta, date rules or Resolution, it will be converted into a function.
+            rebalance: Rebalancing parameter. If it is a timedelta, date rules or Resolution, it will be converted into a function.
                               If None will be ignored.
                               The function returns the next expected rebalance time for a given algorithm UTC DateTime.
                               The function returns null if unknown, in which case the function will be called again in the
                               next loop. Returning current time will trigger rebalance.
             portfolioBias: Specifies the bias of the portfolio (Short, Long/Short, Long)
             percent: percent of portfolio to allocate to each position'''
-        super().__init__(rebalancingParam)
+        super().__init__(rebalance)
         self.portfolioBias = portfolioBias
         self.percent = abs(percent)
         self.sign = lambda x: -1 if x < 0 else (1 if x > 0 else 0)

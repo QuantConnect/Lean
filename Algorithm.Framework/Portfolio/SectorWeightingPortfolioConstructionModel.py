@@ -29,15 +29,15 @@ class SectorWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstruct
    InsightDirection.Down, short targets are returned.
    It will ignore Insight for symbols that have no CompanyReference.IndustryTemplateCode'''
 
-    def __init__(self, rebalancingParam = Resolution.Daily):
+    def __init__(self, rebalance = Resolution.Daily):
         '''Initialize a new instance of InsightWeightingPortfolioConstructionModel
         Args:
-            rebalancingParam: Rebalancing parameter. If it is a timedelta, date rules or Resolution, it will be converted into a function.
+            rebalance: Rebalancing parameter. If it is a timedelta, date rules or Resolution, it will be converted into a function.
                               If None will be ignored.
                               The function returns the next expected rebalance time for a given algorithm UTC DateTime.
                               The function returns null if unknown, in which case the function will be called again in the
                               next loop. Returning current time will trigger rebalance.'''
-        super().__init__(rebalancingParam)
+        super().__init__(rebalance)
         self.sectorCodeBySymbol = dict()
 
     def ShouldCreateTargetForInsight(self, insight):
