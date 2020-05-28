@@ -16,7 +16,6 @@
 
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Packets
@@ -45,10 +44,16 @@ namespace QuantConnect.Packets
         public int TickLimit;
 
         /// <summary>
-        /// Ram allocation for this backtest in MB
+        /// Ram allocation for this algorithm in MB
         /// </summary>
-        [JsonProperty(PropertyName = "iRamAllocation")]
+        [JsonProperty(PropertyName = "iMaxRamAllocation")]
         public int RamAllocation;
+
+        /// <summary>
+        /// CPU allocation for this algorithm
+        /// </summary>
+        [JsonProperty(PropertyName = "dMaxCpuAllocation")]
+        public decimal CpuAllocation;
 
         /// <summary>
         /// The user backtesting log limit
