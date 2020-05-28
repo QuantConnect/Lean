@@ -357,7 +357,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             {
                 try
                 {
-                    BZip2.Decompress(fileToDecompressAsStream, decompressedStream);
+                    BZip2.Decompress(fileToDecompressAsStream, decompressedStream, false);
                     outcome = true;
                 }
                 catch (Exception ex)
