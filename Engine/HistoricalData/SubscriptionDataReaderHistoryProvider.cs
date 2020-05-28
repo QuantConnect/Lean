@@ -79,6 +79,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// </summary>
         protected virtual Subscription CreateSubscription(HistoryRequest request, DateTime start, DateTime end)
         {
+            // Tradable dates are defined with the data time zone to access the right source
+            var tradableDates = Time.EachTradeableDay(request.ExchangeHours,
+                start.ConvertFromUtc(request.DataTimeZone),
+                end.ConvertFromUtc(request.DataTimeZone));
+
             // data reader expects these values in local times
             start = start.ConvertFromUtc(request.ExchangeHours.TimeZone);
             end = end.ConvertFromUtc(request.ExchangeHours.TimeZone);
@@ -120,7 +125,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 end,
                 mapFileResolver,
                 _factorFileProvider,
-                Time.EachTradeableDay(request.ExchangeHours, start, end),
+                tradableDates,
                 false,
                 _dataCacheProvider
                 );
