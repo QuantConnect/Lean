@@ -50,11 +50,17 @@ class BasicTemplateFuturesHistoryAlgorithm(QCAlgorithm):
         self.SetBenchmark(lambda x: 1000000)
 
         self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.Every(timedelta(hours=1)), self.MakeHistoryCall)
+        self.successCount = 0
 
     def MakeHistoryCall(self):
         history = self.History(self.Securities.keys(), 10, Resolution.Minute)
-        if history.empty:
+        if len(history) < 10:
             raise Exception(f'Empty history at {self.Time}')
+        self.successCount += 1
+
+    def OnEndOfAlgorithm(self):
+        if self.successCount < 49:
+            raise Exception(f'Scheduled Event did not assert history call as many times as expected: {_successCount}/49')
 
     def OnData(self,slice):
         if self.Portfolio.Invested: return

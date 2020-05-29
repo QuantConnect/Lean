@@ -20,7 +20,6 @@ using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 
@@ -44,6 +43,8 @@ namespace QuantConnect.Algorithm.CSharp
             Futures.Metals.Gold,
         };
 
+        private int _successCount = 0;
+
         public override void Initialize()
         {
             SetStartDate(2013, 10, 8);
@@ -64,9 +65,18 @@ namespace QuantConnect.Algorithm.CSharp
         private void MakeHistoryCall()
         {
             var history = History(10, Resolution.Minute);
-            if (history.IsNullOrEmpty())
+            if (history.Count() < 10)
             {
                 throw new Exception($"Empty history at {Time}");
+            }
+            _successCount++;
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (_successCount < 49)
+            {
+                throw new Exception($"Scheduled Event did not assert history call as many times as expected: {_successCount}/49");
             }
         }
 
