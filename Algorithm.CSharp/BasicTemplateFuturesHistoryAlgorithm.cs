@@ -20,6 +20,8 @@ using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -32,7 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="history and warm up" />
     /// <meta name="tag" content="history" />
     /// <meta name="tag" content="futures" />
-    public class BasicTemplateFuturesHistoryAlgorithm : QCAlgorithm
+    public class BasicTemplateFuturesHistoryAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         // S&P 500 EMini futures
         private string [] roots = new []
@@ -40,6 +42,8 @@ namespace QuantConnect.Algorithm.CSharp
             Futures.Indices.SP500EMini,
             Futures.Metals.Gold,
         };
+
+        private int _successCount = 0;
 
         public override void Initialize()
         {
@@ -54,6 +58,26 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             SetBenchmark(d => 1000000);
+
+            Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromHours(1)), MakeHistoryCall);
+        }
+
+        private void MakeHistoryCall()
+        {
+            var history = History(10, Resolution.Minute);
+            if (history.Count() < 10)
+            {
+                throw new Exception($"Empty history at {Time}");
+            }
+            _successCount++;
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (_successCount < 49)
+            {
+                throw new Exception($"Scheduled Event did not assert history call as many times as expected: {_successCount}/49");
+            }
         }
 
         /// <summary>
@@ -100,5 +124,62 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Log(orderEvent.ToString());
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "0"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$0.00"},
+            {"Fitness Score", "0"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Portfolio Turnover", "0"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "371857150"}
+        };
     }
 }
