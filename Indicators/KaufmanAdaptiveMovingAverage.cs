@@ -24,8 +24,8 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class KaufmanAdaptiveMovingAverage : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
-        private const decimal _constMax = 2m / (30m + 1m);
-        private const decimal _constDiff = 2m / (2m + 1m) - _constMax;
+        private readonly decimal _slowSmoothingFactor;
+        private readonly decimal _diffSmoothingFactor;
 
         private decimal _sumRoc1;
         private decimal _periodRoc;
@@ -34,20 +34,28 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KaufmanAdaptiveMovingAverage"/> class using the specified name and period.
-        /// </summary> 
+        /// </summary>
         /// <param name="name">The name of this indicator</param>
-        /// <param name="period">The period of the KAMA</param>
-        public KaufmanAdaptiveMovingAverage(string name, int period) 
+        /// <param name="period">The period of the Efficiency Ratio (ER)</param>
+        /// <param name="fastEmaPeriod">The period of the fast EMA used to calculate the Smoothing Constant (SC)</param>
+        /// <param name="slowEmaPeriod">The period of the slow EMA used to calculate the Smoothing Constant (SC)</param>
+        public KaufmanAdaptiveMovingAverage(string name, int period, int fastEmaPeriod = 2, int slowEmaPeriod = 30)
             : base(name, period + 1)
         {
+            // Smoothing factor of the slow EMA
+            _slowSmoothingFactor = 2m / (slowEmaPeriod + 1m);
+            // Difference between the smoothing factor of the fast and slow EMA
+            _diffSmoothingFactor = 2m / (fastEmaPeriod + 1m) - _slowSmoothingFactor;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KaufmanAdaptiveMovingAverage"/> class using the specified period.
-        /// </summary> 
-        /// <param name="period">The period of the KAMA</param>
-        public KaufmanAdaptiveMovingAverage(int period)
-            : this($"KAMA({period})", period)
+        /// </summary>
+        /// <param name="period">The period of the Efficiency Ratio (ER)</param>
+        /// <param name="fastEmaPeriod">The period of the fast EMA used to calculate the Smoothing Constant (SC)</param>
+        /// <param name="slowEmaPeriod">The period of the slow EMA used to calculate the Smoothing Constant (SC)</param>
+        public KaufmanAdaptiveMovingAverage(int period, int fastEmaPeriod = 2, int slowEmaPeriod = 30)
+            : this($"KAMA({period},{fastEmaPeriod},{slowEmaPeriod})", period, fastEmaPeriod, slowEmaPeriod)
         {
         }
 
@@ -111,7 +119,7 @@ namespace QuantConnect.Indicators
             var efficiencyRatio = (_sumRoc1 <= _periodRoc) || _sumRoc1 == 0 ? 1m : Math.Abs(_periodRoc / _sumRoc1);
 
             // Calculate the smoothing constant
-            var smoothingConstant = efficiencyRatio * _constDiff + _constMax;
+            var smoothingConstant = efficiencyRatio * _diffSmoothingFactor + _slowSmoothingFactor;
             smoothingConstant *= smoothingConstant;
 
             // Calculate the KAMA like an EMA, using the

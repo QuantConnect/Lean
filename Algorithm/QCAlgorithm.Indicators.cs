@@ -717,14 +717,29 @@ namespace QuantConnect.Algorithm
         /// Creates a new KaufmanAdaptiveMovingAverage indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose KAMA we want</param>
-        /// <param name="period">The period over which to compute the KAMA</param>
+        /// <param name="period">The period of the Efficiency Ratio (ER) of KAMA</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The KaufmanAdaptiveMovingAverage indicator for the requested symbol over the specified period</returns>
         public KaufmanAdaptiveMovingAverage KAMA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"KAMA({period})", resolution);
-            var kaufmanAdaptiveMovingAverage = new KaufmanAdaptiveMovingAverage(name, period);
+            return KAMA(symbol, period, 2, 30, resolution, selector);
+        }
+
+        /// <summary>
+        /// Creates a new KaufmanAdaptiveMovingAverage indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose KAMA we want</param>
+        /// <param name="period">The period of the Efficiency Ratio (ER)</param>
+        /// <param name="fastEmaPeriod">The period of the fast EMA used to calculate the Smoothing Constant (SC)</param>
+        /// <param name="slowEmaPeriod">The period of the slow EMA used to calculate the Smoothing Constant (SC)</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The KaufmanAdaptiveMovingAverage indicator for the requested symbol over the specified period</returns>
+        public KaufmanAdaptiveMovingAverage KAMA(Symbol symbol, int period, int fastEmaPeriod, int slowEmaPeriod, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"KAMA({period},{fastEmaPeriod},{slowEmaPeriod})", resolution);
+            var kaufmanAdaptiveMovingAverage = new KaufmanAdaptiveMovingAverage(name, period, fastEmaPeriod, slowEmaPeriod);
             RegisterIndicator(symbol, kaufmanAdaptiveMovingAverage, resolution, selector);
 
             if (EnableAutomaticIndicatorWarmUp)
