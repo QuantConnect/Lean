@@ -3145,11 +3145,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             if (result.HasError)
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, result.ErrorCode.ToString(), result.ErrorMessage));
-
-                if (throwException)
+                if (IsWithinScheduledServerResetTimes())
                 {
-                    throw new Exception($"InteractiveBrokersBrokerage.CheckIbAutomaterError(): {result.ErrorCode} - {result.ErrorMessage}");
+                    Log.Trace($"IBAutomater error during server reset times: {result.ErrorCode} - {result.ErrorMessage}, restarting after reset time.");
+                }
+                else
+                {
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, result.ErrorCode.ToString(), result.ErrorMessage));
+
+                    if (throwException)
+                    {
+                        throw new Exception($"InteractiveBrokersBrokerage.CheckIbAutomaterError(): {result.ErrorCode} - {result.ErrorMessage}");
+                    }
                 }
             }
         }
