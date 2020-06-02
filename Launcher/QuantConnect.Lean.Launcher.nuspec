@@ -27,6 +27,7 @@
         <dependency id="QuantConnect.Indicators" version="$version$" exclude="Build,Analyzers" />
         <dependency id="QuantConnect.Research" version="$version$" exclude="Build,Analyzers" />
         <dependency id="QuantConnect.Logging" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Common" version="$version$" exclude="Build,Analyzers" />
       </group>
     </dependencies>
   </metadata>
