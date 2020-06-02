@@ -18,6 +18,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Data.Market;
@@ -38,6 +39,8 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// Source: https://medium.com/bitfinex/bitfinex-api-update-june-2019-661e806e6567
         /// </remarks>
         private const int MaximumSubscriptionsPerSocket = 30;
+
+        private const int ConnectionTimeout = 30000;
 
         private readonly string _wssUrl;
         private readonly object _locker = new object();
@@ -190,7 +193,8 @@ namespace QuantConnect.Brokerages.Bitfinex
             webSocket.Initialize(_wssUrl);
             webSocket.Message += OnMessage;
             webSocket.Error += OnError;
-            webSocket.Connect();
+
+            Connect(webSocket);
 
             webSocket.ConnectionHandler.ConnectionLost += OnConnectionLost;
             webSocket.ConnectionHandler.ConnectionRestored += OnConnectionRestored;
@@ -202,6 +206,31 @@ namespace QuantConnect.Brokerages.Bitfinex
                       $"WebSocket connections: {_channelsByWebSocket.Count}");
 
             return webSocket;
+        }
+
+        private void Connect(IWebSocket webSocket)
+        {
+            var connectedEvent = new ManualResetEvent(false);
+            EventHandler onOpenAction = (s, e) =>
+            {
+                connectedEvent.Set();
+            };
+
+            webSocket.Open += onOpenAction;
+
+            try
+            {
+                webSocket.Connect();
+
+                if (!connectedEvent.WaitOne(ConnectionTimeout))
+                {
+                    throw new Exception("BitfinexSubscriptionManager.Connect(): WebSocket connection timeout.");
+                }
+            }
+            finally
+            {
+                webSocket.Open -= onOpenAction;
+            }
         }
 
         private void OnConnectionLost(object sender, EventArgs e)
@@ -239,7 +268,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 return;
             }
 
-            Log.Trace($"BitfinexSubscriptionManager.OnReconnectRequested(): IsOpen:{webSocket.IsOpen} ReadyState:{webSocket.ReadyState} [Id: {connectionHandler.ConnectionId}]");
+            Log.Trace($"BitfinexSubscriptionManager.OnReconnectRequested(): IsOpen:{webSocket.IsOpen} [Id: {connectionHandler.ConnectionId}]");
 
             if (!webSocket.IsOpen)
             {
@@ -249,11 +278,11 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             if (!webSocket.IsOpen)
             {
-                Log.Trace($"BitfinexSubscriptionManager.OnReconnectRequested(): Websocket not open: IsOpen:{webSocket.IsOpen} ReadyState:{webSocket.ReadyState} [Id: {connectionHandler.ConnectionId}]");
+                Log.Trace($"BitfinexSubscriptionManager.OnReconnectRequested(): Websocket not open: IsOpen:{webSocket.IsOpen} [Id: {connectionHandler.ConnectionId}]");
                 return;
             }
 
-            Log.Trace($"BitfinexSubscriptionManager.OnReconnectRequested(): Reconnected: IsOpen:{webSocket.IsOpen} ReadyState:{webSocket.ReadyState} [Id: {connectionHandler.ConnectionId}]");
+            Log.Trace($"BitfinexSubscriptionManager.OnReconnectRequested(): Reconnected: IsOpen:{webSocket.IsOpen} [Id: {connectionHandler.ConnectionId}]");
 
             List<BitfinexChannel> channels;
             lock (_locker)

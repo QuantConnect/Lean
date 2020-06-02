@@ -20,7 +20,7 @@ namespace QuantConnect.Brokerages.Bitfinex
     /// <summary>
     /// Wrapper class for a Bitfinex websocket connection
     /// </summary>
-    public class BitfinexWebSocketWrapper : WebSocketWrapper
+    public class BitfinexWebSocketWrapper : WebSocketClientWrapper
     {
         /// <summary>
         /// The unique Id for the connection
