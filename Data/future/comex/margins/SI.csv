@@ -6,15 +6,12 @@ date,initial,maintenance
 20090821,4400,4000
 20091215,4950,4500
 20100212,5500,5000
-20100302,5500,5000
 20100430,4675,4250
 20100607,5500,5000
-20101001,5500,5000
 20101111,7150,6500
 20101116,7975,7250
 20101217,8525,7750
 20110121,9075,8250
-20110204,9075,8250
 20110325,9570,8700
 20110426,10450,9500
 20110429,11825,10750
@@ -22,73 +19,43 @@ date,initial,maintenance
 20110505,15400,14000
 20110509,17600,16000
 20110926,20350,1850
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-059.html
 20120213,21600,16000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-162.html
 20120416,18900,14000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-328.html
 20120806,16875,12500
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-498.html
 20121120,12100,11000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-182.html
+20130212,10450,9500
 20130416,12375,11250
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-540.html
 20131122,11000,10000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-138.html
 20140404,9900,9000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-192.html
 20140516,9075,8250
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-279.html
 20140714,8250,7500
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-325.html
 20140822,7150,6500
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-400.html
 20141010,6050,5500
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-469.html
 20141205,7150,6500
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-030.html
 20150130,7920,7200
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-038.html
 20150206,8470,7700
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-139.html
 20150522,7700,7000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-247.html
 20150821,6600,6000
-# https://www.cmegroup.com/notices/clearing/2016/04/Chadv16-153.html
+20151228,5720,5200
 20160408,5280,4800
-# https://www.cmegroup.com/notices/clearing/2016/07/Chadv16-260.html
 20160708,5775,5250
-# https://www.cmegroup.com/notices/clearing/2016/08/Chadv16-355.html
-20160901,5775,5250
-# https://www.cmegroup.com/notices/clearing/2016/10/Chadv16-463.html
 20161103,6380,5800
-# https://www.cmegroup.com/notices/clearing/2016/11/Chadv16-486.html
 20161118,7150,6500
-# https://www.cmegroup.com/notices/clearing/2017/03/Chadv17-085.html
 20170303,6325,5750
-# https://www.cmegroup.com/notices/clearing/2017/04/Chadv17-127.html
 20170407,5500,5000
-# https://www.cmegroup.com/notices/clearing/2017/08/Chadv17-314.html
 20170811,5940,5400
-# https://www.cmegroup.com/notices/clearing/2017/09/Chadv17-350.html
 20170911,6490,5900
-# https://www.cmegroup.com/notices/clearing/2017/12/Chadv17-475.html
 20171208,5720,5200
-# https://www.cmegroup.com/notices/clearing/2017/12/Chadv17-498.html
 20171219,5170,4700
-# https://www.cmegroup.com/notices/clearing/2018/01/Chadv18-011.html
 20180109,4400,4000
-# https://www.cmegroup.com/notices/clearing/2018/02/Chadv18-073.html
 20180220,3960,3600
-# https://www.cmegroup.com/notices/clearing/2019/03/Chadv19-087.html
 20190314,3630,3300
-# https://www.cmegroup.com/notices/clearing/2019/06/Chadv19-208.html
 20190628,3960,3600
-# https://www.cmegroup.com/notices/clearing/2019/08/Chadv19-266.html
 20190809,4510,4100
-# https://www.cmegroup.com/notices/clearing/2019/09/Chadv19-293.html
 20190906,5390,4900
-# https://www.cmegroup.com/notices/clearing/2019/10/Chadv19-327.html
 20191004,5720,5200
-# https://www.cmegroup.com/notices/clearing/2020/01/Chadv20-014.html
 20200109,6050,5500
+20200303,6600,6000
+20200317,7700,7000
+20200320,8800,8000
+20200326,9900,9000

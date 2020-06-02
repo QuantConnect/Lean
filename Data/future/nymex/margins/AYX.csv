@@ -1,61 +1,88 @@
 date,initial,maintenance
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-019.html
 20120117,3300,3000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-162.html
 20120416,3025,2750
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-479.html
+20130212,2200,2000
+20130827,2750,2500
 20131015,2200,2000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-036.html
 20140124,2640,2400
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-073.html
 20140214,3520,3200
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-192.html
-20140516,2860,2600
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-211.html
+20140217,2860,2600
+20140519,2200,2000
 20140530,3410,3100
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-232.html
+20140602,2200,2000
 20140613,4290,3900
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-038.html
+20140616,2200,2000
+20140801,1870,1700
 20150206,2970,2700
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-054.html
+20150209,1650,1500
 20150220,2200,2000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-068.html
+20150223,1320,1200
 20150306,1650,1500
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-371.html
+20150309,1100,1000
+20150410,1430,1300
+20150803,880,800
+20150804,1430,1300
+20151102,880,800
+20151103,1430,1300
 20151106,1925,1750
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-423.html
+20151109,1430,1300
 20151211,2585,2350
-# https://www.cmegroup.com/notices/clearing/2016/07/Chadv16-272.html
+20151214,1430,1300
+20160104,880,800
+20160105,1430,1300
+20160422,1100,1000
+20160502,880,800
+20160503,1100,1000
+20160526,880,800
+20160704,660,600
+20160705,880,800
 20160715,2035,1850
-# https://www.cmegroup.com/notices/clearing/2016/08/Chadv16-327.html
+20160718,770,700
 20160819,1650,1500
-# https://www.cmegroup.com/notices/clearing/2017/03/Chadv17-116.html
+20160822,770,700
+20161003,550,500
+20161004,770,700
+20170102,550,500
+20170104,770,700
 20170323,1320,1200
-# https://www.cmegroup.com/notices/clearing/2017/04/Chadv17-159.html
+20170324,385,350
+20170403,330,300
+20170404,385,350
 20170428,990,900
-# https://www.cmegroup.com/notices/clearing/2017/06/Chadv17-241.html
+20170501,385,350
 20170623,770,700
-# https://www.cmegroup.com/notices/clearing/2017/10/Chadv17-389.html
+20170626,330,300
+20170703,275,250
+20170705,330,300
+20170901,440,400
+20170904,385,350
+20170905,440,400
 20171006,660,600
-# https://www.cmegroup.com/notices/clearing/2018/01/Chadv18-042.html
+20171009,385,350
+20180126,468,425
 20180130,825,750
-# https://www.cmegroup.com/notices/clearing/2018/03/Chadv18-111.html
-20180316,605,550
-# https://www.cmegroup.com/notices/clearing/2018/05/Chadv18-196.html
+20180131,605,550
+20180319,440,400
+20180328,523,475
 20180518,715,650
-# https://www.cmegroup.com/notices/clearing/2018/05/Chadv18-212.html
+20180521,633,575
 20180530,798,725
-# https://www.cmegroup.com/notices/clearing/2018/06/Chadv18-223.html
+20180531,715,650
+20180601,798,725
 20180605,1100,1000
-# https://www.cmegroup.com/notices/clearing/2018/06/Chadv18-257.html
 20180626,1650,1500
-# https://www.cmegroup.com/notices/clearing/2018/10/Chadv18-431.html
 20181031,1430,1300
-# https://www.cmegroup.com/notices/clearing/2019/01/Chadv19-045.html
+20181101,1100,1000
 20190201,1210,1100
-# https://www.cmegroup.com/notices/clearing/2019/06/Chadv19-104.html
+20190204,880,800
 20190621,990,900
-# https://www.cmegroup.com/notices/clearing/2019/09/Chadv19-306.html
+20190624,715,650
 20190918,1320,1200
-# https://www.cmegroup.com/notices/clearing/2020/01/Chadv20-023.html
+20190919,880,800
 20200117,1045,950
+20200120,660,600
+20200312,825,750
+20200316,1210,1100
+20200318,1650,1500
+20200320,3080,2800
+20200424,3520,3200
