@@ -155,8 +155,12 @@
     <None Include="BasicTemplateOptionTradesAlgorithm.py" />
     <None Include="BrokerageModelAlgorithm.py" />
     <None Include="BubbleAlgorithm.py" />
-    <None Include="build.sh" />
-    <None Include="build.bat" />
+    <None Include="build.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="build.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="CoarseFineFundamentalComboAlgorithm.py" />
     <None Include="CoarseFineFundamentalRegressionAlgorithm.py" />
     <None Include="CoarseFundamentalTop3Algorithm.py" />
@@ -311,10 +315,10 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' ">
-      $(ProjectDir)build
+      build
     </PostBuildEvent>
     <PostBuildEvent Condition="'$(OS)' != 'Windows_NT'">
-      $(ProjectDir)build.sh
+      ./build.sh
     </PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets')" />
