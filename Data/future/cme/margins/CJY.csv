@@ -1,34 +1,32 @@
 date,initial,maintenance
+# Values are converted from JPY to USD
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv11-437.html
 20111205,7467,5535
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-380.html
 20120907,6386,5535
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-452.html
 20121023,5500,5000
-20130102,44000,40000
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-014.html
 20130115,3729,3390
-20130116,33000,30000
-20130405,44000,40000
-20130430,57200,52000
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-540.html
 20131122,5168,4703
-20131125,52250,47500
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-211.html
 20140530,4312,3920
-20140602,44000,40000
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-348.html
 20140905,3392,3088
-20140908,35750,32500
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-427.html
 20141104,3694,3358
-20141105,40150,36500
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-007.html
 20150109,3789,3444
-20150112,45100,41000
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-023.html
 20150123,4582,4165
-20150126,53900,49000
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-030.html
 20150130,5049,4950
-20150202,59400,54000
+# https://www.cmegroup.com/notices/clearing/2016/06/Chadv16-254.html
 20160701,7007,6370
-20160704,71500,65000
+# https://www.cmegroup.com/notices/clearing/2017/01/Chadv17-028.html
 20170113,5599,5090
-20170116,64350,58500
+# https://www.cmegroup.com/notices/clearing/2017/05/Chadv17-167.html
 20170512,4356,3960
-20170515,49500,45000
+# https://www.cmegroup.com/notices/clearing/2018/11/Chadv18-473.html
 20181130,3485,3168
-20181203,39600,36000
-20200310,44000,40000
-20200316,55000,50000
-20200318,60500,55000

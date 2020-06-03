@@ -1,39 +1,38 @@
 date,initial,maintenance
+# Values are converted from CAD to USD
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv11-437.html
 20111205,4647,3442
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-380.html
 20120907,3597,3270
-20130102,3520,3200
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-014.html
 20130115,2507,2280
-20130116,2475,2250
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-126.html
 20130319,2678,2435
-20130320,2750,2500
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-304.html
 20130702,3129,2844
-20130703,3300,3000
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-540.html
 20131122,2826,2569
-20131125,2970,2700
-20140117,3300,3000
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-062.html
 20140207,3740,3400
-20140210,4125,3750
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-211.html
 20140530,3297,2997
-20140602,3575,3250
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-424.html
 20141031,2441,2219
-20141103,2750,2500
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-431.html
 20141107,2913,2648
-20141110,3300,3000
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-023.html
 20150123,2834,2577
-20150126,3520,3200
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv16-103.html
 20160304,2975,2704
-20160307,3960,3600
+# https://www.cmegroup.com/notices/clearing/2016/04/Chadv16-185.html
 20160429,3505,3186
-20160502,4400,4000
+# https://www.cmegroup.com/notices/clearing/2016/12/Chadv16-516.html
 20161209,3006,2733
-20161212,3960,3600
+# https://www.cmegroup.com/notices/clearing/2017/01/Chadv17-028.html
 20170113,2643,2402
-20170116,3465,3150
+# https://www.cmegroup.com/notices/clearing/2017/05/Chadv17-194.html
 20170601,2361,2147
-20170602,3190,2900
+# https://www.cmegroup.com/notices/clearing/2017/07/Chadv17-292.html
 20170728,2301,2092
-20170731,2860,2600
+# https://www.cmegroup.com/notices/clearing/2019/07/Chadv19-230.html
 20190719,2022,1838
-20190722,2640,2400
-20200318,3300,3000
-20200320,3960,3600
