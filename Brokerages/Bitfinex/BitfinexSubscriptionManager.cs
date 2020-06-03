@@ -46,7 +46,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         private readonly object _locker = new object();
         private readonly BitfinexBrokerage _brokerage;
         private readonly BitfinexSymbolMapper _symbolMapper;
-        private readonly RateGate _connectionRateLimiter = new RateGate(10, TimeSpan.FromMinutes(1));
+        private readonly RateGate _connectionRateLimiter = new RateGate(5, TimeSpan.FromMinutes(1));
         private readonly ConcurrentDictionary<Symbol, List<BitfinexWebSocketWrapper>> _subscriptionsBySymbol = new ConcurrentDictionary<Symbol, List<BitfinexWebSocketWrapper>>();
         private readonly ConcurrentDictionary<BitfinexWebSocketWrapper, List<BitfinexChannel>> _channelsByWebSocket = new ConcurrentDictionary<BitfinexWebSocketWrapper, List<BitfinexChannel>>();
         private readonly ConcurrentDictionary<Symbol, DefaultOrderBook> _orderBooks = new ConcurrentDictionary<Symbol, DefaultOrderBook>();
@@ -367,8 +367,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                         case "ping":
                             return;
                         case "error":
-                            var error = token.ToObject<Messages.ErrorMessage>();
-                            Log.Trace($"BitfinexSubscriptionManager.OnMessage(): {error.Level}: {error.Message}");
+                            Log.Error($"BitfinexSubscriptionManager.OnMessage(): {e.Message}");
                             return;
                         default:
                             Log.Trace($"BitfinexSubscriptionManager.OnMessage(): Unexpected message format: {e.Message}");
