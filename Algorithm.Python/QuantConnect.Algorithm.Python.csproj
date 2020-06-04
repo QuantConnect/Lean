@@ -155,8 +155,12 @@
     <None Include="BasicTemplateOptionTradesAlgorithm.py" />
     <None Include="BrokerageModelAlgorithm.py" />
     <None Include="BubbleAlgorithm.py" />
-    <None Include="build.sh" />
-    <None Include="build.bat" />
+    <None Include="build.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="build.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="CoarseFineFundamentalComboAlgorithm.py" />
     <None Include="CoarseFineFundamentalRegressionAlgorithm.py" />
     <None Include="CoarseFundamentalTop3Algorithm.py" />
