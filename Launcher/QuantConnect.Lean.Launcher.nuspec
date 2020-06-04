@@ -18,6 +18,16 @@
         <dependency id="QuantConnect.Lean.Engine" version="$version$" exclude="Build,Analyzers" />
         <dependency id="QuantConnect.Messaging" version="$version$" exclude="Build,Analyzers" />
         <dependency id="QuantConnect.Algorithm.CSharp" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Api" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Algorithm" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.AlgorithmFactory" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Brokerages" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Compression" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Configuration" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Indicators" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Research" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Logging" version="$version$" exclude="Build,Analyzers" />
+        <dependency id="QuantConnect.Common" version="$version$" exclude="Build,Analyzers" />
       </group>
     </dependencies>
   </metadata>
