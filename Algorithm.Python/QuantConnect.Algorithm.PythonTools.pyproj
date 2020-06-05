@@ -88,6 +88,7 @@
     <Compile Include="DropboxCoarseFineAlgorithm.py" />
     <Compile Include="DropboxUniverseSelectionAlgorithm.py" />
     <Compile Include="DynamicSecurityDataAlgorithm.py" />
+    <Compile Include="EmaCrossFuturesFrontMonthAlgorithm.py" />
     <Compile Include="EmaCrossUniverseSelectionAlgorithm.py" />
     <Compile Include="EmaCrossUniverseSelectionFrameworkAlgorithm.py" />
     <Compile Include="ETFGlobalRotationAlgorithm.py" />
@@ -133,7 +134,6 @@
     <Compile Include="PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm.py" />
     <Compile Include="PortfolioRebalanceOnCustomFuncRegressionAlgorithm.py" />
     <Compile Include="PortfolioRebalanceOnDateRulesRegressionAlgorithm.py" />
-    <Compile Include="PsychSignalSentimentRegressionAlgorithm.py" />
     <Compile Include="PythonDictionaryFeatureRegressionAlgorithm.py" />
     <Compile Include="PytorchNeuralNetworkAlgorithm.py" />
     <Compile Include="QuandlFuturesDataAlgorithm.py" />
