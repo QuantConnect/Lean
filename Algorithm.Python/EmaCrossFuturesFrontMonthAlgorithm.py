@@ -55,7 +55,7 @@ class EmaCrossFuturesFrontMonthAlgorithm(QCAlgorithm):
         # Add a custom chart to track the EMA cross
         chart = Chart('EMA Cross')
         chart.AddSeries(Series('Fast', SeriesType.Line, 0))
-        chart.AddSeries(Series('Slow', SeriesType.Line, 1))
+        chart.AddSeries(Series('Slow', SeriesType.Line, 0))
         self.AddChart(chart)
 
     def OnData(self,slice):
