@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Add a custom chart to track the EMA cross
             var chart = new Chart("EMA Cross");
             chart.AddSeries(new Series("Fast", SeriesType.Line, 0));
-            chart.AddSeries(new Series("Slow", SeriesType.Line, 1));
+            chart.AddSeries(new Series("Slow", SeriesType.Line, 0));
             AddChart(chart);
         }
 
