@@ -46,6 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
             var future = AddFuture(Futures.Metals.Gold);
 
             // Only consider the front month contract
+            // Update the universe once per day to improve performance
             future.SetFilter(x => x.FrontMonth().OnlyApplyFilterAtMarketOpen());
 
             // Create two exponential moving averages
@@ -54,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Add a custom chart to track the EMA cross
             var chart = new Chart("EMA Cross");
-            chart.AddSeries(new Series("Fast", SeriesType.Line, 1));
+            chart.AddSeries(new Series("Fast", SeriesType.Line, 0));
             chart.AddSeries(new Series("Slow", SeriesType.Line, 1));
             AddChart(chart);
         }
@@ -105,16 +106,9 @@ namespace QuantConnect.Algorithm.CSharp
             RegisterIndicator(_symbol, _fast, _consolidator);
             RegisterIndicator(_symbol, _slow, _consolidator);
 
-            // Update the consolidator with historical data
-            // This will update the registered indicators
-            History(new[] { _symbol }, _slow.WarmUpPeriod)
-                .PushThrough(bar =>
-                {
-                    if (bar.DataType == MarketDataType.TradeBar)
-                    {
-                        _consolidator.Update(bar);
-                    }
-                });
+            // Warm up the indicators
+            WarmUpIndicator(_symbol, _fast, Resolution.Minute);
+            WarmUpIndicator(_symbol, _slow, Resolution.Minute);
 
             PlotEma();
         }

@@ -40,6 +40,7 @@ class EmaCrossFuturesFrontMonthAlgorithm(QCAlgorithm):
         future = self.AddFuture(Futures.Metals.Gold);
 
         # Only consider the front month contract
+        # Update the universe once per day to improve performance
         future.SetFilter(lambda x: x.FrontMonth().OnlyApplyFilterAtMarketOpen())
 
         # Symbol of the current contract
@@ -53,7 +54,7 @@ class EmaCrossFuturesFrontMonthAlgorithm(QCAlgorithm):
 
         # Add a custom chart to track the EMA cross
         chart = Chart('EMA Cross')
-        chart.AddSeries(Series('Fast', SeriesType.Line, 1))
+        chart.AddSeries(Series('Fast', SeriesType.Line, 0))
         chart.AddSeries(Series('Slow', SeriesType.Line, 1))
         self.AddChart(chart)
 
@@ -89,13 +90,9 @@ class EmaCrossFuturesFrontMonthAlgorithm(QCAlgorithm):
         self.RegisterIndicator(self.symbol, self.fast, self.consolidator)
         self.RegisterIndicator(self.symbol, self.slow, self.consolidator)
 
-        # Update the consolidator with historical data
-        # This will update the registered indicators
-        history = self.History(self.symbol, self.slow.WarmUpPeriod)
-        for index, row in history.iterrows():
-            time = index[2]
-            bar = TradeBar(time, self.symbol, row.open, row.high, row.low, row.close, 0)
-            self.consolidator.Update(bar)
+        #  Warm up the indicators
+        self.WarmUpIndicator(self.symbol, self.fast, Resolution.Minute)
+        self.WarmUpIndicator(self.symbol, self.slow, Resolution.Minute)
 
         self.PlotEma()
 
