@@ -922,6 +922,43 @@ def RunTest():
             );
         }
 
+        public void TaTest()
+        {
+            AssetCode(
+                @"
+from io import StringIO
+import pandas as pd
+from ta.utils import dropna
+from ta.momentum import roc
+
+def RunTest():
+    dataCsv = StringIO('Date,Close,ROC,
+        28-Apr-10,11045.27,,
+        29-Apr-10,11167.32,,
+        30-Apr-10,11008.61,,
+         3-May-10,11151.83,,
+         4-May-10,10926.77,,
+         5-May-10,10868.12,,
+         6-May-10,10520.32,,
+         7-May-10,10380.43,,
+        10-May-10,10785.14,,
+        11-May-10,10748.26,,
+        12-May-10,10896.91,,
+        13-May-10,10782.95,,
+        14-May-10,10620.16,-3.84879682,
+        17-May-10,10625.83,-4.84888048,
+        18-May-10,10510.95,-4.52064339,
+        19-May-10,10444.37,-6.34389154,
+        20-May-10,10068.01,-7.85923013,
+        21-May-10,10193.39,-6.20834146,
+        24-May-10,10066.57,-4.31308173,
+        25-May-10,10043.75,-3.24341092,')
+        df = pd.read_csv(dataCsv, sep=',')
+        params = dict(close=df['Close'], n=12, fillna=False)
+        retun ROCIndicator(params).roc()
+");
+        }
+
         /// <summary>
         /// Simple test for modules that don't have short test example
         /// </summary>
@@ -940,7 +977,7 @@ def RunTest():
         [TestCase("cufflinks", "0.17.3", "__version__")]
         [TestCase("ipywidgets", "7.5.1", "__version__")]
         [TestCase("astropy", "4.0.1.post1", "__version__")]
-        [TestCase("gluonts", "0.5.0", "__version__")]
+        [TestCase("gluonts", "0.4.3", "__version__")]
         [TestCase("gplearn", "0.4.1", "__version__")]
         [TestCase("h2o", "3.30.0.3", "__version__")]
         [TestCase("cntk", "2.7", "__version__")]
