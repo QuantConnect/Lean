@@ -18,7 +18,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,29 +49,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     [BrokerageFactory(typeof(InteractiveBrokersBrokerageFactory))]
     public sealed class InteractiveBrokersBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
     {
-        private enum Region { America, Europe, Asia }
-
-        // Source: https://ibkr.info/article/2816
-        private readonly Dictionary<string, Region> _ibServerMap = new Dictionary<string, Region>
-        {
-            { "gdc1.ibllc.com", Region.America },
-            { "ndc1.ibllc.com", Region.America },
-            { "ndc1_hb1.ibllc.com", Region.America },
-            { "cdc1.ibllc.com", Region.America },
-            { "cdc1_hb1.ibllc.com", Region.America },
-
-            { "zdc1.ibllc.com", Region.Europe },
-            { "zdc1_hb1.ibllc.com", Region.Europe },
-
-            { "hdc1.ibllc.com", Region.Asia },
-            { "hdc1_hb1.ibllc.com", Region.Asia },
-            { "mcgw1.ibllc.com.cn", Region.Asia },
-            { "mcgw1_hb1.ibllc.com.cn", Region.Asia }
-        };
-
         private readonly IBAutomater.IBAutomater _ibAutomater;
-        private string _ibServerName;
-        private Region _ibServerRegion = Region.America;
 
         // Existing orders created in TWS can *only* be cancelled/modified when connected with ClientId = 0
         private const int ClientId = 0;
@@ -143,9 +120,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         // IB requests made through the IB-API must be limited to a maximum of 50 messages/second
         private readonly RateGate _messagingRateLimiter = new RateGate(50, TimeSpan.FromSeconds(1));
-
-        // used to limit logging
-        private bool _isWithinScheduledServerResetTimesLastValue;
 
         // additional IB request information, will be matched with errors in the handler, for better error reporting
         private readonly ConcurrentDictionary<int, string> _requestInformation = new ConcurrentDictionary<int, string>();
@@ -570,7 +544,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             if (!IsConnected)
             {
-                if (IsWithinScheduledServerResetTimes())
+                if (_ibAutomater.IsWithinScheduledServerResetTimes())
                 {
                     // Occasionally the disconnection due to the IB reset period might last
                     // much longer than expected during weekends (even up to the cash sync time).
@@ -788,11 +762,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     // enable detailed logging
                     _client.ClientSocket.setServerLogLevel(5);
-
-                    // load server name and region
-                    LoadIbServerInformation();
-
-                    Log.Trace($"InteractiveBrokersBrokerage.Connect(): ServerName: {_ibServerName}, ServerRegion: {_ibServerRegion}");
 
                     break;
                 }
@@ -1334,7 +1303,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return;
             }
 
-            var isResetTime = IsWithinScheduledServerResetTimes();
+            var isResetTime = _ibAutomater.IsWithinScheduledServerResetTimes();
 
             if (!isResetTime)
             {
@@ -2288,83 +2257,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return Interlocked.Increment(ref _nextTickerId);
         }
 
-        /// <summary>
-        /// This function is used to decide whether or not we should kill an algorithm
-        /// when we lose contact with IB servers. IB performs server resets nightly
-        /// and on Fridays they take everything down, so we'll prevent killing algos
-        /// during the scheduled reset times.
-        /// </summary>
-        private bool IsWithinScheduledServerResetTimes()
-        {
-            // Use schedule based on server region:
-            // https://www.interactivebrokers.com/en/index.php?f=2225
-
-            bool result;
-            var utcTime = DateTime.UtcNow;
-            var time = utcTime.ConvertFromUtc(TimeZones.NewYork);
-            var timeOfDay = time.TimeOfDay;
-
-            // Note: we add 15 minutes *before* and *after* all time ranges for safety margin
-
-            // During the Friday evening reset period, all services will be unavailable in all regions for the duration of the reset.
-            if (time.DayOfWeek == DayOfWeek.Friday && timeOfDay > new TimeSpan(22, 45, 0) ||
-                // Occasionally the disconnection due to the IB reset period might last
-                // much longer than expected during weekends (even up to the cash sync time).
-                time.DayOfWeek == DayOfWeek.Saturday)
-            {
-                // Friday: 23:00 - 03:00 ET for all regions
-                result = true;
-            }
-            else
-            {
-                switch (_ibServerRegion)
-                {
-                    case Region.Europe:
-                        {
-                            // Saturday - Thursday: 05:45 - 06:45 CET
-                            var euTime = utcTime.ConvertFromUtc(TimeZones.Zurich);
-                            var euTimeOfDay = euTime.TimeOfDay;
-                            result = euTimeOfDay > new TimeSpan(5, 30, 0) && euTimeOfDay < new TimeSpan(7, 0, 0);
-                        }
-                        break;
-
-                    case Region.Asia:
-                        {
-                            // Saturday - Thursday: First reset: 16:30 - 17:00 ET
-                            if (timeOfDay > new TimeSpan(16, 15, 0) && timeOfDay < new TimeSpan(17, 15, 0))
-                            {
-                                result = true;
-                            }
-                            else
-                            {
-                                // Saturday - Thursday: Second reset: 20:15 - 21:00 HKT
-                                var hkTime = utcTime.ConvertFromUtc(TimeZones.HongKong);
-                                var hkTimeOfDay = hkTime.TimeOfDay;
-                                result = hkTimeOfDay > new TimeSpan(20, 0, 0) && hkTimeOfDay < new TimeSpan(21, 15, 0);
-                            }
-                        }
-                        break;
-
-                    case Region.America:
-                    default:
-                        {
-                            // Saturday - Thursday: 23:45 - 00:45 ET
-                            result = timeOfDay > new TimeSpan(23, 30, 0) || timeOfDay < new TimeSpan(1, 0, 0);
-                        }
-                        break;
-                }
-            }
-
-            if (result != _isWithinScheduledServerResetTimesLastValue)
-            {
-                _isWithinScheduledServerResetTimesLastValue = result;
-
-                Log.Trace($"InteractiveBrokersBrokerage.IsWithinScheduledServerResetTimes(): {result}");
-            }
-
-            return result;
-        }
-
         private void HandleBrokerTime(object sender, IB.CurrentTimeUtcEventArgs e)
         {
             // keep track of clock drift
@@ -2887,7 +2779,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (securityType == SecurityType.Future)
             {
                 // we need to call the IB API only for futures
-                return !IsWithinScheduledServerResetTimes() && IsConnected;
+                return !_ibAutomater.IsWithinScheduledServerResetTimes() && IsConnected;
             }
 
             return true;
@@ -3106,7 +2998,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         public override bool ShouldPerformCashSync(DateTime currentTimeUtc)
         {
             return base.ShouldPerformCashSync(currentTimeUtc) &&
-                   !IsWithinScheduledServerResetTimes();
+                   !_ibAutomater.IsWithinScheduledServerResetTimes();
         }
 
         private void CheckRateLimiting()
@@ -3137,7 +3029,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             Log.Trace($"InteractiveBrokersBrokerage.OnIbAutomaterExited(): Exit code: {e.ExitCode}");
 
-            // check if IBGateway was closed because of an existing session
+            // check if IBGateway was closed because of an IBAutomater error
             CheckIbAutomaterError(_ibAutomater.GetLastStartResult(), false);
         }
 
@@ -3151,45 +3043,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 {
                     throw new Exception($"InteractiveBrokersBrokerage.CheckIbAutomaterError(): {result.ErrorCode} - {result.ErrorMessage}");
                 }
-            }
-        }
-
-        private void LoadIbServerInformation()
-        {
-            // After a successful login, IBGateway saves the connected/redirected host name to the Peer key in the jts.ini file.
-            var iniFileName = Path.Combine(_ibDirectory, "jts.ini");
-
-            // Note: Attempting to connect to a different server via jts.ini will not change anything.
-            // IB will route you back to the server they have set for you on their server side.
-            // You need to request a server change and only then will your system connect to the changed server address.
-
-            if (File.Exists(iniFileName))
-            {
-                const string key = "Peer=";
-                foreach (var line in File.ReadLines(iniFileName))
-                {
-                    if (line.StartsWith(key))
-                    {
-                        var value = line.Substring(key.Length);
-                        _ibServerName = value.Substring(0, value.IndexOf(':'));
-
-                        if (!_ibServerMap.TryGetValue(_ibServerName, out _ibServerRegion))
-                        {
-                            _ibServerRegion = Region.America;
-                            Log.Error($"InteractiveBrokersBrokerage.LoadIbServerInformation(): Unknown server name: {_ibServerName}, region set to {_ibServerRegion}");
-                        }
-
-                        // known server name and region
-                        return;
-                    }
-                }
-
-                _ibServerRegion = Region.America;
-                Log.Error($"InteractiveBrokersBrokerage.LoadIbServerInformation(): Unable to find the server name in the IB ini file: {iniFileName}, region set to {_ibServerRegion}");
-            }
-            else
-            {
-                Log.Error($"InteractiveBrokersBrokerage.LoadIbServerInformation(): IB ini file not found: {iniFileName}");
             }
         }
 
