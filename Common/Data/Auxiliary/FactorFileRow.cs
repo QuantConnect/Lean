@@ -282,7 +282,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Parses the specified line as a factor file row
         /// </summary>
-        public static FactorFileRow Parse(string line)
+        private static FactorFileRow Parse(string line)
         {
             var csv = line.Split(',');
             return new FactorFileRow(
