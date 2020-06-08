@@ -46,6 +46,22 @@ namespace QuantConnect.Python
 
                 _isBeginAllowThreadsCalled = true;
                 Log.Trace("PythonInitializer.Initialize(): ended");
+                using (Py.GIL())
+                {
+                    // We import the CLR library, and remove any reference to
+                    // external libraries so that the CLR import works correctly.
+                    // Once we've successfully imported the base QuantConnect.Common
+                    // classes via import, the rest of the QuantConnect namespaces
+                    // should be able to be imported properly. We then reset the sys.path
+                    // variable to its original value to ensure other imports work properly.
+                    PythonEngine.RunSimpleString(@"import clr
+import sys
+clr.AddReference('QuantConnect.Common')
+__temp_sys_path = sys.path
+sys.path = ['']
+from QuantConnect import *
+sys.path = __temp_sys_path");
+                }
             }
         }
 

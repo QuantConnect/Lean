@@ -302,6 +302,7 @@
     <Compile Include="Algorithm\AlgorithmWarmupTests.cs" />
     <Compile Include="Algorithm\CashModelAlgorithmTradingTests.cs" />
     <Compile Include="Algorithm\AlgorithmTradingTests.cs" />
+    <Compile Include="Algorithm\PythonAlgorithmStubsTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\CommonAlphaModelTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\ConstantAlphaModelTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\EmaCrossAlphaModelTests.cs" />
