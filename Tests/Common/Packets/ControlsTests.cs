@@ -11,26 +11,32 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
+using System.IO;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using QuantConnect.Packets;
 
-namespace QuantConnect.Tests.Common
+namespace QuantConnect.Tests.Common.Packets
 {
-    public class GlobalsTests
+    public class ControlsTests
     {
-        [TestCase(Permissions.Read, "4")]
-        [TestCase(Permissions.ReadWrite, "6")]
-        [TestCase(Permissions.None, "0")]
-        [TestCase(Permissions.Write, "2")]
-        public void PermissionsJsonRoundtrip(Permissions permissions, string expected)
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(FileAccess.Read)]
+        [TestCase(FileAccess.Write)]
+        [TestCase(FileAccess.ReadWrite)]
+        public void StoragePermissionsJsonRoundTrip(FileAccess permissions)
         {
-            var json = JsonConvert.SerializeObject(permissions);
-            Assert.AreEqual(expected, json);
+            var control = new Controls { StoragePermissions = permissions };
+            var json = JsonConvert.SerializeObject(control);
+            var result = JsonConvert.DeserializeObject<Controls>(json);
 
-            var result = JsonConvert.DeserializeObject<Permissions>(json);
-            Assert.AreEqual(permissions, result);
+            Assert.AreEqual(permissions, result.StoragePermissions);
         }
     }
 }

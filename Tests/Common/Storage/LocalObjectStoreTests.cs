@@ -50,18 +50,18 @@ namespace QuantConnect.Tests.Common.Storage
             Config.Set("object-store-root", StorageRootConfigurationValue);
             try
             {
-                Directory.Delete(TestStorageRoot);
+                Directory.Delete(TestStorageRoot, true);
             }
             catch
             {
             }
         }
 
-        [TestCase(Permissions.Read, false)]
-        [TestCase(Permissions.ReadWrite, false)]
-        [TestCase(Permissions.None, true)]
-        [TestCase(Permissions.Write, true)]
-        public void GetFilePathPermissions(Permissions permissions, bool shouldThrow)
+        [TestCase(FileAccess.Read, false)]
+        [TestCase(FileAccess.ReadWrite, false)]
+        [TestCase(0, true)]
+        [TestCase(FileAccess.Write, true)]
+        public void GetFilePathPermissions(FileAccess permissions, bool shouldThrow)
         {
             var store = new TestLocalObjectStore();
             store.Initialize($"CSharp-TestAlgorithm-{permissions}", 0, 0, "", new Controls { StoragePermissions = permissions });
@@ -76,11 +76,11 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        [TestCase(Permissions.Read, false)]
-        [TestCase(Permissions.ReadWrite, false)]
-        [TestCase(Permissions.None, true)]
-        [TestCase(Permissions.Write, true)]
-        public void ReadBytesPermissions(Permissions permissions, bool shouldThrow)
+        [TestCase(FileAccess.Read, false)]
+        [TestCase(FileAccess.ReadWrite, false)]
+        [TestCase(0, true)]
+        [TestCase(FileAccess.Write, true)]
+        public void ReadBytesPermissions(FileAccess permissions, bool shouldThrow)
         {
             var store = new TestLocalObjectStore();
             store.Initialize($"CSharp-TestAlgorithm-{permissions}", 0, 0, "", new Controls { StoragePermissions = permissions });
@@ -95,11 +95,11 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        [TestCase(Permissions.Read, true)]
-        [TestCase(Permissions.ReadWrite, false)]
-        [TestCase(Permissions.None, true)]
-        [TestCase(Permissions.Write, false)]
-        public void SaveBytesPermissions(Permissions permissions, bool shouldThrow)
+        [TestCase(FileAccess.Read, true)]
+        [TestCase(FileAccess.ReadWrite, false)]
+        [TestCase(0, true)]
+        [TestCase(FileAccess.Write, false)]
+        public void SaveBytesPermissions(FileAccess permissions, bool shouldThrow)
         {
             var store = new TestLocalObjectStore();
             store.Initialize($"CSharp-TestAlgorithm-{permissions}", 0, 0, "", new Controls { StoragePermissions = permissions });
@@ -114,11 +114,11 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        [TestCase(Permissions.Read, true)]
-        [TestCase(Permissions.ReadWrite, false)]
-        [TestCase(Permissions.None, true)]
-        [TestCase(Permissions.Write, false)]
-        public void DeletePermissions(Permissions permissions, bool shouldThrow)
+        [TestCase(FileAccess.Read, true)]
+        [TestCase(FileAccess.ReadWrite, false)]
+        [TestCase(0, true)]
+        [TestCase(FileAccess.Write, false)]
+        public void DeletePermissions(FileAccess permissions, bool shouldThrow)
         {
             var store = new TestLocalObjectStore();
             store.Initialize($"CSharp-TestAlgorithm-{permissions}", 0, 0, "", new Controls { StoragePermissions = permissions });
@@ -133,11 +133,11 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        [TestCase(Permissions.Read, false)]
-        [TestCase(Permissions.ReadWrite, false)]
-        [TestCase(Permissions.None, true)]
-        [TestCase(Permissions.Write, true)]
-        public void ContainsKeyPermissions(Permissions permissions, bool shouldThrow)
+        [TestCase(FileAccess.Read, false)]
+        [TestCase(FileAccess.ReadWrite, false)]
+        [TestCase(0, true)]
+        [TestCase(FileAccess.Write, true)]
+        public void ContainsKeyPermissions(FileAccess permissions, bool shouldThrow)
         {
             var store = new TestLocalObjectStore();
             store.Initialize($"CSharp-TestAlgorithm-{permissions}", 0, 0, "", new Controls {StoragePermissions = permissions});
@@ -152,11 +152,11 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        [TestCase(Permissions.Read, false)]
-        [TestCase(Permissions.ReadWrite, false)]
-        [TestCase(Permissions.None, true)]
-        [TestCase(Permissions.Write, true)]
-        public void InitializationPermissions(Permissions permissions, bool shouldThrow)
+        [TestCase(FileAccess.Read, false)]
+        [TestCase(FileAccess.ReadWrite, false)]
+        [TestCase(0, true)]
+        [TestCase(FileAccess.Write, true)]
+        public void InitializationPermissions(FileAccess permissions, bool shouldThrow)
         {
             var store = new TestLocalObjectStore();
             var dir = Path.Combine(TestStorageRoot, $"CSharp-TestAlgorithm-8");

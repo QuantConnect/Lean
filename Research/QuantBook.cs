@@ -93,7 +93,7 @@ namespace QuantConnect.Research
                         PersistenceIntervalSeconds = -1,
                         StorageLimitMB = Config.GetInt("storage-limit-mb", 5),
                         StorageFileCount = Config.GetInt("storage-file-count", 100),
-                        StoragePermissions = (Permissions) Config.GetInt("storage-permissions", (int)Permissions.ReadWrite)
+                        StoragePermissions = (FileAccess) Config.GetInt("storage-permissions", (int)FileAccess.ReadWrite)
                     });
                 SetObjectStore(algorithmHandlers.ObjectStore);
 

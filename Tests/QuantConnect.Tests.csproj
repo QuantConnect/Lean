@@ -355,12 +355,12 @@
     <Compile Include="Common\Data\Custom\RobintrackTests.cs" />
     <Compile Include="Common\Data\Custom\TradingEconomicsTests.cs" />
     <Compile Include="Common\Data\Fundamental\FineFundamentalTests.cs" />
-    <Compile Include="Common\GlobalsTests.cs" />
     <Compile Include="Common\Orders\OrderEventTests.cs" />
     <Compile Include="Common\ExtendedDictionaryTests.cs" />
     <Compile Include="Common\Orders\OrderSizingTests.cs" />
     <Compile Include="Common\ExpiryTests.cs" />
     <Compile Include="Common\Orders\Serialization\SerializedOrderJsonConverterTests.cs" />
+    <Compile Include="Common\Packets\ControlsTests.cs" />
     <Compile Include="Common\Securities\TestDefaultMarginCallModel.cs" />
     <Compile Include="Common\Statistics\AnnualPerformanceTests.cs" />
     <Compile Include="Common\Statistics\StatisticsBuilderTests.cs" />

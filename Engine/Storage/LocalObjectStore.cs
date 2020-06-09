@@ -77,7 +77,7 @@ namespace QuantConnect.Lean.Engine.Storage
 
             Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}");
 
-            if ((controls.StoragePermissions & Permissions.Read) == Permissions.Read)
+            if ((controls.StoragePermissions & FileAccess.Read) == FileAccess.Read)
             {
                 foreach (var file in Directory.EnumerateFiles(AlgorithmStorageRoot))
                 {
@@ -107,7 +107,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(key));
             }
-            if ((Controls.StoragePermissions & Permissions.Read) == 0)
+            if ((Controls.StoragePermissions & FileAccess.Read) == 0)
             {
                 throw new InvalidOperationException("LocalObjectStore.ContainsKey(): user does not have read permissions");
             }
@@ -126,7 +126,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(key));
             }
-            if ((Controls.StoragePermissions & Permissions.Read) == 0)
+            if ((Controls.StoragePermissions & FileAccess.Read) == 0)
             {
                 throw new InvalidOperationException("LocalObjectStore.ReadBytes(): user does not have read permissions");
             }
@@ -154,7 +154,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(key));
             }
-            if ((Controls.StoragePermissions & Permissions.Write) == 0)
+            if ((Controls.StoragePermissions & FileAccess.Write) == 0)
             {
                 throw new InvalidOperationException("LocalObjectStore.SaveBytes(): user does not have write permissions");
             }
@@ -223,7 +223,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(key));
             }
-            if ((Controls.StoragePermissions & Permissions.Write) == 0)
+            if ((Controls.StoragePermissions & FileAccess.Write) == 0)
             {
                 throw new InvalidOperationException("LocalObjectStore.Delete(): user does not have write permissions");
             }

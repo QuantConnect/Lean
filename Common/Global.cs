@@ -265,33 +265,6 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Permissions definitions
-    /// </summary>
-    [Flags]
-    public enum Permissions
-    {
-        /// <summary>
-        /// No permissions
-        /// </summary>
-        None = 0,
-
-        /// <summary>
-        /// Write permissions
-        /// </summary>
-        Write = 2,
-
-        /// <summary>
-        /// Read permissions
-        /// </summary>
-        Read = 4,
-
-        /// <summary>
-        /// Read and write permissions
-        /// </summary>
-        ReadWrite = Write | Read
-    }
-
-    /// <summary>
     /// Type of tradable security / underlying asset
     /// </summary>
     public enum SecurityType
