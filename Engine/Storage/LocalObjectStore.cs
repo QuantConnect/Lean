@@ -39,13 +39,13 @@ namespace QuantConnect.Lean.Engine.Storage
         /// No read permissions error message
         /// </summary>
         protected const string NoReadPermissionsError = "The current user does not have permission to read from the organization Object Store." +
-                                                        " Please contact your organization administrator for more information.";
+                                                        " Please contact your organization administrator to request permission.";
 
         /// <summary>
         /// No write permissions error message
         /// </summary>
         protected const string NoWritePermissionsError = "The current user does not have permission to write to the organization Object Store." +
-                                                         " Please contact your organization administrator for more information.";
+                                                         " Please contact your organization administrator to request permission.";
 
         /// <summary>
         /// Event raised each time there's an error
@@ -89,7 +89,9 @@ namespace QuantConnect.Lean.Engine.Storage
 
             Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}");
 
-            if ((controls.StoragePermissions & FileAccess.Read) == FileAccess.Read)
+            Controls = controls;
+
+            if (Controls.StoragePermissions.HasFlag(FileAccess.Read))
             {
                 foreach (var file in Directory.EnumerateFiles(AlgorithmStorageRoot))
                 {
@@ -98,12 +100,10 @@ namespace QuantConnect.Lean.Engine.Storage
                 }
             }
 
-            Controls = controls;
-
             // if <= 0 we disable periodic persistence and make it synchronous
-            if (controls.PersistenceIntervalSeconds > 0)
+            if (Controls.PersistenceIntervalSeconds > 0)
             {
-                _persistenceInterval = TimeSpan.FromSeconds(controls.PersistenceIntervalSeconds);
+                _persistenceInterval = TimeSpan.FromSeconds(Controls.PersistenceIntervalSeconds);
                 _persistenceTimer = new Timer(_ => Persist(), null, _persistenceInterval, _persistenceInterval);
             }
         }
@@ -119,7 +119,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(key));
             }
-            if ((Controls.StoragePermissions & FileAccess.Read) == 0)
+            if (!Controls.StoragePermissions.HasFlag(FileAccess.Read))
             {
                 throw new InvalidOperationException($"LocalObjectStore.ContainsKey(): {NoReadPermissionsError}");
             }
@@ -138,7 +138,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(key));
             }
-            if ((Controls.StoragePermissions & FileAccess.Read) == 0)
+            if (!Controls.StoragePermissions.HasFlag(FileAccess.Read))
             {
                 throw new InvalidOperationException($"LocalObjectStore.ReadBytes(): {NoReadPermissionsError}");
             }
@@ -166,7 +166,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(key));
             }
-            if ((Controls.StoragePermissions & FileAccess.Write) == 0)
+            if (!Controls.StoragePermissions.HasFlag(FileAccess.Write))
             {
                 throw new InvalidOperationException($"LocalObjectStore.SaveBytes(): {NoWritePermissionsError}");
             }
@@ -239,7 +239,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(key));
             }
-            if ((Controls.StoragePermissions & FileAccess.Write) == 0)
+            if (!Controls.StoragePermissions.HasFlag(FileAccess.Write))
             {
                 throw new InvalidOperationException($"LocalObjectStore.Delete(): {NoWritePermissionsError}");
             }
