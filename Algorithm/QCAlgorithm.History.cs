@@ -381,13 +381,7 @@ namespace QuantConnect.Algorithm
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         public IEnumerable<TradeBar> History(Symbol symbol, TimeSpan span, Resolution? resolution = null)
         {
-            var securityType = symbol.ID.SecurityType;
-            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
-            {
-                Error("Calling History<TradeBar> method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
-            }
-
-            return History(new[] { symbol }, span, resolution).Get(symbol).Memoize();
+            return History(symbol, Time - span, Time, resolution);
         }
 
         /// <summary>
@@ -404,6 +398,12 @@ namespace QuantConnect.Algorithm
             if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
             {
                 Error("Calling History<TradeBar> method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
+            }
+
+            if (resolution.HasValue && resolution == Resolution.Tick)
+            {
+                throw new InvalidOperationException("Calling History<TradeBar> method with Resolution.Tick will return an empty result." +
+                                                    " Please use the generic version with Tick type parameter or provide an enumerable of Symbols to use the Slice history request API.");
             }
 
             return History(new[] { symbol }, start, end, resolution).Get(symbol).Memoize();
