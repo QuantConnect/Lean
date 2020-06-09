@@ -807,6 +807,7 @@ namespace QuantConnect.Tests.Common.Securities
                 { "A8K.csv", 1 },
                 { "AJY.csv", 1 },
                 { "ANL.csv", 2 },
+                { "AUP.csv", 46 },
                 { "CB.csv", 20 },
                 { "CSC.csv", 30 },
                 { "DC.csv", 50 },
