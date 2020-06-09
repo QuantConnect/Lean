@@ -84,6 +84,9 @@ namespace QuantConnect.Tests.Algorithm
         public void TickResolutionHistoryRequestTradeBarApiThrowsException()
         {
             Assert.Throws<InvalidOperationException>(
+                () => _algorithm.History(Symbols.SPY, 1, Resolution.Tick).ToList());
+
+            Assert.Throws<InvalidOperationException>(
                 () => _algorithm.History(Symbols.SPY, TimeSpan.FromSeconds(2), Resolution.Tick).ToList());
 
             Assert.Throws<InvalidOperationException>(
@@ -115,8 +118,6 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(TickType.Trade, _testHistoryProvider.HistryRequests.First().TickType);
         }
 
-        [Test]
-        [TestCase(Resolution.Tick)]
         [TestCase(Resolution.Second)]
         [TestCase(Resolution.Minute)]
         [TestCase(Resolution.Hour)]
