@@ -292,6 +292,7 @@
     <Compile Include="Alphas\IAlphaHandler.cs" />
     <Compile Include="Setup\SetupHandlerParameters.cs" />
     <Compile Include="Storage\LocalObjectStore.cs" />
+    <Compile Include="Storage\StorageLimitExceededException.cs" />
     <Compile Include="TransactionHandlers\BacktestingTransactionHandler.cs" />
     <Compile Include="TransactionHandlers\BrokerageTransactionHandler.cs" />
     <Compile Include="TransactionHandlers\CancelPendingOrders.cs" />

@@ -36,6 +36,18 @@ namespace QuantConnect.Lean.Engine.Storage
         private static string StorageRoot => Path.GetFullPath(Config.Get("object-store-root", "./storage"));
 
         /// <summary>
+        /// No read permissions error message
+        /// </summary>
+        protected const string NoReadPermissionsError = "The current user does not have permission to read from the organization Object Store." +
+                                                        " Please contact your organization administrator for more information.";
+
+        /// <summary>
+        /// No write permissions error message
+        /// </summary>
+        protected const string NoWritePermissionsError = "The current user does not have permission to write to the organization Object Store." +
+                                                         " Please contact your organization administrator for more information.";
+
+        /// <summary>
         /// Event raised each time there's an error
         /// </summary>
         public event EventHandler<ObjectStoreErrorRaisedEventArgs> ErrorRaised;
@@ -109,7 +121,7 @@ namespace QuantConnect.Lean.Engine.Storage
             }
             if ((Controls.StoragePermissions & FileAccess.Read) == 0)
             {
-                throw new InvalidOperationException("LocalObjectStore.ContainsKey(): user does not have read permissions");
+                throw new InvalidOperationException($"LocalObjectStore.ContainsKey(): {NoReadPermissionsError}");
             }
 
             return _storage.ContainsKey(key);
@@ -128,7 +140,7 @@ namespace QuantConnect.Lean.Engine.Storage
             }
             if ((Controls.StoragePermissions & FileAccess.Read) == 0)
             {
-                throw new InvalidOperationException("LocalObjectStore.ReadBytes(): user does not have read permissions");
+                throw new InvalidOperationException($"LocalObjectStore.ReadBytes(): {NoReadPermissionsError}");
             }
 
             byte[] data;
@@ -156,7 +168,7 @@ namespace QuantConnect.Lean.Engine.Storage
             }
             if ((Controls.StoragePermissions & FileAccess.Write) == 0)
             {
-                throw new InvalidOperationException("LocalObjectStore.SaveBytes(): user does not have write permissions");
+                throw new InvalidOperationException($"LocalObjectStore.SaveBytes(): {NoWritePermissionsError}");
             }
 
             if (InternalSaveBytes(key, contents))
@@ -196,14 +208,18 @@ namespace QuantConnect.Lean.Engine.Storage
 
             if (fileCount > Controls.StorageFileCount)
             {
-                Log.Error($"LocaObjectStore.InternalSaveBytes(): at file capacity: {fileCount}. Unable to save: '{key}'");
+                var message = $"LocalObjectStore.InternalSaveBytes(): at file capacity: {fileCount}. Unable to save: '{key}'";
+                Log.Error(message);
+                OnErrorRaised(new StorageLimitExceededException(message));
                 return false;
             }
 
             var expectedStorageSizeMb = BytesToMb(expectedStorageSizeBytes);
             if (expectedStorageSizeMb > Controls.StorageLimitMB)
             {
-                Log.Error($"LocalObjectStore.InternalSaveBytes(): at storage capacity: {expectedStorageSizeMb}. Unable to save: '{key}'");
+                var message = $"LocalObjectStore.InternalSaveBytes(): at storage capacity: {expectedStorageSizeMb}MB/{Controls.StorageLimitMB}MB. Unable to save: '{key}'";
+                Log.Error(message);
+                OnErrorRaised(new StorageLimitExceededException(message));
                 return false;
             }
 
@@ -225,7 +241,7 @@ namespace QuantConnect.Lean.Engine.Storage
             }
             if ((Controls.StoragePermissions & FileAccess.Write) == 0)
             {
-                throw new InvalidOperationException("LocalObjectStore.Delete(): user does not have write permissions");
+                throw new InvalidOperationException($"LocalObjectStore.Delete(): {NoWritePermissionsError}");
             }
 
             byte[] _;
