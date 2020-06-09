@@ -57,6 +57,125 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
+        [TestCase(Permissions.Read, false)]
+        [TestCase(Permissions.ReadWrite, false)]
+        [TestCase(Permissions.None, true)]
+        [TestCase(Permissions.Write, true)]
+        public void GetFilePathPermissions(Permissions permissions, bool shouldThrow)
+        {
+            var store = new TestLocalObjectStore();
+            store.Initialize($"CSharp-TestAlgorithm-{permissions}", 0, 0, "", new Controls { StoragePermissions = permissions });
+
+            if (shouldThrow)
+            {
+                Assert.Throws<InvalidOperationException>(() => store.GetFilePath("Jose"));
+            }
+            else
+            {
+                Assert.Throws<KeyNotFoundException>(() => store.GetFilePath("Jose"));
+            }
+        }
+
+        [TestCase(Permissions.Read, false)]
+        [TestCase(Permissions.ReadWrite, false)]
+        [TestCase(Permissions.None, true)]
+        [TestCase(Permissions.Write, true)]
+        public void ReadBytesPermissions(Permissions permissions, bool shouldThrow)
+        {
+            var store = new TestLocalObjectStore();
+            store.Initialize($"CSharp-TestAlgorithm-{permissions}", 0, 0, "", new Controls { StoragePermissions = permissions });
+
+            if (shouldThrow)
+            {
+                Assert.Throws<InvalidOperationException>(() => store.ReadBytes("Jose"));
+            }
+            else
+            {
+                Assert.Throws<KeyNotFoundException>(() => store.ReadBytes("Jose"));
+            }
+        }
+
+        [TestCase(Permissions.Read, true)]
+        [TestCase(Permissions.ReadWrite, false)]
+        [TestCase(Permissions.None, true)]
+        [TestCase(Permissions.Write, false)]
+        public void SaveBytesPermissions(Permissions permissions, bool shouldThrow)
+        {
+            var store = new TestLocalObjectStore();
+            store.Initialize($"CSharp-TestAlgorithm-{permissions}", 0, 0, "", new Controls { StoragePermissions = permissions });
+
+            if (shouldThrow)
+            {
+                Assert.Throws<InvalidOperationException>(() => store.SaveBytes("Jose", new byte[] { 0 }));
+            }
+            else
+            {
+                Assert.IsTrue(store.SaveBytes("Jose", new byte[] { 0 }));
+            }
+        }
+
+        [TestCase(Permissions.Read, true)]
+        [TestCase(Permissions.ReadWrite, false)]
+        [TestCase(Permissions.None, true)]
+        [TestCase(Permissions.Write, false)]
+        public void DeletePermissions(Permissions permissions, bool shouldThrow)
+        {
+            var store = new TestLocalObjectStore();
+            store.Initialize($"CSharp-TestAlgorithm-{permissions}", 0, 0, "", new Controls { StoragePermissions = permissions });
+
+            if (shouldThrow)
+            {
+                Assert.Throws<InvalidOperationException>(() => store.Delete("Jose"));
+            }
+            else
+            {
+                Assert.IsFalse(store.Delete("Jose"));
+            }
+        }
+
+        [TestCase(Permissions.Read, false)]
+        [TestCase(Permissions.ReadWrite, false)]
+        [TestCase(Permissions.None, true)]
+        [TestCase(Permissions.Write, true)]
+        public void ContainsKeyPermissions(Permissions permissions, bool shouldThrow)
+        {
+            var store = new TestLocalObjectStore();
+            store.Initialize($"CSharp-TestAlgorithm-{permissions}", 0, 0, "", new Controls {StoragePermissions = permissions});
+
+            if (shouldThrow)
+            {
+                Assert.Throws<InvalidOperationException>(() => store.ContainsKey("Jose"));
+            }
+            else
+            {
+                Assert.IsFalse(store.ContainsKey("Jose"));
+            }
+        }
+
+        [TestCase(Permissions.Read, false)]
+        [TestCase(Permissions.ReadWrite, false)]
+        [TestCase(Permissions.None, true)]
+        [TestCase(Permissions.Write, true)]
+        public void InitializationPermissions(Permissions permissions, bool shouldThrow)
+        {
+            var store = new TestLocalObjectStore();
+            var dir = Path.Combine(TestStorageRoot, $"CSharp-TestAlgorithm-8");
+            Directory.CreateDirectory(dir);
+            File.WriteAllText(Path.Combine(dir, "Jose"), "Pepe");
+            store.Initialize($"CSharp-TestAlgorithm-8", 0, 0, "", new Controls { StoragePermissions = permissions });
+
+            if (shouldThrow)
+            {
+                Assert.Throws<InvalidOperationException>(() => store.ContainsKey("Jose"));
+            }
+            else
+            {
+                Assert.IsTrue(store.ContainsKey("Jose"));
+            }
+
+            Directory.Delete(dir, true);
+        }
+
         [Test]
         public void PersistCalledSynchronously()
         {

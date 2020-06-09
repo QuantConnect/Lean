@@ -92,7 +92,8 @@ namespace QuantConnect.Research
                         // if <= 0 we disable periodic persistence and make it synchronous
                         PersistenceIntervalSeconds = -1,
                         StorageLimitMB = Config.GetInt("storage-limit-mb", 5),
-                        StorageFileCount = Config.GetInt("storage-file-count", 100)
+                        StorageFileCount = Config.GetInt("storage-file-count", 100),
+                        StoragePermissions = (Permissions) Config.GetInt("storage-permissions", (int)Permissions.ReadWrite)
                     });
                 SetObjectStore(algorithmHandlers.ObjectStore);
 

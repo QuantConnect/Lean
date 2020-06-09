@@ -77,10 +77,13 @@ namespace QuantConnect.Lean.Engine.Storage
 
             Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}");
 
-            foreach (var file in Directory.EnumerateFiles(AlgorithmStorageRoot))
+            if ((controls.StoragePermissions & Permissions.Read) == Permissions.Read)
             {
-                var contents = File.ReadAllBytes(file);
-                _storage[Path.GetFileName(file)] = contents;
+                foreach (var file in Directory.EnumerateFiles(AlgorithmStorageRoot))
+                {
+                    var contents = File.ReadAllBytes(file);
+                    _storage[Path.GetFileName(file)] = contents;
+                }
             }
 
             Controls = controls;
@@ -104,6 +107,10 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(key));
             }
+            if ((Controls.StoragePermissions & Permissions.Read) == 0)
+            {
+                throw new InvalidOperationException("LocalObjectStore.ContainsKey(): user does not have read permissions");
+            }
 
             return _storage.ContainsKey(key);
         }
@@ -118,6 +125,10 @@ namespace QuantConnect.Lean.Engine.Storage
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
+            }
+            if ((Controls.StoragePermissions & Permissions.Read) == 0)
+            {
+                throw new InvalidOperationException("LocalObjectStore.ReadBytes(): user does not have read permissions");
             }
 
             byte[] data;
@@ -143,7 +154,30 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(key));
             }
+            if ((Controls.StoragePermissions & Permissions.Write) == 0)
+            {
+                throw new InvalidOperationException("LocalObjectStore.SaveBytes(): user does not have write permissions");
+            }
 
+            if (InternalSaveBytes(key, contents))
+            {
+                _dirty = true;
+                // if <= 0 we disable periodic persistence and make it synchronous
+                if (Controls.PersistenceIntervalSeconds <= 0)
+                {
+                    Persist();
+                }
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Won't trigger persist nor will check storage write permissions, useful on initialization since it allows read only permissions to load the object store
+        /// </summary>
+        protected bool InternalSaveBytes(string key, byte[] contents)
+        {
             var fileCount = 0;
             var expectedStorageSizeBytes = 0L;
             foreach (var kvp in _storage)
@@ -162,25 +196,19 @@ namespace QuantConnect.Lean.Engine.Storage
 
             if (fileCount > Controls.StorageFileCount)
             {
-                Log.Error($"LocaObjectStore at file capacity: {fileCount}. Unable to save: '{key}'");
+                Log.Error($"LocaObjectStore.InternalSaveBytes(): at file capacity: {fileCount}. Unable to save: '{key}'");
                 return false;
             }
 
             var expectedStorageSizeMb = BytesToMb(expectedStorageSizeBytes);
             if (expectedStorageSizeMb > Controls.StorageLimitMB)
             {
-                Log.Error($"LocalObjectStore at storage capacity: {expectedStorageSizeMb}. Unable to save: '{key}'");
+                Log.Error($"LocalObjectStore.InternalSaveBytes(): at storage capacity: {expectedStorageSizeMb}. Unable to save: '{key}'");
                 return false;
             }
 
-            _dirty = true;
             _storage.AddOrUpdate(key, k => contents, (k, v) => contents);
 
-            // if <= 0 we disable periodic persistence and make it synchronous
-            if (Controls.PersistenceIntervalSeconds <= 0)
-            {
-                Persist();
-            }
             return true;
         }
 
@@ -194,6 +222,10 @@ namespace QuantConnect.Lean.Engine.Storage
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
+            }
+            if ((Controls.StoragePermissions & Permissions.Write) == 0)
+            {
+                throw new InvalidOperationException("LocalObjectStore.Delete(): user does not have write permissions");
             }
 
             byte[] _;
