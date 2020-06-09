@@ -206,8 +206,7 @@ namespace QuantConnect.Lean.Engine.Results
                 var summary = GenerateStatisticsResults(performanceCharts).Summary;
                 GetAlgorithmRuntimeStatistics(summary, runtimeStatistics);
 
-                //Profit Loss Changes:
-                var progress = Convert.ToDecimal(_daysProcessed / _jobDays);
+                var progress = (decimal)_daysProcessed / _jobDays;
                 if (progress > 0.999m) progress = 0.999m;
 
                 //1. Cloud Upload -> Upload the whole packet to S3  Immediately:
