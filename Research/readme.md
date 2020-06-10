@@ -1,6 +1,12 @@
 ﻿
-QuantConnect Research Project:
+
+QuantConnect Research Project
 =============
+
+## Docker
+There is an up to date docker image available at [quantconnect/research](https://hub.docker.com/repository/docker/quantconnect/research).
+
+## Locally
 Before we enable Jupyter support, follow [Lean installation](https://github.com/QuantConnect/Lean#installation-instructions)
 and [Python installation](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#quantconnect-python-algorithm-project) to get LEAN running Python algorithms in your machine. 
 
