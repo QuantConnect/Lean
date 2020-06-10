@@ -36,6 +36,18 @@ namespace QuantConnect.Lean.Engine.Storage
         private static string StorageRoot => Path.GetFullPath(Config.Get("object-store-root", "./storage"));
 
         /// <summary>
+        /// No read permissions error message
+        /// </summary>
+        protected const string NoReadPermissionsError = "The current user does not have permission to read from the organization Object Store." +
+                                                        " Please contact your organization administrator to request permission.";
+
+        /// <summary>
+        /// No write permissions error message
+        /// </summary>
+        protected const string NoWritePermissionsError = "The current user does not have permission to write to the organization Object Store." +
+                                                         " Please contact your organization administrator to request permission.";
+
+        /// <summary>
         /// Event raised each time there's an error
         /// </summary>
         public event EventHandler<ObjectStoreErrorRaisedEventArgs> ErrorRaised;
@@ -77,18 +89,21 @@ namespace QuantConnect.Lean.Engine.Storage
 
             Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}");
 
-            foreach (var file in Directory.EnumerateFiles(AlgorithmStorageRoot))
-            {
-                var contents = File.ReadAllBytes(file);
-                _storage[Path.GetFileName(file)] = contents;
-            }
-
             Controls = controls;
 
-            // if <= 0 we disable periodic persistence and make it synchronous
-            if (controls.PersistenceIntervalSeconds > 0)
+            if (Controls.StoragePermissions.HasFlag(FileAccess.Read))
             {
-                _persistenceInterval = TimeSpan.FromSeconds(controls.PersistenceIntervalSeconds);
+                foreach (var file in Directory.EnumerateFiles(AlgorithmStorageRoot))
+                {
+                    var contents = File.ReadAllBytes(file);
+                    _storage[Path.GetFileName(file)] = contents;
+                }
+            }
+
+            // if <= 0 we disable periodic persistence and make it synchronous
+            if (Controls.PersistenceIntervalSeconds > 0)
+            {
+                _persistenceInterval = TimeSpan.FromSeconds(Controls.PersistenceIntervalSeconds);
                 _persistenceTimer = new Timer(_ => Persist(), null, _persistenceInterval, _persistenceInterval);
             }
         }
@@ -104,6 +119,10 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(key));
             }
+            if (!Controls.StoragePermissions.HasFlag(FileAccess.Read))
+            {
+                throw new InvalidOperationException($"LocalObjectStore.ContainsKey(): {NoReadPermissionsError}");
+            }
 
             return _storage.ContainsKey(key);
         }
@@ -118,6 +137,10 @@ namespace QuantConnect.Lean.Engine.Storage
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
+            }
+            if (!Controls.StoragePermissions.HasFlag(FileAccess.Read))
+            {
+                throw new InvalidOperationException($"LocalObjectStore.ReadBytes(): {NoReadPermissionsError}");
             }
 
             byte[] data;
@@ -143,7 +166,30 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(key));
             }
+            if (!Controls.StoragePermissions.HasFlag(FileAccess.Write))
+            {
+                throw new InvalidOperationException($"LocalObjectStore.SaveBytes(): {NoWritePermissionsError}");
+            }
 
+            if (InternalSaveBytes(key, contents))
+            {
+                _dirty = true;
+                // if <= 0 we disable periodic persistence and make it synchronous
+                if (Controls.PersistenceIntervalSeconds <= 0)
+                {
+                    Persist();
+                }
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Won't trigger persist nor will check storage write permissions, useful on initialization since it allows read only permissions to load the object store
+        /// </summary>
+        protected bool InternalSaveBytes(string key, byte[] contents)
+        {
             var fileCount = 0;
             var expectedStorageSizeBytes = 0L;
             foreach (var kvp in _storage)
@@ -162,25 +208,23 @@ namespace QuantConnect.Lean.Engine.Storage
 
             if (fileCount > Controls.StorageFileCount)
             {
-                Log.Error($"LocaObjectStore at file capacity: {fileCount}. Unable to save: '{key}'");
+                var message = $"LocalObjectStore.InternalSaveBytes(): at file capacity: {fileCount}. Unable to save: '{key}'";
+                Log.Error(message);
+                OnErrorRaised(new StorageLimitExceededException(message));
                 return false;
             }
 
             var expectedStorageSizeMb = BytesToMb(expectedStorageSizeBytes);
             if (expectedStorageSizeMb > Controls.StorageLimitMB)
             {
-                Log.Error($"LocalObjectStore at storage capacity: {expectedStorageSizeMb}. Unable to save: '{key}'");
+                var message = $"LocalObjectStore.InternalSaveBytes(): at storage capacity: {expectedStorageSizeMb}MB/{Controls.StorageLimitMB}MB. Unable to save: '{key}'";
+                Log.Error(message);
+                OnErrorRaised(new StorageLimitExceededException(message));
                 return false;
             }
 
-            _dirty = true;
             _storage.AddOrUpdate(key, k => contents, (k, v) => contents);
 
-            // if <= 0 we disable periodic persistence and make it synchronous
-            if (Controls.PersistenceIntervalSeconds <= 0)
-            {
-                Persist();
-            }
             return true;
         }
 
@@ -194,6 +238,10 @@ namespace QuantConnect.Lean.Engine.Storage
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
+            }
+            if (!Controls.StoragePermissions.HasFlag(FileAccess.Write))
+            {
+                throw new InvalidOperationException($"LocalObjectStore.Delete(): {NoWritePermissionsError}");
             }
 
             byte[] _;

@@ -264,7 +264,6 @@ namespace QuantConnect
         Server2048
     }
 
-
     /// <summary>
     /// Type of tradable security / underlying asset
     /// </summary>
