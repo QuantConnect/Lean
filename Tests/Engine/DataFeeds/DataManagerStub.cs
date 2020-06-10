@@ -87,7 +87,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 timeKeeper,
                 marketHoursDatabase,
                 liveMode,
-                RegisteredSecurityDataTypesProvider.Null)
+                RegisteredSecurityDataTypesProvider.Null,
+                new DataPermissionManager())
         {
             SecurityService = securityService;
             algorithm.Securities.SetSecurityService(securityService);

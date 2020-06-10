@@ -20,7 +20,9 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Tests.Common.Packets
@@ -69,6 +71,28 @@ namespace QuantConnect.Tests.Common.Packets
                 parameter.ExpectedFinalStatus,
                 startDate: new DateTime(2008, 10, 10),
                 endDate: new DateTime(2010, 10, 10));
+        }
+
+        [Test]
+        public void InvalidConfiguration()
+        {
+            Config.Set("data-permission-manager", "TestDataPermissionManager");
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(nameof(BasicTemplateDailyAlgorithm),
+                new Dictionary<string, string>(),
+                Language.CSharp,
+                // will throw on initialization
+                AlgorithmStatus.Running);
+
+            var result = AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+                parameter.Statistics,
+                parameter.AlphaStatistics,
+                parameter.Language,
+                parameter.ExpectedFinalStatus);
+
+            // algorithm was never set
+            Assert.IsEmpty(result.AlgorithmManager.AlgorithmId);
+
+            Config.Set("data-permission-manager", "DataPermissionManager");
         }
 
         [Test]
@@ -246,6 +270,14 @@ namespace QuantConnect.Tests.Common.Packets
                 SetAccountCurrency("EUR");
                 base.Initialize();
                 SetCash("EUR", 1000000);
+            }
+        }
+
+        public class TestDataPermissionManager : DataPermissionManager
+        {
+            public override void AssertConfiguration(SubscriptionDataConfig subscriptionDataConfig)
+            {
+                throw new InvalidOperationException("Invalid configuration");
             }
         }
 

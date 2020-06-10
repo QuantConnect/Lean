@@ -66,7 +66,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
                 false,
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null,
+                new DataPermissionManager());
             algorithm.SubscriptionManager.SetDataManager(dataManager);
 
             algorithm.Initialize();

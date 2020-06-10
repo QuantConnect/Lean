@@ -94,7 +94,8 @@ namespace QuantConnect.Tests.Brokerages.Paper
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
                 true,
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null,
+                new DataPermissionManager());
             var synchronizer = new NullSynchronizer(algorithm, dividend);
 
             algorithm.SubscriptionManager.SetDataManager(dataManager);

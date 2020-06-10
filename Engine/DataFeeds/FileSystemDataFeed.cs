@@ -62,7 +62,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IFactorFileProvider factorFileProvider,
             IDataProvider dataProvider,
             IDataFeedSubscriptionManager subscriptionManager,
-            IDataFeedTimeProvider dataFeedTimeProvider)
+            IDataFeedTimeProvider dataFeedTimeProvider,
+            IDataChannelProvider dataChannelProvider)
         {
             _algorithm = algorithm;
             _resultHandler = resultHandler;

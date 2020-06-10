@@ -58,7 +58,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 _algorithm.TimeKeeper,
                 MarketHoursDatabase.AlwaysOpen,
                 false,
-                new RegisteredSecurityDataTypesProvider());
+                new RegisteredSecurityDataTypesProvider(),
+                new DataPermissionManager());
 
             var config = new SubscriptionDataConfig(typeof(TradeBar),
                 Symbols.SPY,
@@ -100,7 +101,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 _algorithm.TimeKeeper,
                 MarketHoursDatabase.AlwaysOpen,
                 false,
-                new RegisteredSecurityDataTypesProvider());
+                new RegisteredSecurityDataTypesProvider(),
+                new DataPermissionManager());
 
             var config = new SubscriptionDataConfig(typeof(TradeBar),
                 Symbols.SPY,
@@ -153,7 +155,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 _algorithm.TimeKeeper,
                 MarketHoursDatabase.AlwaysOpen,
                 false,
-                new RegisteredSecurityDataTypesProvider());
+                new RegisteredSecurityDataTypesProvider(),
+                new DataPermissionManager());
 
             var config = new SubscriptionDataConfig(typeof(TradeBar),
                 Symbols.SPY,
@@ -211,7 +214,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler,
                 IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataProvider dataProvider,
-                IDataFeedSubscriptionManager subscriptionManager, IDataFeedTimeProvider dataFeedTimeProvider)
+                IDataFeedSubscriptionManager subscriptionManager, IDataFeedTimeProvider dataFeedTimeProvider,
+                IDataChannelProvider channelProvider)
             {
             }
 

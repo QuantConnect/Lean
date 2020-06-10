@@ -81,6 +81,7 @@ namespace QuantConnect.Report
             // Create MHDB and Symbol properties DB instances for the DataManager
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var dataPermissionManager = new DataPermissionManager();
             _dataManager = new DataManager(feed,
                 new UniverseSelection(
                     Algorithm,
@@ -94,7 +95,8 @@ namespace QuantConnect.Report
                 Algorithm.TimeKeeper,
                 marketHoursDatabase,
                 false,
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null,
+                dataPermissionManager);
 
             _securityService = new SecurityService(Algorithm.Portfolio.CashBook,
                 marketHoursDatabase,
@@ -122,7 +124,7 @@ namespace QuantConnect.Report
             results.Initialize(job, new Messaging.Messaging(), new Api.Api(), transactions);
             results.SetAlgorithm(Algorithm, Algorithm.Portfolio.TotalPortfolioValue);
             transactions.Initialize(Algorithm, new BacktestingBrokerage(Algorithm), results);
-            feed.Initialize(Algorithm, job, results, null, null, null, _dataManager, null);
+            feed.Initialize(Algorithm, job, results, null, null, null, _dataManager, null, new DataChannelProvider());
 
             // Begin setting up the currency conversion feed if needed
             var coreSecurities = Algorithm.Securities.Values.ToList();

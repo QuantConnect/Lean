@@ -36,7 +36,8 @@ namespace QuantConnect.Report
             IFactorFileProvider factorFileProvider,
             IDataProvider dataProvider,
             IDataFeedSubscriptionManager subscriptionManager,
-            IDataFeedTimeProvider dataFeedTimeProvider
+            IDataFeedTimeProvider dataFeedTimeProvider,
+            IDataChannelProvider channelProvider
             )
         {
         }

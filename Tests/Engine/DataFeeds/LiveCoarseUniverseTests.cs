@@ -104,7 +104,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var mapFileProvider = new LocalDiskMapFileProvider();
             feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
-                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider(), algorithm.DataManager, synchronizer);
+                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider(), algorithm.DataManager, synchronizer, new DataChannelProvider());
 
             var symbolIndex = 0;
             var coarseUniverseSelectionCount = 0;

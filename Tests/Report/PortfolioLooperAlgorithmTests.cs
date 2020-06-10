@@ -49,7 +49,8 @@ namespace QuantConnect.Tests.Report
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
                 false,
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null,
+                new DataPermissionManager());
 
             var securityService = new SecurityService(algorithm.Portfolio.CashBook,
                 marketHoursDatabase,

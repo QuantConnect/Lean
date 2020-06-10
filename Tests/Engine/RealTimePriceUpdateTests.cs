@@ -67,6 +67,7 @@ namespace QuantConnect.Tests.Engine
             var algo = new TestAlgorithm();
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var dataPermissionManager = new DataPermissionManager();
             var dataManager = new DataManager(_liveTradingDataFeed,
                 new UniverseSelection(
                     algo,
@@ -75,12 +76,13 @@ namespace QuantConnect.Tests.Engine
                 algo.TimeKeeper,
                 marketHoursDatabase,
                 true,
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null,
+                dataPermissionManager);
             algo.SubscriptionManager.SetDataManager(dataManager);
             var synchronizer = new LiveSynchronizer();
             synchronizer.Initialize(algo, dataManager);
             _liveTradingDataFeed.Initialize(algo, jobPacket, new LiveTradingResultHandler(), new LocalDiskMapFileProvider(),
-                                            null, new DefaultDataProvider(), dataManager, synchronizer);
+                                            null, new DefaultDataProvider(), dataManager, synchronizer, new DataChannelProvider());
             algo.Initialize();
 
             _config = SecurityTests.CreateTradeBarConfig();

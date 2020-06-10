@@ -125,6 +125,9 @@ namespace QuantConnect.Lean.Engine
                     // initialize the object store
                     AlgorithmHandlers.ObjectStore.Initialize(algorithm.Name, job.UserId, job.ProjectId, job.UserToken, job.Controls);
 
+                    // initialize the data permission manager
+                    AlgorithmHandlers.DataPermissionsManager.Initialize(job);
+
                     // notify the user of any errors w/ object store persistence
                     AlgorithmHandlers.ObjectStore.ErrorRaised += (sender, args) => algorithm.Debug($"ObjectStore Persistence Error: {args.Error.Message}");
 
@@ -152,7 +155,8 @@ namespace QuantConnect.Lean.Engine
                         algorithm.TimeKeeper,
                         marketHoursDatabase,
                         _liveMode,
-                        registeredTypesProvider);
+                        registeredTypesProvider,
+                        AlgorithmHandlers.DataPermissionsManager);
 
                     AlgorithmHandlers.Results.SetDataManager(dataManager);
                     algorithm.SubscriptionManager.SetDataManager(dataManager);
@@ -168,7 +172,8 @@ namespace QuantConnect.Lean.Engine
                         AlgorithmHandlers.FactorFileProvider,
                         AlgorithmHandlers.DataProvider,
                         dataManager,
-                        (IDataFeedTimeProvider) synchronizer);
+                        (IDataFeedTimeProvider) synchronizer,
+                        AlgorithmHandlers.DataPermissionsManager.DataChannelProvider);
 
                     // set the order processor on the transaction manager (needs to be done before initializing BrokerageHistoryProvider)
                     algorithm.Transactions.SetOrderProcessor(AlgorithmHandlers.Transactions);

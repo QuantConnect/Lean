@@ -1029,6 +1029,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = new TestableLiveTradingDataFeed();
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+
             var securityService = new SecurityService(
                 algorithm.Portfolio.CashBook,
                 marketHoursDatabase,
@@ -1043,7 +1044,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
                 true,
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null,
+                new DataPermissionManager());
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             var synchronizer = new TestableLiveSynchronizer();
             synchronizer.Initialize(algorithm, dataManager);
@@ -1060,7 +1062,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new LocalDiskFactorFileProvider(mapFileProvider),
                 fileProvider,
                 dataManager,
-                synchronizer);
+                synchronizer,
+                new TestDataChannelProvider());
 
             var unhandledExceptionWasThrown = false;
             try
@@ -1299,14 +1302,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 _algorithm.TimeKeeper,
                 marketHoursDatabase,
                 true,
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null,
+                new DataPermissionManager());
             _algorithm.SubscriptionManager.SetDataManager(_dataManager);
             _algorithm.AddSecurities(resolution, equities, forex, crypto);
             _synchronizer = new TestableLiveSynchronizer(_manualTimeProvider);
             _synchronizer.Initialize(_algorithm, _dataManager);
 
             feed.Initialize(_algorithm, job, resultHandler, mapFileProvider,
-                new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, _dataManager, _synchronizer);
+                new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, _dataManager, _synchronizer, new TestDataChannelProvider());
 
             _algorithm.PostInitialize();
             Thread.Sleep(150); // small handicap for the data to be pumped so TimeSlices have data of all subscriptions
@@ -1618,7 +1622,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
                 true,
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null,
+                new DataPermissionManager());
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             algorithm.SetLiveMode(true);
 
@@ -1666,7 +1671,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var mapFileProvider = new LocalDiskMapFileProvider();
             feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
                 mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider(),
-                dataManager, synchronizer);
+                dataManager, synchronizer, new TestDataChannelProvider());
 
             dataQueueStarted.WaitOne();
             var cancellationTokenSource = new CancellationTokenSource();
@@ -2069,7 +2074,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
                 true,
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null,
+                new DataPermissionManager());
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             algorithm.SetLiveMode(true);
 
@@ -2103,7 +2109,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var mapFileProvider = new LocalDiskMapFileProvider();
             feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
                 mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider(),
-                dataManager, synchronizer);
+                dataManager, synchronizer, new TestDataChannelProvider());
 
             var cancellationTokenSource = new CancellationTokenSource();
 
@@ -2278,10 +2284,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             return DataQueueHandler;
         }
 
-        protected override IDataChannelProvider GetDataChannelProvider()
-        {
-            return new TestDataChannelProvider();
-        }
         public bool UpdateRealTimePrice(
             Subscription subscription,
             TimeZoneOffsetProvider timeZoneOffsetProvider,

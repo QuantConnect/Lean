@@ -46,6 +46,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = new FileSystemDataFeed();
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var dataPermissionManager = new DataPermissionManager();
             var dataManager = new DataManager(feed,
                 new UniverseSelection(
                     algorithm,
@@ -54,12 +55,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
                 false,
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null,
+                dataPermissionManager);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             var synchronizer = new Synchronizer();
             synchronizer.Initialize(algorithm, dataManager);
 
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, factorFileProvider, dataProvider, dataManager, synchronizer);
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, factorFileProvider, dataProvider, dataManager, synchronizer, dataPermissionManager.DataChannelProvider);
             algorithm.Initialize();
             algorithm.PostInitialize();
 

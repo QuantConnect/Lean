@@ -115,7 +115,8 @@ namespace QuantConnect.Research
                         TimeKeeper,
                         MarketHoursDatabase,
                         false,
-                        registeredTypes));
+                        registeredTypes,
+                        algorithmHandlers.DataPermissionsManager));
 
                 var mapFileProvider = algorithmHandlers.MapFileProvider;
                 HistoryProvider = composer.GetExportedValueByTypeName<IHistoryProvider>(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider"));
