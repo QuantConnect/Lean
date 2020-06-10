@@ -45,7 +45,61 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        [TestCase(Resolution.Tick)]
+        public void TickResolutionHistoryRequest()
+        {
+            _algorithm = new QCAlgorithm();
+            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
+            _algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
+            var dataProvider = new DefaultDataProvider();
+            var zipCacheProvider = new ZipDataCacheProvider(dataProvider);
+            _algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                dataProvider,
+                zipCacheProvider,
+                new LocalDiskMapFileProvider(),
+                new LocalDiskFactorFileProvider(),
+                null,
+                false));
+            _algorithm.SetStartDate(2013, 10, 08);
+            var start = new DateTime(2013, 10, 07);
+
+            // Trades and quotes
+            var result = _algorithm.History(new [] { Symbols.SPY }, start.AddHours(9.8), start.AddHours(10), Resolution.Tick).ToList();
+
+            // Just Trades
+            var result2 = _algorithm.History<Tick>(Symbols.SPY, start.AddHours(9.8), start.AddHours(10), Resolution.Tick).ToList();
+
+            zipCacheProvider.DisposeSafely();
+            Assert.IsNotEmpty(result);
+            Assert.IsNotEmpty(result2);
+
+            Assert.IsTrue(result2.All(tick => tick.TickType == TickType.Trade));
+
+            // (Trades and quotes).Count > Trades * 2
+            Assert.Greater(result.Count, result2.Count * 2);
+        }
+
+        [Test]
+        public void ImplicitTickResolutionHistoryRequestTradeBarApiThrowsException()
+        {
+            var spy = _algorithm.AddEquity("SPY", Resolution.Tick).Symbol;
+            Assert.Throws<InvalidOperationException>(() => _algorithm.History(spy, 1).ToList());
+        }
+
+        [Test]
+        public void TickResolutionHistoryRequestTradeBarApiThrowsException()
+        {
+            Assert.Throws<InvalidOperationException>(
+                () => _algorithm.History(Symbols.SPY, 1, Resolution.Tick).ToList());
+
+            Assert.Throws<InvalidOperationException>(
+                () => _algorithm.History(Symbols.SPY, TimeSpan.FromSeconds(2), Resolution.Tick).ToList());
+
+            Assert.Throws<InvalidOperationException>(
+                () => _algorithm.History(Symbols.SPY, DateTime.UtcNow.AddDays(-1), DateTime.UtcNow, Resolution.Tick).ToList());
+        }
+
         [TestCase(Resolution.Second)]
         [TestCase(Resolution.Minute)]
         [TestCase(Resolution.Hour)]
@@ -71,8 +125,6 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(TickType.Trade, _testHistoryProvider.HistryRequests.First().TickType);
         }
 
-        [Test]
-        [TestCase(Resolution.Tick)]
         [TestCase(Resolution.Second)]
         [TestCase(Resolution.Minute)]
         [TestCase(Resolution.Hour)]
