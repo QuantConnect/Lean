@@ -3,7 +3,8 @@
 #
 
 # Use base system for cleaning up wayward processes
-FROM quantconnect/lean:foundation
+ARG LEAN_TAG=latest
+FROM quantconnect/lean:$LEAN_TAG
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
@@ -21,15 +22,12 @@ RUN conda install -y -c conda-forge notebook=6.0.3
 
 #Install ICSharp (Jupyter C# Kernel)
 RUN wget https://cdn.quantconnect.com/icsharp/ICSharp.Kernel.20180820.zip && \
-    unzip ICSharp.Kernel.20180820.zip && rm -irf ICSharp.Kernel.20180820.zip && cd icsharp && \
-    jupyter kernelspec install kernel-spec --name=csharp && cd ..
+    unzip ICSharp.Kernel.20180820.zip -d / && rm -irf ICSharp.Kernel.20180820.zip && cd /icsharp && \
+    jupyter kernelspec install kernel-spec --name=csharp
 
 # Setting some environment variables
-ENV WORK /root/Lean/Launcher/bin/Debug/
+ENV WORK /Lean/Launcher/bin/Debug/
 ENV PYTHONPATH=${WORK}:${PYTHONPATH}
-
-# Copy Lean files to convenient locations
-COPY ./Launcher/bin/Debug/ ${WORK}
 
 RUN find ${WORK} -type f -not -name '*.py*' -not -name '*.xml' -not -name '*.exe.config' -not -name '*.exe' -not -name '*.so' -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -not -name 'decimal.py' -delete
 
@@ -51,8 +49,3 @@ CMD jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root
 
 # List packages
 RUN conda list
-
-# Usage:
-# docker build -t quantconnect/lean:foundation -f DockerfileLeanFoundation .
-# docker build -t quantconnect/research -f DockerfileJupyter .
-# docker run -it --rm -p 8888:8888 -v (absolute to your data folder):/home/Data:ro quantconnect/research
