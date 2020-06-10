@@ -398,7 +398,7 @@ namespace QuantConnect.Algorithm
             if (resolutionToUse == Resolution.Tick)
             {
                 throw new InvalidOperationException("Calling History<TradeBar> method with Resolution.Tick will return an empty result." +
-                                                    " Please use the generic version with Tick type parameter or provide an enumerable of Symbols to use the Slice history request API.");
+                                                    " Please use the generic version with Tick type parameter or provide a list of Symbols to use the Slice history request API.");
             }
 
             return History(new[] { symbol }, start, end, resolutionToUse).Get(symbol).Memoize();

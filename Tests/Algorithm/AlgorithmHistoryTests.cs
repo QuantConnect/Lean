@@ -81,6 +81,13 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void ImplicitTickResolutionHistoryRequestTradeBarApiThrowsException()
+        {
+            var spy = _algorithm.AddEquity("SPY", Resolution.Tick).Symbol;
+            Assert.Throws<InvalidOperationException>(() => _algorithm.History(spy, 1).ToList());
+        }
+
+        [Test]
         public void TickResolutionHistoryRequestTradeBarApiThrowsException()
         {
             Assert.Throws<InvalidOperationException>(
