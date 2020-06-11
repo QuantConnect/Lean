@@ -55,9 +55,22 @@ namespace QuantConnect.Tests.Common.Packets
         {
             var control = new Controls { DataResolutionPermissions = new HashSet<Resolution>{ resolution } };
             var json = JsonConvert.SerializeObject(control);
+
             var result = JsonConvert.DeserializeObject<Controls>(json);
 
             Assert.AreEqual(resolution, result.DataResolutionPermissions.Single());
+        }
+
+        [Test]
+        public void StringDataResolutionPermissionsJsonRoundTrip()
+        {
+            var json = "{\"dataResolutionPermissions\":[\"Tick\", \"daily\", \"1\"]}";
+            var result = JsonConvert.DeserializeObject<Controls>(json);
+
+            Assert.AreEqual(3, result.DataResolutionPermissions.Count);
+            Assert.IsTrue(result.DataResolutionPermissions.Contains(Resolution.Second));
+            Assert.IsTrue(result.DataResolutionPermissions.Contains(Resolution.Tick));
+            Assert.IsTrue(result.DataResolutionPermissions.Contains(Resolution.Daily));
         }
     }
 }
