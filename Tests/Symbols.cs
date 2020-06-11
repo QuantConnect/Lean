@@ -50,12 +50,14 @@ namespace QuantConnect.Tests
         public static readonly Symbol XAGUSD = CreateCfdSymbol("XAGUSD", Market.FXCM);
         public static readonly Symbol XAUUSD = CreateCfdSymbol("XAUUSD", Market.FXCM);
 
+        public static readonly Symbol SPY_Option_Chain = CreateOptionsCanonicalSymbol("SPY");
         public static readonly Symbol SPY_C_192_Feb19_2016 = CreateOptionSymbol("SPY", OptionRight.Call, 192m, new DateTime(2016, 02, 19));
         public static readonly Symbol SPY_P_192_Feb19_2016 = CreateOptionSymbol("SPY", OptionRight.Put, 192m, new DateTime(2016, 02, 19));
 
         public static readonly Symbol Fut_SPY_Feb19_2016 = CreateFutureSymbol(Futures.Indices.SP500EMini, new DateTime(2016, 02, 19));
         public static readonly Symbol Fut_SPY_Mar19_2016 = CreateFutureSymbol(Futures.Indices.SP500EMini, new DateTime(2016, 03, 19));
 
+        public static readonly Symbol ES_Future_Chain = CreateFuturesCanonicalSymbol(Futures.Indices.SP500EMini);
         public static readonly Symbol Future_ESZ18_Dec2018 = CreateFutureSymbol(Futures.Indices.SP500EMini, new DateTime(2018, 12, 21));
         public static readonly Symbol Future_CLF19_Jan2019 = CreateFutureSymbol("CL", new DateTime(2018, 12, 19));
 
@@ -126,5 +128,19 @@ namespace QuantConnect.Tests
             return Symbol.Create(symbol, SecurityType.Crypto, Market.GDAX);
         }
 
+        private static Symbol CreateOptionsCanonicalSymbol(string underlying)
+        {
+            return Symbol.Create(underlying, SecurityType.Option, Market.USA, "?" + underlying);
+        }
+
+        private static Symbol CreateFuturesCanonicalSymbol(string ticker)
+        {
+            string market;
+            if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(ticker, SecurityType.Future, out market))
+            {
+                market = DefaultBrokerageModel.DefaultMarketMap[SecurityType.Future];
+            }
+            return Symbol.Create(ticker, SecurityType.Future, market, "/" + ticker);
+        }
     }
 }
