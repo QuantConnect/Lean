@@ -17,7 +17,7 @@ before_install:
   - conda install -y scipy=1.4.1
   - conda install -y wrapt=1.12.1
   - pip install 'mypy==0.780'
-  - pip install quantconnect-lean-stubs
+  - pip install quantconnect-lean
 install:
   - nuget restore QuantConnect.Lean.sln
   - nuget install NUnit.Runners -Version 3.11.1 -OutputDirectory testrunner

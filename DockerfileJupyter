@@ -14,10 +14,8 @@ RUN wget --quiet https://github.com/krallin/tini/releases/download/v0.10.0/tini 
     mv tini /usr/local/bin/tini && \
     chmod +x /usr/local/bin/tini
 
-# Install Lean/PythonToolbox
-RUN git clone https://github.com/QuantConnect/Lean.git && cd Lean/PythonToolbox && \
-    python setup.py install && cd ../.. && rm -irf Lean
-
+# Install quantconnect-lean for API definitions
+RUN pip install quantconnect-lean
 RUN conda install -y -c conda-forge notebook=6.0.3
 
 #Install ICSharp (Jupyter C# Kernel)
