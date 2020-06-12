@@ -1038,14 +1038,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCacheProvider(algorithm.Portfolio));
             algorithm.Securities.SetSecurityService(securityService);
+            var dataPermissionManager = new DataPermissionManager();
             var dataManager = new DataManager(feed,
-                new UniverseSelection(algorithm, securityService),
+                new UniverseSelection(algorithm, securityService, dataPermissionManager),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
                 true,
                 RegisteredSecurityDataTypesProvider.Null,
-                new DataPermissionManager());
+                dataPermissionManager);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             var synchronizer = new TestableLiveSynchronizer();
             synchronizer.Initialize(algorithm, dataManager);
@@ -1296,14 +1297,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
             var securityService = new SecurityService(_algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, _algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(_algorithm.Portfolio));
             _algorithm.Securities.SetSecurityService(securityService);
+            var dataPermissionManager = new DataPermissionManager();
             _dataManager = new DataManager(feed,
-                new UniverseSelection(_algorithm, securityService),
+                new UniverseSelection(_algorithm, securityService, dataPermissionManager),
                 _algorithm,
                 _algorithm.TimeKeeper,
                 marketHoursDatabase,
                 true,
                 RegisteredSecurityDataTypesProvider.Null,
-                new DataPermissionManager());
+                dataPermissionManager);
             _algorithm.SubscriptionManager.SetDataManager(_dataManager);
             _algorithm.AddSecurities(resolution, equities, forex, crypto);
             _synchronizer = new TestableLiveSynchronizer(_manualTimeProvider);
@@ -1616,14 +1618,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCacheProvider(algorithm.Portfolio));
             algorithm.Securities.SetSecurityService(securityService);
+            var dataPermissionManager = new DataPermissionManager();
             var dataManager = new DataManager(feed,
-                new UniverseSelection(algorithm, securityService),
+                new UniverseSelection(algorithm, securityService, dataPermissionManager),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
                 true,
                 RegisteredSecurityDataTypesProvider.Null,
-                new DataPermissionManager());
+                dataPermissionManager);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             algorithm.SetLiveMode(true);
 
@@ -2068,14 +2071,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCacheProvider(algorithm.Portfolio));
             algorithm.Securities.SetSecurityService(securityService);
+            var dataPermissionManager = new DataPermissionManager();
             var dataManager = new DataManager(feed,
-                new UniverseSelection(algorithm, securityService),
+                new UniverseSelection(algorithm, securityService, dataPermissionManager),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
                 true,
                 RegisteredSecurityDataTypesProvider.Null,
-                new DataPermissionManager());
+                dataPermissionManager);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             algorithm.SetLiveMode(true);
 

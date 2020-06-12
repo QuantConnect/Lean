@@ -74,7 +74,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new LocalDiskMapFileProvider(),
                     new LocalDiskFactorFileProvider(),
                     null,
-                    true
+                    true,
+                    new DataPermissionManager()
                 )
             );
 

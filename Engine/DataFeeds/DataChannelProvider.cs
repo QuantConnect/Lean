@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine.DataFeeds

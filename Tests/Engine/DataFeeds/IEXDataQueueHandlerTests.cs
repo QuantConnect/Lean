@@ -252,7 +252,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void IEXCouldGetHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool received, bool throwsException = false)
         {
             var historyProvider = new IEXDataQueueHandler();
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false));
+            historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, null));
 
             var now = DateTime.UtcNow;
 

@@ -14,11 +14,10 @@
  *
 */
 
-
 using QuantConnect.Data;
 using QuantConnect.Packets;
 
-namespace QuantConnect.Lean.Engine.DataFeeds
+namespace QuantConnect.Interfaces
 {
     /// <summary>
     /// Specifies data channel settings

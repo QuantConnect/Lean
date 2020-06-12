@@ -17,7 +17,7 @@
 using QuantConnect.Data;
 using QuantConnect.Packets;
 
-namespace QuantConnect.Lean.Engine.DataFeeds
+namespace QuantConnect.Interfaces
 {
     /// <summary>
     /// Entity in charge of handling data permissions
@@ -40,5 +40,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="subscriptionDataConfig">The data subscription configuration to assert</param>
         void AssertConfiguration(SubscriptionDataConfig subscriptionDataConfig);
+
+        /// <summary>
+        /// Gets a valid resolution to use for internal subscriptions
+        /// </summary>
+        /// <returns>A permitted resolution for internal subscriptions</returns>
+        Resolution GetResolution(Resolution preferredResolution);
     }
 }

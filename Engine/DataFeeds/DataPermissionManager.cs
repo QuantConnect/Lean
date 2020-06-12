@@ -15,6 +15,7 @@
 */
 
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Util;
@@ -51,6 +52,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="subscriptionDataConfig">The data subscription configuration to assert</param>
         public virtual void AssertConfiguration(SubscriptionDataConfig subscriptionDataConfig)
         {
+        }
+
+        /// <summary>
+        /// Gets a valid resolution to use for internal subscriptions
+        /// </summary>
+        /// <returns>A permitted resolution for internal subscriptions</returns>
+        public virtual Resolution GetResolution(Resolution preferredResolution)
+        {
+            return preferredResolution;
         }
     }
 }

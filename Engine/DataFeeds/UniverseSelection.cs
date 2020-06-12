@@ -39,6 +39,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IDataFeedSubscriptionManager _dataManager;
         private readonly IAlgorithm _algorithm;
         private readonly ISecurityService _securityService;
+        private readonly IDataPermissionManager _dataPermissionManager;
         private readonly Dictionary<DateTime, Dictionary<Symbol, Security>> _pendingSecurityAdditions = new Dictionary<DateTime, Dictionary<Symbol, Security>>();
         private readonly PendingRemovalsManager _pendingRemovalsManager;
         private readonly CurrencySubscriptionDataConfigManager _currencySubscriptionDataConfigManager;
@@ -49,19 +50,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
         /// </summary>
         /// <param name="algorithm">The algorithm to add securities to</param>
-        /// <param name="securityService"></param>
+        /// <param name="securityService">The security service</param>
+        /// <param name="dataPermissionManager">The data permissions manager</param>
         public UniverseSelection(
             IAlgorithm algorithm,
-            ISecurityService securityService)
+            ISecurityService securityService,
+            IDataPermissionManager dataPermissionManager)
         {
             _algorithm = algorithm;
-
             _securityService = securityService;
+            _dataPermissionManager = dataPermissionManager;
             _pendingRemovalsManager = new PendingRemovalsManager(algorithm.Transactions);
             _currencySubscriptionDataConfigManager = new CurrencySubscriptionDataConfigManager(algorithm.Portfolio.CashBook,
                 algorithm.Securities,
                 algorithm.SubscriptionManager,
-                _securityService);
+                _securityService,
+                dataPermissionManager.GetResolution(Resolution.Minute));
         }
 
         /// <summary>
@@ -387,7 +391,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     var dataConfig = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(
                         securityBenchmark.Security.Symbol,
-                        _algorithm.LiveMode ? Resolution.Minute : Resolution.Hour,
+                        _dataPermissionManager.GetResolution(_algorithm.LiveMode ? Resolution.Minute : Resolution.Hour),
                         isInternalFeed: true,
                         fillForward: false).First();
 

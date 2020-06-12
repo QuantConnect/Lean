@@ -65,6 +65,7 @@ namespace QuantConnect.Lean.Engine.Setup
                         includeInternalConfigs:true);
 
                 var resolution = configs.GetHighestResolution();
+
                 var startTime = historyRequestFactory.GetStartTimeAlgoTz(
                     cash.ConversionRateSecurity.Symbol,
                     1,

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Data;
@@ -28,7 +29,9 @@ namespace QuantConnect.Lean.Engine.HistoricalData
     /// </summary>
     public class BrokerageHistoryProvider : SynchronizingHistoryProvider
     {
+        private IDataPermissionManager _dataPermissionManager;
         private IBrokerage _brokerage;
+        private bool _initialized;
 
         /// <summary>
         /// Sets the brokerage to be used for historical requests
@@ -45,7 +48,14 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <param name="parameters">The initialization parameters</param>
         public override void Initialize(HistoryProviderInitializeParameters parameters)
         {
+            if (_initialized)
+            {
+                // let's make sure no one tries to change our parameters values
+                throw new InvalidOperationException("BrokerageHistoryProvider can only be initialized once");
+            }
+            _initialized = true;
             _brokerage.Connect();
+            _dataPermissionManager = parameters.DataPermissionManager;
         }
 
         /// <summary>
@@ -62,6 +72,9 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             {
                 var history = _brokerage.GetHistory(request);
                 var subscription = CreateSubscription(request, history);
+
+                _dataPermissionManager.AssertConfiguration(subscription.Configuration);
+
                 subscriptions.Add(subscription);
             }
 

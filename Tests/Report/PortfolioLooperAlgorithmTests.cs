@@ -36,6 +36,7 @@ namespace QuantConnect.Tests.Report
             // Create MHDB and Symbol properties DB instances for the DataManager
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var dataPermissionManager = new DataPermissionManager();
             var dataManager = new DataManager(new QuantConnect.Report.MockDataFeed(),
                 new UniverseSelection(
                     algorithm,
@@ -44,13 +45,14 @@ namespace QuantConnect.Tests.Report
                         symbolPropertiesDataBase,
                         algorithm,
                         RegisteredSecurityDataTypesProvider.Null,
-                        new SecurityCacheProvider(algorithm.Portfolio))),
+                        new SecurityCacheProvider(algorithm.Portfolio)),
+                    dataPermissionManager),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
                 false,
                 RegisteredSecurityDataTypesProvider.Null,
-                new DataPermissionManager());
+                dataPermissionManager);
 
             var securityService = new SecurityService(algorithm.Portfolio.CashBook,
                 marketHoursDatabase,

@@ -56,7 +56,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new LocalDiskMapFileProvider(),
                 new LocalDiskFactorFileProvider(new LocalDiskMapFileProvider()),
                 i => { },
-                true));
+                true,
+                new DataPermissionManager()));
         }
 
         [TestCase(Language.CSharp, PortfolioBias.Long)]

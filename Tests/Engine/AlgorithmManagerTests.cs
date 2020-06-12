@@ -53,6 +53,7 @@ namespace QuantConnect.Tests.Engine
             var feed = new MockDataFeed();
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var dataPermissionManager = new DataPermissionManager();
             var dataManager = new DataManager(feed,
                 new UniverseSelection(
                     algorithm,
@@ -61,13 +62,14 @@ namespace QuantConnect.Tests.Engine
                         symbolPropertiesDataBase,
                         algorithm,
                         RegisteredSecurityDataTypesProvider.Null,
-                        new SecurityCacheProvider(algorithm.Portfolio))),
+                        new SecurityCacheProvider(algorithm.Portfolio)),
+                    dataPermissionManager),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
                 false,
                 RegisteredSecurityDataTypesProvider.Null,
-                new DataPermissionManager());
+                dataPermissionManager);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             var transactions = new BacktestingTransactionHandler();
             var results = new BacktestingResultHandler();

@@ -60,7 +60,8 @@ namespace QuantConnect.Tests.Algorithm
                 new LocalDiskMapFileProvider(),
                 new LocalDiskFactorFileProvider(),
                 null,
-                false));
+                false,
+                new DataPermissionManager()));
             _algorithm.SetStartDate(2013, 10, 08);
             var start = new DateTime(2013, 10, 07);
 
@@ -181,7 +182,8 @@ namespace QuantConnect.Tests.Algorithm
                 new LocalDiskMapFileProvider(),
                 new LocalDiskFactorFileProvider(),
                 null,
-                false));
+                false,
+                new DataPermissionManager()));
 
             algorithm.SetDateTime(new DateTime(2014, 6, 6, 15, 0, 0));
 

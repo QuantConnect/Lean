@@ -165,13 +165,16 @@ namespace QuantConnect.Securities
         /// <param name="marketMap">The market map that decides which market the new security should be in</param>
         /// <param name="changes">Will be used to consume <see cref="SecurityChanges.AddedSecurities"/></param>
         /// <param name="securityService">Will be used to create required new <see cref="Security"/></param>
+        /// <param name="accountCurrency">The account currency</param>
+        /// <param name="defaultResolution">The default resolution to use for the internal subscriptions</param>
         /// <returns>Returns the added <see cref="SubscriptionDataConfig"/>, otherwise null</returns>
         public SubscriptionDataConfig EnsureCurrencyDataFeed(SecurityManager securities,
             SubscriptionManager subscriptions,
             IReadOnlyDictionary<SecurityType, string> marketMap,
             SecurityChanges changes,
             ISecurityService securityService,
-            string accountCurrency
+            string accountCurrency,
+            Resolution defaultResolution = Resolution.Minute
             )
         {
             // this gets called every time we add securities using universe selection,
@@ -227,7 +230,7 @@ namespace QuantConnect.Securities
                 .Concat(Currencies.CfdCurrencyPairs.Select(cfd => CreateSymbol(marketMap, cfd, markets, SecurityType.Cfd)))
                 .Concat(Currencies.CryptoCurrencyPairs.Select(crypto => CreateSymbol(marketMap, crypto, markets, SecurityType.Crypto)));
 
-            var minimumResolution = subscriptions.Subscriptions.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Minute).Min();
+            var minimumResolution = subscriptions.Subscriptions.Select(x => x.Resolution).DefaultIfEmpty(defaultResolution).Min();
 
             foreach (var symbol in potentials)
             {

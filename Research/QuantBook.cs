@@ -110,7 +110,7 @@ namespace QuantConnect.Research
                 Securities.SetSecurityService(securityService);
                 SubscriptionManager.SetDataManager(
                     new DataManager(new NullDataFeed(),
-                        new UniverseSelection(this, securityService),
+                        new UniverseSelection(this, securityService, algorithmHandlers.DataPermissionsManager),
                         this,
                         TimeKeeper,
                         MarketHoursDatabase,
@@ -129,7 +129,8 @@ namespace QuantConnect.Research
                         mapFileProvider,
                         algorithmHandlers.FactorFileProvider,
                         null,
-                        true
+                        true,
+                        algorithmHandlers.DataPermissionsManager
                     )
                 );
 

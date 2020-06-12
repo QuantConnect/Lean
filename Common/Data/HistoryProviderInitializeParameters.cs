@@ -67,6 +67,11 @@ namespace QuantConnect.Data
         public bool ParallelHistoryRequestsEnabled { get; }
 
         /// <summary>
+        /// The data permission manager
+        /// </summary>
+        public IDataPermissionManager DataPermissionManager { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="HistoryProviderInitializeParameters"/> class from the specified parameters
         /// </summary>
         /// <param name="job">The job</param>
@@ -77,6 +82,7 @@ namespace QuantConnect.Data
         /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
         /// <param name="statusUpdateAction">Function used to send status updates</param>
         /// <param name="parallelHistoryRequestsEnabled">True if parallel history requests are enabled</param>
+        /// <param name="dataPermissionManager">The data permission manager to use</param>
         public HistoryProviderInitializeParameters(
             AlgorithmNodePacket job,
             IApi api,
@@ -85,7 +91,8 @@ namespace QuantConnect.Data
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
             Action<int> statusUpdateAction,
-            bool parallelHistoryRequestsEnabled)
+            bool parallelHistoryRequestsEnabled,
+            IDataPermissionManager dataPermissionManager)
         {
             Job = job;
             Api = api;
@@ -95,6 +102,7 @@ namespace QuantConnect.Data
             FactorFileProvider = factorFileProvider;
             StatusUpdateAction = statusUpdateAction;
             ParallelHistoryRequestsEnabled = parallelHistoryRequestsEnabled;
+            DataPermissionManager = dataPermissionManager;
         }
     }
 }

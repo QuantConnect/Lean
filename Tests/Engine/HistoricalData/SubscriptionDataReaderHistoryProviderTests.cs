@@ -44,7 +44,8 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 new LocalDiskMapFileProvider(),
                 new LocalDiskFactorFileProvider(),
                 null,
-                false));
+                false,
+                new DataPermissionManager()));
             var symbol = Symbol.CreateOption(
                 "FOXA",
                 Market.USA,
@@ -97,7 +98,8 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 new LocalDiskMapFileProvider(),
                 new LocalDiskFactorFileProvider(),
                 null,
-                false));
+                false,
+                new DataPermissionManager()));
             var symbol = Symbol.Create("WM",SecurityType.Equity,Market.USA);
 
             var result = historyProvider.GetHistory(

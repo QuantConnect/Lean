@@ -150,7 +150,8 @@ namespace QuantConnect.Lean.Engine
                     dataManager = new DataManager(AlgorithmHandlers.DataFeed,
                         new UniverseSelection(
                             algorithm,
-                            securityService),
+                            securityService,
+                            AlgorithmHandlers.DataPermissionsManager),
                         algorithm,
                         algorithm.TimeKeeper,
                         marketHoursDatabase,
@@ -204,7 +205,8 @@ namespace QuantConnect.Lean.Engine
                                 }
                             },
                             // disable parallel history requests for live trading
-                            parallelHistoryRequestsEnabled: !_liveMode
+                            parallelHistoryRequestsEnabled: !_liveMode,
+                            dataPermissionManager: AlgorithmHandlers.DataPermissionsManager
                         )
                     );
 
