@@ -59,7 +59,7 @@ RUN pip install --upgrade pip
 RUN conda install -y python=3.6.8
 RUN conda clean -y --all
 
-# Install essencial packages
+# Install essential packages
 RUN conda install -y                \
     cython=0.29.15                  \
     numpy=1.18.1                    \
