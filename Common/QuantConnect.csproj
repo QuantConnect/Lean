@@ -305,6 +305,7 @@
     <Compile Include="Data\Custom\SmartInsider\SmartInsiderIntention.cs" />
     <Compile Include="Data\Custom\SmartInsider\SmartInsiderTransaction.cs" />
     <Compile Include="Data\IndexedBasedData.cs" />
+    <Compile Include="Data\UniverseSelection\UniversePythonWrapper.cs" />
     <Compile Include="ExtendedDictionary.cs" />
     <Compile Include="Data\SubscriptionDataConfigExtensions.cs" />
     <Compile Include="Data\UniverseSelection\ConstituentsUniverse.cs" />

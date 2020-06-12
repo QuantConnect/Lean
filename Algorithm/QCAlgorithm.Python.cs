@@ -245,6 +245,10 @@ namespace QuantConnect.Algorithm
             {
                 AddUniverse(universe);
             }
+            else if (pyObject.TryConvert(out universe, allowPythonDerivative: true))
+            {
+                AddUniverse(new UniversePythonWrapper(pyObject));
+            }
             else if (pyObject.TryConvertToDelegate(out coarseFunc))
             {
                 AddUniverse(coarseFunc.ConvertToUniverseSelectionSymbolDelegate());
