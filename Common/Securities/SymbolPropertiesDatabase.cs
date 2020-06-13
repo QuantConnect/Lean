@@ -206,7 +206,7 @@ namespace QuantConnect.Securities
                 description: csv[3],
                 quoteCurrency: csv[4],
                 contractMultiplier: csv[5].ToDecimal(),
-                minimumPriceVariation: csv[6].ToDecimal(),
+                minimumPriceVariation: csv[6].ToDecimalAllowExponent(),
                 lotSize: csv[7].ToDecimal());
         }
 

@@ -710,6 +710,16 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Extension method for string to decimal conversion where string can represent a number with exponent xe-y
+        /// </summary>
+        /// <param name="str">String to be converted to decimal value</param>
+        /// <returns>Decimal value of the string</returns>
+        public static decimal ToDecimalAllowExponent(this string str)
+        {
+            return decimal.Parse(str, NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
         /// Extension method for faster string to Int32 conversion.
         /// </summary>
         /// <param name="str">String to be converted to positive Int32 value</param>
