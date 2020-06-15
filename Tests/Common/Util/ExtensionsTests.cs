@@ -1102,6 +1102,15 @@ actualDictionary.update({'IBM': 5})
         }
 
         [Test]
+        public void DecimalAllowExponentTests()
+        {
+            const string strWithExponent = "5e-5";
+            Assert.AreEqual(strWithExponent.ToDecimalAllowExponent(), 0.00005);
+            Assert.AreNotEqual(strWithExponent.ToDecimal(), 0.00005);
+            Assert.AreEqual(strWithExponent.ToDecimal(), 10275);
+        }
+
+        [Test]
         public void DateRulesToFunc()
         {
             var dateRules = new DateRules(new SecurityManager(
