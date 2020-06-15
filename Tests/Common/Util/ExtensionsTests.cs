@@ -1105,9 +1105,9 @@ actualDictionary.update({'IBM': 5})
         public void DecimalAllowExponentTests()
         {
             const string strWithExponent = "5e-5";
-            Assert.Equals(strWithExponent.ToDecimalAllowExponent(), 0.00005);
+            Assert.AreEqual(strWithExponent.ToDecimalAllowExponent(), 0.00005);
             Assert.AreNotEqual(strWithExponent.ToDecimal(), 0.00005);
-            Assert.Equals(strWithExponent.ToDecimal(), 10275);
+            Assert.AreEqual(strWithExponent.ToDecimal(), 10275);
         }
 
         [Test]
