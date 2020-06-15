@@ -51,14 +51,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void ReturnsExistingConfig()
         {
+            var dataPermissionManager = new DataPermissionManager();
             var dataManager = new DataManager(new NullDataFeed(),
                 new UniverseSelection(_algorithm,
-                    _securityService),
+                    _securityService,
+                    dataPermissionManager),
                 _algorithm,
                 _algorithm.TimeKeeper,
                 MarketHoursDatabase.AlwaysOpen,
                 false,
-                new RegisteredSecurityDataTypesProvider());
+                new RegisteredSecurityDataTypesProvider(),
+                dataPermissionManager);
 
             var config = new SubscriptionDataConfig(typeof(TradeBar),
                 Symbols.SPY,
@@ -92,15 +95,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void RemovesExistingConfig()
         {
+            var dataPermissionManager = new DataPermissionManager();
             var dataFeed = new TestDataFeed();
             var dataManager = new DataManager(dataFeed,
                 new UniverseSelection(_algorithm,
-                    _securityService),
+                    _securityService,
+                    dataPermissionManager),
                 _algorithm,
                 _algorithm.TimeKeeper,
                 MarketHoursDatabase.AlwaysOpen,
                 false,
-                new RegisteredSecurityDataTypesProvider());
+                new RegisteredSecurityDataTypesProvider(),
+                dataPermissionManager);
 
             var config = new SubscriptionDataConfig(typeof(TradeBar),
                 Symbols.SPY,
@@ -145,15 +151,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         // reproduces GH issue 3877
         public void ConfigurationForAddedSubscriptionIsAlwaysPresent()
         {
+            var dataPermissionManager = new DataPermissionManager();
             var dataFeed = new TestDataFeed();
             var dataManager = new DataManager(dataFeed,
                 new UniverseSelection(_algorithm,
-                    _securityService),
+                    _securityService,
+                    dataPermissionManager),
                 _algorithm,
                 _algorithm.TimeKeeper,
                 MarketHoursDatabase.AlwaysOpen,
                 false,
-                new RegisteredSecurityDataTypesProvider());
+                new RegisteredSecurityDataTypesProvider(),
+                dataPermissionManager);
 
             var config = new SubscriptionDataConfig(typeof(TradeBar),
                 Symbols.SPY,
@@ -211,7 +220,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler,
                 IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataProvider dataProvider,
-                IDataFeedSubscriptionManager subscriptionManager, IDataFeedTimeProvider dataFeedTimeProvider)
+                IDataFeedSubscriptionManager subscriptionManager, IDataFeedTimeProvider dataFeedTimeProvider,
+                IDataChannelProvider channelProvider)
             {
             }
 

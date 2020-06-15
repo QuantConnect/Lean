@@ -64,7 +64,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
 
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);
-                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false));
+                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, null));
 
                 var now = DateTime.UtcNow.RoundDown(resolution.ToTimeSpan());
 

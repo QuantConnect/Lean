@@ -92,7 +92,7 @@ namespace QuantConnect.Tests.Algorithm
 
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
-
+            var dataPermissionManager = new DataPermissionManager();
             var dataManager = new DataManager(
                 new MockDataFeed(),
                 new UniverseSelection(
@@ -103,12 +103,14 @@ namespace QuantConnect.Tests.Algorithm
                         symbolPropertiesDatabase,
                         algorithm,
                         RegisteredSecurityDataTypesProvider.Null,
-                        new SecurityCacheProvider(algorithm.Portfolio))),
+                        new SecurityCacheProvider(algorithm.Portfolio)),
+                    dataPermissionManager),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
                 false,
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null,
+                dataPermissionManager);
 
             var securityService = new SecurityService(
                 algorithm.Portfolio.CashBook,

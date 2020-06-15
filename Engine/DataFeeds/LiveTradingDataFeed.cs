@@ -75,7 +75,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IFactorFileProvider factorFileProvider,
             IDataProvider dataProvider,
             IDataFeedSubscriptionManager subscriptionManager,
-            IDataFeedTimeProvider dataFeedTimeProvider)
+            IDataFeedTimeProvider dataFeedTimeProvider,
+            IDataChannelProvider dataChannelProvider)
         {
             if (!(job is LiveNodePacket))
             {
@@ -88,7 +89,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _timeProvider = dataFeedTimeProvider.TimeProvider;
             _dataQueueHandler = GetDataQueueHandler();
             _dataProvider = dataProvider;
-            _channelProvider = GetDataChannelProvider();
+            _channelProvider = dataChannelProvider;
 
             _frontierTimeProvider = dataFeedTimeProvider.FrontierTimeProvider;
             _customExchange = new BaseDataExchange("CustomDataExchange") {SleepInterval = 10};
@@ -175,17 +176,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             Log.Trace($"LiveTradingDataFeed.GetDataQueueHandler(): will use {_job.DataQueueHandler}");
             return Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(_job.DataQueueHandler);
-        }
-
-        /// <summary>
-        /// Gets the <see cref="IDataChannelProvider"/> to use. By default this will try to load
-        /// the type specified in the configuration via the 'data-channel-provider'
-        /// </summary>
-        /// <returns>The loaded <see cref="IDataChannelProvider"/></returns>
-        protected virtual IDataChannelProvider GetDataChannelProvider()
-        {
-            Log.Trace($"LiveTradingDataFeed.GetDataChannelProvider(): will use {_job.DataChannelProvider}");
-            return Composer.Instance.GetExportedValueByTypeName<IDataChannelProvider>(_job.DataChannelProvider);
         }
 
         /// <summary>

@@ -46,7 +46,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IFactorFileProvider factorFileProvider,
             IDataProvider dataProvider,
             IDataFeedSubscriptionManager subscriptionManager,
-            IDataFeedTimeProvider dataFeedTimeProvider);
+            IDataFeedTimeProvider dataFeedTimeProvider,
+            IDataChannelProvider dataChannelProvider);
 
         /// <summary>
         /// Creates a new subscription to provide data for the specified security.

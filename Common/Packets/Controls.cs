@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
@@ -137,6 +138,12 @@ namespace QuantConnect.Packets
         public HashSet<string> StreamingDataPermissions;
 
         /// <summary>
+        /// Gets list of allowed data resolutions
+        /// </summary>
+        [JsonProperty(PropertyName = "dataResolutionPermissions")]
+        public HashSet<Resolution> DataResolutionPermissions;
+
+        /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class
         /// </summary>
         public Controls()
@@ -161,6 +168,7 @@ namespace QuantConnect.Packets
             TrainingLimits = new LeakyBucketControlParameters();
 
             StreamingDataPermissions = new HashSet<string>();
+            DataResolutionPermissions = new HashSet<Resolution>();
         }
 
         /// <summary>

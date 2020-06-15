@@ -106,12 +106,14 @@ namespace QuantConnect.Securities
         /// <param name="marketMap">The market map that decides which market the new security should be in</param>
         /// <param name="changes">Will be used to consume <see cref="SecurityChanges.AddedSecurities"/></param>
         /// <param name="securityService">Will be used to create required new <see cref="Security"/></param>
+        /// <param name="defaultResolution">The default resolution to use for the internal subscriptions</param>
         /// <returns>Returns a list of added currency <see cref="SubscriptionDataConfig"/></returns>
         public List<SubscriptionDataConfig> EnsureCurrencyDataFeeds(SecurityManager securities,
             SubscriptionManager subscriptions,
             IReadOnlyDictionary<SecurityType, string> marketMap,
             SecurityChanges changes,
-            ISecurityService securityService)
+            ISecurityService securityService,
+            Resolution defaultResolution = Resolution.Minute)
         {
             var addedSubscriptionDataConfigs = new List<SubscriptionDataConfig>();
             foreach (var kvp in _currencies)
@@ -124,7 +126,8 @@ namespace QuantConnect.Securities
                     marketMap,
                     changes,
                     securityService,
-                    AccountCurrency);
+                    AccountCurrency,
+                    defaultResolution);
                 if (subscriptionDataConfig != null)
                 {
                     addedSubscriptionDataConfigs.Add(subscriptionDataConfig);

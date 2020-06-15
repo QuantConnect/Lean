@@ -428,6 +428,7 @@
     <Compile Include="Engine\Alphas\InsightAnalysisContextTests.cs" />
     <Compile Include="Engine\BrokerageTransactionHandlerTests\BacktestingTransactionHandlerTests.cs" />
     <Compile Include="Engine\DataFeeds\BacktestingFutureChainProviderTests.cs" />
+    <Compile Include="Engine\DataFeeds\DataPermissionManagerTests.cs" />
     <Compile Include="Engine\DataFeeds\SubscriptionDataTests.cs" />
     <Compile Include="Engine\DataFeeds\DataManagerStub.cs" />
     <Compile Include="Engine\DataFeeds\DataManagerTests.cs" />

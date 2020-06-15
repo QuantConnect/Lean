@@ -41,7 +41,9 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
         private IDataCacheProvider _dataCacheProvider;
+        private IDataPermissionManager _dataPermissionManager;
         private bool _parallelHistoryRequestsEnabled;
+        private bool _initialized;
 
         /// <summary>
         /// Initializes this history provider to work for the specified job
@@ -49,9 +51,16 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <param name="parameters">The initialization parameters</param>
         public override void Initialize(HistoryProviderInitializeParameters parameters)
         {
+            if (_initialized)
+            {
+                // let's make sure no one tries to change our parameters values
+                throw new InvalidOperationException("SubscriptionDataReaderHistoryProvider can only be initialized once");
+            }
+            _initialized = true;
             _mapFileProvider = parameters.MapFileProvider;
-            _factorFileProvider = parameters.FactorFileProvider;
             _dataCacheProvider = parameters.DataCacheProvider;
+            _factorFileProvider = parameters.FactorFileProvider;
+            _dataPermissionManager = parameters.DataPermissionManager;
             _parallelHistoryRequestsEnabled = parameters.ParallelHistoryRequestsEnabled;
         }
 
@@ -77,7 +86,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <summary>
         /// Creates a subscription to process the request
         /// </summary>
-        protected virtual Subscription CreateSubscription(HistoryRequest request, DateTime startUtc, DateTime endUtc)
+        private Subscription CreateSubscription(HistoryRequest request, DateTime startUtc, DateTime endUtc)
         {
             // data reader expects these values in local times
             var startTimeLocal = startUtc.ConvertFromUtc(request.ExchangeHours.TimeZone);
@@ -96,6 +105,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 true,
                 request.DataNormalizationMode
                 );
+
+            _dataPermissionManager.AssertConfiguration(config);
 
             var security = new Security(
                 request.ExchangeHours,

@@ -81,13 +81,25 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, ITimeKeeper timeKeeper, MarketHoursDatabase marketHoursDatabase, SecurityService securityService, bool liveMode = false)
+            : this(dataFeed,
+                algorithm,
+                timeKeeper,
+                marketHoursDatabase,
+                securityService,
+                new DataPermissionManager(),
+                liveMode)
+        {
+        }
+
+        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, ITimeKeeper timeKeeper, MarketHoursDatabase marketHoursDatabase, SecurityService securityService, DataPermissionManager dataPermissionManager, bool liveMode = false)
             : base(dataFeed,
-                new UniverseSelection(algorithm, securityService),
+                new UniverseSelection(algorithm, securityService, dataPermissionManager),
                 algorithm,
                 timeKeeper,
                 marketHoursDatabase,
                 liveMode,
-                RegisteredSecurityDataTypesProvider.Null)
+                RegisteredSecurityDataTypesProvider.Null,
+                dataPermissionManager)
         {
             SecurityService = securityService;
             algorithm.Securities.SetSecurityService(securityService);
