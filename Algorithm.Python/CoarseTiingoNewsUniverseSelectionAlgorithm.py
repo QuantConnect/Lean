@@ -38,7 +38,6 @@ class CoarseTiingoNewsUniverseSelectionAlgorithm(QCAlgorithm):
 
         self.__numberOfSymbols = 3
         
-        self.MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, None, SecurityType.Base, Extensions.GetBaseDataInstance(TiingoNews).DataTimeZone());
         self.AddUniverse(CustomDataCoarseFundamentalUniverse(self.UniverseSettings, self.SecurityInitializer, self.CoarseSelectionFunction));
 
         self._symbols = []

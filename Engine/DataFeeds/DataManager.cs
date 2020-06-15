@@ -448,7 +448,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+            MarketHoursDatabase.Entry marketHoursDbEntry;
+            if (!_marketHoursDatabase.TryGetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType, out marketHoursDbEntry))
+            {
+                if (symbol.SecurityType == SecurityType.Base)
+                {
+                    var baseInstance = dataTypes.Single().Item1.GetBaseDataInstance();
+                    baseInstance.Symbol = symbol;
+                    _marketHoursDatabase.SetEntryAlwaysOpen(Market.USA, null, SecurityType.Base, baseInstance.DataTimeZone());
+                }
+
+                marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+            }
+
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
             if (symbol.ID.SecurityType == SecurityType.Option || symbol.ID.SecurityType == SecurityType.Future)
             {

@@ -189,34 +189,58 @@ namespace QuantConnect.Securities
         public virtual Entry GetEntry(string market, string symbol, SecurityType securityType)
         {
             Entry entry;
-            var key = new SecurityDatabaseKey(market, symbol, securityType);
-            if (!_entries.TryGetValue(key, out entry))
+            if (!TryGetEntry(market, symbol, securityType, out entry))
             {
-                // now check with null symbol key
-                if (!_entries.TryGetValue(new SecurityDatabaseKey(market, null, securityType), out entry))
+                var key = new SecurityDatabaseKey(market, symbol, securityType);
+                var keys = string.Join(", ", _entries.Keys);
+                Log.Error($"MarketHoursDatabase.GetExchangeHours(): Unable to locate exchange hours for {key}.Available keys: {keys}");
+
+                if (securityType == SecurityType.Future && market == Market.USA)
                 {
-                    var keys = string.Join(", ", _entries.Keys);
-                    Log.Error($"MarketHoursDatabase.GetExchangeHours(): Unable to locate exchange hours for {key}.Available keys: {keys}");
-
-                    if (securityType == SecurityType.Future && market == Market.USA)
+                    var exception =
+                        "Future.Usa market type is no longer supported as we mapped each ticker to its actual exchange. " +
+                        "Please find your specific market in the symbol-properties database.";
+                    if (SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(symbol, SecurityType.Future, out market))
                     {
-                        var exception =
-                            "Future.Usa market type is no longer supported as we mapped each ticker to its actual exchange. " +
-                            "Please find your specific market in the symbol-properties database.";
-                        if (SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(symbol, SecurityType.Future, out market))
-                        {
-                            // let's suggest a market
-                            exception += $" Suggested market based on the provided ticker 'Market.{market.ToUpperInvariant()}'.";
-                        }
-
-                        throw new ArgumentException(exception);
+                        // let's suggest a market
+                        exception += $" Suggested market based on the provided ticker 'Market.{market.ToUpperInvariant()}'.";
                     }
-                    // there was nothing that really matched exactly
-                    throw new ArgumentException($"Unable to locate exchange hours for {key}");
+
+                    throw new ArgumentException(exception);
                 }
+                // there was nothing that really matched exactly
+                throw new ArgumentException($"Unable to locate exchange hours for {key}");
             }
 
             return entry;
+        }
+
+        /// <summary>
+        /// Tries to get the entry for the specified market/symbol/security-type
+        /// </summary>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="symbol">The particular symbol being traded</param>
+        /// <param name="securityType">The security type of the symbol</param>
+        /// <param name="entry">The entry found if any</param>
+        /// <returns>True if the entry was present, else false</returns>
+        public bool TryGetEntry(string market, Symbol symbol, SecurityType securityType, out Entry entry)
+        {
+            return TryGetEntry(market, GetDatabaseSymbolKey(symbol), securityType, out entry);
+        }
+
+        /// <summary>
+        /// Tries to get the entry for the specified market/symbol/security-type
+        /// </summary>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="symbol">The particular symbol being traded</param>
+        /// <param name="securityType">The security type of the symbol</param>
+        /// <param name="entry">The entry found if any</param>
+        /// <returns>True if the entry was present, else false</returns>
+        public bool TryGetEntry(string market, string symbol, SecurityType securityType, out Entry entry)
+        {
+            return _entries.TryGetValue(new SecurityDatabaseKey(market, symbol, securityType), out entry)
+                   // now check with null symbol key
+                   || _entries.TryGetValue(new SecurityDatabaseKey(market, null, securityType), out entry);
         }
 
         /// <summary>

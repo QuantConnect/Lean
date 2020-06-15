@@ -40,7 +40,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             UniverseSettings.FillForward = false;
 
-            MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, null, SecurityType.Base, typeof(TiingoNews).GetBaseDataInstance().DataTimeZone());
             AddUniverse(new CustomDataCoarseFundamentalUniverse(UniverseSettings, SecurityInitializer, CoarseSelectionFunction));
 
             _symbols = new List<Symbol>();
