@@ -9,6 +9,8 @@ before_install:
   - bash Miniconda3-4.5.12-Linux-x86_64.sh -b
   - rm -rf Miniconda3-4.5.12-Linux-x86_64.sh
   - sudo ln -s $HOME/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so
+  - sudo apt-get update -y
+  - sudo apt-get install libstdc++6 -y
   - conda update -y python conda pip
   - conda install -y python=3.6.8
   - conda install -y numpy=1.18.1
@@ -17,7 +19,7 @@ before_install:
   - conda install -y scipy=1.4.1
   - conda install -y wrapt=1.12.1
   - pip install 'mypy==0.780'
-  - pip install quantconnect-lean --no-dependencies
+  - pip install quantconnect-lean
 install:
   - nuget restore QuantConnect.Lean.sln
   - nuget install NUnit.Runners -Version 3.11.1 -OutputDirectory testrunner
