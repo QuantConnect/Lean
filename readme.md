@@ -113,7 +113,7 @@ If you get other errors that lead to the failure of your building, please refer 
 
 - Run the compiled `exe` file:
 ```
-cd Lean/Launcher/bin/Debug
+cd Launcher/bin/Debug
 mono ./QuantConnect.Lean.Launcher.exe
 ```
 - Interactive Brokers set up details
