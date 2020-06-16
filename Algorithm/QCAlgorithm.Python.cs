@@ -210,12 +210,6 @@ namespace QuantConnect.Algorithm
                 // user set time zone
                 MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, alias, SecurityType.Base, timeZone);
             }
-            else
-            {
-                var baseInstance = dataType.GetBaseDataInstance();
-                baseInstance.Symbol = symbol;
-                MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, alias, SecurityType.Base, baseInstance.DataTimeZone());
-            }
 
             //Add this new generic data as a tradeable security:
             var config = SubscriptionManager.SubscriptionDataConfigService.Add(
@@ -244,6 +238,10 @@ namespace QuantConnect.Algorithm
             if (pyObject.TryConvert(out universe))
             {
                 AddUniverse(universe);
+            }
+            else if (pyObject.TryConvert(out universe, allowPythonDerivative: true))
+            {
+                AddUniverse(new UniversePythonWrapper(pyObject));
             }
             else if (pyObject.TryConvertToDelegate(out coarseFunc))
             {

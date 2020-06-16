@@ -45,7 +45,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the internal security collection used to define membership in this universe
         /// </summary>
-        internal virtual ConcurrentDictionary<Symbol, Member> Securities
+        public virtual ConcurrentDictionary<Symbol, Member> Securities
         {
             get;
             private set;
@@ -70,14 +70,14 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Flag indicating if disposal of this universe has been requested
         /// </summary>
-        public bool DisposeRequested
+        public virtual bool DisposeRequested
         {
             get;
-            private set;
+            protected set;
         }
 
         /// <summary>
-        /// Gets the settings used for subscriptons added for this universe
+        /// Gets the settings used for subscriptions added for this universe
         /// </summary>
         public abstract UniverseSettings UniverseSettings
         {
@@ -87,7 +87,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the configuration used to get universe data
         /// </summary>
-        public SubscriptionDataConfig Configuration
+        public virtual SubscriptionDataConfig Configuration
         {
             get; private set;
         }
@@ -384,7 +384,7 @@ namespace QuantConnect.Data.UniverseSelection
             }
         }
 
-        internal sealed class Member
+        public sealed class Member
         {
             public readonly DateTime Added;
             public readonly Security Security;
