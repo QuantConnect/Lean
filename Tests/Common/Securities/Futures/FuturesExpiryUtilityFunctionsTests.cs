@@ -273,5 +273,43 @@ namespace QuantConnect.Tests.Common.Securities.Futures
 
             Assert.AreEqual(expected, actual);
         }
+
+        [TestCase("17/06/2020", DayOfWeek.Friday, 1, "05/06/2020")]
+        [TestCase("30/08/2017", DayOfWeek.Monday, 2, "14/08/2017")]
+        public void Nth_WeekDay_ShouldReturnCorrectDate(string contractDate, DayOfWeek dayOfWeek, int n, string expectedOutput)
+        {
+            // Arrange
+            var inputDate = Parse.DateTimeExact(contractDate, "dd/MM/yyyy");
+            var calculated = FuturesExpiryUtilityFunctions.NthWeekday(inputDate, n, dayOfWeek);
+            var expected = Parse.DateTimeExact(expectedOutput, "dd/MM/yyyy");
+
+            Assert.AreEqual(expected, calculated);
+        }
+
+        [TestCase("17/06/2020", DayOfWeek.Friday, -2)]
+        [TestCase("30/08/2017", DayOfWeek.Monday, 7)]
+        public void Nth_WeekDay_ShouldHandShouldThrowException(string contractDate, DayOfWeek dayOfWeek, int n)
+        {
+            // Arrange
+            var inputDate = Parse.DateTimeExact(contractDate, "dd/MM/yyyy");
+
+            //Act
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
+                FuturesExpiryUtilityFunctions.NthWeekday(inputDate, n, dayOfWeek);
+            });
+        }
+
+        [TestCase("06/01/2015", DayOfWeek.Friday, "30/01/2015")]
+        [TestCase("06/05/2016", DayOfWeek.Wednesday, "25/05/2016")]
+        public void Last_WeekDay_ShouldReturnCorrectDate(string contractDate, DayOfWeek dayOfWeek, string expectedOutput)
+        {
+            // Arrange
+            var inputDate = Parse.DateTimeExact(contractDate, "dd/MM/yyyy");
+            var calculated = FuturesExpiryUtilityFunctions.LastWeekday(inputDate, dayOfWeek);
+            var expected = Parse.DateTimeExact(expectedOutput, "dd/MM/yyyy");
+
+            Assert.AreEqual(expected, calculated);
+        }
     }
 }

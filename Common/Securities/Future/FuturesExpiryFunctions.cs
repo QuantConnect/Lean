@@ -458,6 +458,89 @@ namespace QuantConnect.Securities.Future
                     return closestWednesday.Add(new TimeSpan(20, 0, 0));
                 })
             },
+
+            // JPY-Denominated Nikkie 225 Index Futures: https://www2.sgx.com/derivatives/products/nikkei225futuresoptions?cc=NK#Contract%20Specifications
+            {Symbol.Create(Futures.Indices.Nikkei225Yen, SecurityType.Future, Market.SGX), (time =>
+                {
+                    // The day before the second Friday of the contract month. Trading Hours on Last Day is normal Trading Hours (session T)
+                    // T Session
+                    // 7.15 am - 2.30 pm
+                    var secondFriday = FuturesExpiryUtilityFunctions.SecondFriday(time);
+                    var priorBusinessDay = secondFriday.AddDays(-1);
+
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.SGX, Futures.Indices.Nikkei225Yen, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(priorBusinessDay) || !priorBusinessDay.IsCommonBusinessDay())
+                    {
+                        priorBusinessDay = priorBusinessDay.AddDays(-1);
+                    }
+                    return priorBusinessDay.Add(new TimeSpan(14, 30, 0));
+                })
+            },
+
+            // MSCI Taiwan Index Futures: https://www2.sgx.com/derivatives/products/timsci?cc=TW
+            {Symbol.Create(Futures.Indices.MSCITaiwanIndex, SecurityType.Future, Market.SGX), (time =>
+                {
+                    // Second last business day of the contract month. Same as T Session trading hours
+                    var lastDay = new DateTime(time.Year, time.Month, DateTime.DaysInMonth(time.Year, time.Month));
+                    var priorBusinessDay = lastDay.AddDays(-1);
+
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.SGX, Futures.Indices.MSCITaiwanIndex, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(priorBusinessDay) || !priorBusinessDay.IsCommonBusinessDay())
+                    {
+                        priorBusinessDay = priorBusinessDay.AddDays(-1);
+                    }
+                    return priorBusinessDay.Add(new TimeSpan(13, 45, 0));
+                })
+            },
+
+            // Nifty 50 Index Futures: https://www.sgx.com/derivatives/products/nifty#Contract%20Specifications
+            {Symbol.Create(Futures.Indices.Nifty50, SecurityType.Future, Market.SGX), (time =>
+                {
+                    // Last Thursday of the expiring contract month. If this falls on an NSE non-business day, the last trading day shall be the preceding business day.
+                    // The expiring contract shall close on its last trading day at 6.15 pm.
+
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.NSE, Futures.Indices.Nifty50, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    var expiryday = FuturesExpiryUtilityFunctions.LastThursday(time);
+
+                    while (holidays.Contains(expiryday) || !expiryday.IsCommonBusinessDay())
+                    {
+                        expiryday = expiryday.AddDays(-1);
+                    }
+                    return expiryday.Add(new TimeSpan(18, 15, 0));
+                })
+            },
+
+            // HSI Index Futures:https://www.hkex.com.hk/Products/Listed-Derivatives/Equity-Index/Hang-Seng-Index-(HSI)/Hang-Seng-Index-Futures?sc_lang=en#&product=HSI
+            {Symbol.Create(Futures.Indices.HangSeng, SecurityType.Future, Market.HKFE), (time =>
+                {
+                    // The Business Day immediately preceding the last Business Day of the Contract Month
+                    var lastDay = new DateTime(time.Year, time.Month, DateTime.DaysInMonth(time.Year, time.Month));
+                    var priorBusinessDay = lastDay.AddDays(-1);
+
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.HKFE, Futures.Indices.HangSeng, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(priorBusinessDay) || !priorBusinessDay.IsCommonBusinessDay())
+                    {
+                        priorBusinessDay = priorBusinessDay.AddDays(-1);
+                    }
+                    return priorBusinessDay.Add(new TimeSpan(16, 0, 0));
+                })
+            },
             // Forestry Group
             // Random Length Lumber (LBS): https://www.cmegroup.com/trading/agricultural/lumber-and-pulp/random-length-lumber_contract_specifications.html
             {Symbol.Create(Futures.Forestry.RandomLengthLumber, SecurityType.Future, Market.CME), (time =>
