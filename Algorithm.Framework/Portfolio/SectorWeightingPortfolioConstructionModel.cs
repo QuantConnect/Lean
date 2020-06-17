@@ -71,6 +71,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
         /// <summary>
         /// Initialize a new instance of <see cref="SectorWeightingPortfolioConstructionModel"/>
+        /// </summary>
         /// <param name="rebalance">Rebalancing func or if a date rule, timedelta will be converted into func.
         /// For a given algorithm UTC DateTime the func returns the next expected rebalance time
         /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
