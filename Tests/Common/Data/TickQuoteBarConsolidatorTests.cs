@@ -138,5 +138,101 @@ namespace QuantConnect.Tests.Common.Data
             Exception ex = Assert.Throws<InvalidOperationException>(() => consolidator.Update(tick2));
             Assert.IsTrue(ex.Message.Contains("is not the same"));
         }
+
+        [Test]
+        public void LastCloseAndCurrentOpenPriceShouldBeSameConsolidatedOnCount()
+        {
+            QuoteBar quoteBar = null;
+            var creator = new TickQuoteBarConsolidator(1);
+            creator.DataConsolidated += (sender, args) =>
+            {
+                quoteBar = args;
+            };
+
+            var reference = DateTime.Today;
+            var tick1 = new Tick
+            {
+                Symbol = Symbols.SPY,
+                Time = reference,
+                TickType = TickType.Quote,
+                AskPrice = 25,
+                BidPrice = 24,
+
+            };
+
+            creator.Update(tick1);
+
+            var tick2 = new Tick
+            {
+                Symbol = Symbols.SPY,
+                Time = reference.AddSeconds(1),
+                TickType = TickType.Quote,
+                AskPrice = 36,
+                BidPrice = 35,
+            };
+
+            creator.Update(tick2);
+
+            Assert.AreEqual(tick1.AskPrice, quoteBar.Ask.Open, "Ask Open not equal to Previous Close");
+            Assert.AreEqual(tick1.BidPrice, quoteBar.Bid.Open, "Bid Open not equal to Previous Close");
+            Assert.AreEqual(tick2.AskPrice, quoteBar.Ask.Close, "Ask Close incorrect");
+            Assert.AreEqual(tick2.BidPrice, quoteBar.Bid.Close, "Bid Close incorrect");
+        }
+
+        [Test]
+        public void LastCloseAndCurrentOpenPriceShouldBeSameConsolidatedOnTimeSpan()
+        {
+            QuoteBar quoteBar = null;
+            var creator = new TickQuoteBarConsolidator(TimeSpan.FromMinutes(1));
+            creator.DataConsolidated += (sender, args) =>
+            {
+                quoteBar = args;
+            };
+
+            var reference = DateTime.Today;
+
+            // timeframe 1 
+            var tick1 = new Tick
+            {
+                Symbol = Symbols.SPY,
+                Time = reference,
+                TickType = TickType.Quote,
+                AskPrice = 25,
+                BidPrice = 24,
+
+            };
+
+            creator.Update(tick1);
+
+            var tick2 = new Tick
+            {
+                Symbol = Symbols.SPY,
+                Time = reference.AddSeconds(1),
+                TickType = TickType.Quote,
+                AskPrice = 26,
+                BidPrice = 25,
+            };
+            creator.Update(tick2);
+
+            // timeframe 2 
+            var tick3 = new Tick
+            {
+                Symbol = Symbols.SPY,
+                Time = reference.AddMinutes(1),
+                TickType = TickType.Quote,
+                AskPrice = 36,
+                BidPrice = 35,
+            };
+            creator.Update(tick3);
+
+            
+            //force the consolidator to emit DataConsolidated
+            creator.Scan(reference.AddMinutes(2));
+
+            Assert.AreEqual(tick2.AskPrice, quoteBar.Ask.Open, "Ask Open not equal to Previous Close");
+            Assert.AreEqual(tick2.BidPrice, quoteBar.Bid.Open, "Bid Open not equal to Previous Close");
+            Assert.AreEqual(tick3.AskPrice, quoteBar.Ask.Close, "Ask Close incorrect");
+            Assert.AreEqual(tick3.BidPrice, quoteBar.Bid.Close, "Bid Close incorrect");
+        }
     }
 }
