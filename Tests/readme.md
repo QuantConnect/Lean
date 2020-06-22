@@ -24,13 +24,13 @@ If the above installation, build, and initial run was succesful than we can move
 
 ### Common Problems
 
-Having .NetFramework issues with testing?
+####Having .NetFramework issues with testing?
 - Install [NUnit3TestAdapter](https://marketplace.visualstudio.com/items?itemName=NUnitDevelopers.NUnit3TestAdapter) for VS
 
-Python Algorithm tests not working?
+####Python Algorithm tests not working?
 - Ensure Python has been setup as described [here](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#install-python-36)
 
-Missing dependencies for Python Algorithm?
+####Missing dependencies for Python Algorithm?
 - Use pip or conda to install the module.
 
 
