@@ -6,7 +6,9 @@ Before starting any testing, follow the [installation instructions](https://gith
 If the above installation, build, and initial run was succesful than we can move forward to testing.
 
 
-### Visual Studios:
+## Visual Studios:
+
+### Locating Tests
 
 - Open Visual Studios
 - Open Test Explorer ("Test" > "Test Explorer")
@@ -14,16 +16,16 @@ If the above installation, build, and initial run was succesful than we can move
 - From here select the tests you would like to run and begin running them.
 
 
-#### Failed Test Logs
+### Failed Test Logs
 
 - On a failed test, check the test for information by clicking on the desired test and selecting "Open Additional Output"
 - This will show the stack trace and where the code failed to meet the testing requirements. 
 
 
-#### Common Problems
+### Common Problems
 
-**Having .NetFramework issues with testing?**
-- Install [this extension (NUnit3TestAdapter)] (https://marketplace.visualstudio.com/items?itemName=NUnitDevelopers.NUnit3TestAdapter) for VS
+Having .NetFramework issues with testing?
+- Install [NUnit3TestAdapter](https://marketplace.visualstudio.com/items?itemName=NUnitDevelopers.NUnit3TestAdapter) for VS
 
 Python Algorithm tests not working?
 - Ensure Python has been setup as described [here](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#install-python-36)
