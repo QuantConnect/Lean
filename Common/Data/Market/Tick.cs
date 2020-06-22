@@ -55,13 +55,11 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Bid Price for Tick
         /// </summary>
-        /// <remarks>QuantConnect does not currently have quote data but was designed to handle ticks and quotes</remarks>
         public decimal BidPrice = 0;
 
         /// <summary>
         /// Asking price for the Tick quote.
         /// </summary>
-        /// <remarks>QuantConnect does not currently have quote data but was designed to handle ticks and quotes</remarks>
         public decimal AskPrice = 0;
 
         /// <summary>

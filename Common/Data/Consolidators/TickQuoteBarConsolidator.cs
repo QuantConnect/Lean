@@ -25,7 +25,6 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     public class TickQuoteBarConsolidator : PeriodCountConsolidatorBase<Tick, QuoteBar>
     {
-        private Tick _previousTick;
         /// <summary>
         /// Initializes a new instance of the <see cref="TickQuoteBarConsolidator"/> class
         /// </summary>
@@ -100,10 +99,11 @@ namespace QuantConnect.Data.Consolidators
                     Ask = null
                 };
 
-                // sync last tick  close price with this tick open price
-                if (_previousTick != null)
+                // open ask and bid should match previous close ask and bid
+                if (Consolidated != null)
                 {
-                    workingBar.Update(0, _previousTick.BidPrice, _previousTick.AskPrice, 0, _previousTick.BidSize, _previousTick.AskSize);
+                    var previous = Consolidated as QuoteBar;
+                    workingBar.Update(0, previous.Bid?.Close ?? 0, previous.Ask?.Close ?? 0, 0, previous.LastBidSize, previous.LastAskSize);
                 }
 
                 if (Period.HasValue) workingBar.Period = Period.Value;
@@ -112,7 +112,6 @@ namespace QuantConnect.Data.Consolidators
             // update the bid and ask
             workingBar.Update(0, data.BidPrice, data.AskPrice, 0, data.BidSize, data.AskSize);
             if (!Period.HasValue) workingBar.EndTime = GetRoundedBarTime(data.EndTime);
-            _previousTick = (Tick) data.Clone();
         }
     }
 }

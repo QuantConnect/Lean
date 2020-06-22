@@ -221,5 +221,73 @@ namespace QuantConnect.Tests.Common.Data
             Exception ex = Assert.Throws<InvalidOperationException>(() => consolidator.Update(bar2));
             Assert.IsTrue(ex.Message.Contains("is not the same"));
         }
+
+        [Test]
+        public void LastCloseAndCurrentOpenPriceShouldBeSameConsolidatedOnTimeSpan()
+        {
+            QuoteBar quoteBar = null;
+            var creator = new QuoteBarConsolidator(TimeSpan.FromMinutes(2));
+            creator.DataConsolidated += (sender, args) =>
+            {
+                quoteBar = args;
+            };
+
+            var time = DateTime.Today;
+            var period = TimeSpan.FromMinutes(1);
+            var bar1 = new QuoteBar
+            {
+                Time = time,
+                Symbol = Symbols.SPY,
+                Bid = new Bar(1, 2, 0.75m, 1.25m),
+                LastBidSize = 3,
+                Ask = null,
+                LastAskSize = 0,
+                Value = 1,
+                Period = period
+            };
+            creator.Update(bar1);
+            Assert.IsNull(quoteBar);
+
+            var bar2 = new QuoteBar
+            {
+                Time = time + TimeSpan.FromMinutes(1),
+                Symbol = Symbols.SPY,
+                Bid = null,
+                LastBidSize = 0,
+                Ask = new Bar(2.2m, 4.4m, 3.3m, 3.3m),
+                LastAskSize = 10,
+                Value = 1,
+                Period = period
+            };
+            creator.Update(bar2);
+            Assert.IsNull(quoteBar);
+
+            // pushing another bar to force the fire
+            var bar3 = new QuoteBar
+            {
+                Time = time + TimeSpan.FromMinutes(2),
+                Symbol = Symbols.SPY,
+                Bid = new Bar(1, 2, 0.5m, 1.75m),
+                LastBidSize = 3,
+                Ask = null,
+                LastAskSize = 0,
+                Value = 1,
+                Period = period
+            };
+            creator.Update(bar3);
+            Assert.IsNotNull(quoteBar);
+
+            //force the consolidator to emit DataConsolidated
+            creator.Scan(time.AddMinutes(4));
+
+            Assert.AreEqual(bar1.Symbol, quoteBar.Symbol);
+            Assert.AreEqual(time + TimeSpan.FromMinutes(4), quoteBar.EndTime);
+            Assert.AreEqual(TimeSpan.FromMinutes(2), quoteBar.Period);
+
+            // Bid
+            Assert.AreEqual(quoteBar.Bid.Open, bar1.Bid.Close);
+            // Ask
+            Assert.AreEqual(quoteBar.Ask.Open, bar2.Ask.Close);
+        }
     }
 }

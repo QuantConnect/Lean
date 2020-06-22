@@ -88,10 +88,17 @@ namespace QuantConnect.Data.Consolidators
                 {
                     Symbol = data.Symbol,
                     Time = GetRoundedBarTime(data.Time),
-                    Bid = bid == null ? null : bid.Clone(),
-                    Ask = ask == null ? null : ask.Clone(),
+                    Bid = null,
+                    Ask = null,
                     Period = IsTimeBased && Period.HasValue ? (TimeSpan)Period : data.Period
                 };
+
+                // open ask and bid should match previous close ask and bid
+                if (Consolidated != null)
+                {
+                    var previous = Consolidated as QuoteBar;
+                    workingBar.Update(0, previous.Bid?.Close ?? 0, previous.Ask?.Close ?? 0, 0, previous.LastBidSize, previous.LastAskSize);
+                }
             }
 
             // update the bid and ask
