@@ -334,6 +334,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Trace("InteractiveBrokersBrokerage.PlaceOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
 
+                if (!IsConnected)
+                {
+                    OnMessage(
+                        new BrokerageMessageEvent(
+                            BrokerageMessageType.Warning,
+                            "PlaceOrderWhenDisconnected",
+                            "Orders cannot be submitted when disconnected."));
+                    return false;
+                }
+
                 IBPlaceOrder(order, true);
                 return true;
             }
@@ -354,6 +364,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             try
             {
                 Log.Trace("InteractiveBrokersBrokerage.UpdateOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity + " Status: " + order.Status);
+
+                if (!IsConnected)
+                {
+                    OnMessage(
+                        new BrokerageMessageEvent(
+                            BrokerageMessageType.Warning,
+                            "UpdateOrderWhenDisconnected",
+                            "Orders cannot be updated when disconnected."));
+                    return false;
+                }
+
                 _orderUpdates[order.Id] = order.Id;
                 IBPlaceOrder(order, false);
             }
@@ -377,6 +398,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             try
             {
                 Log.Trace("InteractiveBrokersBrokerage.CancelOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
+
+                if (!IsConnected)
+                {
+                    OnMessage(
+                        new BrokerageMessageEvent(
+                            BrokerageMessageType.Warning,
+                            "CancelOrderWhenDisconnected",
+                            "Orders cannot be cancelled when disconnected."));
+                    return false;
+                }
 
                 // this could be better
                 foreach (var id in order.BrokerId)
@@ -912,14 +943,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="exchange">The exchange to send the order to, defaults to "Smart" to use IB's smart routing</param>
         private void IBPlaceOrder(Order order, bool needsNewId, string exchange = null)
         {
-            // connect will throw if it fails
-            Connect();
-
-            if (!IsConnected)
-            {
-                throw new InvalidOperationException("InteractiveBrokersBrokerage.IBPlaceOrder(): Unable to place order while not connected.");
-            }
-
             // MOO/MOC require directed option orders
             if (exchange == null &&
                 order.Symbol.SecurityType == SecurityType.Option &&
