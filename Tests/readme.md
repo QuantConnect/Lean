@@ -2,6 +2,7 @@ QuantConnect Testing
 =============
 
 Before starting any testing, follow the [installation instructions](https://github.com/QuantConnect/Lean#installation-instructions) to get LEAN running C# algorithms in your machine. 
+For any Python related tests please ensure you have followed the setup as described [here](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#install-python-36)
 
 If the above installation, build, and initial run was succesful than we can move forward to testing.
 
@@ -26,9 +27,6 @@ If the above installation, build, and initial run was succesful than we can move
 
 #### Having .NetFramework issues with testing?
 - Install [NUnit3TestAdapter](https://marketplace.visualstudio.com/items?itemName=NUnitDevelopers.NUnit3TestAdapter) for VS
-
-#### Python Algorithm tests not working?
-- Ensure Python has been setup as described [here](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#install-python-36)
 
 #### Missing dependencies for Python Algorithm?
 - Use pip or conda to install the module.
