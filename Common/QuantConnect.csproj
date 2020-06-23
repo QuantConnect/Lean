@@ -218,6 +218,7 @@
     <Compile Include="API\LiveAlgorithmResultsJsonConverter.cs" />
     <Compile Include="API\LiveAlgorithmSettings.cs" />
     <Compile Include="API\LiveLog.cs" />
+    <Compile Include="API\Nodes.cs" />
     <Compile Include="API\Prices.cs" />
     <Compile Include="API\Project.cs" />
     <Compile Include="API\ProjectFile.cs" />
