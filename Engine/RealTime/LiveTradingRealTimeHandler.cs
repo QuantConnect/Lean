@@ -204,10 +204,12 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void Exit()
         {
-            _timeMonitor.DisposeSafely();
-            _timeMonitor = null;
             _realTimeThread.StopSafely(TimeSpan.FromMinutes(5), _cancellationTokenSource);
             _realTimeThread = null;
+            _timeMonitor.DisposeSafely();
+            _timeMonitor = null;
+            _cancellationTokenSource.DisposeSafely();
+            _cancellationTokenSource = null;
         }
 
         /// <summary>
