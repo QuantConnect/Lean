@@ -85,6 +85,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var currentLocalTime = utcNow.ConvertFromUtc(_timeZone);
                 var barStartTime = currentLocalTime.RoundDown(_barSize);
                 working = new QuoteBar();
+
+                // open ask and bid should match previous close ask and bid
+                if (Current != null)
+                {
+                    // note that we will only fill forward previous close ask and bid when a new data point comes in and we generate a new working bar which is not a fill forward bar
+                    var previous = Current as QuoteBar;
+                    working.Update(0, previous.Bid?.Close ?? 0, previous.Ask?.Close ?? 0, 0, previous.LastBidSize, previous.LastAskSize);
+                }
+
                 working.Update(data.Value, bidPrice, askPrice, qty, bidSize, askSize);
                 working.Period = _barSize;
                 working.Time = barStartTime;

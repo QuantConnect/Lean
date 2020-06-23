@@ -99,6 +99,14 @@ namespace QuantConnect.Data.Consolidators
                     Ask = null
                 };
 
+                // open ask and bid should match previous close ask and bid
+                if (Consolidated != null)
+                {
+                    // note that we will only fill forward previous close ask and bid when a new data point comes in and we generate a new working bar which is not a fill forward bar
+                    var previous = Consolidated as QuoteBar;
+                    workingBar.Update(0, previous.Bid?.Close ?? 0, previous.Ask?.Close ?? 0, 0, previous.LastBidSize, previous.LastAskSize);
+                }
+
                 if (Period.HasValue) workingBar.Period = Period.Value;
             }
 
