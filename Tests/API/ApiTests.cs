@@ -30,6 +30,7 @@ namespace QuantConnect.Tests.API
     {
         private int _testAccount = 1;
         private string _testToken = "ec87b337ac970da4cbea648f24f1c851";
+        private string _testOrg = "enter Org ID here";
         private string _dataFolder = Config.Get("data-folder");
         private Api.Api _api;
         private const bool stopLiveAlgos = true;
@@ -840,6 +841,46 @@ namespace QuantConnect.Tests.API
                 Thread.Sleep(1000);
             }
             return result;
+        }
+
+        /// <summary>
+        /// Test to creating a New Node
+        /// </summary>
+        [Test]
+        public void CreateNewNode()
+        {
+            var result = _api.CreateNode("test", _testOrg, "B2-8");
+            Assert.IsTrue(result.Success);
+        }
+
+        [Test]
+        public void ReadNode()
+        {
+            var result = _api.ReadNode(_testOrg);
+            Assert.IsTrue(result.Success);
+        }
+
+        [Test]
+        public void CRUDNodes()
+        {
+            //First Create a Node
+            var createNodeRequest = _api.CreateNode("testA", _testOrg, "B2-8");
+            Assert.IsTrue(createNodeRequest.Success);
+
+            //Then read the nodes from the org
+            var readNodeRequest = _api.ReadNode(_testOrg);
+            Assert.IsTrue(readNodeRequest.Success);
+
+            //GET THE NODEID FROM EITHER CREATE OR READ???
+            var nodeId = "abc";
+
+            //Update that node with a new name
+            var updateNodeRequest = _api.UpdateNode(nodeId, "TestB", _testOrg);
+            Assert.IsTrue(updateNodeRequest.Success);
+
+            //Delete this node
+            var deleteNodeRequest = _api.DeleteNode(nodeId, _testOrg);
+            Assert.IsTrue(deleteNodeRequest.Success);
         }
     }
 }
