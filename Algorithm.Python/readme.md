@@ -13,14 +13,14 @@ Before we enable python support, follow the [installation instructions](https://
    3. Click **New**. 
         - Name of the variable: `PYTHONHOME`. 
         - Value of the variable: python installation path.
-4. Install [pandas=0.23.4](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
+4. Install [pandas=0.25.3](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
 5. Install [wrapt=1.11.2](https://pypi.org/project/wrapt/) module.
 6. Reboot computer to ensure changes are propogated.
 
 #### [macOS](https://github.com/QuantConnect/Lean#macos)
 
 1. Use the macOS x86-64 package installer from [Anaconda](https://repo.anaconda.com/archive/Anaconda3-5.2.0-MacOSX-x86_64.pkg) and follow "[Installing on macOS](https://docs.anaconda.com/anaconda/install/mac-os)" instructions from Anaconda documentation page.
-2. Install [pandas=0.23.4](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
+2. Install [pandas=0.25.3](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
 3. Install [wrapt=1.11.2](https://pypi.org/project/wrapt/) module.
 
 *Note:* If you encounter the "System.DllNotFoundException: python3.6m" runtime error when running Python algorithms on macOS:
@@ -46,7 +46,7 @@ rm -rf Miniconda3-4.5.12-Linux-x86_64.sh
 sudo ln -s $HOME/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so
 conda update -y python conda pip
 conda install -y cython=0.29.11
-conda install -y pandas=0.23.4
+conda install -y pandas=0.25.3
 conda install -y wrapt=1.11.2
 ```
 
