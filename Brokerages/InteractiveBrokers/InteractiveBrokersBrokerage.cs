@@ -65,7 +65,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly int _port;
         private readonly string _account;
         private readonly string _host;
-        private readonly string _ibDirectory;
         private readonly IAlgorithm _algorithm;
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;
@@ -73,8 +72,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly string _agentDescription;
 
         private Thread _messageProcessingThread;
-        private readonly AutoResetEvent _resetEventRestartGateway = new AutoResetEvent(false);
-        private readonly CancellationTokenSource _ctsRestartGateway = new CancellationTokenSource();
 
         // Notifies the thread reading information from Gateway/TWS whenever there are messages ready to be consumed
         private readonly EReaderSignal _signal = new EReaderMonitorSignal();
@@ -240,7 +237,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _account = account;
             _host = host;
             _port = port;
-            _ibDirectory = ibDirectory;
             _agentDescription = agentDescription;
 
             Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Starting IB Automater...");
@@ -282,40 +278,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
             };
 
-            // handle requests to restart the IB gateway
-            new Thread(() =>
+            _client.ConnectAck += (sender, e) =>
             {
-                try
-                {
-                    Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): thread started.");
+                Log.Trace("InteractiveBrokersBrokerage.HandleConnectAck(): API client connected.");
+            };
 
-                    while (!_ctsRestartGateway.IsCancellationRequested)
-                    {
-                        if (_resetEventRestartGateway.WaitOne(1000, _ctsRestartGateway.Token))
-                        {
-                            Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): Reset sequence start.");
-
-                            try
-                            {
-                                ResetGatewayConnection();
-                            }
-                            catch (Exception exception)
-                            {
-                                Log.Error("InteractiveBrokersBrokerage.ResetHandler(): Error in ResetGatewayConnection: " + exception);
-                            }
-
-                            Log.Trace($"InteractiveBrokersBrokerage.ResetHandler(): Reset sequence end. Current IsConnected state: {IsConnected}");
-                        }
-                    }
-
-                    Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): thread ended.");
-                }
-                catch (Exception exception)
-                {
-                    Log.Error("InteractiveBrokersBrokerage.ResetHandler(): Error in reset handler thread: " + exception);
-                }
-            })
-            { IsBackground = true }.Start();
+            _client.ConnectionClosed += (sender, e) =>
+            {
+                Log.Trace("InteractiveBrokersBrokerage.HandleConnectionClosed(): API client disconnected.");
+            };
         }
 
         /// <summary>
@@ -931,8 +902,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _ibAutomater?.Stop();
 
             _messagingRateLimiter.Dispose();
-
-            _ctsRestartGateway.Cancel(false);
         }
 
         /// <summary>
@@ -1226,18 +1195,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return;
                 }
             }
-            else if (errorCode == 1102 || errorCode == 1101)
+            else if (errorCode == 1102)
             {
-                // we've reconnected
+                // Connectivity between IB and TWS has been restored - data maintained.
                 OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
 
-                // With IB Gateway v960.2a in the cloud, we are not receiving order fill events after the nightly reset,
-                // so we execute the following sequence:
-                // disconnect, kill IB Gateway, restart IB Gateway, reconnect, restore data subscriptions
-                Log.Trace("InteractiveBrokersBrokerage.HandleError(): Reconnect message received. Restarting...");
+                _stateManager.Disconnected1100Fired = false;
+                return;
+            }
+            else if (errorCode == 1101)
+            {
+                // Connectivity between IB and TWS has been restored - data lost.
+                OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
 
-                _resetEventRestartGateway.Set();
+                _stateManager.Disconnected1100Fired = false;
 
+                RestoreDataSubscriptions();
                 return;
             }
             else if (errorCode == 506)
@@ -1268,31 +1241,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
-        }
-
-        /// <summary>
-        /// Restarts the IB Gateway and restores the connection
-        /// </summary>
-        public void ResetGatewayConnection()
-        {
-            // clear all error/status flags
-            _stateManager.Reset();
-
-            // notify the BrokerageMessageHandler before the restart, so it can stop polling
-            OnMessage(BrokerageMessageEvent.Reconnected(string.Empty));
-
-            Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Disconnecting...");
-            Disconnect();
-
-            Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Restarting IB Gateway...");
-            CheckIbAutomaterError(_ibAutomater.Restart());
-
-            Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Reconnecting...");
-            Connect();
-
-            // notify the BrokerageMessageHandler after the restart, because
-            // it could have received a disconnect event during the steps above
-            OnMessage(BrokerageMessageEvent.Reconnected(string.Empty));
         }
 
         /// <summary>
@@ -1330,14 +1278,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (!isResetTime)
             {
-                if (_stateManager.PreviouslyInResetTime)
-                {
-                    // reset time finished and we're still disconnected, restart IB client
-                    Log.Trace("InteractiveBrokersBrokerage.TryWaitForReconnect(): Reset time finished and still disconnected. Restarting...");
-
-                    _resetEventRestartGateway.Set();
-                }
-                else
+                if (!_stateManager.PreviouslyInResetTime)
                 {
                     // if we were disconnected and we're not within the reset times, send the error event
                     OnMessage(BrokerageMessageEvent.Disconnected("Connection with Interactive Brokers lost. " +

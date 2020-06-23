@@ -152,16 +152,6 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         }
 
         [Test]
-        public void IsConnectedAfterReset()
-        {
-            var ib = _interactiveBrokersBrokerage;
-            Assert.IsTrue(ib.IsConnected);
-
-            ib.ResetGatewayConnection();
-            Assert.IsTrue(ib.IsConnected);
-        }
-
-        [Test]
         public void ConnectDisconnectLoop()
         {
             var ib = _interactiveBrokersBrokerage;
@@ -173,20 +163,6 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 ib.Disconnect();
                 Assert.IsFalse(ib.IsConnected);
                 ib.Connect();
-                Assert.IsTrue(ib.IsConnected);
-            }
-        }
-
-        [Test]
-        public void ResetConnectionLoop()
-        {
-            var ib = _interactiveBrokersBrokerage;
-            Assert.IsTrue(ib.IsConnected);
-
-            const int iterations = 2;
-            for (var i = 0; i < iterations; i++)
-            {
-                ib.ResetGatewayConnection();
                 Assert.IsTrue(ib.IsConnected);
             }
         }
