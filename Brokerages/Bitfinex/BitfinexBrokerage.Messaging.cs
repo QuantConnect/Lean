@@ -59,7 +59,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         public BitfinexBrokerage(string wssUrl, string restUrl, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider)
-            : this(wssUrl, new WebSocketWrapper(), new RestClient(restUrl), apiKey, apiSecret, algorithm, priceProvider)
+            : this(wssUrl, new WebSocketClientWrapper(), new RestClient(restUrl), apiKey, apiSecret, algorithm, priceProvider)
         {
         }
 
