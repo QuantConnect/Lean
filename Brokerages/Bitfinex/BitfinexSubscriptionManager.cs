@@ -230,6 +230,8 @@ namespace QuantConnect.Brokerages.Bitfinex
             finally
             {
                 webSocket.Open -= onOpenAction;
+
+                connectedEvent.DisposeSafely();
             }
         }
 
