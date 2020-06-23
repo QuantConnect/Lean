@@ -831,14 +831,14 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="orgId">Organization ID</param>
         /// <returns>Returns rest reply</returns>
-        public RestResponse ReadNode(string orgId)
+        public NodeList ReadNode(string orgId)
         {
 
             var request = new RestRequest("nodes/read", Method.POST);
             request.RequestFormat = DataFormat.Json;
             request.AddParameter("organizationId", orgId);
 
-            RestResponse result;
+            NodeList result;
             ApiConnection.TryRequest(request, out result);
             return result;
 
