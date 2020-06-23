@@ -6,7 +6,7 @@ Before starting any testing, follow the [installation instructions](https://gith
 If the above installation, build, and initial run was succesful than we can move forward to testing.
 
 
-## Visual Studios:
+## Visual Studio:
 
 ### Locating Tests
 
