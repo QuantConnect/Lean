@@ -802,5 +802,95 @@ namespace QuantConnect.Api
             var data = $"{token}:{timestamp.ToStringInvariant()}";
             return data.ToSHA256();
         }
+
+
+        /// <summary>
+        /// Create a new node
+        /// </summary>
+        /// <param name="name">New node name</param>
+        /// <param name="orgId">Organization ID</param>
+        /// <param name="sku">Internal Node Name</param>
+        /// <param name="projectId">Project ID</param>
+        /// <returns>Returns rest reply</returns>
+        public RestResponse CreateNode(string name, string orgId, string sku)
+        {
+
+            var request = new RestRequest("nodes/create", Method.POST);
+            request.AddParameter("name", name);
+            request.AddParameter("organizationId", orgId);
+            request.AddParameter("sku", sku);
+
+            RestResponse result;
+            ApiConnection.TryRequest(request, out result);
+            return result;
+
+        }
+
+        /// <summary>
+        /// Read organizations nodes
+        /// </summary>
+        /// <param name="orgId">Organization ID</param>
+        /// <returns>Returns rest reply</returns>
+        public RestResponse ReadNode(string orgId)
+        {
+
+            var request = new RestRequest("nodes/read", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("organizationId", orgId);
+
+            RestResponse result;
+            ApiConnection.TryRequest(request, out result);
+            return result;
+
+        }
+
+
+        /// <summary>
+        /// Update a node name
+        /// </summary>
+        /// <param name="nodeId">The node ID of the node you want to update</param>
+        /// <param name="newName">The new name for that node</param>
+        /// <param name="orgId">Organization ID</param>
+        /// <returns>Returns rest reply</returns>
+        public RestResponse UpdateNode(string nodeId, string newName, string orgId)
+        {
+
+            var request = new RestRequest("nodes/update", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("nodeId", nodeId);
+            request.AddParameter("name", newName);
+            request.AddParameter("organizationId", orgId);
+
+            RestResponse result;
+            ApiConnection.TryRequest(request, out result);
+            return result;
+
+        }
+
+
+        /// <summary>
+        /// Delete a Node
+        /// </summary>
+        /// <param name="nodeId">The node ID of the node you want to delete</param>
+        /// <param name="orgId">Organization ID</param>
+        /// <returns>Returns rest reply</returns>
+        public RestResponse DeleteNode(string nodeId, string orgId)
+        {
+
+            var request = new RestRequest("nodes/delete", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("nodeId", nodeId);
+            request.AddParameter("organizationId", orgId);
+
+            RestResponse result;
+            ApiConnection.TryRequest(request, out result);
+            return result;
+
+        }
+
+
+
+
+
     }
 }
