@@ -1,87 +1,72 @@
 date,initial,maintenance
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-498.html
-20121120,2310,2100
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-051.html
-20130205,2200,2000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-304.html
-20130702,2530,2300
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-479.html
-20131015,2255,2050
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-540.html
-20131122,1925,1750
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-107.html
-20140314,1650,1500
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-129.html
-20140328,2090,1900
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-290.html
-20140725,1815,1650
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-348.html
-20140905,1980,1800
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-441.html
-20141117,2420,2200
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-464.html
-20141202,3080,2800
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-126.html
-20150508,2860,2600
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-171.html
-20150619,2640,2400
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-189.html
-20150708,3036,2760
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv16-029.html
-20160115,3300,3000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv16-110.html
-20160311,2860,2600
-# https://www.cmegroup.com/notices/clearing/2016/05/Chadv16-211.html
-20160520,2585,2350
-# https://www.cmegroup.com/notices/clearing/2016/09/Chadv16-389.html
-20160930,2200,2000
-# https://www.cmegroup.com/notices/clearing/2017/01/Chadv17-033.html
-20170120,1980,1800
-# https://www.cmegroup.com/notices/clearing/2017/03/Chadv17-099.html
-20170310,1705,1550
-# https://www.cmegroup.com/notices/clearing/2017/05/Chadv17-173.html
-20170505,1540,1400
-# https://www.cmegroup.com/notices/clearing/2018/02/Chadv18-049.html
-20180202,1485,1350
-# https://www.cmegroup.com/notices/clearing/2018/03/Chadv18-134.html
-20180402,1430,1300
-# https://www.cmegroup.com/notices/clearing/2018/05/Chadv18-218.html
+20130108,2236,2032
+20130207,2200,2000
+20130307,2059,1871
+20130405,2200,2000
+20130708,2449,2226
+20130807,2530,2300
+20130909,2362,2147
+20131007,2530,2300
+20131107,2181,1982
+20131206,1925,1750
+20140102,1595,1450
+20140131,1705,1550
+20140303,1595,1450
+20140401,2090,1900
+20140602,2021,1837
+20140701,2090,1900
+20140801,1815,1650
+20140902,1755,1595
+20141001,1980,1800
+20141103,1848,1680
+20141201,2420,2200
+20150102,3080,2800
+20150302,2981,2710
+20150401,3080,2800
+20150601,2860,2600
+20150701,2640,2400
+20150803,2841,2582
+20150901,3036,2760
+20151001,3520,3200
+20151102,3403,3093
+20151201,3520,3200
+20160104,3179,2890
+20160201,3300,3000
+20160401,2860,2600
+20160502,2768,2516
+20160601,2585,2350
+20161003,2059,1871
+20161101,2200,2000
+20170103,2059,1871
+20170201,1980,1800
+20170403,1592,1447
+20170501,1705,1550
+20170601,1540,1400
+20170703,1441,1310
+20170801,1540,1400
+20171002,1491,1355
+20171101,1540,1400
+20180102,1491,1355
+20180201,1540,1400
+20180301,1485,1350
+20180402,1383,1257
+20180501,1430,1300
 20180601,1760,1600
-# https://www.cmegroup.com/notices/clearing/2018/06/Chadv18-261.html
-20180629,1788,1625
-# https://www.cmegroup.com/notices/clearing/2018/07/Chadv18-284.html
-20180713,2145,1950
-# https://www.cmegroup.com/notices/clearing/2018/07/Chadv18-292.html
-20180718,2778,2525
-# https://www.cmegroup.com/notices/clearing/2018/09/Chadv18-366.html
-20180914,2420,2200
-# https://www.cmegroup.com/notices/clearing/2018/11/Chadv18-445.html
-20181109,2310,2100
-# https://www.cmegroup.com/notices/clearing/2018/11/Chadv18-452.html
-20181115,2723,2475
-# https://www.cmegroup.com/notices/clearing/2018/12/Chadv18-478.html
-20181207,3080,2800
-# https://www.cmegroup.com/notices/clearing/2019/02/Chadv19-057.html
-20190213,2750,2500
-# https://www.cmegroup.com/notices/clearing/2019/04/Chadv19-136.html
-20190426,2448,2225
-# https://www.cmegroup.com/notices/clearing/2019/05/Chadv19-168.html
-20190531,2613,2375
-# https://www.cmegroup.com/notices/clearing/2019/07/Chadv19-223.html
-20190712,2970,2700
-# https://www.cmegroup.com/notices/clearing/2019/07/Chadv19-230.html
-20190719,3300,3000
-# https://www.cmegroup.com/notices/clearing/2019/08/Chadv19-269.html
-20190815,3740,3400
-# https://www.cmegroup.com/notices/clearing/2019/08/Chadv19-286.html
-20190903,4180,3800
-# https://www.cmegroup.com/notices/clearing/2019/09/Chadv19-306.html
-20190918,4895,4450
-# https://www.cmegroup.com/notices/clearing/2019/09/Chadv19-319.html
-20190927,5665,5150
-# https://www.cmegroup.com/notices/clearing/2019/12/Chadv19-406.html
-20191206,4950,4500
-# https://www.cmegroup.com/notices/clearing/2020/01/Chadv20-016.html
-20200110,4125,3750
-# Chadv20-057
-20200221,3630,3300
+20180702,1731,1573
+20180801,2778,2525
+20180904,2501,2273
+20181001,2420,2200
+20181203,2635,2395
+20190102,2981,2710
+20190201,3080,2800
+20190301,2750,2500
+20190501,2448,2225
+20190603,2439,2217
+20190701,2613,2375
+20190801,3300,3000
+20190903,3902,3547
+20191001,5665,5150
+20200102,4950,4500
+20200203,3984,3621
+20200302,3514,3194
+20200401,5500,5000

@@ -791,7 +791,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(Market.CBOT)]
         [TestCase(Market.CBOE)]
         [TestCase(Market.COMEX)]
-        [TestCase(Market.NYMEX)]
+        //[TestCase(Market.NYMEX)] NYMEX contracts can have volatile margin requirements, since some are tied to a percentage of the contract's value.
         [TestCase(Market.Globex)]
         public void FutureMarginModel_MarginEntriesAreContinuous(string market)
         {
@@ -807,18 +807,27 @@ namespace QuantConnect.Tests.Common.Securities
                 { "A8K.csv", 1 },
                 { "AJY.csv", 1 },
                 { "ANL.csv", 2 },
+                { "AUP.csv", 46 },
+                { "CB.csv", 20 },
+                { "CSC.csv", 30 },
+                { "DC.csv", 50 },
+                { "DY.csv", 30 },
+                { "EH.csv", 1 },
                 { "EVC.csv", 1 },
                 { "EWG.csv", 1 },
                 { "EWN.csv", 2 },
                 { "FRC.csv", 1 },
-                { "GE.csv", 3 },
+                { "GDK.csv", 30 },
+                { "GE.csv", 20 },
                 { "GF.csv", 2 },
+                { "GNF.csv", 10 },
                 { "HO.csv", 1 },
                 { "ME.csv", 1 },
                 { "NKN.csv", 2 },
                 { "PL.csv", 1 },
                 { "RB.csv", 1 },
                 { "ZC.csv", 2 },
+                { "ZM.csv", 1 },
                 { "ZW.csv", 2 }
             };
 
@@ -900,7 +909,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             security.SetMarketPrice(new TradeBar
             {
-                Time = time ?? new DateTime(2019, 1, 1),
+                Time = time ?? new DateTime(2020, 5, 1),
                 Symbol = security.Symbol,
                 Open = close,
                 High = close,

@@ -1,29 +1,22 @@
 date,initial,maintenance
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-172.html
 20120425,473,350
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-381.html
 20120910,385,350
-# https://www.cmegroup.com/notices/clearing/2016/08/Chadv16-358.html
 20160901,347,315
-# https://www.cmegroup.com/notices/clearing/2016/12/Chadv16-516.html
 20161209,308,280
-# https://www.cmegroup.com/notices/clearing/2017/01/Chadv17-033.html
 20170120,275,250
-# https://www.cmegroup.com/notices/clearing/2017/06/Chadv17-251.html
 20170630,220,200
-# https://www.cmegroup.com/notices/clearing/2018/02/Chadv18-058.html
 20180209,231,210
-# https://www.cmegroup.com/notices/clearing/2018/07/Chadv18-284.html
 20180713,248,225
-# https://www.cmegroup.com/notices/clearing/2018/08/Chadv18-314.html
 20180810,275,250
-# https://www.cmegroup.com/notices/clearing/2018/12/Chadv18-478.html
 20181207,330,300
-# https://www.cmegroup.com/notices/clearing/2019/03/Chadv19-100.html
 20190322,275,250
-# https://www.cmegroup.com/notices/clearing/2019/05/Chadv19-164.html
 20190523,231,210
-# https://www.cmegroup.com/notices/clearing/2019/09/Chadv19-306.html
 20190918,264,240
-# https://www.cmegroup.com/notices/clearing/2019/10/Chadv19-362.html
 20191101,231,210
+20200310,264,240
+20200312,286,260
+20200313,264,240
+20200316,363,330
+20200331,495,450
+20200424,550,500
+20200526,462,420

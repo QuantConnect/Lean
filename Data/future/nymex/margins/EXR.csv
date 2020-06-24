@@ -1,31 +1,65 @@
 date,initial,maintenance
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-280.html
 20120709,26400,24000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-568.html
-20130102,19800,18000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-110.html
-20130312,19800,18000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-198.html
+20130103,19800,18000
+20130304,14407,13097
 20130430,23100,21000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-398.html
 20130903,25300,23000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-479.html
 20131015,16500,15000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-062.html
+20140117,11000,10000
 20140207,16500,15000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-129.html
 20140328,8800,8000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-169.html
 20140425,7700,7000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-290.html
 20140725,6600,6000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-367.html
 20140919,8250,7500
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-400.html
 20141010,9900,9000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-480.html
 20141212,13200,12000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-126.html
 20150508,11880,10800
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-221.html
 20150731,15950,14500
+20160318,13200,12000
+20160401,182,165
+20160404,8140,7400
+20160503,8146,7405
+20160602,25376,23069
+20160705,34210,31100
+20160802,36406,33096
+20160902,34843,31675
+20161004,33349,30317
+20161202,26682,24256
+20170104,28019,25471
+20170202,27863,25330
+20170302,28423,25839
+20170404,24581,22346
+20170502,24965,22695
+20170602,21633,19666
+20170705,20264,18421
+20170802,19887,18079
+20170905,23479,21344
+20171003,23965,21786
+20171102,22201,20182
+20171204,22079,20071
+20180103,22201,20182
+20180202,18839,17126
+20180302,19050,17318
+20180502,19134,17394
+20180604,21206,19278
+20180802,28592,25992
+20180905,29211,26555
+20181002,25111,22828
+20181102,25555,23231
+20181204,31817,28924
+20190103,31993,29084
+20190204,31640,28763
+20190304,27478,24980
+20190502,27601,25091
+20190604,27327,24842
+20190702,27601,25091
+20190802,28599,25999
+20190904,28317,25742
+20191002,31974,29067
+20191104,30727,27933
+20191203,29736,27032
+20200103,28541,25946
+20200204,27241,24764
+20200303,26066,23696
+20200402,47377,43070
+20200504,56301,51182

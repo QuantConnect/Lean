@@ -1,37 +1,34 @@
 date,initial,maintenance
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-398.html
-20130903,1760,1600
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-405.html
+20130102,1540,1400
+20130304,1441,1310
+20130402,1540,1400
+20130604,1438,1307
+20130702,1540,1400
+20130904,1643,1493
+20130905,1584,1440
+20130906,1526,1387
+20130909,1350,1227
 20130910,990,900
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-540.html
+20131107,1100,1000
 20131122,1210,1100
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-129.html
+20140117,880,800
 20140328,660,600
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-290.html
 20140725,550,500
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-038.html
 20150206,605,550
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-064.html
 20150304,715,650
-# https://www.cmegroup.com/notices/clearing/2016/07/Chadv16-272.html
+20160127,825,750
 20160715,990,900
-# https://www.cmegroup.com/notices/clearing/2016/10/Chadv16-4051.html
 20161007,880,800
-# https://www.cmegroup.com/notices/clearing/2017/03/Chadv17-108.html
 20170317,605,550
-# https://www.cmegroup.com/notices/clearing/2017/06/Chadv17-251.html
 20170630,495,450
-# https://www.cmegroup.com/notices/clearing/2017/09/Chadv17-368.html
 20170922,578,525
-# https://www.cmegroup.com/notices/clearing/2017/09/Chadv17-379.html
 20170929,715,650
-# https://www.cmegroup.com/notices/clearing/2017/10/Chadv17-386.html
 20171004,825,750
-# https://www.cmegroup.com/notices/clearing/2018/02/Chadv18-049.html
 20180202,660,600
-# https://www.cmegroup.com/notices/clearing/2018/05/Chadv18-218.html
 20180601,825,750
-# https://www.cmegroup.com/notices/clearing/2018/06/Chadv18-261.html
 20180629,660,600
-# https://www.cmegroup.com/notices/clearing/2019/04/Chadv19-136.html
 20190426,495,450
+20200310,605,550
+20200324,660,600
+20200417,748,680
+20200506,880,800

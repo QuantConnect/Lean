@@ -1,38 +1,44 @@
 date,initial,maintenance
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-380.html
 20120907,6270,5700
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-557.html
 20121226,4950,4500
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-014.html
 20130115,4125,3750
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-007.html
+20131217,6270,5700
+20131223,4125,3750
 20140109,3685,3350
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-161.html
+20140304,4400,4000
 20140421,5280,4800
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-469.html
 20141205,6600,6000
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-007.html
+20141216,7920,7200
+20141222,6600,6000
 20150109,7920,7200
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-023.html
 20150123,9020,8200
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-030.html
 20150130,10120,9200
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-171.html
 20150619,9020,8200
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-221.html
 20150731,8580,7800
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-439.html
-20151218,7480,6800
-# https://www.cmegroup.com/notices/clearing/2016/05/Chadv16-194.html
+20151216,9790,8900
+20151218,8690,7900
+20151223,7480,6800
+20160415,6930,6300
 20160506,6270,5700
-# https://www.cmegroup.com/notices/clearing/2016/05/Chadv16-215.html
 20160526,5500,5000
-# https://www.cmegroup.com/notices/clearing/2016/09/Chadv16-367.html
 20160909,4950,4500
-# https://www.cmegroup.com/notices/clearing/2016/11/Chadv16-462.html
 20161103,5500,5000
-# https://www.cmegroup.com/notices/clearing/2017/01/Chadv17-028.html
+20161209,4675,4250
+20161216,5940,5400
+20161223,4675,4250
 20170113,4125,3750
-# https://www.cmegroup.com/notices/clearing/2017/02/Chadv17-054.html
 20170206,3575,3250
-# Margins from 2017 onward have been skipped because they are given by position size.
+20170317,2860,2600
+20170512,2640,2400
+20170901,2310,2100
+20180316,2090,1900
+20180413,2530,2300
+20181102,2310,2100
+20181130,2090,1900
+20190322,1760,1600
+20190719,1925,1750
+20200310,2420,2200
+20200316,3025,2750
+20200318,3630,3300
+20200320,4400,4000
+20200324,4950,4500
