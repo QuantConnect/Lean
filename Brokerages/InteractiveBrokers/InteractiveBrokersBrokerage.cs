@@ -1198,7 +1198,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             else if (errorCode == 1102)
             {
                 // Connectivity between IB and TWS has been restored - data maintained.
-                OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
+                OnMessage(BrokerageMessageEvent.Reconnected(errorMsg));
 
                 _stateManager.Disconnected1100Fired = false;
                 return;
@@ -1206,7 +1206,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             else if (errorCode == 1101)
             {
                 // Connectivity between IB and TWS has been restored - data lost.
-                OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
+                OnMessage(BrokerageMessageEvent.Reconnected(errorMsg));
 
                 _stateManager.Disconnected1100Fired = false;
 
