@@ -227,7 +227,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            var message = Invariant($"Time: {UtcTime} OrderID: {OrderId} EventID: {Id} Symbol: {Symbol.Value} Status: {Status} Quantity {Quantity}");
+            var message = Invariant($"Time: {UtcTime} OrderID: {OrderId} EventID: {Id} Symbol: {Symbol.Value} Status: {Status} Quantity: {Quantity}");
             if (FillQuantity != 0)
             {
                 message += Invariant($" FillQuantity: {FillQuantity} FillPrice: {FillPrice.SmartRounding()} {FillPriceCurrency}");
