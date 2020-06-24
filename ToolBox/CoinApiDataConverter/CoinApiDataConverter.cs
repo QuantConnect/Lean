@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -86,6 +86,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             // <TickType>-<ID>-<Exchange>_SPOT_<BaseCurrency>_<QuoteCurrency>_<ExtraSuffix>.csv.gz
             // Those cases should be ignored for SPOT prices.
             var fileToProcess = _rawDataFolder.EnumerateFiles("*.gz")
+                .Where(f => f.Name.Contains("SPOT"))
                 .Where(f => f.Name.Split('_').Length == 4)
                 .DistinctBy(
                     x =>
