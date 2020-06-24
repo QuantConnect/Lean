@@ -93,10 +93,34 @@ namespace QuantConnect.API
         [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }
 
+
+        /// <summary>
+        /// Determine the appropriate SKU for a node by params
+        /// </summary>
+        /// <param name="cores">Number of cores</param>
+        /// <param name="memory">Size of RAM</param>
+        /// <param name="target">Target Environment Live/Backtest/Research</param>
+        /// <returns>Returns the SKU as a string for the node desired</returns>
+        public string GetSKU(int cores, int memory, string target)
+        {
+            string result = "";
+            result += target[0];
+
+            if(cores == 0)
+            {
+                result += "-micro";
+            } else
+            {
+                result += cores + "-" + memory;
+            }
+
+            return result;
+        }
+
     }
 
     /// <summary>
-    /// Node rest api response wrapper
+    /// node/read rest api response wrapper
     /// </summary>
     public class NodeList : RestResponse
     {
@@ -119,5 +143,19 @@ namespace QuantConnect.API
         [JsonProperty(PropertyName = "live")]
         public List<Node> LiveNodes;
     }
+
+    /// <summary>
+    /// node/create rest api response wrapper
+    /// </summary>
+    public class CreatedNode : RestResponse
+    {
+        /// <summary>
+        /// Contains the node created
+        /// </summary>
+        [JsonProperty(PropertyName = "node")]
+        public Node Node;
+    }
+
+
 
 }
