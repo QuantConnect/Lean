@@ -49,7 +49,7 @@ namespace QuantConnect.API
         /// Size of RAM
         /// </summary>
         [JsonProperty(PropertyName = "ram")]
-        public int Ram { get; set; }
+        public decimal Ram { get; set; }
 
         /// <summary>
         /// Name of node
@@ -101,7 +101,7 @@ namespace QuantConnect.API
         /// <param name="memory">Size of RAM</param>
         /// <param name="target">Target Environment Live/Backtest/Research</param>
         /// <returns>Returns the SKU as a string for the node desired</returns>
-        public string GetSKU(int cores, int memory, string target)
+        public static string GetSKU(int cores, int memory, string target)
         {
             string result = "";
             result += target[0];
@@ -149,11 +149,16 @@ namespace QuantConnect.API
     /// </summary>
     public class CreatedNode : RestResponse
     {
-        /// <summary>
-        /// Contains the node created
-        /// </summary>
-        [JsonProperty(PropertyName = "node")]
-        public Node Node;
+
+        //Currently commented out due to bug on reply, 
+        //receiving null values for node properties cannot be assigned to some node class types!
+
+        // /// <summary>
+        // /// Contains the node
+        // /// </summary>
+        //[JsonProperty("node")]
+        //public Node Node { get; set; }
+
     }
 
 
