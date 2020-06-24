@@ -231,7 +231,9 @@ namespace QuantConnect.Lean.Engine.Results
                 return;
             }
 
-            var path = $"{AlgorithmId}-order-events.json";
+            var filename = $"{AlgorithmId}-order-events.json";
+            var path = GetResultsPath(filename);
+
             var data = JsonConvert.SerializeObject(orderEvents, Formatting.None, OrderEventJsonConverter);
 
             File.WriteAllText(path, data);
@@ -309,7 +311,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             return Path.Combine(ResultsDestinationFolder, filename);
         }
-        
+
         /// <summary>
         /// Returns the location of the logs
         /// </summary>
