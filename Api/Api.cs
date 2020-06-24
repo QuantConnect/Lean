@@ -809,10 +809,9 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="name">New node name</param>
         /// <param name="orgId">Organization ID</param>
-        /// <param name="sku">Internal Node Name</param>
-        /// <param name="projectId">Project ID</param>
+        /// <param name="sku">Internal Node Type</param>
         /// <returns>Returns rest reply</returns>
-        public RestResponse CreateNode(string name, string orgId, string sku)
+        public CreatedNode CreateNode(string name, string orgId, string sku)
         {
 
             var request = new RestRequest("nodes/create", Method.POST);
@@ -820,7 +819,7 @@ namespace QuantConnect.Api
             request.AddParameter("organizationId", orgId);
             request.AddParameter("sku", sku);
 
-            RestResponse result;
+            CreatedNode result;
             ApiConnection.TryRequest(request, out result);
             return result;
 
@@ -878,6 +877,26 @@ namespace QuantConnect.Api
         {
 
             var request = new RestRequest("nodes/delete", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("nodeId", nodeId);
+            request.AddParameter("organizationId", orgId);
+
+            RestResponse result;
+            ApiConnection.TryRequest(request, out result);
+            return result;
+
+        }
+
+        /// <summary>
+        /// Stop a Node
+        /// </summary>
+        /// <param name="nodeId">The node ID of the node you want to stop</param>
+        /// <param name="orgId">Organization ID</param>
+        /// <returns>Returns rest reply</returns>
+        public RestResponse StopNode(string nodeId, string orgId)
+        {
+
+            var request = new RestRequest("nodes/stop", Method.POST);
             request.RequestFormat = DataFormat.Json;
             request.AddParameter("nodeId", nodeId);
             request.AddParameter("organizationId", orgId);
