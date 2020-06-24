@@ -860,22 +860,39 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(result.Success);
         }
 
+        /// <summary>
+        /// Create, Read, Update, and Delete a node!
+        /// </summary>
         [Test]
         public void CRUDNodes()
         {
-            //First Create a Node
-            var createNodeRequest = _api.CreateNode("testA", _testOrg, "B2-8");
-            Assert.IsTrue(createNodeRequest.Success);
+            var nodeName = "name1";
+            var nodeName2 = "name2";
 
-            //Then read the nodes from the org
+            // First create a new node
+            //var createNodeRequest = _api.CreateNode(nodeName, _testOrg, "B2-8");
+            //Assert.IsTrue(createNodeRequest.Success);
+
+            // Then read the nodes from the org
             var readNodeRequest = _api.ReadNode(_testOrg);
             Assert.IsTrue(readNodeRequest.Success);
 
-            //GET THE NODEID FROM EITHER CREATE OR READ???
-            var nodeId = "abc";
+            //Attempt to find the Node we created and collect its ID
+            //For now it only look at the Backtest nodes :/
+            string nodeId = null;
+            foreach (var Node in readNodeRequest.BacktestNodes)
+            {
+                if (Node.Name == nodeName)
+                {
+                    nodeId = Node.Id;
+                }
+            }
+
+            Assert.IsNotNull(nodeId);
+
 
             //Update that node with a new name
-            var updateNodeRequest = _api.UpdateNode(nodeId, "TestB", _testOrg);
+            var updateNodeRequest = _api.UpdateNode(nodeId, nodeName2, _testOrg);
             Assert.IsTrue(updateNodeRequest.Success);
 
             //Delete this node
