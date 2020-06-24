@@ -30,7 +30,6 @@ namespace QuantConnect.Tests.API
     {
         private int _testAccount = 1;
         private string _testToken = "ec87b337ac970da4cbea648f24f1c851";
-        private string _testOrg = "enter Org ID here";
         private string _dataFolder = Config.Get("data-folder");
         private Api.Api _api;
         private const bool stopLiveAlgos = true;
@@ -843,61 +842,6 @@ namespace QuantConnect.Tests.API
             return result;
         }
 
-        /// <summary>
-        /// Test to creating a New Node
-        /// </summary>
-        [Test]
-        public void CreateNewNode()
-        {
-            var result = _api.CreateNode("test", _testOrg, "B2-8");
-            Assert.IsTrue(result.Success);
-        }
 
-        [Test]
-        public void ReadNode()
-        {
-            var result = _api.ReadNode(_testOrg);
-            Assert.IsTrue(result.Success);
-        }
-
-        /// <summary>
-        /// Create, Read, Update, and Delete a node!
-        /// </summary>
-        [Test]
-        public void CRUDNodes()
-        {
-            var nodeName = "name1";
-            var nodeName2 = "name2";
-
-            // First create a new node
-            //var createNodeRequest = _api.CreateNode(nodeName, _testOrg, "B2-8");
-            //Assert.IsTrue(createNodeRequest.Success);
-
-            // Then read the nodes from the org
-            var readNodeRequest = _api.ReadNode(_testOrg);
-            Assert.IsTrue(readNodeRequest.Success);
-
-            //Attempt to find the Node we created and collect its ID
-            //For now it only look at the Backtest nodes :/
-            string nodeId = null;
-            foreach (var Node in readNodeRequest.BacktestNodes)
-            {
-                if (Node.Name == nodeName)
-                {
-                    nodeId = Node.Id;
-                }
-            }
-
-            Assert.IsNotNull(nodeId);
-
-
-            //Update that node with a new name
-            var updateNodeRequest = _api.UpdateNode(nodeId, nodeName2, _testOrg);
-            Assert.IsTrue(updateNodeRequest.Success);
-
-            //Delete this node
-            var deleteNodeRequest = _api.DeleteNode(nodeId, _testOrg);
-            Assert.IsTrue(deleteNodeRequest.Success);
-        }
     }
 }
