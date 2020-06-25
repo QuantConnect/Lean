@@ -139,16 +139,4 @@ namespace QuantConnect.API
         [JsonProperty(PropertyName = "live")]
         public List<Node> LiveNodes;
     }
-
-    /// <summary>
-    /// node/create rest api response wrapper
-    /// </summary>
-    public class CreatedNode : RestResponse
-    {
-        /// <summary>
-        /// Contains the node
-        /// </summary>
-        [JsonProperty("node")]
-        public Node Node { get; set; }
-    }
 }

@@ -807,7 +807,7 @@ namespace QuantConnect.Api
         /// <param name="name">New node name</param>
         /// <param name="organizationId">Organization ID</param>
         /// <param name="sku">Internal Node Type</param>
-        /// <returns>Returns rest reply</returns>
+        /// <returns>Returns result node, or null if it fails</returns>
         public Node CreateNode(string name, string organizationId, string sku)
         {
             var request = new RestRequest("nodes/create", Method.POST);
@@ -817,6 +817,12 @@ namespace QuantConnect.Api
 
             CreatedNode result;
             ApiConnection.TryRequest(request, out result);
+
+            if(result == null)
+            {
+                return null;
+            }
+
             return result.Node;
         }
 
@@ -890,6 +896,18 @@ namespace QuantConnect.Api
             RestResponse result;
             ApiConnection.TryRequest(request, out result);
             return result;
+        }
+
+        /// <summary>
+        /// node/create rest api response wrapper
+        /// </summary>
+        private class CreatedNode : RestResponse
+        {
+            /// <summary>
+            /// Contains the node
+            /// </summary>
+            [JsonProperty("node")]
+            public Node Node { get; set; }
         }
     }
 }
