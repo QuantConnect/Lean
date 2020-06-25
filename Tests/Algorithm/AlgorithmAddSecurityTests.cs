@@ -72,6 +72,8 @@ namespace QuantConnect.Tests.Algorithm
                     case SecurityType.Crypto:
                         var crypto = (Crypto)security;
                         break;
+                    case SecurityType.Base:
+                        break;
                     default:
                         throw new Exception($"Invalid Security Type: {symbol.SecurityType}");
                 }
@@ -102,6 +104,8 @@ namespace QuantConnect.Tests.Algorithm
                     new TestCaseData(Symbols.SPY_Option_Chain),
                     new TestCaseData(Symbols.SPY_C_192_Feb19_2016),
                     new TestCaseData(Symbols.SPY_P_192_Feb19_2016),
+                    new TestCaseData(Symbol.Create("CustomData", SecurityType.Base, Market.Binance)),
+                    new TestCaseData(Symbol.Create("CustomData2", SecurityType.Base, Market.COMEX))
                 };
             }
         }
