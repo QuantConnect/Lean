@@ -12,7 +12,6 @@ using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.API
 {
-
     [TestFixture, Ignore("These tests require an account, token, and organization ID")]
     public class NodeTests
     {
@@ -67,34 +66,50 @@ namespace QuantConnect.Tests.API
             var nodeName2 = $"{DateTime.UtcNow.Minute}:{DateTime.UtcNow.Second}-Monstro";
 
             // First create a new node
-            var newNode = _api.CreateNode(nodeName, _testOrganization, sku);
-            Assert.IsNotNull(newNode);
+            var createdNode = _api.CreateNode(nodeName, _testOrganization, sku);
 
-            // Then read the nodes from the org
+            //Check for the nodes existance using the helper function
+            var foundNode = FindNodeByName(nodeName);
+            Assert.IsNotNull(foundNode);
+
+            //Update that node with a new name
+            var updateNodeRequest = _api.UpdateNode(foundNode.Id, nodeName2, _testOrganization);
+            Assert.IsTrue(updateNodeRequest.Success);
+
+            //Read again and check for the new name (nodeName2)
+            foundNode = FindNodeByName(nodeName2);
+            Assert.IsNotNull(foundNode);
+
+            //Delete this node
+            var deleteNodeRequest = _api.DeleteNode(foundNode.Id, _testOrganization);
+            Assert.IsTrue(deleteNodeRequest.Success);
+
+            //Read again and ensure the node does not exist.
+            foundNode = FindNodeByName(nodeName2);
+            Assert.IsNull(foundNode);
+        }
+
+        /// <summary>
+        /// Helper function for finding a node by name, used by tests that are looking for a certain node.
+        /// With some small adjustments could be moved to an api function.
+        /// </summary>
+        /// <param name="name">Node name</param>
+        public Node FindNodeByName(string name)
+        {
+            Node result = null;
             var readNodeRequest = _api.ReadNode(_testOrganization);
-            Assert.IsTrue(readNodeRequest.Success);
-
-            //Attempt to find the Node we created in all groups
-            string nodeId = null;
             var allNodes = readNodeRequest.BacktestNodes.Concat(readNodeRequest.LiveNodes).Concat(readNodeRequest.ResearchNodes);
+
             foreach (var Node in allNodes)
             {
-                if (Node.Name == nodeName)
+                if (Node.Name == name)
                 {
-                    nodeId = Node.Id;
+                    result = Node;
                     break;
                 }
             }
 
-            Assert.IsNotNull(nodeId);
-
-            //Update that node with a new name
-            var updateNodeRequest = _api.UpdateNode(nodeId, nodeName2, _testOrganization);
-            Assert.IsTrue(updateNodeRequest.Success);
-
-            //Delete this node
-            var deleteNodeRequest = _api.DeleteNode(nodeId, _testOrganization);
-            Assert.IsTrue(deleteNodeRequest.Success);
+            return result;
         }
 
         /// <summary>
