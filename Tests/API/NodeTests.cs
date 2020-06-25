@@ -18,7 +18,7 @@ namespace QuantConnect.Tests.API
     {
         private int _testAccount = 1;
         private string _testToken = "ec87b337ac970da4cbea648f24f1c851";
-        private string _testOrg = "enter Org ID here";
+        private string _testOrganization = "enter Org ID here";
         private string _dataFolder = Config.Get("data-folder");
         private Api.Api _api;
 
@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.API
         {
             string sku = Node.GetSKU(2, 8, "backtest");
             var nodeName = $"{DateTime.UtcNow.Minute}:{DateTime.UtcNow.Second}-Pinocho";
-            var newNode = _api.CreateNode(nodeName, _testOrg, sku);
+            var newNode = _api.CreateNode(nodeName, _testOrganization, sku);
             Assert.IsNotNull(newNode);
         }
 
@@ -50,13 +50,14 @@ namespace QuantConnect.Tests.API
         [Test]
         public void ReadNode()
         {
-            var result = _api.ReadNode(_testOrg);
+            var result = _api.ReadNode(_testOrganization);
             Assert.IsTrue(result.Success);
         }
 
         /// <summary>
         /// Create, Read, Update, and Delete a node!
         /// </summary>
+        /// <param name="sku">Node Type Identifier</param>
         [TestCase("B2-8")]
         [TestCase("L-micro")]
         [TestCase("r8-16")]
@@ -66,11 +67,11 @@ namespace QuantConnect.Tests.API
             var nodeName2 = $"{DateTime.UtcNow.Minute}:{DateTime.UtcNow.Second}-Monstro";
 
             // First create a new node
-            var newNode = _api.CreateNode(nodeName, _testOrg, sku);
+            var newNode = _api.CreateNode(nodeName, _testOrganization, sku);
             Assert.IsNotNull(newNode);
 
             // Then read the nodes from the org
-            var readNodeRequest = _api.ReadNode(_testOrg);
+            var readNodeRequest = _api.ReadNode(_testOrganization);
             Assert.IsTrue(readNodeRequest.Success);
 
             //Attempt to find the Node we created in all groups
@@ -88,11 +89,11 @@ namespace QuantConnect.Tests.API
             Assert.IsNotNull(nodeId);
 
             //Update that node with a new name
-            var updateNodeRequest = _api.UpdateNode(nodeId, nodeName2, _testOrg);
+            var updateNodeRequest = _api.UpdateNode(nodeId, nodeName2, _testOrganization);
             Assert.IsTrue(updateNodeRequest.Success);
 
             //Delete this node
-            var deleteNodeRequest = _api.DeleteNode(nodeId, _testOrg);
+            var deleteNodeRequest = _api.DeleteNode(nodeId, _testOrganization);
             Assert.IsTrue(deleteNodeRequest.Success);
         }
 
@@ -126,7 +127,7 @@ namespace QuantConnect.Tests.API
         public void ReadAndStop()
         {
             // Then read the nodes from the org
-            var readNodeRequest = _api.ReadNode(_testOrg);
+            var readNodeRequest = _api.ReadNode(_testOrganization);
             Assert.IsTrue(readNodeRequest.Success);
 
             //Iterate through all nodes and stop them if they are running
@@ -136,7 +137,7 @@ namespace QuantConnect.Tests.API
                 // If it is busy then stop it
                 if (Node.Busy)
                 {
-                    var stopNodeRequest = _api.StopNode(Node.Id, _testOrg);
+                    var stopNodeRequest = _api.StopNode(Node.Id, _testOrganization);
                     Assert.IsTrue(stopNodeRequest.Success);
                 }
             }
