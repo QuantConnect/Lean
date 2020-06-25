@@ -784,12 +784,10 @@ namespace QuantConnect.Api
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>
-
         public virtual void Dispose()
         {
             // NOP
         }
-
 
         /// <summary>
         /// Generate a secure hash for the authorization headers.
@@ -803,7 +801,6 @@ namespace QuantConnect.Api
             return data.ToSHA256();
         }
 
-
         /// <summary>
         /// Create a new node
         /// </summary>
@@ -813,7 +810,6 @@ namespace QuantConnect.Api
         /// <returns>Returns rest reply</returns>
         public CreatedNode CreateNode(string name, string orgId, string sku)
         {
-
             var request = new RestRequest("nodes/create", Method.POST);
             request.AddParameter("name", name);
             request.AddParameter("organizationId", orgId);
@@ -822,7 +818,6 @@ namespace QuantConnect.Api
             CreatedNode result;
             ApiConnection.TryRequest(request, out result);
             return result;
-
         }
 
         /// <summary>
@@ -832,7 +827,6 @@ namespace QuantConnect.Api
         /// <returns>Returns rest reply</returns>
         public NodeList ReadNode(string orgId)
         {
-
             var request = new RestRequest("nodes/read", Method.POST);
             request.RequestFormat = DataFormat.Json;
             request.AddParameter("organizationId", orgId);
@@ -840,9 +834,7 @@ namespace QuantConnect.Api
             NodeList result;
             ApiConnection.TryRequest(request, out result);
             return result;
-
         }
-
 
         /// <summary>
         /// Update a node name
@@ -853,7 +845,6 @@ namespace QuantConnect.Api
         /// <returns>Returns rest reply</returns>
         public RestResponse UpdateNode(string nodeId, string newName, string orgId)
         {
-
             var request = new RestRequest("nodes/update", Method.POST);
             request.RequestFormat = DataFormat.Json;
             request.AddParameter("nodeId", nodeId);
@@ -863,9 +854,7 @@ namespace QuantConnect.Api
             RestResponse result;
             ApiConnection.TryRequest(request, out result);
             return result;
-
         }
-
 
         /// <summary>
         /// Delete a Node
@@ -875,7 +864,6 @@ namespace QuantConnect.Api
         /// <returns>Returns rest reply</returns>
         public RestResponse DeleteNode(string nodeId, string orgId)
         {
-
             var request = new RestRequest("nodes/delete", Method.POST);
             request.RequestFormat = DataFormat.Json;
             request.AddParameter("nodeId", nodeId);
@@ -884,7 +872,6 @@ namespace QuantConnect.Api
             RestResponse result;
             ApiConnection.TryRequest(request, out result);
             return result;
-
         }
 
         /// <summary>
@@ -895,7 +882,6 @@ namespace QuantConnect.Api
         /// <returns>Returns rest reply</returns>
         public RestResponse StopNode(string nodeId, string orgId)
         {
-
             var request = new RestRequest("nodes/stop", Method.POST);
             request.RequestFormat = DataFormat.Json;
             request.AddParameter("nodeId", nodeId);
@@ -904,12 +890,6 @@ namespace QuantConnect.Api
             RestResponse result;
             ApiConnection.TryRequest(request, out result);
             return result;
-
         }
-
-
-
-
-
     }
 }

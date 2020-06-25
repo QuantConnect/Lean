@@ -32,7 +32,6 @@ namespace QuantConnect.Tests.API
             _api.Initialize(_testAccount, _testToken, _dataFolder);
         }
 
-
         /// <summary>
         /// Test to creating a New Node
         /// </summary>
@@ -62,7 +61,6 @@ namespace QuantConnect.Tests.API
         [TestCase("B2-8")]
         [TestCase("L-micro")]
         [TestCase("r8-16")]
-
         public void CRUDNodes(string sku)
         {
             var nodeName = $"{DateTime.UtcNow.Minute}:{DateTime.UtcNow.Second}-Pinocho";
@@ -90,7 +88,6 @@ namespace QuantConnect.Tests.API
 
             Assert.IsNotNull(nodeId);
 
-
             //Update that node with a new name
             var updateNodeRequest = _api.UpdateNode(nodeId, nodeName2, _testOrg);
             Assert.IsTrue(updateNodeRequest.Success);
@@ -99,7 +96,6 @@ namespace QuantConnect.Tests.API
             var deleteNodeRequest = _api.DeleteNode(nodeId, _testOrg);
             Assert.IsTrue(deleteNodeRequest.Success);
         }
-
 
         /// <summary>
         /// Generate some SKUs and ensure they are correct
@@ -134,7 +130,6 @@ namespace QuantConnect.Tests.API
             var readNodeRequest = _api.ReadNode(_testOrg);
             Assert.IsTrue(readNodeRequest.Success);
 
-
             //Iterate through all nodes and stop them if they are running
             var allNodes = readNodeRequest.BacktestNodes.Concat(readNodeRequest.LiveNodes).Concat(readNodeRequest.ResearchNodes);
             foreach (var Node in allNodes)
@@ -145,7 +140,6 @@ namespace QuantConnect.Tests.API
                     var stopNodeRequest = _api.StopNode(Node.Id, _testOrg);
                     Assert.IsTrue(stopNodeRequest.Success);
                 }
-                
             }
         }
     }

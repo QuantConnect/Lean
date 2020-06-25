@@ -26,7 +26,6 @@ namespace QuantConnect.API
     /// </summary>
     public class Node
     {
-
         /// <summary>
         /// The nodes cpu speed
         /// </summary>
@@ -93,7 +92,6 @@ namespace QuantConnect.API
         [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }
 
-
         /// <summary>
         /// Determine the appropriate SKU for a node by params
         /// </summary>
@@ -116,7 +114,6 @@ namespace QuantConnect.API
 
             return result;
         }
-
     }
 
     /// <summary>
@@ -124,7 +121,6 @@ namespace QuantConnect.API
     /// </summary>
     public class NodeList : RestResponse
     {
-
         /// <summary>
         /// Collection of backtest nodes
         /// </summary>
@@ -149,7 +145,6 @@ namespace QuantConnect.API
     /// </summary>
     public class CreatedNode : RestResponse
     {
-
         //Currently commented out due to bug on reply, 
         //receiving null values for node properties cannot be assigned to some node class types!
 
@@ -158,7 +153,6 @@ namespace QuantConnect.API
         // /// </summary>
         //[JsonProperty("node")]
         //public Node Node { get; set; }
-
     }
 
 

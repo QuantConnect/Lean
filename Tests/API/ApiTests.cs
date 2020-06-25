@@ -841,7 +841,5 @@ namespace QuantConnect.Tests.API
             }
             return result;
         }
-
-
     }
 }
