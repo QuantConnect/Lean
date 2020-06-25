@@ -455,7 +455,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     var baseInstance = dataTypes.Single().Item1.GetBaseDataInstance();
                     baseInstance.Symbol = symbol;
-                    _marketHoursDatabase.SetEntryAlwaysOpen(Market.USA, null, SecurityType.Base, baseInstance.DataTimeZone());
+                    _marketHoursDatabase.SetEntryAlwaysOpen(symbol.ID.Market, null, SecurityType.Base, baseInstance.DataTimeZone());
                 }
 
                 marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
