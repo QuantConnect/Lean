@@ -805,31 +805,31 @@ namespace QuantConnect.Api
         /// Create a new node
         /// </summary>
         /// <param name="name">New node name</param>
-        /// <param name="orgId">Organization ID</param>
+        /// <param name="organizationId">Organization ID</param>
         /// <param name="sku">Internal Node Type</param>
         /// <returns>Returns rest reply</returns>
-        public CreatedNode CreateNode(string name, string orgId, string sku)
+        public Node CreateNode(string name, string organizationId, string sku)
         {
             var request = new RestRequest("nodes/create", Method.POST);
             request.AddParameter("name", name);
-            request.AddParameter("organizationId", orgId);
+            request.AddParameter("organizationId", organizationId);
             request.AddParameter("sku", sku);
 
             CreatedNode result;
             ApiConnection.TryRequest(request, out result);
-            return result;
+            return result.Node;
         }
 
         /// <summary>
         /// Read organizations nodes
         /// </summary>
-        /// <param name="orgId">Organization ID</param>
+        /// <param name="organizationId">Organization ID</param>
         /// <returns>Returns rest reply</returns>
-        public NodeList ReadNode(string orgId)
+        public NodeList ReadNode(string organizationId)
         {
             var request = new RestRequest("nodes/read", Method.POST);
             request.RequestFormat = DataFormat.Json;
-            request.AddParameter("organizationId", orgId);
+            request.AddParameter("organizationId", organizationId);
 
             NodeList result;
             ApiConnection.TryRequest(request, out result);
@@ -841,15 +841,15 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="nodeId">The node ID of the node you want to update</param>
         /// <param name="newName">The new name for that node</param>
-        /// <param name="orgId">Organization ID</param>
+        /// <param name="organizationId">Organization ID</param>
         /// <returns>Returns rest reply</returns>
-        public RestResponse UpdateNode(string nodeId, string newName, string orgId)
+        public RestResponse UpdateNode(string nodeId, string newName, string organizationId)
         {
             var request = new RestRequest("nodes/update", Method.POST);
             request.RequestFormat = DataFormat.Json;
             request.AddParameter("nodeId", nodeId);
             request.AddParameter("name", newName);
-            request.AddParameter("organizationId", orgId);
+            request.AddParameter("organizationId", organizationId);
 
             RestResponse result;
             ApiConnection.TryRequest(request, out result);
@@ -860,14 +860,14 @@ namespace QuantConnect.Api
         /// Delete a Node
         /// </summary>
         /// <param name="nodeId">The node ID of the node you want to delete</param>
-        /// <param name="orgId">Organization ID</param>
+        /// <param name="organizationId">Organization ID</param>
         /// <returns>Returns rest reply</returns>
-        public RestResponse DeleteNode(string nodeId, string orgId)
+        public RestResponse DeleteNode(string nodeId, string organizationId)
         {
             var request = new RestRequest("nodes/delete", Method.POST);
             request.RequestFormat = DataFormat.Json;
             request.AddParameter("nodeId", nodeId);
-            request.AddParameter("organizationId", orgId);
+            request.AddParameter("organizationId", organizationId);
 
             RestResponse result;
             ApiConnection.TryRequest(request, out result);
@@ -878,14 +878,14 @@ namespace QuantConnect.Api
         /// Stop a Node
         /// </summary>
         /// <param name="nodeId">The node ID of the node you want to stop</param>
-        /// <param name="orgId">Organization ID</param>
+        /// <param name="organizationId">Organization ID</param>
         /// <returns>Returns rest reply</returns>
-        public RestResponse StopNode(string nodeId, string orgId)
+        public RestResponse StopNode(string nodeId, string organizationId)
         {
             var request = new RestRequest("nodes/stop", Method.POST);
             request.RequestFormat = DataFormat.Json;
             request.AddParameter("nodeId", nodeId);
-            request.AddParameter("organizationId", orgId);
+            request.AddParameter("organizationId", organizationId);
 
             RestResponse result;
             ApiConnection.TryRequest(request, out result);

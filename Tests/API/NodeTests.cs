@@ -14,7 +14,7 @@ namespace QuantConnect.Tests.API
 {
 
     [TestFixture, Ignore("These tests require an account, token, and organization ID")]
-    class NodeTests
+    public class NodeTests
     {
         private int _testAccount = 1;
         private string _testToken = "ec87b337ac970da4cbea648f24f1c851";
@@ -40,9 +40,8 @@ namespace QuantConnect.Tests.API
         {
             string sku = Node.GetSKU(2, 8, "backtest");
             var nodeName = $"{DateTime.UtcNow.Minute}:{DateTime.UtcNow.Second}-Pinocho";
-            var result = _api.CreateNode(nodeName, _testOrg, sku);
-            Assert.IsTrue(result.Success);
-
+            var newNode = _api.CreateNode(nodeName, _testOrg, sku);
+            Assert.IsNotNull(newNode);
         }
 
         /// <summary>
@@ -67,8 +66,8 @@ namespace QuantConnect.Tests.API
             var nodeName2 = $"{DateTime.UtcNow.Minute}:{DateTime.UtcNow.Second}-Monstro";
 
             // First create a new node
-            var createNodeRequest = _api.CreateNode(nodeName, _testOrg, sku);
-            Assert.IsTrue(createNodeRequest.Success);
+            var newNode = _api.CreateNode(nodeName, _testOrg, sku);
+            Assert.IsNotNull(newNode);
 
             // Then read the nodes from the org
             var readNodeRequest = _api.ReadNode(_testOrg);

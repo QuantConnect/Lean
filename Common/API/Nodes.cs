@@ -101,13 +101,13 @@ namespace QuantConnect.API
         /// <returns>Returns the SKU as a string for the node desired</returns>
         public static string GetSKU(int cores, int memory, string target)
         {
-            string result = "";
-            result += target[0];
+            var result = $"{target[0]}";
 
             if(cores == 0)
             {
                 result += "-micro";
-            } else
+            } 
+            else
             {
                 result += cores + "-" + memory;
             }
@@ -145,16 +145,10 @@ namespace QuantConnect.API
     /// </summary>
     public class CreatedNode : RestResponse
     {
-        //Currently commented out due to bug on reply, 
-        //receiving null values for node properties cannot be assigned to some node class types!
-
-        // /// <summary>
-        // /// Contains the node
-        // /// </summary>
-        //[JsonProperty("node")]
-        //public Node Node { get; set; }
+        /// <summary>
+        /// Contains the node
+        /// </summary>
+        [JsonProperty("node")]
+        public Node Node { get; set; }
     }
-
-
-
 }
