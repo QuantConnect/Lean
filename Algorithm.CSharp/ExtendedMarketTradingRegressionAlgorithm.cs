@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
             TradeBar spyBar = data["SPY"];
 
             //If it isnt during market hours, go ahead and buy ten!
-            if (!InMarketHours(spyBar.Time))
+            if (!InMarketHours())
             {
                 LimitOrder(spy, 10, spyBar.Low);
                 lastAction = Time;
@@ -68,7 +68,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="orderEvent">OrderEvent object with details about the order status</param>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (InMarketHoursUTC(orderEvent.UtcTime))
+            if (InMarketHours())
             {
                 throw new Exception("Order processed during market hours.");
             }
@@ -83,24 +83,11 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        // Check if we are in UTC Market Hours, NYSE is open from (1:30pm to 8pm) UTC
-        /// </summary>
-        bool InMarketHoursUTC(DateTime dateTime)
-        {
-            TimeSpan now = dateTime.TimeOfDay;
-            TimeSpan open = new TimeSpan(13, 30, 0);
-            TimeSpan close = new TimeSpan(20, 0, 0);
-
-            return (open < now) && (close > now);
-
-        }
-
-        /// <summary>
         // Check if we are in Market Hours, NYSE is open from (9:30 am to 4 pm)
         /// </summary>
-        bool InMarketHours(DateTime dateTime)
+        bool InMarketHours()
         {
-            TimeSpan now = dateTime.TimeOfDay;
+            TimeSpan now = Time.TimeOfDay;
             TimeSpan open = new TimeSpan(09, 30, 0);
             TimeSpan close = new TimeSpan(16, 0, 0);
 
