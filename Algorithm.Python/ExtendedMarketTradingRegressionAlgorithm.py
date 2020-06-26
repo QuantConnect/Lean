@@ -23,8 +23,7 @@ from QuantConnect.Orders import *
 from QuantConnect.Algorithm import QCAlgorithm
 
 ### <summary>
-### This algorithm demonstrates the runtime addition and removal of securities from your algorithm.
-### With LEAN it is possible to add and remove securities after the initialization.
+### This algorithm demonstrates extended market hours trading.
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="assets" />
@@ -33,8 +32,6 @@ class ExtendedMarketTradingRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-
-        self.SetTimeZone("America/New_York")
         self.SetStartDate(2013,10,7)   #Set Start Date
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
@@ -55,12 +52,9 @@ class ExtendedMarketTradingRegressionAlgorithm(QCAlgorithm):
             self._lastAction = self.Time
 
     def OnOrderEvent(self, orderEvent):
+        self.Log(str(orderEvent))
         if self.InMarketHours():
             raise Exception("Order processed during market hours.")
-        if orderEvent.Status == OrderStatus.Submitted:
-            self.Debug("{0}: Submitted: {1}".format(self.Time, self.Transactions.GetOrderById(orderEvent.OrderId)))
-        if orderEvent.Status == OrderStatus.Filled:
-            self.Debug("{0}: Filled: {1}".format(self.Time, self.Transactions.GetOrderById(orderEvent.OrderId)))
 
     def InMarketHours(self):
         now = self.Time.time()

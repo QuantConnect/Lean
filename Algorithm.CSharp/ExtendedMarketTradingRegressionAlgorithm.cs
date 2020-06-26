@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
-using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,8 +29,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="regression test" />
     public class ExtendedMarketTradingRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private DateTime lastAction;
-        private Symbol spy;
+        private DateTime _lastAction;
+        private Symbol _spy;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -41,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 07);  //Set Start Date
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
-            spy = AddEquity("SPY", Resolution.Minute, Market.USA, true, 0m, true).Symbol;
+            _spy = AddEquity("SPY", Resolution.Minute, Market.USA, true, 0m, true).Symbol;
         }
 
         /// <summary>
@@ -51,14 +50,14 @@ namespace QuantConnect.Algorithm.CSharp
         public void OnData(TradeBars data)
         {
             //Only take an action once a day.
-            if (lastAction.Date == Time.Date) return;
+            if (_lastAction.Date == Time.Date) return;
             TradeBar spyBar = data["SPY"];
 
             //If it isnt during market hours, go ahead and buy ten!
             if (!InMarketHours())
             {
-                LimitOrder(spy, 10, spyBar.Low);
-                lastAction = Time;
+                LimitOrder(_spy, 10, spyBar.Low);
+                _lastAction = Time;
             }
         }
 
@@ -72,20 +71,14 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("Order processed during market hours.");
             }
-            if (orderEvent.Status == OrderStatus.Submitted)
-            {
-                Debug(Time + ": Submitted: " + Transactions.GetOrderById(orderEvent.OrderId));
-            }
-            if (orderEvent.Status.IsFill())
-            {
-                Debug(Time + ": Filled: " + Transactions.GetOrderById(orderEvent.OrderId));
-            }
+
+            Log($"{orderEvent}");
         }
 
         /// <summary>
-        // Check if we are in Market Hours, NYSE is open from (9:30 am to 4 pm)
+        /// Check if we are in Market Hours, NYSE is open from (9:30 am to 4 pm)
         /// </summary>
-        bool InMarketHours()
+        public bool InMarketHours()
         {
             TimeSpan now = Time.TimeOfDay;
             TimeSpan open = new TimeSpan(09, 30, 0);
