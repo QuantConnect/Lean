@@ -21,6 +21,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Tests.Common.Data;
@@ -282,29 +283,41 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new SecurityCache()
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101m));
+            var slippageModel = new ConstantSlippageModel(.01m);
+            security.SetSlippageModel(new ConstantSlippageModel(.01m));
 
+            // scenario 1: price doesn't trigger stop market fill
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101m));
             var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
                 Time.OneHour)).OrderEvent;
-
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102.5m));
-
+            // scenario 2: price moves through stop price; should fill at stop price plus slippage
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 101m, 110m, 100m, 110m, 100));
             fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
                 Time.OneHour)).OrderEvent;
-
-            // this fills worst case scenario, so it's min of asset/stop price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(Math.Max(security.Price, order.StopPrice), fill.FillPrice);
+            Assert.AreEqual(order.StopPrice + slippageModel.GetSlippageApproximation(security, order), fill.FillPrice);
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+
+            // scenario 3: bar opens above the stop price; should fill at open price plus slippage
+            var tradeBar = new TradeBar(Noon, Symbols.SPY, 105m, 110m, 99m, 100m, 100);
+            security.SetMarketPrice(tradeBar);
+            fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour)).OrderEvent;
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(tradeBar.Open + slippageModel.GetSlippageApproximation(security, order), fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
@@ -324,29 +337,41 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new SecurityCache()
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102m));
+            var slippageModel = new ConstantSlippageModel(.01m);
+            security.SetSlippageModel(new ConstantSlippageModel(.01m));
 
+            // scenario 1: price doesn't trigger stop market fill
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102m));
             var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
                 Time.OneHour)).OrderEvent;
-
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101m));
-
+            // scenario 2: price moves through stop price; should fill at stop price minus slippage
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 102m, 103m, 90m, 90m, 100));
             fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
                 Time.OneHour)).OrderEvent;
-
-            // this fills worst case scenario, so it's min of asset/stop price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(Math.Min(security.Price, order.StopPrice), fill.FillPrice);
+            Assert.AreEqual(order.StopPrice - slippageModel.GetSlippageApproximation(security, order), fill.FillPrice);
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+
+            // scenario 3: bar opens below the stop price; should fill at open price minus slippage
+            var tradeBar = new TradeBar(Noon, Symbols.SPY, 100m, 105m, 95m, 103m, 100);
+            security.SetMarketPrice(tradeBar);
+            fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour)).OrderEvent;
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(tradeBar.Open - slippageModel.GetSlippageApproximation(security, order), fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
         
@@ -758,7 +783,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         }
 
         [TestCase(100, 291.50)]
-        [TestCase(-100, 290.50)]
+        [TestCase(-100, 291.50)]
         public void StopMarketOrderDoesNotFillUsingDataBeforeSubmitTime(decimal orderQuantity, decimal stopPrice)
         {
             var time = new DateTime(2018, 9, 24, 9, 30, 0);
@@ -802,7 +827,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             time += TimeSpan.FromMinutes(1);
             timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
 
-            tradeBar = new TradeBar(time, symbol, 290m, 292m, 289m, 291m, 12345);
+            tradeBar = new TradeBar(time, symbol, 291.5m, 292m, 289m, 291m, 12345);
             security.SetMarketPrice(tradeBar);
 
             fill = fillModel.StopMarketFill(security, order);
