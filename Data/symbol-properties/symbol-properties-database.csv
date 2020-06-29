@@ -232,6 +232,10 @@ nymex,PA,future,Palladium Futures,USD,100.0,0.05,1.0
 nymex,PL,future,Platinum Futures,USD,50.0,0.1,1.0
 nymex,RB,future,RBOB Gasoline Futures,USD,42000.0,0.0001,1.0
 nymex,YO,future,No. 11 Sugar Futures,USD,112000.0,0.0001,1.0
+sgx,NK,future,SGX Nikkei 225 Index Futures,JPY,500,5,5.0
+sgx,TW,future,MSCI Taiwan Index Futures,USD,100,0.1,50.0
+sgx,IN,future,Nifty Indices Futures,USD,2,0.5,50.0
+hkfe,HSI,future,Hang Seng Index,HKD,50,1,1.0
 
 fxcm,AUDCAD,forex,,CAD,1,0.00001,1000
 fxcm,AUDCHF,forex,,CHF,1,0.00001,1000

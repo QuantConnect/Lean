@@ -58,6 +58,8 @@ namespace QuantConnect
             
             Tuple.Create(COMEX, 22),
             Tuple.Create(CME, 23),
+            Tuple.Create(SGX, 24),
+            Tuple.Create(HKFE, 25),
         };
 
         static Market()
@@ -136,7 +138,17 @@ namespace QuantConnect
         /// CME
         /// </summary>
         public const string CME = "cme";
-        
+
+        /// <summary>
+        /// Singapore Exchange
+        /// </summary>
+        public const string SGX = "sgx";
+
+        /// <summary>
+        /// Hong Kong Exchange
+        /// </summary>
+        public const string HKFE = "hkfe";
+
         /// <summary>
         /// GDAX
         /// </summary>

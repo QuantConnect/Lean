@@ -200,7 +200,23 @@ namespace QuantConnect.Securities.Future
         /// <param name="time">Date from the given month</param>
         /// <param name="n">The order of the Friday in the period</param>
         /// <returns>Nth Friday of given month</returns>
-        public static DateTime NthFriday(DateTime time, int n)
+        public static DateTime NthFriday(DateTime time, int n) => NthWeekday(time, n, DayOfWeek.Friday);
+
+        /// <summary>
+        /// Method to retrieve third Wednesday of the given month (usually Monday).
+        /// </summary>
+        /// <param name="time">Date from the given month</param>
+        /// <returns>Third Wednesday of the given month</returns>
+        public static DateTime ThirdWednesday(DateTime time) => NthWeekday(time, 3, DayOfWeek.Wednesday);
+
+        /// <summary>
+        /// Method to retrieve the Nth Weekday of the given month
+        /// </summary>
+        /// <param name="time">Date from the given month</param>
+        /// <param name="n">The order of the Weekday in the period</param>
+        /// <param name="dayofWeek">The day of the week</param>
+        /// <returns>Nth Weekday of given month</returns>
+        public static DateTime NthWeekday(DateTime time, int n, DayOfWeek dayofWeek)
         {
             if (n < 1 || n > 5)
             {
@@ -209,22 +225,33 @@ namespace QuantConnect.Securities.Future
 
             var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
             return (from day in Enumerable.Range(1, daysInMonth)
-                    where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Friday
+                    where new DateTime(time.Year, time.Month, day).DayOfWeek == dayofWeek
                     select new DateTime(time.Year, time.Month, day)).ElementAt(n - 1);
         }
 
+
         /// <summary>
-        /// Method to retrieve third Wednesday of the given month (usually Monday).
+        /// Method to retrieve the last weekday of any month
         /// </summary>
         /// <param name="time">Date from the given month</param>
-        /// <returns>Third Wednesday of the given month</returns>
-        public static DateTime ThirdWednesday(DateTime time)
+        /// <param name="dayofWeek">the last weekday to be found</param>
+        /// <returns>Last day of the we</returns>
+        public static DateTime LastWeekday(DateTime time, DayOfWeek dayofWeek)
         {
+
             var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
-            return (from day in Enumerable.Range(1, daysInMonth)
-                                  where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Wednesday
-                                  select new DateTime(time.Year, time.Month, day)).ElementAt(2);
+            return (from day in Enumerable.Range(1, daysInMonth).Reverse()
+                    where new DateTime(time.Year, time.Month, day).DayOfWeek == dayofWeek
+                    select new DateTime(time.Year, time.Month, day)).First();
         }
+
+        /// <summary>
+        /// Method to retrieve the last weekday of any month
+        /// </summary>
+        /// <param name="time">Date from the given month</param>
+        /// <param name="dayofWeek">the last weekday to be found</param>
+        /// <returns>Last day of the we</returns>
+        public static DateTime LastThursday(DateTime time) => LastWeekday(time, DayOfWeek.Thursday);
 
         /// <summary>
         /// Method to check whether a given time is holiday or not
