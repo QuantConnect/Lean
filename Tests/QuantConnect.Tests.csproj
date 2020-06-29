@@ -675,6 +675,7 @@
     <Compile Include="Indicators\ParabolicStopAndReverseTests.cs" />
     <Compile Include="Indicators\PercentagePriceOscillatorTests.cs" />
     <Compile Include="Indicators\FisherTransformTests.cs" />
+    <Compile Include="Indicators\SchaffTrendCycleTests.cs" />
     <Compile Include="Indicators\SwissArmyKnifeTests.cs" />
     <Compile Include="Indicators\VolumeWeightedAveragePriceIndicatorTests.cs" />
     <Compile Include="Indicators\WindowIdentityTests.cs" />
