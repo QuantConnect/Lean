@@ -191,7 +191,12 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 var message =
                     err.Message.Contains("ORA-20101") ? "Incorrect login credentials" :
-                    err.Message.Contains("ORA-20003") ? "API connections are not available on Mini accounts. If you have a standard account contact api@fxcm.com to enable API access" :
+                    err.Message.Contains("ORA-20003") ? "Contact api@fxcm.com to enable API access, below is a template email. " + Environment.NewLine +
+                        "Email: api@fxcm.com " + Environment.NewLine +
+                        "Template: " + Environment.NewLine +
+                        "Hello FXCM staff, " + Environment.NewLine +
+                        "Please enable Java API for all accounts which are associated with this email address. " + Environment.NewLine +
+                        "Also, please respond to this email address once Java API has been enabled, letting me know that the change was done successfully." :
                     err.Message;
 
                 _cancellationTokenSource.Cancel();

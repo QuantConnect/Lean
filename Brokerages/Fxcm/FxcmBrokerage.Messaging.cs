@@ -99,7 +99,7 @@ namespace QuantConnect.Brokerages.Fxcm
             if (_accounts[_accountId].getParties().getFXCMPositionMaintenance() == "Y")
             {
                 throw new NotSupportedException("FxcmBrokerage.LoadAccounts(): The Lean engine does not support accounts with Hedging enabled. " +
-                    "Please contact FXCM Active Trader support to disable Hedging. They can be reached at 646.432.2970 or by email, activetrader@fxcm.com."
+                    "Please contact FXCM Active Trader support to disable Hedging. They can be reached at https://www.fxcm.com/markets/contact-client-support/ through their Live Chat or Phone."
                 );
             }
         }
