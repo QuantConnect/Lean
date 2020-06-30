@@ -153,12 +153,12 @@ namespace QuantConnect.Brokerages.Alpaca
                             OrderFee.Zero,
                             "Alpaca Rejected Order Event") { Status = OrderStatus.Invalid });
                 }
-                else if (trade.Event == TradeEvent.Canceled)
+                else if (trade.Event == TradeEvent.Canceled || trade.Event == TradeEvent.Expired)
                 {
                     OnOrderEvent(new OrderEvent(order,
                         DateTime.UtcNow,
                         OrderFee.Zero,
-                        "Alpaca Cancel Order Event") { Status = OrderStatus.Canceled });
+                        $"Alpaca {trade.Event} Order Event") { Status = OrderStatus.Canceled });
                 }
                 else if (trade.Event == TradeEvent.OrderCancelRejected)
                 {
