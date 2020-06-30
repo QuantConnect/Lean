@@ -146,6 +146,13 @@ namespace QuantConnect.Brokerages.Alpaca
                         FillQuantity = fillQuantity * (order.Direction == OrderDirection.Buy ? 1 : -1)
                     });
                 }
+                else if (trade.Event == TradeEvent.Rejected)
+                {
+                    OnOrderEvent(new OrderEvent(order,
+                            DateTime.UtcNow,
+                            OrderFee.Zero,
+                            "Alpaca Rejected Order Event") { Status = OrderStatus.Invalid });
+                }
                 else if (trade.Event == TradeEvent.Canceled)
                 {
                     OnOrderEvent(new OrderEvent(order,
