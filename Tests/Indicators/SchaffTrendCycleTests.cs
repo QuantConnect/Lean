@@ -16,7 +16,7 @@ namespace QuantConnect.Tests.Indicators
 
         protected override string TestFileName
         {
-            get { return "spy_ad.txt"; }
+            get { return "spy_stc.txt"; }
         }
 
         protected override string TestColumnName
