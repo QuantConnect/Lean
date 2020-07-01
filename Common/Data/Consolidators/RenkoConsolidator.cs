@@ -85,18 +85,9 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="barSize">The constant value size of each bar</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
         public RenkoConsolidator(decimal barSize, bool evenBars = true)
+            : this(barSize, x => x.Value, x => 0, evenBars)
         {
-            if (barSize < Extensions.GetDecimalEpsilon())
-            {
-                throw new ArgumentOutOfRangeException(nameof(barSize), "RenkoConsolidator bar size must be positve and greater than 1e-28");
-            }
 
-            _barSize = barSize;
-            _selector = x => x.Value;
-            _volumeSelector = x => 0;
-            _evenBars = evenBars;
-
-            Type = RenkoType.Classic;
         }
 
         /// <summary>
@@ -135,21 +126,12 @@ namespace QuantConnect.Data.Consolidators
         public RenkoConsolidator(decimal barSize, PyObject selector, PyObject volumeSelector = null, bool evenBars = true)
             : this(barSize, evenBars)
         {
-            if (barSize < Extensions.GetDecimalEpsilon())
-            {
-                throw new ArgumentOutOfRangeException(nameof(barSize), "RenkoConsolidator bar size must be positve and greater than 1e-28");
-            }
-
             if (selector != null)
             {
                 if (!selector.TryConvertToDelegate(out _selector))
                 {
                     throw new ArgumentException("Unable to convert parameter 'selector' to delegate type Func<IBaseData, decimal>");
                 }
-            }
-            else
-            {
-                _selector = (x => x.Value);
             }
 
             if (volumeSelector != null)
@@ -158,10 +140,6 @@ namespace QuantConnect.Data.Consolidators
                 {
                     throw new ArgumentException("Unable to convert parameter 'volumeSelector' to delegate type Func<IBaseData, decimal>");
                 }
-            }
-            else
-            {
-                _volumeSelector = (x => 0);
             }
         }
 
