@@ -25,23 +25,21 @@ namespace QuantConnect.Indicators
         private readonly MovingAverageConvergenceDivergence _MACD;
         private readonly IndicatorBase<IndicatorDataPoint> _maximum;
         private readonly IndicatorBase<IndicatorDataPoint> _minimum;
-        private readonly IndicatorBase<IndicatorDataPoint> _sumFastK;
-        private readonly IndicatorBase<IndicatorDataPoint> _sumSlowK;
 
-        /// <summary>
-        /// Gets the value of the Slow Stochastics given Period K.
-        /// </summary>
-        public IndicatorBase<IndicatorDataPoint> StochK { get; }
+        //_K = %K FROM MACD; _D = %D FROM _K
+        private readonly IndicatorBase<IndicatorDataPoint> _K;
+        private readonly IndicatorBase<IndicatorDataPoint> _D;
+        private readonly IndicatorBase<IndicatorDataPoint> _maximumD;
+        private readonly IndicatorBase<IndicatorDataPoint> _minimumD;
 
-        /// <summary>
-        /// Gets the value of the Slow Stochastics given Period D.
-        /// </summary>
-        public IndicatorBase<IndicatorDataPoint> StochD { get; }
+        //PF = %K FROM %MACD_D; PFF = %D FROM PF
+        private readonly IndicatorBase<IndicatorDataPoint> _PF;
+        private readonly IndicatorBase<IndicatorDataPoint> _PFF;
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _MACD.IsReady;
+        public override bool IsReady => _PFF.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -55,11 +53,10 @@ namespace QuantConnect.Indicators
         /// <param name="fastPeriod">The fast moving average period</param>
         /// <param name="slowPeriod">The slow moving average period</param>
         /// <param name="cyclePeriod">The signal period</param>
-        /// <param name="dPeriod">The D period given to calculated the Slow %D</param>
         /// <param name="type">The type of moving averages to use</param>
 
-        public SchaffTrendCycle(int fastPeriod = 23, int slowPeriod = 50, int cyclePeriod = 10, int dPeriod = 3, MovingAverageType type = MovingAverageType.Exponential)
-            : this($"SchaffTrendCycle({fastPeriod},{slowPeriod},{cyclePeriod})", fastPeriod, slowPeriod, cyclePeriod, dPeriod, type)
+        public SchaffTrendCycle(int cyclePeriod = 10, int fastPeriod = 23, int slowPeriod = 50, MovingAverageType type = MovingAverageType.Exponential)
+            : this($"SchaffTrendCycle({cyclePeriod},{fastPeriod},{slowPeriod})", cyclePeriod, fastPeriod, slowPeriod, type)
         {
         }
 
@@ -70,31 +67,24 @@ namespace QuantConnect.Indicators
         /// <param name="fastPeriod">The fast moving average period</param>
         /// <param name="slowPeriod">The slow moving average period</param>
         /// <param name="cyclePeriod">The signal period</param>
-        /// <param name="dPeriod">The D period given to calculated the Slow %D</param>
         /// <param name="type">The type of moving averages to use</param>
-        public SchaffTrendCycle(string name, int fastPeriod, int slowPeriod, int cyclePeriod, int dPeriod, MovingAverageType type)
+        public SchaffTrendCycle(string name, int cyclePeriod, int fastPeriod, int slowPeriod, MovingAverageType type)
             : base(name)
         {
-            //Create MACD indicator and build Stochastics that take MACD values as input.
+            //Create MACD indicator and track max and min.
             _MACD = new MovingAverageConvergenceDivergence(fastPeriod, slowPeriod, cyclePeriod, type);
-            _maximum = _MACD.MAX(cyclePeriod,false);
-            _minimum = _MACD.MIN(cyclePeriod,false);
-            _sumFastK = new Sum(name + "_SumFastK", cyclePeriod).Of(_MACD, false);
-            _sumSlowK = new Sum(name + "_SumD", dPeriod).Of(_MACD, false);
+            _maximum = _MACD.MAX(cyclePeriod, false);
+            _minimum = _MACD.MIN(cyclePeriod, false);
 
+            //Stochastics of MACD variables
+            _K = new Identity(name + "_K");
+            _D = type.AsIndicator(3).Of(_K, false);
+            _maximumD = _D.MAX(cyclePeriod, false);
+            _minimumD = _D.MIN(cyclePeriod, false);
 
-            StochK = new FunctionalIndicator<IndicatorDataPoint>(name + "_StochK",
-                input => ComputeStochK(cyclePeriod, input),
-                stochK => _maximum.IsReady,
-                () => { }
-            ).Of(_MACD, false);
-
-            StochD = new FunctionalIndicator<IndicatorDataPoint>(
-                name + "_StochD",
-                input => ComputeStochD(cyclePeriod, dPeriod),
-                stochD => _maximum.IsReady,
-                () => { }
-            ).Of(_MACD, false);
+            //Stochastics of stochastics variables
+            _PF = new Identity(name + "_PF");
+            _PFF = type.AsIndicator(3).Of(_PF, false);
 
             WarmUpPeriod = cyclePeriod;
         }
@@ -109,43 +99,25 @@ namespace QuantConnect.Indicators
             // Update internal indicator, automatically updates _maximum and _minimum
             _MACD.Update(input);
 
-            var denominator = StochD - StochK;
+            //Update our Stochastics K, automatically updates our Stochastics D variable which is a smoothed version of K
+            var MACD_K = new IndicatorDataPoint(input.Time, ComputeStoch(_MACD.Current.Value, _maximum.Current.Value, _minimum.Current.Value));
+            _K.Update(MACD_K);
 
-            // if there's no range, just return constant zero
-            if (denominator == 0m)
-            {
-                return 0m;
-            }
+            //With our Stochastic D values calculate PF 
+            var PF = new IndicatorDataPoint(input.Time, ComputeStoch(_D.Current.Value, _maximumD.Current.Value, _minimumD.Current.Value));
+            _PF.Update(PF);
 
-            var numerator = _MACD - StochK;
-            var STC = _maximum.Samples >= WarmUpPeriod ? numerator / denominator : decimal.Zero;
-            return STC;
+            return _PFF;
         }
 
-        /// <summary>
-        /// Computes the Slow Stochastic %K.
-        /// </summary>
-        /// <param name="period">The period.</param>
-        /// <param name="input">The input.</param>
-        /// <returns>The Slow Stochastics %K value.</returns>
-        private decimal ComputeStochK(int period, IndicatorDataPoint input)
+        private decimal ComputeStoch(decimal value, decimal highest, decimal lowest)
         {
-            var stochK = _maximum.Samples >= (period) ? _sumFastK / period : decimal.Zero;
-            _sumSlowK.Update(input.Time, stochK);
-            return stochK;
+            var numerator = value - lowest;
+            var denominator = highest - lowest;
+
+            return denominator > 0 ? (numerator / denominator) * 100 : decimal.Zero;
         }
 
-        /// <summary>
-        /// Computes the Slow Stochastic %D.
-        /// </summary>
-        /// <param name="period">The period.</param>
-        /// <param name="dPeriod">The period for StochD Calculation</param>
-        /// <returns>The Slow Stochastics %D value.</returns>
-        private decimal ComputeStochD(int period, int dPeriod)
-        {
-            var stochD = _maximum.Samples >= (period + dPeriod - 2) ? _sumSlowK / dPeriod : decimal.Zero;
-            return stochD;
-        }
 
         /// <summary>
         /// Resets this indicator to its initial state
