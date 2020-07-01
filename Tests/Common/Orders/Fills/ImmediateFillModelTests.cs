@@ -284,7 +284,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             var slippageModel = new ConstantSlippageModel(.01m);
-            security.SetSlippageModel(new ConstantSlippageModel(.01m));
+            security.SetSlippageModel(slippageModel);
 
             // scenario 1: price doesn't trigger stop market fill
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101m));
@@ -338,7 +338,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             var slippageModel = new ConstantSlippageModel(.01m);
-            security.SetSlippageModel(new ConstantSlippageModel(.01m));
+            security.SetSlippageModel(slippageModel);
 
             // scenario 1: price doesn't trigger stop market fill
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102m));
