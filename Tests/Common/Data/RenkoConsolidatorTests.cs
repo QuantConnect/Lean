@@ -737,5 +737,24 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(openRenko.Low, 7.9);
             Assert.AreEqual(openRenko.Close, 7.9);
         }
+
+        [Test]
+        public void WickedArgumentExceptionRenkoTypeClassicTest()
+        {
+            Assert.Throws<ArgumentException>(() => new RenkoConsolidator(2.5m, RenkoType.Classic));
+        }
+
+        [Test]
+        public void ClassicArgumentOutOfRangeExceptionZeroBarSizeTests()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new RenkoConsolidator(0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new RenkoConsolidator(0, x => x.Value, x => 0));
+        }
+
+        [Test]
+        public void WickedArgumentOutOfRangeExceptionZeroBarSizeTests()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new RenkoConsolidator(0, RenkoType.Wicked));
+        }
     }
 }

@@ -68,6 +68,11 @@ namespace QuantConnect.Data.Consolidators
                 throw new ArgumentException($"RenkoConsolidator can only be initialized with RenkoType.Wicked. For RenkoType.Classic, please use the other constructor overloads.");
             }
 
+            if (barSize < Extensions.GetDecimalEpsilon())
+            {
+                throw new ArgumentOutOfRangeException(nameof(barSize), "RenkoConsolidator bar size must be positve and greater than 1e-28");
+            }
+
             _barSize = barSize;
             Type = type;
         }
@@ -81,6 +86,11 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
         public RenkoConsolidator(decimal barSize, bool evenBars = true)
         {
+            if (barSize < Extensions.GetDecimalEpsilon())
+            {
+                throw new ArgumentOutOfRangeException(nameof(barSize), "RenkoConsolidator bar size must be positve and greater than 1e-28");
+            }
+
             _barSize = barSize;
             _selector = x => x.Value;
             _volumeSelector = x => 0;
