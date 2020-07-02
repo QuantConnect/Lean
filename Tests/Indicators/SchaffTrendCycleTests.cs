@@ -24,17 +24,14 @@ namespace QuantConnect.Tests.Indicators
             get { return "STC"; }
         }
 
-        [Test]
-        public virtual void RunningTest()
+        /// <summary>
+        /// Returns a custom assertion function, parameters are the indicator and the expected value from the file
+        /// This overwrites the virtual function to allow a +/- 1 variance since this indicator is highly sensitive with
+        /// a chain of EMAs and Stochastics calculation.
+        /// </summary>
+        protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion
         {
-            var indicator = CreateIndicator();
-            var startDate = new DateTime(2019, 1, 1);
-
-            for (var i = 0; i < 30; i++)
-            {
-                var input = new IndicatorDataPoint(startDate.AddDays(i), 100m + i);
-                indicator.Update(input);
-            }
+            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 1); }
         }
     }
 }
