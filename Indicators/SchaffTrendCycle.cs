@@ -21,18 +21,19 @@ namespace QuantConnect.Indicators
     /// This indicator creates the Schaff Trend Cycle
     /// </summary>
     public class SchaffTrendCycle : Indicator, IIndicatorWarmUpPeriodProvider
-    {
+    {   
+        // MACD Variables
         private readonly MovingAverageConvergenceDivergence _MACD;
         private readonly IndicatorBase<IndicatorDataPoint> _maximum;
         private readonly IndicatorBase<IndicatorDataPoint> _minimum;
 
-        //_K = %K FROM MACD; _D = %D FROM _K
+        // _K = %K FROM MACD; _D = %D FROM _K
         private readonly IndicatorBase<IndicatorDataPoint> _K;
         private readonly IndicatorBase<IndicatorDataPoint> _D;
         private readonly IndicatorBase<IndicatorDataPoint> _maximumD;
         private readonly IndicatorBase<IndicatorDataPoint> _minimumD;
 
-        //PF = %K FROM %MACD_D; PFF = %D FROM PF
+        // PF = %K FROM %MACD_D; PFF = %D FROM PF
         private readonly IndicatorBase<IndicatorDataPoint> _PF;
         private readonly IndicatorBase<IndicatorDataPoint> _PFF;
 
@@ -54,7 +55,6 @@ namespace QuantConnect.Indicators
         /// <param name="slowPeriod">The slow moving average period</param>
         /// <param name="cyclePeriod">The signal period</param>
         /// <param name="type">The type of moving averages to use</param>
-
         public SchaffTrendCycle(int cyclePeriod = 10, int fastPeriod = 23, int slowPeriod = 50, MovingAverageType type = MovingAverageType.Exponential)
             : this($"SchaffTrendCycle({cyclePeriod},{fastPeriod},{slowPeriod})", cyclePeriod, fastPeriod, slowPeriod, type)
         {
@@ -82,7 +82,7 @@ namespace QuantConnect.Indicators
             _maximumD = _D.MAX(cyclePeriod, false);
             _minimumD = _D.MIN(cyclePeriod, false);
 
-            //Stochastics of stochastics variables
+            //Stochastics of MACD Stochastics variables; _PFF is STC
             _PF = new Identity(name + "_PF");
             _PFF = type.AsIndicator(3).Of(_PF, false);
 
@@ -99,17 +99,24 @@ namespace QuantConnect.Indicators
             // Update internal indicator, automatically updates _maximum and _minimum
             _MACD.Update(input);
 
-            //Update our Stochastics K, automatically updates our Stochastics D variable which is a smoothed version of K
+            // Update our Stochastics K, automatically updates our Stochastics D variable which is a smoothed version of K
             var MACD_K = new IndicatorDataPoint(input.Time, ComputeStoch(_MACD.Current.Value, _maximum.Current.Value, _minimum.Current.Value));
             _K.Update(MACD_K);
 
-            //With our Stochastic D values calculate PF 
+            // With our Stochastic D values calculate PF 
             var PF = new IndicatorDataPoint(input.Time, ComputeStoch(_D.Current.Value, _maximumD.Current.Value, _minimumD.Current.Value));
             _PF.Update(PF);
 
             return _PFF;
         }
 
+        /// <summary>
+        /// Computes the stochastics value for a series.
+        /// </summary>
+        /// <param name="value">The current value of the set</param>
+        /// <param name="highest">The max value of the set within a given period</param>
+        /// <param name="lowest">The min value of the set within a given period</param>
+        /// <returns>Stochastics valuereturns>
         private decimal ComputeStoch(decimal value, decimal highest, decimal lowest)
         {
             var numerator = value - lowest;
@@ -117,7 +124,6 @@ namespace QuantConnect.Indicators
 
             return denominator > 0 ? (numerator / denominator) * 100 : decimal.Zero;
         }
-
 
         /// <summary>
         /// Resets this indicator to its initial state
