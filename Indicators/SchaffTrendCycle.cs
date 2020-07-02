@@ -39,7 +39,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _PFF.IsReady;
+        public override bool IsReady => _MACD.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -127,6 +127,12 @@ namespace QuantConnect.Indicators
             _MACD.Reset();
             _maximum.Reset();
             _minimum.Reset();
+            _K.Reset();
+            _D.Reset();
+            _maximumD.Reset();
+            _minimumD.Reset();
+            _PF.Reset();
+            _PFF.Reset();
             base.Reset();
         }
     }
