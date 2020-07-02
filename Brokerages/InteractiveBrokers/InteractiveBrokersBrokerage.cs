@@ -2994,7 +2994,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             Log.Trace($"InteractiveBrokersBrokerage.OnIbAutomaterExited(): Exit code: {e.ExitCode}");
 
             // check if IBGateway was closed because of an IBAutomater error
-            CheckIbAutomaterError(_ibAutomater.GetLastStartResult(), false);
+            var result = _ibAutomater.GetLastStartResult();
+            CheckIbAutomaterError(result, false);
+
+            if (!result.HasError)
+            {
+                // IBGateway was closed by the v978+ automatic logoff or it was closed manually (less likely)
+                Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): IBGateway close detected, restarting IBAutomater and reconnecting...");
+
+                Disconnect();
+                CheckIbAutomaterError(_ibAutomater.Start(false));
+                Connect();
+            }
         }
 
         private void CheckIbAutomaterError(StartResult result, bool throwException = true)
