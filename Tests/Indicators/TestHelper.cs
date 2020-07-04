@@ -376,10 +376,14 @@ namespace QuantConnect.Tests.Indicators
         /// </summary>
         private static TradeBar GetTradeBar(this IReadOnlyDictionary<string, string> dictionary, bool forceVolumeColumn = false)
         {
+            var sid = (dictionary.ContainsKey("symbol") || dictionary.ContainsKey("ticker"))
+                ? SecurityIdentifier.GenerateEquity(dictionary.GetCsvValue("symbol", "ticker"), Market.USA)
+                : SecurityIdentifier.Empty;
+
             return new TradeBar
             {
-                Symbol = dictionary.ContainsKey("symbol") || dictionary.ContainsKey("ticker")
-                    ? new Symbol(SecurityIdentifier.Parse(dictionary.GetCsvValue("symbol", "ticker")), dictionary.GetCsvValue("symbol")) 
+                Symbol = sid != SecurityIdentifier.Empty
+                    ? new Symbol(sid, dictionary.GetCsvValue("symbol", "ticker"))
                     : Symbol.Empty,
                 Time = Time.ParseDate(dictionary.GetCsvValue("date", "time")),
                 Open = dictionary.GetCsvValue("open").ToDecimal(),
