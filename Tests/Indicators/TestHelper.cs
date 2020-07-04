@@ -378,6 +378,9 @@ namespace QuantConnect.Tests.Indicators
         {
             return new TradeBar
             {
+                Symbol = dictionary.ContainsKey("symbol") || dictionary.ContainsKey("ticker")
+                    ? new Symbol(SecurityIdentifier.Parse(dictionary.GetCsvValue("symbol", "ticker")), dictionary.GetCsvValue("symbol")) 
+                    : Symbol.Empty,
                 Time = Time.ParseDate(dictionary.GetCsvValue("date", "time")),
                 Open = dictionary.GetCsvValue("open").ToDecimal(),
                 High = dictionary.GetCsvValue("high").ToDecimal(),
