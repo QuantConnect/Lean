@@ -101,6 +101,7 @@
     <Compile Include="AccelerationBands.cs" />
     <Compile Include="AccumulationDistribution.cs" />
     <Compile Include="AccumulationDistributionOscillator.cs" />
+    <Compile Include="AdvanceDeclineRatio.cs" />
     <Compile Include="ArnaudLegouxMovingAverage.cs" />
     <Compile Include="AverageDirectionalIndex.cs" />
     <Compile Include="AverageDirectionalMovementIndexRating.cs" />
