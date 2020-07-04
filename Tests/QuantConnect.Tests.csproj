@@ -458,6 +458,7 @@
     <Compile Include="Engine\RealTime\BacktestingRealTimeHandlerTests.cs" />
     <Compile Include="Engine\Results\BacktestingResultHandlerTests.cs" />
     <Compile Include="Engine\Results\BaseResultsHandlerTests.cs" />
+    <Compile Include="Indicators\AdvanceDeclineRatioVolumeTests.cs" />
     <Compile Include="Indicators\AdvanceDeclineRatioTests.cs" />
     <Compile Include="Indicators\PythonIndicatorNoinheritanceTestsLegacy.cs" />
     <Compile Include="Indicators\PythonIndicatorNoinheritanceTests.cs" />
