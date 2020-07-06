@@ -34,5 +34,10 @@ namespace QuantConnect.Indicators
         /// The indicator encountered a math error during calculations
         /// </summary>
         MathError,
+
+        /// <summary>
+        /// The indicator value is not ready
+        /// </summary>
+        ValueNotReady
     }
 }
