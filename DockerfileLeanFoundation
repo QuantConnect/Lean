@@ -27,11 +27,11 @@ RUN apt-get install -y git bzip2 clang cmake curl unzip wget python3-pip python-
 RUN apt-get install -y openjdk-8-jdk openjdk-8-jre
 
 # Install IB Gateway: Installs to ~/Jts
-RUN wget http://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v974.4g.sh && \
-    chmod 777 ibgateway-latest-standalone-linux-x64-v974.4g.sh && \
-    ./ibgateway-latest-standalone-linux-x64-v974.4g.sh -q && \
+RUN wget http://cdn.quantconnect.com/interactive/ibgateway-stable-standalone-linux-x64-v978.2c.sh && \
+    chmod 777 ibgateway-stable-standalone-linux-x64-v978.2c.sh && \
+    ./ibgateway-stable-standalone-linux-x64-v978.2c.sh -q && \
     wget -O ~/Jts/jts.ini http://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v974.4g.jts.ini && \
-    rm ibgateway-latest-standalone-linux-x64-v974.4g.sh
+    rm ibgateway-stable-standalone-linux-x64-v978.2c.sh
 
 # Mono C# for LEAN:
 # From https://github.com/mono/docker/blob/master/
@@ -77,7 +77,7 @@ RUN conda install -y                \
     msgpack-python=1.0.0            \
     numba=0.46                      \
     setuptools-git=1.2              \
-    xarray=0.15.1 
+    xarray=0.15.1
 
 RUN conda install -y -c plotly      \
     plotly=4.6.0
@@ -90,7 +90,7 @@ RUN pip install tensorflow==1.15.2
 
 # Install math/ML packages
 RUN conda install -y                \
-    docutils=0.14                   \ 
+    docutils=0.14                   \
     cvxopt=1.2.0                    \
     gensim=3.8.0                    \
     keras=2.3.1                     \
@@ -105,7 +105,7 @@ RUN pip install cmdstanpy==0.4
 
 # Install math/ML from conda-forge
 RUN conda install -y -c conda-forge \
-    copulae=0.3.1                   \ 
+    copulae=0.3.1                   \
     featuretools=0.13.4             \
     fbprophet=0.6                   \
     pulp=1.6.8                      \
@@ -114,7 +114,7 @@ RUN conda install -y -c conda-forge \
     scikit-learn=0.21.3             \
     scikit-multiflow=0.4.1          \
     scikit-optimize=0.7.4           \
-    theano=1.0.4                    \    
+    theano=1.0.4                    \
     tsfresh=0.15.1                  \
     tslearn=0.3.1                   \
     tweepy=3.8.0                    \
@@ -203,27 +203,27 @@ RUN wget https://cdn.quantconnect.com/fastText/fastText-master-6d7c77c.zip && \
 
 # Update ODO
 RUN conda remove --force-remove -y odo
-RUN wget https://cdn.quantconnect.com/odo/odo-master-9fce669.zip && \ 
+RUN wget https://cdn.quantconnect.com/odo/odo-master-9fce669.zip && \
     unzip -q odo-master-9fce669.zip && cd odo-master && \
     python setup.py install && cd .. && rm -irf odo-master
 
 # Install Auto-KS
-RUN wget https://cdn.quantconnect.com/auto_ks/auto_ks-master-b39e8f3.zip && \ 
+RUN wget https://cdn.quantconnect.com/auto_ks/auto_ks-master-b39e8f3.zip && \
     unzip -q auto_ks-master-b39e8f3.zip && cd auto_ks-master && \
     python setup.py install && cd .. && rm -irf auto_ks-master
 
 # Install Pyrb
-RUN wget https://cdn.quantconnect.com/pyrb/pyrb-master-d02b56a.zip && \ 
+RUN wget https://cdn.quantconnect.com/pyrb/pyrb-master-d02b56a.zip && \
     unzip -q pyrb-master-d02b56a.zip && cd pyrb-master && \
     python setup.py install && cd .. && rm -irf pyrb-master
 
 # Install SSM
-RUN wget https://cdn.quantconnect.com/ssm/ssm-master-34b50d4.zip && \ 
+RUN wget https://cdn.quantconnect.com/ssm/ssm-master-34b50d4.zip && \
     unzip -q ssm-master-34b50d4.zip && cd ssm-master && \
     python setup.py install && cd .. && rm -irf ssm-master
 
 # Install Tigramite
-RUN wget https://cdn.quantconnect.com/tigramite/tigramite-master-eee4809.zip && \ 
+RUN wget https://cdn.quantconnect.com/tigramite/tigramite-master-eee4809.zip && \
     unzip -q tigramite-master-eee4809.zip && cd tigramite-master && \
     python setup.py install && cd .. && rm -irf tigramite-master
 
