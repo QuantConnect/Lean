@@ -284,5 +284,31 @@ namespace QuantConnect
         {
             return value.IfNotNullOrEmpty(default(T), func);
         }
+
+        /// <summary>
+        /// Retrieves a substring from this instance. The substring starts at a specified
+        /// character position and has a specified length.
+        /// </summary>
+        /// <paramref name="startIndex">The zero-based starting character position of a substring in this instance</paramref>
+        /// <paramref name="length">The number of characters in the substring</paramref>
+        public static string SafeSubstring(this string value, int startIndex, int length)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return value;
+            }
+
+            if (startIndex > value.Length - 1)
+            {
+                return string.Empty;
+            }
+
+            if (startIndex < - 1)
+            {
+                startIndex = 0;
+            }
+
+            return value.Substring(startIndex, Math.Min(length, value.Length - startIndex));
+        }
     }
 }
