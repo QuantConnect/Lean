@@ -287,9 +287,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         Assert.AreEqual(1, dataQueueHandler.Subscriptions.Count(x => x.Value.Contains("TESTUNIVERSE")));
                     }
-                    else if (dataQueueHandler.Subscriptions.Count == 5)
+                    else if (dataQueueHandler.Subscriptions.Count == 4)
                     {
-                        Assert.AreEqual(1, dataQueueHandler.Subscriptions.Count(x => x.Value.Contains("TESTUNIVERSE")));
+                        // Coarse universe isn't added to the data queue handler
+                        Assert.AreNotEqual(1, dataQueueHandler.Subscriptions.Count(x => x.Value.Contains("TESTUNIVERSE")));
                         Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
                         Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.AAPL));
                         Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
@@ -627,114 +628,22 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
-        public void CoarseFundamentalDataGetsPipedCorrectly()
-        {
-            var lck = new object();
-            BaseDataCollection list = null;
-
-            _algorithm.AddUniverse(coarse => coarse.Take(10).Select(x => x.Symbol));
-            var yieldedUniverseData = new ManualResetEvent(false);
-            var feed = RunDataFeed(getNextTicksFunction: fdqh =>
-            {
-                lock (lck)
-                {
-                    if (list != null)
-                        try
-                        {
-                            var tmp = list;
-                            return new List<BaseData> { tmp };
-                        }
-                        finally
-                        {
-                            list = null;
-                            yieldedUniverseData.Set();
-                        }
-                }
-                return Enumerable.Empty<BaseData>();
-            });
-
-            var receivedCoarseData = false;
-            ConsumeBridge(feed, TimeSpan.FromSeconds(3), ts =>
-            {
-                if (list == null)
-                {
-                    lock (lck)
-                    {
-                        var currentTime = _manualTimeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
-                        list = new BaseDataCollection { Symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA, false) };
-                        list.Data.Add(new CoarseFundamental
-                        {
-                            Symbol = Symbols.SPY,
-                            Time = currentTime - Time.OneDay, // hard-coded coarse period of one day
-                        });
-                    }
-                    yieldedUniverseData.WaitOne(TimeSpan.FromSeconds(3));
-                }
-
-                if (ts.UniverseData.Count > 0 &&
-                    ts.UniverseData.First().Value.Data.First() is CoarseFundamental)
-                {
-                    receivedCoarseData = true;
-                    // we got what we wanted, end unit test
-                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
-                }
-            }, sendUniverseData: true, alwaysInvoke:true, endDate:_startDate.AddDays(10));
-
-            yieldedUniverseData.DisposeSafely();
-            Assert.IsTrue(receivedCoarseData, "receivedCoarseData");
-        }
-
-        [Test]
         public void CoarseFundamentalDataIsHoldUntilTimeIsRight()
         {
-            var startDate = new DateTime(2018, 08, 1, 23, 0, 0);
-            _manualTimeProvider.SetCurrentTimeUtc(startDate);
+            _startDate = new DateTime(2014, 3, 25);
+            CustomMockedFileBaseData.StartDate = _startDate;
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+
             Console.WriteLine($"StartTime {_manualTimeProvider.GetUtcNow()}");
 
             // we just want to emit one single coarse data packet
-            var yieldUniverseData = false;
-            var yieldedUniverseData = false;
-            var emittedData = new ManualResetEvent(false);
-            var feed = RunDataFeed(getNextTicksFunction: fdqh =>
-            {
-                // just once
-                if (yieldUniverseData && !yieldedUniverseData)
-                {
-                    yieldedUniverseData = true;
-                    var currentTime = _manualTimeProvider.GetUtcNow();
-                    var data = new BaseDataCollection(currentTime, CoarseFundamental.CreateUniverseSymbol(Market.USA, false),
-                        new[]{new CoarseFundamental
-                        {
-                            Symbol = Symbols.SPY,
-                            Time = currentTime - Time.OneDay
-                        }});
-                    Console.WriteLine($"Emitted BaseDataCollection {data.Time} {data.EndTime}");
-
-                    // Assert data gets emitted in an 'invalid' time
-                    Assert.IsTrue(data.Time.Hour > 23 || data.Time.Hour < 5);
-                    emittedData.Set();
-                    return new[] { data };
-                }
-                return Enumerable.Empty<BaseData>();
-            });
+            var feed = RunDataFeed(getNextTicksFunction: fdqh => Enumerable.Empty<BaseData>());
 
             _algorithm.AddUniverse(coarse => coarse.Take(10).Select(x => x.Symbol));
-            _algorithm.OnEndOfTimeStep();
 
             var receivedCoarseData = false;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
-                if (yieldUniverseData)
-                {
-                    if (!emittedData.WaitOne(1000))
-                    {
-                        Assert.Fail("Timeout waiting for data to be produced");
-                    }
-                }
-                if (!yieldedUniverseData)
-                {
-                    yieldUniverseData = true;
-                }
                 if (ts.UniverseData.Count > 0 &&
                     ts.UniverseData.First().Value.Data.First() is CoarseFundamental)
                 {
@@ -744,22 +653,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     // Assert data got hold until time was right
                     Assert.IsTrue(now.Hour < 23 && now.Hour > 5, $"Unexpected now value: {now}");
                     receivedCoarseData = true;
-                }
 
-                if (yieldedUniverseData && receivedCoarseData)
-                {
                     // we got what we wanted, end unit test
                     _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
                 }
             }, sendUniverseData: true,
                 alwaysInvoke: true,
                 secondsTimeStep: 3600,
-                endDate: startDate.AddDays(1));
-            emittedData.DisposeSafely();
+                endDate: _startDate.AddDays(1));
 
             Console.WriteLine($"EndTime {_manualTimeProvider.GetUtcNow()}");
 
-            Assert.IsTrue(yieldedUniverseData, "No universe data points yielded.");
             Assert.IsTrue(receivedCoarseData, "Did not receive Coarse data.");
         }
 
@@ -826,33 +730,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void FineCoarseFundamentalDataGetsPipedCorrectly()
         {
-            var lck = new object();
-            BaseDataCollection list = null;
+            _startDate = new DateTime(2014, 3, 25);
+            CustomMockedFileBaseData.StartDate = _startDate;
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
 
-            var yieldedUniverseData = false;
-            var manualResetEvent = new ManualResetEvent(false);
-            var feed = RunDataFeed(getNextTicksFunction: fdqh =>
-            {
-                lock (lck)
-                {
-                    if (list != null)
-                        try
-                        {
-                            manualResetEvent.Set();
-                            var tmp = list;
-                            return new List<BaseData> { tmp };
-                        }
-                        finally
-                        {
-                            list = null;
-                            yieldedUniverseData = true;
-                        }
-                }
-                return Enumerable.Empty<BaseData>();
-            });
+            var feed = RunDataFeed(getNextTicksFunction: fdqh => Enumerable.Empty<BaseData>());
 
             var fineWasCalled = false;
-            _algorithm.AddUniverse(coarse => coarse.Take(1).Select(x => x.Symbol),
+            _algorithm.AddUniverse(coarse => coarse
+                    .Where(x => x.Symbol.ID.Symbol.Contains("AAPL")).Select((fundamental, i) => fundamental.Symbol),
                 fine =>
                 {
                     var symbol = fine.First().Symbol;
@@ -866,24 +752,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var receivedFundamentalsData = false;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
-                if (list == null)
-                {
-                    // we emit the data in the first loop
-                    lock (lck)
-                    {
-                        list = new BaseDataCollection { Symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA, false) };
-                        list.Data.Add(new CoarseFundamental
-                        {
-                            Symbol = Symbols.AAPL,
-                            Time = new DateTime(2014, 04, 24),
-                            HasFundamentalData = true
-                        });
-                    }
-
-                    // we wait for the data to be emitted by the DQH
-                    manualResetEvent.WaitOne(TimeSpan.FromSeconds(10));
-                }
-
                 if (ts.UniverseData.Count > 0 &&
                     ts.UniverseData.First().Value.Data.First() is Fundamentals)
                 {
@@ -891,72 +759,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     // we got what we wanted shortcut unit test
                     _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
                 }
-            }, sendUniverseData: true, alwaysInvoke: true, endDate: _startDate.AddDays(10));
+            }, sendUniverseData: true, alwaysInvoke: true, secondsTimeStep: 3600, endDate: _startDate.AddDays(10));
 
-            manualResetEvent.DisposeSafely();
-            Assert.IsTrue(yieldedUniverseData);
             Assert.IsTrue(receivedFundamentalsData);
             Assert.IsTrue(fineWasCalled);
-        }
-
-        [Test]
-        public void HandlesCoarseFundamentalData()
-        {
-            var yieldedUniverseData = false;
-            var lastEmission = DateTime.MinValue;
-            var feed = RunDataFeed(getNextTicksFunction: fdqh =>
-           {
-               var now = DateTime.UtcNow;
-               if (now - lastEmission > Time.OneSecond)
-               {
-                   _manualTimeProvider.AdvanceSeconds(1);
-                   lastEmission = now;
-                   var list = new BaseDataCollection
-                   {
-                       Symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA, false),
-                       Time = now.AddDays(-1)
-                   };
-                   list.Data.AddRange(Enumerable.Range(0, 50).Select(x => new CoarseFundamental
-                   {
-                       Symbol = Symbol.Create($"{x}", SecurityType.Equity, Market.USA)
-                   }));
-                   yieldedUniverseData = true;
-                   return new[] { list };
-               }
-               return Enumerable.Empty<BaseData>();
-           });
-
-            var dataReachedSelection = false;
-            _algorithm.AddUniverse(new FuncUniverse(
-                new SubscriptionDataConfig(typeof(CoarseFundamental),
-                    CoarseFundamental.CreateUniverseSymbol(Market.USA),
-                    Resolution.Daily,
-                    TimeZones.NewYork,
-                    TimeZones.NewYork,
-                    false,
-                    false,
-                    false),
-                new UniverseSettings(Resolution.Second, 1, true, false, TimeSpan.Zero), SecurityInitializer.Null,
-                coarse =>
-                {
-                    dataReachedSelection = true;
-                    var data = coarse.ToList();
-                    for (var i = 0; i < 10; i++)
-                    {
-                        dataReachedSelection &= data.Any(baseData => baseData.Symbol.Value == $"{i}");
-                    }
-                    return Enumerable.Empty<Symbol>();
-                }
-            ));
-
-            ConsumeBridge(feed, TimeSpan.FromSeconds(3), ts =>
-            {
-                Assert.IsTrue(_dataManager.DataFeedSubscriptions
-                    .Any(x => x.IsUniverseSelectionSubscription), "No universe selection subscriptions found.");
-            });
-
-            Assert.IsTrue(yieldedUniverseData, "No data points yielded.");
-            Assert.IsTrue(dataReachedSelection, "Data did not reach universe selection.");
         }
 
         [Test]
