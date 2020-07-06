@@ -424,7 +424,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var timeTriggered = request.Universe as ITimeTriggeredUniverse;
             if (timeTriggered != null)
             {
-                Log.Trace($"LiveTradingDataFeed.CreateUniverseSubscription(): Creating user defined universe: {config.Symbol}");
+                Log.Trace($"LiveTradingDataFeed.CreateUniverseSubscription(): Creating user defined universe: {config.Symbol.ID}");
 
                 // spoof a tick on the requested interval to trigger the universe selection function
                 var enumeratorFactory = new TimeTriggeredUniverseSubscriptionEnumeratorFactory(timeTriggered, MarketHoursDatabase.FromDataFolder(), _frontierTimeProvider);
@@ -438,33 +438,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else if (config.Type == typeof (CoarseFundamental))
             {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating coarse universe: " + config.Symbol.ToString());
+                Log.Trace($"LiveTradingDataFeed.CreateUniverseSubscription(): Creating coarse universe: {config.Symbol.ID}");
 
                 // we subscribe using a normalized symbol, without a random GUID,
                 // since the ticker plant will send the coarse data using this symbol
                 var normalizedSymbol = CoarseFundamental.CreateUniverseSymbol(config.Symbol.ID.Market, false);
 
-                // since we're binding to the data queue exchange we'll need to let him
-                // know that we expect this data
-                _dataQueueHandler.Subscribe(_job, new[] { normalizedSymbol });
+                // Will try to pull coarse data from the data folder every 30min, file with today's date.
+                // If lean is started today it will trigger initial coarse universe selection
+                var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider);
+                var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
+
+                // aggregates each coarse data point into a single BaseDataCollection
+                var aggregator = new BaseDataCollectionAggregatorEnumerator(enumeratorStack, normalizedSymbol, true);
+                _customExchange.AddEnumerator(normalizedSymbol, aggregator);
 
                 var enqueable = new EnqueueableEnumerator<BaseData>();
-                // We `AddDataHandler` not `Set` so we can have multiple handlers for the coarse data
-                _exchange.AddDataHandler(normalizedSymbol, data =>
+                _customExchange.SetDataHandler(normalizedSymbol, data =>
                 {
-                    enqueable.Enqueue(data);
-
+                    var coarseData = data as BaseDataCollection;
+                    enqueable.Enqueue(new BaseDataCollection(coarseData.Time, config.Symbol, coarseData.Data));
                     subscription.OnNewDataAvailable();
-
                 });
-
                 enumerator = GetConfiguredFrontierAwareEnumerator(enqueable, tzOffsetProvider,
                     // advance time if before 23pm or after 5am and not on Saturdays
                     time => time.Hour < 23 && time.Hour > 5 && time.DayOfWeek != DayOfWeek.Saturday);
             }
             else if (request.Universe is OptionChainUniverse)
             {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating option chain universe: " + config.Symbol.ToString());
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating option chain universe: " + config.Symbol.ID);
 
                 Func<SubscriptionRequest, IEnumerator<BaseData>, IEnumerator<BaseData>> configure = (subRequest, input) =>
                 {
@@ -500,7 +502,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else if (request.Universe is FuturesChainUniverse)
             {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating futures chain universe: " + config.Symbol.ToString());
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating futures chain universe: " + config.Symbol.ID);
 
                 var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
                 if (symbolUniverse == null)
@@ -518,7 +520,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else
             {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating custom universe: " + config.Symbol.ToString());
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating custom universe: " + config.Symbol.ID);
 
                 var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider);
                 var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
