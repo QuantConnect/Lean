@@ -460,6 +460,7 @@
     <Compile Include="Engine\Results\BaseResultsHandlerTests.cs" />
     <Compile Include="Indicators\AdvanceDeclineRatioVolumeTests.cs" />
     <Compile Include="Indicators\AdvanceDeclineRatioTests.cs" />
+    <Compile Include="Indicators\ArmsIndexTests.cs" />
     <Compile Include="Indicators\PythonIndicatorNoinheritanceTestsLegacy.cs" />
     <Compile Include="Indicators\PythonIndicatorNoinheritanceTests.cs" />
     <Compile Include="Indicators\PythonIndicatorTests.cs" />

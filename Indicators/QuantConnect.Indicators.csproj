@@ -103,6 +103,7 @@
     <Compile Include="AccumulationDistributionOscillator.cs" />
     <Compile Include="AdvanceDeclineVolumeRatio.cs" />
     <Compile Include="AdvanceDeclineRatio.cs" />
+    <Compile Include="ArmsIndex.cs" />
     <Compile Include="ArnaudLegouxMovingAverage.cs" />
     <Compile Include="AverageDirectionalIndex.cs" />
     <Compile Include="AverageDirectionalMovementIndexRating.cs" />
