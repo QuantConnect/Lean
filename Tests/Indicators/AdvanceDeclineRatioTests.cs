@@ -24,7 +24,11 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            return new AdvanceDeclineRatio("test_name");
+            var adr = new AdvanceDeclineRatio("test_name");
+            adr.AddStock(Symbol.Create("AAPL", SecurityType.Equity, Market.USA));
+            adr.AddStock(Symbol.Create("IBM", SecurityType.Equity, Market.USA));
+            adr.AddStock(Symbol.Create("GOOG", SecurityType.Equity, Market.USA));
+            return adr;
         }
 
         protected override string TestFileName => "arms_data.txt";
