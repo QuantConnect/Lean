@@ -1,0 +1,29 @@
+{
+    /*
+        VS Code Launch configuration for the LEAN engine,
+        In order to use this you need mono on your system path or define runtimeExecutable 
+        in the configuration and point it to mono.
+    */
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch",
+            "type": "mono",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceRoot}/Launcher/bin/Debug/QuantConnect.Lean.Launcher.exe",
+            "args": [
+                "--data-folder", "${workspaceFolder}/Data",
+                "--config", "${workspaceFolder}/Launcher/config.json"
+            ],
+            "cwd": "${workspaceRoot}/Launcher/bin/Debug/"
+        },
+        {
+            "name": "Attach",
+            "type": "mono",
+            "request": "attach",
+            "address": "localhost",
+            "port": 55555
+        }
+    ]
+}

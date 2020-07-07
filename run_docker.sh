@@ -30,6 +30,7 @@ else
     read -p "Enter absolute path to Lean config file [default: $default_config_file]: " config_file
     read -p "Enter absolute path to Data folder [default: $default_data_dir]: " data_dir
     read -p "Enter absolute path to store results [default: $default_results_dir]: " results_dir
+    read -p "Are you using a custom algorithm? (Must be updated in config!!) [Y/N default: N]: " custom_algorithm
 fi
 
 if [ -z "$image" ]; then
@@ -63,7 +64,33 @@ if [ ! -d "$results_dir" ]; then
     exit 1
 fi
 
-docker run --rm --mount type=bind,source=$config_file,target=/Lean/config.json,readonly \
- --mount type=bind,source=$data_dir,target=/Data,readonly \
- --mount type=bind,source=$results_dir,target=/Results \
- $image --data-folder /Data --results-destination-folder /Results --config /Lean/config.json
+if [ "$custom_algorithm" == "Y" ]; then
+    read -p "Is it a C# algorithm? (Ensure compiled if so!) [Y/N default: Y]: " question
+    if [ "$question" == "N" ]; then
+        read -p "Enter python algorithm name [include .py]: " attach_algorithm
+        algorithm_location=${current_dir}/Algorithm.Python/$attach_algorithm
+        algorithm_destination=/Lean/Algorithm.Python/$attach_algorithm
+    else
+        attach_algorithm=QuantConnect.Algorithm.CSharp.dll
+        algorithm_location=${current_dir}/Launcher/bin/Debug/$attach_algorithm
+        algorithm_destination=/Lean/Launcher/bin/Debug/$attach_algorithm
+    fi
+
+    if [ ! -a "$algorithm_location" ]; then
+	    echo "Algorithm file $attach_algorithm does not exist at $algorithm_location"
+	    exit 1
+    fi
+
+    docker run --rm --mount type=bind,source=$config_file,target=/Lean/config.json,readonly \
+    --mount type=bind,source=$data_dir,target=/Data,readonly \
+    --mount type=bind,source=$results_dir,target=/Results \
+    --mount type=bind,source=$algorithm_location,target=$algorithm_destination^
+    $image --data-folder /Data --results-destination-folder /Results --config /Lean/config.json
+else
+    docker run --rm --mount type=bind,source=$config_file,target=/Lean/config.json,readonly \
+    --mount type=bind,source=$data_dir,target=/Data,readonly \
+    --mount type=bind,source=$results_dir,target=/Results \
+    $image --data-folder /Data --results-destination-folder /Results --config /Lean/config.json
+fi
+
+read -p "Press Enter to close this process...."

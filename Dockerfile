@@ -8,9 +8,9 @@ FROM quantconnect/lean:foundation
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
-COPY ./Launcher/bin/Debug/ /Lean/Launcher/bin/Debug/
+COPY . /Lean/
 
 # Can override with '-w'
 WORKDIR /Lean/Launcher/bin/Debug
 
-ENTRYPOINT [ "mono", "QuantConnect.Lean.Launcher.exe" ]
+ENTRYPOINT [ "mono", "QuantConnect.Lean.Launcher.exe"]

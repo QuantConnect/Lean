@@ -26,6 +26,7 @@ if exist "%~1" (
     set /p config_file="Enter absolute path to Lean config file [default: %default_config_file%]: "
     set /p data_dir="Enter absolute path to Data folder [default: %default_data_dir%]: "
     set /p results_dir="Enter absolute path to store results [default: %default_results_dir%]: "
+    set /p custom_algorithm="Are you using a custom algorithm? (Must be updated in config!!) [Y/N default: N]: "	
 )
 
 if "%image%" == "" (
@@ -59,13 +60,50 @@ if not exist "%results_dir%" (
     goto script_exit
 )
 
-docker run --rm --mount type=bind,source=%config_file%,target=/Lean/config.json,readonly^
- --mount type=bind,source=%data_dir%,target=/Data,readonly^
- --mount type=bind,source=%results_dir%,target=/Results^
- %image% --data-folder /Data --results-destination-folder /Results --config /Lean/config.json
+if /I "%custom_algorithm%" == "Y" (
+    goto attach_custom_algorithm
+) else (
+    docker run --rm --mount type=bind,source=%config_file%,target=/Lean/Launcher/config.json,readonly^
+    --mount type=bind,source=%data_dir%,target=/Data,readonly^
+    --mount type=bind,source=%results_dir%,target=/Results^
+    %image% --data-folder /Data --results-destination-folder /Results --config /Lean/Launcher/config.json
+
+    goto script_exit
+)
+
+:attach_custom_algorithm
+set /p question="Is it a C# algorithm? (Ensure compiled if so!) [Y/N default: Y]: "
+
+if /I "%question%" == "N" (
+    set /p attach_algorithm="Enter python algorithm name [include .py]: "
+    set algorithm_location=%current_dir%Algorithm.Python\%attach_algorithm%
+    set algorithm_destination=/Lean/Algorithm.Python/%attach_algorithm%
+) else (
+    set attach_algorithm=QuantConnect.Algorithm.CSharp.dll
+    set algorithm_location=%current_dir%Launcher\bin\Debug\%attach_algorithm%
+    set algorithm_destination=/Lean/Launcher/bin/Debug/%attach_algorithm%
+)
+
+if not exist "%algorithm_location%" (
+    echo Algorithm file %attach_algorithm% does not exist at %algorithm_location%
+    goto script_exit
+)
+
+docker run --rm --mount type=bind,source=%config_file%,target=/Lean/Launcher/config.json,readonly^
+    --mount type=bind,source=%data_dir%,target=/Data,readonly^
+    --mount type=bind,source=%results_dir%,target=/Results^
+    --mount type=bind,source=%algorithm_location%,target=%algorithm_destination%^
+    %image% --data-folder /Data --results-destination-folder /Results --config /Lean/Launcher/config.json
 
 :script_exit
+
 set image=
 set data_dir=
 set results_dir=
 set config_file=
+set question =
+set attach_algorithm=
+set algorithm_location=
+set algorithm_destination=
+
+pause
