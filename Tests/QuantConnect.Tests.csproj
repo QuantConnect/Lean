@@ -174,6 +174,9 @@
     <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
       <HintPath>..\packages\NodaTime.1.3.4\lib\net35-Client\NodaTime.dll</HintPath>
     </Reference>
+    <Reference Include="protobuf-net, Version=2.4.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <HintPath>..\packages\protobuf-net.2.4.6\lib\net40\protobuf-net.dll</HintPath>
+    </Reference>
     <Reference Include="QuantConnect.Fxcm, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Brokerages\Fxcm\QuantConnect.Fxcm.dll</HintPath>
@@ -189,6 +192,7 @@
       <HintPath>..\packages\System.Collections.Specialized.4.3.0\lib\net46\System.Collections.Specialized.dll</HintPath>
     </Reference>
     <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
@@ -365,6 +369,7 @@
     <Compile Include="Common\Packets\ControlsTests.cs" />
     <Compile Include="Common\Securities\TestDefaultMarginCallModel.cs" />
     <Compile Include="Common\Statistics\AnnualPerformanceTests.cs" />
+    <Compile Include="Common\ProtobufSerializationTests.cs" />
     <Compile Include="Common\Statistics\StatisticsBuilderTests.cs" />
     <Compile Include="Common\Statistics\TrackingErrorTests.cs" />
     <Compile Include="Common\Storage\LocalObjectStoreTests.cs" />

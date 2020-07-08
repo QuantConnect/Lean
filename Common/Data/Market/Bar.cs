@@ -13,33 +13,38 @@
  * limitations under the License.
 */
 
-using System.Threading;
+using ProtoBuf;
 
 namespace QuantConnect.Data.Market
 {
     /// <summary>
     /// Base Bar Class: Open, High, Low, Close and Period.
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class Bar : IBar
     {
         /// <summary>
         /// Opening price of the bar: Defined as the price at the start of the time period.
         /// </summary>
+        [ProtoMember(1)]
         public decimal Open { get; set; }
 
         /// <summary>
         /// High price of the bar during the time period.
         /// </summary>
+        [ProtoMember(2)]
         public decimal High { get; set; }
 
         /// <summary>
         /// Low price of the bar during the time period.
         /// </summary>
+        [ProtoMember(3)]
         public decimal Low { get; set; }
 
         /// <summary>
         /// Closing price of the bar. Defined as the price at Start Time + TimeSpan.
         /// </summary>
+        [ProtoMember(4)]
         public decimal Close { get; set; }
 
         /// <summary>
