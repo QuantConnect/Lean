@@ -320,6 +320,7 @@
     <Compile Include="Interfaces\IDataChannelProvider.cs" />
     <Compile Include="Interfaces\IDataPermissionManager.cs" />
     <Compile Include="Interfaces\IExtendedDictionary.cs" />
+    <Compile Include="Interfaces\ILiveDataProvider.cs" />
     <Compile Include="Interfaces\IObjectStore.cs" />
     <Compile Include="Interfaces\IBrokerageCashSynchronizer.cs" />
     <Compile Include="Interfaces\IBusyCollection.cs" />

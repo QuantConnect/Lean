@@ -23,29 +23,34 @@ using QuantConnect.Packets;
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Task requestor interface with cloud system
+    /// Task requester interface with cloud system
     /// </summary>
+    /// <remarks>
+    /// This interface is the main entrypoint for external live streams of data
+    /// to enter the Lean engine. You will need a class deriving from <see cref="BaseData"/>, and you need to convert your data
+    /// into an instance of the class deriving from BaseData.
+    /// </remarks>
     [InheritedExport(typeof(IDataQueueHandler))]
     public interface IDataQueueHandler : IDisposable
     {
         /// <summary>
         /// Get the next ticks from the live trading data queue
         /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
+        /// <returns>IEnumerable list of data since the last update</returns>
         IEnumerable<BaseData> GetNextTicks();
 
         /// <summary>
         /// Adds the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
+        /// <param name="job">Job we're processing</param>
+        /// <param name="symbols">The symbols to be added</param>
         void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols);
 
         /// <summary>
         /// Removes the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
+        /// <param name="job">Job we're processing</param>
+        /// <param name="symbols">The symbols to be removed</param>
         void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols);
 
         /// <summary>

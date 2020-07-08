@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Configuration;
@@ -50,7 +51,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private ITimeProvider _timeProvider;
         private ITimeProvider _frontierTimeProvider;
         private IDataProvider _dataProvider;
-        private IDataQueueHandler _dataQueueHandler;
+        private ILiveDataProvider _liveDataProvider;
         private BaseDataExchange _exchange;
         private BaseDataExchange _customExchange;
         private SubscriptionCollection _subscriptions;
@@ -87,7 +88,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _job = (LiveNodePacket) job;
             _timeProvider = dataFeedTimeProvider.TimeProvider;
-            _dataQueueHandler = GetDataQueueHandler();
+            _liveDataProvider = GetDataQueueHandler();
             _dataProvider = dataProvider;
             _channelProvider = dataChannelProvider;
 
@@ -120,10 +121,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // check if we could create the subscription
             if (subscription != null)
             {
-                // send the subscription for the new symbol through to the data queuehandler
+                // send the subscription for the new symbol through to the live data provider
                 if (_channelProvider.ShouldStreamSubscription(_job, subscription.Configuration))
                 {
-                    _dataQueueHandler.Subscribe(_job, new[] { request.Security.Symbol });
+                    // We use `request.Configuration` instead of `request.Security.Subscriptions`
+                    // so that internal feeds like benchmark securities are also added into the
+                    // LiveDataProvider rather than outright skipping them because the user did
+                    // not explicitly add it to their algorithm.
+                    _liveDataProvider.Subscribe(new[] { request.Configuration });
                 }
             }
 
@@ -146,7 +151,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else
             {
-                _dataQueueHandler.Unsubscribe(_job, new[] { symbol });
+                _liveDataProvider.Unsubscribe(new[] { subscription.Configuration });
                 _exchange.RemoveDataHandler(symbol);
             }
         }
@@ -172,10 +177,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// the type specified in the configuration via the 'data-queue-handler'
         /// </summary>
         /// <returns>The loaded <see cref="IDataQueueHandler"/></returns>
-        protected virtual IDataQueueHandler GetDataQueueHandler()
+        protected virtual ILiveDataProvider GetDataQueueHandler()
         {
             Log.Trace($"LiveTradingDataFeed.GetDataQueueHandler(): will use {_job.DataQueueHandler}");
-            return Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(_job.DataQueueHandler);
+            return new DataQueueHandlerLiveDataProvider(
+                Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(_job.DataQueueHandler),
+                _job);
         }
 
         /// <summary>
@@ -486,7 +493,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return new LiveFillForwardEnumerator(_frontierTimeProvider, input, request.Security.Exchange, fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone, request.StartTimeLocal);
                 };
 
-                var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
+                var symbolUniverse = _liveDataProvider as IDataQueueUniverseProvider ??
+                                     (_liveDataProvider as DataQueueHandlerLiveDataProvider)?.DataQueueHandler as IDataQueueUniverseProvider;
                 if (symbolUniverse == null)
                 {
                     throw new NotSupportedException("The DataQueueHandler does not support Options.");
@@ -504,7 +512,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating futures chain universe: " + config.Symbol.ID);
 
-                var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
+                var symbolUniverse = _liveDataProvider as IDataQueueUniverseProvider ??
+                                     (_liveDataProvider as DataQueueHandlerLiveDataProvider)?.DataQueueHandler as IDataQueueUniverseProvider;
                 if (symbolUniverse == null)
                 {
                     throw new NotSupportedException("The DataQueueHandler does not support Futures.");
@@ -575,7 +584,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
                 int ticks = 0;
-                foreach (var data in _dataQueueHandler.GetNextTicks())
+                foreach (var data in _liveDataProvider.Next())
                 {
                     ticks++;
                     yield return data;
