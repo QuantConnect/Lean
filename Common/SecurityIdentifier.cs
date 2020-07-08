@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Newtonsoft.Json;
+using ProtoBuf;
 using QuantConnect.Configuration;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -37,6 +38,7 @@ namespace QuantConnect
     /// The symbol is limited to 12 characters
     /// </remarks>
     [JsonConverter(typeof(SecurityIdentifierJsonConverter))]
+    [ProtoContract(SkipConstructor = true)]
     public struct SecurityIdentifier : IEquatable<SecurityIdentifier>
     {
         #region Empty, DefaultDate Fields
@@ -105,8 +107,11 @@ namespace QuantConnect
 
         #region Member variables
 
+        [ProtoMember(1)]
         private readonly string _symbol;
+        [ProtoMember(2)]
         private readonly ulong _properties;
+        [ProtoMember(3)]
         private readonly SidBox _underlying;
         private readonly int _hashCode;
         private decimal? _strikePrice;
@@ -207,6 +212,7 @@ namespace QuantConnect
         /// <summary>
         /// Gets the security type component of this security identifier.
         /// </summary>
+        [ProtoMember(4)]
         public SecurityType SecurityType { get; }
 
         /// <summary>

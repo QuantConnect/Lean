@@ -16,6 +16,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using ProtoBuf;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 
@@ -25,41 +26,49 @@ namespace QuantConnect.Data.Market
     /// Tick class is the base representation for tick data. It is grouped into a Ticks object
     /// which implements IDictionary and passed into an OnData event handler.
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class Tick : BaseData
     {
         /// <summary>
         /// Type of the Tick: Trade or Quote.
         /// </summary>
+        [ProtoMember(10)]
         public TickType TickType = TickType.Trade;
 
         /// <summary>
         /// Quantity exchanged in a trade.
         /// </summary>
+        [ProtoMember(11)]
         public decimal Quantity = 0;
 
         /// <summary>
         /// Exchange we are executing on. String short code expanded in the MarketCodes.US global dictionary
         /// </summary>
+        [ProtoMember(12)]
         public string Exchange = "";
 
         /// <summary>
         /// Sale condition for the tick.
         /// </summary>
+        [ProtoMember(13)]
         public string SaleCondition = "";
 
         /// <summary>
         /// Bool whether this is a suspicious tick
         /// </summary>
+        [ProtoMember(14)]
         public bool Suspicious = false;
 
         /// <summary>
         /// Bid Price for Tick
         /// </summary>
+        [ProtoMember(15)]
         public decimal BidPrice = 0;
 
         /// <summary>
         /// Asking price for the Tick quote.
         /// </summary>
+        [ProtoMember(16)]
         public decimal AskPrice = 0;
 
         /// <summary>
@@ -76,11 +85,13 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Size of bid quote.
         /// </summary>
+        [ProtoMember(17)]
         public decimal BidSize = 0;
 
         /// <summary>
         /// Size of ask quote.
         /// </summary>
+        [ProtoMember(18)]
         public decimal AskSize = 0;
 
         //In Base Class: Alias of Closing:

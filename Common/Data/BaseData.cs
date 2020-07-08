@@ -19,6 +19,8 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using NodaTime;
+using ProtoBuf;
+using QuantConnect.Data.Market;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data
@@ -27,6 +29,10 @@ namespace QuantConnect.Data
     /// Abstract base data class of QuantConnect. It is intended to be extended to define
     /// generic user customizable data types while at the same time implementing the basics of data where possible
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
+    [ProtoInclude(8, typeof(Tick))]
+    [ProtoInclude(100, typeof(TradeBar))]
+    [ProtoInclude(200, typeof(QuoteBar))]
     public abstract class BaseData : IBaseData
     {
         private decimal _value;
@@ -51,23 +57,27 @@ namespace QuantConnect.Data
         /// Market Data Type of this data - does it come in individual price packets or is it grouped into OHLC.
         /// </summary>
         /// <remarks>Data is classed into two categories - streams of instantaneous prices and groups of OHLC data.</remarks>
+        [ProtoMember(1)]
         public MarketDataType DataType { get; set; } = MarketDataType.Base;
 
         /// <summary>
         /// True if this is a fill forward piece of data
         /// </summary>
+        [ProtoMember(2)]
         public bool IsFillForward { get; private set; }
 
         /// <summary>
         /// Current time marker of this data packet.
         /// </summary>
         /// <remarks>All data is timeseries based.</remarks>
+        [ProtoMember(3)]
         public DateTime Time { get; set; }
 
         /// <summary>
         /// The end time of this data. Some data covers spans (trade bars) and as such we want
         /// to know the entire time span covered
         /// </summary>
+        [ProtoMember(4)]
         public virtual DateTime EndTime
         {
             get { return Time; }
@@ -77,12 +87,14 @@ namespace QuantConnect.Data
         /// <summary>
         /// Symbol representation for underlying Security
         /// </summary>
+        [ProtoMember(5)]
         public Symbol Symbol { get; set; } = Symbol.Empty;
 
         /// <summary>
         /// Value representation of this data packet. All data requires a representative value for this moment in time.
         /// For streams of data this is the price now, for OHLC packets this is the closing price.
         /// </summary>
+        [ProtoMember(6)]
         public virtual decimal Value
         {
             get
