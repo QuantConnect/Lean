@@ -211,11 +211,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>A new subscription instance of the specified security</returns>
         protected Subscription CreateDataSubscription(SubscriptionRequest request)
         {
+            Subscription subscription = null;
+            var subscriptionRef = new Ref<Subscription>(() => subscription, value => { subscription = value; });
+
             try
             {
                 var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
                 var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
-                var enumerator = _liveDataAggregator.CreateEnumerator(request, timeZoneOffsetProvider);
+                var enumerator = _liveDataAggregator.CreateEnumerator(subscriptionRef, request, timeZoneOffsetProvider);
 
                 if (request.Configuration.FillDataForward)
                 {
@@ -234,14 +237,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
 
                 var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, timeZoneOffsetProvider, enumerator);
-                _liveDataAggregator.Subscription = new Subscription(request, subscriptionDataEnumerator, timeZoneOffsetProvider);
+                subscriptionRef.Value = new Subscription(request, subscriptionDataEnumerator, timeZoneOffsetProvider);
             }
             catch (Exception err)
             {
                 Log.Error(err);
             }
 
-            return _liveDataAggregator.Subscription;
+            return subscriptionRef.Value;
         }
 
         /// <summary>
