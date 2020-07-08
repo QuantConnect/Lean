@@ -169,6 +169,7 @@
     <Compile Include="DataFeeds\BaseSubscriptionDataSourceReader.cs" />
     <Compile Include="DataFeeds\CachingFutureChainProvider.cs" />
     <Compile Include="DataFeeds\CachingOptionChainProvider.cs" />
+    <Compile Include="DataFeeds\LiveDataAggregator.cs" />
     <Compile Include="DataFeeds\DataQueueHandlerLiveDataProvider.cs" />
     <Compile Include="DataFeeds\CurrencySubscriptionDataConfigManager.cs" />
     <Compile Include="DataFeeds\DataChannelProvider.cs" />

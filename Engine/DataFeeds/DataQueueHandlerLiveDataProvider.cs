@@ -34,6 +34,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </remarks>
     public class DataQueueHandlerLiveDataProvider : ILiveDataProvider
     {
+        private readonly LiveDataAggregator _liveDataAggregator;
         private readonly LiveNodePacket _jobPacket;
 
         /// <summary>
@@ -48,8 +49,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="job">Node packet job</param>
         public DataQueueHandlerLiveDataProvider(IDataQueueHandler queueHandler, LiveNodePacket job)
         {
-            DataQueueHandler = queueHandler;
             _jobPacket = job;
+
+            DataQueueHandler = queueHandler;
         }
 
         /// <summary>
