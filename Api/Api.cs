@@ -802,36 +802,31 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Create a new node
+        /// Create a new node defined by the SKU under a given organization
         /// </summary>
-        /// <param name="name">New node name</param>
-        /// <param name="organizationId">Organization ID</param>
-        /// <param name="sku">Internal Node Type</param>
-        /// <returns>Returns result node, or null if it fails</returns>
-        public Node CreateNode(string name, string organizationId, string sku)
+        /// <param name="name">The name of the new node</param>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <param name="sku">Node type to be created</param>
+        /// <returns>Returns resulting <see cref="Node"/>, or null if it fails</returns>
+        public CreatedNode CreateNode(string name, string organizationId, SKU sku)
         {
             var request = new RestRequest("nodes/create", Method.POST);
             request.AddParameter("name", name);
             request.AddParameter("organizationId", organizationId);
-            request.AddParameter("sku", sku);
+            request.AddParameter("sku", sku.ToString());
 
             CreatedNode result;
             ApiConnection.TryRequest(request, out result);
 
-            if(result == null)
-            {
-                return null;
-            }
-
-            return result.Node;
+            return result;
         }
 
         /// <summary>
-        /// Read organizations nodes
+        /// Read and return the given organization's nodes
         /// </summary>
-        /// <param name="organizationId">Organization ID</param>
-        /// <returns>Returns rest reply</returns>
-        public NodeList ReadNode(string organizationId)
+        /// <param name="organizationId">ID of the organization</param>
+        /// <returns><see cref="NodeList"/> containing Backtest, Research, and Live Nodes</returns>
+        public NodeList ReadNodes(string organizationId)
         {
             var request = new RestRequest("nodes/read", Method.POST);
             request.RequestFormat = DataFormat.Json;
@@ -847,8 +842,8 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="nodeId">The node ID of the node you want to update</param>
         /// <param name="newName">The new name for that node</param>
-        /// <param name="organizationId">Organization ID</param>
-        /// <returns>Returns rest reply</returns>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
         public RestResponse UpdateNode(string nodeId, string newName, string organizationId)
         {
             var request = new RestRequest("nodes/update", Method.POST);
@@ -863,11 +858,11 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Delete a Node
+        /// Delete a node from an organization
         /// </summary>
         /// <param name="nodeId">The node ID of the node you want to delete</param>
-        /// <param name="organizationId">Organization ID</param>
-        /// <returns>Returns rest reply</returns>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
         public RestResponse DeleteNode(string nodeId, string organizationId)
         {
             var request = new RestRequest("nodes/delete", Method.POST);
@@ -881,11 +876,11 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Stop a Node
+        /// Stop a running node
         /// </summary>
         /// <param name="nodeId">The node ID of the node you want to stop</param>
-        /// <param name="organizationId">Organization ID</param>
-        /// <returns>Returns rest reply</returns>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
         public RestResponse StopNode(string nodeId, string organizationId)
         {
             var request = new RestRequest("nodes/stop", Method.POST);
@@ -896,18 +891,6 @@ namespace QuantConnect.Api
             RestResponse result;
             ApiConnection.TryRequest(request, out result);
             return result;
-        }
-
-        /// <summary>
-        /// node/create rest api response wrapper
-        /// </summary>
-        private class CreatedNode : RestResponse
-        {
-            /// <summary>
-            /// Contains the node
-            /// </summary>
-            [JsonProperty("node")]
-            public Node Node { get; set; }
         }
     }
 }

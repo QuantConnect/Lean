@@ -13,75 +13,73 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Api;
-using QuantConnect.Util;
 
 namespace QuantConnect.API
 {
     /// <summary>
-    /// Node obj for API response
+    /// Node obj for API response, contains all relevant data members for a node.
     /// </summary>
     public class Node
     {
         /// <summary>
-        /// The nodes cpu speed
+        /// The nodes cpu clock speed in GHz
         /// </summary>
         [JsonProperty(PropertyName = "speed")]
         public decimal Speed { get; set; }
 
         /// <summary>
-        /// The price of the node
+        /// The monthly price of the node in US dollars
         /// </summary>
         [JsonProperty(PropertyName = "price")]
         public int Price { get; set; }
 
         /// <summary>
-        /// CPU Count of node
+        /// CPU core count of node
         /// </summary>
         [JsonProperty(PropertyName = "cpu")]
         public int CpuCount { get; set; }
 
         /// <summary>
-        /// Size of RAM
+        /// Size of RAM in Gigabytes
         /// </summary>
         [JsonProperty(PropertyName = "ram")]
         public decimal Ram { get; set; }
 
         /// <summary>
-        /// Name of node
+        /// Name of the node
         /// </summary>
         [JsonProperty(PropertyName = "name")]
         public string Name { get; set; }
 
         /// <summary>
-        /// Node type (Sku)
+        /// Node type identifier for configuration
         /// </summary>
         [JsonProperty(PropertyName = "sku")]
-        public string Sku { get; set; }
+        public string SKU { get; set; }
 
         /// <summary>
-        /// String description of Node
+        /// String description of the node
         /// </summary>
         [JsonProperty(PropertyName = "description")]
         public string Description { get; set; }
 
         /// <summary>
-        /// Used by 
+        /// User currently using the node
         /// </summary>
         [JsonProperty(PropertyName = "usedBy")]
         public string UsedBy { get; set; }
 
         /// <summary>
-        /// Project it is being used for
+        /// Project the node is being used for
         /// </summary>
         [JsonProperty(PropertyName = "projectName")]
         public string ProjectName { get; set; }
 
         /// <summary>
-        /// Bool if the node is currently busy
+        /// Boolean if the node is currently busy
         /// </summary>
         [JsonProperty(PropertyName = "busy")]
         public bool Busy { get; set; }
@@ -91,33 +89,11 @@ namespace QuantConnect.API
         /// </summary>
         [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }
-
-        /// <summary>
-        /// Determine the appropriate SKU for a node by params
-        /// </summary>
-        /// <param name="cores">Number of cores</param>
-        /// <param name="memory">Size of RAM</param>
-        /// <param name="target">Target Environment Live/Backtest/Research</param>
-        /// <returns>Returns the SKU as a string for the node desired</returns>
-        public static string GetSKU(int cores, int memory, string target)
-        {
-            var result = $"{target[0]}";
-
-            if(cores == 0)
-            {
-                result += "-micro";
-            } 
-            else
-            {
-                result += cores + "-" + memory;
-            }
-
-            return result;
-        }
     }
 
     /// <summary>
-    /// node/read rest api response wrapper
+    /// Rest api response wrapper for node/read, contains the set of node lists for each
+    /// target environment.
     /// </summary>
     public class NodeList : RestResponse
     {
@@ -138,5 +114,97 @@ namespace QuantConnect.API
         /// </summary>
         [JsonProperty(PropertyName = "live")]
         public List<Node> LiveNodes;
+    }
+
+    /// <summary>
+    /// Rest api response wrapper for node/create, contains the new node object created
+    /// </summary>
+    public class CreatedNode : RestResponse
+    {
+        /// <summary>
+        /// The created node from node/create
+        /// </summary>
+        [JsonProperty("node")]
+        public Node Node { get; set; }
+    }
+
+    /// <summary>
+    /// Class for generating a SKU for a node with a given configuration
+    /// </summary>
+    public class SKU
+    {
+        /// <summary>
+        /// The number of CPU cores in the node
+        /// </summary>
+        public int cores;
+
+        /// <summary>
+        /// Size of RAM in GB of the Node
+        /// </summary>
+        public int memory;
+
+        /// <summary>
+        /// Target environment for the node
+        /// </summary>
+        public NodeType target;
+
+        /// <summary>
+        /// Constructs a SKU object out of the provided node configuration
+        /// </summary>
+        /// <param name="cores">Number of cores</param>
+        /// <param name="memory">Size of RAM in GBs</param>
+        /// <param name="target">Target Environment Live/Backtest/Research</param>
+        public SKU(int cores, int memory, NodeType target)
+        {
+            this.cores = cores;
+            this.memory = memory;
+            this.target = target;
+        }
+
+        /// <summary>
+        /// Generates the SKU string for API calls based on the specifications of the node
+        /// </summary>
+        /// <returns>String representation of the SKU</returns>
+        public override string ToString()
+        {
+            string result = "";
+
+            switch (target)
+            {
+                case NodeType.Backtest: 
+                    result += "B";
+                    break;
+                case NodeType.Research:
+                    result += "R";
+                    break;
+                case NodeType.Live:
+                    result += "L";
+                    break;
+            }
+
+            if (cores == 0)
+            {
+                result += "-Micro";
+            }
+            else
+            {
+                result += cores + "-" + memory;
+            }
+
+            return result;
+        }
+    }
+
+    /// <summary>
+    /// The possible target environments for Nodes
+    /// </summary>
+    public enum NodeType
+    {
+        /// A node for running backtests
+        Backtest,   //0
+        /// A node for running research
+        Research,   //1
+        /// A node for live trading
+        Live        //2
     }
 }

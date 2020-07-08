@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Web;
+using com.sun.corba.se.spi.protocol;
 using NUnit.Framework;
 using QuantConnect.Api;
 using QuantConnect.API;
@@ -18,11 +19,10 @@ namespace QuantConnect.Tests.API
         private int _testAccount = 1;
         private string _testToken = "ec87b337ac970da4cbea648f24f1c851";
         private string _testOrganization = "enter Org ID here";
-        private string _dataFolder = Config.Get("data-folder");
         private Api.Api _api;
 
         /// <summary>
-        /// Run before every test
+        /// Setup for this text fixture, will create API connection.
         /// </summary>
         [SetUp]
         public void Setup()
@@ -37,10 +37,10 @@ namespace QuantConnect.Tests.API
         [Test]
         public void CreateNewNode()
         {
-            string sku = Node.GetSKU(2, 8, "backtest");
+            var sku = new SKU(2, 8, NodeType.Backtest);
             var nodeName = $"{DateTime.UtcNow.Minute}:{DateTime.UtcNow.Second}-Pinocho";
             var newNode = _api.CreateNode(nodeName, _testOrganization, sku);
-            Assert.IsNotNull(newNode);
+            Assert.IsTrue(newNode.Success);
         }
 
         /// <summary>
@@ -49,19 +49,22 @@ namespace QuantConnect.Tests.API
         [Test]
         public void ReadNode()
         {
-            var result = _api.ReadNode(_testOrganization);
+            var result = _api.ReadNodes(_testOrganization);
             Assert.IsTrue(result.Success);
         }
 
         /// <summary>
         /// Create, Read, Update, and Delete a node!
         /// </summary>
-        /// <param name="sku">Node Type Identifier</param>
-        [TestCase("B2-8")]
-        [TestCase("L-micro")]
-        [TestCase("r8-16")]
-        public void CRUDNodes(string sku)
+        /// <param name="cores">Number of cores for the node</param>
+        /// <param name="memory">Amount of RAM in GB for the node</param>
+        /// <param name="target">Target environment for the node</param>
+        [TestCase(2, 8, NodeType.Backtest)]
+        [TestCase(0, 0, NodeType.Live)]
+        [TestCase(8, 16, NodeType.Research)]
+        public void CRUDNodes(int cores, int memory, NodeType target)
         {
+            var sku = new SKU(cores, memory, target);
             var nodeName = $"{DateTime.UtcNow.Minute}:{DateTime.UtcNow.Second}-Pinocho";
             var nodeName2 = $"{DateTime.UtcNow.Minute}:{DateTime.UtcNow.Second}-Monstro";
 
@@ -93,11 +96,12 @@ namespace QuantConnect.Tests.API
         /// Helper function for finding a node by name, used by tests that are looking for a certain node.
         /// With some small adjustments could be moved to an api function.
         /// </summary>
-        /// <param name="name">Node name</param>
+        /// <param name="name">Name of the node</param>
+        /// <returns>The Node if found, null if not</returns>
         public Node FindNodeByName(string name)
         {
             Node result = null;
-            var readNodeRequest = _api.ReadNode(_testOrganization);
+            var readNodeRequest = _api.ReadNodes(_testOrganization);
             var allNodes = readNodeRequest.BacktestNodes.Concat(readNodeRequest.LiveNodes).Concat(readNodeRequest.ResearchNodes);
 
             foreach (var Node in allNodes)
@@ -119,20 +123,20 @@ namespace QuantConnect.Tests.API
         /// <param name="memory">Size of memory</param>
         /// <param name="target">Target node environment</param>
         /// <param name="expectedResult">Expected Result</param>
-        [TestCase(0, 0, "Live", "L-micro")]
-        [TestCase(1, 1, "Live", "L1-1")]
-        [TestCase(1, 2, "live", "l1-2")]
-        [TestCase(1, 4, "L", "L1-4")]
-        [TestCase(2, 8, "B", "B2-8")]
-        [TestCase(4, 12, "Backtest", "B4-12")]
-        [TestCase(1, 4, "R", "R1-4")]
-        [TestCase(2, 8, "R", "R2-8")]
-        [TestCase(4, 12, "Research", "R4-12")]
-        [TestCase(8, 16, "research", "r8-16")]
-        public void SkuIsGeneratedCorrectly(int cores, int memory, string target, string expectedResult)
+        [TestCase(0, 0, NodeType.Live, "L-micro")]
+        [TestCase(1, 1, NodeType.Live, "L1-1")]
+        [TestCase(1, 2, NodeType.Live, "L1-2")]
+        [TestCase(1, 4, NodeType.Live, "L1-4")]
+        [TestCase(2, 8, NodeType.Backtest, "B2-8")]
+        [TestCase(4, 12, NodeType.Backtest, "B4-12")]
+        [TestCase(1, 4, NodeType.Research, "R1-4")]
+        [TestCase(2, 8, NodeType.Research, "R2-8")]
+        [TestCase(4, 12, NodeType.Research, "R4-12")]
+        [TestCase(8, 16, NodeType.Research, "R8-16")]
+        public void SkuIsGeneratedCorrectly(int cores, int memory, NodeType target, string expectedResult)
         {
-            string SKU = Node.GetSKU(cores, memory, target);
-            Assert.IsTrue(SKU == expectedResult);
+            var SKU = new SKU(cores, memory, target);
+            Assert.IsTrue(SKU.ToString() == expectedResult);
         }
 
         /// <summary>
@@ -142,7 +146,7 @@ namespace QuantConnect.Tests.API
         public void ReadAndStop()
         {
             // Then read the nodes from the org
-            var readNodeRequest = _api.ReadNode(_testOrganization);
+            var readNodeRequest = _api.ReadNodes(_testOrganization);
             Assert.IsTrue(readNodeRequest.Success);
 
             //Iterate through all nodes and stop them if they are running
