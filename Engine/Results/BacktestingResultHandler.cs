@@ -321,7 +321,7 @@ namespace QuantConnect.Lean.Engine.Results
                     SaveResults(key, results);
 
                     // Store Order Events in a separate file
-                    StoreOrderEvents(Algorithm.UtcTime, result.Results.OrderEvents);
+                    StoreOrderEvents(Algorithm?.UtcTime ?? DateTime.UtcNow, result.Results.OrderEvents);
                 }
                 else
                 {
@@ -367,7 +367,7 @@ namespace QuantConnect.Lean.Engine.Results
                 }
                 else
                 {
-                    result = new BacktestResultPacket(_job, new BacktestResult(), DateTime.UtcNow, DateTime.UtcNow);
+                    result = BacktestResultPacket.CreateEmpty(_job);
                 }
                 result.ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds;
                 result.DateFinished = DateTime.Now;
