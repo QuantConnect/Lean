@@ -13,13 +13,7 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Data.Market;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Indicators
 {
@@ -30,6 +24,8 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class ArmsIndex : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
+        private readonly IndicatorBase<IndicatorDataPoint> _arms;
+
         /// <summary>
         /// Gets the Advance/Decline Ratio (ADR) indicator
         /// </summary>
@@ -39,8 +35,6 @@ namespace QuantConnect.Indicators
         /// Gets the Advance/Decline Volume Ratio (ADVR) indicator
         /// </summary>
         public AdvanceDeclineVolumeRatio ADVRatio { get; }
-
-        private readonly IndicatorBase<IndicatorDataPoint> _arms;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ArmsIndex"/> class
@@ -61,7 +55,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod { get; }
+        public int WarmUpPeriod { get; } = 2;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -86,6 +80,26 @@ namespace QuantConnect.Indicators
             _arms.Reset();
 
             base.Reset();
+        }
+
+        /// <summary>
+        /// Add Tracking stock issue
+        /// </summary>
+        /// <param name="symbol">the tracking stock issue</param>
+        public void AddStock(Symbol symbol)
+        {
+            ADRatio.AddStock(symbol);
+            ADVRatio.AddStock(symbol);
+        }
+
+        /// <summary>
+        /// Remove Tracking stock issue
+        /// </summary>
+        /// <param name="symbol">the tracking stock issue</param>
+        public void RemoveStock(Symbol symbol)
+        {
+            ADRatio.RemoveStock(symbol);
+            ADVRatio.RemoveStock(symbol);
         }
     }
 }

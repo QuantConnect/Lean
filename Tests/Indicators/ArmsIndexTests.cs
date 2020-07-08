@@ -24,7 +24,11 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            return new ArmsIndex("test_name");
+            var indicator = new ArmsIndex("test_name");
+            indicator.AddStock(Symbol.Create("AAPL", SecurityType.Equity, Market.USA));
+            indicator.AddStock(Symbol.Create("IBM", SecurityType.Equity, Market.USA));
+            indicator.AddStock(Symbol.Create("GOOG", SecurityType.Equity, Market.USA));
+            return indicator;
         }
 
         protected override string TestFileName => "arms_data.txt";
