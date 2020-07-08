@@ -785,18 +785,13 @@ namespace QuantConnect.Lean.Engine.Results
 
                     //Create a packet:
                     result = new LiveResultPacket(_job,
-                        new LiveResult(new LiveResultParameters(charts, orders, profitLoss, holdings, Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime, GetOrderEventsToStore())))
-                    {
-                        ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds
-                    };
+                        new LiveResult(new LiveResultParameters(charts, orders, profitLoss, holdings, Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime, GetOrderEventsToStore())));
                 }
                 else
                 {
-                    result = new LiveResultPacket(_job, new LiveResult())
-                    {
-                        ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds
-                    };
+                    result = LiveResultPacket.CreateEmpty(_job);
                 }
+                result.ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds;
 
                 //Store to S3:
                 StoreResult(result);
