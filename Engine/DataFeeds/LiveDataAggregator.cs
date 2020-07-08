@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Remoting.Channels;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
@@ -17,6 +13,7 @@ using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -31,7 +28,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly ITimeProvider _timeProvider;
         private readonly ITimeProvider _frontierTimeProvider;
 
-        public Subscription Subscription { get; set; }
         protected Func<Subscription, TimeZoneOffsetProvider, SecurityExchangeHours, BaseData, bool> UpdateSubscriptionRealTimePrice;
 
         public LiveDataAggregator(
@@ -58,18 +54,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         public IEnumerator<BaseData> CreateEnumerator(
+            Ref<Subscription> subscriptionRef,
             SubscriptionRequest request,
             TimeZoneOffsetProvider timeZoneOffsetProvider)
         {
-            // Bail out of this method early if we don't have a wrapper instance.
-            // We only setup the aggregation for wrapped DataQueueHandlers.
-            if (_liveDataProvider.GetType() != typeof(DataQueueHandlerLiveDataProvider))
-            {
-                var enqueueableEnumerator = new EnqueueableEnumerator<BaseData>();
-                _exchange.AddDataHandler(request.Configuration.Symbol, data => NoAggregationDataHandler(enqueueableEnumerator, request, timeZoneOffsetProvider, data));
-                return enqueueableEnumerator;
-            }
-
             if (!_channelProvider.ShouldStreamSubscription(_job, request.Configuration))
             {
                 if (!Quandl.IsAuthCodeSet)
@@ -112,16 +100,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     enqueable.Enqueue(data);
 
-                    Subscription.OnNewDataAvailable();
+                    subscriptionRef.Value.OnNewDataAvailable();
 
                     UpdateSubscriptionRealTimePrice(
-                        Subscription,
+                        subscriptionRef.Value,
                         timeZoneOffsetProvider,
                         request.Security.Exchange.Hours,
                         data);
                 });
 
                 return enqueable;
+            }
+
+            // Bail out of this method if we don't have a wrapper instance.
+            // We only setup the aggregation for wrapped DataQueueHandlers.
+            if (_liveDataProvider.GetType() != typeof(DataQueueHandlerLiveDataProvider))
+            {
+                var enqueueableEnumerator = new EnqueueableEnumerator<BaseData>();
+                _exchange.AddDataHandler(request.Configuration.Symbol, data => NoAggregationDataHandler(
+                    enqueueableEnumerator,
+                    subscriptionRef,
+                    request,
+                    timeZoneOffsetProvider,
+                    data));
+                return enqueueableEnumerator;
             }
 
             // this enumerator allows the exchange to pump ticks into the 'back' of the enumerator,
@@ -134,7 +136,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         request.Security.Exchange.TimeZone,
                         _timeProvider,
                         true,
-                        (sender, args) => Subscription.OnNewDataAvailable());
+                        (sender, args) => subscriptionRef.Value.OnNewDataAvailable());
 
                     _exchange.AddDataHandler(request.Configuration.Symbol, data =>
                         {
@@ -145,7 +147,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 quoteBarAggregator.ProcessData(tick);
 
                                 UpdateSubscriptionRealTimePrice(
-                                    Subscription,
+                                    subscriptionRef.Value,
                                     timeZoneOffsetProvider,
                                     request.Security.Exchange.Hours,
                                     data);
@@ -159,7 +161,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         request.Security.Exchange.TimeZone,
                         _timeProvider,
                         true,
-                        (sender, args) => Subscription.OnNewDataAvailable());
+                        (sender, args) => subscriptionRef.Value.OnNewDataAvailable());
 
                     var auxDataEnumerator = new LiveAuxiliaryDataEnumerator(
                         request.Security.Exchange.TimeZone,
@@ -173,7 +175,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 auxDataEnumerator.Enqueue(data);
 
-                                Subscription.OnNewDataAvailable();
+                                subscriptionRef.Value.OnNewDataAvailable();
                             }
                             else
                             {
@@ -183,7 +185,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     tradeBarAggregator.ProcessData(tick);
 
                                     UpdateSubscriptionRealTimePrice(
-                                        Subscription,
+                                        subscriptionRef.Value,
                                         timeZoneOffsetProvider,
                                         request.Security.Exchange.Hours,
                                         data);
@@ -201,7 +203,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         request.Security.Exchange.TimeZone,
                         _timeProvider,
                         true,
-                        (sender, args) => Subscription.OnNewDataAvailable());
+                        (sender, args) => subscriptionRef.Value.OnNewDataAvailable());
 
                     _exchange.AddDataHandler(request.Configuration.Symbol, data =>
                         {
@@ -220,6 +222,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var enqueueableEnumerator = new EnqueueableEnumerator<BaseData>();
                     _exchange.AddDataHandler(request.Configuration.Symbol, data => NoAggregationDataHandler(
                         enqueueableEnumerator,
+                        subscriptionRef,
                         request,
                         timeZoneOffsetProvider,
                         data));
@@ -228,13 +231,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        private void NoAggregationDataHandler(EnqueueableEnumerator<BaseData> enumerator, SubscriptionRequest request, TimeZoneOffsetProvider timeZoneOffsetProvider, BaseData data)
+        private void NoAggregationDataHandler(EnqueueableEnumerator<BaseData> enumerator, Ref<Subscription> subscriptionRef, SubscriptionRequest request, TimeZoneOffsetProvider timeZoneOffsetProvider, BaseData data)
         {
             var tick = data as Tick;
             if (tick == null)
             {
                 enumerator.Enqueue(data);
-                Subscription.OnNewDataAvailable();
+                subscriptionRef.Value.OnNewDataAvailable();
                 return;
             }
 
@@ -244,12 +247,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             enumerator.Enqueue(data);
-            Subscription.OnNewDataAvailable();
+            subscriptionRef.Value.OnNewDataAvailable();
 
             if (tick.TickType != TickType.OpenInterest)
             {
                 UpdateSubscriptionRealTimePrice(
-                    Subscription,
+                    subscriptionRef.Value,
                     timeZoneOffsetProvider,
                     request.Security.Exchange.Hours,
                     data);

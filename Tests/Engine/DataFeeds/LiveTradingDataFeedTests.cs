@@ -1049,6 +1049,67 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsTrue(emittedAuxData);
         }
 
+        [Test]
+        public void AggregatesTicksToTradeBar()
+        {
+            var symbol = Symbols.AAPL;
+
+            var feed = RunDataFeed(
+                Resolution.Second,
+                equities: new List<string> { symbol.Value },
+                getNextTicksFunction: delegate
+                {
+                    return Enumerable.Range(0, 2)
+                        .Select(_ => (BaseData)new Tick { Symbol = symbol, TickType = TickType.Trade })
+                        .ToList();
+                });
+
+            var emittedTradebars = false;
+
+            ConsumeBridge(feed, TimeSpan.FromSeconds(1), true, ts =>
+            {
+                if (ts.Slice.HasData)
+                {
+                    if (ts.Slice.Bars.ContainsKey(symbol))
+                    {
+                        emittedTradebars = true;
+                    }
+                }
+            });
+
+            Assert.IsTrue(emittedTradebars);
+        }
+
+        [Test]
+        public void DoesNotAggregateTicksToTradeBar()
+        {
+            var symbol = Symbols.AAPL;
+            var feed = RunDataFeed(
+                Resolution.Tick,
+                equities: new List<string> { symbol.Value },
+                getNextTicksFunction: delegate
+                {
+                    return Enumerable.Range(0, 2)
+                        .Select(_ => (BaseData)new Tick { Symbol = symbol, TickType = TickType.Trade })
+                        .ToList();
+                });
+
+            var emittedTradebars = false;
+
+            ConsumeBridge(feed, TimeSpan.FromSeconds(1), true, ts =>
+            {
+                if (ts.Slice.HasData)
+                {
+                    if (ts.Slice.Bars.ContainsKey(symbol))
+                    {
+                        emittedTradebars = true;
+                    }
+                }
+            });
+
+            Assert.IsFalse(emittedTradebars);
+        }
+
         private IDataFeed RunDataFeed(Resolution resolution = Resolution.Second,
                                     List<string> equities = null,
                                     List<string> forex = null,
