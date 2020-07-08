@@ -298,8 +298,9 @@ namespace QuantConnect.Lean.Engine.Storage
                     _persistenceTimer.DisposeSafely();
                 }
 
-                // if the object store was not used, delete the empty storage directory created in Initialize
-                if (!Directory.EnumerateFileSystemEntries(AlgorithmStorageRoot).Any())
+                // if the object store was not used, delete the empty storage directory created in Initialize.
+                // can be null if not initialized
+                if (AlgorithmStorageRoot != null && !Directory.EnumerateFileSystemEntries(AlgorithmStorageRoot).Any())
                 {
                     Directory.Delete(AlgorithmStorageRoot);
                 }

@@ -761,32 +761,42 @@ namespace QuantConnect.Lean.Engine.Results
             Log.Trace("LiveTradingResultHandler.SendFinalResult(): Starting...");
             try
             {
-                //Convert local dictionary:
-                var charts = new Dictionary<string, Chart>();
-                lock (ChartLock)
+                LiveResultPacket result;
+                // could happen if algorithm failed to init
+                if (Algorithm != null)
                 {
-                    foreach (var kvp in Charts)
+                    //Convert local dictionary:
+                    var charts = new Dictionary<string, Chart>();
+                    lock (ChartLock)
                     {
-                        charts.Add(kvp.Key, kvp.Value.Clone());
+                        foreach (var kvp in Charts)
+                        {
+                            charts.Add(kvp.Key, kvp.Value.Clone());
+                        }
                     }
+
+                    var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
+                    var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
+                    var holdings = new Dictionary<string, Holding>();
+                    var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
+                    var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary);
+
+                    StoreStatusFile(runtime, holdings, charts, profitLoss, statistics: statisticsResults);
+
+                    //Create a packet:
+                    result = new LiveResultPacket(_job,
+                        new LiveResult(new LiveResultParameters(charts, orders, profitLoss, holdings, Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime, GetOrderEventsToStore())))
+                    {
+                        ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds
+                    };
                 }
-
-                var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
-                var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
-                var holdings = new Dictionary<string, Holding>();
-                var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
-                var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary);
-
-                StoreStatusFile(runtime, holdings, charts, profitLoss, statistics: statisticsResults);
-
-                //Create a packet:
-                var result = new LiveResultPacket(_job,
-                    new LiveResult(new LiveResultParameters(charts, orders, profitLoss, holdings, Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime, GetOrderEventsToStore())))
+                else
                 {
-                    ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds
-                };
-
-                //Save the processing time:
+                    result = new LiveResultPacket(_job, new LiveResult())
+                    {
+                        ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds
+                    };
+                }
 
                 //Store to S3:
                 StoreResult(result);
