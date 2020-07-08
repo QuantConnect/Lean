@@ -80,7 +80,7 @@ The upstream repository holds a single primary branch that we maintain:
 Topic branches are for contributors to develop bug fixes and new features so that they can be easily merged to **master**. They must follow a few simple rules for consistency:
 
 * Must branch off from **master**
-* Must be meged back into **master**
+* Must be merged back into **master**
 * Consider using the GitHub issue number in the branch name
 
 Topic branches should exist in your **local** and **origin** repositories only. Submitting a pull request will request a merge from your topic branch to our **upstream/master** branch.
