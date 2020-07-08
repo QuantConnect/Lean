@@ -187,6 +187,19 @@ namespace QuantConnect.Packets
             }
         }
 
+        /// <summary>
+        /// Creates an empty result packet, useful when the algorithm fails to initialize
+        /// </summary>
+        /// <param name="job">The associated job packet</param>
+        /// <returns>An empty result packet</returns>
+        public static BacktestResultPacket CreateEmpty(BacktestNodePacket job)
+        {
+            return new BacktestResultPacket(job, new BacktestResult(new BacktestResultParameters(
+                new Dictionary<string, Chart>(), new Dictionary<int, Order>(), new Dictionary<DateTime, decimal>(),
+                new Dictionary<string, string>(), new Dictionary<string, string>(), new Dictionary<string, AlgorithmPerformance>(),
+                new List<OrderEvent>(), new AlgorithmPerformance(), new AlphaRuntimeStatistics()
+            )), DateTime.UtcNow, DateTime.UtcNow);
+        }
     } // End Queue Packet:
 
 
