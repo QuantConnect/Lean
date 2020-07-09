@@ -187,9 +187,6 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="websocket-sharp, Version=1.0.4.0, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
-      <HintPath>..\packages\WebSocketSharpFork.1.0.4.0\lib\net35\websocket-sharp.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
@@ -340,11 +337,10 @@
     <Compile Include="Alpaca\Markets\RateThrottler.cs" />
     <Compile Include="Alpaca\Markets\SockClient.cs" />
     <Compile Include="Alpaca\Markets\ThrottleParameters.cs" />
-    <Compile Include="Alpaca\Markets\WebSocket\IWebSocket.cs" />
     <Compile Include="Alpaca\Markets\WebSocket\IWebSocketFactory.cs" />
     <Compile Include="Alpaca\Markets\WebSocket\StreamingClientBase.cs" />
     <Compile Include="Alpaca\Markets\WebSocket\SynchronizationQueue.cs" />
-    <Compile Include="Alpaca\Markets\WebSocket\WebSocketSharpFactory.cs" />
+    <Compile Include="Alpaca\Markets\WebSocket\WebSocketClientFactory.cs" />
     <Compile Include="Backtesting\BacktestingBrokerage.cs" />
     <Compile Include="Backtesting\BacktestingBrokerageFactory.cs" />
     <Compile Include="Backtesting\BasicOptionAssignmentSimulation.cs" />

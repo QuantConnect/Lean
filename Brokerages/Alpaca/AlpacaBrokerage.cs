@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using NodaTime;
 using QuantConnect.Brokerages.Alpaca.Markets;
 using QuantConnect.Data;
@@ -37,9 +36,6 @@ namespace QuantConnect.Brokerages.Alpaca
     public partial class AlpacaBrokerage : Brokerage, IDataQueueHandler
     {
         private bool _isConnected;
-        private Thread _connectionMonitorThread;
-        private volatile bool _connectionLost;
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         // Rest API requests must be limited to a maximum of 200 messages/minute
         private readonly RateGate _messagingRateLimiter = new RateGate(200, TimeSpan.FromMinutes(1));
@@ -121,7 +117,7 @@ namespace QuantConnect.Brokerages.Alpaca
             {
                 ApiEndpoint = Environments.Live.PolygonStreamingApi,
                 KeyId = accountKeyId,
-                WebSocketFactory = new WebSocketSharpFactory()
+                WebSocketFactory = new WebSocketClientFactory()
             });
             _polygonStreamingClient.QuoteReceived += OnQuoteReceived;
             _polygonStreamingClient.TradeReceived += OnTradeReceived;
@@ -133,7 +129,7 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
-        public override bool IsConnected => _isConnected && !_connectionLost;
+        public override bool IsConnected => _isConnected;
 
         /// <summary>
         /// Connects the client to the broker's remote servers
@@ -146,82 +142,10 @@ namespace QuantConnect.Brokerages.Alpaca
 
             if (_handlesMarketData)
             {
-                _polygonStreamingClient.ConnectAndAuthenticateAsync().SynchronouslyAwaitTask();
+                _polygonStreamingClient.Connect();
             }
 
             _isConnected = true;
-
-            // create new thread to manage disconnections and reconnections
-            var connectionMonitorStartedEvent = new AutoResetEvent(false);
-            _cancellationTokenSource = new CancellationTokenSource();
-            _connectionMonitorThread = new Thread(() =>
-            {
-                connectionMonitorStartedEvent.Set();
-
-                var nextReconnectionAttemptSeconds = 1;
-
-                try
-                {
-                    while (!_cancellationTokenSource.IsCancellationRequested)
-                    {
-                        var isAlive = true;
-                        try
-                        {
-                            isAlive = _sockClient.IsAlive;
-                        }
-                        catch (Exception)
-                        {
-                            // ignored
-                        }
-
-                        if (isAlive && _connectionLost)
-                        {
-                            _connectionLost = false;
-                            nextReconnectionAttemptSeconds = 1;
-
-                            OnMessage(BrokerageMessageEvent.Reconnected("Connection with Alpaca server restored."));
-                        }
-                        else if (!isAlive)
-                        {
-                            if (_connectionLost)
-                            {
-                                try
-                                {
-                                    Thread.Sleep(TimeSpan.FromSeconds(nextReconnectionAttemptSeconds));
-
-                                    _sockClient.ConnectAsync().SynchronouslyAwaitTask();
-                                }
-                                catch (Exception exception)
-                                {
-                                    // double the interval between attempts (capped to 1 minute)
-                                    nextReconnectionAttemptSeconds = Math.Min(nextReconnectionAttemptSeconds * 2, 60);
-
-                                    Log.Error(exception);
-                                }
-                            }
-                            else
-                            {
-                                _connectionLost = true;
-
-                                OnMessage(
-                                    BrokerageMessageEvent.Disconnected(
-                                        "Connection with Alpaca server lost. " +
-                                        "This could be because of internet connectivity issues. "));
-                            }
-                        }
-
-                        Thread.Sleep(1000);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    Log.Error(exception);
-                }
-            })
-            { IsBackground = true };
-            _connectionMonitorThread.Start();
-
-            connectionMonitorStartedEvent.WaitOne();
         }
 
         /// <summary>
@@ -229,15 +153,11 @@ namespace QuantConnect.Brokerages.Alpaca
         /// </summary>
         public override void Disconnect()
         {
-            // request and wait for thread to stop
-            _cancellationTokenSource.Cancel();
-            _connectionMonitorThread?.Join();
-
             _sockClient.DisconnectAsync().SynchronouslyAwaitTask();
 
             if (_handlesMarketData)
             {
-                _polygonStreamingClient.DisconnectAsync().SynchronouslyAwaitTask();
+                _polygonStreamingClient.Disconnect();
             }
 
             _isConnected = false;
@@ -251,7 +171,6 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             Log.Trace("AlpacaBrokerage.Dispose(): Disposing of Alpaca brokerage resources.");
 
-            _cancellationTokenSource.Dispose();
             _sockClient?.Dispose();
             _polygonStreamingClient?.Dispose();
 

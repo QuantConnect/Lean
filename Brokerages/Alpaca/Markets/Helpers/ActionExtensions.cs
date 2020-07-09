@@ -8,6 +8,7 @@
 
 using System;
 using Newtonsoft.Json.Linq;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
@@ -18,7 +19,15 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             JToken eventArg)
             where TJson : class, TApi
         {
-            eventHandler?.Invoke(eventArg.ToObject<TJson>());
+            try
+            {
+                eventHandler?.Invoke(eventArg.ToObject<TJson>());
+            }
+            catch (Exception)
+            {
+                Log.Error($"Error deserializing JSON: {eventArg}");
+                throw;
+            }
         }
     }
 }

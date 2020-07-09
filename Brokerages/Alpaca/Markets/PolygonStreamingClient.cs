@@ -64,11 +64,11 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         {
             _handlers = new Dictionary<String, Action<JToken>>(StringComparer.Ordinal)
             {
-                { StatusMessage, handleAuthorization },
-                { TradesChannel, handleTradesChannel },
-                { QuotesChannel, handleQuotesChannel },
-                { MinuteAggChannel, handleMinuteAggChannel },
-                { SecondAggChannel, handleSecondAggChannel }
+                { StatusMessage, HandleAuthorization },
+                { TradesChannel, HandleTradesChannel },
+                { QuotesChannel, HandleQuotesChannel },
+                { MinuteAggChannel, HandleMinuteAggChannel },
+                { SecondAggChannel, HandleSecondAggChannel }
             };
         }
 
@@ -79,7 +79,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="symbol">Asset name for subscription change.</param>
         public void SubscribeTrade(
             String symbol) =>
-            subscribe(getParams(TradesChannel, symbol));
+            Subscribe(GetParams(TradesChannel, symbol));
 
         /// <summary>
         /// Subscribes for the quote updates via <see cref="QuoteReceived"/>
@@ -88,7 +88,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="symbol">Asset name for subscription change.</param>
         public void SubscribeQuote(
             String symbol) =>
-            subscribe(getParams(QuotesChannel, symbol));
+            Subscribe(GetParams(QuotesChannel, symbol));
 
         /// <summary>
         /// Subscribes for the second bar updates via <see cref="SecondAggReceived"/>
@@ -97,7 +97,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="symbol">Asset name for subscription change.</param>
         public void SubscribeSecondAgg(
             String symbol) =>
-            subscribe(getParams(SecondAggChannel, symbol));
+            Subscribe(GetParams(SecondAggChannel, symbol));
 
         /// <summary>
         /// Subscribes for the minute bar updates via <see cref="MinuteAggReceived"/>
@@ -106,7 +106,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="symbol">Asset name for subscription change.</param>
         public void SubscribeMinuteAgg(
             String symbol) =>
-            subscribe(getParams(MinuteAggChannel, symbol));
+            Subscribe(GetParams(MinuteAggChannel, symbol));
 
         /// <summary>
         /// Subscribes for the trade updates via <see cref="TradeReceived"/>
@@ -115,7 +115,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="symbols">List of asset names for subscription change.</param>
         public void SubscribeTrade(
             IEnumerable<String> symbols) =>
-            subscribe(getParams(TradesChannel, symbols));
+            Subscribe(GetParams(TradesChannel, symbols));
 
         /// <summary>
         /// Subscribes for the quote updates via <see cref="QuoteReceived"/>
@@ -124,7 +124,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="symbols">List of asset names for subscription change.</param>
         public void SubscribeQuote(
             IEnumerable<String> symbols) =>
-            subscribe(getParams(QuotesChannel, symbols));
+            Subscribe(GetParams(QuotesChannel, symbols));
 
         /// <summary>
         /// Subscribes for the second bar updates via <see cref="SecondAggReceived"/>
@@ -133,7 +133,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="symbols">List of asset names for subscription change.</param>
         public void SubscribeSecondAgg(
             IEnumerable<String> symbols) =>
-            subscribe(getParams(SecondAggChannel, symbols));
+            Subscribe(GetParams(SecondAggChannel, symbols));
 
         /// <summary>
         /// Subscribes for the minute bar updates via <see cref="MinuteAggReceived"/>
@@ -142,7 +142,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="symbols">List of asset names for subscription change.</param>
         public void SubscribeMinuteAgg(
             IEnumerable<String> symbols) =>
-            subscribe(getParams(MinuteAggChannel, symbols));
+            Subscribe(GetParams(MinuteAggChannel, symbols));
 
         /// <summary>
         /// Unsubscribes from the trade updates via <see cref="TradeReceived"/>
@@ -151,7 +151,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="symbol">Asset name for subscription change.</param>
         public void UnsubscribeTrade(
             String symbol) =>
-            unsubscribe(getParams(TradesChannel, symbol));
+            Unsubscribe(GetParams(TradesChannel, symbol));
 
         /// <summary>
         /// Unsubscribes from the quote updates via <see cref="QuoteReceived"/>
@@ -160,7 +160,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="symbol">Asset name for subscription change.</param>
         public void UnsubscribeQuote(
             String symbol) =>
-            unsubscribe(getParams(QuotesChannel, symbol));
+            Unsubscribe(GetParams(QuotesChannel, symbol));
 
         /// <summary>
         /// Unsubscribes from the second bar updates via <see cref="SecondAggReceived"/>
@@ -169,7 +169,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="symbol">Asset name for subscription change.</param>
         public void UnsubscribeSecondAgg(
             String symbol) =>
-            unsubscribe(getParams(SecondAggChannel, symbol));
+            Unsubscribe(GetParams(SecondAggChannel, symbol));
 
         /// <summary>
         /// Unsubscribes from the minute bar updates via <see cref="MinuteAggReceived"/>
@@ -178,7 +178,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="symbol">Asset name for subscription change.</param>
         public void UnsubscribeMinuteAgg(
             String symbol) =>
-            unsubscribe(getParams(MinuteAggChannel, symbol));
+            Unsubscribe(GetParams(MinuteAggChannel, symbol));
 
         /// <summary>
         /// Unsubscribes from the trade updates via <see cref="TradeReceived"/>
@@ -187,7 +187,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="symbols">List of asset names for subscription change.</param>
         public void UnsubscribeTrade(
             IEnumerable<String> symbols) =>
-            unsubscribe(getParams(TradesChannel, symbols));
+            Unsubscribe(GetParams(TradesChannel, symbols));
 
         /// <summary>
         /// Unsubscribes from the quote updates via <see cref="QuoteReceived"/>
@@ -196,7 +196,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="symbols">List of asset names for subscription change.</param>
         public void UnsubscribeQuote(
             IEnumerable<String> symbols) =>
-            unsubscribe(getParams(QuotesChannel, symbols));
+            Unsubscribe(GetParams(QuotesChannel, symbols));
 
         /// <summary>
         /// Unsubscribes from the second bar updates via <see cref="SecondAggReceived"/>
@@ -205,7 +205,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="symbols">List of asset names for subscription change.</param>
         public void UnsubscribeSecondAgg(
             IEnumerable<String> symbols) =>
-            unsubscribe(getParams(SecondAggChannel, symbols));
+            Unsubscribe(GetParams(SecondAggChannel, symbols));
 
         /// <summary>
         /// Unsubscribes from the minute bar updates via <see cref="MinuteAggReceived"/>
@@ -214,23 +214,23 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="symbols">List of asset names for subscription change.</param>
         public void UnsubscribeMinuteAgg(
             IEnumerable<String> symbols) =>
-            unsubscribe(getParams(MinuteAggChannel, symbols));
+            Unsubscribe(GetParams(MinuteAggChannel, symbols));
 
         /// <inheritdoc/>
         [SuppressMessage(
             "Design", "CA1031:Do not catch general exception types",
             Justification = "Expected behavior - we report exceptions via OnError event.")]
-        protected override void OnMessageReceived(
-            String message)
+        protected override void OnMessage(object sender, WebSocketMessage message)
         {
             try
             {
-                foreach (var token in JArray.Parse(message))
+                foreach (var token in JArray.Parse(message.Message))
                 {
                     var messageType = token["ev"];
                     if (ReferenceEquals(messageType, null))
                     {
-                        HandleError(new InvalidOperationException());
+                        var errorMessage = "Null message type.";
+                        HandleError(null, new WebSocketError(errorMessage, new InvalidOperationException(errorMessage)));
                     }
                     else
                     {
@@ -240,11 +240,11 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             }
             catch (Exception exception)
             {
-                HandleError(exception);
+                HandleError(null, new WebSocketError(exception.Message, exception));
             }
         }
 
-        private void handleAuthorization(
+        private void HandleAuthorization(
             JToken token)
         {
             var connectionStatus = token.ToObject<JsonConnectionStatus>();
@@ -266,7 +266,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
 
                 case ConnectionStatus.AuthenticationFailed:
                 case ConnectionStatus.AuthenticationRequired:
-                    HandleError(new InvalidOperationException(connectionStatus.Message));
+                    HandleError(null, new WebSocketError(connectionStatus.Message, new InvalidOperationException(connectionStatus.Message)));
                     break;
 
                 case ConnectionStatus.Failed:
@@ -274,12 +274,13 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                     break;
 
                 default:
-                    HandleError(new InvalidOperationException("Unknown connection status"));
+                    var errorMessage = "Unknown connection status.";
+                    HandleError(null, new WebSocketError(errorMessage, new InvalidOperationException(errorMessage)));
                     break;
             }
         }
 
-        private void subscribe(
+        private void Subscribe(
             String parameters) =>
             SendAsJsonString(new JsonListenRequest
             {
@@ -287,7 +288,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                 Params = parameters
             });
 
-        private void unsubscribe(
+        private void Unsubscribe(
             String parameters) =>
             SendAsJsonString(new JsonUnsubscribeRequest
             {
@@ -295,29 +296,29 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                 Params = parameters
             });
 
-        private static String getParams(
+        private static String GetParams(
             String channel,
             String symbol) =>
             $"{channel}.{symbol}";
 
-        private static String getParams(
+        private static String GetParams(
             String channel,
             IEnumerable<String> symbols) =>
-            String.Join(",",symbols.Select(symbol => getParams(channel, symbol)));
+            String.Join(",",symbols.Select(symbol => GetParams(channel, symbol)));
 
-        private void handleTradesChannel(
+        private void HandleTradesChannel(
             JToken token) =>
             TradeReceived.DeserializeAndInvoke<IStreamTrade, JsonStreamTrade>(token);
 
-        private void handleQuotesChannel(
+        private void HandleQuotesChannel(
             JToken token) =>
             QuoteReceived.DeserializeAndInvoke<IStreamQuote, JsonStreamQuote>(token);
 
-        private void handleMinuteAggChannel(
+        private void HandleMinuteAggChannel(
             JToken token) =>
             MinuteAggReceived.DeserializeAndInvoke<IStreamAgg, JsonStreamAgg>(token);
 
-        private void handleSecondAggChannel(
+        private void HandleSecondAggChannel(
             JToken token) =>
             SecondAggReceived.DeserializeAndInvoke<IStreamAgg, JsonStreamAgg>(token);
     }
