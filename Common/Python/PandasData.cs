@@ -87,6 +87,8 @@ def mapper(key):
         kvp = SymbolCache.TryGetSymbol(key, None)
         if kvp[0]:
             return str(kvp[1].ID)
+    if keyType is list:
+        return [mapper(x) for x in key]
     if keyType is tuple:
         return tuple([mapper(x) for x in key])
     if keyType is dict:

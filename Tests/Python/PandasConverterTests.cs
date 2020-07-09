@@ -1066,6 +1066,30 @@ def Test(dataFrame, symbol):
             }
         }
 
+        [TestCase("['SPY','AAPL']", true)]
+        [TestCase("symbols")]
+        [TestCase("[str(symbols[0].ID), str(symbols[1].ID)]")]
+        public void BackwardsCompatibilityDataFrame_loc_list(string index, bool cache = false)
+        {
+            if (cache)
+            {
+                SymbolCache.Set("SPY", Symbols.SPY);
+                SymbolCache.Set("AAPL", Symbols.AAPL);
+            }
+
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    $@"
+def Test(dataFrame, symbols):
+    data = dataFrame.lastprice.unstack(0)
+    data = data.loc[:, {index}]").GetAttr("Test");
+
+                var symbols = new List<Symbol> {Symbols.SPY, Symbols.AAPL};
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(symbols), symbols));
+            }
+        }
+
         [TestCase("'SPY'", true)]
         [TestCase("symbol")]
         [TestCase("str(symbol.ID)")]
@@ -3247,11 +3271,33 @@ def Test(dataFrame, symbol):
 
         private dynamic GetTestDataFrame(Symbol symbol, int count = 1)
         {
-            var rawBars = Enumerable
+            return GetTestDataFrame(new[] {symbol}, count);
+        }
+
+        private dynamic GetTestDataFrame(IEnumerable<Symbol> symbols, int count = 1)
+        {
+            var slices = Enumerable
                 .Range(0, count)
-                .Select(i => new Tick(symbol, $"144{i:D2}000,167{i:D2}00,1{i:D2},T,T,0", new DateTime(2013, 10, 7)))
-                .ToArray();
-            return _converter.GetDataFrame(rawBars);
+                .Select(
+                    i =>
+                    {
+                        var time = new DateTime(2013, 10, 7).AddMilliseconds(14400000 + i * 10000);
+                        return new Slice(
+                            time,
+                            symbols.Select(
+                                symbol => new Tick
+                                {
+                                    Time = time,
+                                    Symbol = symbol,
+                                    Value = 167 + i / 10,
+                                    Quantity = 1 + i * 10,
+                                    Exchange = "T"
+                                }
+                            )
+                        );
+                    }
+                );
+            return _converter.GetDataFrame(slices);
         }
 
         internal class SubTradeBar : TradeBar
