@@ -317,7 +317,7 @@ namespace QuantConnect.ToolBox
 
                         foreach (var group in historyBySymbol[symbol])
                         {
-                            if (group.Key == date)
+                            if (group.Key == date.Date)
                             {
                                 var sb = new StringBuilder();
                                 foreach (var row in group)
