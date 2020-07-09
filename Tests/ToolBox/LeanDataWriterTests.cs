@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 using QuantConnect.ToolBox;
 using QuantConnect.Util;
 
@@ -64,6 +65,28 @@ namespace QuantConnect.Tests.ToolBox
             var data = QuantConnect.Compression.Unzip(filePath);
 
             Assert.AreEqual(data.First().Value.Count(), 3);
+        }
+
+        [Test]
+        public void LeanDataWriter_CanWriteFutureWithMultipleContracts()
+        {
+            var contract1 = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 02, 01));
+            var filePath1 = LeanData.GenerateZipFilePath(_dataDirectory, contract1, _date, Resolution.Second, TickType.Quote);
+            var leanDataWriter1 = new LeanDataWriter(Resolution.Second, contract1, _dataDirectory, TickType.Quote);
+            leanDataWriter1.Write(GetQuoteBars(contract1));
+
+            var contract2 = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 03, 01));
+            var filePath2 = LeanData.GenerateZipFilePath(_dataDirectory, contract2, _date, Resolution.Second, TickType.Quote);
+            var leanDataWriter2 = new LeanDataWriter(Resolution.Second, contract2, _dataDirectory, TickType.Quote);
+            leanDataWriter2.Write(GetQuoteBars(contract2));
+
+            Assert.AreEqual(filePath1, filePath2);
+            Assert.IsTrue(File.Exists(filePath1));
+            Assert.IsFalse(File.Exists(filePath1 + ".tmp"));
+
+            var data = QuantConnect.Compression.Unzip(filePath1).ToDictionary(x => x.Key, x => x.Value.ToList());
+            Assert.AreEqual(2, data.Count);
+            Assert.That(data.Values, Has.All.Count.EqualTo(3));
         }
 
         [Test]
