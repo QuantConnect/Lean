@@ -206,7 +206,7 @@ namespace QuantConnect.ToolBox
             IReadOnlyDictionary<Symbol, List<BaseData>> historyBySymbol)
         {
             var zipFileName = Path.Combine(
-                Globals.DataFolder,
+                _dataDirectory,
                 LeanData.GenerateRelativeZipFilePath(canonicalSymbol, DateTime.MinValue, _resolution, _tickType));
 
             var folder = Path.GetDirectoryName(zipFileName);
@@ -295,7 +295,7 @@ namespace QuantConnect.ToolBox
             while (date <= endTimeUtc)
             {
                 var zipFileName = Path.Combine(
-                    Globals.DataFolder,
+                    _dataDirectory,
                     LeanData.GenerateRelativeZipFilePath(canonicalSymbol, date, _resolution, _tickType));
 
                 var folder = Path.GetDirectoryName(zipFileName);
