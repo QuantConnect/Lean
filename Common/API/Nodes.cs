@@ -33,10 +33,11 @@ namespace QuantConnect.API
         public decimal Speed { get; set; }
 
         /// <summary>
-        /// The monthly price of the node in US dollars
+        /// The monthly and yearly prices of the node in US dollars,
+        /// see <see cref="NodePrices"/> for type.
         /// </summary>
         [JsonProperty(PropertyName = "price")]
-        public int Price { get; set; }
+        public NodePrices Prices { get; set; }
 
         /// <summary>
         /// CPU core count of node
@@ -215,4 +216,23 @@ namespace QuantConnect.API
         /// A node for live trading
         Live        //2
     }
+
+    /// <summary>
+    /// Class for deserializing node prices from node object
+    /// </summary>
+    public class NodePrices
+    {
+        /// <summary>
+        /// The monthly price of the node in US dollars
+        /// </summary>
+        [JsonProperty(PropertyName = "monthly")]
+        public int Monthly { get; set; }
+
+        /// <summary>
+        /// The yearly prices of the node in US dollars
+        /// </summary>
+        [JsonProperty(PropertyName = "yearly")]
+        public int Yearly { get; set; }
+    }
+
 }
