@@ -20,7 +20,9 @@ using QuantConnect.Api;
 namespace QuantConnect.API
 {
     /// <summary>
-    /// Node obj for API response, contains all relevant data members for a node.
+    /// Node class built for API endpoints nodes/read and nodes/create.
+    /// Converts JSON properties from API response into data members for the class.
+    /// Contains all relevant information on a Node to interact through API endpoints.
     /// </summary>
     public class Node
     {
@@ -92,8 +94,8 @@ namespace QuantConnect.API
     }
 
     /// <summary>
-    /// Rest api response wrapper for node/read, contains the set of node lists for each
-    /// target environment.
+    /// Rest api response wrapper for node/read, contains sets of node lists for each
+    /// target environment. List are composed of <see cref="Node"/> objects.
     /// </summary>
     public class NodeList : RestResponse
     {
@@ -117,7 +119,8 @@ namespace QuantConnect.API
     }
 
     /// <summary>
-    /// Rest api response wrapper for node/create, contains the new node object created
+    /// Rest api response wrapper for node/create, reads in the nodes information into a 
+    /// node object
     /// </summary>
     public class CreatedNode : RestResponse
     {
@@ -130,6 +133,10 @@ namespace QuantConnect.API
 
     /// <summary>
     /// Class for generating a SKU for a node with a given configuration
+    /// Every SKU is made up of 3 variables: 
+    /// - Target environment (L for live, B for Backtest, R for Research)
+    /// - CPU core count
+    /// - Dedicated RAM (GB)
     /// </summary>
     public class SKU
     {
@@ -196,7 +203,8 @@ namespace QuantConnect.API
     }
 
     /// <summary>
-    /// The possible target environments for Nodes
+    /// NodeTypes enum for all possible options of target environments
+    /// Used in conjuction with SKU class as a NodeType is a required parameter for SKU
     /// </summary>
     public enum NodeType
     {

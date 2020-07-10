@@ -1,24 +1,38 @@
-﻿using System;
-using System.IO;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
 using System.Linq;
-using System.Threading;
-using System.Web;
-using com.sun.corba.se.spi.protocol;
 using NUnit.Framework;
-using QuantConnect.Api;
 using QuantConnect.API;
-using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 
 
 namespace QuantConnect.Tests.API
 {
     [TestFixture, Ignore("These tests require an account, token, and organization ID")]
+    /// <summary>
+    /// Test class for all nodes/ endpoints:
+    /// create, read, update, delete, stop
+    /// </summary>
     public class NodeTests
     {
         private int _testAccount = 1;
         private string _testToken = "ec87b337ac970da4cbea648f24f1c851";
         private string _testOrganization = "enter Org ID here";
+        private string _dataFolder = Config.Get("data-folder");
         private Api.Api _api;
 
         /// <summary>
@@ -32,7 +46,8 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
-        /// Test to creating a New Node
+        /// Create a new backtest node with 2 CPU cores and 8GB of RAM check for successful
+        /// creation in API response.
         /// </summary>
         [Test]
         public void CreateNewNode()
@@ -44,7 +59,8 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
-        /// Test to creating a New Node
+        /// Read all the nodes from the organization and check for a successful reply
+        /// from the API.
         /// </summary>
         [Test]
         public void ReadNode()
@@ -93,7 +109,8 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
-        /// Helper function for finding a node by name, used by tests that are looking for a certain node.
+        /// Helper function for finding a node by name, used by tests that are looking 
+        /// for a certain node.
         /// With some small adjustments could be moved to an api function.
         /// </summary>
         /// <param name="name">Name of the node</param>
@@ -117,7 +134,7 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
-        /// Generate some SKUs and ensure they are correct
+        /// Test to ensure SKUs are generated correctly for a given Node configuration
         /// </summary>
         /// <param name="cores">Number of cores</param>
         /// <param name="memory">Size of memory</param>
@@ -140,7 +157,8 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
-        /// Read and stop all nodes
+        /// Read in the list of nodes from an organizations and stop any
+        /// that are currently busy
         /// </summary>
         [Test]
         public void ReadAndStop()

@@ -802,12 +802,14 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Create a new node defined by the SKU under a given organization
+        /// Create a new node in the organization, node configuration is defined by the
+        /// <see cref="SKU"/>
         /// </summary>
         /// <param name="name">The name of the new node</param>
         /// <param name="organizationId">ID of the organization</param>
-        /// <param name="sku">Node type to be created</param>
-        /// <returns>Returns resulting <see cref="Node"/>, or null if it fails</returns>
+        /// <param name="sku"><see cref="SKU"/> Object representing configuration</param>
+        /// <returns>Returns <see cref="CreatedNode"/> which contains API response and 
+        /// <see cref="Node"/></returns>
         public CreatedNode CreateNode(string name, string organizationId, SKU sku)
         {
             var request = new RestRequest("nodes/create", Method.POST);
@@ -822,7 +824,8 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Read and return the given organization's nodes
+        /// Reads the nodes associated with the organization, creating a 
+        /// <see cref="NodeList"/> for the response
         /// </summary>
         /// <param name="organizationId">ID of the organization</param>
         /// <returns><see cref="NodeList"/> containing Backtest, Research, and Live Nodes</returns>
@@ -838,7 +841,7 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Update a node name
+        /// Update an organizations node with a new name
         /// </summary>
         /// <param name="nodeId">The node ID of the node you want to update</param>
         /// <param name="newName">The new name for that node</param>
@@ -858,7 +861,7 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Delete a node from an organization
+        /// Delete a node from an organization, requires node ID.
         /// </summary>
         /// <param name="nodeId">The node ID of the node you want to delete</param>
         /// <param name="organizationId">ID of the organization</param>
@@ -876,7 +879,7 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Stop a running node
+        /// Stop a running node in a organization
         /// </summary>
         /// <param name="nodeId">The node ID of the node you want to stop</param>
         /// <param name="organizationId">ID of the organization</param>
