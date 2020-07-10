@@ -174,12 +174,12 @@ namespace QuantConnect.Brokerages.Alpaca
 
         private static void OnPolygonStreamingClientError(Exception exception)
         {
-            Log.Error(exception, "PolygonStreamingClient error");
+            Log.Error($"PolygonStreamingClient error: {exception.Message}");
         }
 
         private static void OnSockClientError(Exception exception)
         {
-            Log.Error(exception, "SockClient error");
+            Log.Error($"SockClient error: {exception.Message}");
         }
 
         /// <summary>

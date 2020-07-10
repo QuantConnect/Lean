@@ -82,7 +82,6 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             _webSocket.Message += HandleDataReceived;
             _webSocket.Error += (sender, args) =>
             {
-                Console.WriteLine(args.Exception);
                 OnError?.Invoke(args.Exception);
             };
         }
