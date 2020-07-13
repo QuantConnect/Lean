@@ -17,7 +17,7 @@ set current_dir=%~dp0
 set default_image=quantconnect/lean:latest
 set default_data_dir=%current_dir%Data\
 set default_results_dir=%current_dir%
-set default_config_file=%current_dir%Launcher\bin\Debug\config.json
+set default_config_file=%current_dir%Launcher\config.json
 
 if exist "%~1" (
     for /f "eol=- delims=" %%a in (%~1) do set "%%a"
@@ -26,7 +26,7 @@ if exist "%~1" (
     set /p config_file="Enter absolute path to Lean config file [default: %default_config_file%]: "
     set /p data_dir="Enter absolute path to Data folder [default: %default_data_dir%]: "
     set /p results_dir="Enter absolute path to store results [default: %default_results_dir%]: "
-    set /p custom_algorithm="Are you using a custom algorithm? (Must be updated in config!!) [Y/N default: N]: "	
+    set /p custom_algorithm="Are you using a custom algorithm? (Must be defined in config) [Y/N default: N]: "	
 )
 
 if "%image%" == "" (
@@ -66,7 +66,11 @@ if /I "%custom_algorithm%" == "Y" (
     docker run --rm --mount type=bind,source=%config_file%,target=/Lean/Launcher/config.json,readonly^
     --mount type=bind,source=%data_dir%,target=/Data,readonly^
     --mount type=bind,source=%results_dir%,target=/Results^
-    %image% --data-folder /Data --results-destination-folder /Results --config /Lean/Launcher/config.json
+    -p 55555:55555 -p 5678:5678^
+    --name LeanEngine^
+    --entrypoint mono^
+    %image% --debug --debugger-agent=transport=dt_socket,server=y,address=0.0.0.0:55555^
+    QuantConnect.Lean.Launcher.exe --data-folder /Data --results-destination-folder /Results --config /Lean/Launcher/config.json
 
     goto script_exit
 )
@@ -93,7 +97,11 @@ docker run --rm --mount type=bind,source=%config_file%,target=/Lean/Launcher/con
     --mount type=bind,source=%data_dir%,target=/Data,readonly^
     --mount type=bind,source=%results_dir%,target=/Results^
     --mount type=bind,source=%algorithm_location%,target=%algorithm_destination%^
-    %image% --data-folder /Data --results-destination-folder /Results --config /Lean/Launcher/config.json
+    -p 55555:55555 -p 5678:5678^
+    --name LeanEngine^
+    --entrypoint mono^
+    %image% --debug --debugger-agent=transport=dt_socket,server=y,address=0.0.0.0:55555^
+    QuantConnect.Lean.Launcher.exe --data-folder /Data --results-destination-folder /Results --config /Lean/Launcher/config.json
 
 :script_exit
 
@@ -105,5 +113,3 @@ set question =
 set attach_algorithm=
 set algorithm_location=
 set algorithm_destination=
-
-pause

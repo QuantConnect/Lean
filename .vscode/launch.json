@@ -7,23 +7,55 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch",
+            "name": "Launch Mono",
+            "console": "externalTerminal",
             "type": "mono",
             "request": "launch",
             "preLaunchTask": "build",
             "program": "${workspaceRoot}/Launcher/bin/Debug/QuantConnect.Lean.Launcher.exe",
             "args": [
-                "--data-folder", "${workspaceFolder}/Data",
-                "--config", "${workspaceFolder}/Launcher/config.json"
-            ],
-            "cwd": "${workspaceRoot}/Launcher/bin/Debug/"
+                "--data-folder",
+                "${workspaceFolder}/Data",
+                "--config",
+                "${workspaceFolder}/Launcher/config.json"
+            ]
         },
         {
-            "name": "Attach",
+            "name": "Debug in Container",
             "type": "mono",
+            "preLaunchTask": "run-docker",
+            "postDebugTask": "close-docker",
             "request": "attach",
             "address": "localhost",
             "port": 55555
+        },
+        {
+            "name": "Attach to Mono",
+            "type": "mono",
+            "postDebugTask": "close-docker",
+            "request": "attach",
+            "address": "localhost",
+            "port": 55555
+        },
+        {
+            "name": "Attach to Python (Container)",
+            "type": "python",
+            "request": "attach",
+            "port": 5678,
+            "pathMappings":[{ 
+                "localRoot": "${workspaceFolder}", 
+                "remoteRoot": "/Lean/"
+            }]
+        }
+        {
+            "name": "Attach to Python (Local)",
+            "type": "python",
+            "request": "attach",
+            "port": 5678,
+            "pathMappings":[{ 
+                "localRoot": "${workspaceFolder}", 
+                "remoteRoot": "${workspaceFolder}"
+            }]
         }
     ]
 }

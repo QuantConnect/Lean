@@ -8,7 +8,10 @@ FROM quantconnect/lean:foundation
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
-COPY . /Lean/
+#Install Python Tool for Visual Studio Debugger for remote python debugging
+RUN pip install ptvsd
+
+COPY ./Launcher/bin/Debug/ /Lean/Launcher/bin/Debug/
 
 # Can override with '-w'
 WORKDIR /Lean/Launcher/bin/Debug

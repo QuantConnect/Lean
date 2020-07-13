@@ -18,7 +18,7 @@ current_dir=$(dirname $full_path)
 default_image=quantconnect/lean:latest
 default_data_dir=$current_dir/Data
 default_results_dir=$current_dir
-default_config_file=$current_dir/Launcher/bin/Debug/config.json
+default_config_file=$current_dir/Launcher/config.json
 
 if [ -f "$1" ]; then
     IFS="="
@@ -30,7 +30,7 @@ else
     read -p "Enter absolute path to Lean config file [default: $default_config_file]: " config_file
     read -p "Enter absolute path to Data folder [default: $default_data_dir]: " data_dir
     read -p "Enter absolute path to store results [default: $default_results_dir]: " results_dir
-    read -p "Are you using a custom algorithm? (Must be updated in config!!) [Y/N default: N]: " custom_algorithm
+    read -p "Are you using a custom algorithm? (Must be defined in config) [Y/N default: N]: " custom_algorithm
 fi
 
 if [ -z "$image" ]; then
@@ -76,7 +76,7 @@ if [ "$custom_algorithm" == "Y" ]; then
         algorithm_destination=/Lean/Launcher/bin/Debug/$attach_algorithm
     fi
 
-    if [ ! -a "$algorithm_location" ]; then
+    if [ ! -f "$algorithm_location" ]; then
 	    echo "Algorithm file $attach_algorithm does not exist at $algorithm_location"
 	    exit 1
     fi
@@ -84,13 +84,20 @@ if [ "$custom_algorithm" == "Y" ]; then
     docker run --rm --mount type=bind,source=$config_file,target=/Lean/config.json,readonly \
     --mount type=bind,source=$data_dir,target=/Data,readonly \
     --mount type=bind,source=$results_dir,target=/Results \
-    --mount type=bind,source=$algorithm_location,target=$algorithm_destination^
-    $image --data-folder /Data --results-destination-folder /Results --config /Lean/config.json
+    --mount type=bind,source=$algorithm_location,target=$algorithm_destination \
+    -p 55555:55555 -p 5678:5678 \
+    --name LeanEngine \
+    --entrypoint mono \
+    $image --debug --debugger-agent=transport=dt_socket,server=y,address=0.0.0.0:55555 \
+    QuantConnect.Lean.Launcher.exe --data-folder /Data --results-destination-folder /Results --config /Lean/Launcher/config.json
+
 else
     docker run --rm --mount type=bind,source=$config_file,target=/Lean/config.json,readonly \
     --mount type=bind,source=$data_dir,target=/Data,readonly \
     --mount type=bind,source=$results_dir,target=/Results \
-    $image --data-folder /Data --results-destination-folder /Results --config /Lean/config.json
+    -p 55555:55555 -p 5678:5678 \
+    --name LeanEngine \
+    --entrypoint mono \
+    $image --debug --debugger-agent=transport=dt_socket,server=y,address=0.0.0.0:55555 \
+    QuantConnect.Lean.Launcher.exe --data-folder /Data --results-destination-folder /Results --config /Lean/Launcher/config.json
 fi
-
-read -p "Press Enter to close this process...."

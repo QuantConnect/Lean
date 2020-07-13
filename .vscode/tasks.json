@@ -9,23 +9,87 @@
             "label": "build",
             "type": "shell",
             "command": "msbuild",
-            "windows": {
-                 
-            },
             "args": [
-                // Ask msbuild to generate full paths for file names.
                 "/property:GenerateFullPaths=true",
                 "/t:build",
-                // Do not generate summary otherwise it leads to duplicate errors in Problems panel
-                "/consoleloggerparameters:NoSummary"
+                "/consoleloggerparameters:NoSummary",
             ],
             "group": "build",
             "presentation": {
-                // Reveal the output only if unrecognized errors occur.
                 "reveal": "silent"
             },
-            // Use the standard MS compiler pattern to detect errors, warnings and infos
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "force build linux",
+            "type": "shell",
+            "command": "msbuild",
+            "args": [
+                "/property:GenerateFullPaths=true",
+                "/t:build",
+                "/consoleloggerparameters:NoSummary",
+                "/p:ForceLinuxBuild=true"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "run-docker",
+            "type": "shell",
+            "isBackground": true,
+            "windows": {
+                "command": "${workspaceFolder}/run_docker.bat"
+            },
+            "linux": {
+                "command": "${workspaceFolder}/run_docker.sh"
+            },
+            "problemMatcher": [
+                {
+                  "pattern": [
+                    {
+                      "regexp": ".",
+                      "file": 1,
+                      "location": 2,
+                      "message": 3
+                    }
+                  ],
+                  "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".",
+                    "endsPattern": ".",
+                  }
+                }
+              ]
+        },
+        {
+            "label": "close-docker",
+            "type": "shell",
+            "command": "docker stop LeanEngine",
+            "presentation": {
+                "echo": false,
+                "reveal": "never",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true,
+            }
+        },
+        {
+            "label": "Run Application",
+            "type": "process",
+            "command": "QuantConnect.Lean.Launcher.exe",
+            "args" : [
+                "--data-folder",
+                "${workspaceFolder}/Data",
+                "--config",
+                "${workspaceFolder}/Launcher/config.json"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/Launcher/bin/Debug/"
+            }
         }
     ]
 }
