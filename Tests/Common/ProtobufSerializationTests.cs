@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -28,6 +29,70 @@ namespace QuantConnect.Tests.Common
     [TestFixture]
     public class ProtobufSerializationTests
     {
+        [TestCase(10)]
+        [TestCase(100)]
+        [TestCase(1000)]
+        [TestCase(10000)]
+        [TestCase(100000)]
+        [TestCase(100000)]
+        public void TickListSerializationRoundTrip(int tickCount)
+        {
+            var time = DateTime.UtcNow;
+            var ticks = new List<Tick>();
+            for (int i = 0; i < tickCount; i++)
+            {
+                var tick = new Tick
+                {
+                    Symbol = Symbols.AAPL,
+                    AskPrice = i,
+                    AskSize = i,
+                    Time = time + TimeSpan.FromMilliseconds(i),
+                    Quantity = i,
+                    DataType = MarketDataType.Tick,
+                    Exchange = "Pinocho",
+                    SaleCondition = "VerySold",
+                    TickType = TickType.Quote,
+                    Value = i,
+                    BidPrice = i,
+                    BidSize = i
+                };
+                ticks.Add(tick);
+            }
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var serializedTick = ticks.ProtobufSerialize();
+            stopwatch.Stop();
+
+            Log.Trace($"Took {stopwatch.ElapsedMilliseconds}ms. TickCount : {tickCount}.");
+
+            // verify its correct
+            using (var stream = new MemoryStream(serializedTick))
+            {
+                var results = Serializer.Deserialize<List<Tick>>(stream);
+
+                Assert.AreEqual(tickCount, results.Count);
+
+                for (int i = 0; i < tickCount; i++)
+                {
+                    var result = results[i];
+                    Assert.AreEqual(Symbols.AAPL, result.Symbol);
+                    Assert.AreEqual(i, result.AskPrice);
+                    Assert.AreEqual(i, result.AskSize);
+                    Assert.AreEqual(time + TimeSpan.FromMilliseconds(i), result.Time);
+                    Assert.AreEqual(i, result.Quantity);
+                    Assert.AreEqual(MarketDataType.Tick, result.DataType);
+                    Assert.AreEqual("Pinocho", result.Exchange);
+                    Assert.AreEqual("VerySold", result.SaleCondition);
+                    Assert.AreEqual(TickType.Quote, result.TickType);
+                    Assert.AreEqual(time + TimeSpan.FromMilliseconds(i), result.EndTime);
+                    Assert.AreEqual(i, result.Value);
+                    Assert.AreEqual(i, result.BidPrice);
+                    Assert.AreEqual(i, result.BidSize);
+                }
+            }
+        }
+
         [Test]
         public void TickSerializationRoundTrip()
         {
@@ -48,11 +113,11 @@ namespace QuantConnect.Tests.Common
                 BidSize = 100
             };
 
-            using (var stream = new MemoryStream())
+            var serializedTick = tick.ProtobufSerialize();
+
+            // verify its correct
+            using (var stream = new MemoryStream(serializedTick))
             {
-                Serializer.Serialize(stream, tick);
-                stream.Position = 0;
-                // verify its correct
                 var result = Serializer.Deserialize<Tick>(stream);
 
                 Assert.AreEqual(tick.Symbol, result.Symbol);
@@ -79,7 +144,6 @@ namespace QuantConnect.Tests.Common
                 Symbol = Symbols.AAPL,
                 Volume = 10,
                 Time = DateTime.UtcNow,
-                DataType = MarketDataType.Tick,
                 EndTime = DateTime.UtcNow,
                 Value = 10,
                 Close = 10,
@@ -89,10 +153,9 @@ namespace QuantConnect.Tests.Common
                 Period = TimeSpan.FromMinutes(1)
             };
 
-            using (var stream = new MemoryStream())
+            var serializedTradeBar = tradeBar.ProtobufSerialize();
+            using (var stream = new MemoryStream(serializedTradeBar))
             {
-                Serializer.Serialize(stream, tradeBar);
-                stream.Position = 0;
                 // verify its correct
                 var result = Serializer.Deserialize<TradeBar>(stream);
 
@@ -117,7 +180,6 @@ namespace QuantConnect.Tests.Common
             {
                 Symbol = Symbols.AAPL,
                 Time = DateTime.UtcNow,
-                DataType = MarketDataType.Tick,
                 EndTime = DateTime.UtcNow,
                 Value = 10,
                 LastAskSize = 10,
@@ -127,10 +189,9 @@ namespace QuantConnect.Tests.Common
                 Period = TimeSpan.FromMinutes(1)
             };
 
-            using (var stream = new MemoryStream())
+            var serializedQuoteBar = quoteBar.ProtobufSerialize();
+            using (var stream = new MemoryStream(serializedQuoteBar))
             {
-                Serializer.Serialize(stream, quoteBar);
-                stream.Position = 0;
                 // verify its correct
                 var result = Serializer.Deserialize<QuoteBar>(stream);
 
@@ -199,10 +260,9 @@ namespace QuantConnect.Tests.Common
 
             {
                 // warmup
-                using (var stream = new MemoryStream())
+                var serialized = ticks.ProtobufSerialize();
+                using (var stream = new MemoryStream(serialized))
                 {
-                    Serializer.Serialize(stream, ticks);
-                    stream.Position = 0;
                     // verify its correct
                     var result = Serializer.Deserialize<List<Tick>>(stream);
                 }
@@ -210,10 +270,7 @@ namespace QuantConnect.Tests.Common
                 var start = DateTime.UtcNow;
                 for (var i = 0; i < 10; i++)
                 {
-                    using (var stream = new MemoryStream())
-                    {
-                        Serializer.Serialize(stream, ticks);
-                    }
+                    serialized = ticks.ProtobufSerialize();
                 }
                 var end = DateTime.UtcNow;
                 Log.Trace($"PROTO BUF TOOK {end - start}");

@@ -18,6 +18,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Text;
 using Newtonsoft.Json;
 using ProtoBuf;
 using QuantConnect.Configuration;
@@ -39,7 +40,7 @@ namespace QuantConnect
     /// </remarks>
     [JsonConverter(typeof(SecurityIdentifierJsonConverter))]
     [ProtoContract(SkipConstructor = true)]
-    public struct SecurityIdentifier : IEquatable<SecurityIdentifier>
+    public class SecurityIdentifier : IEquatable<SecurityIdentifier>
     {
         #region Empty, DefaultDate Fields
 
@@ -108,11 +109,11 @@ namespace QuantConnect
         #region Member variables
 
         [ProtoMember(1)]
-        private readonly string _symbol;
+        private string _symbol;
         [ProtoMember(2)]
-        private readonly ulong _properties;
+        private ulong _properties;
         [ProtoMember(3)]
-        private readonly SidBox _underlying;
+        private SecurityIdentifier _underlying;
         private readonly int _hashCode;
         private decimal? _strikePrice;
         private OptionStyle? _optionStyle;
@@ -144,7 +145,7 @@ namespace QuantConnect
                 {
                     throw new InvalidOperationException("No underlying specified for this identifier. Check that HasUnderlying is true before accessing the Underlying property.");
                 }
-                return _underlying.SecurityIdentifier;
+                return _underlying;
             }
         }
 
@@ -353,7 +354,7 @@ namespace QuantConnect
             // performance: directly call Equals(SecurityIdentifier other), shortcuts Equals(object other)
             if (!underlying.Equals(Empty))
             {
-                _underlying = new SidBox(underlying);
+                _underlying = underlying;
             }
         }
 
@@ -535,7 +536,7 @@ namespace QuantConnect
             decimal strike = 0,
             OptionRight optionRight = 0,
             OptionStyle optionStyle = 0,
-            SecurityIdentifier? underlying = null,
+            SecurityIdentifier underlying = null,
             bool forceSymbolToUpper = true)
         {
             if ((ulong)securityType >= SecurityTypeWidth || securityType < 0)
@@ -637,7 +638,7 @@ namespace QuantConnect
         /// </summary>
         private static string EncodeBase36(ulong data)
         {
-            var stack = new Stack<char>();
+            var stack = new Stack<char>(15);
             while (data != 0)
             {
                 var value = data % 36;
@@ -889,48 +890,11 @@ namespace QuantConnect
             props = props.Length == 0 ? "0" : props;
             if (HasUnderlying)
             {
-                return _symbol + ' ' + props + '|' + _underlying.SecurityIdentifier;
+                return $"{_symbol} {props}|{_underlying}";
             }
-            return _symbol + ' ' + props;
+            return $"{_symbol} {props}";
         }
 
         #endregion
-
-        /// <summary>
-        /// Provides a reference type container for a security identifier instance.
-        /// This is used to maintain a reference to an underlying
-        /// </summary>
-        private sealed class SidBox : IEquatable<SidBox>
-        {
-            public readonly SecurityIdentifier SecurityIdentifier;
-            public SidBox(SecurityIdentifier securityIdentifier)
-            {
-                SecurityIdentifier = securityIdentifier;
-            }
-            public bool Equals(SidBox other)
-            {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
-                return SecurityIdentifier.Equals(other.SecurityIdentifier);
-            }
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                return obj is SidBox && Equals((SidBox)obj);
-            }
-            public override int GetHashCode()
-            {
-                return SecurityIdentifier.GetHashCode();
-            }
-            public static bool operator ==(SidBox left, SidBox right)
-            {
-                return Equals(left, right);
-            }
-            public static bool operator !=(SidBox left, SidBox right)
-            {
-                return !Equals(left, right);
-            }
-        }
     }
 }

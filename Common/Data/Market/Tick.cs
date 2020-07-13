@@ -180,6 +180,34 @@ namespace QuantConnect.Data.Market
             AskPrice = ask;
         }
 
+        public Tick(DateTime time, Symbol symbol, string saleCondition, string exchange, decimal quantity, decimal price)
+        {
+            Value = price;
+            Time = time;
+            DataType = MarketDataType.Tick;
+            Symbol = symbol;
+            TickType = TickType.Trade;
+            Quantity = quantity;
+            Exchange = exchange;
+            SaleCondition = saleCondition;
+            Suspicious = false;
+        }
+
+        public Tick(DateTime time, Symbol symbol, string saleCondition, string exchange, decimal bidSize, decimal bidPrice, decimal askSize, decimal askPrice)
+        {
+            Time = time;
+            DataType = MarketDataType.Tick;
+            Symbol = symbol;
+            TickType = TickType.Quote;
+            Exchange = exchange;
+            SaleCondition = saleCondition;
+            Suspicious = false;
+            AskPrice = askPrice;
+            AskSize = askSize;
+            BidPrice = bidPrice;
+            BidSize = bidSize;
+        }
+
         /// <summary>
         /// Constructor for QuantConnect FXCM Data source:
         /// </summary>

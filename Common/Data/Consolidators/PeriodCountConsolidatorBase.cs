@@ -32,6 +32,7 @@ namespace QuantConnect.Data.Consolidators
     {
         // The symbol that we are consolidating for.
         private Symbol _symbol;
+        private bool _symbolsSet;
         //The number of data updates between creating new bars.
         private readonly int? _maxCount;
         //
@@ -128,8 +129,9 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="data">The new data for the consolidator</param>
         public override void Update(T data)
         {
-            if (_symbol == null)
+            if (!_symbolsSet)
             {
+                _symbolsSet = true;
                 _symbol = data.Symbol;
             }
             else if (_symbol != data.Symbol)
