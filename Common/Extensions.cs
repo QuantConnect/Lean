@@ -29,6 +29,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NodaTime;
+using ProtoBuf;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -55,6 +56,50 @@ namespace QuantConnect
     {
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
+
+        /// <summary>
+        /// Serialize a list of ticks using protobuf
+        /// </summary>
+        /// <param name="ticks">The list of ticks to serialize</param>
+        /// <returns>The resulting byte array</returns>
+        public static byte[] ProtobufSerialize(this List<Tick> ticks)
+        {
+            using (var stream = new MemoryStream())
+            {
+                Serializer.Serialize(stream, ticks);
+                return stream.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Serialize a base data instance using protobuf
+        /// </summary>
+        /// <param name="baseData">The data point to serialize</param>
+        /// <returns>The resulting byte array</returns>
+        public static byte[] ProtobufSerialize(this IBaseData baseData)
+        {
+            using (var stream = new MemoryStream())
+            {
+                switch (baseData.DataType)
+                {
+                    case MarketDataType.Tick:
+                        Serializer.Serialize(stream, baseData as Tick);
+                        break;
+                    case MarketDataType.QuoteBar:
+                        Serializer.Serialize(stream, baseData as QuoteBar);
+                        break;
+                    case MarketDataType.TradeBar:
+                        Serializer.Serialize(stream, baseData as TradeBar);
+                        break;
+                    case MarketDataType.Base:
+                        Serializer.Serialize(stream, baseData);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+                return stream.ToArray();
+            }
+        }
 
         /// <summary>
         /// Extension method to get security price is 0 messages for users

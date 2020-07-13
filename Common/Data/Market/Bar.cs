@@ -79,8 +79,8 @@ namespace QuantConnect.Data.Market
             if (value == 0) return;
 
             if (Open == 0) Open = High = Low = Close = value;
-            if (value > High) High = value;
-            if (value < Low) Low = value;
+            else if (value > High) High = value;
+            else if (value < Low) Low = value;
             Close = value;
         }
 
