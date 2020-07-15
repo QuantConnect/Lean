@@ -2140,8 +2140,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private Holding CreateHolding(IB.UpdatePortfolioEventArgs e)
         {
-            var currencySymbol = Currencies.GetCurrencySymbol(e.Contract.Currency);
             var symbol = MapSymbol(e.Contract);
+
+            var currencySymbol = Currencies.GetCurrencySymbol(
+                e.Contract.Currency ??
+                _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, Currencies.USD).QuoteCurrency);
 
             var multiplier = e.Contract.Multiplier.ConvertInvariant<decimal>();
             if (multiplier == 0m) multiplier = 1m;
