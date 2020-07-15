@@ -24,9 +24,13 @@ Before developing a new indicator it is important to understand a few core thing
 
 In order to understand indicators in Lean it is crucial to understand the class implementation of indicators. In Figure 1.1 you will find a UML Class Implementation diagram meant to show the class interactions and hierarchy.
 
-<p>Figure 1.1: Indicator Class Implementation
-<p> ![Indicator_Class_Structure](Documentation/Indicator/Indicator_Class_Structure.png)
+<p align="center">Figure 1.1: Indicator Class Implementation
+	
+	
+![Indicator_Class_Structure](/Documentation/Indicator/Indicator_Class_Structure.png)
 
+
+</p>
 
 The figure shows the fundamental concepts for Lean indicators including the base interfaces that are used by all indicators. To better understand the diagram and indicator class structure it is best to take a look at already implemented indicators and run their respective unit tests with a debugger to see how they operate. 
 
@@ -73,9 +77,13 @@ Under the Indicator project in Lean you can find a directory for the indicators.
 
 ***IndicatorName*.cs**
 
-<p>Figure 2.1: Indicator Directory
-![Indicator_directory](Documentation/Indicator/Indicator_Directory.png)
+<p align="center">Figure 2.1: Indicator Directory
+	
+	
+![Indicator_directory](/Documentation/Indicator/Indicator_Directory.png)
 
+
+</p>
 
 Once this new file has been created we must use the superclass IndicatorBase for our new class. Figure 2.2 shows an example of a basic indicator class template. It is also wise to take a look at other indicator classes to compare and contrast their implementation.
 
@@ -195,9 +203,13 @@ At this point you should have some form of external data to test your indicator 
 
 <p>* This header should be named either the indicator name or just an abbreviation, you will enter this header into your testing class later.
 
-<p>Figure 3.1 : Example Data File
-![Example_Data_File](Documentation/Indicator/Example_Data_File.png)
+<p align="center">Figure 3.1 : Example Data File
+	
+	
+![Example_Data_File](/Documentation/Indicator/Example_Data_File.png)
 
+
+</p>
 
 Reference other test files in /Tests/TestData for more examples of the data formatting before moving on to testing your indicator. Once the formatting is complete move your test file to the TestData directory.
 
@@ -208,8 +220,11 @@ Under the Tests project in Lean you can find a directory for indicator tests. To
 
 ***_IndicatorName*_Test.cs**
 
-<p>Figure 3.2: Indicator Tests Directory
-![Indicator_Test_Directory](Documentation/Indicator/Indicator_Test_Directory.png)
+<p align="center">Figure 3.2: Indicator Tests Directory
+	
+	
+![Indicator_Test_Directory](/Documentation/Indicator/Indicator_Tests_Directory.png)
+</p>
 
 
 Once this new file has been created there is a basic template format in Figure 3.3 that showcases how to make use of the CommonIndicatorTests interface. Just be sure to use the appropriate data type for your indicator with this interface. 
