@@ -20,6 +20,7 @@ using System.IO;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using ProtoBuf;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
@@ -29,6 +30,24 @@ namespace QuantConnect.Tests.Common
     [TestFixture]
     public class ProtobufSerializationTests
     {
+        [Test]
+        public void SymbolRoundTrip()
+        {
+            var symbol = Symbols.AAPL;
+
+            using (var stream = new MemoryStream())
+            {
+                Serializer.Serialize(stream, symbol);
+
+                stream.Position = 0;
+
+                var result = Serializer.Deserialize<Symbol>(stream);
+
+                Assert.AreEqual(symbol, result);
+                Assert.AreEqual(symbol.GetHashCode(), result.GetHashCode());
+            }
+        }
+
         [TestCase(10)]
         [TestCase(100)]
         [TestCase(1000)]
@@ -193,7 +212,7 @@ namespace QuantConnect.Tests.Common
             using (var stream = new MemoryStream(serializedQuoteBar))
             {
                 // verify its correct
-                var result = Serializer.Deserialize<QuoteBar>(stream);
+                var result = (QuoteBar)Serializer.Deserialize<BaseData>(stream);
 
                 Assert.AreEqual(quoteBar.Symbol, result.Symbol);
                 Assert.AreEqual(quoteBar.Time, result.Time);
