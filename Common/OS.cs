@@ -140,7 +140,9 @@ namespace QuantConnect
                     }
                 }
 
-                return (decimal) _cpuUsageCounter.NextValue();
+                var newSample = (decimal) _cpuUsageCounter.NextValue();
+                // mono is reporting double https://github.com/mono/mono/issues/20128
+                return IsWindows ? newSample : newSample / 2;
             }
         }
 
