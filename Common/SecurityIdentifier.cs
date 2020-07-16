@@ -18,7 +18,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 using Newtonsoft.Json;
 using ProtoBuf;
 using QuantConnect.Configuration;
@@ -114,7 +113,8 @@ namespace QuantConnect
         private ulong _properties;
         [ProtoMember(3)]
         private SecurityIdentifier _underlying;
-        private readonly int _hashCode;
+        private bool _hashCodeSet;
+        private int _hashCode;
         private decimal? _strikePrice;
         private OptionStyle? _optionStyle;
         private OptionRight? _optionRight;
@@ -333,6 +333,7 @@ namespace QuantConnect
                 throw new ArgumentException($"The provided properties do not match with a valid {nameof(SecurityType)}", "properties");
             }
             _hashCode = unchecked (symbol.GetHashCode() * 397) ^ properties.GetHashCode();
+            _hashCodeSet = true;
         }
 
         /// <summary>
@@ -859,7 +860,15 @@ namespace QuantConnect
         /// A hash code for the current <see cref="T:System.Object"/>.
         /// </returns>
         /// <filterpriority>2</filterpriority>
-        public override int GetHashCode() => _hashCode;
+        public override int GetHashCode()
+        {
+            if (!_hashCodeSet)
+            {
+                _hashCode = unchecked(_symbol.GetHashCode() * 397) ^ _properties.GetHashCode();
+                _hashCodeSet = true;
+            }
+            return _hashCode;
+        }
 
         /// <summary>
         /// Override equals operator

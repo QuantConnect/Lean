@@ -99,7 +99,7 @@ namespace QuantConnect.Data.Consolidators
                     High = data.Value,
                     Low = data.Value,
                     Open = data.Value,
-                    DataType = data.DataType,
+                    DataType = MarketDataType.TradeBar,
                     Value = data.Value,
                     Volume = data.Quantity
                 };
