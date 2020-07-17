@@ -150,7 +150,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 factory = new OptionChainUniverseSubscriptionEnumeratorFactory((req) =>
                 {
                     var underlyingFactory = new BaseDataSubscriptionEnumeratorFactory(false, _mapFileProvider.Get(req.Configuration.Market), _factorFileProvider);
-                    return ConfigureEnumerator(req, true, underlyingFactory.CreateEnumerator(request, _dataProvider));
+                    return ConfigureEnumerator(req, true, underlyingFactory.CreateEnumerator(req, _dataProvider));
                 });
             }
             if (request.Universe is FuturesChainUniverse)
