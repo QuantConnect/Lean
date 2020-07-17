@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Interfaces
@@ -52,6 +53,37 @@ namespace QuantConnect.Interfaces
         /// <param name="job">Job we're processing</param>
         /// <param name="symbols">The symbols to be removed</param>
         void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols);
+
+        /// <summary>
+        /// Returns whether the data provider is connected
+        /// </summary>
+        /// <returns>True if the data provider is connected</returns>
+        bool IsConnected { get; }
+    }
+
+    /// <summary>
+    /// Task requester interface with cloud system
+    /// </summary>
+    /// <remarks>
+    /// This interface is the main entrypoint for external live streams of data
+    /// to enter the Lean engine. You will need a class deriving from <see cref="BaseData"/>, and you need to convert your data
+    /// into an instance of the class deriving from BaseData.
+    /// </remarks>
+    [InheritedExport(typeof(IDataQueueHandler))]
+    public interface INewDataQueueHandler : IDisposable
+    {
+        /// <summary>
+        /// Adds the specified symbols to the subscription
+        /// </summary>
+        /// <param name="subscriptionRequest"></param>
+        /// <param name="newDataAvailableHandler"></param>
+        IEnumerator<BaseData> Subscribe(SubscriptionRequest subscriptionRequest, EventHandler newDataAvailableHandler);
+
+        /// <summary>
+        /// Removes the specified symbols to the subscription
+        /// </summary>
+        /// <param name="dataConfig"></param>
+        void Unsubscribe(SubscriptionDataConfig dataConfig);
 
         /// <summary>
         /// Returns whether the data provider is connected
