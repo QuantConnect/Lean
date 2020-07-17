@@ -2150,9 +2150,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             DataQueueHandler = dataQueueHandler;
         }
 
-        protected override ILiveDataProvider GetDataQueueHandler()
+        protected override INewDataQueueHandler GetDataQueueHandler()
         {
-            return new DataQueueHandlerLiveDataProvider(DataQueueHandler, null);
+            return null;
         }
 
         public bool UpdateRealTimePrice(
