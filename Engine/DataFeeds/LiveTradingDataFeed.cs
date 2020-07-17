@@ -167,7 +167,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected Subscription CreateDataSubscription(SubscriptionRequest request)
         {
             Subscription subscription = null;
-            var subscriptionRef = new Ref<Subscription>(() => subscription, value => { subscription = value; });
 
             try
             {
@@ -217,10 +216,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         enqueable.Enqueue(data);
 
-                        subscriptionRef.Value.OnNewDataAvailable();
+                        subscription.OnNewDataAvailable();
 
                         UpdateSubscriptionRealTimePrice(
-                            subscriptionRef.Value,
+                            subscription,
                             timeZoneOffsetProvider,
                             request.Security.Exchange.Hours,
                             data);
@@ -249,14 +248,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
 
                 var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, timeZoneOffsetProvider, enumerator);
-                subscriptionRef.Value = new Subscription(request, subscriptionDataEnumerator, timeZoneOffsetProvider);
+                subscription = new Subscription(request, subscriptionDataEnumerator, timeZoneOffsetProvider);
             }
             catch (Exception err)
             {
                 Log.Error(err);
             }
 
-            return subscriptionRef.Value;
+            return subscription;
         }
 
         /// <summary>
@@ -325,9 +324,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 Func<SubscriptionRequest, IEnumerator<BaseData>> configure = (subRequest) =>
                 {
-                    var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(request.Configuration);
-                    var input = _dataQueueHandler.Subscribe(request, (sender, args) => subscription.OnNewDataAvailable());
-                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, request.Security.Exchange, fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone, request.StartTimeLocal);
+                    var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(subRequest.Configuration);
+                    var input = _dataQueueHandler.Subscribe(subRequest, (sender, args) => subscription.OnNewDataAvailable());
+                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution, subRequest.Configuration.ExtendedMarketHours, localEndTime, subRequest.Configuration.Increment, subRequest.Configuration.DataTimeZone, subRequest.StartTimeLocal);
                 };
 
                 var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
