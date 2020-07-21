@@ -13,8 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using RestSharp;
@@ -31,8 +33,8 @@ namespace QuantConnect.Brokerages.GDAX
         /// Initializes a new instance of the <see cref="GDAXDataQueueHandler"/> class
         /// </summary>
         public GDAXDataQueueHandler(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
-            IPriceProvider priceProvider)
-            : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider)
+            IPriceProvider priceProvider, IDataAggregator aggregator)
+            : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator)
         {
         }
 
@@ -42,37 +44,26 @@ namespace QuantConnect.Brokerages.GDAX
         protected override string[] ChannelNames { get; } = { "heartbeat", "level2", "matches" };
 
         /// <summary>
-        /// Get the next ticks from the live trading data queue
-        /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public IEnumerable<BaseData> GetNextTicks()
-        {
-            lock (TickLocker)
-            {
-                var copy = Ticks.ToArray();
-                Ticks.Clear();
-                return copy;
-            }
-        }
-
-        /// <summary>
         /// Adds the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="request">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">fired when new data are ready</param>
+        /// <returns></returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionRequest request, EventHandler newDataAvailableHandler)
         {
-            Subscribe(symbols);
+            Subscribe(new[] { request.Security.Symbol });
+
+            var enumerator = _aggregator.Add(request.Configuration, newDataAvailableHandler);
+            return enumerator;
         }
 
         /// <summary>
         /// Removes the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            Unsubscribe(symbols);
+            Unsubscribe(new Symbol[] { dataConfig.Symbol });
         }
     }
 }

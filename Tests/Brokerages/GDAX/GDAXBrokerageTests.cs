@@ -30,6 +30,7 @@ using System.Threading;
 using QuantConnect.Brokerages.GDAX.Messages;
 using QuantConnect.Util;
 using Order = QuantConnect.Orders.Order;
+using QuantConnect.Data;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
@@ -60,7 +61,9 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             var priceProvider = new Mock<IPriceProvider>();
             priceProvider.Setup(x => x.GetLastPrice(It.IsAny<Symbol>())).Returns(1.234m);
 
-            _unit = new GDAXBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass", _algo.Object, priceProvider.Object);
+            var aggregator = new Mock<IDataAggregator>();
+
+            _unit = new GDAXBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass", _algo.Object, priceProvider.Object, aggregator.Object);
             _orderData = File.ReadAllText("TestData//gdax_order.txt");
             _matchData = File.ReadAllText("TestData//gdax_match.txt");
             _openOrderData = File.ReadAllText("TestData//gdax_openOrders.txt");

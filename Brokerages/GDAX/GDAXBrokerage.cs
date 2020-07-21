@@ -435,6 +435,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         public override void Dispose()
         {
+            _aggregator.Dispose();
             _publicEndpointRateLimiter.Dispose();
             _privateEndpointRateLimiter.Dispose();
         }
