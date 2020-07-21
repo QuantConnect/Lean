@@ -21,6 +21,7 @@ using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Util;
@@ -40,6 +41,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         private readonly ConcurrentQueue<BaseData> _ticks;
         private readonly HashSet<Symbol> _symbols;
         private readonly object _sync = new object();
+        private readonly IDataAggregator _aggregator = new AggregationManager(); 
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FakeDataQueue"/> class to randomly emit data for each symbol
@@ -68,7 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
             {
                 var elapsed = (DateTime.Now - lastTime);
                 var ticksPerSecond = (count - lastCount)/elapsed.TotalSeconds;
-                Console.WriteLine("TICKS PER SECOND:: " + ticksPerSecond.ToStringInvariant("000000.0") + " ITEMS IN QUEUE:: " + _ticks.Count);
+                Console.WriteLine("TICKS PER SECOND:: " + ticksPerSecond.ToStringInvariant("000000.0") + " ITEMS IN QUEUE:: " + 0);
                 lastCount = count;
                 lastTime = DateTime.Now;
                 PopulateQueue();
@@ -76,17 +78,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         }
 
         /// <summary>
-        /// Get the next ticks from the live trading data queue
+        /// Adds the specified symbols to the subscription
         /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="request">defines the parameters to subscribe to a data feed</param>
+        /// <returns></returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionRequest request, EventHandler newDataAvailableHandler)
         {
-            BaseData tick;
-            while (_ticks.TryDequeue(out tick))
-            {
-                yield return tick;
-                Interlocked.Increment(ref count);
-            }
+            Subscribe(new[] { request.Security.Symbol });
+
+            return _aggregator.Add(request.Configuration, newDataAvailableHandler);
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// </summary>
         /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public void Subscribe(IEnumerable<Symbol> symbols)
         {
             foreach (var symbol in symbols)
             {
@@ -108,9 +108,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// <summary>
         /// Removes the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            Unsubscribe(new Symbol[] { dataConfig.Symbol });
+        }
+
+        /// <summary>
+        /// Removes the specified symbols to the subscription
+        /// </summary>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public void Unsubscribe(IEnumerable<Symbol> symbols)
         {
             foreach (var symbol in symbols)
             {
@@ -152,7 +160,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 // emits 500k per second
                 for (int i = 0; i < 500000; i++)
                 {
-                    _ticks.Enqueue(new Tick
+                    _aggregator.Update(new Tick
                     {
                         Time = DateTime.Now,
                         Symbol = symbol,

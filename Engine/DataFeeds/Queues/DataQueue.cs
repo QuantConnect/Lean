@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
@@ -26,11 +27,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
     /// </summary>
     public class LiveDataQueue : IDataQueueHandler
     {
+
         /// <summary>
         /// Desktop/Local doesn't support live data from this handler
         /// </summary>
-        /// <returns>Tick</returns>
-        public virtual IEnumerable<BaseData> GetNextTicks()
+        public IEnumerator<BaseData> Subscribe(SubscriptionRequest request, EventHandler newDataAvailableHandler)
         {
             throw new NotImplementedException("QuantConnect.Queues.LiveDataQueue has not implemented live data.");
         }
@@ -38,15 +39,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// <summary>
         /// Desktop/Local doesn't support live data from this handler
         /// </summary>
-        public virtual void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
-        {
-            throw new NotImplementedException("QuantConnect.Queues.LiveDataQueue has not implemented live data.");
-        }
-
-        /// <summary>
-        /// Desktop/Local doesn't support live data from this handler
-        /// </summary>
-        public virtual void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public virtual void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
             throw new NotImplementedException("QuantConnect.Queues.LiveDataQueue has not implemented live data.");
         }
