@@ -20,6 +20,7 @@ using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -38,6 +39,7 @@ namespace QuantConnect.Brokerages.Oanda
     {
         private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
         private readonly OandaRestApiBase _api;
+        private readonly IDataAggregator _aggregator;
 
         /// <summary>
         /// The maximum number of bars per historical data request
@@ -49,11 +51,12 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         /// <param name="orderProvider">The order provider.</param>
         /// <param name="securityProvider">The holdings provider.</param>
+        /// <param name="aggregator">consolidate ticks</param>
         /// <param name="environment">The Oanda environment (Trade or Practice)</param>
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
         /// <param name="agent">The Oanda agent string</param>
-        public OandaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent = OandaRestApiBase.OandaAgentDefaultValue)
+        public OandaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, Environment environment, string accessToken, string accountId, string agent = OandaRestApiBase.OandaAgentDefaultValue)
             : base("Oanda Brokerage")
         {
             if (environment != Environment.Trade && environment != Environment.Practice)
@@ -62,8 +65,8 @@ namespace QuantConnect.Brokerages.Oanda
             // Use v20 REST API only if you have a v20 account
             // Use v1 REST API if your account id contains only digits(ie. 2534253) as it is a legacy account
             _api = IsLegacyAccount(accountId) ? (OandaRestApiBase)
-                new OandaRestApiV1(_symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId, agent) :
-                new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId, agent);
+                new OandaRestApiV1(_symbolMapper, orderProvider, securityProvider, _aggregator, environment, accessToken, accountId, agent) :
+                new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, _aggregator, environment, accessToken, accountId, agent);
 
             // forward events received from API
             _api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);
@@ -244,32 +247,44 @@ namespace QuantConnect.Brokerages.Oanda
         #region IDataQueueHandler implementation
 
         /// <summary>
-        /// Get the next ticks from the live trading data queue
+        /// Adds the specified symbols to the subscription
         /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="request">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">fired when new data are ready</param>
+        /// <returns></returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionRequest request, EventHandler newDataAvailableHandler)
         {
-            return _api.GetNextTicks();
+            Subscribe(new[] { request.Security.Symbol });
+
+            var enumerator = _aggregator.Add(request.Configuration, newDataAvailableHandler);
+            return enumerator;
         }
 
         /// <summary>
         /// Adds the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public void Subscribe(IEnumerable<Symbol> symbols)
         {
-            _api.Subscribe(job, symbols);
+            _api.Subscribe(symbols);
+        }
+
+        /// <summary>
+        /// Removes the specified symbols to the subscription
+        /// </summary>
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            Unsubscribe(new Symbol[] { dataConfig.Symbol });
         }
 
         /// <summary>
         /// Removes the specified symbols from the subscription
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public void Unsubscribe(IEnumerable<Symbol> symbols)
         {
-            _api.Unsubscribe(job, symbols);
+            _api.Unsubscribe(symbols);
         }
 
         #endregion

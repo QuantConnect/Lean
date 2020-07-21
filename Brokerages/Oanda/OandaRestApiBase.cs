@@ -21,7 +21,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using NodaTime;
 using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -62,11 +64,6 @@ namespace QuantConnect.Brokerages.Oanda
         protected readonly IConnectionHandler TransactionsConnectionHandler;
 
         /// <summary>
-        /// The list of ticks received
-        /// </summary>
-        protected readonly List<Tick> Ticks = new List<Tick>();
-
-        /// <summary>
         /// The list of currently subscribed symbols
         /// </summary>
         protected HashSet<Symbol> SubscribedSymbols = new HashSet<Symbol>();
@@ -90,6 +87,11 @@ namespace QuantConnect.Brokerages.Oanda
         /// The security provider
         /// </summary>
         protected ISecurityProvider SecurityProvider;
+
+        /// <summary>
+        /// The data aggregator
+        /// </summary>
+        protected IDataAggregator Aggregator;
 
         /// <summary>
         /// The Oanda enviroment
@@ -127,11 +129,12 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="symbolMapper">The symbol mapper.</param>
         /// <param name="orderProvider">The order provider.</param>
         /// <param name="securityProvider">The holdings provider.</param>
+        /// <param name="aggregator">Consolidate ticks</param>
         /// <param name="environment">The Oanda environment (Trade or Practice)</param>
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
         /// <param name="agent">The Oanda agent string</param>
-        protected OandaRestApiBase(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent)
+        protected OandaRestApiBase(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, Environment environment, string accessToken, string accountId, string agent)
             : base("Oanda Brokerage")
         {
             SymbolMapper = symbolMapper;
@@ -141,6 +144,7 @@ namespace QuantConnect.Brokerages.Oanda
             AccessToken = accessToken;
             AccountId = accountId;
             Agent = agent;
+            Aggregator = aggregator;
 
             PricingConnectionHandler = new DefaultConnectionHandler { MaximumIdleTimeSpan = TimeSpan.FromSeconds(20) };
             PricingConnectionHandler.ConnectionLost += OnPricingConnectionLost;
@@ -321,26 +325,16 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The list of bars</returns>
         public abstract IEnumerable<QuoteBar> DownloadQuoteBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone);
 
-        /// <summary>
-        /// Get the next ticks from the live trading data queue
-        /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        public IEnumerator<BaseData> Subscribe(SubscriptionRequest request, EventHandler newDataAvailableHandler)
         {
-            lock (Ticks)
-            {
-                var copy = Ticks.ToArray();
-                Ticks.Clear();
-                return copy;
-            }
+            throw new NotImplementedException();
         }
 
         /// <summary>
         /// Adds the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public void Subscribe(IEnumerable<Symbol> symbols)
         {
             lock (LockerSubscriptions)
             {
@@ -363,11 +357,19 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
+        /// Removes the specified symbols to the subscription
+        /// </summary>
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            Unsubscribe(new Symbol[] { dataConfig.Symbol });
+        }
+
+        /// <summary>
         /// Removes the specified symbols from the subscription
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public void Unsubscribe(IEnumerable<Symbol> symbols)
         {
             lock (LockerSubscriptions)
             {
@@ -466,6 +468,15 @@ namespace QuantConnect.Brokerages.Oanda
 
                 PricingConnectionHandler.EnableMonitoring(true);
             }
+        }
+
+        /// <summary>
+        /// Emit ticks
+        /// </summary>
+        /// <param name="tick"></param>
+        protected void EmitTick(Tick tick)
+        {
+            Aggregator.Update(tick);
         }
     }
 }

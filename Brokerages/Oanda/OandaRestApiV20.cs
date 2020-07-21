@@ -38,6 +38,7 @@ using Order = QuantConnect.Orders.Order;
 using OandaLimitOrder = Oanda.RestV20.Model.LimitOrder;
 using OrderType = QuantConnect.Orders.OrderType;
 using TimeInForce = QuantConnect.Orders.TimeInForce;
+using QuantConnect.Data;
 
 namespace QuantConnect.Brokerages.Oanda
 {
@@ -59,12 +60,13 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="symbolMapper">The symbol mapper.</param>
         /// <param name="orderProvider">The order provider.</param>
         /// <param name="securityProvider">The holdings provider.</param>
+        /// <param name="aggregator">Consolidate ticks.</param>
         /// <param name="environment">The Oanda environment (Trade or Practice)</param>
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
         /// <param name="agent">The Oanda agent string</param>
-        public OandaRestApiV20(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent)
-            : base(symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId, agent)
+        public OandaRestApiV20(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, Environment environment, string accessToken, string accountId, string agent)
+            : base(symbolMapper, orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent)
         {
             var basePathRest = environment == Environment.Trade ?
                 "https://api-fxtrade.oanda.com/v3" :
@@ -418,10 +420,7 @@ namespace QuantConnect.Brokerages.Oanda
                     var askPrice = data.Asks.Last().Price.ConvertInvariant<decimal>();
                     var tick = new Tick(time, symbol, bidPrice, askPrice);
 
-                    lock (Ticks)
-                    {
-                        Ticks.Add(tick);
-                    }
+                    EmitTick(tick);
                     break;
             }
         }

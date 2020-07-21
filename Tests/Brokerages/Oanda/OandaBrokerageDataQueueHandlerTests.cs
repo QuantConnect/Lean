@@ -32,31 +32,26 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         {
             var brokerage = (OandaBrokerage)Brokerage;
 
-            brokerage.Subscribe(null, new List<Symbol>
+            brokerage.Subscribe(new List<Symbol>
             {
                 Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda),
                 Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda),
             });
 
-            brokerage.Subscribe(null, new List<Symbol>
+            brokerage.Subscribe(new List<Symbol>
             {
                 Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda),
                 Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda),
             });
 
-            brokerage.Subscribe(null, new List<Symbol>
+            brokerage.Subscribe(new List<Symbol>
             {
                 Symbol.Create("XAUXAG", SecurityType.Cfd, Market.Oanda),
             });
 
             Thread.Sleep(20000);
 
-            foreach (var tick in brokerage.GetNextTicks())
-            {
-                Log.Trace("{0}: {1} - {2} / {3}", tick.Time, tick.Symbol.Value, ((Tick)tick).BidPrice, ((Tick)tick).AskPrice);
-            }
-
-            brokerage.Unsubscribe(null, new List<Symbol>
+            brokerage.Unsubscribe(new List<Symbol>
             {
                 Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda),
                 Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda),
@@ -65,11 +60,6 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             });
 
             Thread.Sleep(20000);
-
-            foreach (var tick in brokerage.GetNextTicks())
-            {
-                Log.Trace("{0}: {1} - {2} / {3}", tick.Time, tick.Symbol.Value, ((Tick)tick).BidPrice, ((Tick)tick).AskPrice);
-            }
 
             Thread.Sleep(5000);
         }
@@ -88,7 +78,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             var stopwatch = Stopwatch.StartNew();
             foreach (var symbol in symbols)
             {
-                brokerage.Subscribe(null, new List<Symbol>
+                brokerage.Subscribe(new List<Symbol>
                 {
                     Symbol.Create(symbol, SecurityType.Forex, Market.Oanda),
                 });
@@ -102,7 +92,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             stopwatch.Restart();
             foreach (var symbol in symbols)
             {
-                brokerage.Unsubscribe(null, new List<Symbol>
+                brokerage.Unsubscribe(new List<Symbol>
                 {
                     Symbol.Create(symbol, SecurityType.Forex, Market.Oanda),
                 });
