@@ -35,24 +35,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             Task.Run(() =>
             {
-                foreach (var tick in iex.GetNextTicks())
-                {
-                    try
-                    {
-                        if (callback != null)
-                        {
-                            callback.Invoke(tick);
-                        }
-                    }
-                    catch (AssertionException)
-                    {
-                        throw;
-                    }
-                    catch (Exception err)
-                    {
-                        Console.WriteLine(err.Message);
-                    }
-                }
+                
             });
         }
 
@@ -78,7 +61,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             ProcessFeed(iex, tick => Console.WriteLine(tick.ToString()));
 
-            iex.Subscribe(null, new[]
+            iex.Subscribe(new[]
             {
                 Symbol.Create("firehose", SecurityType.Equity, Market.USA)
             });
@@ -97,7 +80,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             ProcessFeed(iex, tick => Console.WriteLine(tick.ToString()));
 
-            iex.Subscribe(null, new[]
+            iex.Subscribe(new[]
             {
                 Symbol.Create("FB", SecurityType.Equity, Market.USA),
                 Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
@@ -120,22 +103,22 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             ProcessFeed(iex, tick => Console.WriteLine(tick.ToString()));
 
-            iex.Subscribe(null, new[]
+            iex.Subscribe(new[]
             {
                 Symbol.Create("MBLY", SecurityType.Equity, Market.USA),
             });
 
-            iex.Subscribe(null, new[]
+            iex.Subscribe(new[]
             {
                 Symbol.Create("FB", SecurityType.Equity, Market.USA),
             });
 
-            iex.Subscribe(null, new[]
+            iex.Subscribe(new[]
             {
                 Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
             });
 
-            iex.Subscribe(null, new[]
+            iex.Subscribe(new[]
             {
                 Symbol.Create("USO", SecurityType.Equity, Market.USA),
             });
@@ -144,17 +127,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Console.WriteLine("Unsubscribing from all except MBLY");
 
-            iex.Unsubscribe(null, new[]
+            iex.Unsubscribe(new[]
             {
                 Symbol.Create("FB", SecurityType.Equity, Market.USA),
             });
 
-            iex.Unsubscribe(null, new[]
+            iex.Unsubscribe(new[]
             {
                 Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
             });
 
-            iex.Unsubscribe(null, new[]
+            iex.Unsubscribe(new[]
             {
                 Symbol.Create("USO", SecurityType.Equity, Market.USA),
             });
@@ -179,14 +162,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             });
 
-            iex.Subscribe(null, new[] {
+            iex.Subscribe(new[] {
                 Symbol.Create("MBLY", SecurityType.Equity, Market.USA),
                 Symbol.Create("USO", SecurityType.Equity, Market.USA)
             });
 
             Thread.Sleep(20000);
 
-            iex.Unsubscribe(null, new[]
+            iex.Unsubscribe(new[]
             {
                 Symbol.Create("MBLY", SecurityType.Equity, Market.USA)
             });

@@ -32,6 +32,7 @@ using QuantConnect.Interfaces;
 using NodaTime;
 using System.Globalization;
 using static QuantConnect.StringExtensions;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.ToolBox.IEX
 {
@@ -157,18 +158,21 @@ namespace QuantConnect.ToolBox.IEX
         }
 
         /// <summary>
-        /// Desktop/Local doesn't support live data from this handler
+        /// Adds the specified symbols to the subscription
         /// </summary>
-        /// <returns>Tick</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="request">defines the parameters to subscribe to a data feed</param>
+        /// <returns></returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionRequest request, EventHandler newDataAvailableHandler)
         {
-            return _outputCollection.GetConsumingEnumerable();
+            Subscribe(new[] { request.Security.Symbol });
+
+            return null;
         }
 
         /// <summary>
         /// Subscribe to symbols
         /// </summary>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public void Subscribe(IEnumerable<Symbol> symbols)
         {
             try
             {
@@ -200,11 +204,20 @@ namespace QuantConnect.ToolBox.IEX
             }
         }
 
+        /// <summary>
+        /// Removes the specified symbols to the subscription
+        /// </summary>
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            Unsubscribe(new Symbol[] { dataConfig.Symbol });
+        }
+
 
         /// <summary>
         /// Unsubscribe from symbols
         /// </summary>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public void Unsubscribe(IEnumerable<Symbol> symbols)
         {
             try
             {
@@ -350,7 +363,8 @@ namespace QuantConnect.ToolBox.IEX
             {
                 Log.Error("IEXDataQueueHandler.GetHistory(): History calls with minute resolution for IEX available only for trailing 30 calendar days.");
                 yield break;
-            } else if (request.Resolution != Resolution.Daily && request.Resolution != Resolution.Minute)
+            }
+            else if (request.Resolution != Resolution.Daily && request.Resolution != Resolution.Minute)
             {
                 Log.Error("IEXDataQueueHandler.GetHistory(): History calls for IEX only support daily & minute resolution.");
                 yield break;
@@ -380,7 +394,7 @@ namespace QuantConnect.ToolBox.IEX
             {
                 suffixes.Add("1m");
             }
-            else if (span.Days < 3*30)
+            else if (span.Days < 3 * 30)
             {
                 suffixes.Add("3m");
             }

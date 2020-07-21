@@ -14,16 +14,16 @@
  *
 */
 
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -294,7 +294,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             return exchange;
         }
 
-        private static IEnumerator<BaseData> GetNextTicksEnumerator(IDataQueueHandler dataQueueHandler)
+        private static IEnumerator<BaseData> GetNextTicksEnumerator(FuncDataQueueHandler dataQueueHandler)
         {
             while (true)
             {
