@@ -28,6 +28,7 @@ using System.Linq;
 using System.Net;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities.Crypto;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -107,7 +108,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                 OnOrderEvent(new OrderEvent(order,
                     DateTime.UtcNow,
                     OrderFee.Zero,
-                    "Bitfinex Order Event") { Status = OrderStatus.CancelPending });
+                    "Bitfinex Order Event")
+                { Status = OrderStatus.CancelPending });
 
                 cancellationSubmitted = true;
             }
@@ -354,7 +356,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
                     throw new Exception(
-                        $"BitfinexBrokerage.GetHistory: request failed: [{(int) response.StatusCode}] {response.StatusDescription}, " +
+                        $"BitfinexBrokerage.GetHistory: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, " +
                         $"Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
                 }
 
@@ -402,40 +404,30 @@ namespace QuantConnect.Brokerages.Bitfinex
         #endregion
 
         #region IDataQueueHandler
-        /// <summary>
-        /// Get the next ticks from the live trading data queue
-        /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public IEnumerable<BaseData> GetNextTicks()
-        {
-            lock (TickLocker)
-            {
-                var copy = Ticks.ToArray();
-                Ticks.Clear();
-                return copy;
-            }
-        }
 
         /// <summary>
         /// Adds the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="request">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">fired when new data are ready</param>
+        /// <returns></returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionRequest request, EventHandler newDataAvailableHandler)
         {
-            Subscribe(symbols);
-        }
+            Subscribe(new[] { request.Security.Symbol });
 
+            var enumerator = _aggregator.Add(request.Configuration, newDataAvailableHandler);
+            return enumerator;
+        }
 
         /// <summary>
         /// Removes the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            Unsubscribe(symbols);
+            Unsubscribe(new Symbol[] { dataConfig.Symbol });
         }
+
         #endregion
 
         /// <summary>
@@ -452,7 +444,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         public override void Dispose()
         {
+            _aggregator.Dispose();
             _restRateLimiter.Dispose();
         }
+
     }
 }
