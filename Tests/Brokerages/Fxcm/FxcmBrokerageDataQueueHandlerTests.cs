@@ -30,17 +30,9 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         {
             var brokerage = (FxcmBrokerage)Brokerage;
 
-            brokerage.Subscribe(null, new List<Symbol> {Symbols.USDJPY, Symbols.EURGBP});
+            //brokerage.Subscribe(new List<Symbol> {Symbols.USDJPY, Symbols.EURGBP});
 
             Thread.Sleep(5000);
-
-            for (var i = 0; i < 10; i++)
-            {
-                foreach (var tick in brokerage.GetNextTicks())
-                {
-                    Log.Trace("{0}: {1} - {2} / {3}", tick.Time.ToStringInvariant("yyyy-MM-dd HH:mm:ss.fff"), tick.Symbol, ((Tick)tick).BidPrice, ((Tick)tick).AskPrice);
-                }
-            }
         }
     }
 }
