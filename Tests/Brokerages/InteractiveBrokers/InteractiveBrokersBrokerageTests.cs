@@ -23,11 +23,13 @@ using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine;
 using QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
@@ -64,7 +66,11 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 new SecurityCache()
             );
 
-            _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(_orders), securityProvider);
+            _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage(
+                new QCAlgorithm(), 
+                new OrderProvider(_orders), 
+                securityProvider,
+                new AggregationManager());
             _interactiveBrokersBrokerage.Connect();
         }
 

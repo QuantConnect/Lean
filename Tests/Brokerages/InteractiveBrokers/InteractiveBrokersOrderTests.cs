@@ -17,6 +17,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
@@ -98,7 +99,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
-            return new InteractiveBrokersBrokerage(new QCAlgorithm(), orderProvider, securityProvider);
+            return new InteractiveBrokersBrokerage(new QCAlgorithm(), orderProvider, securityProvider, new AggregationManager());
         }
 
         protected override void DisposeBrokerage(IBrokerage brokerage)

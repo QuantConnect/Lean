@@ -19,6 +19,7 @@ using IBApi;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.InteractiveBrokers;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
@@ -34,7 +35,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             var symbolMapper = new InteractiveBrokersSymbolMapper();
 
-            using (var ib = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(), new SecurityProvider()))
+            using (var ib = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(), new SecurityProvider(), new AggregationManager()))
             {
                 ib.Connect();
                 Assert.IsTrue(ib.IsConnected);
