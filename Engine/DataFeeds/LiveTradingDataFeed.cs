@@ -47,7 +47,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private ITimeProvider _timeProvider;
         private ITimeProvider _frontierTimeProvider;
         private IDataProvider _dataProvider;
-        private INewDataQueueHandler _dataQueueHandler;
+        private IDataQueueHandler _dataQueueHandler;
         private BaseDataExchange _customExchange;
         private SubscriptionCollection _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -153,10 +153,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// the type specified in the configuration via the 'data-queue-handler'
         /// </summary>
         /// <returns>The loaded <see cref="IDataQueueHandler"/></returns>
-        protected virtual INewDataQueueHandler GetDataQueueHandler()
+        protected virtual IDataQueueHandler GetDataQueueHandler()
         {
             Log.Trace($"LiveTradingDataFeed.GetDataQueueHandler(): will use {_job.DataQueueHandler}");
-            return Composer.Instance.GetExportedValueByTypeName<INewDataQueueHandler>(_job.DataQueueHandler);
+            return Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(_job.DataQueueHandler);
         }
 
         /// <summary>

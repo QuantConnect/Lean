@@ -19,70 +19,26 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Packets;
 
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Task requester interface with cloud system
+    /// Task requestor interface with cloud system
     /// </summary>
-    /// <remarks>
-    /// This interface is the main entrypoint for external live streams of data
-    /// to enter the Lean engine. You will need a class deriving from <see cref="BaseData"/>, and you need to convert your data
-    /// into an instance of the class deriving from BaseData.
-    /// </remarks>
     [InheritedExport(typeof(IDataQueueHandler))]
     public interface IDataQueueHandler : IDisposable
     {
         /// <summary>
-        /// Get the next ticks from the live trading data queue
+        /// Subscribe to the specified symbols
         /// </summary>
-        /// <returns>IEnumerable list of data since the last update</returns>
-        IEnumerable<BaseData> GetNextTicks();
-
-        /// <summary>
-        /// Adds the specified symbols to the subscription
-        /// </summary>
-        /// <param name="job">Job we're processing</param>
-        /// <param name="symbols">The symbols to be added</param>
-        void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols);
-
-        /// <summary>
-        /// Removes the specified symbols to the subscription
-        /// </summary>
-        /// <param name="job">Job we're processing</param>
-        /// <param name="symbols">The symbols to be removed</param>
-        void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols);
-
-        /// <summary>
-        /// Returns whether the data provider is connected
-        /// </summary>
-        /// <returns>True if the data provider is connected</returns>
-        bool IsConnected { get; }
-    }
-
-    /// <summary>
-    /// Task requester interface with cloud system
-    /// </summary>
-    /// <remarks>
-    /// This interface is the main entrypoint for external live streams of data
-    /// to enter the Lean engine. You will need a class deriving from <see cref="BaseData"/>, and you need to convert your data
-    /// into an instance of the class deriving from BaseData.
-    /// </remarks>
-    [InheritedExport(typeof(IDataQueueHandler))]
-    public interface INewDataQueueHandler : IDisposable
-    {
-        /// <summary>
-        /// Adds the specified symbols to the subscription
-        /// </summary>
-        /// <param name="subscriptionRequest"></param>
-        /// <param name="newDataAvailableHandler"></param>
+        /// <param name="subscriptionRequest">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
         IEnumerator<BaseData> Subscribe(SubscriptionRequest subscriptionRequest, EventHandler newDataAvailableHandler);
 
         /// <summary>
         /// Removes the specified symbols to the subscription
         /// </summary>
-        /// <param name="dataConfig"></param>
+        /// <param name="dataConfig">Subscription config to be removed</param>
         void Unsubscribe(SubscriptionDataConfig dataConfig);
 
         /// <summary>

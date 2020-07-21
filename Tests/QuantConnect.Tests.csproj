@@ -457,7 +457,6 @@
     <Compile Include="Engine\BrokerageTransactionHandlerTests\BacktestingTransactionHandlerTests.cs" />
     <Compile Include="Engine\DataFeeds\BacktestingFutureChainProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\DataPermissionManagerTests.cs" />
-    <Compile Include="Engine\DataFeeds\Enumerators\QuoteBarBuilderEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\SubscriptionDataTests.cs" />
     <Compile Include="Engine\DataFeeds\DataManagerStub.cs" />
     <Compile Include="Engine\DataFeeds\DataManagerTests.cs" />
@@ -649,7 +648,6 @@
     <Compile Include="Engine\DataFeeds\Enumerators\RateLimitEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\RefreshEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\SynchronizingEnumeratorTests.cs" />
-    <Compile Include="Engine\DataFeeds\Enumerators\TradeBarBuilderEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\FileSystemDataFeedTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\FillForwardEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\IEXDataQueueHandlerTests.cs" />

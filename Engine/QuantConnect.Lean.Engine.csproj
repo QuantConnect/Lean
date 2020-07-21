@@ -142,6 +142,9 @@
     <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
       <HintPath>..\packages\NodaTime.1.3.4\lib\net35-Client\NodaTime.dll</HintPath>
     </Reference>
+    <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
+    </Reference>
     <Reference Include="RestSharp, Version=106.6.10.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
       <HintPath>..\packages\RestSharp.106.6.10\lib\net452\RestSharp.dll</HintPath>
     </Reference>
@@ -163,6 +166,7 @@
     <Compile Include="AlgorithmTimeLimitManager.cs" />
     <Compile Include="Alphas\ChartingInsightManagerExtension.cs" />
     <Compile Include="Alphas\StatisticsInsightManagerExtension.cs" />
+    <Compile Include="DataFeeds\AggregationManager.cs" />
     <Compile Include="DataFeeds\ApiDataProvider.cs" />
     <Compile Include="DataFeeds\BacktestingFutureChainProvider.cs" />
     <Compile Include="DataFeeds\BacktestingOptionChainProvider.cs" />
@@ -173,6 +177,7 @@
     <Compile Include="DataFeeds\DataChannelProvider.cs" />
     <Compile Include="DataFeeds\DataPermissionManager.cs" />
     <Compile Include="DataFeeds\Enumerators\ConcatEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\ScannableEnumerator.cs" />
     <Compile Include="DataFeeds\IndexSubscriptionDataSourceReader.cs" />
     <Compile Include="DataFeeds\DataManager.cs" />
     <Compile Include="DataFeeds\Enumerators\DelistingEventProvider.cs" />
@@ -225,8 +230,6 @@
     <Compile Include="DataFeeds\Enumerators\RefreshEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\SubscriptionFilterEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\SynchronizingEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\QuoteBarBuilderEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\TradeBarBuilderEnumerator.cs" />
     <Compile Include="DataFeeds\DefaultDataProvider.cs" />
     <Compile Include="DataFeeds\ISubscriptionDataSourceReader.cs" />
     <Compile Include="DataFeeds\CollectionSubscriptionDataSourceReader.cs" />
@@ -387,7 +390,9 @@
     <Error Condition="!Exists('..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props'))" />
+    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets'))" />
   </Target>
+  <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
