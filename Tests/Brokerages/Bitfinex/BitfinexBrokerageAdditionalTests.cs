@@ -20,6 +20,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Bitfinex;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using RestSharp;
 
@@ -38,6 +39,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         {
             var priceProvider = new Mock<IPriceProvider>();
             priceProvider.Setup(x => x.GetLastPrice(It.IsAny<Symbol>())).Returns(1.234m);
+            var aggregator = new Mock<IDataAggregator>();
 
             _brokerage = new BitfinexBrokerage(
                 "wss://localhost",
@@ -46,7 +48,8 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
                 "apikey",
                 "apisecret",
                 _algorithm,
-                priceProvider.Object);
+                priceProvider.Object,
+                aggregator.Object);
 
             _algorithm.SetBrokerageModel(new BitfinexBrokerageModel());
         }

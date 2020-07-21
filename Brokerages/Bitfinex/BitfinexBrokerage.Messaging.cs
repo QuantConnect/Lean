@@ -15,6 +15,8 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -43,6 +45,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
         private readonly BitfinexSubscriptionManager _subscriptionManager;
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
+        private readonly IDataAggregator _aggregator;
 
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
@@ -58,8 +61,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
-        public BitfinexBrokerage(string wssUrl, string restUrl, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider)
-            : this(wssUrl, new WebSocketClientWrapper(), new RestClient(restUrl), apiKey, apiSecret, algorithm, priceProvider)
+        /// <param name="aggregator">consolidate ticks</param>
+        public BitfinexBrokerage(string wssUrl, string restUrl, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator)
+            : this(wssUrl, new WebSocketClientWrapper(), new RestClient(restUrl), apiKey, apiSecret, algorithm, priceProvider, aggregator)
         {
         }
 
@@ -73,12 +77,14 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
-        public BitfinexBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider)
+        /// <param name="aggregator">consolidate ticks</param>
+        public BitfinexBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.Bitfinex, "Bitfinex")
         {
             _subscriptionManager = new BitfinexSubscriptionManager(this, wssUrl, _symbolMapper);
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _algorithm = algorithm;
+            _aggregator = aggregator;
 
             WebSocket.Open += (sender, args) =>
             {
@@ -161,7 +167,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <summary>
         /// Ends current subscriptions
         /// </summary>
-        public void Unsubscribe(IEnumerable<Symbol> symbols)
+        private void Unsubscribe(IEnumerable<Symbol> symbols)
         {
             foreach (var symbol in symbols)
             {
@@ -328,6 +334,15 @@ namespace QuantConnect.Brokerages.Bitfinex
                 Log.Error(e);
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Emit stream tick
+        /// </summary>
+        /// <param name="tick"></param>
+        public void EmitTick(Tick tick)
+        {
+            _aggregator.Update(tick);
         }
 
         /// <summary>
