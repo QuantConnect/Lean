@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
@@ -92,7 +93,14 @@ namespace QuantConnect.Brokerages.Oanda
                 throw new Exception(string.Join(System.Environment.NewLine, errors));
             }
 
-            var brokerage = new OandaBrokerage(algorithm.Transactions, algorithm.Portfolio, environment, accessToken, accountId, agent);
+            var brokerage = new OandaBrokerage(
+                algorithm.Transactions, 
+                algorithm.Portfolio,
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                environment, 
+                accessToken, 
+                accountId, 
+                agent);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;

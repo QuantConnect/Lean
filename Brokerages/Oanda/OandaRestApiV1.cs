@@ -29,6 +29,7 @@ using QuantConnect.Brokerages.Oanda.RestV1.DataType.Communications;
 using QuantConnect.Brokerages.Oanda.RestV1.DataType.Communications.Requests;
 using QuantConnect.Brokerages.Oanda.RestV1.Framework;
 using QuantConnect.Brokerages.Oanda.RestV1.Session;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -53,12 +54,13 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="symbolMapper">The symbol mapper.</param>
         /// <param name="orderProvider">The order provider.</param>
         /// <param name="securityProvider">The holdings provider.</param>
+        /// <param name="aggregator">Consolidate ticks</param>
         /// <param name="environment">The Oanda environment (Trade or Practice)</param>
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
         /// <param name="agent">The Oanda agent string</param>
-        public OandaRestApiV1(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent)
-            : base(symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId, agent)
+        public OandaRestApiV1(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, Environment environment, string accessToken, string accountId, string agent)
+            : base(symbolMapper, orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent)
         {
         }
 
@@ -707,10 +709,7 @@ namespace QuantConnect.Brokerages.Oanda
             var askPrice = Convert.ToDecimal(data.tick.ask);
             var tick = new Tick(time, symbol, bidPrice, askPrice);
 
-            lock (Ticks)
-            {
-                Ticks.Add(tick);
-            }
+            EmitTick(tick);
         }
 
         /// <summary>
