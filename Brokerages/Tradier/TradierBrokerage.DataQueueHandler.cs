@@ -26,6 +26,7 @@ using Newtonsoft.Json;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Util;
@@ -48,52 +49,24 @@ namespace QuantConnect.Brokerages.Tradier
         private Stream _tradierStream;
 
         /// <summary>
-        /// Get a stream of ticks from the brokerage
+        /// Adds the specified symbols to the subscription
         /// </summary>
-        /// <returns>IEnumerable of BaseData</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="request">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">fired when new data are ready</param>
+        /// <returns></returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionRequest request, EventHandler newDataAvailableHandler)
         {
-            IEnumerator<TradierStreamData> pipe = null;
-            do
-            {
-                if (_subscriptions.IsEmpty)
-                {
-                    Thread.Sleep(10);
-                    continue;
-                }
+            Subscribe(new[] { request.Security.Symbol });
 
-                //If there's been an update to the subscriptions list; recreate the stream.
-                if (_refresh)
-                {
-                    var stream = Stream(GetTickers());
-                    pipe = stream.GetEnumerator();
-                    pipe.MoveNext();
-                    _refresh = false;
-                }
-
-                if (pipe != null && pipe.Current != null)
-                {
-                    var tsd = pipe.Current;
-                    if (tsd.Type == "trade")
-                    {
-                        var tick = CreateTick(tsd);
-                        if (tick != null)
-                        {
-                            yield return tick;
-                        }
-                    }
-                    pipe.MoveNext();
-                }
-
-            } while (!_disconnect);
+            var enumerator = _aggregator.Add(request.Configuration, newDataAvailableHandler);
+            return enumerator;
         }
 
         /// <summary>
         /// Subscribe to a specific list of symbols
         /// </summary>
-        /// <param name="job">Live job to subscribe with</param>
         /// <param name="symbols">List of symbols to subscribe to</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        private void Subscribe(IEnumerable<Symbol> symbols)
         {
             //Add the symbols to the list if they aren't there already.
             foreach (var symbol in symbols.Where(x => !x.Value.Contains("-UNIVERSE-")))
@@ -109,11 +82,19 @@ namespace QuantConnect.Brokerages.Tradier
         }
 
         /// <summary>
+        /// Removes the specified symbols to the subscription
+        /// </summary>
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            Unsubscribe(new Symbol[] { dataConfig.Symbol });
+        }
+
+        /// <summary>
         /// Remove the symbol from the subscription list.
         /// </summary>
-        /// <param name="job">Live Job to subscribe with</param>
         /// <param name="symbols">List of symbols to unsubscribe from</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        private void Unsubscribe(IEnumerable<Symbol> symbols)
         {
             //Remove the symbols from the subscription list if there.
             foreach (var symbol in symbols)
@@ -184,7 +165,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 Exchange = tsd.TradeExchange,
                 TickType = TickType.Trade,
-                Quantity = (int) tsd.TradeSize,
+                Quantity = (int)tsd.TradeSize,
                 Time = time,
                 EndTime = time,
                 Symbol = symbol,
