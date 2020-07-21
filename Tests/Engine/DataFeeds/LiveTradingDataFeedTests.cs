@@ -2150,11 +2150,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             DataQueueHandler = dataQueueHandler;
         }
 
-        protected override INewDataQueueHandler GetDataQueueHandler()
-        {
-            return null;
-        }
-
         public bool UpdateRealTimePrice(
             Subscription subscription,
             TimeZoneOffsetProvider timeZoneOffsetProvider,
