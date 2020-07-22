@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// <param name="request">defines the parameters to subscribe to a data feed</param>
         /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
         /// <returns>The new enumerator for this subscription request</returns>
-        public IEnumerator<BaseData> Subscribe(SubscriptionRequest request, EventHandler newDataAvailableHandler)
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
             lock (_subscriptions) _subscriptions.Add(request.Configuration);
             return _aggregationManager.Add(request.Configuration, newDataAvailableHandler);
