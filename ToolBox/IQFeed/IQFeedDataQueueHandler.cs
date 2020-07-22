@@ -69,13 +69,14 @@ namespace QuantConnect.ToolBox.IQFeed
         }
 
         /// <summary>
-        /// Adds the specified symbols to the subscription
+        /// Subscribe to the specified configuration
         /// </summary>
-        /// <param name="request">defines the parameters to subscribe to a data feed</param>
-        /// <returns></returns>
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            Subscribe(new[] { request.Security.Symbol });
+            Subscribe(new[] { dataConfig.Symbol });
 
             return null;
         }
@@ -83,7 +84,6 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <summary>
         /// Adds the specified symbols to the subscription: new IQLevel1WatchItem("IBM", true)
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
         public void Subscribe(IEnumerable<Symbol> symbols)
         {

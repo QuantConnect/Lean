@@ -1351,6 +1351,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataQueueHandler = new FuncDataQueueHandler(fdqh =>
             {
                 dataQueueStarted.Set();
+                if (exchangeTimeZone == null)
+                {
+                    return Enumerable.Empty<BaseData>();
+                }
+
                 var utcTime = timeProvider.GetUtcNow();
                 var exchangeTime = utcTime.ConvertFromUtc(exchangeTimeZone);
                 if (exchangeTime == lastTime ||
@@ -1782,6 +1787,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     started.Set();
                     timeAdvanced.WaitOne();
+
+                    if (exchangeTimeZone == null)
+                    {
+                        return Enumerable.Empty<BaseData>();
+                    }
 
                     var utcTime = timeProvider.GetUtcNow();
                     var exchangeTime = utcTime.ConvertFromUtc(exchangeTimeZone);

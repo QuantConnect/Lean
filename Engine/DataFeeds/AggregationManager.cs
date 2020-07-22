@@ -13,23 +13,15 @@
  * limitations under the License.
 */
 
-using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Logging;
-using QuantConnect.Util;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.AccessControl;
-using System.Security.Policy;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -109,27 +101,40 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         public void Update(BaseData input)
         {
-            ConcurrentDictionary<SubscriptionDataConfig, IDataConsolidator> consolidators;
-            if (_consolidators.TryGetValue(input.Symbol, out consolidators))
+            try
             {
-                foreach (var kvp in consolidators)
+                ConcurrentDictionary<SubscriptionDataConfig, IDataConsolidator> consolidators;
+                if (_consolidators.TryGetValue(input.Symbol, out consolidators))
                 {
-                    // for non tick resolution subscriptions drop suspicious ticks
-                    if (kvp.Key.Resolution != Resolution.Tick)
+                    foreach (var kvp in consolidators)
                     {
-                        continue;
-                    }
-                    var consolidator = kvp.Value;
-                    lock (consolidator)
-                    {
-                        consolidator.Update(input);
+                        // for non tick resolution subscriptions drop suspicious ticks
+                        if (kvp.Key.Resolution != Resolution.Tick && input.DataType == MarketDataType.Tick)
+                        {
+                            var tick = input as Tick;
+                            if (tick != null && tick.Suspicious)
+                            {
+                                continue;
+                            }
+                        }
+
+                        var consolidator = kvp.Value;
+                        lock (consolidator)
+                        {
+                            consolidator.Update(input);
+                        }
                     }
                 }
+                else
+                {
+                    Log.Trace(
+                        $"AggregationManager.Update(): IDataConsolidator fot symbol ({input.Symbol.Value}) was not found."
+                    );
+                }
             }
-            else
+            catch (Exception exception)
             {
-                Log.Trace($"AggregationManager.Update(): IDataConsolidator fot symbol ({input.Symbol.Value}) was not found.");
-                return;
+                Log.Error(exception);
             }
         }
 

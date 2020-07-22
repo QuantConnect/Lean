@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Interfaces
 {
@@ -29,7 +28,7 @@ namespace QuantConnect.Interfaces
     public interface IDataQueueHandler : IDisposable
     {
         /// <summary>
-        /// Subscribe to the specified symbols
+        /// Subscribe to the specified configuration
         /// </summary>
         /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
         /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
@@ -37,7 +36,7 @@ namespace QuantConnect.Interfaces
         IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler);
 
         /// <summary>
-        /// Removes the specified symbols to the subscription
+        /// Removes the specified configuration
         /// </summary>
         /// <param name="dataConfig">Subscription config to be removed</param>
         void Unsubscribe(SubscriptionDataConfig dataConfig);
