@@ -73,7 +73,7 @@ namespace QuantConnect.ToolBox.IQFeed
         /// </summary>
         /// <param name="request">defines the parameters to subscribe to a data feed</param>
         /// <returns></returns>
-        public IEnumerator<BaseData> Subscribe(SubscriptionRequest request, EventHandler newDataAvailableHandler)
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
             Subscribe(new[] { request.Security.Symbol });
 

@@ -249,14 +249,14 @@ namespace QuantConnect.Brokerages.Oanda
         /// <summary>
         /// Adds the specified symbols to the subscription
         /// </summary>
-        /// <param name="request">defines the parameters to subscribe to a data feed</param>
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
         /// <param name="newDataAvailableHandler">fired when new data are ready</param>
         /// <returns></returns>
-        public IEnumerator<BaseData> Subscribe(SubscriptionRequest request, EventHandler newDataAvailableHandler)
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            Subscribe(new[] { request.Security.Symbol });
+            Subscribe(new[] { dataConfig.Symbol });
 
-            var enumerator = _aggregator.Add(request.Configuration, newDataAvailableHandler);
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
             return enumerator;
         }
 

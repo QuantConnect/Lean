@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// <summary>
         /// Desktop/Local doesn't support live data from this handler
         /// </summary>
-        public IEnumerator<BaseData> Subscribe(SubscriptionRequest request, EventHandler newDataAvailableHandler)
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
             throw new NotImplementedException("QuantConnect.Queues.LiveDataQueue has not implemented live data.");
         }
