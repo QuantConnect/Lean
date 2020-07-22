@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// </summary>
         public List<Symbol> Subscriptions
         {
-            get { lock (_subscriptions) return _subscriptions.Select(config => config.Symbol).ToList(); }
+            get { lock (_subscriptions) return _subscriptions.Select(config => config.Symbol).Distinct().ToList(); }
         }
 
         /// <summary>

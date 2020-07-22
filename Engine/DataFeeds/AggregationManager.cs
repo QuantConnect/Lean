@@ -116,6 +116,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     if (kvp.Key.TickType == input.TickType)
                     {
+                        // for non tick resolution subscriptions drop suspicious ticks
+                        if (kvp.Key.Resolution != Resolution.Tick && input.Suspicious)
+                        {
+                            continue;
+                        }
                         var consolidator = kvp.Value;
                         lock (consolidator)
                         {
