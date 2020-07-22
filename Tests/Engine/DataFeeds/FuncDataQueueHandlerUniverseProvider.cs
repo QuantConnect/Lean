@@ -36,11 +36,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// <param name="getNextTicksFunction">The functional implementation for the <see cref="FuncDataQueueHandler.GetNextTicks"/> function</param>
         /// <param name="lookupSymbolsFunction">The functional implementation for the <see cref="IDataQueueUniverseProvider.LookupSymbols"/> function</param>
         /// <param name="canAdvanceTimeFunction">The functional implementation for the <see cref="IDataQueueUniverseProvider.CanAdvanceTime"/> function</param>
+        /// <param name="timeProvider">The time provider instance to use</param>
         public FuncDataQueueHandlerUniverseProvider(
             Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction,
             Func<string, SecurityType, bool, string, string, IEnumerable<Symbol>> lookupSymbolsFunction,
-            Func<SecurityType, bool> canAdvanceTimeFunction)
-            : base(getNextTicksFunction)
+            Func<SecurityType, bool> canAdvanceTimeFunction,
+            ITimeProvider timeProvider)
+            : base(getNextTicksFunction, timeProvider)
         {
             _lookupSymbolsFunction = lookupSymbolsFunction;
             _canAdvanceTimeFunction = canAdvanceTimeFunction;

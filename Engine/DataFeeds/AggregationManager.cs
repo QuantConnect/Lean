@@ -38,12 +38,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _isDisposed = false;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly ConcurrentDictionary<Symbol, ConcurrentDictionary<SubscriptionDataConfig, IDataConsolidator>> _consolidators = new ConcurrentDictionary<Symbol, ConcurrentDictionary<SubscriptionDataConfig, IDataConsolidator>>();
-        private readonly ITimeProvider _timeProvider;
 
-        public AggregationManager()
-        {
-            _timeProvider = GetTimeProvider();
-        }
+        protected ITimeProvider TimeProvider { get; set; } = new RealTimeProvider();
 
         public IEnumerator<BaseData> Add(SubscriptionDataConfig config, EventHandler newDataAvailableHandler)
         {
@@ -73,7 +69,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             ScannableEnumerator<BaseData> enumerator = new ScannableEnumerator<BaseData>(
                 consolidator, 
                 config.DataTimeZone, 
-                _timeProvider,
+                TimeProvider,
                 newDataAvailableHandler);
 
             _consolidators.AddOrUpdate(
@@ -121,7 +117,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (kvp.Key.TickType == input.TickType)
                     {
                         var consolidator = kvp.Value;
-                        consolidator.Update(input);
+                        lock (consolidator)
+                        {
+                            consolidator.Update(input);
+                        }
                     }
                 }
             }
@@ -130,11 +129,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Log.Trace($"AggregationManager.Update(): IDataConsolidator fot symbol ({input.Symbol.Value}) was not found.");
                 return;
             }
-        }
-
-        protected virtual ITimeProvider GetTimeProvider()
-        {
-            return new RealTimeProvider();
         }
 
         public void Dispose()

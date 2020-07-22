@@ -683,13 +683,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var customUniverse = new ConstituentsUniverse(customUniverseSymbol,
                 new UniverseSettings(Resolution.Daily, 1, false, true, TimeSpan.Zero));
 
-            var started = new ManualResetEvent(false);
-            var feed = RunDataFeed(getNextTicksFunction: handler =>
-            {
-                started.Set();
-                return new BaseData[0];
-            });
-            started.WaitOne();
+            var feed = RunDataFeed();
 
             var fineWasCalled = false;
             _algorithm.AddUniverse(customUniverse,
@@ -719,7 +713,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 sendUniverseData: true,
                 endDate:_startDate.AddDays(10));
 
-            started.DisposeSafely();
             Assert.IsNotNull(securityChanges);
             Assert.IsTrue(securityChanges.AddedSecurities.Single().Symbol.Value == "AAPL");
             Assert.IsTrue(receivedFundamentalsData);
@@ -858,7 +851,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             synchronizer.Initialize(algorithm, dataManager);
             algorithm.AddSecurities(Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToStringInvariant()).ToList());
             var getNextTicksFunction = Enumerable.Range(0, 20).Select(x => new Tick { Symbol = SymbolCache.GetSymbol(x.ToStringInvariant()) }).ToList();
-            feed.DataQueueHandler = new FuncDataQueueHandler(handler => getNextTicksFunction);
+            feed.DataQueueHandler = new FuncDataQueueHandler(handler => getNextTicksFunction, new RealTimeProvider());
             var mapFileProvider = new LocalDiskMapFileProvider();
             var fileProvider = new DefaultDataProvider();
             feed.Initialize(
@@ -1131,20 +1124,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var time = _manualTimeProvider.GetUtcNow();
                 if (time == lastTime) return Enumerable.Empty<BaseData>();
                 lastTime = time;
-                var tickTime = lastTime.AddMinutes(-1).ConvertFromUtc(TimeZones.NewYork);
-                return fdqh.Subscriptions.Where(symbol => !_algorithm.UniverseManager.ContainsKey(symbol)) // its not a universe
-                    .SelectMany(symbol =>
+                var tickTimeUtc = lastTime.AddMinutes(-1);
+                return fdqh.SubscriptionDataConfigs.Where(config => !_algorithm.UniverseManager.ContainsKey(config.Symbol)) // its not a universe
+                    .SelectMany(config =>
                         {
-                            var ticks = new List<Tick>();
-                            foreach (var tickType in _algorithm.SubscriptionManager.GetDataTypesForSecurity(symbol.SecurityType))
+                            var ticks = new List<Tick>
                             {
-                                ticks.Add(new Tick(tickTime, symbol, 1, 2)
+                                new Tick(tickTimeUtc.ConvertFromUtc(config.ExchangeTimeZone), config.Symbol, 1, 2)
                                 {
                                     Quantity = 1,
                                     // Symbol could not be in the Securities collections for the custom Universe tests. AlgorithmManager is in charge of adding them, and we are not executing that code here.
-                                    TickType = tickType
-                                });
-                            }
+                                    TickType = config.TickType
+                                }
+                            };
                             return ticks;
                         }
                     ).ToList();
@@ -1155,7 +1147,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // result handler is used due to dependency in SubscriptionDataReader
             var resultHandler = new BacktestingResultHandler();
 
-            dataQueueHandler = new FuncDataQueueHandler(getNextTicksFunction);
+            dataQueueHandler = new FuncDataQueueHandler(getNextTicksFunction, _manualTimeProvider);
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler);
             var mapFileProvider = new LocalDiskMapFileProvider();
@@ -1462,7 +1454,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                 emittedData.Set();
                 return dataPoints;
-            });
+            }, timeProvider);
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler);
 
@@ -1914,7 +1906,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Log.Debug($"CanAdvanceTime() called at {time} ({algorithmTimeZone}), returning {result}");
 
                     return result;
-                });
+                },
+                timeProvider);
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler);
 
@@ -2148,6 +2141,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public TestableLiveTradingDataFeed(IDataQueueHandler dataQueueHandler = null)
         {
             DataQueueHandler = dataQueueHandler;
+        }
+
+        protected override IDataQueueHandler GetDataQueueHandler()
+        {
+            return DataQueueHandler;
         }
 
         public bool UpdateRealTimePrice(

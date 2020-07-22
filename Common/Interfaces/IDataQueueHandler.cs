@@ -33,6 +33,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="subscriptionRequest">defines the parameters to subscribe to a data feed</param>
         /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
         IEnumerator<BaseData> Subscribe(SubscriptionRequest subscriptionRequest, EventHandler newDataAvailableHandler);
 
         /// <summary>
