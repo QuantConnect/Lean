@@ -25,7 +25,7 @@ namespace QuantConnect.Data
 
         bool Remove(SubscriptionDataConfig dataConfig);
 
-        void Update(Tick input);
+        void Update(BaseData input);
 
     }
 }

@@ -67,8 +67,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             ScannableEnumerator<BaseData> enumerator = new ScannableEnumerator<BaseData>(
-                consolidator, 
-                config.DataTimeZone, 
+                consolidator,
+                config.DataTimeZone,
                 TimeProvider,
                 newDataAvailableHandler);
 
@@ -107,25 +107,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        public void Update(Tick input)
+        public void Update(BaseData input)
         {
             ConcurrentDictionary<SubscriptionDataConfig, IDataConsolidator> consolidators;
             if (_consolidators.TryGetValue(input.Symbol, out consolidators))
             {
                 foreach (var kvp in consolidators)
                 {
-                    if (kvp.Key.TickType == input.TickType)
+                    // for non tick resolution subscriptions drop suspicious ticks
+                    if (kvp.Key.Resolution != Resolution.Tick)
                     {
-                        // for non tick resolution subscriptions drop suspicious ticks
-                        if (kvp.Key.Resolution != Resolution.Tick && input.Suspicious)
-                        {
-                            continue;
-                        }
-                        var consolidator = kvp.Value;
-                        lock (consolidator)
-                        {
-                            consolidator.Update(input);
-                        }
+                        continue;
+                    }
+                    var consolidator = kvp.Value;
+                    lock (consolidator)
+                    {
+                        consolidator.Update(input);
                     }
                 }
             }
