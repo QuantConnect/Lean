@@ -52,6 +52,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private LiveSynchronizer _synchronizer;
         private DateTime _startDate;
         private DataManager _dataManager;
+        private FuncDataQueueHandler _dataQueueHandler;
         private static readonly Dictionary<Type, BaseData> _instances = new Dictionary<Type, BaseData>
         {
             {typeof(BaseData), typeof(TradeBar).GetBaseDataInstance() },
@@ -77,6 +78,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void TearDown()
         {
             _dataManager?.RemoveAllSubscriptions();
+            _dataQueueHandler?.DisposeSafely();
         }
 
         [Test]
@@ -133,11 +135,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var symbolCount = 600;
 
-            FuncDataQueueHandler queue;
             var count = new Count();
             var stopwatch = Stopwatch.StartNew();
-            var feed = RunDataFeed(out queue, fdqh => ProduceBenchmarkTicks(fdqh, count), Resolution.Tick,
-                equities: Enumerable.Range(0, symbolCount).Select(x => "E" + x.ToStringInvariant()).ToList());
+            var feed = RunDataFeed(Resolution.Tick, equities: Enumerable.Range(0, symbolCount).Select(x => "E" + x.ToStringInvariant()).ToList(),
+                getNextTicksFunction: fdqh => ProduceBenchmarkTicks(fdqh, count));
 
             var securitiesCount = _algorithm.Securities.Count;
             var expected = _algorithm.Securities.Keys.ToHashSet();
@@ -173,8 +174,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // Current implementation only sends equity/forex subscriptions to the queue handler,
             // new impl sends all, the restriction shouldn't live in the feed, but rather in the
             // queue handler impl
-            FuncDataQueueHandler dataQueueHandler;
-            var feed = RunDataFeed(out dataQueueHandler, equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
+            var feed = RunDataFeed(equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
             _algorithm.AddData<CustomMockedFileBaseData>("CustomMockedFileBaseData");
             var customMockedFileBaseData = SymbolCache.GetSymbol("CustomMockedFileBaseData");
 
@@ -182,9 +182,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             ConsumeBridge(feed, TimeSpan.FromSeconds(2), ts =>
             {
                 ConsoleWriteLine("Count: " + ts.Slice.Keys.Count + " " + DateTime.UtcNow.ToStringInvariant("o"));
-                Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
-                Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
-                Assert.IsFalse(dataQueueHandler.Subscriptions.Contains(customMockedFileBaseData));
+                Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
+                Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
+                Assert.IsFalse(_dataQueueHandler.Subscriptions.Contains(customMockedFileBaseData));
                 emittedData = true;
 
                 // we got what we wanted shortcut unit test
@@ -198,8 +198,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void AddsSubscription_NewUserUniverse()
         {
             var endDate = _startDate.AddDays(10);
-            FuncDataQueueHandler dataQueueHandler;
-            var feed = RunDataFeed(out dataQueueHandler, equities: new List<string> { "SPY" });
+            var feed = RunDataFeed(equities: new List<string> { "SPY" });
 
             var forexFxcmUserUniverse = UserDefinedUniverse.CreateSymbol(SecurityType.Forex, Market.FXCM);
             var emittedData = false;
@@ -210,13 +209,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 securityChanges += ts.SecurityChanges.Count;
                 if (!emittedData)
                 {
-                    Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
+                    Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
                     if (ts.Data.Count > 0)
                     {
                         Assert.IsTrue(ts.Slice.Keys.Contains(Symbols.SPY));
                     }
                     // SPY benchmark and the UserDefinedUniverse
-                    Assert.AreEqual(2, dataQueueHandler.Subscriptions.Count);
+                    Assert.AreEqual(2, _dataQueueHandler.Subscriptions.Count);
 
                     _algorithm.AddSecurities(forex: new List<string> { "EURUSD" });
                     emittedData = true;
@@ -224,15 +223,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 else
                 {
                     // SPY benchmark and the UserDefinedUniverse Equity/Forex, EURUSD
-                    if (dataQueueHandler.Subscriptions.Count == 4) // there could be some slices with no data
+                    if (_dataQueueHandler.Subscriptions.Count == 4) // there could be some slices with no data
                     {
-                        Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
+                        Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
                         if (ts.Data.Count > 0)
                         {
                             Assert.IsTrue(ts.Slice.Keys.Contains(Symbols.SPY));
                         }
-                        Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD)
-                                      || dataQueueHandler.Subscriptions.Contains(forexFxcmUserUniverse));
+                        Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD)
+                                      || _dataQueueHandler.Subscriptions.Contains(forexFxcmUserUniverse));
                         // Might delay a couple of Slices to send over the data, so we will count them
                         // and assert a minimum amount
                         if (ts.Slice.Keys.Contains(Symbols.EURUSD))
@@ -247,7 +246,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                     else
                     {
-                        Assert.Fail($"Subscriptions.Count: {dataQueueHandler.Subscriptions.Count}");
+                        Assert.Fail($"Subscriptions.Count: {_dataQueueHandler.Subscriptions.Count}");
                     }
                 }
             }, endDate: endDate);
@@ -266,8 +265,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm.UniverseSettings.Resolution = Resolution.Second; // Default is Minute and we need something faster
             _algorithm.UniverseSettings.ExtendedMarketHours = true; // Current _startDate is at extended market hours
 
-            FuncDataQueueHandler dataQueueHandler;
-            var feed = RunDataFeed(out dataQueueHandler, forex: new List<string> { "EURUSD" });
+            var feed = RunDataFeed(forex: new List<string> { "EURUSD" });
             var firstTime = false;
             var securityChanges = 0;
             var newDataCount = 0;
@@ -277,23 +275,23 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 if (!firstTime)
                 {
                     // benchmark SPY, EURUSD and the UserDefinedUniverse
-                    Assert.AreEqual(3, dataQueueHandler.Subscriptions.Count);
+                    Assert.AreEqual(3, _dataQueueHandler.Subscriptions.Count);
                     _algorithm.AddUniverse("TestUniverse", time => new List<string> { "AAPL", "SPY" });
                     firstTime = true;
                 }
                 else
                 {
-                    if (dataQueueHandler.Subscriptions.Count == 2)
+                    if (_dataQueueHandler.Subscriptions.Count == 2)
                     {
-                        Assert.AreEqual(1, dataQueueHandler.Subscriptions.Count(x => x.Value.Contains("TESTUNIVERSE")));
+                        Assert.AreEqual(1, _dataQueueHandler.Subscriptions.Count(x => x.Value.Contains("TESTUNIVERSE")));
                     }
-                    else if (dataQueueHandler.Subscriptions.Count == 4)
+                    else if (_dataQueueHandler.Subscriptions.Count == 4)
                     {
                         // Coarse universe isn't added to the data queue handler
-                        Assert.AreNotEqual(1, dataQueueHandler.Subscriptions.Count(x => x.Value.Contains("TESTUNIVERSE")));
-                        Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
-                        Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.AAPL));
-                        Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
+                        Assert.AreNotEqual(1, _dataQueueHandler.Subscriptions.Count(x => x.Value.Contains("TESTUNIVERSE")));
+                        Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
+                        Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.AAPL));
+                        Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
                         // Might delay a couple of Slices to send over the data, so we will count them and assert a minimum amount
                         if (ts.Slice.Keys.Contains(Symbols.AAPL)
                             && ts.Slice.Keys.Contains(Symbols.SPY))
@@ -308,7 +306,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                     else
                     {
-                        Assert.Fail($"Subscriptions.Count: {dataQueueHandler.Subscriptions.Count}");
+                        Assert.Fail($"Subscriptions.Count: {_dataQueueHandler.Subscriptions.Count}");
                     }
                 }
             }, endDate: endDate);
@@ -324,8 +322,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void AddsSubscription_SameUserUniverse()
         {
             var endDate = _startDate.AddDays(10);
-            FuncDataQueueHandler dataQueueHandler;
-            var feed = RunDataFeed(out dataQueueHandler, equities: new List<string> { "SPY" });
+            var feed = RunDataFeed(equities: new List<string> { "SPY" });
 
             var emittedData = false;
             var newDataCount = 0;
@@ -338,13 +335,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 if (!emittedData)
                 {
-                    Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
+                    Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
                     if (ts.Data.Count > 0)
                     {
                         Assert.IsTrue(ts.Slice.Keys.Contains(Symbols.SPY));
                     }
                     // SPY benchmark and the UserDefinedUniverse
-                    Assert.AreEqual(2, dataQueueHandler.Subscriptions.Count);
+                    Assert.AreEqual(2, _dataQueueHandler.Subscriptions.Count);
 
                     _algorithm.AddSecurities(equities: new List<string> { "AAPL" });
                     emittedData = true;
@@ -352,14 +349,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 else
                 {
                     // SPY benchmark and the UserDefinedUniverse Equity, AAPL
-                    if (dataQueueHandler.Subscriptions.Count == 3) // there could be some slices with no data
+                    if (_dataQueueHandler.Subscriptions.Count == 3) // there could be some slices with no data
                     {
-                        Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
+                        Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
                         if (ts.Data.Count > 0)
                         {
                             Assert.IsTrue(ts.Slice.Keys.Contains(Symbols.SPY));
                         }
-                        Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.AAPL));
+                        Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.AAPL));
                         // Might delay a couple of Slices to send over the data, so we will count them
                         // and assert a minimum amount
                         if (ts.Slice.Keys.Contains(Symbols.AAPL))
@@ -374,7 +371,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                     else
                     {
-                        Assert.Fail($"Subscriptions.Count: {dataQueueHandler.Subscriptions.Count}");
+                        Assert.Fail($"Subscriptions.Count: {_dataQueueHandler.Subscriptions.Count}");
                     }
                 }
             }, endDate: endDate);
@@ -390,8 +387,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void Unsubscribes()
         {
             var endDate = _startDate.AddDays(10);
-            FuncDataQueueHandler dataQueueHandler;
-            var feed = RunDataFeed(out dataQueueHandler, equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
+            var feed = RunDataFeed(equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
             _algorithm.AddData<CustomMockedFileBaseData>("CustomMockedFileBaseData");
             var customMockedFileBaseData = SymbolCache.GetSymbol("CustomMockedFileBaseData");
 
@@ -399,12 +395,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var currentSubscriptionCount = 0;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), false, ts =>
             {
-                Assert.IsFalse(dataQueueHandler.Subscriptions.Contains(customMockedFileBaseData));
+                Assert.IsFalse(_dataQueueHandler.Subscriptions.Contains(customMockedFileBaseData));
                 if (!emittedData)
                 {
-                    currentSubscriptionCount = dataQueueHandler.Subscriptions.Count;
-                    Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
-                    Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
+                    currentSubscriptionCount = _dataQueueHandler.SubscriptionDataConfigs.Count;
+                    Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
+                    Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
                     var subscriptions = _dataManager.DataFeedSubscriptions
                         .Where(subscription => !subscription.Configuration.IsInternalFeed && subscription.Configuration.Symbol == Symbols.SPY);
                     foreach (var subscription in subscriptions)
@@ -415,9 +411,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else
                 {
-                    Assert.AreEqual(currentSubscriptionCount - 1, dataQueueHandler.Subscriptions.Count);
-                    Assert.IsFalse(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
-                    Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
+                    // should of remove trade and quote bar subscription
+                    Assert.AreEqual(currentSubscriptionCount - 2, _dataQueueHandler.SubscriptionDataConfigs.Count);
+                    // internal subscription should still be there
+                    Assert.AreEqual(0, _dataQueueHandler.SubscriptionDataConfigs
+                        .Where(config => !config.IsInternalFeed)
+                        .Count(config => config.Symbol == Symbols.SPY));
+                    Assert.AreEqual(1, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
+                    Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
 
                     // we got what we wanted shortcut unit test
                     _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
@@ -433,8 +434,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var endDate = _startDate.AddDays(10);
             _algorithm.SetFinishedWarmingUp();
             _algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
-            FuncDataQueueHandler dataQueueHandler;
-            var feed = RunDataFeed(out dataQueueHandler, equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
+            var feed = RunDataFeed(equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
             _algorithm.AddData<CustomMockedFileBaseData>("CustomMockedFileBaseData");
             var customMockedFileBaseData = SymbolCache.GetSymbol("CustomMockedFileBaseData");
 
@@ -447,20 +447,25 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     changes.Add(ts.SecurityChanges);
                 }
-                Assert.IsFalse(dataQueueHandler.Subscriptions.Contains(customMockedFileBaseData));
+                Assert.IsFalse(_dataQueueHandler.Subscriptions.Contains(customMockedFileBaseData));
                 if (!emittedData)
                 {
-                    currentSubscriptionCount = dataQueueHandler.Subscriptions.Count;
-                    Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
-                    Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
+                    currentSubscriptionCount = _dataQueueHandler.SubscriptionDataConfigs.Count;
+                    Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
+                    Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
                     _algorithm.RemoveSecurity(Symbols.SPY);
                     emittedData = true;
                 }
                 else
                 {
-                    Assert.AreEqual(currentSubscriptionCount - 1, dataQueueHandler.Subscriptions.Count);
-                    Assert.IsFalse(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
-                    Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
+                    // should of remove trade and quote bar subscription
+                    Assert.AreEqual(currentSubscriptionCount - 2, _dataQueueHandler.SubscriptionDataConfigs.Count);
+                    // internal subscription should still be there
+                    Assert.AreEqual(0, _dataQueueHandler.SubscriptionDataConfigs
+                        .Where(config => !config.IsInternalFeed)
+                        .Count(config => config.Symbol == Symbols.SPY));
+                    Assert.AreEqual(1, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
+                    Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
                     // we got what we wanted shortcut unit test
                     _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
                 }
@@ -592,8 +597,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void HandlesRestApi()
         {
             var resolution = Resolution.Second;
-            FuncDataQueueHandler dqgh;
-            var feed = RunDataFeed(out dqgh);
+            var feed = RunDataFeed();
             _algorithm.AddData<RestApiBaseData>("RestApi", resolution);
             var symbol = SymbolCache.GetSymbol("RestApi");
 
@@ -971,8 +975,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void SuspiciousTicksAreFilteredAtNonTickResolution(SecurityType securityType, TickType tickType)
         {
             var lastTime = _manualTimeProvider.GetUtcNow();
-            var feed = RunDataFeed(
-                resolution: Resolution.Minute,
+            var feed = RunDataFeed(Resolution.Minute,
                 equities: securityType == SecurityType.Equity ? new List<string> { Symbols.SPY } : new List<string>(),
                 forex: securityType == SecurityType.Forex ? new List<string> { Symbols.EURUSD } : new List<string>(),
                 crypto: securityType == SecurityType.Crypto ? new List<string> { Symbols.BTCUSD } : new List<string>(),
@@ -1047,17 +1050,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var symbol = Symbols.AAPL;
 
-            var feed = RunDataFeed(
-                Resolution.Second,
-                equities: new List<string> { symbol.Value },
-                getNextTicksFunction: delegate
-                {
-                    return Enumerable.Range(0, 2)
-                        .Select(_ => (BaseData)new Tick { Symbol = symbol, TickType = TickType.Trade })
-                        .ToList();
-                });
+            var feed = RunDataFeed(Resolution.Second, equities: new List<string> { symbol.Value });
 
-            var emittedTradebars = false;
+            var emittedTradeBars = false;
 
             ConsumeBridge(feed, TimeSpan.FromSeconds(1), true, ts =>
             {
@@ -1065,12 +1060,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     if (ts.Slice.Bars.ContainsKey(symbol))
                     {
-                        emittedTradebars = true;
+                        emittedTradeBars = true;
                     }
                 }
             });
 
-            Assert.IsTrue(emittedTradebars);
+            Assert.IsTrue(emittedTradeBars);
         }
 
         [Test]
@@ -1103,18 +1098,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsFalse(emittedTradebars);
         }
 
-        private IDataFeed RunDataFeed(Resolution resolution = Resolution.Second,
-                                    List<string> equities = null,
-                                    List<string> forex = null,
-                                    List<string> crypto = null,
-                                    Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null)
-        {
-            FuncDataQueueHandler dataQueueHandler;
-            return RunDataFeed(out dataQueueHandler, getNextTicksFunction, resolution, equities, forex, crypto);
-        }
 
-        private IDataFeed RunDataFeed(out FuncDataQueueHandler dataQueueHandler, Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null,
-            Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null, List<string> crypto = null)
+        private IDataFeed RunDataFeed(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null, List<string> crypto = null,
+            Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null)
         {
             _algorithm.SetStartDate(_startDate);
 
@@ -1130,7 +1116,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         {
                             var ticks = new List<Tick>
                             {
-                                new Tick(tickTimeUtc.ConvertFromUtc(config.ExchangeTimeZone), config.Symbol, 1, 2)
+                                new Tick(tickTimeUtc.ConvertFromUtc(config.DataTimeZone), config.Symbol, 1, 2)
                                 {
                                     Quantity = 1,
                                     // Symbol could not be in the Securities collections for the custom Universe tests. AlgorithmManager is in charge of adding them, and we are not executing that code here.
@@ -1147,9 +1133,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // result handler is used due to dependency in SubscriptionDataReader
             var resultHandler = new BacktestingResultHandler();
 
-            dataQueueHandler = new FuncDataQueueHandler(getNextTicksFunction, _manualTimeProvider);
+            _dataQueueHandler = new FuncDataQueueHandler(getNextTicksFunction, _manualTimeProvider);
 
-            var feed = new TestableLiveTradingDataFeed(dataQueueHandler);
+            var feed = new TestableLiveTradingDataFeed(_dataQueueHandler);
             var mapFileProvider = new LocalDiskMapFileProvider();
             var fileProvider = new DefaultDataProvider();
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
@@ -1744,6 +1730,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             catch (Exception exception)
             {
                 Log.Error(exception);
+                dataQueueHandler.DisposeSafely();
                 feed.Exit();
                 cancellationTokenSource.Cancel();
                 dataManager.RemoveAllSubscriptions();
@@ -2126,7 +2113,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
 
             dataManager.RemoveAllSubscriptions();
-
+            dataQueueHandler.DisposeSafely();
             canAdvanceTimeCalled.DisposeSafely();
             timeAdvanced.DisposeSafely();
             started.DisposeSafely();
