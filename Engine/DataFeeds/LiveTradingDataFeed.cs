@@ -378,6 +378,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, tzOffsetProvider, enumerator);
             subscription = new Subscription(request, subscriptionDataEnumerator, tzOffsetProvider);
 
+            // send the subscription for the new symbol through to the data queuehandler
+            if (_channelProvider.ShouldStreamSubscription(_job, subscription.Configuration))
+            {
+                _dataQueueHandler.Subscribe(request, (sender, args) => subscription.OnNewDataAvailable());
+            }
+
             return subscription;
         }
 

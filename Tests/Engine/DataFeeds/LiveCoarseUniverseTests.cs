@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var emitted = new ManualResetEvent(false);
             var coarseDataEmittedCount = 0;
-            var dataQueueHandler = new FuncDataQueueHandler(fdqh => Enumerable.Empty<BaseData>());
+            var dataQueueHandler = new FuncDataQueueHandler(fdqh => Enumerable.Empty<BaseData>(), timeProvider);
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler);
 

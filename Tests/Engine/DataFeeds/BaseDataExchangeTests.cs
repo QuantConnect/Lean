@@ -17,7 +17,6 @@
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using System;
 using System.Collections.Concurrent;
@@ -279,32 +278,24 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private static BaseDataExchange CreateExchange(ConcurrentQueue<BaseData> dataQueue)
         {
-            var dataQueueHandler = new FuncDataQueueHandler(q =>
-            {
-                BaseData data;
-                int count = 0;
-                var list = new List<BaseData>();
-                while (++count < 10 && dataQueue.TryDequeue(out data)) list.Add(data);
-                return list;
-            });
             var exchange = new BaseDataExchange("test");
-            IEnumerator<BaseData> enumerator = GetNextTicksEnumerator(dataQueueHandler);
+            IEnumerator<BaseData> enumerator = GetNextTicksEnumerator(dataQueue);
             var sym = Symbol.Create("data-queue-handler-symbol", SecurityType.Base, Market.USA);
             exchange.AddEnumerator(sym, enumerator, null, null);
             return exchange;
         }
 
-        private static IEnumerator<BaseData> GetNextTicksEnumerator(FuncDataQueueHandler dataQueueHandler)
+        private static IEnumerator<BaseData> GetNextTicksEnumerator(ConcurrentQueue<BaseData> dataQueue)
         {
             while (true)
             {
-                int ticks = 0;
-                foreach (var data in dataQueueHandler.GetNextTicks())
+                BaseData data;
+                var count = 0;
+                while (++count < 10 && dataQueue.TryDequeue(out data))
                 {
-                    ticks++;
                     yield return data;
                 }
-                if (ticks == 0) Thread.Sleep(1);
+                if (count == 0) Thread.Sleep(1);
             }
         }
     }

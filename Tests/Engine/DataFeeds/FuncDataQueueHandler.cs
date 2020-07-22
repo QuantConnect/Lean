@@ -17,11 +17,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using com.sun.org.apache.bcel.@internal.generic;
+using System.Threading;
+using System.Threading.Tasks;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Packets;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -31,80 +34,24 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     /// </summary>
     public class FuncDataQueueHandler : IDataQueueHandler
     {
-        private readonly object _lock = new object();
-        private readonly HashSet<Symbol> _subscriptions = new HashSet<Symbol>();
-        private readonly Func<FuncDataQueueHandler, IEnumerable<BaseData>> _getNextTicksFunction;
+        private readonly HashSet<SubscriptionDataConfig> _subscriptions;
+        private readonly AggregationManager _aggregationManager;
+        private readonly CancellationTokenSource _cancellationTokenSource;
 
         /// <summary>
-        /// Gets the subscriptions currently being managed by the queue handler
+        /// Gets the subscriptions configurations currently being managed by the queue handler
+        /// </summary>
+        public List<SubscriptionDataConfig> SubscriptionDataConfigs
+        {
+            get { lock (_subscriptions) return _subscriptions.ToList(); }
+        }
+
+        /// <summary>
+        /// Gets the subscriptions Symbols currently being managed by the queue handler
         /// </summary>
         public List<Symbol> Subscriptions
         {
-            get { lock (_lock) return _subscriptions.ToList(); }
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="FuncDataQueueHandler"/> class
-        /// </summary>
-        /// <param name="getNextTicksFunction">The functional implementation for the <see cref="GetNextTicks"/> function</param>
-        public FuncDataQueueHandler(Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction)
-        {
-            _getNextTicksFunction = getNextTicksFunction;
-        }
-
-        /// <summary>
-        /// Get the next ticks from the live trading data queue
-        /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public IEnumerable<BaseData> GetNextTicks()
-        {
-            return _getNextTicksFunction(this);
-        }
-
-        /// <summary>
-        /// Adds the specified symbols to the subscription
-        /// </summary>
-        /// <param name="request">defines the parameters to subscribe to a data feed</param>
-        /// <returns></returns>
-        public IEnumerator<BaseData> Subscribe(SubscriptionRequest request, EventHandler newDataAvailableHandler)
-        {
-            Subscribe(new[] { request.Security.Symbol });
-
-            return null;
-        }
-
-        /// <summary>
-        /// Adds the specified symbols to the subscription
-        /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(IEnumerable<Symbol> symbols)
-        {
-            foreach (var symbol in symbols)
-            {
-                lock (_lock) _subscriptions.Add(symbol);
-            }
-        }
-
-        /// <summary>
-        /// Removes the specified symbols to the subscription
-        /// </summary>
-        /// <param name="dataConfig">Job we're processing.</param>
-        public void Unsubscribe(SubscriptionDataConfig dataConfig)
-        {
-            Unsubscribe(new Symbol[] { dataConfig.Symbol });
-        }
-
-        /// <summary>
-        /// Removes the specified symbols to the subscription
-        /// </summary>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(IEnumerable<Symbol> symbols)
-        {
-            foreach (var symbol in symbols)
-            {
-                lock (_lock) _subscriptions.Remove(symbol);
-            }
+            get { lock (_subscriptions) return _subscriptions.Select(config => config.Symbol).ToList(); }
         }
 
         /// <summary>
@@ -114,10 +61,73 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public bool IsConnected => true;
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="FuncDataQueueHandler"/> class
+        /// </summary>
+        /// <param name="getNextTicksFunction">The functional implementation to get ticks function</param>
+        /// <param name="timeProvider">The time provider to use</param>
+        public FuncDataQueueHandler(Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction, ITimeProvider timeProvider)
+        {
+            _subscriptions = new HashSet<SubscriptionDataConfig>();
+            _cancellationTokenSource = new CancellationTokenSource();
+            _aggregationManager = new TestAggregationManager(timeProvider);
+            Task.Factory.StartNew(() =>
+            {
+                while (!_cancellationTokenSource.IsCancellationRequested)
+                {
+                    try
+                    {
+                        foreach (var baseData in getNextTicksFunction(this))
+                        {
+                            _aggregationManager.Update(baseData as Tick);
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        Log.Error(exception);
+                    }
+                    Thread.Sleep(10);
+                }
+            });
+        }
+
+        /// <summary>
+        /// Adds the specified symbols to the subscription
+        /// </summary>
+        /// <param name="request">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionRequest request, EventHandler newDataAvailableHandler)
+        {
+            lock (_subscriptions) _subscriptions.Add(request.Configuration);
+            return _aggregationManager.Add(request.Configuration, newDataAvailableHandler);
+        }
+
+        /// <summary>
+        /// Removes the specified symbols to the subscription
+        /// </summary>
+        /// <param name="dataConfig">Job we're processing.</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            lock (_subscriptions) _subscriptions.Remove(dataConfig);
+            _aggregationManager.Remove(dataConfig);
+        }
+
+        /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public void Dispose()
         {
+            _cancellationTokenSource.Cancel();
+            _aggregationManager.Dispose();
+            _cancellationTokenSource.Dispose();
+        }
+
+        private class TestAggregationManager : AggregationManager
+        {
+            public TestAggregationManager(ITimeProvider timeProvider)
+            {
+                TimeProvider = timeProvider;
+            }
         }
     }
 }

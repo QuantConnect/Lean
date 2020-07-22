@@ -89,15 +89,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             {
                 _current = default(T);
 
-                if (_consolidator.WorkingData != null)
+                var retry = false;
+                lock (_consolidator)
                 {
-                    lock (_consolidator)
+                    if (_consolidator.WorkingData != null)
                     {
+                        retry = true;
                         var utcTime = _timeProvider.GetUtcNow();
                         var localTime = utcTime.ConvertFromUtc(_timeZone);
                         _consolidator.Scan(localTime);
                     }
+                }
 
+                if (retry)
+                {
                     _queue.TryDequeue(out current);
                 }
             }
