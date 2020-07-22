@@ -228,7 +228,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 else
                 {
-                    enumerator = _dataQueueHandler.Subscribe(request, (sender, args) => subscription.OnNewDataAvailable());
+                    enumerator = _dataQueueHandler.Subscribe(request.Configuration, (sender, args) => subscription.OnNewDataAvailable());
                 }
 
                 if (request.Configuration.FillDataForward)
@@ -325,7 +325,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Func<SubscriptionRequest, IEnumerator<BaseData>> configure = (subRequest) =>
                 {
                     var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(subRequest.Configuration);
-                    var input = _dataQueueHandler.Subscribe(subRequest, (sender, args) => subscription.OnNewDataAvailable());
+                    var input = _dataQueueHandler.Subscribe(subRequest.Configuration, (sender, args) => subscription.OnNewDataAvailable());
                     return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution, subRequest.Configuration.ExtendedMarketHours, localEndTime, subRequest.Configuration.Increment, subRequest.Configuration.DataTimeZone, subRequest.StartTimeLocal);
                 };
 
@@ -381,7 +381,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // send the subscription for the new symbol through to the data queuehandler
             if (_channelProvider.ShouldStreamSubscription(_job, subscription.Configuration))
             {
-                _dataQueueHandler.Subscribe(request, (sender, args) => subscription.OnNewDataAvailable());
+                _dataQueueHandler.Subscribe(request.Configuration, (sender, args) => subscription.OnNewDataAvailable());
             }
 
             return subscription;

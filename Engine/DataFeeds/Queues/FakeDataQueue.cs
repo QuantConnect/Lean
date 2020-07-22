@@ -15,15 +15,11 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Packets;
 using QuantConnect.Util;
 using Timer = System.Timers.Timer;
 
@@ -38,17 +34,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         private readonly Random _random = new Random();
 
         private readonly Timer _timer;
-        private readonly ConcurrentQueue<BaseData> _ticks;
         private readonly HashSet<Symbol> _symbols;
         private readonly object _sync = new object();
-        private readonly IDataAggregator _aggregator = new AggregationManager(); 
+        private readonly IDataAggregator _aggregator;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FakeDataQueue"/> class to randomly emit data for each symbol
         /// </summary>
         public FakeDataQueue()
         {
-            _ticks = new ConcurrentQueue<BaseData>();
+            _aggregator = new AggregationManager();
             _symbols = new HashSet<Symbol>();
 
             // load it up to start
@@ -78,31 +73,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         }
 
         /// <summary>
-        /// Adds the specified symbols to the subscription
+        /// Subscribe to the specified symbols
         /// </summary>
-        /// <param name="request">defines the parameters to subscribe to a data feed</param>
-        /// <returns></returns>
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            Subscribe(new[] { request.Security.Symbol });
-
-            return _aggregator.Add(request.Configuration, newDataAvailableHandler);
-        }
-
-        /// <summary>
-        /// Adds the specified symbols to the subscription
-        /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(IEnumerable<Symbol> symbols)
-        {
-            foreach (var symbol in symbols)
+            lock (_sync)
             {
-                lock (_sync)
-                {
-                    _symbols.Add(symbol);
-                }
+                _symbols.Add(dataConfig.Symbol);
             }
+
+            return _aggregator.Add(dataConfig, newDataAvailableHandler);
         }
 
         /// <summary>
@@ -111,21 +94,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            Unsubscribe(new Symbol[] { dataConfig.Symbol });
-        }
-
-        /// <summary>
-        /// Removes the specified symbols to the subscription
-        /// </summary>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(IEnumerable<Symbol> symbols)
-        {
-            foreach (var symbol in symbols)
+            lock (_sync)
             {
-                lock (_sync)
-                {
-                    _symbols.Remove(symbol);
-                }
+                _symbols.Remove(dataConfig.Symbol);
             }
         }
 
@@ -158,7 +129,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
             foreach (var symbol in symbols)
             {
                 // emits 500k per second
-                for (int i = 0; i < 500000; i++)
+                for (var i = 0; i < 500000; i++)
                 {
                     _aggregator.Update(new Tick
                     {

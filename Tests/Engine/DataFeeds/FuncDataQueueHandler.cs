@@ -78,7 +78,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         foreach (var baseData in getNextTicksFunction(this))
                         {
-                            _aggregationManager.Update(baseData as Tick);
+                            _aggregationManager.Update(baseData);
                         }
                     }
                     catch (Exception exception)
@@ -93,13 +93,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// <summary>
         /// Adds the specified symbols to the subscription
         /// </summary>
-        /// <param name="request">defines the parameters to subscribe to a data feed</param>
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
         /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            lock (_subscriptions) _subscriptions.Add(request.Configuration);
-            return _aggregationManager.Add(request.Configuration, newDataAvailableHandler);
+            lock (_subscriptions) _subscriptions.Add(dataConfig);
+            return _aggregationManager.Add(dataConfig, newDataAvailableHandler);
         }
 
         /// <summary>
