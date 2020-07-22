@@ -99,7 +99,7 @@ namespace QuantConnect.ToolBox
                         break;
                     case "iexdl":
                     case "iexdownloader":
-                        IEXDownloaderProgram.IEXDownloader(tickers, resolution, fromDate, toDate, GetParameterOrExit(optionsObject, "api-key"));
+                        IEXDownloaderProgram.IEXDownloader(tickers, resolution, fromDate, toDate);
                         break;
                     case "iqfdl":
                     case "iqfeeddownloader":

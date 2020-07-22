@@ -37,38 +37,42 @@ namespace QuantConnect.ToolBox.IEX
 {
     /// <summary>
     /// IEX live data handler.
-    /// Data provided for free by IEX. See more at https://iextrading.com/api-exhibit-a
+    /// Data provided for free by IEX. See more at https://iextrading.com/developers/docs/#websockets
     /// </summary>
-    public class IEXDataQueueHandler : HistoryProviderBase, IDataQueueHandler, IDisposable
+    public class IEXDataQueueHandler : HistoryProviderBase, IDataQueueHandler
     {
         // using SocketIoClientDotNet is a temp solution until IEX implements standard WebSockets protocol
         private Socket _socket;
-        private readonly string _apiKey;
 
-        private ConcurrentDictionary<string, Symbol> _symbols = new ConcurrentDictionary<string, Symbol>(StringComparer.InvariantCultureIgnoreCase);
+        // only required for history requests to IEX Cloud
+        private readonly string _apiKey = Config.Get("iex-cloud-api-key");
+
+        private readonly ConcurrentDictionary<string, Symbol> _symbols = new ConcurrentDictionary<string, Symbol>(StringComparer.InvariantCultureIgnoreCase);
         private Manager _manager;
-        private CancellationTokenSource _cts = new CancellationTokenSource();
-        private static DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Unspecified);
-        private TaskCompletionSource<bool> _connected = new TaskCompletionSource<bool>();
-        private Task _lastEmitTask;
+        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
+        private static DateTime _unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified);
+        private readonly TaskCompletionSource<bool> _connected = new TaskCompletionSource<bool>();
         private bool _subscribedToAll;
         private int _dataPointCount;
 
-        private BlockingCollection<BaseData> _outputCollection = new BlockingCollection<BaseData>();
+        private readonly BlockingCollection<BaseData> _outputCollection = new BlockingCollection<BaseData>();
 
         public string Endpoint { get; internal set; }
 
-        public bool IsConnected
+        public bool IsConnected => _manager.ReadyState == Manager.ReadyStateEnum.OPEN;
+
+        public IEXDataQueueHandler() : this(true)
         {
-            get { return _manager.ReadyState == Manager.ReadyStateEnum.OPEN; }
         }
 
-        public IEXDataQueueHandler(bool live = true, string apiKey = null)
+        public IEXDataQueueHandler(bool live)
         {
             Endpoint = "https://ws-api.iextrading.com/1.0/tops";
+
             if (live)
+            {
                 Reconnect();
-            _apiKey = apiKey;
+            }
         }
 
         internal void Reconnect()
@@ -125,14 +129,14 @@ namespace QuantConnect.ToolBox.IEX
                 var lastSalePrice = message["lastSalePrice"].Value<decimal>();
                 var lastSaleSize = message["lastSaleSize"].Value<int>();
                 var lastSaleTime = message["lastSaleTime"].Value<long>();
-                var lastSaleDateTime = UnixEpoch.AddMilliseconds(lastSaleTime);
+                var lastSaleDateTime = _unixEpoch.AddMilliseconds(lastSaleTime);
                 var lastUpdated = message["lastUpdated"].Value<long>();
                 if (lastUpdated == -1)
                 {
                     // there were no trades on this day
                     return;
                 }
-                var lastUpdatedDatetime = UnixEpoch.AddMilliseconds(lastUpdated);
+                var lastUpdatedDatetime = _unixEpoch.AddMilliseconds(lastUpdated);
 
                 var tick = new Tick()
                 {
@@ -189,7 +193,7 @@ namespace QuantConnect.ToolBox.IEX
                     }
                 }
                 var symbolsList = sb.ToString().TrimEnd(',');
-                if (!String.IsNullOrEmpty(symbolsList))
+                if (!string.IsNullOrEmpty(symbolsList))
                 {
                     SocketSafeAsyncEmit("subscribe", symbolsList);
                 }
@@ -223,7 +227,7 @@ namespace QuantConnect.ToolBox.IEX
                     }
                 }
                 var symbolsList = sb.ToString().TrimEnd(',');
-                if (!String.IsNullOrEmpty(symbolsList))
+                if (!string.IsNullOrEmpty(symbolsList))
                 {
                     SocketSafeAsyncEmit("unsubscribe", symbolsList);
                 }
@@ -350,11 +354,14 @@ namespace QuantConnect.ToolBox.IEX
             {
                 Log.Error("IEXDataQueueHandler.GetHistory(): History calls with minute resolution for IEX available only for trailing 30 calendar days.");
                 yield break;
-            } else if (request.Resolution != Resolution.Daily && request.Resolution != Resolution.Minute)
+            }
+
+            if (request.Resolution != Resolution.Daily && request.Resolution != Resolution.Minute)
             {
                 Log.Error("IEXDataQueueHandler.GetHistory(): History calls for IEX only support daily & minute resolution.");
                 yield break;
             }
+
             if (start <= DateTime.Today.AddYears(-5))
             {
                 Log.Error("IEXDataQueueHandler.GetHistory(): History calls for IEX only support a maximum of 5 years history.");
@@ -402,46 +409,48 @@ namespace QuantConnect.ToolBox.IEX
             }
 
             // Download and parse data
-            var client = new System.Net.WebClient();
-            foreach (var suffix in suffixes)
+            using (var client = new System.Net.WebClient())
             {
-                var response = client.DownloadString("https://cloud.iexapis.com/v1/stock/" + ticker + "/chart/" + suffix + "?token=" + _apiKey);
-                var parsedResponse = JArray.Parse(response);
-
-                foreach (var item in parsedResponse.Children())
+                foreach (var suffix in suffixes)
                 {
-                    DateTime date;
-                    if (item["minute"] != null)
+                    var response = client.DownloadString("https://cloud.iexapis.com/v1/stock/" + ticker + "/chart/" + suffix + "?token=" + _apiKey);
+                    var parsedResponse = JArray.Parse(response);
+
+                    foreach (var item in parsedResponse.Children())
                     {
-                        date = DateTime.ParseExact(item["date"].Value<string>(), "yyyy-MM-dd", CultureInfo.InvariantCulture);
-                        var mins = TimeSpan.ParseExact(item["minute"].Value<string>(), "hh\\:mm", CultureInfo.InvariantCulture);
-                        date += mins;
+                        DateTime date;
+                        if (item["minute"] != null)
+                        {
+                            date = DateTime.ParseExact(item["date"].Value<string>(), "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                            var mins = TimeSpan.ParseExact(item["minute"].Value<string>(), "hh\\:mm", CultureInfo.InvariantCulture);
+                            date += mins;
+                        }
+                        else
+                        {
+                            date = Parse.DateTime(item["date"].Value<string>());
+                        }
+
+                        if (date.Date < start.Date || date.Date > end.Date)
+                        {
+                            continue;
+                        }
+
+                        Interlocked.Increment(ref _dataPointCount);
+
+                        if (item["open"].Type == JTokenType.Null)
+                        {
+                            continue;
+                        }
+                        var open = item["open"].Value<decimal>();
+                        var high = item["high"].Value<decimal>();
+                        var low = item["low"].Value<decimal>();
+                        var close = item["close"].Value<decimal>();
+                        var volume = item["volume"].Value<int>();
+
+                        var tradeBar = new TradeBar(date, request.Symbol, open, high, low, close, volume);
+
+                        yield return new Slice(tradeBar.EndTime, new[] {tradeBar});
                     }
-                    else
-                    {
-                        date = Parse.DateTime(item["date"].Value<string>());
-                    }
-
-                    if (date.Date < start.Date || date.Date > end.Date)
-                    {
-                        continue;
-                    }
-
-                    Interlocked.Increment(ref _dataPointCount);
-
-                    if (item["open"].Type == JTokenType.Null)
-                    {
-                        continue;
-                    }
-                    var open = item["open"].Value<decimal>();
-                    var high = item["high"].Value<decimal>();
-                    var low = item["low"].Value<decimal>();
-                    var close = item["close"].Value<decimal>();
-                    var volume = item["volume"].Value<int>();
-
-                    TradeBar tradeBar = new TradeBar(date, request.Symbol, open, high, low, close, volume);
-
-                    yield return new Slice(tradeBar.EndTime, new[] { tradeBar });
                 }
             }
         }
