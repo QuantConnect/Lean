@@ -15,8 +15,10 @@
 
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Fxcm;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 
@@ -29,10 +31,49 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         public void GetsTickData()
         {
             var brokerage = (FxcmBrokerage)Brokerage;
+            var cancelationToken = new CancellationTokenSource();
 
-            //brokerage.Subscribe(new List<Symbol> {Symbols.USDJPY, Symbols.EURGBP});
+            var configs = new SubscriptionDataConfig[] {
+                GetSubscriptionDataConfig<TradeBar>(Symbols.USDJPY, Resolution.Tick),
+                GetSubscriptionDataConfig<TradeBar>(Symbols.EURGBP, Resolution.Tick)
+            };
+
+            foreach (var config in configs)
+            {
+                Task.Factory.StartNew(
+                    () =>
+                    {
+                        IEnumerator<BaseData> enumerator = null;
+                        try
+                        {
+                            enumerator = brokerage.Subscribe(config, (s, e) => { });
+                            while (enumerator.MoveNext() && !cancelationToken.IsCancellationRequested)
+                            {
+                                BaseData tick = enumerator.Current;
+                                Log.Trace("{0}: {1} - {2} / {3}", tick.Time.ToStringInvariant("yyyy-MM-dd HH:mm:ss.fff"), tick.Symbol, (tick as Tick)?.BidPrice, (tick as Tick)?.AskPrice);
+                            }
+                        }
+                        finally
+                        {
+                            if (enumerator != null)
+                            {
+                                enumerator.Dispose();
+                            }
+                        }
+                    },
+                    cancelationToken.Token);
+            }
 
             Thread.Sleep(5000);
+
+            foreach (var config in configs)
+            {
+                brokerage.Unsubscribe(config);
+            }
+
+            Thread.Sleep(20000);
+
+            cancelationToken.Cancel();
         }
     }
 }
