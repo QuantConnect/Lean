@@ -455,6 +455,7 @@
     <Compile Include="Engine\Alphas\DefaultAlphaHandlerTests.cs" />
     <Compile Include="Engine\Alphas\InsightAnalysisContextTests.cs" />
     <Compile Include="Engine\BrokerageTransactionHandlerTests\BacktestingTransactionHandlerTests.cs" />
+    <Compile Include="Engine\DataFeeds\AggregationManagerTests.cs" />
     <Compile Include="Engine\DataFeeds\BacktestingFutureChainProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\DataPermissionManagerTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\ScannableEnumeratorTests.cs" />
