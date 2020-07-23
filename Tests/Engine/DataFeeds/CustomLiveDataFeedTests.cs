@@ -285,6 +285,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             timer.Value.Dispose();
             dataManager.RemoveAllSubscriptions();
+            dataQueueHandler.DisposeSafely();
             Assert.AreEqual(14, slicesEmitted);
             Assert.AreEqual(14 * symbols.Count, dataPointsEmitted);
         }

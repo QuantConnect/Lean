@@ -20,8 +20,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
@@ -83,9 +81,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                     catch (Exception exception)
                     {
+                        if (exception is ObjectDisposedException)
+                        {
+                            return;
+                        }
                         Log.Error(exception);
                     }
-                    Thread.Sleep(10);
+                    Thread.Sleep(1);
                 }
             });
         }
