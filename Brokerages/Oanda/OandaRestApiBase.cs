@@ -325,6 +325,12 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The list of bars</returns>
         public abstract IEnumerable<QuoteBar> DownloadQuoteBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone);
 
+        /// <summary>
+        /// Subscribe to the specified configuration
+        /// </summary>
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
             throw new NotImplementedException();
@@ -357,7 +363,7 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
-        /// Removes the specified symbols to the subscription
+        /// Removes the specified configuration
         /// </summary>
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)

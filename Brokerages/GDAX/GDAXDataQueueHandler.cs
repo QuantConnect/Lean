@@ -44,11 +44,11 @@ namespace QuantConnect.Brokerages.GDAX
         protected override string[] ChannelNames { get; } = { "heartbeat", "level2", "matches" };
 
         /// <summary>
-        /// Adds the specified symbols to the subscription
+        /// Subscribe to the specified configuration
         /// </summary>
         /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
-        /// <param name="newDataAvailableHandler">fired when new data are ready</param>
-        /// <returns></returns>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
             Subscribe(new[] { dataConfig.Symbol });
@@ -58,7 +58,7 @@ namespace QuantConnect.Brokerages.GDAX
         }
 
         /// <summary>
-        /// Removes the specified symbols to the subscription
+        /// Removes the specified configuration
         /// </summary>
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)

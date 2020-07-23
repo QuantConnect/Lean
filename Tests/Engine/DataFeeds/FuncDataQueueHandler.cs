@@ -105,7 +105,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Removes the specified symbols to the subscription
+        /// Removes the specified configuration
         /// </summary>
         /// <param name="dataConfig">Job we're processing.</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)

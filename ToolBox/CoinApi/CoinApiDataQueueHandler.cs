@@ -63,7 +63,7 @@ namespace QuantConnect.ToolBox.CoinApi
         }
 
         /// <summary>
-        /// Adds the specified symbols to the subscription
+        /// Subscribe to the specified configuration
         /// </summary>
         /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
         /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
@@ -100,7 +100,7 @@ namespace QuantConnect.ToolBox.CoinApi
         }
 
         /// <summary>
-        /// Removes the specified symbols to the subscription
+        /// Removes the specified configuration
         /// </summary>
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
