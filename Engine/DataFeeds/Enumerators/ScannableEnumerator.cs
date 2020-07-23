@@ -70,7 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Enqueues the new data into this enumerator
         /// </summary>
         /// <param name="data">The data to be enqueued</param>
-        public void Enqueue(T data)
+        private void Enqueue(T data)
         {
             _queue.Enqueue(data);
         }
