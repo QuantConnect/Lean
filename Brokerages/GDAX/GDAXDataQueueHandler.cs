@@ -64,6 +64,7 @@ namespace QuantConnect.Brokerages.GDAX
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
             Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            _aggregator.Remove(dataConfig);
         }
     }
 }

@@ -98,6 +98,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
             {
                 _symbols.Remove(dataConfig.Symbol);
             }
+            _aggregator.Remove(dataConfig);
         }
 
         /// <summary>

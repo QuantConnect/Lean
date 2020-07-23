@@ -104,6 +104,7 @@ namespace QuantConnect.Brokerages.Fxcm
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
             Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            _aggregator.Remove(dataConfig);
         }
 
         /// <summary>
