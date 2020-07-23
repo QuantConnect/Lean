@@ -18,36 +18,42 @@ using NodaTime;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ProtoBuf;
 
 namespace QuantConnect.Data.Custom.Benzinga
 {
     /// <summary>
     /// News data powered by Benzinga - https://docs.benzinga.io/benzinga/newsfeed-v2.html
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class BenzingaNews : IndexedBaseData
     {
         /// <summary>
         /// Unique ID assigned to the article by Benzinga
         /// </summary>
         [JsonProperty("id")]
+        [ProtoMember(10)]
         public int Id { get; set; }
 
         /// <summary>
         /// Author of the article
         /// </summary>
         [JsonProperty("author")]
+        [ProtoMember(11)]
         public string Author { get; set; }
 
         /// <summary>
         /// Date the article was published
         /// </summary>
         [JsonProperty("created")]
+        [ProtoMember(12)]
         public DateTime CreatedAt { get; set; }
 
         /// <summary>
         /// Date that the article was revised on
         /// </summary>
         [JsonProperty("updated")]
+        [ProtoMember(13)]
         public DateTime UpdatedAt
         {
             get { return Time; }
@@ -58,30 +64,35 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// Title of the article published
         /// </summary>
         [JsonProperty("title")]
+        [ProtoMember(14)]
         public string Title { get; set; }
 
         /// <summary>
         /// Summary of the article's contents
         /// </summary>
         [JsonProperty("teaser")]
+        [ProtoMember(15)]
         public string Teaser { get; set; }
 
         /// <summary>
         /// Contents of the article
         /// </summary>
         [JsonProperty("body")]
+        [ProtoMember(16)]
         public string Contents { get; set; }
 
         /// <summary>
         /// Categories that relate to the article
         /// </summary>
         [JsonProperty("channels")]
+        [ProtoMember(17)]
         public List<string> Categories { get; set; }
 
         /// <summary>
         /// Symbols that this news article mentions
         /// </summary>
         [JsonProperty("stocks")]
+        [ProtoMember(18)]
         public List<Symbol> Symbols { get; set; }
 
         /// <summary>
@@ -91,6 +102,7 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// celebrities, stock movements (i.e. 'Mid-day Losers' &amp; 'Mid-day Gainers').
         /// </summary>
         [JsonProperty("tags")]
+        [ProtoMember(19)]
         public List<string> Tags { get; set; }
 
         /// <summary>
