@@ -83,16 +83,16 @@ namespace QuantConnect
                 switch (baseData.DataType)
                 {
                     case MarketDataType.Tick:
-                        Serializer.Serialize(stream, baseData as Tick);
+                        Serializer.SerializeWithLengthPrefix(stream, baseData as Tick, PrefixStyle.Base128, 1);
                         break;
                     case MarketDataType.QuoteBar:
-                        Serializer.Serialize(stream, baseData as QuoteBar);
+                        Serializer.SerializeWithLengthPrefix(stream, baseData as QuoteBar, PrefixStyle.Base128, 1);
                         break;
                     case MarketDataType.TradeBar:
-                        Serializer.Serialize(stream, baseData as TradeBar);
+                        Serializer.SerializeWithLengthPrefix(stream, baseData as TradeBar, PrefixStyle.Base128, 1);
                         break;
                     default:
-                        Serializer.Serialize(stream, baseData);
+                        Serializer.SerializeWithLengthPrefix(stream, baseData as BaseData, PrefixStyle.Base128, 1);
                         break;
                 }
                 return stream.ToArray();
