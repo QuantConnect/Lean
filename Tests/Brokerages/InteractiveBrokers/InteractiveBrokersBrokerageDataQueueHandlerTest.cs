@@ -19,8 +19,10 @@ using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.InteractiveBrokers;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
@@ -34,17 +36,13 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             using (var ib = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(), new SecurityProvider(), new AggregationManager()))
             {
                 ib.Connect();
-
-                //ib.Subscribe(new List<Symbol> {Symbols.USDJPY, Symbols.EURGBP});
-
-                Thread.Sleep(2000);
-
                 var gotUsdData = false;
                 var gotEurData = false;
-                for (int i = 0; i < 20; i++)
-                {
-                    
-                }
+
+                ib.Subscribe(GetSubscriptionDataConfig<QuoteBar>(Symbols.USDJPY, Resolution.Minute), (s, e) => { gotUsdData = true; });
+                ib.Subscribe(GetSubscriptionDataConfig<QuoteBar>(Symbols.EURGBP, Resolution.Minute), (s, e) => { gotEurData = true; });
+
+                Thread.Sleep(2000);
 
                 Assert.IsTrue(gotUsdData);
                 Assert.IsTrue(gotEurData);
@@ -56,20 +54,41 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             using (var ib = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(), new SecurityProvider(), new AggregationManager()))
             {
-                ib.Connect();
-                //ib.Subscribe(new List<Symbol> {Symbols.USDJPY, Symbols.EURGBP});
-                ib.Disconnect();
-                Thread.Sleep(2000);
-
-                ib.Connect();
-                Thread.Sleep(2000);
-
                 var gotUsdData = false;
                 var gotEurData = false;
-                
+                ib.Connect();
+                ib.Subscribe(GetSubscriptionDataConfig<QuoteBar>(Symbols.USDJPY, Resolution.Minute), (s, e) => { gotUsdData = true; });
+                ib.Subscribe(GetSubscriptionDataConfig<QuoteBar>(Symbols.EURGBP, Resolution.Minute), (s, e) => { gotEurData = true; });
+                Thread.Sleep(2000);
+
+                Assert.IsTrue(gotUsdData);
+                Assert.IsTrue(gotEurData);
+
+                ib.Disconnect();
+                gotUsdData = false;
+                gotEurData = false;
+
+                Thread.Sleep(2000);
+
+                ib.Connect();
+                Thread.Sleep(2000);
+
                 Assert.IsTrue(gotUsdData);
                 Assert.IsTrue(gotEurData);
             }
+        }
+
+        protected SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
+        {
+            return new SubscriptionDataConfig(
+                typeof(T),
+                symbol,
+                resolution,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                true,
+                true,
+                false);
         }
     }
 }
