@@ -333,14 +333,16 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            throw new NotImplementedException();
+            Subscribe(new[] { dataConfig.Symbol });
+
+            return Aggregator.Add(dataConfig, newDataAvailableHandler);
         }
 
         /// <summary>
         /// Adds the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(IEnumerable<Symbol> symbols)
+        private void Subscribe(IEnumerable<Symbol> symbols)
         {
             lock (LockerSubscriptions)
             {
@@ -375,7 +377,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// Removes the specified symbols from the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(IEnumerable<Symbol> symbols)
+        private void Unsubscribe(IEnumerable<Symbol> symbols)
         {
             lock (LockerSubscriptions)
             {

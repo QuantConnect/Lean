@@ -39,7 +39,6 @@ namespace QuantConnect.Brokerages.Oanda
     {
         private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
         private readonly OandaRestApiBase _api;
-        private readonly IDataAggregator _aggregator;
 
         /// <summary>
         /// The maximum number of bars per historical data request
@@ -65,8 +64,8 @@ namespace QuantConnect.Brokerages.Oanda
             // Use v20 REST API only if you have a v20 account
             // Use v1 REST API if your account id contains only digits(ie. 2534253) as it is a legacy account
             _api = IsLegacyAccount(accountId) ? (OandaRestApiBase)
-                new OandaRestApiV1(_symbolMapper, orderProvider, securityProvider, _aggregator, environment, accessToken, accountId, agent) :
-                new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, _aggregator, environment, accessToken, accountId, agent);
+                new OandaRestApiV1(_symbolMapper, orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent) :
+                new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent);
 
             // forward events received from API
             _api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);
@@ -254,19 +253,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            Subscribe(new[] { dataConfig.Symbol });
-
-            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
-            return enumerator;
-        }
-
-        /// <summary>
-        /// Adds the specified symbols to the subscription
-        /// </summary>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(IEnumerable<Symbol> symbols)
-        {
-            _api.Subscribe(symbols);
+            return _api.Subscribe(dataConfig, newDataAvailableHandler);
         }
 
         /// <summary>
@@ -275,16 +262,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            Unsubscribe(new Symbol[] { dataConfig.Symbol });
-        }
-
-        /// <summary>
-        /// Removes the specified symbols from the subscription
-        /// </summary>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(IEnumerable<Symbol> symbols)
-        {
-            _api.Unsubscribe(symbols);
+            _api.Unsubscribe(dataConfig);
         }
 
         #endregion
