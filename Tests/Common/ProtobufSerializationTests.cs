@@ -237,6 +237,55 @@ namespace QuantConnect.Tests.Common
             }
         }
 
+        [Test]
+        public void DividendRoundTrip()
+        {
+            var dividend = new Dividend
+            {
+                DataType = MarketDataType.Auxiliary,
+                Distribution = 0.5m,
+                ReferencePrice = decimal.MaxValue - 10000m,
+
+                Symbol = Symbols.AAPL,
+                Time = DateTime.UtcNow,
+                Value = 0.5m
+            };
+
+            var serializedDividend = dividend.ProtobufSerialize();
+            using (var stream = new MemoryStream(serializedDividend))
+            {
+                var result = (Dividend)Serializer.Deserialize<BaseData>(stream);
+
+                Assert.AreEqual(dividend.DataType, result.DataType);
+                Assert.AreEqual(dividend.Distribution, result.Distribution);
+                Assert.AreEqual(dividend.ReferencePrice, result.ReferencePrice);
+                Assert.AreEqual(dividend.Symbol, result.Symbol);
+                Assert.AreEqual(dividend.Time, result.Time);
+                Assert.AreEqual(dividend.EndTime, result.EndTime);
+                Assert.AreEqual(dividend.Value, result.Value);
+            }
+        }
+
+        [Test]
+        public void SplitRoundTrip()
+        {
+            var split = new Split(Symbols.AAPL, DateTime.UtcNow, decimal.MaxValue, decimal.MinValue, SplitType.SplitOccurred);
+
+            var serializedSplit = split.ProtobufSerialize();
+            using (var stream = new MemoryStream(serializedSplit))
+            {
+                var result = (Split)Serializer.Deserialize<BaseData>(stream);
+
+                Assert.AreEqual(split.Type, result.Type);
+                Assert.AreEqual(split.DataType, result.DataType);
+                Assert.AreEqual(split.SplitFactor, result.SplitFactor);
+                Assert.AreEqual(split.ReferencePrice, result.ReferencePrice);
+                Assert.AreEqual(split.Time, result.Time);
+                Assert.AreEqual(split.Symbol, result.Symbol);
+                Assert.AreEqual(split.Value, result.Value);
+            }
+        }
+
         [Test, Ignore("Performance test")]
         public void SpeedTest()
         {
