@@ -52,15 +52,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     break;
 
                 case nameof(Tick):
+                    consolidator = FilteredIdentityDataConsolidator.ForTickType(config.TickType);
+                    break;
+
                 default:
-                    // tick or streaming custom data subscriptions can pass right through
-                    consolidator = new IdentityDataConsolidator<BaseData>();
+                    // streaming custom data subscriptions can pass right through
+                    consolidator = new FilteredIdentityDataConsolidator<BaseData>(data => data.GetType() == config.Type);
                     break;
             }
 
             ScannableEnumerator<BaseData> enumerator = new ScannableEnumerator<BaseData>(
                 consolidator,
-                config.DataTimeZone,
+                config.ExchangeTimeZone,
                 TimeProvider,
                 newDataAvailableHandler);
 
@@ -119,17 +122,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
 
                         var consolidator = kvp.Value;
+                        if (consolidator.InputType != typeof(BaseData) && input.GetType() != consolidator.InputType)
+                        {
+                            continue;
+                        }
+
                         lock (consolidator)
                         {
                             consolidator.Update(input);
                         }
                     }
-                }
-                else
-                {
-                    Log.Trace(
-                        $"AggregationManager.Update(): IDataConsolidator fot symbol ({input.Symbol.Value}) was not found."
-                    );
                 }
             }
             catch (Exception exception)

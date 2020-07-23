@@ -24,6 +24,7 @@ using QuantConnect.Data.Custom;
 using QuantConnect.Data.Custom.Fred;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Data.Custom.TradingEconomics;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
@@ -130,13 +131,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             else
             {
                 _dataQueueHandler.Unsubscribe(subscription.Configuration);
+                if (subscription.Configuration.SecurityType == SecurityType.Equity && !subscription.Configuration.IsInternalFeed)
+                {
+                    _dataQueueHandler.Unsubscribe(new SubscriptionDataConfig(subscription.Configuration, typeof(Dividend)));
+                    _dataQueueHandler.Unsubscribe(new SubscriptionDataConfig(subscription.Configuration, typeof(Split)));
+                }
             }
         }
 
         /// <summary>
         /// External controller calls to signal a terminate of the thread.
         /// </summary>
-        public void Exit()
+        public virtual void Exit()
         {
             if (IsActive)
             {
@@ -228,7 +234,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 else
                 {
-                    enumerator = _dataQueueHandler.Subscribe(request.Configuration, (sender, args) => subscription.OnNewDataAvailable());
+                    EventHandler handler = (sender, args) => subscription.OnNewDataAvailable();
+                    enumerator = _dataQueueHandler.Subscribe(request.Configuration, handler);
+
+                    if (request.Configuration.Symbol.SecurityType == SecurityType.Equity && !request.Configuration.IsInternalFeed)
+                    {
+                        var dividends = _dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Dividend)), handler);
+                        var splits = _dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Split)), handler);
+
+                        enumerator = new LiveEquityDataSynchronizingEnumerator(_timeProvider, request.Configuration.ExchangeTimeZone, enumerator, dividends, splits);
+                    }
                 }
 
                 if (request.Configuration.FillDataForward)

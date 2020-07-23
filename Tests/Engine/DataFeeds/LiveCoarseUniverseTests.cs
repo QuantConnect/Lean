@@ -153,6 +153,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(coarseTimes.Count, coarseUniverseSelectionCount, message: "coarseUniverseSelectionCount");
 
             algorithm.DataManager.RemoveAllSubscriptions();
+            dataQueueHandler.DisposeSafely();
         }
     }
 }

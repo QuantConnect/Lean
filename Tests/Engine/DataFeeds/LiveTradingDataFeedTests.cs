@@ -411,8 +411,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else
                 {
-                    // should of remove trade and quote bar subscription
-                    Assert.AreEqual(currentSubscriptionCount - 2, _dataQueueHandler.SubscriptionDataConfigs.Count);
+                    // should of remove trade and quote bar subscription and split/dividend
+                    Assert.AreEqual(currentSubscriptionCount - 4, _dataQueueHandler.SubscriptionDataConfigs.Count);
                     // internal subscription should still be there
                     Assert.AreEqual(0, _dataQueueHandler.SubscriptionDataConfigs
                         .Where(config => !config.IsInternalFeed)
@@ -458,8 +458,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else
                 {
-                    // should of remove trade and quote bar subscription
-                    Assert.AreEqual(currentSubscriptionCount - 2, _dataQueueHandler.SubscriptionDataConfigs.Count);
+                    // should of remove trade and quote bar subscription and split/dividend
+                    Assert.AreEqual(currentSubscriptionCount - 4, _dataQueueHandler.SubscriptionDataConfigs.Count);
                     // internal subscription should still be there
                     Assert.AreEqual(0, _dataQueueHandler.SubscriptionDataConfigs
                         .Where(config => !config.IsInternalFeed)
@@ -893,7 +893,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = RunDataFeed(
                 Resolution.Tick,
                 crypto: new List<string> { symbol.Value },
-                getNextTicksFunction: dqh => Enumerable.Range(0, 2)
+                getNextTicksFunction: dqh => Enumerable.Range(1, 2)
                     .Select(x => new Tick
                     {
                         Symbol = symbol,
@@ -901,25 +901,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     })
                     .ToList());
 
+            var tradeCount = 0;
+            var quoteCount = 0;
             var emittedData = false;
             ConsumeBridge(feed, TimeSpan.FromSeconds(1), true, ts =>
             {
                 if (ts.Slice.HasData)
                 {
                     emittedData = true;
-                    foreach (var security in _algorithm.Securities.Values)
-                    {
-                        foreach (var config in security.Subscriptions)
-                        {
-                            Assert.AreEqual(2, ts.ConsolidatorUpdateData.Count); // Trades + Quotes
-                            Assert.IsTrue(ts.ConsolidatorUpdateData.Select(x => x.Target).Contains(config), "Config not found");
-                            Assert.IsTrue(ts.ConsolidatorUpdateData.All(x => x.Data.Count > 0), "Data is empty");
-                        }
-                    }
+                    tradeCount += ts.Slice.Ticks[symbol].Count(tick => tick.TickType == TickType.Trade);
+                    quoteCount += ts.Slice.Ticks[symbol].Count(tick => tick.TickType == TickType.Quote);
                 }
             });
 
             Assert.IsTrue(emittedData, "No data was emitted");
+            Assert.AreEqual(tradeCount, quoteCount, 10);
         }
 
         [Test]
@@ -1016,7 +1012,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 equities: new List<string> { symbol.Value },
                 getNextTicksFunction: delegate
                 {
-                    return Enumerable.Range(0, 2)
+                    return Enumerable.Range(1, 2)
                         .Select(
                             x => x % 2 == 0
                                 ? (BaseData)new Tick { Symbol = symbol, TickType = TickType.Trade }
@@ -1350,11 +1346,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataQueueStarted = new ManualResetEvent(false);
             var dataQueueHandler = new FuncDataQueueHandler(fdqh =>
             {
-                dataQueueStarted.Set();
                 if (exchangeTimeZone == null)
                 {
                     return Enumerable.Empty<BaseData>();
                 }
+                dataQueueStarted.Set();
 
                 var utcTime = timeProvider.GetUtcNow();
                 var exchangeTime = utcTime.ConvertFromUtc(exchangeTimeZone);
@@ -1380,8 +1376,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         EndTime = exchangeTime,
                         Value = actualPricePointsEnqueued++
                     });
-
-                    dataPoints.Add(dataPoint);
 
                     ConsoleWriteLine(
                         $"{algorithmTime} - FuncDataQueueHandler emitted custom data point: {dataPoint}");
@@ -1654,6 +1648,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                     ConsoleWriteLine($"Algorithm time set to {currentTime.ConvertFromUtc(algorithmTimeZone)}");
 
+                    // let's avoid race conditions and give time for the funDataQueueHandler thread to distribute the data among the consolidators
+                    Thread.Sleep(10);
+
                     if (currentTime.ConvertFromUtc(algorithmTimeZone) > endDate)
                     {
                         feed.Exit();
@@ -1767,7 +1764,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var timeAdvanceStep = TimeSpan.FromMinutes(120);
             var timeAdvanced = new AutoResetEvent(true);
             var started = new ManualResetEvent(false);
-            var canAdvanceTimeCalled = new ManualResetEvent(false);
             var lookupCount = 0;
 
             var optionSymbol1 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 192m, new DateTime(2019, 12, 19));
@@ -1896,7 +1892,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 // CanAdvanceTime
                 secType =>
                 {
-                    canAdvanceTimeCalled.Set();
                     var time = timeProvider.GetUtcNow().ConvertFromUtc(algorithmTimeZone);
                     var result = time.Hour >= 1 && time.Hour < 23 && time.Day != 21;
 
@@ -1991,8 +1986,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     timeProvider.Advance(timeAdvanceStep);
                     Log.Debug($"Time advanced to {timeProvider.GetUtcNow()} (UTC)");
                     timeAdvanced.Set();
-
-                    canAdvanceTimeCalled.WaitOne();
 
                     // restart the timer
                     timer.Change(interval, interval);
@@ -2124,7 +2117,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             dataManager.RemoveAllSubscriptions();
             dataQueueHandler.DisposeSafely();
-            canAdvanceTimeCalled.DisposeSafely();
             timeAdvanced.DisposeSafely();
             started.DisposeSafely();
             timer.DisposeSafely();
@@ -2151,6 +2143,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             SecurityExchangeHours exchangeHours)
         {
             return UpdateSubscriptionRealTimePrice(subscription, timeZoneOffsetProvider, exchangeHours, new Tick());
+        }
+
+        public override void Exit()
+        {
+            base.Exit();
+            DataQueueHandler.DisposeSafely();
         }
     }
 
