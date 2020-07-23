@@ -31,6 +31,9 @@ using QuantConnect.Brokerages.GDAX.Messages;
 using QuantConnect.Util;
 using Order = QuantConnect.Orders.Order;
 using QuantConnect.Data;
+using System.Collections.Concurrent;
+using QuantConnect.Lean.Engine.DataFeeds;
+using Deedle;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
@@ -38,7 +41,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
     public class GDAXBrokerageTests
     {
         #region Declarations
-        GDAXBrokerage _unit;
+        GDAXFakeBrokerage _unit;
         Mock<IWebSocket> _wss = new Mock<IWebSocket>();
         Mock<IRestClient> _rest = new Mock<IRestClient>();
         Mock<IAlgorithm> _algo = new Mock<IAlgorithm>();
@@ -61,9 +64,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             var priceProvider = new Mock<IPriceProvider>();
             priceProvider.Setup(x => x.GetLastPrice(It.IsAny<Symbol>())).Returns(1.234m);
 
-            var aggregator = new Mock<IDataAggregator>();
-
-            _unit = new GDAXBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass", _algo.Object, priceProvider.Object, aggregator.Object);
+            _unit = new GDAXFakeBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass", _algo.Object, priceProvider.Object, new AggregationManager());
             _orderData = File.ReadAllText("TestData//gdax_order.txt");
             _matchData = File.ReadAllText("TestData//gdax_match.txt");
             _openOrderData = File.ReadAllText("TestData//gdax_openOrders.txt");
@@ -331,27 +332,23 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         public void SubscribeTest()
         {
             string actual = null;
-            string expected = "[\"BTC-USD\",\"BTC-ETH\"]";
+
             _wss.Setup(w => w.Send(It.IsAny<string>())).Callback<string>(c => actual = c);
 
-            _unit.Ticks.Clear();
+            var gotBTCUSD = false;
+            var gotGBPUSD = false;
+            var gotBTCETH = false;
 
-            _unit.Subscribe(new[] { Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX), Symbol.Create("GBPUSD", SecurityType.Crypto, Market.GDAX),
-                Symbol.Create("BTCETH", SecurityType.Crypto, Market.GDAX)});
+            _unit.Subscribe(GetSubscriptionDataConfig<Tick>(Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX), Resolution.Tick), (s, e) => { gotBTCUSD = true; });
+            StringAssert.Contains("[\"BTC-USD\"]", actual);
+            _unit.Subscribe(GetSubscriptionDataConfig<Tick>(Symbol.Create("GBPUSD", SecurityType.Crypto, Market.GDAX), Resolution.Tick), (s, e) => { gotGBPUSD = true; });
+            _unit.Subscribe(GetSubscriptionDataConfig<Tick>(Symbol.Create("BTCETH", SecurityType.Crypto, Market.GDAX), Resolution.Tick), (s, e) => { gotBTCETH = true; });
+            StringAssert.Contains("[\"BTC-USD\",\"BTC-ETH\"]", actual);
+            Thread.Sleep(1000);
 
-            StringAssert.Contains(expected, actual);
-
-            // spin for a few seconds, waiting for the GBPUSD tick
-            var start = DateTime.UtcNow;
-            var timeout = start.AddSeconds(5);
-            while (_unit.Ticks.Count == 0 && DateTime.UtcNow < timeout)
-            {
-                Thread.Sleep(1);
-            }
-
-            // only rate conversion ticks are received during subscribe
-            Assert.AreEqual(1, _unit.Ticks.Count);
-            Assert.AreEqual("GBPUSD", _unit.Ticks[0].Symbol.Value);
+            Assert.IsFalse(gotBTCUSD);
+            Assert.IsTrue(gotGBPUSD);
+            Assert.IsFalse(gotBTCETH);
         }
 
         [Test]
@@ -366,35 +363,17 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             StringAssert.DoesNotContain("matches", actual);
         }
 
-        [Test, Ignore("This test is obsolete, the 'ticker' channel is no longer used.")]
-        public void OnMessageTickerTest()
-        {
-            string json = _tickerData;
-
-            _unit.OnMessage(_unit, GDAXTestsHelpers.GetArgs(json));
-
-            var actual = _unit.Ticks.First();
-
-            Assert.AreEqual("BTCUSD", actual.Symbol.Value);
-            Assert.AreEqual(4388.005m, actual.Price);
-            Assert.AreEqual(4388m, actual.BidPrice);
-            Assert.AreEqual(4388.01m, actual.AskPrice);
-
-            actual = _unit.Ticks.Last();
-
-            Assert.AreEqual("BTCUSD", actual.Symbol.Value);
-            Assert.AreEqual(4388.01m, actual.Price);
-            Assert.AreEqual(0.03m, actual.Quantity);
-        }
-
         [Test]
         public void PollTickTest()
         {
-            _unit.PollTick(Symbol.Create("GBPUSD", SecurityType.Forex, Market.FXCM));
+            var gotGBPUSD = false;
+            var enumerator = _unit.Subscribe(GetSubscriptionDataConfig<Tick>(Symbol.Create("GBPUSD", SecurityType.Crypto, Market.GDAX), Resolution.Tick), (s, e) => { gotGBPUSD = true; });
             Thread.Sleep(1000);
 
             // conversion rate is the price returned by the QC pricing API
-            Assert.AreEqual(1.234m, _unit.Ticks.First().Price);
+            Assert.IsTrue(gotGBPUSD);
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual(1.234m, enumerator.Current.Price);
         }
 
         [Test]
@@ -406,7 +385,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             const string expected = "[\"BTC-LTC\"]";
             _wss.Setup(w => w.Send(It.IsAny<string>())).Callback<string>(c => actual = c);
 
-            _unit.Subscribe(new[] { Symbol.Create("BTCLTC", SecurityType.Crypto, Market.GDAX)});
+            _unit.Subscribe(new[] { Symbol.Create("BTCLTC", SecurityType.Crypto, Market.GDAX) });
 
             StringAssert.Contains(expected, actual);
 
@@ -416,6 +395,55 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             _unit.OnMessage(_unit, GDAXTestsHelpers.GetArgs(json));
 
             Assert.AreEqual(BrokerageMessageType.Error, messageType);
+        }
+
+        private SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
+        {
+            return new SubscriptionDataConfig(
+                typeof(T),
+                symbol,
+                resolution,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                true,
+                true,
+                false);
+        }
+
+        private class GDAXFakeBrokerage : GDAXBrokerage, IDataQueueHandler
+        {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="GDAXDataQueueHandler"/> class
+            /// </summary>
+            public GDAXFakeBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
+                IPriceProvider priceProvider, IDataAggregator aggregator)
+                : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator)
+            {
+            }
+
+            /// <summary>
+            /// Subscribe to the specified configuration
+            /// </summary>
+            /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+            /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+            /// <returns>The new enumerator for this subscription request</returns>
+            public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
+            {
+                Subscribe(new[] { dataConfig.Symbol });
+
+                var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
+                return enumerator;
+            }
+
+            /// <summary>
+            /// Removes the specified configuration
+            /// </summary>
+            /// <param name="dataConfig">Subscription config to be removed</param>
+            public void Unsubscribe(SubscriptionDataConfig dataConfig)
+            {
+                Unsubscribe(new Symbol[] { dataConfig.Symbol });
+                _aggregator.Remove(dataConfig);
+            }
         }
     }
 }
