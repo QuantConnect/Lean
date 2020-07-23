@@ -17,40 +17,108 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
-using Moq;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Alpaca;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Brokerages.Alpaca
 {
-    [TestFixture, Ignore("This test requires a configured and testable Alpaca practice account. Since it uses the Polygon API, the account needs to be funded.")]
-    public class AlpacaBrokerageDataQueueHandlerBrokerageTests
-    {
-        private AlpacaBrokerage _brokerage;
-
-        [SetUp]
-        public void Setup()
+    [TestFixture]
+    public partial class AlpacaBrokerageTests
+    { 
+        [Test]
+        public void GetsTickData()
         {
-            Log.LogHandler = new ConsoleLogHandler();
+            var brokerage = (AlpacaBrokerage)Brokerage;
+            var cancelationToken = new CancellationTokenSource();
 
-            var keyId = Config.Get("alpaca-key-id");
-            var secretKey = Config.Get("alpaca-secret-key");
-            var tradingMode = Config.Get("alpaca-trading-mode");
+            var configs = new SubscriptionDataConfig[] {
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), Resolution.Tick),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("FB", SecurityType.Equity, Market.USA), Resolution.Tick),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("TSLA", SecurityType.Equity, Market.USA), Resolution.Tick),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("MSFT", SecurityType.Equity, Market.USA), Resolution.Tick),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("GOOGL", SecurityType.Equity, Market.USA), Resolution.Tick),
+            };
 
-            var aggregator = new Mock<IDataAggregator>();
-            _brokerage = new AlpacaBrokerage(null, null, keyId, secretKey, tradingMode, true, aggregator.Object);
-            _brokerage.Connect();
+            foreach (var config in configs)
+            {
+                Task.Factory.StartNew(
+                    () =>
+                    {
+                        IEnumerator<BaseData> enumerator = null;
+                        try
+                        {
+                            enumerator = brokerage.Subscribe(config, (s, e) => { });
+                            while (enumerator.MoveNext() && !cancelationToken.IsCancellationRequested)
+                            {
+                                BaseData tick = enumerator.Current;
+                                Log.Trace("{0}: {1} - {2} / {3}", tick.Time, tick.Symbol.Value, (tick as Tick)?.BidPrice, (tick as Tick)?.AskPrice);
+                            }
+                        }
+                        finally
+                        {
+                            if (enumerator != null)
+                            {
+                                enumerator.Dispose();
+                            }
+                        }
+                    },
+                    cancelationToken.Token);
+            }
+
+            Thread.Sleep(20000);
+
+            foreach (var config in configs)
+            {
+                brokerage.Unsubscribe(config);
+            }
+
+            Thread.Sleep(20000);
+
+            cancelationToken.Cancel();
         }
 
-        [TearDown]
-        public void TearDown()
+        [Test]
+        public void SubscribesAndUnsubscribesMultipleSymbols()
         {
-            _brokerage.Disconnect();
-            _brokerage.Dispose();
+            var symbols = new List<string>
+            {
+                "AAPL", "FB", "MSFT", "GOOGL"
+            };
+
+            var brokerage = (AlpacaBrokerage)Brokerage;
+
+            var configs = new List<SubscriptionDataConfig>();
+            foreach (var symbol in symbols)
+            {
+                configs.Add(GetSubscriptionDataConfig<QuoteBar>(Symbol.Create(symbol, SecurityType.Forex, Market.Oanda), Resolution.Tick));
+            }
+
+            var stopwatch = Stopwatch.StartNew();
+            foreach (var config in configs)
+            {
+                brokerage.Subscribe(config, (s, e) => { });
+            }
+            stopwatch.Stop();
+            Console.WriteLine("Subscribe: Elapsed time: " + stopwatch.Elapsed);
+
+            Thread.Sleep(10000);
+
+            stopwatch.Restart();
+            foreach (var config in configs)
+            {
+                brokerage.Unsubscribe(config);
+            }
+            Console.WriteLine("Unsubscribe: Elapsed time: " + stopwatch.Elapsed);
+
+            Thread.Sleep(5000);
         }
+
     }
 }
