@@ -908,6 +908,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 _client.Dispose();
             }
 
+            _aggregator.DisposeSafely();
             _ibAutomater?.Stop();
 
             _messagingRateLimiter.Dispose();
@@ -2331,6 +2332,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
             Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            _aggregator.Remove(dataConfig);
         }
 
         /// <summary>

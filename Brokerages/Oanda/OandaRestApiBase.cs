@@ -226,6 +226,8 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override void Dispose()
         {
+            Aggregator.DisposeSafely();
+
             PricingConnectionHandler.ConnectionLost -= OnPricingConnectionLost;
             PricingConnectionHandler.ConnectionRestored -= OnPricingConnectionRestored;
             PricingConnectionHandler.ReconnectRequested -= OnPricingReconnectRequested;
@@ -371,6 +373,7 @@ namespace QuantConnect.Brokerages.Oanda
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
             Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            Aggregator.Remove(dataConfig);
         }
 
         /// <summary>

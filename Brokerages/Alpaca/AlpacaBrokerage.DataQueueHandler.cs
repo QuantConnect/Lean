@@ -76,6 +76,7 @@ namespace QuantConnect.Brokerages.Alpaca
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
             Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            _aggregator.Remove(dataConfig);
         }
 
         /// <summary>
