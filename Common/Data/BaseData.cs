@@ -33,6 +33,8 @@ namespace QuantConnect.Data
     [ProtoInclude(8, typeof(Tick))]
     [ProtoInclude(100, typeof(TradeBar))]
     [ProtoInclude(200, typeof(QuoteBar))]
+    [ProtoInclude(300, typeof(Dividend))]
+    [ProtoInclude(400, typeof(Split))]
     public abstract class BaseData : IBaseData
     {
         private decimal _value;

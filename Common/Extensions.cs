@@ -91,11 +91,9 @@ namespace QuantConnect
                     case MarketDataType.TradeBar:
                         Serializer.Serialize(stream, baseData as TradeBar);
                         break;
-                    case MarketDataType.Base:
+                    default:
                         Serializer.Serialize(stream, baseData);
                         break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
                 }
                 return stream.ToArray();
             }
