@@ -605,5 +605,18 @@ namespace QuantConnect.Tests.Brokerages
 
             return order;
         }
+
+        protected SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
+        {
+            return new SubscriptionDataConfig(
+                typeof(T),
+                symbol,
+                resolution,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                true,
+                true,
+                false);
+        }
     }
 }

@@ -17,8 +17,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Oanda;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 
@@ -30,38 +32,56 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         [Test]
         public void GetsTickData()
         {
+            var cancelationToken = new CancellationTokenSource();
             var brokerage = (OandaBrokerage)Brokerage;
 
-            brokerage.Subscribe(new List<Symbol>
-            {
-                Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda),
-                Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda),
-            });
+            var configs = new SubscriptionDataConfig[] {
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda), Resolution.Tick),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda), Resolution.Tick),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda), Resolution.Tick),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda), Resolution.Tick),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("XAUXAG", SecurityType.Cfd, Market.Oanda), Resolution.Tick),
+            };
 
-            brokerage.Subscribe(new List<Symbol>
+            foreach (var config in configs)
             {
-                Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda),
-                Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda),
-            });
-
-            brokerage.Subscribe(new List<Symbol>
-            {
-                Symbol.Create("XAUXAG", SecurityType.Cfd, Market.Oanda),
-            });
+                Task.Factory.StartNew(
+                    () =>
+                    {
+                        IEnumerator<BaseData> enumerator = null;
+                        try
+                        {
+                            enumerator = brokerage.Subscribe(config, (s, e) => { });
+                            while (enumerator.MoveNext() && !cancelationToken.IsCancellationRequested)
+                            {
+                                BaseData tick = enumerator.Current;
+                                Log.Trace("{0}: {1} - {2} / {3}", tick.Time, tick.Symbol.Value, (tick as Tick)?.BidPrice, (tick as Tick)?.AskPrice);
+                            }
+                        }
+                        finally
+                        {
+                            if (enumerator != null)
+                            {
+                                enumerator.Dispose();
+                            }
+                        }
+                    },
+                    cancelationToken.Token);
+            }
 
             Thread.Sleep(20000);
 
-            brokerage.Unsubscribe(new List<Symbol>
+            foreach (var config in configs)
             {
-                Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda),
-                Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda),
-                Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda),
-                Symbol.Create("XAUXAG", SecurityType.Cfd, Market.Oanda),
-            });
-
+                if (!config.Symbol.Value.Equals("EURUSD", StringComparison.OrdinalIgnoreCase))
+                {
+                    brokerage.Unsubscribe(config);
+                }
+            }
+            
             Thread.Sleep(20000);
 
-            Thread.Sleep(5000);
+            cancelationToken.Cancel();
         }
 
         [Test]
@@ -69,20 +89,22 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         {
             var symbols = new List<string>
             {
-                "AUDJPY", "AUDUSD", "EURCHF", "EURGBP", "EURJPY", "EURUSD", "GBPAUD", 
+                "AUDJPY", "AUDUSD", "EURCHF", "EURGBP", "EURJPY", "EURUSD", "GBPAUD",
                 "GBPJPY", "GBPUSD", "NZDUSD", "USDCAD", "USDCHF", "USDJPY"
             };
+
+            var configs = new List<SubscriptionDataConfig>();
+            foreach (var symbol in symbols)
+            {
+                configs.Add(GetSubscriptionDataConfig<QuoteBar>(Symbol.Create(symbol, SecurityType.Forex, Market.Oanda), Resolution.Tick));
+            }
 
             var brokerage = (OandaBrokerage)Brokerage;
 
             var stopwatch = Stopwatch.StartNew();
-            foreach (var symbol in symbols)
+            foreach (var config in configs)
             {
-                brokerage.Subscribe(new List<Symbol>
-                {
-                    Symbol.Create(symbol, SecurityType.Forex, Market.Oanda),
-                });
-                //Thread.Sleep(50);
+                brokerage.Subscribe(config, (s, e) => { });
             }
             stopwatch.Stop();
             Console.WriteLine("Subscribe: Elapsed time: " + stopwatch.Elapsed);
@@ -90,12 +112,9 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             Thread.Sleep(10000);
 
             stopwatch.Restart();
-            foreach (var symbol in symbols)
+            foreach (var config in configs)
             {
-                brokerage.Unsubscribe(new List<Symbol>
-                {
-                    Symbol.Create(symbol, SecurityType.Forex, Market.Oanda),
-                });
+                brokerage.Unsubscribe(config);
             }
             Console.WriteLine("Unsubscribe: Elapsed time: " + stopwatch.Elapsed);
 
