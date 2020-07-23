@@ -25,19 +25,31 @@ using System.Threading;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
+    /// <summary>
+    /// Aggregates ticks and bars based on given subscriptions. 
+    /// Current implementation is based on <see cref="IDataConsolidator"/> that consolidates ticks and put them into enumerator.
+    /// </summary>
     public class AggregationManager : IDataAggregator
     {
-        private bool _isDisposed = false;
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly ConcurrentDictionary<Symbol, ConcurrentDictionary<SubscriptionDataConfig, IDataConsolidator>> _consolidators = new ConcurrentDictionary<Symbol, ConcurrentDictionary<SubscriptionDataConfig, IDataConsolidator>>();
 
+        /// <summary>
+        /// Continuous UTC time provider
+        /// </summary>
         protected ITimeProvider TimeProvider { get; set; } = new RealTimeProvider();
 
-        public IEnumerator<BaseData> Add(SubscriptionDataConfig config, EventHandler newDataAvailableHandler)
+        /// <summary>
+        /// Add new subscription to current <see cref="IDataAggregator"/> instance
+        /// </summary>
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Add(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
             IDataConsolidator consolidator;
-            var period = config.Resolution.ToTimeSpan();
-            switch (config.Type.Name)
+            var period = dataConfig.Resolution.ToTimeSpan();
+            switch (dataConfig.Type.Name)
             {
                 case nameof(QuoteBar):
                     consolidator = new TickQuoteBarConsolidator(period);
@@ -63,14 +75,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             ScannableEnumerator<BaseData> enumerator = new ScannableEnumerator<BaseData>(
                 consolidator,
-                config.ExchangeTimeZone,
+                dataConfig.ExchangeTimeZone,
                 TimeProvider,
                 newDataAvailableHandler);
 
             _consolidators.AddOrUpdate(
-                config.Symbol,
-                new ConcurrentDictionary<SubscriptionDataConfig, IDataConsolidator>() { [config] = consolidator },
-                (k, v) => { v.AddOrUpdate(config, consolidator); return v; });
+                dataConfig.Symbol,
+                new ConcurrentDictionary<SubscriptionDataConfig, IDataConsolidator>() { [dataConfig] = consolidator },
+                (k, v) => { v.AddOrUpdate(dataConfig, consolidator); return v; });
 
             return enumerator;
         }
@@ -102,6 +114,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
+        /// <summary>
+        /// Add new data to aggregator
+        /// </summary>
+        /// <param name="input">The new data</param>
         public void Update(BaseData input)
         {
             try
@@ -140,10 +156,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        public void Dispose()
-        {
-            _cancellationTokenSource.Cancel();
-            _cancellationTokenSource.Dispose();
-        }
+        /// <summary>
+        /// Dispose of the aggregation manager.
+        /// </summary>
+        public void Dispose() { }
     }
 }

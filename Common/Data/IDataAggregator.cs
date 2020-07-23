@@ -19,13 +19,31 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Data
 {
+    /// <summary>
+    /// Aggregates ticks and bars based on given subscriptions.
+    /// </summary>
     public interface IDataAggregator : IDisposable
     {
-        IEnumerator<BaseData> Add(SubscriptionDataConfig config, EventHandler newDataAvailableHandler);
+        /// <summary>
+        /// Add new subscription to current <see cref="IDataAggregator"/> instance
+        /// </summary>
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        /// <returns></returns>
+        IEnumerator<BaseData> Add(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler);
 
+        /// <summary>
+        /// Remove the given subscription
+        /// </summary>
+        /// <param name="dataConfig">defines the subscription configuration data.</param>        
+        /// <returns>Returns true if given <see cref="SubscriptionDataConfig"/> was found and succesfully removed; otherwise false.</returns>
         bool Remove(SubscriptionDataConfig dataConfig);
 
+        /// <summary>
+        /// Adds new <see cref="BaseData"/> input into aggregator.
+        /// </summary>
+        /// <param name="input">The new data</param>
         void Update(BaseData input);
-
     }
 }
