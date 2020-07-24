@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Data;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Interfaces
 {
@@ -40,6 +41,12 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="dataConfig">Subscription config to be removed</param>
         void Unsubscribe(SubscriptionDataConfig dataConfig);
+
+        /// <summary>
+        /// Sets the job we're subscribing for
+        /// </summary>
+        /// <param name="job">Job we're subscribing for</param>
+        void SetJob(LiveNodePacket job);
 
         /// <summary>
         /// Returns whether the data provider is connected

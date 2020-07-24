@@ -20,8 +20,6 @@ using com.fxcm.fix;
 using com.fxcm.fix.pretrade;
 using NodaTime;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
@@ -36,6 +34,14 @@ namespace QuantConnect.Brokerages.Fxcm
         private readonly HashSet<Symbol> _subscribedSymbols = new HashSet<Symbol>();
 
         #region IDataQueueHandler implementation
+
+        /// <summary>
+        /// Sets the job we're subscribing for
+        /// </summary>
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
+        {
+        }
 
         /// <summary>
         /// Subscribe to the specified configuration

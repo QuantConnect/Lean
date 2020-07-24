@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using RestSharp;
@@ -55,6 +54,14 @@ namespace QuantConnect.Brokerages.GDAX
             Subscribe(new[] { dataConfig.Symbol });
 
             return enumerator;
+        }
+
+        /// <summary>
+        /// Sets the job we're subscribing for
+        /// </summary>
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
+        {
         }
 
         /// <summary>

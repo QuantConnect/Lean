@@ -29,7 +29,6 @@ using System.Linq;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using Timer = System.Timers.Timer;
-using QuantConnect.Data.UniverseSelection;
 using System.Threading;
 
 namespace QuantConnect.ToolBox.IQFeed
@@ -149,6 +148,13 @@ namespace QuantConnect.ToolBox.IQFeed
             _aggregator.Remove(dataConfig);
         }
 
+        /// <summary>
+        /// Sets the job we're subscribing for
+        /// </summary>
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
+        {
+        }
 
         /// <summary>
         /// Removes the specified symbols to the subscription

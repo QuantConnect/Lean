@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
@@ -42,6 +41,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         public virtual void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
             throw new NotImplementedException("QuantConnect.Queues.LiveDataQueue has not implemented live data.");
+        }
+
+        /// <summary>
+        /// Sets the job we're subscribing for
+        /// </summary>
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
+        {
         }
 
         /// <summary>

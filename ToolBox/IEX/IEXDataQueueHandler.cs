@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Packets;
-using QuantConnect.Configuration;
 using Quobject.SocketIoClientDotNet.Client;
 using QuantConnect.Logging;
 using Newtonsoft.Json.Linq;
@@ -32,7 +31,6 @@ using QuantConnect.Interfaces;
 using NodaTime;
 using System.Globalization;
 using static QuantConnect.StringExtensions;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.ToolBox.IEX
 {
@@ -168,6 +166,14 @@ namespace QuantConnect.ToolBox.IEX
             Subscribe(new[] { dataConfig.Symbol });
 
             return null;
+        }
+
+        /// <summary>
+        /// Sets the job we're subscribing for
+        /// </summary>
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
+        {
         }
 
         /// <summary>
