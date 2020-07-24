@@ -24,6 +24,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -76,6 +77,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         foreach (var baseData in getNextTicksFunction(this))
                         {
+                            if (_cancellationTokenSource.IsCancellationRequested)
+                            {
+                                break;
+                            }
                             emitted = true;
                             _aggregationManager.Update(baseData);
                         }
@@ -91,14 +96,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                     if (!emitted)
                     {
-                        Thread.Sleep(25);
-                    }
-                    else
-                    {
                         Thread.Sleep(1);
                     }
                 }
-            }, TaskCreationOptions.LongRunning);
+            });
         }
 
         /// <summary>
@@ -145,9 +146,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// </summary>
         public void Dispose()
         {
-            _cancellationTokenSource.Cancel();
-            _aggregationManager.Dispose();
-            _cancellationTokenSource.Dispose();
+            if (!_cancellationTokenSource.IsCancellationRequested)
+            {
+                _cancellationTokenSource.Cancel();
+            }
+            _aggregationManager.DisposeSafely();
+            _cancellationTokenSource.DisposeSafely();
         }
 
         private class TestAggregationManager : AggregationManager

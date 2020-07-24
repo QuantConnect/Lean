@@ -21,6 +21,7 @@ using QuantConnect.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -30,8 +31,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class AggregationManager : IDataAggregator
     {
-        private readonly ConcurrentDictionary<SecurityIdentifier, ConcurrentDictionary<SubscriptionDataConfig, ScannableEnumerator<BaseData>>> _enumerators
-            = new ConcurrentDictionary<SecurityIdentifier, ConcurrentDictionary<SubscriptionDataConfig, ScannableEnumerator<BaseData>>>();
+        private readonly ConcurrentDictionary<SecurityIdentifier, List<KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>>> _enumerators
+            = new ConcurrentDictionary<SecurityIdentifier, List<KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>>>();
 
         /// <summary>
         /// Continuous UTC time provider
@@ -80,8 +81,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _enumerators.AddOrUpdate(
                 dataConfig.Symbol.ID,
-                new ConcurrentDictionary<SubscriptionDataConfig, ScannableEnumerator<BaseData>> { [dataConfig] = enumerator },
-                (k, v) => { v.AddOrUpdate(dataConfig, enumerator); return v; });
+                new List<KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>> { new KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>(dataConfig, enumerator) },
+                (k, v) => { return v.Concat(new[] { new KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>(dataConfig, enumerator) }).ToList(); });
 
             return enumerator;
         }
@@ -92,18 +93,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="dataConfig">Subscription data configuration to be removed</param>
         public bool Remove(SubscriptionDataConfig dataConfig)
         {
-            ConcurrentDictionary<SubscriptionDataConfig, ScannableEnumerator<BaseData>> enumerators;
+            List<KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>> enumerators;
             if (_enumerators.TryGetValue(dataConfig.Symbol.ID, out enumerators))
             {
                 if (enumerators.Count == 1)
                 {
-                    ConcurrentDictionary<SubscriptionDataConfig, ScannableEnumerator<BaseData>> output;
+                    List<KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>> output;
                     return _enumerators.TryRemove(dataConfig.Symbol.ID, out output);
                 }
                 else
                 {
-                    ScannableEnumerator<BaseData> output;
-                    return enumerators.TryRemove(dataConfig, out output);
+                    _enumerators[dataConfig.Symbol.ID] = enumerators.Where(pair => pair.Key != dataConfig).ToList();
+                    return true;
                 }
             }
             else
@@ -121,11 +122,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             try
             {
-                ConcurrentDictionary<SubscriptionDataConfig, ScannableEnumerator<BaseData>> enumerators;
+                List<KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>> enumerators;
                 if (_enumerators.TryGetValue(input.Symbol.ID, out enumerators))
                 {
-                    foreach (var kvp in enumerators)
+                    for (var i = 0; i < enumerators.Count; i++)
                     {
+                        var kvp = enumerators[i];
+
                         // for non tick resolution subscriptions drop suspicious ticks
                         if (kvp.Key.Resolution != Resolution.Tick)
                         {

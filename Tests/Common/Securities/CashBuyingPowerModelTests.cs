@@ -858,7 +858,10 @@ namespace QuantConnect.Tests.Common.Securities
 
                 _algorithm.LimitOrder(symbol, quantity, limitPrice);
 
-                resetEvent.WaitOne();
+                if (!resetEvent.WaitOne(5000))
+                {
+                    throw new TimeoutException("SubmitLimitOrder");
+                }
 
                 _brokerage.OrderStatusChanged -= handler;
             }
@@ -874,7 +877,10 @@ namespace QuantConnect.Tests.Common.Securities
 
                 _algorithm.StopMarketOrder(symbol, quantity, stopPrice);
 
-                resetEvent.WaitOne();
+                if (!resetEvent.WaitOne(5000))
+                {
+                    throw new TimeoutException("SubmitStopMarketOrder");
+                }
 
                 _brokerage.OrderStatusChanged -= handler;
             }
