@@ -48,6 +48,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TearDown]
         public void TearDown()
         {
+            _feed.Exit();
             _synchronizer.DisposeSafely();
         }
 

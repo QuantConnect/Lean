@@ -122,7 +122,6 @@ namespace QuantConnect.Parameters
             var parameters = new Dictionary<string, string>();
             foreach (var type in assembly.GetTypes())
             {
-                Log.Debug($"ParameterAttribute.GetParametersFromAssembly(): Checking type {type.Name}");
                 foreach (var kvp in GetParametersFromType(type))
                 {
                     parameters[kvp.Key] = kvp.Value;

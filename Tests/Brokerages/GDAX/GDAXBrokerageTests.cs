@@ -31,9 +31,7 @@ using QuantConnect.Brokerages.GDAX.Messages;
 using QuantConnect.Util;
 using Order = QuantConnect.Orders.Order;
 using QuantConnect.Data;
-using System.Collections.Concurrent;
 using QuantConnect.Lean.Engine.DataFeeds;
-using Deedle;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
