@@ -91,7 +91,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                     if (!emitted)
                     {
-                        Thread.Sleep(20);
+                        Thread.Sleep(25);
+                    }
+                    else
+                    {
+                        Thread.Sleep(1);
                     }
                 }
             }, TaskCreationOptions.LongRunning);
@@ -125,7 +129,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// <summary>
         /// Removes the specified configuration
         /// </summary>
-        /// <param name="dataConfig">Job we're processing.</param>
+        /// <param name="dataConfig">The data config to remove</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
             lock (_subscriptions)

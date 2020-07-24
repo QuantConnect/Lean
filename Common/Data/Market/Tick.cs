@@ -180,6 +180,15 @@ namespace QuantConnect.Data.Market
             AskPrice = ask;
         }
 
+        /// <summary>
+        /// Trade tick type constructor
+        /// </summary>
+        /// <param name="time">Full date and time</param>
+        /// <param name="symbol">Underlying equity security symbol</param>
+        /// <param name="saleCondition">The ticks sale condition</param>
+        /// <param name="exchange">The ticks exchange</param>
+        /// <param name="quantity">The quantity traded</param>
+        /// <param name="price">The price of the trade</param>
         public Tick(DateTime time, Symbol symbol, string saleCondition, string exchange, decimal quantity, decimal price)
         {
             Value = price;
@@ -193,6 +202,17 @@ namespace QuantConnect.Data.Market
             Suspicious = false;
         }
 
+        /// <summary>
+        /// Quote tick type constructor
+        /// </summary>
+        /// <param name="time">Full date and time</param>
+        /// <param name="symbol">Underlying equity security symbol</param>
+        /// <param name="saleCondition">The ticks sale condition</param>
+        /// <param name="exchange">The ticks exchange</param>
+        /// <param name="bidSize">The bid size</param>
+        /// <param name="bidPrice">The bid price</param>
+        /// <param name="askSize">The ask size</param>
+        /// <param name="askPrice">The ask price</param>
         public Tick(DateTime time, Symbol symbol, string saleCondition, string exchange, decimal bidSize, decimal bidPrice, decimal askSize, decimal askPrice)
         {
             Time = time;
