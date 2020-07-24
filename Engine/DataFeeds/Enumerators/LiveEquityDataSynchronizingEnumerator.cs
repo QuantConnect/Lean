@@ -64,9 +64,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 return true;
 
             // advance enumerators with no current data
-            foreach (var auxDataEnumerator in _auxDataEnumerators.Where(enumerator => enumerator.Current == null))
+            for (var i = 0; i < _auxDataEnumerators.Count; i++)
             {
-                auxDataEnumerator.MoveNext();
+                if (_auxDataEnumerators[i].Current == null)
+                {
+                    _auxDataEnumerators[i].MoveNext();
+                }
             }
             if (_tradeBarAggregator.Current == null) _tradeBarAggregator.MoveNext();
 
@@ -120,10 +123,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
         private bool DataPointEmitted(DateTime frontierUtc)
         {
-            var auxDataEnumerator = _auxDataEnumerators
-                .Where(enumerator => enumerator.Current != null)
-                .OrderBy(enumerator => enumerator.Current.EndTime)
-                .FirstOrDefault();
+            // we get the aux enumerator that has the smallest endTime if any
+            IEnumerator<BaseData> auxDataEnumerator = null;
+            for (var i = 0; i < _auxDataEnumerators.Count; i++)
+            {
+                var currentEnum = _auxDataEnumerators[i];
+                if (currentEnum.Current != null)
+                {
+                    if (auxDataEnumerator == null)
+                    {
+                        auxDataEnumerator = currentEnum;
+                    }
+                    else
+                    {
+                        auxDataEnumerator = auxDataEnumerator.Current.EndTime > currentEnum.Current.EndTime ? currentEnum : auxDataEnumerator;
+                    }
+                }
+            }
 
             // check if any enumerator is ready to emit
             if (auxDataEnumerator?.Current != null && _tradeBarAggregator.Current != null)

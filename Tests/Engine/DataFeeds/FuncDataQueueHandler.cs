@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                     else
                     {
-                        Thread.Sleep(25);
+                        Thread.Sleep(10);
                     }
                 }
             }, TaskCreationOptions.LongRunning);
