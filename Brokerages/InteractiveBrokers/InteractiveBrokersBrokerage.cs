@@ -2243,6 +2243,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private TimeSpan _brokerTimeDiff = new TimeSpan(0);
 
         /// <summary>
+        /// Sets the job we're subscribing for
+        /// </summary>
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
+        {
+        }
+
+        /// <summary>
         /// Subscribe to the specified configuration
         /// </summary>
         /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>

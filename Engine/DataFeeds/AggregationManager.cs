@@ -127,7 +127,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     foreach (var kvp in enumerators)
                     {
                         // for non tick resolution subscriptions drop suspicious ticks
-                        if (kvp.Key.Resolution != Resolution.Tick && input.DataType == MarketDataType.Tick)
+                        if (kvp.Key.Resolution != Resolution.Tick)
                         {
                             var tick = input as Tick;
                             if (tick != null && tick.Suspicious)

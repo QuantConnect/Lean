@@ -23,6 +23,7 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -33,8 +34,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     public class FuncDataQueueHandler : IDataQueueHandler
     {
         private readonly HashSet<SubscriptionDataConfig> _subscriptions;
-        private readonly AggregationManager _aggregationManager;
         private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly AggregationManager _aggregationManager;
+        private List<Symbol> _symbols;
 
         /// <summary>
         /// Gets the subscriptions configurations currently being managed by the queue handler
@@ -49,7 +51,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// </summary>
         public List<Symbol> Subscriptions
         {
-            get { lock (_subscriptions) return _subscriptions.Select(config => config.Symbol).Distinct().ToList(); }
+            get { lock (_subscriptions) return _symbols; }
         }
 
         /// <summary>
@@ -90,16 +92,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         Log.Error(exception);
                     }
 
-                    if (emitted)
+                    if (!emitted)
                     {
-                        Thread.Sleep(1);
-                    }
-                    else
-                    {
-                        Thread.Sleep(10);
+                        Thread.Sleep(15);
                     }
                 }
             }, TaskCreationOptions.LongRunning);
+        }
+
+        /// <summary>
+        /// Sets the job we're subscribing for
+        /// </summary>
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
+        {
         }
 
         /// <summary>
@@ -111,7 +117,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
             var enumerator = _aggregationManager.Add(dataConfig, newDataAvailableHandler);
-            lock (_subscriptions) _subscriptions.Add(dataConfig);
+            lock (_subscriptions)
+            {
+                _subscriptions.Add(dataConfig);
+                _symbols = _subscriptions.Select(config => config.Symbol).Distinct().ToList();
+            }
             return enumerator;
         }
 
@@ -121,7 +131,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// <param name="dataConfig">Job we're processing.</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            lock (_subscriptions) _subscriptions.Remove(dataConfig);
+            lock (_subscriptions)
+            {
+                _subscriptions.Remove(dataConfig);
+                _symbols = _subscriptions.Select(config => config.Symbol).Distinct().ToList();
+            }
             _aggregationManager.Remove(dataConfig);
         }
 

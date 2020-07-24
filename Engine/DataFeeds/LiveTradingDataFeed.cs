@@ -92,6 +92,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _subscriptions = subscriptionManager.DataFeedSubscriptions;
 
             _dataQueueHandler = GetDataQueueHandler();
+            _dataQueueHandler?.SetJob(_job);
 
             // run the exchanges
             Task.Run(() => _customExchange.Start(_cancellationTokenSource.Token));

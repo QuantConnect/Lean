@@ -24,6 +24,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Packets;
 using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.CoinApi
@@ -74,6 +75,14 @@ namespace QuantConnect.ToolBox.CoinApi
             Subscribe(new[] { dataConfig.Symbol });
 
             return enumerator;
+        }
+
+        /// <summary>
+        /// Sets the job we're subscribing for
+        /// </summary>
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
+        {
         }
 
         /// <summary>
