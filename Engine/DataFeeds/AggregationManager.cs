@@ -21,7 +21,6 @@ using QuantConnect.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -44,7 +43,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
         /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
         /// <returns>The new enumerator for this subscription request</returns>
-        /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Add(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
             IDataConsolidator consolidator;
@@ -64,12 +62,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     break;
 
                 case nameof(Tick):
-                    consolidator = FilteredIdentityDataConsolidator.ForTickType(config.TickType);
+                    consolidator = FilteredIdentityDataConsolidator.ForTickType(dataConfig.TickType);
                     break;
 
                 default:
                     // streaming custom data subscriptions can pass right through
-                    consolidator = new FilteredIdentityDataConsolidator<BaseData>(data => data.GetType() == config.Type);
+                    consolidator = new FilteredIdentityDataConsolidator<BaseData>(data => data.GetType() == dataConfig.Type);
                     break;
             }
 
