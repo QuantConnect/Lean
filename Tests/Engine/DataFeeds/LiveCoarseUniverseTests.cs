@@ -154,6 +154,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             algorithm.DataManager.RemoveAllSubscriptions();
             dataQueueHandler.DisposeSafely();
+            synchronizer.DisposeSafely();
         }
     }
 }

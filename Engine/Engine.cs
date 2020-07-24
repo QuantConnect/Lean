@@ -396,6 +396,8 @@ namespace QuantConnect.Lean.Engine
                     dataManager?.RemoveAllSubscriptions();
                     workerThread?.Dispose();
                 }
+
+                synchronizer.DisposeSafely();
                 // Close data feed, alphas. Could be running even if algorithm initialization failed
                 AlgorithmHandlers.DataFeed.Exit();
                 AlgorithmHandlers.Alphas.Exit();

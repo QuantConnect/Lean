@@ -30,13 +30,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class LiveSynchronizer : Synchronizer
     {
         private ITimeProvider _timeProvider;
-        private readonly AutoResetEvent _newLiveDataEmitted = new AutoResetEvent(false);
+        private readonly ManualResetEventSlim _newLiveDataEmitted = new ManualResetEventSlim(false);
         private RealTimeScheduleEventService _realTimeScheduleEventService;
-
-        /// <summary>
-        /// Maximum time to wait for new live data before synchronizing the data feed subscriptions
-        /// </summary>
-        protected virtual TimeSpan NewLiveDataTimeout { get; } = TimeSpan.FromMilliseconds(500);
 
         /// <summary>
         /// Continuous UTC time provider
@@ -66,7 +61,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 subscription.NewDataAvailable -= OnSubscriptionNewDataAvailable;
             };
 
-            _realTimeScheduleEventService = new RealTimeScheduleEventService(_timeProvider);
+            _realTimeScheduleEventService = new RealTimeScheduleEventService(new RealTimeProvider());
+            // this schedule event will be our time pulse
             _realTimeScheduleEventService.NewEvent += (sender, args) => _newLiveDataEmitted.Set();
         }
 
@@ -89,14 +85,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (!previousWasTimePulse)
                 {
-                    if (!_newLiveDataEmitted.WaitOne())
+                    if (!_newLiveDataEmitted.IsSet)
                     {
-                        // what's missing for the current second to end
-                        var millisecond = 1000 - DateTime.UtcNow.Millisecond;
-                        _realTimeScheduleEventService.ScheduleEvent(TimeSpan.FromMilliseconds(millisecond), _timeProvider.GetUtcNow());
-
-                        _newLiveDataEmitted.WaitOne();
+                        var now = DateTime.UtcNow;
+                        // if we just crossed into the next second let's loop again, we will flush any consolidator bar
+                        // else we will wait to be notified by the subscriptions or our scheduled event service every second
+                        if (now.Millisecond > 10)
+                        {
+                            _realTimeScheduleEventService.ScheduleEvent(TimeSpan.FromMilliseconds(GetPulseDueTime(now)), now);
+                            _newLiveDataEmitted.Wait();
+                        }
                     }
+                    _newLiveDataEmitted.Reset();
                 }
 
                 TimeSlice timeSlice;
@@ -155,9 +155,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            _realTimeScheduleEventService.DisposeSafely();
             enumerator.DisposeSafely();
             Log.Trace("LiveSynchronizer.GetEnumerator(): Exited thread.");
+        }
+
+        /// <summary>
+        /// Free resources
+        /// </summary>
+        public override void Dispose()
+        {
+            _newLiveDataEmitted.Set();
+            _newLiveDataEmitted?.DisposeSafely();
+            _realTimeScheduleEventService?.DisposeSafely();
         }
 
         /// <summary>
@@ -168,6 +177,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected override ITimeProvider GetTimeProvider()
         {
             return new RealTimeProvider();
+        }
+
+        /// <summary>
+        /// Will return the amount of milliseconds that are missing for the next time pulse
+        /// </summary>
+        protected virtual int GetPulseDueTime(DateTime now)
+        {
+            // let's wait until the next second starts
+            return 1000 - now.Millisecond;
         }
 
         private void OnSubscriptionNewDataAvailable(object sender, EventArgs args)

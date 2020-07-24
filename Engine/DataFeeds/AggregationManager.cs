@@ -30,7 +30,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class AggregationManager : IDataAggregator
     {
-        private readonly ConcurrentDictionary<Symbol, ConcurrentDictionary<SubscriptionDataConfig, IDataConsolidator>> _consolidators = new ConcurrentDictionary<Symbol, ConcurrentDictionary<SubscriptionDataConfig, IDataConsolidator>>();
+        private readonly ConcurrentDictionary<Symbol, ConcurrentDictionary<SubscriptionDataConfig, ScannableEnumerator<BaseData>>> _enumerators
+            = new ConcurrentDictionary<Symbol, ConcurrentDictionary<SubscriptionDataConfig, ScannableEnumerator<BaseData>>>();
 
         /// <summary>
         /// Continuous UTC time provider
@@ -47,17 +48,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             IDataConsolidator consolidator;
             var period = dataConfig.Resolution.ToTimeSpan();
+            var isPeriodBased = false;
             switch (dataConfig.Type.Name)
             {
                 case nameof(QuoteBar):
+                    isPeriodBased = dataConfig.Resolution != Resolution.Tick;
                     consolidator = new TickQuoteBarConsolidator(period);
                     break;
 
                 case nameof(TradeBar):
+                    isPeriodBased = dataConfig.Resolution != Resolution.Tick;
                     consolidator = new TickConsolidator(period);
                     break;
 
                 case nameof(OpenInterest):
+                    isPeriodBased = dataConfig.Resolution != Resolution.Tick;
                     consolidator = new OpenInterestConsolidator(period);
                     break;
 
@@ -71,16 +76,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     break;
             }
 
-            ScannableEnumerator<BaseData> enumerator = new ScannableEnumerator<BaseData>(
-                consolidator,
-                dataConfig.ExchangeTimeZone,
-                TimeProvider,
-                newDataAvailableHandler);
+            var enumerator = new ScannableEnumerator<BaseData>(consolidator, dataConfig.ExchangeTimeZone, TimeProvider, newDataAvailableHandler, isPeriodBased);
 
-            _consolidators.AddOrUpdate(
+            _enumerators.AddOrUpdate(
                 dataConfig.Symbol,
-                new ConcurrentDictionary<SubscriptionDataConfig, IDataConsolidator>() { [dataConfig] = consolidator },
-                (k, v) => { v.AddOrUpdate(dataConfig, consolidator); return v; });
+                new ConcurrentDictionary<SubscriptionDataConfig, ScannableEnumerator<BaseData>> { [dataConfig] = enumerator },
+                (k, v) => { v.AddOrUpdate(dataConfig, enumerator); return v; });
 
             return enumerator;
         }
@@ -91,23 +92,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="dataConfig">Subscription data configuration to be removed</param>
         public bool Remove(SubscriptionDataConfig dataConfig)
         {
-            ConcurrentDictionary<SubscriptionDataConfig, IDataConsolidator> consolidators;
-            if (_consolidators.TryGetValue(dataConfig.Symbol, out consolidators))
+            ConcurrentDictionary<SubscriptionDataConfig, ScannableEnumerator<BaseData>> enumerators;
+            if (_enumerators.TryGetValue(dataConfig.Symbol, out enumerators))
             {
-                if (consolidators.Count == 1)
+                if (enumerators.Count == 1)
                 {
-                    ConcurrentDictionary<SubscriptionDataConfig, IDataConsolidator> output;
-                    return _consolidators.TryRemove(dataConfig.Symbol, out output);
+                    ConcurrentDictionary<SubscriptionDataConfig, ScannableEnumerator<BaseData>> output;
+                    return _enumerators.TryRemove(dataConfig.Symbol, out output);
                 }
                 else
                 {
-                    IDataConsolidator output;
-                    return consolidators.TryRemove(dataConfig, out output);
+                    ScannableEnumerator<BaseData> output;
+                    return enumerators.TryRemove(dataConfig, out output);
                 }
             }
             else
             {
-                Log.Trace($"AggregationManager.Update(): IDataConsolidator for symbol ({dataConfig.Symbol.Value}) was not found.");
+                Log.Debug($"AggregationManager.Update(): IDataConsolidator for symbol ({dataConfig.Symbol.Value}) was not found.");
                 return false;
             }
         }
@@ -120,10 +121,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             try
             {
-                ConcurrentDictionary<SubscriptionDataConfig, IDataConsolidator> consolidators;
-                if (_consolidators.TryGetValue(input.Symbol, out consolidators))
+                ConcurrentDictionary<SubscriptionDataConfig, ScannableEnumerator<BaseData>> enumerators;
+                if (_enumerators.TryGetValue(input.Symbol, out enumerators))
                 {
-                    foreach (var kvp in consolidators)
+                    foreach (var kvp in enumerators)
                     {
                         // for non tick resolution subscriptions drop suspicious ticks
                         if (kvp.Key.Resolution != Resolution.Tick && input.DataType == MarketDataType.Tick)
@@ -135,16 +136,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             }
                         }
 
-                        var consolidator = kvp.Value;
-                        if (consolidator.InputType != typeof(BaseData) && input.GetType() != consolidator.InputType)
-                        {
-                            continue;
-                        }
-
-                        lock (consolidator)
-                        {
-                            consolidator.Update(input);
-                        }
+                        kvp.Value.Update(input);
                     }
                 }
             }

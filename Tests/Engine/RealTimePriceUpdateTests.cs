@@ -29,6 +29,7 @@ using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine
 {
@@ -37,6 +38,7 @@ namespace QuantConnect.Tests.Engine
     {
         private TestableLiveTradingDataFeed _liveTradingDataFeed;
         private SecurityExchangeHours _exchangeHours;
+        private LiveSynchronizer _liveSynchronizer;
         private SubscriptionDataConfig _config;
 
         [OneTimeSetUp]
@@ -80,10 +82,10 @@ namespace QuantConnect.Tests.Engine
                 RegisteredSecurityDataTypesProvider.Null,
                 dataPermissionManager);
             algo.SubscriptionManager.SetDataManager(dataManager);
-            var synchronizer = new LiveSynchronizer();
-            synchronizer.Initialize(algo, dataManager);
+            _liveSynchronizer = new LiveSynchronizer();
+            _liveSynchronizer.Initialize(algo, dataManager);
             _liveTradingDataFeed.Initialize(algo, jobPacket, new LiveTradingResultHandler(), new LocalDiskMapFileProvider(),
-                                            null, new DefaultDataProvider(), dataManager, synchronizer, new DataChannelProvider());
+                                            null, new DefaultDataProvider(), dataManager, _liveSynchronizer, new DataChannelProvider());
             algo.Initialize();
 
             _config = SecurityTests.CreateTradeBarConfig();
@@ -102,6 +104,7 @@ namespace QuantConnect.Tests.Engine
         public void TearDown()
         {
             _liveTradingDataFeed.Exit();
+            _liveSynchronizer.DisposeSafely();
         }
 
 

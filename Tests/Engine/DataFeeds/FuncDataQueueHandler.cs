@@ -72,10 +72,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 while (!_cancellationTokenSource.IsCancellationRequested)
                 {
+                    var emitted = false;
                     try
                     {
                         foreach (var baseData in getNextTicksFunction(this))
                         {
+                            emitted = true;
                             _aggregationManager.Update(baseData);
                         }
                     }
@@ -87,9 +89,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         }
                         Log.Error(exception);
                     }
-                    Thread.Sleep(1);
+
+                    if (emitted)
+                    {
+                        Thread.Sleep(1);
+                    }
+                    else
+                    {
+                        Thread.Sleep(25);
+                    }
                 }
-            });
+            }, TaskCreationOptions.LongRunning);
         }
 
         /// <summary>

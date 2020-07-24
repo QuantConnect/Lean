@@ -908,7 +908,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             while (!brokerage.ShouldPerformCashSync(transactionHandler.TestCurrentTimeUtc))
             {
                 count++;
-                if (count > 20)
+                if (count > 40)
                 {
                     Assert.Fail("Timeout waiting for ShouldPerformCashSync");
                 }
