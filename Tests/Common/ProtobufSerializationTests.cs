@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using ProtoBuf;
@@ -137,7 +138,7 @@ namespace QuantConnect.Tests.Common
             // verify its correct
             using (var stream = new MemoryStream(serializedTick))
             {
-                var result = Serializer.Deserialize<Tick>(stream);
+                var result = (Tick) Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
                 Assert.AreEqual(tick.Symbol, result.Symbol);
                 Assert.AreEqual(tick.AskPrice, result.AskPrice);
@@ -176,7 +177,7 @@ namespace QuantConnect.Tests.Common
             using (var stream = new MemoryStream(serializedTradeBar))
             {
                 // verify its correct
-                var result = Serializer.Deserialize<TradeBar>(stream);
+                var result = (TradeBar) Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
                 Assert.AreEqual(tradeBar.Symbol, result.Symbol);
                 Assert.AreEqual(tradeBar.Time, result.Time);
@@ -212,7 +213,7 @@ namespace QuantConnect.Tests.Common
             using (var stream = new MemoryStream(serializedQuoteBar))
             {
                 // verify its correct
-                var result = (QuoteBar)Serializer.Deserialize<BaseData>(stream);
+                var result = (QuoteBar)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
                 Assert.AreEqual(quoteBar.Symbol, result.Symbol);
                 Assert.AreEqual(quoteBar.Time, result.Time);
@@ -254,7 +255,7 @@ namespace QuantConnect.Tests.Common
             var serializedDividend = dividend.ProtobufSerialize();
             using (var stream = new MemoryStream(serializedDividend))
             {
-                var result = (Dividend)Serializer.Deserialize<BaseData>(stream);
+                var result = (Dividend)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
                 Assert.AreEqual(dividend.DataType, result.DataType);
                 Assert.AreEqual(dividend.Distribution, result.Distribution);
@@ -274,7 +275,7 @@ namespace QuantConnect.Tests.Common
             var serializedSplit = split.ProtobufSerialize();
             using (var stream = new MemoryStream(serializedSplit))
             {
-                var result = (Split)Serializer.Deserialize<BaseData>(stream);
+                var result = (Split)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
                 Assert.AreEqual(split.Type, result.Type);
                 Assert.AreEqual(split.DataType, result.DataType);
