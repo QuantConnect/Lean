@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
     public class GDAXBrokerageTests
     {
         #region Declarations
-        GDAXFakeBrokerage _unit;
+        GDAXFakeDataQueueHandler _unit;
         Mock<IWebSocket> _wss = new Mock<IWebSocket>();
         Mock<IRestClient> _rest = new Mock<IRestClient>();
         Mock<IAlgorithm> _algo = new Mock<IAlgorithm>();
@@ -64,7 +64,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             var priceProvider = new Mock<IPriceProvider>();
             priceProvider.Setup(x => x.GetLastPrice(It.IsAny<Symbol>())).Returns(1.234m);
 
-            _unit = new GDAXFakeBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass", _algo.Object, priceProvider.Object, new AggregationManager());
+            _unit = new GDAXFakeDataQueueHandler("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass", _algo.Object, priceProvider.Object, new AggregationManager());
             _orderData = File.ReadAllText("TestData//gdax_order.txt");
             _matchData = File.ReadAllText("TestData//gdax_match.txt");
             _openOrderData = File.ReadAllText("TestData//gdax_openOrders.txt");
@@ -411,39 +411,14 @@ namespace QuantConnect.Tests.Brokerages.GDAX
                 false);
         }
 
-        private class GDAXFakeBrokerage : GDAXBrokerage, IDataQueueHandler
+        private class GDAXFakeDataQueueHandler : GDAXDataQueueHandler
         {
-            /// <summary>
-            /// Initializes a new instance of the <see cref="GDAXDataQueueHandler"/> class
-            /// </summary>
-            public GDAXFakeBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
+            protected override string[] ChannelNames => new[] { "heartbeat", "user" };
+
+            public GDAXFakeDataQueueHandler(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
                 IPriceProvider priceProvider, IDataAggregator aggregator)
-                : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator)
+            : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator)
             {
-            }
-
-            /// <summary>
-            /// Subscribe to the specified configuration
-            /// </summary>
-            /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
-            /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
-            /// <returns>The new enumerator for this subscription request</returns>
-            public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
-            {
-                Subscribe(new[] { dataConfig.Symbol });
-
-                var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
-                return enumerator;
-            }
-
-            /// <summary>
-            /// Removes the specified configuration
-            /// </summary>
-            /// <param name="dataConfig">Subscription config to be removed</param>
-            public void Unsubscribe(SubscriptionDataConfig dataConfig)
-            {
-                Unsubscribe(new Symbol[] { dataConfig.Symbol });
-                _aggregator.Remove(dataConfig);
             }
         }
     }

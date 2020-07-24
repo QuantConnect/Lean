@@ -100,8 +100,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            var enumerator = _aggregationManager.Add(dataConfig, newDataAvailableHandler);
             lock (_subscriptions) _subscriptions.Add(dataConfig);
-            return _aggregationManager.Add(dataConfig, newDataAvailableHandler);
+            return enumerator;
         }
 
         /// <summary>

@@ -70,9 +70,10 @@ namespace QuantConnect.ToolBox.CoinApi
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            var enumerator = _dataAggregator.Add(dataConfig, newDataAvailableHandler);
             Subscribe(new[] { dataConfig.Symbol });
 
-            return _dataAggregator.Add(dataConfig, newDataAvailableHandler);
+            return enumerator;
         }
 
         /// <summary>
