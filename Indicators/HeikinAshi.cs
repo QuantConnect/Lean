@@ -54,16 +54,6 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> Volume { get; }
 
         /// <summary>
-        /// Gets the Heikin-Ashi Symbol
-        /// </summary>
-        public Symbol Symbol { get; private set; }
-
-        /// <summary>
-        /// Gets the Heikin-Ashi current TradeBar
-        /// </summary>
-        public TradeBar CurrentBar => new TradeBar(Open.Current.Time, Symbol, Open, High, Low, Close, Volume);
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="HeikinAshi"/> class using the specified name.
         /// </summary> 
         /// <param name="name">The name of this indicator</param>
@@ -128,8 +118,6 @@ namespace QuantConnect.Indicators
             }
             Volume.Update(input.Time, volume);
 
-            Symbol = input.Symbol;
-
             return Close;
         }
 
@@ -143,7 +131,6 @@ namespace QuantConnect.Indicators
             Low.Reset();
             Close.Reset();
             Volume.Reset();
-            Symbol = Symbol.Empty;
             base.Reset();
         }
     }
