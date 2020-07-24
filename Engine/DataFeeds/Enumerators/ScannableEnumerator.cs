@@ -33,6 +33,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private T _current;
         private bool _consolidated;
         private bool _isPeriodBase;
+        private bool _validateInputType;
+        private Type _consolidatorInputType;
         private readonly DateTimeZone _timeZone;
         private readonly ConcurrentQueue<T> _queue;
         private readonly ITimeProvider _timeProvider;
@@ -70,6 +72,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _consolidator = consolidator;
             _isPeriodBase = isPeriodBased;
             _queue = new ConcurrentQueue<T>();
+            _consolidatorInputType = consolidator.InputType;
+            _validateInputType = _consolidatorInputType != typeof(BaseData);
             var newDataAvailableHandler1 = newDataAvailableHandler ?? ((s, e) => { });
 
             _consolidator.DataConsolidated += (sender, data) =>
@@ -87,7 +91,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public void Update(T data)
         {
             // if the input type of the consolidator isn't generic we validate it's correct before sending it in
-            if (_consolidator.InputType != typeof(BaseData) && data.GetType() != _consolidator.InputType)
+            if (_validateInputType && data.GetType() != _consolidatorInputType)
             {
                 return;
             }
