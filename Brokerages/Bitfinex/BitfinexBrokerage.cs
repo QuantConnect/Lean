@@ -28,7 +28,6 @@ using System.Linq;
 using System.Net;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities.Crypto;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -456,6 +455,5 @@ namespace QuantConnect.Brokerages.Bitfinex
             _aggregator.Dispose();
             _restRateLimiter.Dispose();
         }
-
     }
 }

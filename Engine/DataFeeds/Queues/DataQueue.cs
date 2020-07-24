@@ -26,7 +26,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
     /// </summary>
     public class LiveDataQueue : IDataQueueHandler
     {
-
         /// <summary>
         /// Desktop/Local doesn't support live data from this handler
         /// </summary>

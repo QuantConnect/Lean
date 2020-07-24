@@ -130,6 +130,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             if (!_queue.TryDequeue(out _current) && _isPeriodBase)
             {
+                _consolidated = false;
                 lock (_consolidator)
                 {
                     // if there is a working bar we will try to pull it out if the time is right, each consolidator knows when it's right
@@ -143,7 +144,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                 if (_consolidated)
                 {
-                    _consolidated = false;
                     _queue.TryDequeue(out _current);
                 }
             }
