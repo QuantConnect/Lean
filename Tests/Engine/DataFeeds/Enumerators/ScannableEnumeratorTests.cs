@@ -15,10 +15,7 @@
 */
 
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using NodaTime;
-using NodaTime.TimeZones;
 using NUnit.Framework;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
@@ -33,10 +30,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [Test]
         public void PassesTicksStraightThrough()
         {
-            var consolidator = new IdentityDataConsolidator<Tick>();
             var currentTime = new DateTime(2000, 01, 01);
             var enumerator = new ScannableEnumerator<Tick>(
-                consolidator,
+                new IdentityDataConsolidator<Tick>(),
                 DateTimeZone.ForOffset(Offset.FromHours(-5)),
                 new ManualTimeProvider(currentTime),
                 (s, e) => { }
@@ -47,7 +43,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsNull(enumerator.Current);
 
             var tick1 = new Tick(currentTime, Symbols.SPY, 199.55m, 199, 200) { Quantity = 10 };
-            consolidator.Update(tick1);
+            enumerator.Update(tick1);
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual(tick1, enumerator.Current);
 
@@ -55,7 +51,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsNull(enumerator.Current);
 
             var tick2 = new Tick(currentTime, Symbols.SPY, 199.56m, 199.21m, 200.02m) { Quantity = 5 };
-            consolidator.Update(tick2);
+            enumerator.Update(tick2);
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual(tick2, enumerator.Current);
 
@@ -65,11 +61,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [Test]
         public void NewDataAvailableShouldFire()
         {
-            var consolidator = new IdentityDataConsolidator<Tick>();
             var currentTime = new DateTime(2000, 01, 01);
             var available = false;
             var enumerator = new ScannableEnumerator<Tick>(
-                consolidator,
+                new IdentityDataConsolidator<Tick>(),
                 DateTimeZone.ForOffset(Offset.FromHours(-5)),
                 new ManualTimeProvider(currentTime),
                 (s, e) => { available = true; }
@@ -81,7 +76,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsFalse(available);
 
             var tick1 = new Tick(currentTime, Symbols.SPY, 199.55m, 199, 200) { Quantity = 10 };
-            consolidator.Update(tick1);
+            enumerator.Update(tick1);
             Assert.IsTrue(available);
 
             enumerator.Dispose();
@@ -90,11 +85,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [Test]
         public void AggregatesNewQuoteBarProperly()
         {
-            var consolidator = new TickQuoteBarConsolidator(4);
             var reference = DateTime.Today;
 
             var enumerator = new ScannableEnumerator<Data.BaseData>(
-                consolidator,
+                new TickQuoteBarConsolidator(4),
                 DateTimeZone.ForOffset(Offset.FromHours(-5)),
                 new ManualTimeProvider(reference),
                 (s, e) => { }
@@ -108,7 +102,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 BidSize = 20,
                 TickType = TickType.Quote
             };
-            consolidator.Update(tick1);
+            enumerator.Update(tick1);
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 
@@ -133,11 +127,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 Quantity = 1234,
                 TickType = TickType.Trade
             };
-            consolidator.Update(badTick);
+            enumerator.Update(badTick);
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 
-            consolidator.Update(tick2);
+            enumerator.Update(tick2);
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 
@@ -149,7 +143,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 BidSize = 50,
                 TickType = TickType.Quote
             };
-            consolidator.Update(tick3);
+            enumerator.Update(tick3);
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 
@@ -161,7 +155,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 AskSize = 15,
                 TickType = TickType.Quote
             };
-            consolidator.Update(tick4);
+            enumerator.Update(tick4);
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
 
@@ -187,64 +181,64 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [Test]
         public void ForceScanQuoteBar()
         {
-            var consolidator = new TickQuoteBarConsolidator(TimeSpan.FromMinutes(1));
-            var reference = DateTime.Today;
-
+            var reference = new DateTime(2020, 2, 2, 1, 0, 0);
+            var timeProvider = new ManualTimeProvider(reference);
+            var dateTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
             var enumerator = new ScannableEnumerator<Data.BaseData>(
-                consolidator,
-                DateTimeZone.ForOffset(Offset.FromHours(-5)),
-                new ManualTimeProvider(reference),
+                new TickQuoteBarConsolidator(TimeSpan.FromMinutes(1)),
+                dateTimeZone,
+                timeProvider,
                 (s, e) => { }
             );
 
             var tick1 = new Tick
             {
                 Symbol = Symbols.SPY,
-                Time = reference,
+                Time = reference.ConvertFromUtc(dateTimeZone),
                 BidPrice = 10,
                 BidSize = 20,
                 TickType = TickType.Quote
             };
-            consolidator.Update(tick1);
+            enumerator.Update(tick1);
 
             var tick2 = new Tick
             {
                 Symbol = Symbols.SPY,
-                Time = reference.AddSeconds(1),
+                Time = reference.AddSeconds(1).ConvertFromUtc(dateTimeZone),
                 AskPrice = 20,
                 AskSize = 10,
                 TickType = TickType.Quote
             };
 
-            consolidator.Update(tick2);
+            enumerator.Update(tick2);
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 
             var tick3 = new Tick
             {
                 Symbol = Symbols.SPY,
-                Time = reference.AddSeconds(2),
+                Time = reference.AddSeconds(2).ConvertFromUtc(dateTimeZone),
                 BidPrice = 12,
                 BidSize = 50,
                 TickType = TickType.Quote
             };
-            consolidator.Update(tick3);
+            enumerator.Update(tick3);
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 
             var tick4 = new Tick
             {
                 Symbol = Symbols.SPY,
-                Time = reference.AddSeconds(3),
+                Time = reference.AddSeconds(3).ConvertFromUtc(dateTimeZone),
                 AskPrice = 17,
                 AskSize = 15,
                 TickType = TickType.Quote
             };
-            consolidator.Update(tick4);
+            enumerator.Update(tick4);
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 
-            consolidator.Scan(reference.AddMinutes(2));
+            timeProvider.AdvanceSeconds(120);
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
@@ -270,7 +264,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [Test]
         public void MoveNextScanQuoteBar()
         {
-            var consolidator = new TickQuoteBarConsolidator(TimeSpan.FromMinutes(1));
             var offset = Offset.FromHours(-5);
             var timeZone = DateTimeZone.ForOffset(offset);
             var utc = new DateTimeOffset(DateTime.Today);
@@ -278,7 +271,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var timeProvider = new ManualTimeProvider(reference.DateTime, timeZone);
 
             var enumerator = new ScannableEnumerator<Data.BaseData>(
-                consolidator,
+                new TickQuoteBarConsolidator(TimeSpan.FromMinutes(1)),
                 timeZone,
                 timeProvider,
                 (s, e) => { }
@@ -292,7 +285,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 BidSize = 20,
                 TickType = TickType.Quote
             };
-            consolidator.Update(tick1);
+            enumerator.Update(tick1);
 
             var tick2 = new Tick
             {
@@ -303,7 +296,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 TickType = TickType.Quote
             };
 
-            consolidator.Update(tick2);
+            enumerator.Update(tick2);
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 
@@ -315,7 +308,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 BidSize = 50,
                 TickType = TickType.Quote
             };
-            consolidator.Update(tick3);
+            enumerator.Update(tick3);
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 
@@ -327,7 +320,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 AskSize = 15,
                 TickType = TickType.Quote
             };
-            consolidator.Update(tick4);
+            enumerator.Update(tick4);
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
 

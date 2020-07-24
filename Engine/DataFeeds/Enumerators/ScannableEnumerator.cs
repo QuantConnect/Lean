@@ -31,18 +31,29 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     public class ScannableEnumerator<T> : IEnumerator<T> where T : class, IBaseData
     {
         private T _current;
-
-        private readonly IDataConsolidator _consolidator;
+        private bool _consolidated;
+        private bool _isPeriodBase;
         private readonly DateTimeZone _timeZone;
-        private readonly ITimeProvider _timeProvider;
-        private readonly EventHandler _newDataAvailableHandler;
-
         private readonly ConcurrentQueue<T> _queue;
+        private readonly ITimeProvider _timeProvider;
+        private readonly IDataConsolidator _consolidator;
 
         /// <summary>
-        /// Gets the current number of items held in the internal queue
+        /// Gets the element in the collection at the current position of the enumerator.
         /// </summary>
-        public int Count => _queue.Count;
+        /// <returns>
+        /// The element in the collection at the current position of the enumerator.
+        /// </returns>
+        public T Current => _current;
+
+        /// <summary>
+        /// Gets the current element in the collection.
+        /// </summary>
+        /// <returns>
+        /// The current element in the collection.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        object IEnumerator.Current => Current;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ScannableEnumerator{T}"/> class
@@ -51,19 +62,48 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="timeZone">The time zone the raw data is time stamped in</param>
         /// <param name="timeProvider">The time provider instance used to determine when bars are completed and can be emitted</param>
         /// <param name="newDataAvailableHandler">The event handler for a new available data point</param>
-        public ScannableEnumerator(IDataConsolidator consolidator, DateTimeZone timeZone, ITimeProvider timeProvider, EventHandler newDataAvailableHandler)
+        /// <param name="isPeriodBased">The consolidator is period based, this will enable scanning on <see cref="MoveNext"/></param>
+        public ScannableEnumerator(IDataConsolidator consolidator, DateTimeZone timeZone, ITimeProvider timeProvider, EventHandler newDataAvailableHandler, bool isPeriodBased = true)
         {
-            _consolidator = consolidator;
             _timeZone = timeZone;
             _timeProvider = timeProvider;
+            _consolidator = consolidator;
+            _isPeriodBase = isPeriodBased;
             _queue = new ConcurrentQueue<T>();
-            _newDataAvailableHandler = newDataAvailableHandler ?? ((s, e) => { });
+            var newDataAvailableHandler1 = newDataAvailableHandler ?? ((s, e) => { });
 
             _consolidator.DataConsolidated += (sender, data) =>
             {
+                _consolidated = true;
                 Enqueue(data as T);
-                _newDataAvailableHandler(sender, EventArgs.Empty);
+                newDataAvailableHandler1(sender, EventArgs.Empty);
             };
+        }
+
+        /// <summary>
+        /// Updates the consolidator
+        /// </summary>
+        /// <param name="data">The data to consolidate</param>
+        public void Update(T data)
+        {
+            // if the input type of the consolidator isn't generic we validate it's correct before sending it in
+            if (_consolidator.InputType != typeof(BaseData) && data.GetType() != _consolidator.InputType)
+            {
+                return;
+            }
+
+            if (_isPeriodBase)
+            {
+                // we only need to lock if it's period base since the move next call could trigger a scan
+                lock (_consolidator)
+                {
+                    _consolidator.Update(data);
+                }
+            }
+            else
+            {
+                _consolidator.Update(data);
+            }
         }
 
         /// <summary>
@@ -84,30 +124,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
-            T current;
-            if (!_queue.TryDequeue(out current))
+            if (!_queue.TryDequeue(out _current) && _isPeriodBase)
             {
-                _current = default(T);
-
-                var retry = false;
                 lock (_consolidator)
                 {
+                    // if there is a working bar we will try to pull it out if the time is right, each consolidator knows when it's right
                     if (_consolidator.WorkingData != null)
                     {
-                        retry = true;
                         var utcTime = _timeProvider.GetUtcNow();
                         var localTime = utcTime.ConvertFromUtc(_timeZone);
                         _consolidator.Scan(localTime);
                     }
                 }
 
-                if (retry)
+                if (_consolidated)
                 {
-                    _queue.TryDequeue(out current);
+                    _consolidated = false;
+                    _queue.TryDequeue(out _current);
                 }
             }
-
-            _current = current;
 
             // even if we don't have data to return, we haven't technically
             // passed the end of the collection, so always return true until
@@ -121,25 +156,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public void Reset()
         {
-            throw new NotImplementedException("ScannableEnumerator.Reset() has not been implemented yet.");
         }
-
-        /// <summary>
-        /// Gets the element in the collection at the current position of the enumerator.
-        /// </summary>
-        /// <returns>
-        /// The element in the collection at the current position of the enumerator.
-        /// </returns>
-        public T Current => _current;
-
-        /// <summary>
-        /// Gets the current element in the collection.
-        /// </summary>
-        /// <returns>
-        /// The current element in the collection.
-        /// </returns>
-        /// <filterpriority>2</filterpriority>
-        object IEnumerator.Current => Current;
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -147,7 +164,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-
         }
     }
 }

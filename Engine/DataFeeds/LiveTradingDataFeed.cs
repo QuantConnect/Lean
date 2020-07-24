@@ -234,7 +234,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 else
                 {
-                    EventHandler handler = (sender, args) => subscription.OnNewDataAvailable();
+                    EventHandler handler = (sender, args) => subscription?.OnNewDataAvailable();
                     enumerator = _dataQueueHandler.Subscribe(request.Configuration, handler);
 
                     if (request.Configuration.Symbol.SecurityType == SecurityType.Equity && !request.Configuration.IsInternalFeed)

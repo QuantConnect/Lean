@@ -77,6 +77,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TearDown]
         public void TearDown()
         {
+            _synchronizer.DisposeSafely();
             _dataManager?.RemoveAllSubscriptions();
             _dataQueueHandler?.DisposeSafely();
         }
@@ -851,8 +852,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 RegisteredSecurityDataTypesProvider.Null,
                 dataPermissionManager);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
-            var synchronizer = new TestableLiveSynchronizer();
-            synchronizer.Initialize(algorithm, dataManager);
+            _synchronizer = new TestableLiveSynchronizer();
+            _synchronizer.Initialize(algorithm, dataManager);
             algorithm.AddSecurities(Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToStringInvariant()).ToList());
             var getNextTicksFunction = Enumerable.Range(0, 20).Select(x => new Tick { Symbol = SymbolCache.GetSymbol(x.ToStringInvariant()) }).ToList();
             feed.DataQueueHandler = new FuncDataQueueHandler(handler => getNextTicksFunction, new RealTimeProvider());
@@ -866,7 +867,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new LocalDiskFactorFileProvider(mapFileProvider),
                 fileProvider,
                 dataManager,
-                synchronizer,
+                _synchronizer,
                 new TestDataChannelProvider());
 
             var unhandledExceptionWasThrown = false;
@@ -1149,7 +1150,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 dataPermissionManager);
             _algorithm.SubscriptionManager.SetDataManager(_dataManager);
             _algorithm.AddSecurities(resolution, equities, forex, crypto);
-            _synchronizer = new TestableLiveSynchronizer(_manualTimeProvider);
+            _synchronizer = new TestableLiveSynchronizer(_manualTimeProvider, 50);
             _synchronizer.Initialize(_algorithm, _dataManager);
 
             feed.Initialize(_algorithm, job, resultHandler, mapFileProvider,
@@ -1478,8 +1479,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
             algorithm.Transactions.SetOrderProcessor(mock.Object);
 
-            var synchronizer = new TestableLiveSynchronizer(timeProvider, TimeSpan.FromMilliseconds(20));
-            synchronizer.Initialize(algorithm, dataManager);
+            _synchronizer = new TestableLiveSynchronizer(timeProvider, 20);
+            _synchronizer.Initialize(algorithm, dataManager);
 
             Security security;
             switch (symbol.SecurityType)
@@ -1518,7 +1519,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var mapFileProvider = new LocalDiskMapFileProvider();
             feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
                 mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider(),
-                dataManager, synchronizer, new TestDataChannelProvider());
+                dataManager, _synchronizer, new TestDataChannelProvider());
 
             dataQueueStarted.WaitOne();
             var cancellationTokenSource = new CancellationTokenSource();
@@ -1532,7 +1533,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var actualAuxPointsReceived = 0;
                 var actualCustomPointsReceived = 0;
                 var sliceCount = 0;
-                foreach (var timeSlice in synchronizer.StreamData(cancellationTokenSource.Token))
+                foreach (var timeSlice in _synchronizer.StreamData(cancellationTokenSource.Token))
                 {
                     if (timeSlice.IsTimePulse)
                     {
@@ -1939,8 +1940,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
             algorithm.Transactions.SetOrderProcessor(mock.Object);
 
-            var synchronizer = new TestableLiveSynchronizer(timeProvider, TimeSpan.FromMilliseconds(25));
-            synchronizer.Initialize(algorithm, dataManager);
+            _synchronizer = new TestableLiveSynchronizer(timeProvider, 25);
+            _synchronizer.Initialize(algorithm, dataManager);
 
             if (securityType == SecurityType.Option)
             {
@@ -1965,7 +1966,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var mapFileProvider = new LocalDiskMapFileProvider();
             feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
                 mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider(),
-                dataManager, synchronizer, new TestDataChannelProvider());
+                dataManager, _synchronizer, new TestDataChannelProvider());
 
             var cancellationTokenSource = new CancellationTokenSource();
 
@@ -1991,7 +1992,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     timer.Change(interval, interval);
                 }, null, interval, interval);
 
-            foreach (var timeSlice in synchronizer.StreamData(cancellationTokenSource.Token))
+            foreach (var timeSlice in _synchronizer.StreamData(cancellationTokenSource.Token))
             {
                 if (timeSlice.IsTimePulse || !timeSlice.Slice.HasData && timeSlice.SecurityChanges == SecurityChanges.None)
                 {
@@ -2168,13 +2169,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     internal class TestableLiveSynchronizer : LiveSynchronizer
     {
         private readonly ITimeProvider _timeProvider;
+        private readonly int _newLiveDataTimeout;
 
-        protected override TimeSpan NewLiveDataTimeout { get; }
-
-        public TestableLiveSynchronizer(ITimeProvider timeProvider = null, TimeSpan? newLiveDataTimeout = null)
+        public TestableLiveSynchronizer(ITimeProvider timeProvider = null, int? newLiveDataTimeout = null)
         {
             _timeProvider = timeProvider ?? new RealTimeProvider();
-            NewLiveDataTimeout = newLiveDataTimeout ?? base.NewLiveDataTimeout;
+            _newLiveDataTimeout = newLiveDataTimeout ?? 1000;
+        }
+
+        protected override int GetPulseDueTime(DateTime now)
+        {
+            return _newLiveDataTimeout;
         }
 
         protected override ITimeProvider GetTimeProvider()

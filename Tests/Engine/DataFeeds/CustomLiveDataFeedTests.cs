@@ -45,6 +45,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private LiveSynchronizer _synchronizer;
         private IDataFeed _feed;
 
+        [TearDown]
+        public void TearDown()
+        {
+            _synchronizer.DisposeSafely();
+        }
+
         [Test]
         public void EmitsDailyQuandlFutureDataOverWeekends()
         {
