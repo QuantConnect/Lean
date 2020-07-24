@@ -96,6 +96,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         public void TearDown()
         {
             _unit.Disconnect();
+            _unit.DisposeSafely();
         }
 
         private void SetupResponse(string body, HttpStatusCode httpStatus = HttpStatusCode.OK)
