@@ -158,6 +158,7 @@
     <Compile Include="AltData\TiingoNewsAlgorithm.cs" />
     <Compile Include="AutomaticIndicatorWarmupDataTypeRegressionAlgorithm.cs" />
     <Compile Include="AutomaticIndicatorWarmupRegressionAlgorithm.cs" />
+    <Compile Include="ExtendedMarketTradingRegressionAlgorithm.cs" />
     <Compile Include="CoarseTiingoNewsUniverseSelectionAlgorithm.cs" />
     <Compile Include="DelistedFutureLiquidateRegressionAlgorithm.cs" />
     <Compile Include="EmaCrossFuturesFrontMonthAlgorithm.cs" />

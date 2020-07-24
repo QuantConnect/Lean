@@ -58,6 +58,28 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public void ComparesWithExternalDataBandWidth()
+        {
+            TestHelper.TestIndicator(
+                CreateIndicator() as BollingerBands,
+                TestFileName,
+                "BandWidth",
+                ind => (double)ind.BandWidth.Current.Value
+            );
+        }
+
+        [Test]
+        public void ComparesWithExternalDataPercentB()
+        {
+            TestHelper.TestIndicator(
+                CreateIndicator() as BollingerBands,
+                TestFileName,
+                "%B",
+                ind => (double)ind.PercentB.Current.Value
+            );
+        }
+
+        [Test]
         public void ResetsProperly()
         {
             var bb = new BollingerBands(2, 2m);
@@ -70,6 +92,8 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsTrue(bb.LowerBand.IsReady);
             Assert.IsTrue(bb.MiddleBand.IsReady);
             Assert.IsTrue(bb.UpperBand.IsReady);
+            Assert.IsTrue(bb.BandWidth.IsReady);
+            Assert.IsTrue(bb.PercentB.IsReady);
 
             bb.Reset();
             TestHelper.AssertIndicatorIsInDefaultState(bb);
@@ -77,6 +101,8 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.AssertIndicatorIsInDefaultState(bb.LowerBand);
             TestHelper.AssertIndicatorIsInDefaultState(bb.MiddleBand);
             TestHelper.AssertIndicatorIsInDefaultState(bb.UpperBand);
+            TestHelper.AssertIndicatorIsInDefaultState(bb.BandWidth);
+            TestHelper.AssertIndicatorIsInDefaultState(bb.PercentB);
         }
 
         [Test]

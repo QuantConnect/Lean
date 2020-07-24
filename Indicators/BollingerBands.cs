@@ -47,6 +47,23 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> LowerBand { get; }
 
         /// <summary>
+        /// Gets the Bollinger BandWidth indicator
+        /// BandWidth = ((Upper Band - Lower Band) / Middle Band) * 100
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> BandWidth { get; }
+
+        /// <summary>
+        /// Gets the Bollinger %B
+        /// %B = (Price - Lower Band)/(Upper Band - Lower Band)
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> PercentB { get; }
+
+        /// <summary>
+        /// Gets the Price level
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> Price { get; }
+
+        /// <summary>
         /// Initializes a new instance of the BollingerBands class
         /// </summary>
         /// <param name="period">The period of the standard deviation and moving average (middle band)</param>
@@ -73,12 +90,23 @@ namespace QuantConnect.Indicators
             MiddleBand = movingAverageType.AsIndicator(name + "_MiddleBand", period);
             LowerBand = MiddleBand.Minus(StandardDeviation.Times(k), name + "_LowerBand");
             UpperBand = MiddleBand.Plus(StandardDeviation.Times(k), name + "_UpperBand");
+
+            var UpperMinusLower = UpperBand.Minus(LowerBand);
+            BandWidth = UpperMinusLower
+                .Over(MiddleBand)
+                .Times(new ConstantIndicator<IndicatorDataPoint>("ct", 100m), name + "_BandWidth");
+
+            Price = new Identity(name + "_Close");
+            PercentB = IndicatorExtensions.Over(
+                Price.Minus(LowerBand),
+                UpperMinusLower,
+                name + "_%B");
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => MiddleBand.IsReady && UpperBand.IsReady && LowerBand.IsReady;
+        public override bool IsReady => MiddleBand.IsReady && UpperBand.IsReady && LowerBand.IsReady && BandWidth.IsReady && PercentB.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -95,6 +123,8 @@ namespace QuantConnect.Indicators
         {
             StandardDeviation.Update(input);
             MiddleBand.Update(input);
+            Price.Update(input);
+
             return input;
         }
 
@@ -107,6 +137,8 @@ namespace QuantConnect.Indicators
             MiddleBand.Reset();
             UpperBand.Reset();
             LowerBand.Reset();
+            BandWidth.Reset();
+            PercentB.Reset();
             base.Reset();
         }
     }

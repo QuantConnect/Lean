@@ -49,7 +49,11 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         private const string EightOClockChicagoTime = "13:00:00";
         private const string TwelveOclock = "12:00:00";
         private const string TwelveOne = "12:01:00";
-        private const string FourPmLondonTime = "15:00:00";
+        private const string FourPMLondonTime = "15:00:00";
+        private const string TwoThirtyPM = "14:30:00";
+        private const string OneFortyFivePM = "13:45:00";
+        private const string SixFifteenPM = "18:15:00";
+        private const string FourPM = "16:00:00";
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
         [OneTimeSetUp]
@@ -140,7 +144,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Currencies.AUDCAD, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.AUDJPY, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.AUDNZD, NineSixteenCentralTime)]
-        [TestCase(QuantConnect.Securities.Futures.Currencies.BTC, FourPmLondonTime)]
+        [TestCase(QuantConnect.Securities.Futures.Currencies.BTC, FourPMLondonTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.CADJPY, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.StandardSizeUSDOffshoreRMBCNH, ElevenAmHongKongTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.EuroFXEmini, NineSixteenCentralTime)]
@@ -293,6 +297,10 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Indices.Russell2000EMini, NineThirtyEasternTime)]
         [TestCase(QuantConnect.Securities.Futures.Indices.Nikkei225Dollar, FiveOClockPMEasternTime)]
         [TestCase(QuantConnect.Securities.Futures.Indices.VIX, EightOClockChicagoTime)]
+        [TestCase(QuantConnect.Securities.Futures.Indices.Nikkei225Yen, TwoThirtyPM)]
+        [TestCase(QuantConnect.Securities.Futures.Indices.MSCITaiwanIndex, OneFortyFivePM)]
+        [TestCase(QuantConnect.Securities.Futures.Indices.Nifty50, SixFifteenPM)]
+        [TestCase(QuantConnect.Securities.Futures.Indices.HangSeng, FourPM)]
         public void IndicesExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");

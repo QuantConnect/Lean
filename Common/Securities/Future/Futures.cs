@@ -790,6 +790,29 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string USDDenominatedIbovespa = "IBV";
+
+            /// <summary>
+            /// USD-Denominated MSCI Taiwan Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MSCITaiwanIndex = "TW";
+
+            /// <summary>
+            /// Nikkei-225 Yen denominated Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string Nikkei225Yen = "NK";
+
+            /// <summary>
+            /// Nifty 50  Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string Nifty50 = "IN";
+
+            /// <summary>
+            /// Hang Seng Index
+            /// </summary>
+            public const string HangSeng = "HSI";
         }
 
         /// <summary>
