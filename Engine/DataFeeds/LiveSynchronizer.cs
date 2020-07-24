@@ -31,6 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private ITimeProvider _timeProvider;
         private readonly AutoResetEvent _newLiveDataEmitted = new AutoResetEvent(false);
+        private RealTimeScheduleEventService _realTimeScheduleEventService;
 
         /// <summary>
         /// Maximum time to wait for new live data before synchronizing the data feed subscriptions
@@ -64,6 +65,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 subscription.NewDataAvailable -= OnSubscriptionNewDataAvailable;
             };
+
+            _realTimeScheduleEventService = new RealTimeScheduleEventService(_timeProvider);
+            _realTimeScheduleEventService.NewEvent += (sender, args) => _newLiveDataEmitted.Set();
         }
 
         /// <summary>
@@ -85,7 +89,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (!previousWasTimePulse)
                 {
-                    _newLiveDataEmitted.WaitOne(NewLiveDataTimeout);
+                    if (!_newLiveDataEmitted.WaitOne())
+                    {
+                        // what's missing for the current second to end
+                        var millisecond = 1000 - DateTime.UtcNow.Millisecond;
+                        _realTimeScheduleEventService.ScheduleEvent(TimeSpan.FromMilliseconds(millisecond), _timeProvider.GetUtcNow());
+
+                        _newLiveDataEmitted.WaitOne();
+                    }
                 }
 
                 TimeSlice timeSlice;
@@ -144,6 +155,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
+            _realTimeScheduleEventService.DisposeSafely();
             enumerator.DisposeSafely();
             Log.Trace("LiveSynchronizer.GetEnumerator(): Exited thread.");
         }
