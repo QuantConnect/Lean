@@ -116,13 +116,16 @@ namespace QuantConnect.Indicators
                 High.Update(input.Time, Math.Max(input.High, Math.Max(Open, Close)));
                 Low.Update(input.Time, Math.Min(input.Low, Math.Min(Open, Close)));
             }
-            
-            // IBaseDataBar subtypes TradeBar and RenkoBar have a Volume property, but QuoteBar does not.
+
             var volume = 0.0m;
             if (input is TradeBar)
+            {
                 volume = ((TradeBar) input).Volume;
+            }
             else if (input is RenkoBar)
+            {
                 volume = ((RenkoBar) input).Volume;
+            }
             Volume.Update(input.Time, volume);
 
             Symbol = input.Symbol;
