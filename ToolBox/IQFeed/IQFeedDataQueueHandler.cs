@@ -78,9 +78,10 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
             Subscribe(new[] { dataConfig.Symbol });
 
-            return _aggregator.Add(dataConfig, newDataAvailableHandler);
+            return enumerator;
         }
 
         /// <summary>

@@ -80,12 +80,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
             lock (_sync)
             {
                 _symbols.Add(dataConfig.Symbol);
             }
 
-            return _aggregator.Add(dataConfig, newDataAvailableHandler);
+            return enumerator;
         }
 
         /// <summary>
