@@ -705,7 +705,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 });
             SecurityChanges securityChanges = null;
             var receivedFundamentalsData = false;
-            ConsumeBridge(feed, TimeSpan.FromSeconds(7), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(10), ts =>
             {
                 if (ts.UniverseData.Count > 0 &&
                     ts.UniverseData.First().Value.Data.First() is Fundamentals)
@@ -788,7 +788,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         Market.USA),
                     "constituents-universe-qctest"),
                 _algorithm.UniverseSettings));
-            ConsumeBridge(feed, TimeSpan.FromSeconds(6), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(10), ts =>
             {
                 if (ts.UniverseData.Count > 0)
                 {

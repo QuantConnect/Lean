@@ -116,7 +116,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     if (coarseTimes.Contains(time))
                     {
                         // lets wait for coarse to emit
-                        if (!emitted.WaitOne(TimeSpan.FromMilliseconds(10000)))
+                        if (!emitted.WaitOne(TimeSpan.FromMilliseconds(15000)))
                         {
                             throw new TimeoutException("Timeout waiting for coarse to emit");
                         }

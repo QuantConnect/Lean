@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Common
 
             Action code = () =>
             {
-                if (!minuteElapsed.WaitOne(5000))
+                if (!minuteElapsed.WaitOne(10000))
                 {
                     throw new TimeoutException("minuteElapsed");
                 }
