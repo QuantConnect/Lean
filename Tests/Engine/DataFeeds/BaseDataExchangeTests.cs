@@ -120,9 +120,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataQueue = new ConcurrentQueue<BaseData>();
             var exchange = CreateExchange(dataQueue);
 
+            var cancellationToken = new CancellationTokenSource();
             Task.Run(() =>
             {
-                while (true)
+                while (!cancellationToken.IsCancellationRequested)
                 {
                     Thread.Sleep(1);
                     dataQueue.Enqueue(new Tick {Symbol = Symbols.SPY, Time = DateTime.UtcNow});
@@ -143,11 +144,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsTrue(lastUpdated.WaitOne(DefaultTimeout));
 
             exchange.Stop();
+            cancellationToken.Cancel();
 
             Assert.IsTrue(finishedRunning.WaitOne(DefaultTimeout));
 
             var endTime = DateTime.UtcNow;
-
             Assert.IsNotNull(last);
             Assert.IsTrue(last.Time <= endTime);
         }

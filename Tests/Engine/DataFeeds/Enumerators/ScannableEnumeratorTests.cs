@@ -24,7 +24,7 @@ using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class ScannableEnumeratorTests
     {
         [Test]

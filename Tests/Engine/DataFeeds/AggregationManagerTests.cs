@@ -21,13 +21,12 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using DateTime = System.DateTime;
 using Tick = QuantConnect.Data.Market.Tick;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class AggregationManagerTests
     {
         [Test]
@@ -154,46 +153,44 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
-        [TestCase(typeof(TradeBar), TickType.Trade)]
-        [TestCase(typeof(QuoteBar), TickType.Quote)]
-        public void CanHandleBars(Type type, TickType tickType)
+        [TestCase(typeof(TradeBar), TickType.Trade, Resolution.Second)]
+        [TestCase(typeof(QuoteBar), TickType.Quote, Resolution.Second)]
+        [TestCase(typeof(Tick), TickType.Trade, Resolution.Tick)]
+        [TestCase(typeof(Tick), TickType.Quote, Resolution.Tick)]
+        public void CanHandleBars(Type type, TickType tickType, Resolution resolution)
         {
             var aggregator = GetDataAggregator();
             var reference = DateTime.Today;
             var total = 0;
-            var enumerator = aggregator.Add(GetSubscriptionDataConfig(type, Symbols.EURUSD, Resolution.Tick), (s, e) => { });
-            var cancelationToken = new CancellationTokenSource();
-            Task.Factory.StartNew(
-                () =>
-                {
-                    try
-                    {
-                        while (enumerator.MoveNext() && !cancelationToken.IsCancellationRequested)
-                        {
-                            if (enumerator.Current != null)
-                            {
-                                Assert.IsTrue(enumerator.Current.GetType() == type);
-                                Interlocked.Increment(ref total);
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        if (enumerator != null)
-                        {
-                            enumerator.Dispose();
-                        }
-                    }
-                },
-                cancelationToken.Token);
+            var enumerator = aggregator.Add(GetSubscriptionDataConfig(type, Symbols.EURUSD, resolution, tickType), (s, e) => { });
 
             for (int i = 0; i < 100; i++)
             {
                 aggregator.Update(new Tick(reference.AddSeconds(i), Symbols.EURUSD, 20 + i, 20 + i) { TickType = tickType });
             }
             Thread.Sleep(250);
-            cancelationToken.Cancel();
-            Assert.AreEqual(100, total);
+
+            enumerator.MoveNext();
+            while (enumerator.Current != null)
+            {
+                Assert.IsTrue(enumerator.Current.GetType() == type);
+                var tick = enumerator.Current as Tick;
+                if (tick != null)
+                {
+                    Assert.IsTrue(tick.TickType == tickType);
+                }
+                total++;
+                enumerator.MoveNext();
+            }
+
+            if (resolution == Resolution.Second)
+            {
+                Assert.AreEqual(99, total);
+            }
+            else
+            {
+                Assert.AreEqual(100, total);
+            }
         }
 
         private IDataAggregator GetDataAggregator()
@@ -206,7 +203,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             return GetSubscriptionDataConfig(typeof(T), symbol, resolution);
         }
 
-        private SubscriptionDataConfig GetSubscriptionDataConfig(Type T, Symbol symbol, Resolution resolution)
+        private SubscriptionDataConfig GetSubscriptionDataConfig(Type T, Symbol symbol, Resolution resolution, TickType? tickType = null)
         {
             return new SubscriptionDataConfig(
                 T,
@@ -216,7 +213,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 TimeZones.Utc,
                 true,
                 true,
-                false);
+                false,
+                tickType: tickType);
         }
 
         private class TestAggregationManager : AggregationManager

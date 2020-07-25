@@ -57,11 +57,18 @@ namespace QuantConnect.Tests.Common.Securities.Options
         [Test]
         public void LiveOptionChainProviderReturnsData()
         {
+            var now = DateTime.Today;
+            if (now.DayOfWeek == DayOfWeek.Saturday || now.DayOfWeek == DayOfWeek.Sunday)
+            {
+                // end point won't return anything
+                return;
+            }
+
             var provider = new LiveOptionChainProvider();
 
             foreach (var symbol in new[] { Symbols.SPY, Symbols.AAPL, Symbols.MSFT })
             {
-                var result = provider.GetOptionContractList(symbol, DateTime.Today);
+                var result = provider.GetOptionContractList(symbol, now);
 
                 Assert.IsTrue(result.Any());
             }

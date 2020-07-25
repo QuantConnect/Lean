@@ -30,7 +30,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class ProtobufSerializationTests
     {
         [Test]
@@ -54,9 +54,6 @@ namespace QuantConnect.Tests.Common
         [TestCase(10)]
         [TestCase(100)]
         [TestCase(1000)]
-        [TestCase(10000)]
-        [TestCase(100000)]
-        [TestCase(100000)]
         public void TickListSerializationRoundTrip(int tickCount)
         {
             var time = DateTime.UtcNow;

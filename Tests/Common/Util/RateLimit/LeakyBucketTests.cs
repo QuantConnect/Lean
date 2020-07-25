@@ -74,11 +74,16 @@ namespace QuantConnect.Tests.Common.Util.RateLimit
             for (int i = 0; i < 5; i++)
             {
                 timeProvider.Advance(refillInterval);
-                Thread.Sleep(1);
 
                 // on the last loop, the bucket will consume all ten
                 if (i != 4)
                 {
+                    var count = 0;
+                    while (++count < 100 && (initialAmount + (1 + i) * refillAmount) != bucket.AvailableTokens)
+                    {
+                        Thread.Sleep(1);
+                    }
+
                     // each time we advance the number of available tokens will increment by the refill amount
                     Assert.AreEqual(initialAmount + (1 + i) * refillAmount, bucket.AvailableTokens,
                         $"CurrentTime: {timeProvider.GetUtcNow():O}: Iteration: {i}"
@@ -88,8 +93,8 @@ namespace QuantConnect.Tests.Common.Util.RateLimit
 
             // now that we've advanced, bucket consumption should have completed
             // we provide for a small timeout to support non-multi-threaded machines
-            Assert.IsTrue(bucketConsumeCompleted.WaitOne(10));
-            Assert.AreEqual(0, bucket.AvailableTokens);
+            Assert.IsTrue(bucketConsumeCompleted.WaitOne(1000), "Timeout waiting for consumer");
+            Assert.AreEqual(0, bucket.AvailableTokens, $"There are still available tokens {bucket.AvailableTokens}");
         }
     }
 }
