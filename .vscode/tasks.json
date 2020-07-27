@@ -46,6 +46,9 @@
             "linux": {
                 "command": "${workspaceFolder}/run_docker.sh"
             },
+            "osx": {
+                "command": "${workspaceFolder}/run_docker.sh"
+            },
             "problemMatcher": [
                 {
                   "pattern": [
