@@ -54,19 +54,19 @@ namespace QuantConnect.ToolBox.IEX
         private readonly TaskCompletionSource<bool> _connected = new TaskCompletionSource<bool>();
         private bool _subscribedToAll;
         private int _dataPointCount;
-
-        private readonly BlockingCollection<BaseData> _outputCollection = new BlockingCollection<BaseData>();
+        private readonly IDataAggregator _aggregator;
 
         public string Endpoint { get; internal set; }
 
         public bool IsConnected => _manager.ReadyState == Manager.ReadyStateEnum.OPEN;
 
-        public IEXDataQueueHandler() : this(true)
+        public IEXDataQueueHandler(IDataAggregator aggregator) : this(aggregator, true)
         {
         }
 
-        public IEXDataQueueHandler(bool live)
+        public IEXDataQueueHandler(IDataAggregator aggregator, bool live)
         {
+            _aggregator = aggregator;
             Endpoint = "https://ws-api.iextrading.com/1.0/tops";
 
             if (string.IsNullOrWhiteSpace(_apiKey))
@@ -156,7 +156,8 @@ namespace QuantConnect.ToolBox.IEX
                     Value = lastSalePrice,
                     Quantity = lastSaleSize
                 };
-                _outputCollection.TryAdd(tick);
+
+                _aggregator.Update(tick);
             }
             catch (Exception err)
             {
@@ -173,9 +174,10 @@ namespace QuantConnect.ToolBox.IEX
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
             Subscribe(new[] { dataConfig.Symbol });
 
-            return null;
+            return enumerator;
         }
 
         /// <summary>
@@ -320,7 +322,6 @@ namespace QuantConnect.ToolBox.IEX
 
         private void Dispose(bool disposing)
         {
-            _outputCollection.CompleteAdding();
             _cts.Cancel();
             if (_socket != null)
             {
