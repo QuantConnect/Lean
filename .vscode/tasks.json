@@ -10,9 +10,9 @@
             "type": "shell",
             "command": "msbuild",
             "args": [
-                "/property:GenerateFullPaths=true",
+                "/p:Configuration=Debug",
+                "/p:DebugType=Full",
                 "/t:build",
-                "/consoleloggerparameters:NoSummary",
             ],
             "group": "build",
             "presentation": {
