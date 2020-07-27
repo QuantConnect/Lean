@@ -22,7 +22,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Python;
 
-[SetUpFixture, Timeout(200000)]
+[SetUpFixture]
 public class AssemblyInitialize
 {
     [OneTimeSetUp]

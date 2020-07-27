@@ -537,7 +537,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="symbol"></param>
         public void PollTick(Symbol symbol)
         {
-            int delay = 36000000;
+            int delay = 36000;
             var token = _canceller.Token;
             var listener = Task.Factory.StartNew(() =>
             {
@@ -555,7 +555,13 @@ namespace QuantConnect.Brokerages.GDAX
                     };
                     _aggregator.Update(latest);
 
-                    Thread.Sleep(delay);
+                    int count = 0;
+                    while (++count < delay)
+                    {
+                        if (token.IsCancellationRequested) break;
+                        Thread.Sleep(1000);
+                    }
+
                     if (token.IsCancellationRequested) break;
                 }
 

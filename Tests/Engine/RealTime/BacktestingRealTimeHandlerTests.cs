@@ -35,6 +35,20 @@ namespace QuantConnect.Tests.Engine.RealTime
     [TestFixture]
     public class BacktestingRealTimeHandlerTests
     {
+        private IResultHandler _resultHandler;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _resultHandler = new TestResultHandler();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _resultHandler.Exit();
+        }
+
         [Test]
         public void SortsEventsAfterSetup()
         {
@@ -293,7 +307,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             var realTimeHandler = new BacktestingRealTimeHandler();
             realTimeHandler.Setup(new AlgorithmStub(),
                 new AlgorithmNodePacket(PacketType.AlgorithmNode) { Language = Language.CSharp },
-                new TestResultHandler(),
+                _resultHandler,
                 null,
                 new TestTimeLimitManager());
 
@@ -378,7 +392,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             var realTimeHandler = new TestBacktestingRealTimeHandler();
             realTimeHandler.Setup(algorithm,
                 new AlgorithmNodePacket(PacketType.AlgorithmNode) { Language = language },
-                new TestResultHandler(),
+                _resultHandler,
                 null,
                 new TestTimeLimitManager());
             // the generic OnEndOfDay()
@@ -419,7 +433,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             var realTimeHandler = new TestBacktestingRealTimeHandler();
             realTimeHandler.Setup(algorithm,
                 new AlgorithmNodePacket(PacketType.AlgorithmNode) { Language = language },
-                new TestResultHandler(),
+                _resultHandler,
                 null,
                 new TestTimeLimitManager());
             // the generic OnEndOfDay()

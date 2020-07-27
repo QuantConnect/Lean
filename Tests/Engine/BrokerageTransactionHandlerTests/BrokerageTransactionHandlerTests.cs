@@ -980,7 +980,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             algorithm.SetLiveMode(true);
 
             var transactionHandler = new TestBrokerageTransactionHandler();
-            transactionHandler.Initialize(algorithm, brokerage, new TestResultHandler());
+            var resultHandler = new TestResultHandler();
+            transactionHandler.Initialize(algorithm, brokerage, resultHandler);
 
             // Advance current time UTC so cash sync is performed
             transactionHandler.TestCurrentTimeUtc = transactionHandler.TestCurrentTimeUtc.AddDays(2);
@@ -1001,6 +1002,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 // expect exception from ProcessSynchronousEvents when max attempts reached
                 Assert.That(exception.Message.Contains("maximum number of attempts"));
             }
+
+            resultHandler.Exit();
         }
 
         [Test]

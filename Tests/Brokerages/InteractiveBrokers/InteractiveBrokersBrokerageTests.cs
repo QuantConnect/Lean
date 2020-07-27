@@ -700,7 +700,8 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             algorithm.SetLiveMode(true);
 
             var transactionHandler = new BrokerageTransactionHandlerTests.TestBrokerageTransactionHandler();
-            transactionHandler.Initialize(algorithm, ib, new TestResultHandler());
+            var testResultHandler = new TestResultHandler();
+            transactionHandler.Initialize(algorithm, ib, testResultHandler);
 
             // Advance current time UTC so cash sync is performed
             transactionHandler.TestCurrentTimeUtc = transactionHandler.TestCurrentTimeUtc.AddDays(2);
@@ -729,6 +730,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             // perform clean connect so the test can complete Teardown without exceptions
             ib.Client.ConnectAck -= handler;
             ib.Connect();
+            testResultHandler.Exit();
             Assert.IsTrue(ib.IsConnected);
         }
 

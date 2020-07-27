@@ -88,9 +88,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (!_newLiveDataEmitted.IsSet)
                     {
                         var now = DateTime.UtcNow;
-                        // we will wait to be notified by the subscriptions or our scheduled event service every second
-                        _realTimeScheduleEventService.ScheduleEvent(TimeSpan.FromMilliseconds(GetPulseDueTime(now)), now);
-                        _newLiveDataEmitted.Wait();
+                        // if we just crossed into the next second let's loop again, we will flush any consolidator bar
+                        // else we will wait to be notified by the subscriptions or our scheduled event service every second
+                        if (now.Millisecond > 100)
+                        {
+                            _realTimeScheduleEventService.ScheduleEvent(TimeSpan.FromMilliseconds(GetPulseDueTime(now)), now);
+                            _newLiveDataEmitted.Wait();
+                        }
                     }
                     _newLiveDataEmitted.Reset();
                 }
