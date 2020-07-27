@@ -100,7 +100,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                     else
                     {
-                        Thread.Sleep(5);
+                        Thread.Sleep(1);
                     }
                 }
             }, TaskCreationOptions.LongRunning);

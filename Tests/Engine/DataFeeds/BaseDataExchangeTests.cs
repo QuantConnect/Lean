@@ -26,7 +26,7 @@ using System.Threading.Tasks;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
-    [TestFixture, Parallelizable(ParallelScope.All)]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class BaseDataExchangeTests
     {
         // This is a default timeout for all tests to wait if something went wrong
