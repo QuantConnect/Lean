@@ -188,7 +188,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return 1000 - now.Millisecond;
         }
 
-        private void OnSubscriptionNewDataAvailable(object sender, EventArgs args)
+        protected virtual void OnSubscriptionNewDataAvailable(object sender, EventArgs args)
         {
             _newLiveDataEmitted.Set();
         }

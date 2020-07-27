@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private static bool LogsEnabled = false; // this is for travis log not to fill up and reach the max size.
         private ManualTimeProvider _manualTimeProvider;
         private AlgorithmStub _algorithm;
-        private LiveSynchronizer _synchronizer;
+        private TestableLiveSynchronizer _synchronizer;
         private DateTime _startDate;
         private TestableLiveTradingDataFeed _feed;
         private DataManager _dataManager;
@@ -348,6 +348,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                     _algorithm.AddSecurities(equities: new List<string> { "AAPL" });
                     emittedData = true;
+
+                    // The custom exchange has to pick up the universe selection data point and push it into the universe subscription to
+                    // trigger adding AAPL in the next loop
+                    Thread.Sleep(150);
                 }
                 else
                 {
@@ -1153,7 +1157,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 dataPermissionManager);
             _algorithm.SubscriptionManager.SetDataManager(_dataManager);
             _algorithm.AddSecurities(resolution, equities, forex, crypto);
-            _synchronizer = new TestableLiveSynchronizer(_manualTimeProvider, 50);
+            _synchronizer = new TestableLiveSynchronizer(_manualTimeProvider, 500);
             _synchronizer.Initialize(_algorithm, _dataManager);
 
             _feed.Initialize(_algorithm, job, resultHandler, mapFileProvider,
@@ -1350,11 +1354,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataQueueStarted = new ManualResetEvent(false);
             _dataQueueHandler = new FuncDataQueueHandler(fdqh =>
             {
+                dataQueueStarted.Set();
+
                 if (exchangeTimeZone == null)
                 {
                     return Enumerable.Empty<BaseData>();
                 }
-                dataQueueStarted.Set();
 
                 var utcTime = timeProvider.GetUtcNow();
                 var exchangeTime = utcTime.ConvertFromUtc(exchangeTimeZone);
@@ -1482,7 +1487,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
             algorithm.Transactions.SetOrderProcessor(mock.Object);
 
-            _synchronizer = new TestableLiveSynchronizer(timeProvider, 20);
+            _synchronizer = new TestableLiveSynchronizer(timeProvider, 150);
             _synchronizer.Initialize(algorithm, dataManager);
 
             Security security;
@@ -1517,8 +1522,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     break;
             }
 
-            exchangeTimeZone = security.Exchange.TimeZone;
-
             var mapFileProvider = new LocalDiskMapFileProvider();
             _feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
                 mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider(),
@@ -1529,9 +1532,36 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 throw new TimeoutException("Timeout waiting for IDQH to start");
             }
             var cancellationTokenSource = new CancellationTokenSource();
+
+            // for tick resolution, we advance one hour at a time for less unit test run time
+            TimeSpan advanceTimeSpan;
+            switch (resolution)
+            {
+                case Resolution.Tick:
+                default:
+                    advanceTimeSpan = TimeSpan.FromHours(1);
+                    break;
+                case Resolution.Second:
+                    advanceTimeSpan = TimeSpan.FromSeconds(0.5);
+                    break;
+                case Resolution.Minute:
+                    advanceTimeSpan = TimeSpan.FromSeconds(30);
+                    break;
+                case Resolution.Hour:
+                    advanceTimeSpan = TimeSpan.FromMinutes(30);
+                    break;
+                case Resolution.Daily:
+                    advanceTimeSpan = TimeSpan.FromHours(12);
+                    break;
+            }
             try
             {
                 algorithm.PostInitialize();
+
+                // The custom exchange has to pick up the universe selection data point and push it into the universe subscription to
+                // trigger adding the securities. else there will be a race condition emitting the first data point and having a subscription
+                // to receive it
+                Thread.Sleep(150);
 
                 var actualTicksReceived = 0;
                 var actualTradeBarsReceived = 0;
@@ -1543,8 +1573,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     if (timeSlice.IsTimePulse)
                     {
+                        algorithm.OnEndOfTimeStep();
                         continue;
                     }
+
+                    exchangeTimeZone = security.Exchange.TimeZone;
 
                     sliceCount++;
 
@@ -1626,28 +1659,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                     algorithm.OnEndOfTimeStep();
 
-                    // for tick resolution, we advance one hour at a time for less unit test run time
-                    TimeSpan advanceTimeSpan;
-                    switch (resolution)
-                    {
-                        case Resolution.Tick:
-                        default:
-                            advanceTimeSpan = TimeSpan.FromHours(1);
-                            break;
-                        case Resolution.Second:
-                            advanceTimeSpan = TimeSpan.FromSeconds(0.5);
-                            break;
-                        case Resolution.Minute:
-                            advanceTimeSpan = TimeSpan.FromSeconds(30);
-                            break;
-                        case Resolution.Hour:
-                            advanceTimeSpan = TimeSpan.FromMinutes(30);
-                            break;
-                        case Resolution.Daily:
-                            advanceTimeSpan = TimeSpan.FromHours(12);
-                            break;
-                    }
-
+                    _synchronizer.NewDataEvent.Reset();
                     emittedData.Reset();
                     timeProvider.Advance(advanceTimeSpan);
 
@@ -1661,6 +1673,23 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     algorithm.SetDateTime(currentTime);
 
                     ConsoleWriteLine($"Algorithm time set to {currentTime.ConvertFromUtc(algorithmTimeZone)}");
+
+                    if (resolution != Resolution.Tick)
+                    {
+                        var amount = currentTime.Ticks % resolution.ToTimeSpan().Ticks;
+                        if (amount == 0)
+                        {
+                            // let's avoid race conditions and give time for the funDataQueueHandler thread to distribute the data among the consolidators
+                            if (!_synchronizer.NewDataEvent.Wait(500))
+                            {
+                                Log.Error("Timeout waiting for data generation");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        _synchronizer.NewDataEvent.Wait(500);
+                    }
 
                     if (currentTime.ConvertFromUtc(algorithmTimeZone) > endDate)
                     {
@@ -1967,7 +1996,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
             algorithm.Transactions.SetOrderProcessor(mock.Object);
 
-            _synchronizer = new TestableLiveSynchronizer(timeProvider, 25);
+            _synchronizer = new TestableLiveSynchronizer(timeProvider, 500);
             _synchronizer.Initialize(algorithm, dataManager);
 
             if (securityType == SecurityType.Option)
@@ -2201,10 +2230,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private readonly ITimeProvider _timeProvider;
         private readonly int _newLiveDataTimeout;
 
+        public ManualResetEventSlim NewDataEvent { get; set; }
+
         public TestableLiveSynchronizer(ITimeProvider timeProvider = null, int? newLiveDataTimeout = null)
         {
+            NewDataEvent = new ManualResetEventSlim(true);
             _timeProvider = timeProvider ?? new RealTimeProvider();
-            _newLiveDataTimeout = newLiveDataTimeout ?? 1000;
+            _newLiveDataTimeout = newLiveDataTimeout ?? 500;
         }
 
         protected override int GetPulseDueTime(DateTime now)
@@ -2215,6 +2247,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         protected override ITimeProvider GetTimeProvider()
         {
             return _timeProvider;
+        }
+
+        protected override void OnSubscriptionNewDataAvailable(object sender, EventArgs args)
+        {
+            base.OnSubscriptionNewDataAvailable(sender, args);
+            NewDataEvent.Set();
         }
     }
 
