@@ -20,6 +20,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using DateTime = System.DateTime;
 using Tick = QuantConnect.Data.Market.Tick;
@@ -39,7 +40,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var count = 0;
             aggregator.Add(config, (s, e) => { count++; });
 
-            aggregator.Update(new Tick(reference.AddSeconds(1), Symbols.SPY, 30, 30) {TickType = TickType.Trade});
+            aggregator.Update(new Tick(reference.AddSeconds(1), Symbols.SPY, 30, 30) { TickType = TickType.Trade });
             aggregator.Update(new Tick(reference.AddSeconds(2), Symbols.SPY, 20, 20) { TickType = TickType.Trade });
 
             Assert.AreEqual(count, 2);
@@ -136,7 +137,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 foreach (var symbol in symbols)
                 {
-                    aggregator.Update(new Tick(reference.AddSeconds(i), symbol, 20 + i, 20 + i) { TickType = dataType == typeof(TradeBar) ? TickType.Trade : TickType.Quote});
+                    aggregator.Update(new Tick(reference.AddSeconds(i), symbol, 20 + i, 20 + i) { TickType = dataType == typeof(TradeBar) ? TickType.Trade : TickType.Quote });
                 }
             }
 
@@ -193,14 +194,73 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
-        private IDataAggregator GetDataAggregator()
+        [Test]
+        public void SubscribeMultipleDataTypes()
         {
-            return new TestAggregationManager(new ManualTimeProvider(DateTime.Today));
+            var reference = DateTime.Today;
+            var timeProvider = new ManualTimeProvider(reference);
+            var aggregator = GetDataAggregator(timeProvider);
+            var symbol = Symbols.AAPL;
+
+            var configs = new[] {
+                GetSubscriptionDataConfig<TradeBar>(symbol, Resolution.Minute),
+                GetSubscriptionDataConfig<QuoteBar>(symbol, Resolution.Minute),
+                GetSubscriptionDataConfig<Tick>(symbol, Resolution.Tick, TickType.Trade),
+                GetSubscriptionDataConfig<Tick>(symbol, Resolution.Tick, TickType.Quote),
+                GetSubscriptionDataConfig<Dividend>(symbol, Resolution.Tick),
+                GetSubscriptionDataConfig<Split>(symbol, Resolution.Tick)
+            };
+
+            var enumerators = new Queue<IEnumerator<BaseData>>();
+            Array.ForEach(configs, (c) => enumerators.Enqueue(aggregator.Add(c, (s, e) => { })));
+
+            var expectedBars = new[] { 2, 2, 100, 100, 1, 1 };
+            for (int i = 1; i <= 100; i++)
+            {
+                aggregator.Update(new Tick(reference.AddSeconds(i), symbol, 20 + i, 20 + i)
+                {
+                    TickType = TickType.Trade
+                });
+                aggregator.Update(new Tick(reference.AddSeconds(i), symbol, 20 + i, 20 + i)
+                {
+                    TickType = TickType.Quote
+                });
+            }
+
+            aggregator.Update(new Dividend(symbol, reference.AddSeconds(1), 0.47m, 108.60m));
+
+            aggregator.Update(new Split(symbol, reference.AddSeconds(1), 645.57m, 0.142857m, SplitType.SplitOccurred));
+
+            timeProvider.SetCurrentTime(reference.AddMinutes(2));
+
+            var j = 0;
+            foreach (var enumerator in enumerators)
+            {
+                for (int i = 0; i < expectedBars[j]; i++)
+                {
+                    enumerator.MoveNext();
+                    Assert.IsNotNull(enumerator.Current);
+                }
+
+                enumerator.MoveNext();
+                Assert.IsNull(enumerator.Current);
+                j++;
+            }
         }
 
-        private SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
+        private IDataAggregator GetDataAggregator()
         {
-            return GetSubscriptionDataConfig(typeof(T), symbol, resolution);
+            return GetDataAggregator(new ManualTimeProvider(DateTime.Today));
+        }
+
+        private IDataAggregator GetDataAggregator(ITimeProvider timeProvider)
+        {
+            return new TestAggregationManager(timeProvider);
+        }
+
+        private SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution, TickType? tickType = null)
+        {
+            return GetSubscriptionDataConfig(typeof(T), symbol, resolution, tickType);
         }
 
         private SubscriptionDataConfig GetSubscriptionDataConfig(Type T, Symbol symbol, Resolution resolution, TickType? tickType = null)
