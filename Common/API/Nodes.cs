@@ -144,17 +144,17 @@ namespace QuantConnect.API
         /// <summary>
         /// The number of CPU cores in the node
         /// </summary>
-        public int cores;
+        public int Cores;
 
         /// <summary>
         /// Size of RAM in GB of the Node
         /// </summary>
-        public int memory;
+        public int Memory;
 
         /// <summary>
         /// Target environment for the node
         /// </summary>
-        public NodeType target;
+        public NodeType Target;
 
         /// <summary>
         /// Constructs a SKU object out of the provided node configuration
@@ -164,9 +164,9 @@ namespace QuantConnect.API
         /// <param name="target">Target Environment Live/Backtest/Research</param>
         public SKU(int cores, int memory, NodeType target)
         {
-            this.cores = cores;
-            this.memory = memory;
-            this.target = target;
+            Cores = cores;
+            Memory = memory;
+            Target = target;
         }
 
         /// <summary>
@@ -177,7 +177,7 @@ namespace QuantConnect.API
         {
             string result = "";
 
-            switch (target)
+            switch (Target)
             {
                 case NodeType.Backtest: 
                     result += "B";
@@ -190,13 +190,13 @@ namespace QuantConnect.API
                     break;
             }
 
-            if (cores == 0)
+            if (Cores == 0)
             {
-                result += "-Micro";
+                result += "-MICRO";
             }
             else
             {
-                result += cores + "-" + memory;
+                result += Cores + "-" + Memory;
             }
 
             return result;

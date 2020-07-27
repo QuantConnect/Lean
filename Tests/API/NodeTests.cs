@@ -140,7 +140,7 @@ namespace QuantConnect.Tests.API
         /// <param name="memory">Size of memory</param>
         /// <param name="target">Target node environment</param>
         /// <param name="expectedResult">Expected Result</param>
-        [TestCase(0, 0, NodeType.Live, "L-micro")]
+        [TestCase(0, 0, NodeType.Live, "L-MICRO")]
         [TestCase(1, 1, NodeType.Live, "L1-1")]
         [TestCase(1, 2, NodeType.Live, "L1-2")]
         [TestCase(1, 4, NodeType.Live, "L1-4")]
