@@ -32,7 +32,7 @@ namespace QuantConnect.ToolBox.IEX
 
         public IEXDataDownloader(string apiKey)
         {
-            _handler = new IEXDataQueueHandler(false, apiKey);
+            _handler = new IEXDataQueueHandler(null, false, apiKey);
             _apiKey = apiKey;
         }
         public void Dispose()

@@ -52,8 +52,7 @@ namespace QuantConnect.ToolBox.IEX
         private Task _lastEmitTask;
         private bool _subscribedToAll;
         private int _dataPointCount;
-
-        private BlockingCollection<BaseData> _outputCollection = new BlockingCollection<BaseData>();
+        private readonly IDataAggregator _aggregator;
 
         public string Endpoint { get; internal set; }
 
@@ -62,8 +61,9 @@ namespace QuantConnect.ToolBox.IEX
             get { return _manager.ReadyState == Manager.ReadyStateEnum.OPEN; }
         }
 
-        public IEXDataQueueHandler(bool live = true, string apiKey = null)
+        public IEXDataQueueHandler(IDataAggregator aggregator, bool live = true, string apiKey = null)
         {
+            _aggregator = aggregator;
             Endpoint = "https://ws-api.iextrading.com/1.0/tops";
             if (live)
                 Reconnect();
@@ -146,7 +146,8 @@ namespace QuantConnect.ToolBox.IEX
                     Value = lastSalePrice,
                     Quantity = lastSaleSize
                 };
-                _outputCollection.TryAdd(tick);
+
+                _aggregator.Update(tick);
             }
             catch (Exception err)
             {
@@ -163,9 +164,10 @@ namespace QuantConnect.ToolBox.IEX
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
             Subscribe(new[] { dataConfig.Symbol });
 
-            return null;
+            return enumerator;
         }
 
         /// <summary>
@@ -310,7 +312,6 @@ namespace QuantConnect.ToolBox.IEX
 
         private void Dispose(bool disposing)
         {
-            _outputCollection.CompleteAdding();
             _cts.Cancel();
             if (_socket != null)
             {
