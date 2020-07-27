@@ -35,14 +35,15 @@ Before we can use this method with Windows or Mac OS we need to share the Lean d
 <h3>Activate File Sharing for Docker:</h3>
 
 
-
-
-    *   Windows
-        1. [https://docs.docker.com/docker-for-windows/#file-sharing](https://docs.docker.com/docker-for-windows/#file-sharing)
-        2. Share the LEAN root directory with docker
-    *   Mac
-        3. [https://docs.docker.com/docker-for-mac/#file-sharing](https://docs.docker.com/docker-for-mac/#file-sharing)
-        4. Share the LEAN root directory with docker
+  <h4>Windows</h4>
+  
+  1. [Instructions](https://docs.docker.com/docker-for-windows/#file-sharing)
+  2. Share the LEAN root directory with docker
+  
+  <h4>Mac</h4>
+  
+  1. [Instructions](https://docs.docker.com/docker-for-mac/#file-sharing)
+  2. Share the LEAN root directory with docker
 
 <h3>Lean Configuration</h3>
 
@@ -89,18 +90,13 @@ The steps the script takes are as follows:
 *   Enter absolute path to Lean config file [default: _~currentDir_\Launcher\config.json]:
 *   Enter absolute path to Data folder [default: ~_currentDir_\Data\]:
 *   Enter absolute path to store results [default: ~_currentDir_\]:
-*   Are you using a custom algorithm? (Must be defined in config) [Y/N default: N]:
 
-Using just the defaults (pressing enter) is fine except on the question of running a custom algorithm. If you enter “Y” you will be prompted with a few more questions depending on the language of the algorithm you are attempting to import to the container.
-
-At this point VS Code will attach to the remote process in the container and run the debugger in the local IDE for everything C#. All logs will be passed to your store results directory (Default is root of Lean). Upon finishing the debug VS code will run a task to ensure that the docker container shuts down.
+Using just the defaults (pressing enter) is fine. At this point VS Code will attach to the remote process in the container and run the debugger in the local IDE for everything C#. All logs will be passed to your store results directory (Default is root of Lean). Upon finishing the debug VS code will run a task to ensure that the docker container shuts down.
 
 <h2>Debugging Python</h2>
 
 
-Python algorithms require a little extra work in order to be able to debug them locally or in the container. Thankfully we were able to configure VS code tasks to take care of the work for you!
-
-This particular setup requires 
+Python algorithms require a little extra work in order to be able to debug them locally or in the container. Thankfully we were able to configure VS code tasks to take care of the work for you! Follow the steps below to get Python debugging working properly.
 
 <h3>Modifying the Configuration</h3>
 
@@ -128,7 +124,7 @@ If the message is displayed, use the same drop down for “Debug in Container”
 <h4>Local</h4>
 
 
-To debug locally we must run the program locally using either the launch option “Launch Mono” (requires Mono but allows for C# debug at the same time) or Terminal > Run Task > “Run Application”. Once Lean is started you should see the messages in Figure 2.
+To debug locally we must run the program locally using the programmed task found under Terminal > Run Task > “Run Application”. Once Lean is started you should see the messages in Figure 2.
 
 If the message is displayed, use the launch option “Attach to Python (Local)”. Then press run, VS Code will now enter and debug any breakpoints you have set in your python algorithm.
 
