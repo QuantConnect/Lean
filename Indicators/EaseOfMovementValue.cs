@@ -70,7 +70,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input value to this indicator on this time step</param>
-        /// <returns>A new value for this indicator</returns>
+        /// <returns>A a value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
             // if we're not ready just grab the first input point in the window
