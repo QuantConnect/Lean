@@ -676,6 +676,7 @@
     <Compile Include="Indicators\ParabolicStopAndReverseTests.cs" />
     <Compile Include="Indicators\PercentagePriceOscillatorTests.cs" />
     <Compile Include="Indicators\FisherTransformTests.cs" />
+    <Compile Include="Indicators\SchaffTrendCycleTests.cs" />
     <Compile Include="Indicators\SwissArmyKnifeTests.cs" />
     <Compile Include="Indicators\VolumeWeightedAveragePriceIndicatorTests.cs" />
     <Compile Include="Indicators\WindowIdentityTests.cs" />
@@ -896,6 +897,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_coppock_curve.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_stc.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\stock_prices.csv">
