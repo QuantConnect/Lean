@@ -54,21 +54,14 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(2, symbols.Count());
         }
 
-        [Test]
+        [Test, Category("TravisExclude")]
         public void LiveOptionChainProviderReturnsData()
         {
-            var now = DateTime.Today;
-            if (now.DayOfWeek == DayOfWeek.Saturday || now.DayOfWeek == DayOfWeek.Sunday)
-            {
-                // end point won't return anything
-                return;
-            }
-
             var provider = new LiveOptionChainProvider();
 
             foreach (var symbol in new[] { Symbols.SPY, Symbols.AAPL, Symbols.MSFT })
             {
-                var result = provider.GetOptionContractList(symbol, now);
+                var result = provider.GetOptionContractList(symbol, DateTime.Today);
 
                 Assert.IsTrue(result.Any());
             }

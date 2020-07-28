@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
             CustomMockedFileBaseData.StartDate = _startDate;
 
-            TestCustomData.ReaderCallsCount = 0;
+            Interlocked.Exchange(ref TestCustomData.ReaderCallsCount, 0);
             TestCustomData.ReturnNull = false;
             TestCustomData.ThrowException = false;
         }
@@ -222,6 +222,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                     _algorithm.AddSecurities(forex: new List<string> { "EURUSD" });
                     emittedData = true;
+
+                    // The custom exchange has to pick up the universe selection data point and push it into the universe subscription to
+                    // trigger adding EURUSD in the next loop
+                    Thread.Sleep(150);
+
+                    _algorithm.OnEndOfTimeStep();
                 }
                 else
                 {
@@ -249,7 +255,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                     else
                     {
-                        Assert.Fail($"Subscriptions.Count: {_dataQueueHandler.Subscriptions.Count}");
+                        Assert.Fail($"Subscriptions.Count: {_dataQueueHandler.Subscriptions.Count}: {string.Join(",", _dataQueueHandler.Subscriptions)}");
                     }
                 }
             }, endDate: endDate);
@@ -597,7 +603,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 Console.WriteLine("Emitted data");
             });
 
-            Assert.AreEqual(TestCustomData.ReaderCallsCount, 1);
+            Assert.AreEqual(1, TestCustomData.ReaderCallsCount);
         }
 
         [Test, Ignore("These tests depend on a remote server")]
@@ -651,6 +657,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = RunDataFeed(getNextTicksFunction: fdqh => Enumerable.Empty<BaseData>());
 
             _algorithm.AddUniverse(coarse => coarse.Take(10).Select(x => x.Symbol));
+            // will add the universe
+            _algorithm.OnEndOfTimeStep();
 
             var receivedCoarseData = false;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
@@ -772,7 +780,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void ConstituentsUniverse()
         {
-            var _qqq = Symbol.Create("QQQ", SecurityType.Equity, Market.USA);
+            var qqq = Symbol.Create("QQQ", SecurityType.Equity, Market.USA);
             // Set a date for which we have the test data.
             // Note the date is a Tuesday
             _startDate = new DateTime(2013, 10, 07);
@@ -792,6 +800,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         Market.USA),
                     "constituents-universe-qctest"),
                 _algorithm.UniverseSettings));
+            // will add the universe
+            _algorithm.OnEndOfTimeStep();
             ConsumeBridge(feed, TimeSpan.FromSeconds(10), ts =>
             {
                 if (ts.UniverseData.Count > 0)
@@ -807,7 +817,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         Assert.AreEqual(2, data.Data.Count);
                         Assert.IsTrue(data.Data.Any(baseData => baseData.Symbol == Symbols.AAPL));
-                        Assert.IsTrue(data.Data.Any(baseData => baseData.Symbol == _qqq));
+                        Assert.IsTrue(data.Data.Any(baseData => baseData.Symbol == qqq));
                         yieldedSymbols = true;
                     }
 
@@ -817,7 +827,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
                     }
                 }
-            }, secondsTimeStep: 60 * 60 * 6, // 6 hour time step
+            }, secondsTimeStep: 60 * 60 * 3, // 3 hour time step
                 alwaysInvoke: true,
                 endDate: endDate);
 
@@ -1210,7 +1220,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 _algorithm.OnEndOfTimeStep();
                 _manualTimeProvider.AdvanceSeconds(secondsTimeStep);
-                Thread.Sleep(1);
+                Thread.Sleep(10);
                 if (endDate != default(DateTime) && _manualTimeProvider.GetUtcNow() > endDate
                     || endTime <= DateTime.UtcNow)
                 {
@@ -1561,7 +1571,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 // The custom exchange has to pick up the universe selection data point and push it into the universe subscription to
                 // trigger adding the securities. else there will be a race condition emitting the first data point and having a subscription
                 // to receive it
-                Thread.Sleep(150);
+                Thread.Sleep(200);
 
                 var actualTicksReceived = 0;
                 var actualTradeBarsReceived = 0;
@@ -1682,13 +1692,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             // let's avoid race conditions and give time for the funDataQueueHandler thread to distribute the data among the consolidators
                             if (!_synchronizer.NewDataEvent.Wait(500))
                             {
-                                Log.Error("Timeout waiting for data generation");
+                                Assert.Fail("Timeout waiting for data generation");
                             }
                         }
                     }
                     else
                     {
-                        _synchronizer.NewDataEvent.Wait(500);
+                        _synchronizer.NewDataEvent.Wait(300);
                     }
 
                     if (currentTime.ConvertFromUtc(algorithmTimeZone) > endDate)
@@ -2258,7 +2268,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
     internal class TestCustomData : BaseData
     {
-        public static int ReaderCallsCount { get; set; }
+        public static int ReaderCallsCount;
 
         public static bool ReturnNull { get; set; }
 
@@ -2274,7 +2284,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            ReaderCallsCount++;
+            Interlocked.Increment(ref ReaderCallsCount);
             if (ThrowException)
             {
                 throw new Exception("Custom data Reader threw exception");

@@ -94,8 +94,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _dataQueueHandler = GetDataQueueHandler();
             _dataQueueHandler?.SetJob(_job);
 
-            // run the exchanges
-            Task.Run(() => _customExchange.Start(_cancellationTokenSource.Token));
+            // run the custom data exchange
+            var manualEvent = new ManualResetEventSlim(false);
+            Task.Factory.StartNew(() =>
+            {
+                manualEvent.Set();
+                _customExchange.Start(_cancellationTokenSource.Token);
+            }, TaskCreationOptions.LongRunning);
+            manualEvent.Wait();
+            manualEvent.DisposeSafely();
 
             IsActive = true;
         }
