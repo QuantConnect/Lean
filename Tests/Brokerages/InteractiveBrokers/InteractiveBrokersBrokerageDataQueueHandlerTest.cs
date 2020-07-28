@@ -43,12 +43,12 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 var cancelationToken = new CancellationTokenSource();
 
                 ProcessFeed(
-                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.USDJPY, Resolution.Tick), (s, e) => { gotUsdData = true; }),
+                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.AAPL, Resolution.Tick), (s, e) => { gotUsdData = true; }),
                     cancelationToken,
                     (tick) => Log(tick));
 
                 ProcessFeed(
-                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.EURGBP, Resolution.Tick), (s, e) => { gotEurData = true; }),
+                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.SPY, Resolution.Tick), (s, e) => { gotEurData = true; }),
                     cancelationToken,
                     (tick) => Log(tick));
 
@@ -72,12 +72,12 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 var gotEurData = false;
 
                 ProcessFeed(
-                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.USDJPY, Resolution.Tick), (s, e) => { gotUsdData = true; }),
+                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.AAPL, Resolution.Tick), (s, e) => { gotUsdData = true; }),
                     cancelationToken,
                     (tick) => Log(tick));
 
                 ProcessFeed(
-                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.EURGBP, Resolution.Tick), (s, e) => { gotEurData = true; }),
+                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.SPY, Resolution.Tick), (s, e) => { gotEurData = true; }),
                     cancelationToken,
                     (tick) => Log(tick));
 
