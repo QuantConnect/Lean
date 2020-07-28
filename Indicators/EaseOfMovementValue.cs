@@ -73,18 +73,16 @@ namespace QuantConnect.Indicators
         /// <returns>A a value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            // if we're not ready just grab the first input point in the window
-            High.Update(input.Time, Math.Max(input.High, Math.Max(Open, Close)));
-            Low.Update(input.Time, Math.Min(input.Low, Math.Min(Open, Close)));
+            
+            High.Update(input.High);
+            Low.Update(input.Low);
             
             var previous = window.Samples <= window.Size ? window[window.Count - 1] : window.MostRecentlyRemoved;
-
+            // if we're not ready just grab the first input point in the window
             if (previous == 0)
             {
                 return 0;
             }
-
-            var value = base.ComputeNextValue(input);
 
             var mid = ((input.High + input.Low)/2) - ((previous.High + previous.Low) / 2);
             var ratio = (input.Volume/10000) / (input.High - input.Low);
