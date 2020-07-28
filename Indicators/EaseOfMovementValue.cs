@@ -16,25 +16,30 @@
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// This indicator computes the n-period Ease of Movement Value in three values using the following:
-    /// MID = (high_n + low_n)/2 - (high_0 + low_0)/2 
-    /// RATIO = (currentVolume/10000) / (high_n - low_n)
+    /// This indicator computes the n-period Ease of Movement Value using the following:
+    /// MID = (high_1 + low_1)/2 - (high_0 + low_0)/2 
+    /// RATIO = (currentVolume/10000) / (high_1 - low_1)
     /// EMV = MID/ratio
     /// </summary>
     public class EaseOfMovement : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// Gets EaseOfMovement Open
         /// </summary>
-        
         public IndicatorBase<IndicatorDataPoint> High { get; }
 
+        /// <summary>
+        /// Gets EaseOfMovment Low
+        /// </summary>
         public IndicatorBase<IndicatorDataPoint> Low { get; }
 
+        /// <summary>
+        /// Gets EaseOfMovement Volume
+        /// </summary>
         public IndicatorBase<IndicatorDataPoint> Volume { get; }
 
         /// <summary>
-        /// Creates a new RateOfChange indicator with the specified period
+        /// Initializeds a new instance of the <see cref="EaseOfMovement"/> class using the specufued period
         /// </summary>
         /// <param name="period">The period over which to perform to computation</param>
         public EaseOfMovement(int period)
@@ -43,7 +48,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Creates a new RateOfChange indicator with the specified period
+        /// Creates a new EaseOfMovement indicator with the specified period
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period over which to perform to computation</param>
