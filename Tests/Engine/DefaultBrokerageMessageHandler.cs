@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Engine
             var job = new LiveNodePacket();
             var results = new TestResultHandler();//packet => Console.WriteLine(FieldsToString(packet)));
             var api = new Api.Api();
-            var handler = new DefaultBrokerageMessageHandler(algorithm, job, api, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(2));
+            var handler = new DefaultBrokerageMessageHandler(algorithm, job, api, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(.25));
 
             Assert.IsNull(algorithm.RunTimeError);
 

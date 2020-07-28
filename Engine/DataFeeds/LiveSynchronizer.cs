@@ -75,6 +75,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             var shouldSendExtraEmptyPacket = false;
             var nextEmit = DateTime.MinValue;
+            var lastLoopStart = DateTime.UtcNow;
 
             var enumerator = SubscriptionSynchronizer
                 .Sync(SubscriptionManager.DataFeedSubscriptions, cancellationToken)
@@ -83,14 +84,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var previousWasTimePulse = false;
             while (!cancellationToken.IsCancellationRequested)
             {
+                var now = DateTime.UtcNow;
                 if (!previousWasTimePulse)
                 {
                     if (!_newLiveDataEmitted.IsSet)
                     {
-                        var now = DateTime.UtcNow;
                         // if we just crossed into the next second let's loop again, we will flush any consolidator bar
                         // else we will wait to be notified by the subscriptions or our scheduled event service every second
-                        if (now.Millisecond > 100)
+                        if (lastLoopStart.Second == now.Second)
                         {
                             _realTimeScheduleEventService.ScheduleEvent(TimeSpan.FromMilliseconds(GetPulseDueTime(now)), now);
                             _newLiveDataEmitted.Wait();
@@ -98,6 +99,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                     _newLiveDataEmitted.Reset();
                 }
+
+                lastLoopStart = now;
 
                 TimeSlice timeSlice;
                 try
