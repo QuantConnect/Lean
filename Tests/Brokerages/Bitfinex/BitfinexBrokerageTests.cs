@@ -23,6 +23,7 @@ using Moq;
 using QuantConnect.Brokerages;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Data;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {
@@ -53,7 +54,6 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
 
             var priceProvider = new Mock<IPriceProvider>();
             priceProvider.Setup(a => a.GetLastPrice(It.IsAny<Symbol>())).Returns(1.234m);
-            var aggregator = new Mock<IDataAggregator>();
 
             return new BitfinexBrokerage(
                     Config.Get("bitfinex-url", "wss://api.bitfinex.com/ws"),
@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
                     Config.Get("bitfinex-api-secret"),
                     algorithm.Object,
                     priceProvider.Object,
-                    aggregator.Object
+                    new AggregationManager()
                 );
         }
 

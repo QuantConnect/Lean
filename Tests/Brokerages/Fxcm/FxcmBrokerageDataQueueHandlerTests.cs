@@ -40,28 +40,15 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
 
             foreach (var config in configs)
             {
-                Task.Factory.StartNew(
-                    () =>
-                    {
-                        IEnumerator<BaseData> enumerator = null;
-                        try
+                ProcessFeed(
+                    brokerage.Subscribe(config, (s, e) => { }),
+                    cancelationToken,
+                    (tick) => {
+                        if (tick != null)
                         {
-                            enumerator = brokerage.Subscribe(config, (s, e) => { });
-                            while (enumerator.MoveNext() && !cancelationToken.IsCancellationRequested)
-                            {
-                                BaseData tick = enumerator.Current;
-                                Log.Trace("{0}: {1} - {2} / {3}", tick.Time.ToStringInvariant("yyyy-MM-dd HH:mm:ss.fff"), tick.Symbol, (tick as Tick)?.BidPrice, (tick as Tick)?.AskPrice);
-                            }
+                            Log.Trace("{0}: {1} - {2} / {3}", tick.Time.ToStringInvariant("yyyy-MM-dd HH:mm:ss.fff"), tick.Symbol, (tick as Tick)?.BidPrice, (tick as Tick)?.AskPrice);
                         }
-                        finally
-                        {
-                            if (enumerator != null)
-                            {
-                                enumerator.Dispose();
-                            }
-                        }
-                    },
-                    cancelationToken.Token);
+                    });
             }
 
             Thread.Sleep(5000);
