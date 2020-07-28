@@ -26,7 +26,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => Period;
+        
+        public IndicatorBase<IndicatorDataPoint> High { get; }
+
+        public IndicatorBase<IndicatorDataPoint> Low { get; }
+
+        public IndicatorBase<IndicatorDataPoint> Volume { get; }
 
         /// <summary>
         /// Creates a new RateOfChange indicator with the specified period
@@ -43,9 +48,17 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period over which to perform to computation</param>
         public EaseOfMovement(string name, int period)
-            : base(name, period)
+            : base(name)
         {
+            WarmUpPeriod = period;
+            High = new Identity(name + "_High");
+            Low = new Identity(name + "_Low");
+            Volume = new Identity(name + "_Volume");
         }
+
+        public override bool IsReady => High.IsReady && Low.IsReady && Volume.IsReady;
+
+        public int WarmUpPeriod { get; }
 
         /// <summary>
         /// Computes the next value for this indicator from the given state.
@@ -55,8 +68,24 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
+            // if we're not ready just grab the first input point in the window
+            High.Update(input.Time, Math.Max(input.High, Math.Max(Open, Close)));
+            Low.Update(input.Time, Math.Min(input.Low, Math.Min(Open, Close)));
+            
+            var previous = window.Samples <= window.Size ? window[window.Count - 1] : window.MostRecentlyRemoved;
 
-            return ();
+            if (previous == 0)
+            {
+                return 0;
+            }
+
+            var value = base.ComputeNextValue(input);
+
+            var mid = ((input.High + input.Low)/2) - ((previous.High + previous.Low) / 2);
+            var ratio = (input.Volume/10000) / (input.High - input.Low);
+            var emvValue = mid / ratio;
+
+            return emvValue;
         }
     }
 }
