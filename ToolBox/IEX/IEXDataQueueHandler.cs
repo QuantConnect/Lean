@@ -32,6 +32,7 @@ using QuantConnect.Interfaces;
 using NodaTime;
 using System.Globalization;
 using static QuantConnect.StringExtensions;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.IEX
 {
@@ -230,6 +231,7 @@ namespace QuantConnect.ToolBox.IEX
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
             Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            _aggregator.Remove(dataConfig);
         }
 
 
@@ -322,6 +324,7 @@ namespace QuantConnect.ToolBox.IEX
 
         private void Dispose(bool disposing)
         {
+            _aggregator.DisposeSafely();
             _cts.Cancel();
             if (_socket != null)
             {
