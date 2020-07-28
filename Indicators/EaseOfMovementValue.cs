@@ -43,7 +43,7 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period over which to perform to computation</param>
         public EaseOfMovement(string name, int period)
-            : base(name)
+            : base(name, period)
         {
         }
 
