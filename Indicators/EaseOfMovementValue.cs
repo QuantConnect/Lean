@@ -21,19 +21,20 @@ namespace QuantConnect.Indicators
     /// RATIO = (currentVolume/10000) / (high_1 - low_1)
     /// EMV = MID/ratio
     /// </summary>
-    public class EaseOfMovement : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public class EaseOfMovement : WindowIndicators<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
-        /// <summary>
-        /// Required period for indicator to be fully initialized
-        /// </summary>
-        public int WarmUpPeriod => Period;
+
+        private readonly int _period;
+        private readonly Minimum _minimum;
+        private readonly Maximum _maximum;
+
 
         /// <summary>
-        /// Initializeds a new instance of the <see cref="EaseOfMovement"/> class using the specufued period
+        /// Initializeds a new instance of the EaseOfMovement class using the specufued period
         /// </summary>
         /// <param name="period">The period over which to perform to computation</param>
-        public EaseOfMovement(int period)
-            : base($"EMV({period})", period)
+        public EaseOfMovement(int period = 2)
+            : this($"EMV({period})", period)
         {
         }
 
@@ -45,8 +46,22 @@ namespace QuantConnect.Indicators
         public EaseOfMovement(string name, int period)
             : base(name, period)
         {
+            _period = period;
+            _maximum = new Maximum(period);
+            _minimum = new Minimum(period);
         }
 
+
+
+        /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => Samples >= _period;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => _period;
 
         /// <summary>
         /// Computes the next value for this indicator from the given state.
@@ -56,20 +71,32 @@ namespace QuantConnect.Indicators
         /// <returns>A a value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            
-            var previous = window.Samples <= window.Size ? window[window.Count - 1] : window.MostRecentlyRemoved;
+            var previousMax = 0;
+            var previousMin = 0;
+            var currentMax = 0;
+            var currentMin = 0;
 
-            /// if we're not ready just grab the first input point in the window
-            if (previous == 0)
+            if (Samples > 1 || input.Time < Current.Time)
             {
-                return 0;
+                _maximum.Update(new IndicatorDataPoint { Value = Current.High });
+                _minimum.Update(new IndicatorDataPoint { Value = Current.Low });
+                previousMax = _maximum;
+                previousMin = _minimum;
+
+                _maximum.Update(new IndicatorDataPoint { Value = input.High });
+                _minimum.Update(new IndicatorDataPoint { Value = input.Low });
+                currentMax = _maximum;
+                currentMin = _minimum;
+
             }
-
-            var mid = ((input.High + input.Low)/2) - ((previous.High + previous.Low) / 2);
-            var ratio = (input.Volume/10000) / (input.High - input.Low);
-            var emvValue = mid / ratio;
-
-            return emvValue;
+            
+            
+            return (((currentMax + currentMin) / 2) - ((previousMax + previousMin) / 2)) / ((input.Volume/10000) / (currentMax - currentMin));
+            
         }
     }
 }
+
+/// MID = (high_1 + low_1)/2 - (high_0 + low_0)/2 
+/// RATIO = (currentVolume/10000) / (high_1 - low_1)
+/// EMV = MID/ratio
