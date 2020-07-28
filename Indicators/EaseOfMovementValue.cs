@@ -24,19 +24,9 @@ namespace QuantConnect.Indicators
     public class EaseOfMovement : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
-        /// Gets EaseOfMovement Open
+        /// Required period for indicator to be fully initialized
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> High { get; }
-
-        /// <summary>
-        /// Gets EaseOfMovment Low
-        /// </summary>
-        public IndicatorBase<IndicatorDataPoint> Low { get; }
-
-        /// <summary>
-        /// Gets EaseOfMovement Volume
-        /// </summary>
-        public IndicatorBase<IndicatorDataPoint> Volume { get; }
+        public int WarmUpPeriod => Period;
 
         /// <summary>
         /// Initializeds a new instance of the <see cref="EaseOfMovement"/> class using the specufued period
@@ -55,15 +45,8 @@ namespace QuantConnect.Indicators
         public EaseOfMovement(string name, int period)
             : base(name)
         {
-            WarmUpPeriod = period;
-            High = new Identity(name + "_High");
-            Low = new Identity(name + "_Low");
-            Volume = new Identity(name + "_Volume");
         }
 
-        public override bool IsReady => High.IsReady && Low.IsReady && Volume.IsReady;
-
-        public int WarmUpPeriod { get; }
 
         /// <summary>
         /// Computes the next value for this indicator from the given state.
@@ -74,11 +57,9 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
             
-            High.Update(input.High);
-            Low.Update(input.Low);
-            
             var previous = window.Samples <= window.Size ? window[window.Count - 1] : window.MostRecentlyRemoved;
-            // if we're not ready just grab the first input point in the window
+
+            /// if we're not ready just grab the first input point in the window
             if (previous == 0)
             {
                 return 0;
