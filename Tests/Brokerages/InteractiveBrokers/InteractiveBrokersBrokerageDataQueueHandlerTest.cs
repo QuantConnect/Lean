@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.InteractiveBrokers;
@@ -39,10 +40,21 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 var gotUsdData = false;
                 var gotEurData = false;
 
-                ib.Subscribe(GetSubscriptionDataConfig<QuoteBar>(Symbols.USDJPY, Resolution.Minute), (s, e) => { gotUsdData = true; });
-                ib.Subscribe(GetSubscriptionDataConfig<QuoteBar>(Symbols.EURGBP, Resolution.Minute), (s, e) => { gotEurData = true; });
+                var cancelationToken = new CancellationTokenSource();
+
+                ProcessFeed(
+                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.USDJPY, Resolution.Tick), (s, e) => { gotUsdData = true; }),
+                    cancelationToken,
+                    (tick) => Log(tick));
+
+                ProcessFeed(
+                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.EURGBP, Resolution.Tick), (s, e) => { gotEurData = true; }),
+                    cancelationToken,
+                    (tick) => Log(tick));
 
                 Thread.Sleep(2000);
+                cancelationToken.Cancel();
+                cancelationToken.Dispose();
 
                 Assert.IsTrue(gotUsdData);
                 Assert.IsTrue(gotEurData);
@@ -54,11 +66,21 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             using (var ib = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(), new SecurityProvider(), new AggregationManager()))
             {
+                ib.Connect();
+                var cancelationToken = new CancellationTokenSource();
                 var gotUsdData = false;
                 var gotEurData = false;
-                ib.Connect();
-                ib.Subscribe(GetSubscriptionDataConfig<QuoteBar>(Symbols.USDJPY, Resolution.Minute), (s, e) => { gotUsdData = true; });
-                ib.Subscribe(GetSubscriptionDataConfig<QuoteBar>(Symbols.EURGBP, Resolution.Minute), (s, e) => { gotEurData = true; });
+
+                ProcessFeed(
+                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.USDJPY, Resolution.Tick), (s, e) => { gotUsdData = true; }),
+                    cancelationToken,
+                    (tick) => Log(tick));
+
+                ProcessFeed(
+                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.EURGBP, Resolution.Tick), (s, e) => { gotEurData = true; }),
+                    cancelationToken,
+                    (tick) => Log(tick));
+
                 Thread.Sleep(2000);
 
                 Assert.IsTrue(gotUsdData);
@@ -72,6 +94,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
                 ib.Connect();
                 Thread.Sleep(2000);
+
+                cancelationToken.Cancel();
+                cancelationToken.Dispose();
 
                 Assert.IsTrue(gotUsdData);
                 Assert.IsTrue(gotEurData);
@@ -89,6 +114,40 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 true,
                 true,
                 false);
+        }
+
+        private void ProcessFeed(IEnumerator<BaseData> enumerator, CancellationTokenSource cancellationToken, Action<BaseData> callback = null)
+        {
+            Task.Run(() =>
+            {
+                try
+                {
+                    while (enumerator.MoveNext() && !cancellationToken.IsCancellationRequested)
+                    {
+                        BaseData tick = enumerator.Current;
+                        if (callback != null)
+                        {
+                            callback.Invoke(tick);
+                        }
+                    }
+                }
+                catch (AssertionException)
+                {
+                    throw;
+                }
+                catch (Exception err)
+                {
+                    Console.WriteLine(err.Message);
+                }
+            });
+        }
+
+        private void Log(BaseData tick)
+        {
+            if (tick != null)
+            {
+                Console.WriteLine("{0}: {1} - {2} @ {3}", tick.Time, tick.Symbol, tick.Price, ((Tick)tick).Quantity);
+            }
         }
     }
 }
