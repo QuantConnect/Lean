@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var iex = new IEXDataQueueHandler(new AggregationManager());
 
             ProcessFeed(
-                iex.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbol.Create("firehose", SecurityType.Equity, Market.USA), Resolution.Tick), (s, e) => { }),
+                iex.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbol.Create("firehose", SecurityType.Equity, Market.USA), Resolution.Second), (s, e) => { }),
                 tick =>
                 {
                     if (tick != null)
@@ -106,7 +106,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Array.ForEach(new[] { "FB", "AAPL", "XIV", "PTN", "USO" }, (ticker) =>
             {
                 ProcessFeed(
-                    iex.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbol.Create(ticker, SecurityType.Equity, Market.USA), Resolution.Tick), (sender, e) => { }),
+                    iex.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbol.Create(ticker, SecurityType.Equity, Market.USA), Resolution.Second), (sender, e) => { }),
                     tick =>
                     {
                         if (tick != null)
@@ -129,10 +129,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var iex = new IEXDataQueueHandler(new AggregationManager());
 
             var configs = new[] {
-                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("MBLY", SecurityType.Equity, Market.USA), Resolution.Tick),
-                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("FB", SecurityType.Equity, Market.USA), Resolution.Tick),
-                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), Resolution.Tick),
-                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("USO", SecurityType.Equity, Market.USA), Resolution.Tick)
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("MBLY", SecurityType.Equity, Market.USA), Resolution.Second),
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("FB", SecurityType.Equity, Market.USA), Resolution.Second),
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), Resolution.Second),
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("USO", SecurityType.Equity, Market.USA), Resolution.Second)
             };
 
             Array.ForEach(configs, (c) =>
@@ -184,8 +184,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             };
 
             var configs = new[] {
-                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("MBLY", SecurityType.Equity, Market.USA), Resolution.Tick),
-                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("USO", SecurityType.Equity, Market.USA), Resolution.Tick)
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("MBLY", SecurityType.Equity, Market.USA), Resolution.Second),
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("USO", SecurityType.Equity, Market.USA), Resolution.Second)
             };
 
             Array.ForEach(configs, (c) =>

@@ -36,11 +36,11 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             var brokerage = (OandaBrokerage)Brokerage;
 
             var configs = new SubscriptionDataConfig[] {
-                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda), Resolution.Tick),
-                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda), Resolution.Tick),
-                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda), Resolution.Tick),
-                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda), Resolution.Tick),
-                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("XAUXAG", SecurityType.Cfd, Market.Oanda), Resolution.Tick),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda), Resolution.Second),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda), Resolution.Second),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda), Resolution.Second),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda), Resolution.Second),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("XAUXAG", SecurityType.Cfd, Market.Oanda), Resolution.Second),
             };
 
             foreach (var config in configs)
@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             var configs = new List<SubscriptionDataConfig>();
             foreach (var symbol in symbols)
             {
-                configs.Add(GetSubscriptionDataConfig<QuoteBar>(Symbol.Create(symbol, SecurityType.Forex, Market.Oanda), Resolution.Tick));
+                configs.Add(GetSubscriptionDataConfig<QuoteBar>(Symbol.Create(symbol, SecurityType.Forex, Market.Oanda), Resolution.Second));
             }
 
             var brokerage = (OandaBrokerage)Brokerage;
