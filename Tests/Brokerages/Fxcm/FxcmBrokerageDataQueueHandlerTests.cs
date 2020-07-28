@@ -34,8 +34,8 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             var cancelationToken = new CancellationTokenSource();
 
             var configs = new SubscriptionDataConfig[] {
-                GetSubscriptionDataConfig<TradeBar>(Symbols.USDJPY, Resolution.Tick),
-                GetSubscriptionDataConfig<TradeBar>(Symbols.EURGBP, Resolution.Tick)
+                GetSubscriptionDataConfig<TradeBar>(Symbols.USDJPY, Resolution.Second),
+                GetSubscriptionDataConfig<TradeBar>(Symbols.EURGBP, Resolution.Second)
             };
 
             foreach (var config in configs)

@@ -39,11 +39,11 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             var cancelationToken = new CancellationTokenSource();
 
             var configs = new SubscriptionDataConfig[] {
-                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), Resolution.Tick),
-                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("FB", SecurityType.Equity, Market.USA), Resolution.Tick),
-                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("TSLA", SecurityType.Equity, Market.USA), Resolution.Tick),
-                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("MSFT", SecurityType.Equity, Market.USA), Resolution.Tick),
-                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("GOOGL", SecurityType.Equity, Market.USA), Resolution.Tick),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), Resolution.Second),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("FB", SecurityType.Equity, Market.USA), Resolution.Second),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("TSLA", SecurityType.Equity, Market.USA), Resolution.Second),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("MSFT", SecurityType.Equity, Market.USA), Resolution.Second),
+                GetSubscriptionDataConfig<QuoteBar>(Symbol.Create("GOOGL", SecurityType.Equity, Market.USA), Resolution.Second),
             };
 
             foreach (var config in configs)
@@ -97,7 +97,7 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             var configs = new List<SubscriptionDataConfig>();
             foreach (var symbol in symbols)
             {
-                configs.Add(GetSubscriptionDataConfig<QuoteBar>(Symbol.Create(symbol, SecurityType.Forex, Market.Oanda), Resolution.Tick));
+                configs.Add(GetSubscriptionDataConfig<QuoteBar>(Symbol.Create(symbol, SecurityType.Forex, Market.Oanda), Resolution.Second));
             }
 
             var stopwatch = Stopwatch.StartNew();
