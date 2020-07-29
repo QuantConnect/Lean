@@ -834,7 +834,7 @@ namespace QuantConnect
         /// <param name="other">An object to compare with this object.</param>
         public bool Equals(SecurityIdentifier other)
         {
-            return _properties == other._properties
+            return ReferenceEquals(this, other) || _properties == other._properties
                 && _symbol == other._symbol
                 && _underlying == other._underlying;
         }
