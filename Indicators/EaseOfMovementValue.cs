@@ -21,13 +21,34 @@ namespace QuantConnect.Indicators
     /// RATIO = (currentVolume/10000) / (high_1 - low_1)
     /// EMV = MID/ratio
     /// </summary>
-    public class EaseOfMovement : WindowIndicator<BarIndicator>, IIndicatorWarmUpPeriodProvider
+    public class EaseOfMovement : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
 
         private readonly int _period;
-        private readonly Minimum _minimum;
-        private readonly Maximum _maximum;
+        private readonly IndicatorBase<IndicatorDataPoint> _maximum;
+        private readonly IndicatorBase<IndicatorDataPoint> _minimum;
 
+        public decimal PreviousHighPrice { get; private set; }
+        public decimal PreviousLowPrice { get; private set; }
+
+        /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => _maximum.IsReady && _minimum.IsReady;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod { get; }
+
+        public override void Reset()
+        {
+            PreviousHighPrice = 0.0m;
+            PreviousLowPrice = 0.0m;
+            _maximum.Reset();
+            _minimum.Reset();
+            base.Reset();
+        }
 
         /// <summary>
         /// Initializeds a new instance of the EaseOfMovement class using the specufued period
@@ -44,11 +65,12 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period over which to perform to computation</param>
         public EaseOfMovement(string name, int period)
-            : base(name, period)
+            : base(name)
         {
-            _period = period;
+            WarmUpPeriod = period;
             _maximum = new Maximum(period);
             _minimum = new Minimum(period);
+            
         }
 
 
@@ -69,29 +91,21 @@ namespace QuantConnect.Indicators
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input value to this indicator on this time step</param>
         /// <returns>A a value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar input)
+        protected override decimal ComputeNextValue(TradeBar input)
         {
-            var previousMax = 0;
-            var previousMin = 0;
-            var currentMax = 0;
-            var currentMin = 0;
+            var MIDvalue = 0;
+            var MIDratio = 0;
 
-            if (Samples > 1 || input.Time < Current.Time)
-            {
-                _maximum.Update(new IndicatorDataPoint { Value = Current.High });
-                _minimum.Update(new IndicatorDataPoint { Value = Current.Low });
-                previousMax = _maximum.Current.Value;
-                previousMin = _minimum.Current.Value;
+            _maximum.Update(new IndicatorDataPoint { Value = input.High });
+            _minimum.Update(new IndicatorDataPoint { Value = input.Low });
 
-                _maximum.Update(new IndicatorDataPoint { Value = input.High });
-                _minimum.Update(new IndicatorDataPoint { Value = input.Low });
-                currentMax = _maximum.Current.Value;
-                currentMin = _minimum.Current.Value;
+            MIDvalue = ((input.High + input.Low) / 2) - ((PreviousHighPrice + PreviousLowPrice) / 2);
+            MIDratio = ((input.Volume / 10000) / (input.High - input.Low));
 
-            }
-            
-            
-            return (((currentMax + currentMin) / 2) - ((previousMax + previousMin) / 2)) / ((input.Volume/10000) / (currentMax - currentMin));
+            PreviousHighPrice = input.High;
+            PreviousLowPrice = input.Low;
+
+            return (MIDvalue/MIDratio);
             
         }
 

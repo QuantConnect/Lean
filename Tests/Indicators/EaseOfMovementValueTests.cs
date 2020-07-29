@@ -13,30 +13,41 @@
  * limitations under the License.
 */
 
-using System;
 using NUnit.Framework;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class EaseOfMovementValueTests : CommonIndicatorTests<IndicatorDataPoint>
+    public class EaseOfMovementValueTests : CommonIndicatorTests<TradeBar>
     {
-        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+        protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            return new EaseOfMovementValue();
+            return new EaseOfMovementValue(2);
         }
 
-        protected override string TestFileName
-        {
-            get { return "spy_emv.txt"; }
-        }
+        protected override string TestFileName => "spy_emv.txt";
 
-        protected override string TestColumnName
+        protected override string TestColumnName => "EMV";
+
+        [Test]
+        public void TestTradeBarsWithNoVolume()
         {
-            get { return "EMV"; }
+            var emv = new EaseOfMovementValue(2);
+            foreach (var data in TestHelper.GetDataStream(3))
+            {
+                var tradeBar = new TradeBar
+                {
+                    Open = data.Value,
+                    Close = data.Value,
+                    High = data.Value,
+                    Low = data.Value,
+                    Volume = 30000000
+                };
+                emv.Update(tradeBar);
+            }
+            Assert.AreEqual(emv.Current.Value, 100.0m);
         }
     }
 }
