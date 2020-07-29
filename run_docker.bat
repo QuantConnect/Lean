@@ -20,6 +20,7 @@ set default_results_dir=%current_dir%
 set default_config_file=%current_dir%Launcher\config.json
 set python_location=%current_dir%Algorithm.Python\
 set csharp_dll=%current_dir%Launcher\bin\Debug\QuantConnect.Algorithm.CSharp.dll
+set csharp_pdb=%current_dir%Launcher\bin\Debug\QuantConnect.Algorithm.CSharp.pdb
 
 if exist "%~1" (
     for /f "eol=- delims=" %%a in (%~1) do set "%%a"
@@ -61,10 +62,16 @@ if not exist "%results_dir%" (
     goto script_exit
 )
 
+if not exist "%csharp_dll%" (
+    echo Csharp dll at '%csharp_dll%' does not exist; be sure to build the project first. 
+    goto script_exit
+)
+
 docker run --rm --mount type=bind,source=%config_file%,target=/Lean/Launcher/config.json,readonly^
     --mount type=bind,source=%data_dir%,target=/Data,readonly^
     --mount type=bind,source=%results_dir%,target=/Results^
     --mount type=bind,source=%csharp_dll%,target=/Lean/Launcher/bin/Debug/QuantConnect.Algorithm.CSharp.dll^
+    --mount type=bind,source=%csharp_pdb%,target=/Lean/Launcher/bin/Debug/QuantConnect.Algorithm.CSharp.pdb^
     --mount type=bind,source=%python_location%,target=/Lean/Algorithm.Python^
     -p 55555:55555 -p 5678:5678^
     --name LeanEngine^
