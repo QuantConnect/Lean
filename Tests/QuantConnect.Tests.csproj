@@ -689,7 +689,7 @@
     <Compile Include="Indicators\WilliamsPercentRTests.cs" />
     <Compile Include="Indicators\RateOfChangePercentTests.cs" />
     <Compile Include="Indicators\RateOfChangeTests.cs" />
-	<Compile Include="Indicators\EaseOfMovementValueTests.cs"/>
+	<Compile Include="Indicators\EaseOfMovementValueTests.cs" />
     <Compile Include="Indicators\StochasticTests.cs" />
     <Compile Include="Research\QuantBookIndicatorsTests.cs" />
     <Compile Include="Research\QuantBookHistoryTests.cs" />
@@ -1077,6 +1077,9 @@
     <Content Include="TestData\spy_rocr.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+	<Content Include="TestData\spy_emv.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
     <Content Include="TestData\spy_tr.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

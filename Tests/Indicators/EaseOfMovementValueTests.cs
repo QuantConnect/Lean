@@ -22,9 +22,9 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class EaseOfMovementValueTests : CommonIndicatorTests<IBaseDataBar>
+    public class EaseOfMovementValueTests : CommonIndicatorTests<IndicatorDataPoint>
     {
-        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
             return new EaseOfMovementValue();
         }

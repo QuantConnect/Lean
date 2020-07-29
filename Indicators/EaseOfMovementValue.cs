@@ -21,7 +21,7 @@ namespace QuantConnect.Indicators
     /// RATIO = (currentVolume/10000) / (high_1 - low_1)
     /// EMV = MID/ratio
     /// </summary>
-    public class EaseOfMovement : WindowIndicators<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public class EaseOfMovement : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
 
         private readonly int _period;
@@ -56,7 +56,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => Samples >= _period;
+        public override bool IsReady => _maximum.IsReady && _minimum.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -95,17 +95,6 @@ namespace QuantConnect.Indicators
             
         }
 
-        ///<summary>
-        /// Resets this indicator to its initial state
-        /// </summary>
-
-        public override void Reset()
-        {
-            _period.Reset();
-            _maximum.Reset();
-            _minimum.Reset();
-            base.Reset();
         
-        }
     }
 }
