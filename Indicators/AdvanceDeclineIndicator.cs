@@ -85,9 +85,9 @@ namespace QuantConnect.Indicators
 
             foreach (var stock in _currentPeriod)
             {
-                if (!_previousPeriod.ContainsKey(stock.Key))
+                if (_previousPeriod[stock.Key] == null)
                 {
-                    return 0;
+                    continue;
                 }
                 else if (stock.Value.Close < _previousPeriod[stock.Key].Close)
                 {

@@ -66,6 +66,54 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(1m, adr.Current.Value);
         }
 
+        [Test]
+        public virtual void IgnorePeriodIfAnyStockMissed()
+        {
+            var adr = (AdvanceDeclineRatio)CreateIndicator();
+            adr.AddStock(Symbols.MSFT);
+            var reference = System.DateTime.Today;
+
+            adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Time = reference.AddMinutes(1) });
+            adr.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Time = reference.AddMinutes(1) });
+            adr.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 1, Time = reference.AddMinutes(1) });
+            adr.Update(new TradeBar() { Symbol = Symbols.MSFT, Close = 1, Time = reference.AddMinutes(1) });
+
+            // value is not ready yet
+            Assert.AreEqual(0m, adr.Current.Value);
+
+            adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 2, Time = reference.AddMinutes(2) });
+            adr.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 0.5m, Time = reference.AddMinutes(2) });
+            adr.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 3, Time = reference.AddMinutes(2) });
+
+            Assert.AreEqual(0m, adr.Current.Value);
+
+            adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 3, Time = reference.AddMinutes(3) });
+            adr.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Time = reference.AddMinutes(3) });
+            adr.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 2, Time = reference.AddMinutes(3) });
+            adr.Update(new TradeBar() { Symbol = Symbols.MSFT, Close = 1, Time = reference.AddMinutes(3) });
+
+            Assert.AreEqual(2m, adr.Current.Value);
+
+            adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Time = reference.AddMinutes(4) });
+            adr.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 2, Time = reference.AddMinutes(4) });
+            adr.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 1, Time = reference.AddMinutes(4) });
+            adr.Update(new TradeBar() { Symbol = Symbols.MSFT, Close = 2, Time = reference.AddMinutes(4) });
+
+            Assert.AreEqual(1m, adr.Current.Value);
+
+            adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 2, Time = reference.AddMinutes(5) });
+            adr.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 3, Time = reference.AddMinutes(5) });
+            adr.Update(new TradeBar() { Symbol = Symbols.MSFT, Close = 1, Time = reference.AddMinutes(5) });
+
+            Assert.AreEqual(1m, adr.Current.Value);
+
+            adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 2, Time = reference.AddMinutes(6) });
+            adr.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 4, Time = reference.AddMinutes(6) });
+            adr.Update(new TradeBar() { Symbol = Symbols.MSFT, Close = 5, Time = reference.AddMinutes(6) });
+
+            Assert.AreEqual(1m, adr.Current.Value);
+        }
+
         protected override string TestFileName => "arms_data.txt";
 
         protected override string TestColumnName => "A/D Ratio";
