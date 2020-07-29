@@ -22,7 +22,7 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture]
     public class EaseOfMovementValueTests : CommonIndicatorTests<TradeBar>
     {
-        protected override IndicatorBase<TradeBar> CreateIndicator()
+        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
             return new EaseOfMovementValue(2);
         }
