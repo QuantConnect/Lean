@@ -71,6 +71,8 @@ if [ ! -f "$csharp_dll" ]; then
     exit 1
 fi
 
+echo "Docker container starting, attach to Mono process at localhost:55555 to begin"
+
 docker run --rm --mount type=bind,source=$config_file,target=/Lean/Launcher/config.json,readonly \
     --mount type=bind,source=$data_dir,target=/Data,readonly \
     --mount type=bind,source=$results_dir,target=/Results \
@@ -80,5 +82,5 @@ docker run --rm --mount type=bind,source=$config_file,target=/Lean/Launcher/conf
     -p 55555:55555 -p 5678:5678 \
     --name LeanEngine \
     --entrypoint mono \
-    %image% --debug --debugger-agent=transport=dt_socket,server=y,address=0.0.0.0:55555,suspend=n \
+    %image% --debug --debugger-agent=transport=dt_socket,server=y,address=0.0.0.0:55555,suspend=y \
     QuantConnect.Lean.Launcher.exe --data-folder /Data --results-destination-folder /Results --config /Lean/Launcher/config.json
