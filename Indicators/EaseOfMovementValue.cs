@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
     /// RATIO = (currentVolume/10000) / (high_1 - low_1)
     /// EMV = MID/ratio
     /// </summary>
-    public class EaseOfMovement : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
+    public class EaseOfMovementValue : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
 
         private readonly int _period;
@@ -55,7 +55,7 @@ namespace QuantConnect.Indicators
         /// Initializeds a new instance of the EaseOfMovement class using the specufued period
         /// </summary>
         /// <param name="period">The period over which to perform to computation</param>
-        public EaseOfMovement(int period = 2)
+        public EaseOfMovementValue(int period = 2)
             : this($"EMV({period})", period)
         {
         }
@@ -65,7 +65,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period over which to perform to computation</param>
-        public EaseOfMovement(string name, int period)
+        public EaseOfMovementValue(string name, int period)
             : base(name)
         {
             WarmUpPeriod = period;
