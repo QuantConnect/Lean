@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -20,11 +21,11 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class EaseOfMovementValueTests : CommonIndicatorTests<TradeBar>
+    public class EaseOfMovementValueTests : CommonIndicatorTests<IBaseDataBar>
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
-            return new EaseOfMovementValue(2);
+            return new EaseOfMovementValue(5);
         }
 
         protected override string TestFileName => "spy_emv.txt";
