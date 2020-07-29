@@ -133,5 +133,19 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual(time, deserialized.Time);
             Assert.AreEqual(time, deserialized.EndTime);
         }
+        
+        [Test]
+        public void ParseFromRawDataUnexpectedEventType()
+        {
+            var rawIntentionLine = "BI12363\tSome unexpected entry\t2020-07-27\t2009-11-11\tUS1234567890\t1000000\t12345\thttps://smartinsidercompanypage\tConsumer Staples\tPersonal Care, Drug and Grocery Stores\tPersonal Care, Drug and Grocery Stores\tPersonal Products\t12345678\tSome Company Corp\tSome Company C\t\t\t\t\tCom\tUS\tSCC\t\t\t\t\t\t\t\t-999\tSome new unexpected event.\t\t\t\t\t\t\t\t2020-07-27\t\t\t\t2020-07-27  13:57:37\tUS\thttps://smartinsiderdatapage\tOn Market\tIssuer\tNot Reported\t\t\t\t\t"; 
+
+            var intention = new SmartInsiderIntention();
+            intention.FromRawData(rawIntentionLine);
+            Assert.DoesNotThrow(() =>intention.FromRawData(rawIntentionLine));
+
+            Assert.IsTrue(intention.EventType.HasValue);
+            Assert.AreEqual(intention.
+                EventType, SmartInsiderEventType.NotSpecified);
+        }
     }
 }
