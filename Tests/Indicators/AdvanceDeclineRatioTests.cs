@@ -25,10 +25,45 @@ namespace QuantConnect.Tests.Indicators
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
             var adr = new AdvanceDeclineRatio("test_name");
-            adr.AddStock(Symbol.Create("AAPL", SecurityType.Equity, Market.USA));
-            adr.AddStock(Symbol.Create("IBM", SecurityType.Equity, Market.USA));
-            adr.AddStock(Symbol.Create("GOOG", SecurityType.Equity, Market.USA));
+            adr.AddStock(Symbols.AAPL);
+            adr.AddStock(Symbols.IBM);
+            adr.AddStock(Symbols.GOOG);
             return adr;
+        }
+
+        [Test]
+        public virtual void ShouldIgnoreRemovedStocks()
+        {
+            var adr = (AdvanceDeclineRatio)CreateIndicator();
+            var reference = System.DateTime.Today;
+
+            adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
+            adr.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
+            adr.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
+
+            // value is not ready yet
+            Assert.AreEqual(0m, adr.Current.Value);
+
+            adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 2, Volume = 100, Time = reference.AddMinutes(2) });
+            adr.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 0.5m, Volume = 100, Time = reference.AddMinutes(2) });
+            adr.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 3, Volume = 100, Time = reference.AddMinutes(2) });
+
+            Assert.AreEqual(2m, adr.Current.Value);
+            adr.Reset();
+            adr.RemoveStock(Symbols.GOOG);
+
+            adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
+            adr.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
+            adr.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
+
+            // value is not ready yet
+            Assert.AreEqual(0m, adr.Current.Value);
+
+            adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 2, Volume = 100, Time = reference.AddMinutes(2) });
+            adr.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 0.5m, Volume = 100, Time = reference.AddMinutes(2) });
+            adr.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 3, Volume = 100, Time = reference.AddMinutes(2) });
+
+            Assert.AreEqual(1m, adr.Current.Value);
         }
 
         protected override string TestFileName => "arms_data.txt";
