@@ -19,6 +19,7 @@ using QuantConnect.Statistics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 
 namespace QuantConnect.Indicators
 {
@@ -78,34 +79,31 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
-        {
-            if (_currentPeriod.Any(t => t.Value != null) && (input.Time > _currentPeriod.First(t => t.Value != null).Value.Time))
+        { 
+            var advStocks = new List<TradeBar>();
+            var dclStocks = new List<TradeBar>();
+
+            foreach (var stock in _currentPeriod)
             {
-                _previousPeriod.Clear();
-                foreach (var key in _currentPeriod.Keys.ToList())
+                if (!_previousPeriod.ContainsKey(stock.Key))
                 {
-                    _previousPeriod[key] = _currentPeriod[key];
-                    _currentPeriod[key] = null;
+                    return 0;
+                }
+                else if (stock.Value.Close < _previousPeriod[stock.Key].Close)
+                {
+                    dclStocks.Add(stock.Value);
+                }
+                else if(stock.Value.Close > _previousPeriod[stock.Key].Close)
+                {
+                    advStocks.Add(stock.Value);
                 }
             }
 
-            if (_currentPeriod.ContainsKey(input.Symbol.ID))
-            {
-                _currentPeriod[input.Symbol.ID] = input;
-            }
-
-            var receivedStocks = _currentPeriod
-                .Where(kvp => kvp.Value != null)
-                .Select(kvp => kvp.Value);
-
-            var dclStocks = receivedStocks
-                .Where(t => _previousPeriod.ContainsKey(t.Symbol.ID) && (t.Close < _previousPeriod[t.Symbol.ID].Close));
             if (!dclStocks.Any())
             {
                 return 0;
             }
 
-            var advStocks = receivedStocks.Where(t => !_previousPeriod.ContainsKey(t.Symbol.ID) || (t.Close > _previousPeriod[t.Symbol.ID].Close));
             return _computeValue(advStocks) / _computeValue(dclStocks);
         }
 
@@ -116,12 +114,14 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override IndicatorResult ValidateAndComputeNextValue(TradeBar input)
         {
-            var vNext = ComputeNextValue(input);
+            Enqueue(input);
+
             if (_currentPeriod.Any(p => p.Value == null))
             {
-                return new IndicatorResult(vNext, IndicatorStatus.ValueNotReady);
+                return new IndicatorResult(0, IndicatorStatus.ValueNotReady);
             }
 
+            var vNext = ComputeNextValue(input);
             return new IndicatorResult(vNext);
         }
 
@@ -137,6 +137,24 @@ namespace QuantConnect.Indicators
             }
 
             base.Reset();
+        }
+
+        private void Enqueue(TradeBar input)
+        {
+            if (_currentPeriod.Any(t => t.Value != null) && (input.Time > _currentPeriod.First(t => t.Value != null).Value.Time))
+            {
+                _previousPeriod.Clear();
+                foreach (var key in _currentPeriod.Keys.ToList())
+                {
+                    _previousPeriod[key] = _currentPeriod[key];
+                    _currentPeriod[key] = null;
+                }
+            }
+
+            if (_currentPeriod.ContainsKey(input.Symbol.ID))
+            {
+                _currentPeriod[input.Symbol.ID] = input;
+            }
         }
     }
 }
