@@ -1,7 +1,7 @@
 {
     /*
-        VS Code Tasks for the LEAN engine,
-        In order to use these you need msbuild on your system path.
+        VS Code Tasks for the LEAN engine
+        In order to use the build tasks you need msbuild on your system path.
     */
     "version": "2.0.0",
     "tasks": [
@@ -11,7 +11,7 @@
             "command": "msbuild",
             "args": [
                 "/p:Configuration=Debug",
-                "/p:DebugType=Full",
+                "/p:DebugType=portable",
                 "/t:build",
             ],
             "group": "build",
@@ -26,8 +26,9 @@
             "command": "msbuild",
             "args": [
                 "/property:GenerateFullPaths=true",
+                "/p:Configuration=Debug",
+                "/p:DebugType=portable",
                 "/t:build",
-                "/consoleloggerparameters:NoSummary",
                 "/p:ForceLinuxBuild=true"
             ],
             "group": "build",
