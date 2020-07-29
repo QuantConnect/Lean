@@ -94,9 +94,18 @@ namespace QuantConnect.Indicators
             return (((currentMax + currentMin) / 2) - ((previousMax + previousMin) / 2)) / ((input.Volume/10000) / (currentMax - currentMin));
             
         }
+
+        ///<summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+
+        public override void Reset()
+        {
+            _period.Reset();
+            _maximum.Reset();
+            _minimum.Reset();
+            base.Reset();
+        
+        }
     }
 }
-
-/// MID = (high_1 + low_1)/2 - (high_0 + low_0)/2 
-/// RATIO = (currentVolume/10000) / (high_1 - low_1)
-/// EMV = MID/ratio
