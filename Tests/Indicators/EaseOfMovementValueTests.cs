@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Indicators
                     Close = data.Value,
                     High = data.Value,
                     Low = data.Value,
-                    Volume = 30000000
+                    Volume = data.Value
                 };
                 emv.Update(tradeBar);
             }
