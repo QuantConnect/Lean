@@ -21,7 +21,7 @@ namespace QuantConnect.Indicators
     /// RATIO = (currentVolume/10000) / (high_1 - low_1)
     /// EMV = MID/ratio
     /// </summary>
-    public class EaseOfMovement : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public class EaseOfMovement : WindowIndicator<BarIndicator>, IIndicatorWarmUpPeriodProvider
     {
 
         private readonly int _period;
@@ -69,7 +69,7 @@ namespace QuantConnect.Indicators
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input value to this indicator on this time step</param>
         /// <returns>A a value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar input)
         {
             var previousMax = 0;
             var previousMin = 0;
@@ -80,13 +80,13 @@ namespace QuantConnect.Indicators
             {
                 _maximum.Update(new IndicatorDataPoint { Value = Current.High });
                 _minimum.Update(new IndicatorDataPoint { Value = Current.Low });
-                previousMax = _maximum;
-                previousMin = _minimum;
+                previousMax = _maximum.Current.Value;
+                previousMin = _minimum.Current.Value;
 
                 _maximum.Update(new IndicatorDataPoint { Value = input.High });
                 _minimum.Update(new IndicatorDataPoint { Value = input.Low });
-                currentMax = _maximum;
-                currentMin = _minimum;
+                currentMax = _maximum.Current.Value;
+                currentMin = _minimum.Current.Value;
 
             }
             
