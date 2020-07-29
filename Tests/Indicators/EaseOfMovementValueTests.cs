@@ -21,9 +21,9 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class EaseOfMovementValueTests : CommonIndicatorTests<IBaseDataBar>
+    public class EaseOfMovementValueTests : CommonIndicatorTests<TradeBar>
     {
-        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
+        protected override IndicatorBase<TradeBar> CreateIndicator()
         {
             return new EaseOfMovementValue(5);
         }
@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestColumnName => "EMV";
 
         [Test]
-        public void TestTradeBarsWithNoVolume()
+        public void TestTradeBarsWithVolume()
         {
             var emv = new EaseOfMovementValue(2);
             foreach (var data in TestHelper.GetDataStream(3))

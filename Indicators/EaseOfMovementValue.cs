@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
     /// RATIO = (currentVolume/10000) / (high_1 - low_1)
     /// EMV = MID/ratio
     /// </summary>
-    public class EaseOfMovement : BarIndicator, IIndicatorWarmUpPeriodProvider
+    public class EaseOfMovement : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
 
         private readonly int _period;
@@ -80,16 +80,14 @@ namespace QuantConnect.Indicators
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input value to this indicator on this time step</param>
         /// <returns>A a value for this indicator</returns>
-        protected override decimal ComputeNextValue(IBaseDataBar input)
+        protected override decimal ComputeNextValue(TradeBar input)
         {
-            var MIDvalue = 0;
-            var MIDratio = 0;
 
             _maximum.Update(new IndicatorDataPoint { Value = input.High });
             _minimum.Update(new IndicatorDataPoint { Value = input.Low });
 
-            MIDvalue = ((input.High + input.Low) / 2) - ((PreviousHighPrice + PreviousLowPrice) / 2);
-            MIDratio = ((input.Volume / 10000) / (input.High - input.Low));
+            var MIDvalue = ((input.High + input.Low) / 2) - ((PreviousHighPrice + PreviousLowPrice) / 2);
+            var MIDratio = ((input.Volume / 10000) / (input.High - input.Low));
 
             PreviousHighPrice = input.High;
             PreviousLowPrice = input.Low;
