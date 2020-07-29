@@ -49,7 +49,13 @@ The most important plugins are:
 
 These are all configurable from the config.json file in the Launcher Project.
 
-## Installation Instructions ##
+## Docker Instructions ##
+
+TODO.
+
+See the Makefile for current best guesses.
+
+## Local Installation Instructions ##
 
 *We recommend using the docker image.* This is perfectly configured to run out of the box without interfering with your development environment. You can pull this image with `docker pull quantconnect/lean`
 

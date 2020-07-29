@@ -45,7 +45,7 @@ EXPOSE 8888
 WORKDIR $WORK
 
 ENTRYPOINT [ "/usr/local/bin/tini", "--" ]
-CMD jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root
+CMD jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --notebook-dir=/home/notebooks
 
 # List packages
 RUN conda list
