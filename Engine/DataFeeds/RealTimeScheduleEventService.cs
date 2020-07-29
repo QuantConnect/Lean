@@ -28,6 +28,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// event before time.</remarks>
     public class RealTimeScheduleEventService : IDisposable
     {
+        private static TimeSpan _millisecondAccuracyOffset = TimeSpan.FromMilliseconds(15);
         private readonly Timer _timer;
         private readonly Ref<ReferenceWrapper<DateTime>> _nextUtcScheduledEvent;
 
@@ -52,7 +53,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // has past, if we got called earlier lets wait until time is right
                     while (diff.Ticks > 0)
                     {
-                        await Task.Delay(diff);
+                        if (diff.Milliseconds > 25)
+                        {
+                            // uses a timer internally, don't trust the accuracy
+                            await Task.Delay(diff - TimeSpan.FromMilliseconds(10));
+                        }
+                        else
+                        {
+                            Thread.SpinWait(1000);
+                        }
                         // testing has shown that it sometimes requires more than one loop
                         diff = nextUtcScheduledEvent - timeProvider.GetUtcNow();
                     }
@@ -75,7 +84,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void ScheduleEvent(TimeSpan dueTime, DateTime utcNow)
         {
             _nextUtcScheduledEvent.Value = new ReferenceWrapper<DateTime>(utcNow + dueTime);
-            _timer.Change(dueTime, Timeout.InfiniteTimeSpan);
+            // the timer will wake up a little earlier to improve accuracy
+            _timer.Change(dueTime > _millisecondAccuracyOffset ? (dueTime - _millisecondAccuracyOffset) : TimeSpan.Zero, Timeout.InfiniteTimeSpan);
         }
 
         /// <summary>
