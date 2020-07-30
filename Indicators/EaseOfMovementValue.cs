@@ -26,29 +26,24 @@ namespace QuantConnect.Indicators
     {
 
         private readonly int _period;
-        private readonly IndicatorBase<IndicatorDataPoint> _maximum;
-        private readonly IndicatorBase<IndicatorDataPoint> _minimum;
-
-        public decimal PreviousHighPrice { get; private set; }
-        public decimal PreviousLowPrice { get; private set; }
+        private readonly decimal _previoushighprice { get; private set; }
+        private readonly decimal _previouslowprice { get; private set; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _maximum.IsReady && _minimum.IsReady;
+        public override bool IsReady => Samples >= _period + 1;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod { get; }
+        public int WarmUpPeriod => _period + 1;
 
 
         public override void Reset()
         {
-            PreviousHighPrice = 1;
-            PreviousLowPrice = 1;
-            _maximum.Reset();
-            _minimum.Reset();
+            _previoushighprice = 0;
+            _previouslowprice = 0;
             base.Reset();
         }
 
@@ -70,9 +65,8 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             WarmUpPeriod = period;
-            _maximum = new Maximum(period);
-            _minimum = new Minimum(period);
-
+            _previousHighMaximum = new Delay(1).MAX(period);
+            _previousLowMinimum = new Delay(1).MIN(period);
         }
 
         /// <summary>
@@ -83,20 +77,25 @@ namespace QuantConnect.Indicators
         /// <returns>A a value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
+            if (input.High-input.Low == 0 || input.Volume == 0)
+            {
+                return 0;
+            }
 
-            _maximum.Update(new IndicatorDataPoint { Value = input.High });
-            _minimum.Update(new IndicatorDataPoint { Value = input.Low });
+            if (_previoushighprice + _previouslowprice == 0)
+            {
+                _previoushighprice = input.High;
+                _previouslowprice = input.Low;
+                return 0;
+            }
 
-            var MIDvalue = ((input.High + input.Low) / 2) - ((PreviousHighPrice + PreviousLowPrice) / 2);
+            var MIDvalue = ((input.High + input.Low) / 2) - ((_previoushighprice + _previouslowprice) / 2);
             var MIDratio = ((input.Volume / 10000) / (input.High - input.Low));
 
-            PreviousHighPrice = input.High;
-            PreviousLowPrice = input.Low;
+            _previoushighprice = input.High;
+            _previouslowprice = input.Low;
 
             return (MIDvalue / MIDratio);
-
         }
-
-
     }
 }
