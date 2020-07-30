@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            return new EaseOfMovementValue(5);
+            return new EaseOfMovementValue();
         }
 
         protected override string TestFileName => "spy_emv.txt";
