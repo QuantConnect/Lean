@@ -144,7 +144,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             // check if any enumerator is ready to emit
             if (auxDataEnumerator?.Current != null && _tradeBarAggregator.Current != null)
             {
-                var auxDataEndTime = auxDataEnumerator.Current.EndTime;
+                var auxDataEndTime = auxDataEnumerator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
                 var tradeBarEndTime = _tradeBarAggregator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
                 if (auxDataEndTime < tradeBarEndTime)
                 {

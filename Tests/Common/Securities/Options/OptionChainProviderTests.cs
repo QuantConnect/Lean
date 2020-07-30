@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(2, symbols.Count());
         }
 
-        [Test, Category("TravisExclude")]
+        [Test]
         public void LiveOptionChainProviderReturnsData()
         {
             var provider = new LiveOptionChainProvider();
