@@ -26,7 +26,8 @@ namespace QuantConnect.Indicators
     {
 
         private readonly int _period;
-        
+        private readonly IndicatorBase<IndicatorDataPoint> _maximum;
+        private readonly IndicatorBase<IndicatorDataPoint> _minimum;
 
         public decimal PreviousHighPrice { get; private set; }
         public decimal PreviousLowPrice { get; private set; }
@@ -40,6 +41,7 @@ namespace QuantConnect.Indicators
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
         public int WarmUpPeriod { get; }
+
 
         public override void Reset()
         {
@@ -70,7 +72,7 @@ namespace QuantConnect.Indicators
             WarmUpPeriod = period;
             _maximum = new Maximum(period);
             _minimum = new Minimum(period);
-            
+
         }
 
         /// <summary>
@@ -81,6 +83,9 @@ namespace QuantConnect.Indicators
         /// <returns>A a value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
+
+            _maximum.Update(new IndicatorDataPoint { Value = input.High });
+            _minimum.Update(new IndicatorDataPoint { Value = input.Low });
 
             if (PreviousHighPrice == null || PreviousLowPrice == null)
             {
@@ -96,8 +101,8 @@ namespace QuantConnect.Indicators
             PreviousHighPrice = input.High;
             PreviousLowPrice = input.Low;
 
-            return (MIDvalue/MIDratio);
-            
+            return (MIDvalue / MIDratio);
+
         }
 
 
