@@ -25,25 +25,24 @@ namespace QuantConnect.Indicators
     public class EaseOfMovementValue : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
 
-        private readonly int _period;
-        private readonly Maximum _previousHighMaximum;
-        private readonly Minimum _previousLowMinimum;
+        private decimal _previousHighMaximum;
+        private decimal _previousLowMinimum;
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => Samples >= _period + 1;
+        public override bool IsReady => Samples >= 2;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => _period + 1;
+        public int WarmUpPeriod => 2;
 
 
         public override void Reset()
         {
-            _previousHighMaximum = 0;
-            _previousLowMinimum = 0;
+            _previousHighMaximum = 0.0m;
+            _previousLowMinimum = 0.0m;
             base.Reset();
         }
 
@@ -51,22 +50,17 @@ namespace QuantConnect.Indicators
         /// Initializeds a new instance of the EaseOfMovement class using the specufued period
         /// </summary>
         /// <param name="period">The period over which to perform to computation</param>
-        public EaseOfMovementValue(int period = 2)
-            : this($"EMV({period})", period)
+        public EaseOfMovementValue()
+            : this("EMV()")
         {
         }
-
         /// <summary>
         /// Creates a new EaseOfMovement indicator with the specified period
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        /// <param name="period">The period over which to perform to computation</param>
-        public EaseOfMovementValue(string name, int period)
+        public EaseOfMovementValue(string name)
             : base(name)
         {
-            WarmUpPeriod = period;
-            _previousHighMaximum = new Delay(1).MAX(period);
-            _previousLowMinimum = new Delay(1).MIN(period);
         }
 
         /// <summary>
@@ -77,29 +71,17 @@ namespace QuantConnect.Indicators
         /// <returns>A a value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-
-            _previousHighMaximum.Update(new IndicatorDataPoint { Value = input.High });
-            _previousLowMinimum.Update(new IndicatorDataPoint { Value = input.Low });
-
-            if (input.High-input.Low == 0 || input.Volume == 0)
+            if (_previousHighMaximum == null) _previousHighMaximum = input.High;
+            if (_previousLowMinimum == null) _previousLowMinimum = input.Low;
+            if (input.Volume == 0 || input.High == input.Low)
             {
                 return 0;
             }
-
-            if (_previousHighMaximum + _previousLowMinimum == 0)
-            {
-                _previousHighMaximum = input.High;
-                _previousLowMinimum = input.Low;
-                return 0;
-            }
-
             var midValue = ((input.High + input.Low) / 2) - ((_previousHighMaximum + _previousLowMinimum) / 2);
             var midRatio = ((input.Volume / 10000) / (input.High - input.Low));
-
             _previousHighMaximum = input.High;
             _previousLowMinimum = input.Low;
-
-            return (midValue / midRatio);
+            return midValue / midRatio;
         }
     }
 }
