@@ -125,7 +125,7 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             if (IsConnected) return;
 
-            _sockClient.ConnectAsync().SynchronouslyAwaitTask();
+            _sockClient.Connect();
         }
 
         /// <summary>
@@ -133,9 +133,8 @@ namespace QuantConnect.Brokerages.Alpaca
         /// </summary>
         public override void Disconnect()
         {
-            _sockClient.DisconnectAsync().SynchronouslyAwaitTask();
+            _sockClient.Disconnect();
         }
-
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
