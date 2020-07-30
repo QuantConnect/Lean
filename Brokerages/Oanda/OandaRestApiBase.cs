@@ -21,9 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NodaTime;
 using QuantConnect.Data;
-using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -493,7 +491,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <summary>
         /// Emit ticks
         /// </summary>
-        /// <param name="tick"></param>
+        /// <param name="tick">The new tick to emit</param>
         protected void EmitTick(Tick tick)
         {
             Aggregator.Update(tick);
