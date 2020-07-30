@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Data.Market;
+using System.Runtime.InteropServices;
 
 namespace QuantConnect.Indicators
 {
@@ -24,6 +25,7 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class ArmsIndex : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
+        private int _stockCount;
         private readonly IndicatorBase<IndicatorDataPoint> _arms;
 
         /// <summary>
@@ -55,7 +57,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod { get; } = 2;
+        public int WarmUpPeriod => System.Math.Max(ADRatio.WarmUpPeriod, ADVRatio.WarmUpPeriod);
 
         /// <summary>
         /// Computes the next value of this indicator from the given state

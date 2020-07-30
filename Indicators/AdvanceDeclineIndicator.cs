@@ -66,12 +66,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => Samples >= WarmUpPeriod;
+        public override bool IsReady => _previousPeriod.Keys.Any();
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod { get; } = 2;
+        public int WarmUpPeriod => 2;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -79,7 +79,7 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
-        { 
+        {
             var advStocks = new List<TradeBar>();
             var dclStocks = new List<TradeBar>();
 
@@ -93,7 +93,7 @@ namespace QuantConnect.Indicators
                 {
                     dclStocks.Add(stock.Value);
                 }
-                else if(stock.Value.Close > _previousPeriod[stock.Key].Close)
+                else if (stock.Value.Close > _previousPeriod[stock.Key].Close)
                 {
                     advStocks.Add(stock.Value);
                 }
@@ -116,7 +116,7 @@ namespace QuantConnect.Indicators
         {
             Enqueue(input);
 
-            if (_currentPeriod.Any(p => p.Value == null))
+            if (!_previousPeriod.Keys.Any() || _currentPeriod.Any(p => p.Value == null))
             {
                 return new IndicatorResult(0, IndicatorStatus.ValueNotReady);
             }

@@ -115,6 +115,25 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(3m / 5m, adr.Current.Value);
         }
 
+        [Test]
+        public override void WarmsUpProperly()
+        {
+            var indicator = CreateIndicator();
+            var reference = System.DateTime.Today;
+
+            indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Volume = 1, Time = reference.AddMinutes(1) });
+            indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 1, Time = reference.AddMinutes(1) });
+            indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 1, Volume = 1, Time = reference.AddMinutes(1) });
+
+            // indicator is not ready yet
+            Assert.IsFalse(indicator.IsReady);
+
+            indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 2, Volume = 1, Time = reference.AddMinutes(2) });
+            indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 0.5m, Volume = 1, Time = reference.AddMinutes(2) });
+            indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 3, Volume = 1, Time = reference.AddMinutes(2) });
+
+            Assert.IsTrue(indicator.IsReady);
+        }
 
         protected override string TestFileName => "arms_data.txt";
 
