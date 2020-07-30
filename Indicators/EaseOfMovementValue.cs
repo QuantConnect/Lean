@@ -26,8 +26,7 @@ namespace QuantConnect.Indicators
     {
 
         private readonly int _period;
-        private readonly IndicatorBase<IndicatorDataPoint> _maximum;
-        private readonly IndicatorBase<IndicatorDataPoint> _minimum;
+        
 
         public decimal PreviousHighPrice { get; private set; }
         public decimal PreviousLowPrice { get; private set; }
@@ -44,8 +43,8 @@ namespace QuantConnect.Indicators
 
         public override void Reset()
         {
-            PreviousHighPrice = 1;
-            PreviousLowPrice = 1;
+            PreviousHighPrice = null;
+            PreviousLowPrice = null;
             _maximum.Reset();
             _minimum.Reset();
             base.Reset();
@@ -83,8 +82,13 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(TradeBar input)
         {
 
-            _maximum.Update(new IndicatorDataPoint { Value = input.High });
-            _minimum.Update(new IndicatorDataPoint { Value = input.Low });
+            if (PreviousHighPrice == null && PreviousLowPrice == null)
+            {
+                PreviousHighPrice = input.High;
+                PreviousLowPrice = input.Low;
+
+                return 0;
+            }
 
             var MIDvalue = ((input.High + input.Low) / 2) - ((PreviousHighPrice + PreviousLowPrice) / 2);
             var MIDratio = ((input.Volume / 10000) / (input.High - input.Low));
