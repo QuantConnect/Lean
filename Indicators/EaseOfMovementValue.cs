@@ -26,8 +26,8 @@ namespace QuantConnect.Indicators
     {
 
         private readonly int _period;
-        private readonly decimal _previoushighprice { get; private set; }
-        private readonly decimal _previouslowprice { get; private set; }
+        private decimal _previoushighprice { get; private set; }
+        private decimal _previouslowprice { get; private set; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
