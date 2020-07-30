@@ -26,8 +26,8 @@ namespace QuantConnect.Indicators
     {
 
         private readonly int _period;
-        private decimal _previoushighprice { get; private set; }
-        private decimal _previouslowprice { get; private set; }
+        private readonly Maximum _previousHighMaximum;
+        private readonly Minimum _previousLowMinimum;
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -42,8 +42,8 @@ namespace QuantConnect.Indicators
 
         public override void Reset()
         {
-            _previoushighprice = 0;
-            _previouslowprice = 0;
+            _previousHighMaximum = 0;
+            _previousLowMinimum = 0;
             base.Reset();
         }
 
@@ -77,25 +77,29 @@ namespace QuantConnect.Indicators
         /// <returns>A a value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
+
+            _previousHighMaximum.Update(new IndicatorDataPoint { Value = input.High });
+            _previousLowMinimum.Update(new IndicatorDataPoint { Value = input.Low });
+
             if (input.High-input.Low == 0 || input.Volume == 0)
             {
                 return 0;
             }
 
-            if (_previoushighprice + _previouslowprice == 0)
+            if (_previousHighMaximum + _previousLowMinimum == 0)
             {
                 _previoushighprice = input.High;
                 _previouslowprice = input.Low;
                 return 0;
             }
 
-            var MIDvalue = ((input.High + input.Low) / 2) - ((_previoushighprice + _previouslowprice) / 2);
-            var MIDratio = ((input.Volume / 10000) / (input.High - input.Low));
+            var midValue = ((input.High + input.Low) / 2) - ((_previousHighMaximum + _previousLowMinimum) / 2);
+            var midRatio = ((input.Volume / 10000) / (input.High - input.Low));
 
-            _previoushighprice = input.High;
-            _previouslowprice = input.Low;
+            _previousHighMaximum = input.High;
+            _previousLowMinimum = input.Low;
 
-            return (MIDvalue / MIDratio);
+            return (midValue / midRatio);
         }
     }
 }
