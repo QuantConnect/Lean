@@ -45,8 +45,8 @@ namespace QuantConnect.Indicators
 
         public override void Reset()
         {
-            PreviousHighPrice = 0;
-            PreviousLowPrice = 0;
+            PreviousHighPrice = 1;
+            PreviousLowPrice = 1;
             _maximum.Reset();
             _minimum.Reset();
             base.Reset();
@@ -86,14 +86,6 @@ namespace QuantConnect.Indicators
 
             _maximum.Update(new IndicatorDataPoint { Value = input.High });
             _minimum.Update(new IndicatorDataPoint { Value = input.Low });
-
-            if (PreviousHighPrice == 0 || PreviousLowPrice == 0)
-            {
-                PreviousHighPrice = input.High;
-                PreviousLowPrice = input.Low;
-
-                return 0;
-            }
 
             var MIDvalue = ((input.High + input.Low) / 2) - ((PreviousHighPrice + PreviousLowPrice) / 2);
             var MIDratio = ((input.Volume / 10000) / (input.High - input.Low));
