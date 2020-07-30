@@ -376,7 +376,6 @@
     <Compile Include="Common\Brokerages\FxcmBrokerageModelTests.cs" />
     <Compile Include="Common\Data\Auxiliary\FactorFileRowTests.cs" />
     <Compile Include="Brokerages\GDAX\GDAXBrokerageHistoryProviderTests.cs" />
-    <Compile Include="Brokerages\Alpaca\AlpacaBrokerageDataQueueHandlerTests.cs" />
     <Compile Include="Brokerages\Alpaca\AlpacaBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\Alpaca\AlpacaBrokerageTests.cs" />
     <Compile Include="Common\Data\Auxiliary\FactorFileTests.cs" />

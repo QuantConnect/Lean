@@ -16,10 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NodaTime;
 using QuantConnect.Brokerages.Alpaca.Markets;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
@@ -33,18 +31,14 @@ namespace QuantConnect.Brokerages.Alpaca
     /// Alpaca Brokerage implementation
     /// </summary>
     [BrokerageFactory(typeof(AlpacaBrokerageFactory))]
-    public partial class AlpacaBrokerage : Brokerage, IDataQueueHandler
+    public partial class AlpacaBrokerage : Brokerage
     {
-        private bool _isConnected;
-
         // Rest API requests must be limited to a maximum of 200 messages/minute
         private readonly RateGate _messagingRateLimiter = new RateGate(200, TimeSpan.FromMinutes(1));
 
         private readonly AlpacaTradingClient _alpacaTradingClient;
         private readonly PolygonDataClient _polygonDataClient;
         private readonly SockClient _sockClient;
-        private readonly PolygonStreamingClient _polygonStreamingClient;
-        private readonly bool _handlesMarketData;
 
         /// <summary>
         /// This lock is used to sync 'PlaceOrder' and callback 'OnTradeUpdate'
@@ -71,8 +65,6 @@ namespace QuantConnect.Brokerages.Alpaca
         /// </summary>
         private readonly MarketHoursDatabase _marketHours;
 
-        private readonly Dictionary<Symbol, DateTimeZone> _symbolExchangeTimeZones = new Dictionary<Symbol, DateTimeZone>();
-
         /// <summary>
         /// Initializes a new instance of the <see cref="AlpacaBrokerage"/> class.
         /// </summary>
@@ -81,12 +73,10 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="accountKeyId">The Alpaca api key id</param>
         /// <param name="secretKey">The api secret key</param>
         /// <param name="tradingMode">The Alpaca trading mode. paper/live</param>
-        /// <param name="handlesMarketData">true if market data subscriptions will be handled by Alpaca</param>
         /// <param name="aggregator">consolidate ticks</param>
-        public AlpacaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountKeyId, string secretKey, string tradingMode, bool handlesMarketData, IDataAggregator aggregator)
+        public AlpacaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountKeyId, string secretKey, string tradingMode, IDataAggregator aggregator)
             : base("Alpaca Brokerage")
         {
-            _handlesMarketData = handlesMarketData;
             _aggregator = aggregator;
 
             var httpScheme = "https://";
@@ -107,6 +97,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 ApiEndpoint = tradingMode.Equals("paper") ? Environments.Paper.AlpacaTradingApi : Environments.Live.AlpacaTradingApi,
                 SecurityId = new SecretKey(accountKeyId, secretKey)
             });
+
             // api client for alpaca data
             _polygonDataClient = new PolygonDataClient(new PolygonDataClientConfiguration
             {
@@ -118,17 +109,6 @@ namespace QuantConnect.Brokerages.Alpaca
             _sockClient = new SockClient(accountKeyId, secretKey, httpAlpacaBaseUrl);
             _sockClient.OnTradeUpdate += OnTradeUpdate;
             _sockClient.OnError += OnSockClientError;
-
-            // Polygon Streaming client for Alpaca (streams trade and quote data)
-            _polygonStreamingClient = new PolygonStreamingClient(new PolygonStreamingClientConfiguration
-            {
-                ApiEndpoint = Environments.Live.PolygonStreamingApi,
-                KeyId = accountKeyId,
-                WebSocketFactory = new WebSocketClientFactory()
-            });
-            _polygonStreamingClient.QuoteReceived += OnQuoteReceived;
-            _polygonStreamingClient.TradeReceived += OnTradeReceived;
-            _polygonStreamingClient.OnError += OnPolygonStreamingClientError;
         }
 
         #region IBrokerage implementation
@@ -136,7 +116,7 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
-        public override bool IsConnected => _isConnected;
+        public override bool IsConnected => _sockClient.IsConnected;
 
         /// <summary>
         /// Connects the client to the broker's remote servers
@@ -146,13 +126,6 @@ namespace QuantConnect.Brokerages.Alpaca
             if (IsConnected) return;
 
             _sockClient.ConnectAsync().SynchronouslyAwaitTask();
-
-            if (_handlesMarketData)
-            {
-                _polygonStreamingClient.Connect();
-            }
-
-            _isConnected = true;
         }
 
         /// <summary>
@@ -161,13 +134,6 @@ namespace QuantConnect.Brokerages.Alpaca
         public override void Disconnect()
         {
             _sockClient.DisconnectAsync().SynchronouslyAwaitTask();
-
-            if (_handlesMarketData)
-            {
-                _polygonStreamingClient.Disconnect();
-            }
-
-            _isConnected = false;
         }
 
 
@@ -180,7 +146,6 @@ namespace QuantConnect.Brokerages.Alpaca
 
             _aggregator.Dispose();
             _sockClient?.Dispose();
-            _polygonStreamingClient?.Dispose();
 
             _messagingRateLimiter.Dispose();
         }

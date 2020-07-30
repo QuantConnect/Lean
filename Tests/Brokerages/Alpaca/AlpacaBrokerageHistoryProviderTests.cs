@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             var tradingMode = Config.Get("alpaca-trading-mode");
             var aggregator = new AggregationManager();
 
-            using (var brokerage = new AlpacaBrokerage(null, null, keyId, secretKey, tradingMode, true, aggregator))
+            using (var brokerage = new AlpacaBrokerage(null, null, keyId, secretKey, tradingMode, aggregator))
             {
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);

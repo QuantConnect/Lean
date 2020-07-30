@@ -26,6 +26,11 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         private readonly string _secretKey;
 
         /// <summary>
+        /// Returns true if we're currently connected to the broker
+        /// </summary>
+        public bool IsConnected => _webSocket.IsOpen;
+
+        /// <summary>
         /// Creates new instance of <see cref="SockClient"/> object.
         /// </summary>
         /// <param name="keyId">Application key identifier.</param>

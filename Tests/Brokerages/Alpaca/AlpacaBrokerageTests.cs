@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             var tradingMode = Config.Get("alpaca-trading-mode");
             var aggregator = new AggregationManager();
 
-            return new AlpacaBrokerage(orderProvider, securityProvider, keyId, secretKey, tradingMode, false, aggregator);
+            return new AlpacaBrokerage(orderProvider, securityProvider, keyId, secretKey, tradingMode, aggregator);
         }
 
         /// <summary>

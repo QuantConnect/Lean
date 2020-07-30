@@ -92,18 +92,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 throw new Exception("Available trading mode: paper/live");
             }
 
-            var handlesMarketData = job.DataQueueHandler.EndsWith("AlpacaBrokerage");
-
-            var brokerage = new AlpacaBrokerage(algorithm.Transactions, 
-                algorithm.Portfolio, 
-                keyId, 
-                secretKey, 
-                tradingMode, 
-                handlesMarketData,
-                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")));
-            Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
-
-            return brokerage;
+            return new AlpacaBrokerage(algorithm.Transactions, algorithm.Portfolio, keyId, secretKey, tradingMode);
         }
 
     }
