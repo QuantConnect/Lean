@@ -88,8 +88,8 @@ namespace QuantConnect.Indicators
 
             if (_previousHighMaximum + _previousLowMinimum == 0)
             {
-                _previoushighprice = input.High;
-                _previouslowprice = input.Low;
+                _previousHighMaximum = input.High;
+                _previousLowMinimum = input.Low;
                 return 0;
             }
 
