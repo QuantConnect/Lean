@@ -2,20 +2,15 @@
  * The official C# API client for alpaca brokerage
  * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
  * Changes from the above source:
- *     The websocket connection now depends on WebSocketSharp, not on WebSocket4Net as in the original source
+ *     The websocket connection now depends on System.Net.WebSockets, not on WebSocket4Net as in the original source
 */
 
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using WebSocketSharp;
-using System.Security.Authentication;
-using QuantConnect.Configuration;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
@@ -24,11 +19,11 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
     /// </summary>
     internal sealed class SockClient : IDisposable
     {
-        private readonly WebSocket _webSocket;
+        private readonly WebSocketClientWrapper _webSocket;
 
-        private readonly String _keyId;
+        private readonly string _keyId;
 
-        private readonly String _secretKey;
+        private readonly string _secretKey;
 
         /// <summary>
         /// Creates new instance of <see cref="SockClient"/> object.
@@ -37,9 +32,9 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="secretKey">Application secret key.</param>
         /// <param name="alpacaRestApi">Alpaca REST API endpoint URL.</param>
         public SockClient(
-            String keyId,
-            String secretKey,
-            String alpacaRestApi = null)
+            string keyId,
+            string secretKey,
+            string alpacaRestApi = null)
             : this(
                 keyId,
                 secretKey,
@@ -54,8 +49,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="secretKey">Application secret key.</param>
         /// <param name="alpacaRestApi">Alpaca REST API endpoint URL.</param>
         public SockClient(
-            String keyId,
-            String secretKey,
+            string keyId,
+            string secretKey,
             Uri alpacaRestApi)
         {
             if (keyId == null)
@@ -76,28 +71,17 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             {
                 Scheme = alpacaRestApi.Scheme == "http" ? "ws" : "wss"
             };
-            uriBuilder.Path += "/stream";
+            uriBuilder.Path += "stream";
 
-            _webSocket = new WebSocket(uriBuilder.Uri.ToString())
+            _webSocket = new WebSocketClientWrapper();
+            _webSocket.Initialize(uriBuilder.Uri.ToString());
+
+            _webSocket.Open += HandleOpened;
+            _webSocket.Closed += HandleClosed;
+
+            _webSocket.Message += HandleDataReceived;
+            _webSocket.Error += (sender, args) =>
             {
-                Log =
-                {
-                    Level = Config.GetBool("websocket-log-trace") ? LogLevel.Trace : LogLevel.Error,
-
-                    // The stack frame number of 3 was derived from the usage of the Logger class in the WebSocketSharp library
-                    Output = (data, file) => { Log.Trace($"{WhoCalledMe.GetMethodName(3)}(): {data.Message}", true); }
-                }
-            };
-
-            _webSocket.SslConfiguration.EnabledSslProtocols = SslProtocols.Tls11 | SslProtocols.Tls12;
-
-            _webSocket.OnOpen += handleOpened;
-            _webSocket.OnClose += handleClosed;
-
-            _webSocket.OnMessage += handleDataReceived;
-            _webSocket.OnError += (sender, args) =>
-            {
-                Console.WriteLine(args.Exception);
                 OnError?.Invoke(args.Exception);
             };
         }
@@ -123,11 +107,6 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         public event Action<Exception> OnError;
 
         /// <summary>
-        /// Returns true if the websocket ping-pong handshake was successful
-        /// </summary>
-        public bool IsAlive => _webSocket.IsAlive;
-
-        /// <summary>
         /// Opens connection to Alpaca streaming API.
         /// </summary>
         /// <returns>Waitable task object for handling action completion in asyncronious mode.</returns>
@@ -148,15 +127,13 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <inheritdoc />
         public void Dispose()
         {
-            if (_webSocket != null && _webSocket.ReadyState != WebSocketState.Closing && _webSocket.ReadyState != WebSocketState.Closed)
+            if (_webSocket != null && _webSocket.IsOpen)
             {
                 _webSocket.Close();
             }
         }
 
-        private void handleOpened(
-            Object sender,
-            EventArgs e)
+        private void HandleOpened(object sender, EventArgs e)
         {
             var authenticateRequest = new JsonAuthRequest
             {
@@ -168,23 +145,18 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                 }
             };
 
-            sendAsJsonString(authenticateRequest);
+            SendAsJsonString(authenticateRequest);
         }
 
-        private void handleClosed(
-            Object sender,
-            EventArgs e)
+        private void HandleClosed(object sender, WebSocketCloseData e)
         {
         }
 
-        private void handleDataReceived(
-            Object sender,
-            MessageEventArgs e)
+        private void HandleDataReceived(object sender, WebSocketMessage e)
         {
-            var message = Encoding.UTF8.GetString(e.RawData);
             try
             {
-                var root = JObject.Parse(message);
+                var root = JObject.Parse(e.Message);
 
                 var data = root["data"];
                 var stream = root["stream"].ToString();
@@ -192,7 +164,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                 switch (stream)
                 {
                     case "authorization":
-                        handleAuthorization(
+                        HandleAuthorization(
                             data.ToObject<JsonAuthResponse>());
                         break;
 
@@ -201,12 +173,12 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                         break;
 
                     case "trade_updates":
-                        handleTradeUpdates(
+                        HandleTradeUpdates(
                             data.ToObject<JsonTradeUpdate>());
                         break;
 
                     case "account_updates":
-                        handleAccountUpdates(
+                        HandleAccountUpdates(
                             data.ToObject<JsonAccountUpdate>());
                         break;
 
@@ -222,8 +194,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             }
         }
 
-        private void handleAuthorization(
-            JsonAuthResponse response)
+        private void HandleAuthorization(JsonAuthResponse response)
         {
             if (response.Status == AuthStatus.Authorized)
             {
@@ -240,7 +211,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                     }
                 };
 
-                sendAsJsonString(listenRequest);
+                SendAsJsonString(listenRequest);
             }
             else
             {
@@ -248,20 +219,17 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             }
         }
 
-        private void handleTradeUpdates(
-            ITradeUpdate update)
+        private void HandleTradeUpdates(ITradeUpdate update)
         {
             OnTradeUpdate?.Invoke(update);
         }
 
-        private void handleAccountUpdates(
-            IAccountUpdate update)
+        private void HandleAccountUpdates(IAccountUpdate update)
         {
             OnAccountUpdate?.Invoke(update);
         }
 
-        private void sendAsJsonString(
-            Object value)
+        private void SendAsJsonString(object value)
         {
             using (var textWriter = new StringWriter())
             {

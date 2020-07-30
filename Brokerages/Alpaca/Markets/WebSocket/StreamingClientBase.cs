@@ -13,8 +13,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -26,7 +24,6 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
     public abstract class StreamingClientBase<TConfiguration> : IDisposable
         where TConfiguration : StreamingClientConfiguration
     {
-        private TaskCompletionSource<AuthStatus> _tcs;
         private readonly SynchronizationQueue _queue = new SynchronizationQueue();
 
         private readonly IWebSocket _webSocket;
@@ -44,14 +41,13 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
 
             _webSocket = configuration.CreateWebSocket();
 
-            _webSocket.Opened += OnOpened;
+            _webSocket.Open += OnOpened;
             _webSocket.Closed += OnClosed;
 
-            _webSocket.MessageReceived += OnMessageReceived;
-            _webSocket.DataReceived += OnDataReceived;
+            _webSocket.Message += OnMessage;
 
             _webSocket.Error += HandleError;
-            _queue.OnError += HandleError;
+            _queue.OnError += HandleQueueError;
         }
 
         /// <summary>
@@ -77,46 +73,12 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <summary>
         /// Opens connection to a streaming API.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>Awaitable task object for handling action completion in asynchronous mode.</returns>
-        public Task ConnectAsync(
-            CancellationToken cancellationToken = default(CancellationToken))
-            => _webSocket.OpenAsync(cancellationToken);
-
-        /// <summary>
-        /// Opens connection to a streaming API and awaits for authentication response.
-        /// </summary>
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>Awaitable task object for handling client authentication event in asynchronous mode.</returns>
-        public async Task<AuthStatus> ConnectAndAuthenticateAsync(
-            CancellationToken cancellationToken = default(CancellationToken))
-        {
-            _tcs = new TaskCompletionSource<AuthStatus>();
-            Connected += HandleConnected;
-
-            await ConnectAsync(cancellationToken).ConfigureAwait(false);
-            return await _tcs.Task.ConfigureAwait(false);
-
-        }
-
-        /// <summary>
-        /// Sets the authentication status once we've connected to the websocket stream
-        /// </summary>
-        /// <param name="authStatus">Authentication status returned by the server</param>
-        private void HandleConnected(AuthStatus authStatus)
-        {
-            Connected -= HandleConnected;
-            _tcs.SetResult(authStatus);
-        }
+        public void Connect() => _webSocket.Connect();
 
         /// <summary>
         /// Closes connection to a streaming API.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>Awaitable task object for handling action completion in asynchronous mode.</returns>
-        public Task DisconnectAsync(
-            CancellationToken cancellationToken = default(CancellationToken))
-            => _webSocket.CloseAsync(cancellationToken);
+        public void Disconnect() => _webSocket.Close();
 
         /// <inheritdoc />
         public void Dispose()
@@ -126,30 +88,19 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         }
 
         /// <summary>
-        /// Handles <see cref="IWebSocket.Opened"/> event.
+        /// Handles <see cref="IWebSocket.Open"/> event.
         /// </summary>
-        protected virtual void OnOpened() => SocketOpened?.Invoke();
+        protected virtual void OnOpened(object sender, EventArgs e) => SocketOpened?.Invoke();
 
         /// <summary>
         /// Handles <see cref="IWebSocket.Closed"/> event.
         /// </summary>
-        protected virtual void OnClosed() => SocketClosed?.Invoke();
+        protected virtual void OnClosed(object sender, WebSocketCloseData e) => SocketClosed?.Invoke();
 
         /// <summary>
-        /// Handles <see cref="IWebSocket.MessageReceived"/> event.
+        /// Handles <see cref="IWebSocket.Message"/> event.
         /// </summary>
-        /// <param name="message">Incoming string message for processing.</param>
-        protected virtual void OnMessageReceived(
-            String message)
-        {
-        }
-
-        /// <summary>
-        /// Handles <see cref="IWebSocket.DataReceived"/> event.
-        /// </summary>
-        /// <param name="binaryData">Incoming binary data for processing.</param>
-        protected virtual void OnDataReceived(
-            Byte[] binaryData)
+        protected virtual void OnMessage(object sender, WebSocketMessage message)
         {
         }
 
@@ -166,16 +117,14 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                 return;
             }
 
-            _webSocket.Opened -= OnOpened;
+            _webSocket.Open -= OnOpened;
             _webSocket.Closed -= OnClosed;
 
-            _webSocket.MessageReceived -= OnMessageReceived;
-            _webSocket.DataReceived -= OnDataReceived;
+            _webSocket.Message -= OnMessage;
 
             _webSocket.Error -= HandleError;
-            _queue.OnError -= OnError;
+            _queue.OnError -= HandleQueueError;
 
-            _webSocket.Dispose();
             _queue.Dispose();
         }
 
@@ -208,13 +157,13 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                 }
                 else
                 {
-                    HandleError(new InvalidOperationException(
-                        $"Unexpected message type '{messageType}' received."));
+                    var errorMessage = $"Unexpected message type '{messageType}' received.";
+                    HandleError(null, new WebSocketError(errorMessage, new InvalidOperationException(errorMessage)));
                 }
             }
             catch (Exception exception)
             {
-                HandleError(exception);
+                HandleError(null, new WebSocketError(exception.Message, exception));
             }
         }
 
@@ -227,11 +176,18 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             Connected?.Invoke(authStatus);
 
         /// <summary>
+        /// Handles <see cref="SynchronizationQueue.OnError"/> event.
+        /// </summary>
+        protected void HandleError(object sender, WebSocketError error)
+        {
+            OnError?.Invoke(error.Exception);
+        }
+
+        /// <summary>
         /// Handles <see cref="IWebSocket.Error"/> event.
         /// </summary>
         /// <param name="exception">Exception for routing into <see cref="OnError"/> event.</param>
-        protected void HandleError(
-            Exception exception)
+        private void HandleQueueError(Exception exception)
         {
             OnError?.Invoke(exception);
         }
@@ -240,8 +196,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         ///
         /// </summary>
         /// <param name="value"></param>
-        protected void SendAsJsonString(
-            Object value)
+        protected void SendAsJsonString(object value)
         {
             using (var textWriter = new StringWriter())
             {

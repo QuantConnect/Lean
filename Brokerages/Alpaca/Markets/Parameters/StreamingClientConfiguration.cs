@@ -18,7 +18,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         protected internal StreamingClientConfiguration(Uri apiEndpoint)
         {
             ApiEndpoint = apiEndpoint;
-            WebSocketFactory = new WebSocketSharpFactory();
+            WebSocketFactory = new WebSocketClientFactory();
         }
 
         /// <summary>
