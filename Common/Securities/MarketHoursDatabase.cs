@@ -32,6 +32,7 @@ namespace QuantConnect.Securities
     public class MarketHoursDatabase
     {
         private static MarketHoursDatabase _dataFolderMarketHoursDatabase;
+        private static MarketHoursDatabase _alwaysOpenMarketHoursDatabase;
         private static readonly object DataFolderMarketHoursDatabaseLock = new object();
 
         private readonly Dictionary<SecurityDatabaseKey, Entry> _entries;
@@ -44,7 +45,18 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets a <see cref="MarketHoursDatabase"/> that always returns <see cref="SecurityExchangeHours.AlwaysOpen"/>
         /// </summary>
-        public static MarketHoursDatabase AlwaysOpen { get; } = new AlwaysOpenMarketHoursDatabaseImpl();
+        public static MarketHoursDatabase AlwaysOpen
+        {
+            get
+            {
+                if (_alwaysOpenMarketHoursDatabase == null)
+                {
+                    _alwaysOpenMarketHoursDatabase = new AlwaysOpenMarketHoursDatabaseImpl();
+                }
+
+                return _alwaysOpenMarketHoursDatabase;
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MarketHoursDatabase"/> class
