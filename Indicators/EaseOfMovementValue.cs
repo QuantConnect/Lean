@@ -82,7 +82,7 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(TradeBar input)
         {
 
-            if (PreviousHighPrice == null && PreviousLowPrice == null)
+            if (PreviousHighPrice == null || PreviousLowPrice == null)
             {
                 PreviousHighPrice = input.High;
                 PreviousLowPrice = input.Low;
