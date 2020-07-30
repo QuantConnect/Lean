@@ -96,16 +96,6 @@ namespace QuantConnect.Indicators
             
         }
 
-        /// <summary>
-        /// Resets this indicator to its initial state
-        /// </summary>
-        public override void Reset()
-        {
-            _maximum.Reset();
-            _minimum.Reset();
-            base.Reset();
-        }
-
 
     }
 }
