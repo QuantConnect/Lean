@@ -44,8 +44,8 @@ namespace QuantConnect.Indicators
 
         public override void Reset()
         {
-            PreviousHighPrice = 0;
-            PreviousLowPrice = 0;
+            PreviousHighPrice = 1;
+            PreviousLowPrice = 1;
             _maximum.Reset();
             _minimum.Reset();
             base.Reset();

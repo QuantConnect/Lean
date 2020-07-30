@@ -48,7 +48,13 @@ namespace QuantConnect.Tests.Indicators
                 };
                 emv.Update(tradeBar);
             }
-            Assert.AreEqual(emv.Current.Value, 100.0m);
+            
         }
+
+        protected override Action<IndicatorBase<IBaseDataBar>, double> Assertion
+        {
+            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 1); }
+        }
+            
     }
 }
