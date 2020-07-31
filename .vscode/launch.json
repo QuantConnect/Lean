@@ -50,6 +50,14 @@
             "port": 55555
         },
         {
+            "name": "Attach to Mono",
+            "type": "mono",
+            "request": "attach",
+            "address": "localhost",
+            "postDebugTask": "close-docker",
+            "port": 55555
+        },
+        {
             "name": "Attach to Python (Container)",
             "type": "python",
             "request": "attach",

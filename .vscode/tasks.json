@@ -42,7 +42,7 @@
             "type": "shell",
             "isBackground": true,
             "windows": {
-                "command": "${workspaceFolder}/run_docker.bat"
+                "command": "${workspaceFolder}/run_docker.bat",
             },
             "linux": {
                 "command": "${workspaceFolder}/run_docker.sh"
@@ -50,6 +50,13 @@
             "osx": {
                 "command": "${workspaceFolder}/run_docker.sh"
             },
+            "args": [
+                "image=quantconnect/lean:latest",
+                "config_file=${workspaceFolder}/Launcher/config.json",
+                "data_dir=${workspaceFolder}/Data",
+                "results_dir=${workspaceFolder}/",
+                "debugging=Y",
+            ],
             "problemMatcher": [
                 {
                   "pattern": [
@@ -79,6 +86,9 @@
                 "panel": "shared",
                 "showReuseMessage": false,
                 "clear": true,
+            },
+            "linux":{
+                "command": "sudo docker stop LeanEngine"
             }
         },
         {
