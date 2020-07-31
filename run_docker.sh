@@ -19,7 +19,7 @@ default_image=quantconnect/lean:latest
 default_data_dir=$current_dir/Data
 default_results_dir=$current_dir
 default_config_file=$current_dir/Launcher/config.json
-python_location=$current_dir/Algorithm.Python/
+default_python_dir=$current_dir/Algorithm.Python/
 csharp_dll=$current_dir/Launcher/bin/Debug/QuantConnect.Algorithm.CSharp.dll
 csharp_pdb=$current_dir/Launcher/bin/Debug/QuantConnect.Algorithm.CSharp.pdb
 
@@ -49,6 +49,10 @@ fi
 
 if [ -z "$config_file" ]; then
     config_file=$default_config_file
+fi
+
+if [ -z "$python_dir" ]; then
+    python_dir=$default_python_dir
 fi
 
 if [ ! -f "$config_file" ]; then
@@ -90,10 +94,10 @@ else
 fi
 
 #If python algorithms are present, mount them
-if [ ! -d "$python_location" ]; then
-    echo "No Python Algorithm location found at '$python_location'; no Python files will be mounted"
+if [ ! -d "$python_dir" ]; then
+    echo "No Python Algorithm location found at '$python_dir'; no Python files will be mounted"
 else
-    command+="--mount type=bind,source=$python_location,target=/Lean/Algorithm.Python "
+    command+="--mount type=bind,source=$python_dir,target=/Lean/Algorithm.Python "
 fi
 
 #If debugging is set then set the entrypoint to run mono with a debugger server

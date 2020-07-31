@@ -18,7 +18,7 @@ set default_image=quantconnect/lean:latest
 set default_data_dir=%current_dir%Data\
 set default_results_dir=%current_dir%
 set default_config_file=%current_dir%Launcher\config.json
-set python_location=%current_dir%Algorithm.Python\
+set default_python_dir=%current_dir%Algorithm.Python\
 set csharp_dll=%current_dir%Launcher\bin\Debug\QuantConnect.Algorithm.CSharp.dll
 set csharp_pdb=%current_dir%Launcher\bin\Debug\QuantConnect.Algorithm.CSharp.pdb
 
@@ -51,6 +51,10 @@ if "%image%" == "" (
 
 if "%config_file%" == "" (
     set config_file=%default_config_file%
+)
+
+if "%python_dir%" == "" (
+    set python_dir=%default_python_dir%
 )
 
 if not exist "%config_file%" (
@@ -92,10 +96,10 @@ if not exist "%csharp_dll%" (
 )
 
 REM If python algorithms are present, mount them
-if not exist "%python_location%" (
-    echo No Python Algorithm location found at '%python_location%'; no Python files will be mounted
+if not exist "%python_dir%" (
+    echo No Python Algorithm location found at '%python_dir%'; no Python files will be mounted
 ) else (
-    set command=%command% --mount type=bind,source=%python_location%,target=/Lean/Algorithm.Python
+    set command=%command% --mount type=bind,source=%python_dir%,target=/Lean/Algorithm.Python
 )
 
 REM If debugging is set then set the entrypoint to run mono with a debugger server
@@ -119,7 +123,7 @@ set image=
 set data_dir=
 set results_dir=
 set config_file=
-set python_location=
+set python_dir=
 set csharp_dll=
 
 exit

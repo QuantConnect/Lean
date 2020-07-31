@@ -56,6 +56,7 @@
                 "data_dir=${workspaceFolder}/Data",
                 "results_dir=${workspaceFolder}/",
                 "debugging=Y",
+                "python_dir=${workspaceFolder}/Algorithm.Python"
             ],
             "problemMatcher": [
                 {
