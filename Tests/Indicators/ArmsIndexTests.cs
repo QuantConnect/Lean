@@ -14,7 +14,6 @@
 */
 
 using NUnit.Framework;
-using Oanda.RestV20.Model;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 

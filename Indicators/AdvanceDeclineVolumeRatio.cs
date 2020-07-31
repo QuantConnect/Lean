@@ -13,9 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data.Market;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace QuantConnect.Indicators

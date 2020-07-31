@@ -14,7 +14,6 @@
 */
 
 using QuantConnect.Data.Market;
-using System.Runtime.InteropServices;
 
 namespace QuantConnect.Indicators
 {

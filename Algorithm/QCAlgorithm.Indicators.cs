@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
-using System.Drawing;
 
 namespace QuantConnect.Algorithm
 {
