@@ -40,21 +40,17 @@ namespace QuantConnect.Tests.Indicators
             {
                 var tradeBar = new TradeBar
                 {
-                    Open = data.Value,
-                    Close = data.Value,
                     High = data.Value,
                     Low = data.Value,
                     Volume = data.Value
                 };
                 emv.Update(tradeBar);
             }
-            
         }
 
         protected override Action<IndicatorBase<TradeBar>, double> Assertion
         {
             get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 1); }
-        }
-            
+        }  
     }
 }

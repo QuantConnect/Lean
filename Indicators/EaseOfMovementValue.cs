@@ -24,7 +24,6 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class EaseOfMovementValue : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
-
         private decimal _previousHighMaximum;
         private decimal _previousLowMinimum;
 
@@ -37,7 +36,6 @@ namespace QuantConnect.Indicators
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
         public int WarmUpPeriod => 2;
-
 
         public override void Reset()
         {
@@ -72,14 +70,18 @@ namespace QuantConnect.Indicators
         {
             if (_previousHighMaximum == null) _previousHighMaximum = input.High;
             if (_previousLowMinimum == null) _previousLowMinimum = input.Low;
+
             if (input.Volume == 0 || input.High == input.Low)
             {
                 return 0;
             }
+
             var midValue = ((input.High + input.Low) / 2) - ((_previousHighMaximum + _previousLowMinimum) / 2);
             var midRatio = ((input.Volume / 10000) / (input.High - input.Low));
+
             _previousHighMaximum = input.High;
             _previousLowMinimum = input.Low;
+
             return midValue / midRatio;
         }
     }
