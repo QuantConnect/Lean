@@ -124,6 +124,9 @@
   // To get your access token go to https://www.eia.gov/opendata
   "us-energy-information-auth-token": "",
 
+  // Required for IEX history requests
+  "iex-cloud-api-key": "",
+
   // alpaca configuration
   // available trading mode: 'paper', 'live'
   "alpaca-key-id": "",

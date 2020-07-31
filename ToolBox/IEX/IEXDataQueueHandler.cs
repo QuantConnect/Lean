@@ -69,6 +69,11 @@ namespace QuantConnect.ToolBox.IEX
         {
             Endpoint = "https://ws-api.iextrading.com/1.0/tops";
 
+            if (string.IsNullOrWhiteSpace(_apiKey))
+            {
+                Log.Trace("IEXDataQueueHandler(): The IEX API key was not provided, history calls will return no data.");
+            }
+
             if (live)
             {
                 Reconnect();
@@ -204,7 +209,6 @@ namespace QuantConnect.ToolBox.IEX
             }
         }
 
-
         /// <summary>
         /// Unsubscribe from symbols
         /// </summary>
@@ -332,6 +336,12 @@ namespace QuantConnect.ToolBox.IEX
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
         public override IEnumerable<Slice> GetHistory(IEnumerable<Data.HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
+            if (string.IsNullOrWhiteSpace(_apiKey))
+            {
+                Log.Error("IEXDataQueueHandler.GetHistory(): History calls for IEX require an API key.");
+                yield break;
+            }
+
             foreach (var request in requests)
             {
                 foreach (var slice in ProcessHistoryRequests(request))
