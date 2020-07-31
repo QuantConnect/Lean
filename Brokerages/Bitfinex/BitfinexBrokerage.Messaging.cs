@@ -131,40 +131,8 @@ namespace QuantConnect.Brokerages.Bitfinex
             Log.Trace("BitfinexBrokerage.SubscribeAuth(): Sent authentication request.");
         }
 
-        /// <summary>
-        /// Subscribes to the requested symbols (using an individual streaming channel)
-        /// </summary>
-        /// <param name="symbols">The list of symbols to subscribe</param>
-        public override void Subscribe(IEnumerable<Symbol> symbols)
-        {
-            foreach (var symbol in symbols)
-            {
-                if (_subscriptionManager.IsSubscribed(symbol) ||
-                    symbol.Value.Contains("UNIVERSE") ||
-                    !_symbolMapper.IsKnownLeanSymbol(symbol) ||
-                    symbol.SecurityType != _symbolMapper.GetLeanSecurityType(symbol.Value))
-                {
-                    continue;
-                }
 
-                _subscriptionManager.Subscribe(symbol);
-
-                Log.Trace($"BitfinexBrokerage.Subscribe(): Sent subscribe for {symbol.Value}.");
-            }
-        }
-
-        /// <summary>
-        /// Ends current subscriptions
-        /// </summary>
-        private void Unsubscribe(IEnumerable<Symbol> symbols)
-        {
-            foreach (var symbol in symbols)
-            {
-                _subscriptionManager.Unsubscribe(symbol);
-
-                Log.Trace($"BitfinexBrokerage.Unsubscribe(): Sent unsubscribe for {symbol.Value}.");
-            }
-        }
+        public override void Subscribe(IEnumerable<Symbol> symbols) { }
 
         private long GetNextClientOrderId()
         {
@@ -469,23 +437,6 @@ namespace QuantConnect.Brokerages.Bitfinex
         public void EmitTick(Tick tick)
         {
             _aggregator.Update(tick);
-        }
-
-        /// <summary>
-        /// Gets a list of current subscriptions
-        /// </summary>
-        /// <returns></returns>
-        protected override IList<Symbol> GetSubscribed()
-        {
-            IList<Symbol> list = new List<Symbol>();
-            lock (ChannelList)
-            {
-                foreach (var ticker in ChannelList.Select(x => x.Value.Symbol).Distinct())
-                {
-                    list.Add(_symbolMapper.GetLeanSymbol(ticker));
-                }
-            }
-            return list;
         }
     }
 
