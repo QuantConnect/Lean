@@ -23,8 +23,8 @@ namespace QuantConnect.Indicators
     /// bias. Instead, the Mass Index identifies range bulges that can foreshadow a reversal of the
     /// current trend. Developed by Donald Dorsey.
     /// </summary>
-    /// <seealso cref="IndicatorBase{TradeBar}"/>
-    public class MassIndex : IndicatorBase<TradeBar>, IIndicatorWarmUpPeriodProvider
+    /// <seealso cref="TradeBarIndicator"/>
+    public class MassIndex : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
         private readonly ExponentialMovingAverage _ema1;
         private readonly ExponentialMovingAverage _ema2;

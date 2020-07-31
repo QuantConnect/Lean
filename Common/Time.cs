@@ -264,11 +264,27 @@ namespace QuantConnect
                 {
                     return date;
                 }
-                if (DateTime.TryParseExact(dateToParse.Substring(0, 19), DateFormat.JsonFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                if (DateTime.TryParseExact(dateToParse, DateFormat.TwelveCharacter, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                {
+                    return date;
+                }
+                if (DateTime.TryParseExact(dateToParse.SafeSubstring(0, 19), DateFormat.JsonFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                {
+                    return date;
+                }
+                if (DateTime.TryParseExact(dateToParse, DateFormat.USShort, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                {
+                    return date;
+                }
+                if (DateTime.TryParseExact(dateToParse, DateFormat.USShortDateOnly, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
                 {
                     return date;
                 }
                 if (DateTime.TryParseExact(dateToParse, DateFormat.US, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                {
+                    return date;
+                }
+                if (DateTime.TryParseExact(dateToParse, DateFormat.USDateOnly, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
                 {
                     return date;
                 }
