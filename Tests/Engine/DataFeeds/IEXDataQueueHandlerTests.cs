@@ -15,12 +15,14 @@
 */
 
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.IEX;
@@ -226,78 +228,90 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 return new[]
                 {
                     // valid parameters
-                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(15), true),
-                    new TestCaseData(Symbols.SPY, Resolution.Minute, TimeSpan.FromDays(3), true),
+                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(15), true, false),
+                    new TestCaseData(Symbols.SPY, Resolution.Minute, TimeSpan.FromDays(3), true, false),
 
                     // invalid resolution == empty result.
-                    new TestCaseData(Symbols.SPY, Resolution.Tick, TimeSpan.FromSeconds(15), false),
-                    new TestCaseData(Symbols.SPY, Resolution.Second, Time.OneMinute, false),
-                    new TestCaseData(Symbols.SPY, Resolution.Hour, Time.OneDay, false),
+                    new TestCaseData(Symbols.SPY, Resolution.Tick, TimeSpan.FromSeconds(15), false, false),
+                    new TestCaseData(Symbols.SPY, Resolution.Second, Time.OneMinute, false, false),
+                    new TestCaseData(Symbols.SPY, Resolution.Hour, Time.OneDay, false, false),
 
                     // invalid period == empty result
-                    new TestCaseData(Symbols.SPY, Resolution.Minute, TimeSpan.FromDays(45), false), // beyond 30 days
-                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(-15), false), // date in future
-                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(365*5.5), false), // beyond 5 years
+                    new TestCaseData(Symbols.SPY, Resolution.Minute, TimeSpan.FromDays(45), false, false), // beyond 30 days
+                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(-15), false, false), // date in future
+                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(365*5.5), false, false), // beyond 5 years
 
-                    // invalid symbol: XYZ
+                    // invalid symbol: XYZ -> not found WebException
                     new TestCaseData(Symbol.Create("XYZ", SecurityType.Equity, Market.FXCM), Resolution.Daily, TimeSpan.FromDays(15), false, true),
 
-                    // invalid security type, throws "System.ArgumentException : Invalid security type: Forex"
-                    new TestCaseData(Symbols.EURUSD, Resolution.Daily, TimeSpan.FromDays(15), false, true)
+                    // invalid security type, no exception, empty result
+                    new TestCaseData(Symbols.EURUSD, Resolution.Daily, TimeSpan.FromDays(15), false, false)
                 };
             }
         }
 
         [Test, TestCaseSource(nameof(TestParameters))]
-        public void IEXCouldGetHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool received, bool throwsException = false)
+        public void IEXCouldGetHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool received, bool throwsException)
         {
-            var historyProvider = new IEXDataQueueHandler();
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, null));
-
-            var now = DateTime.UtcNow;
-
-            var requests = new[]
+            TestDelegate test = () =>
             {
-                new HistoryRequest(now.Add(-period),
-                                   now,
-                                   typeof(QuoteBar),
-                                   symbol,
-                                   resolution,
-                                   SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                                   DateTimeZone.Utc,
-                                   Resolution.Minute,
-                                   false,
-                                   false,
-                                   DataNormalizationMode.Adjusted,
-                                   TickType.Quote)
+                var historyProvider = new IEXDataQueueHandler();
+                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, new DataPermissionManager()));
+
+                var now = DateTime.UtcNow;
+
+                var requests = new[]
+                {
+                    new HistoryRequest(now.Add(-period),
+                                       now,
+                                       typeof(QuoteBar),
+                                       symbol,
+                                       resolution,
+                                       SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                                       DateTimeZone.Utc,
+                                       Resolution.Minute,
+                                       false,
+                                       false,
+                                       DataNormalizationMode.Adjusted,
+                                       TickType.Quote)
+                };
+
+                var history = historyProvider.GetHistory(requests, TimeZones.Utc);
+
+                foreach (var slice in history)
+                {
+                    if (resolution == Resolution.Tick || resolution == Resolution.Second || resolution == Resolution.Hour)
+                    {
+                        Assert.IsNull(slice);
+                    }
+                    else if (resolution == Resolution.Daily || resolution == Resolution.Minute)
+                    {
+                        Assert.IsNotNull(slice);
+
+                        var bar = slice.Bars[symbol];
+
+                        Log.Trace("{0}: {1} - O={2}, H={3}, L={4}, C={5}: {6}, {7}", bar.Time, bar.Symbol, bar.Open, bar.High, bar.Low, bar.Close, resolution, period);
+                    }
+                }
+
+                Log.Trace("Data points retrieved: " + historyProvider.DataPointCount);
+                if (received)
+                {
+                    Assert.IsTrue(historyProvider.DataPointCount > 0);
+                }
+                else
+                {
+                    Assert.IsTrue(historyProvider.DataPointCount == 0);
+                }
             };
 
-            var history = historyProvider.GetHistory(requests, TimeZones.Utc);
-
-            foreach (var slice in history)
+            if (throwsException)
             {
-                if (resolution == Resolution.Tick || resolution == Resolution.Second || resolution == Resolution.Hour)
-                {
-                    Assert.IsNull(slice);
-                }
-                else if (resolution == Resolution.Daily || resolution == Resolution.Minute)
-                {
-                    Assert.IsNotNull(slice);
-
-                    var bar = slice.Bars[symbol];
-
-                    Log.Trace("{0}: {1} - O={2}, H={3}, L={4}, C={5}: {6}, {7}", bar.Time, bar.Symbol, bar.Open, bar.High, bar.Low, bar.Close, resolution, period);
-                }
-            }
-
-            Log.Trace("Data points retrieved: " + historyProvider.DataPointCount);
-            if (received)
-            {
-                Assert.IsTrue(historyProvider.DataPointCount > 0);
+                Assert.Throws<WebException>(test);
             }
             else
             {
-                Assert.IsTrue(historyProvider.DataPointCount == 0);
+                Assert.DoesNotThrow(test);
             }
         }
 

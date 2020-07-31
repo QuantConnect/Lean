@@ -15,12 +15,9 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using QuantConnect.Configuration;
-using QuantConnect.Data.Market;
-using System.Linq;
 
 namespace QuantConnect.ToolBox.IEX
 {
@@ -29,18 +26,13 @@ namespace QuantConnect.ToolBox.IEX
         /// <summary>
         /// Primary entry point to the program. This program only supports FOREX for now.
         /// </summary>
-        public static void IEXDownloader(IList<string> tickers, string resolution, DateTime fromDate, DateTime toDate, string apiKey)
+        public static void IEXDownloader(IList<string> tickers, string resolution, DateTime fromDate, DateTime toDate)
         {
             if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
                 Console.WriteLine("IEXDownloader ERROR: '--tickers=' or '--resolution=' parameter is missing");
                 Console.WriteLine("--tickers=eg SPY,AAPL");
                 Console.WriteLine("--resolution=Minute/Daily");
-                Environment.Exit(1);
-            }
-            if (apiKey.IsNullOrEmpty())
-            {
-                Console.WriteLine("QuandlBitfinexDownloader ERROR: '--api-key=' parameter is missing");
                 Environment.Exit(1);
             }
 
@@ -53,12 +45,12 @@ namespace QuantConnect.ToolBox.IEX
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
                 var startDate = fromDate.ConvertToUtc(TimeZones.NewYork);
                 var endDate = toDate.ConvertToUtc(TimeZones.NewYork);
-                
+
                 // Create an instance of the downloader
                 const string market = Market.USA;
                 SecurityType securityType = SecurityType.Equity;
 
-                using (var downloader = new IEXDataDownloader(apiKey = apiKey))
+                using (var downloader = new IEXDataDownloader())
                 {
                     foreach (var ticker in tickers)
                     {
@@ -74,7 +66,7 @@ namespace QuantConnect.ToolBox.IEX
             }
             catch (Exception err)
             {
-                Log.Error(err);       
+                Log.Error(err);
             }
             Console.ReadLine();
         }
