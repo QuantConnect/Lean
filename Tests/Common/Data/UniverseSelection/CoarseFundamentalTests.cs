@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.IO;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -48,6 +49,28 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             Assert.AreEqual(priceFactor, cf.PriceFactor);
             Assert.AreEqual(splitFactor, cf.SplitFactor);
             Assert.AreEqual(adjustedPrice, cf.AdjustedPrice);
+        }
+
+        [Test]
+        public void LoadsPreviousDayCoarseInLiveMode()
+        {
+            var cf = new CoarseFundamental();
+            var config = new SubscriptionDataConfig(
+                typeof(CoarseFundamental),
+                Symbol.Create("AAPL", SecurityType.Equity, QuantConnect.Market.USA),
+                Resolution.Daily,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false);
+
+            var now = DateTime.UtcNow;
+            var yesterday = now.AddDays(-1);
+            var source = cf.GetSource(config, now, true);
+
+            var expectedPath = Path.Combine(Globals.DataFolder, "equity", config.Market, "fundamental", "coarse", $"{yesterday.ToStringInvariant("yyyyMMdd")}.csv");
+            Assert.AreEqual(expectedPath, source.Source);
         }
 
         public static object[] TestParameters =

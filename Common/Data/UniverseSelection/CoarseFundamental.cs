@@ -90,6 +90,14 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>String URL of source file.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
+            if (isLiveMode)
+            {
+                // Coarse will never be available on the same day in live mode.
+                // If we load data from disk, we will want to use yesterday's
+                // data for coarse selection.
+                date = date.AddDays(-1);
+            }
+
             var path = Path.Combine(Globals.DataFolder, "equity", config.Market, "fundamental", "coarse", Invariant($"{date:yyyyMMdd}.csv"));
             return new SubscriptionDataSource(path, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
