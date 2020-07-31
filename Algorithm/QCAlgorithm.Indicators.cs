@@ -1702,7 +1702,7 @@ namespace QuantConnect.Algorithm
         /// <returns>The Arms Index indicator for the requested symbol over the specified period</returns>
         public ArmsIndex TRIN(IEnumerable<Symbol> symbols, Resolution? resolution = null)
         {
-            var name = CreateIndicatorName(QuantConnect.Symbol.Empty, "TRIN", resolution ?? GetSubscription(symbols.First()).Resolution);
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, "TRIN", resolution ?? GetSubscription(symbols.First()).Resolution);
             var trin = new ArmsIndex(name);
             foreach (var symbol in symbols)
             {
@@ -1726,7 +1726,7 @@ namespace QuantConnect.Algorithm
         /// <returns>The Advance/Decline Ratio indicator for the requested symbol over the specified period</returns>
         public AdvanceDeclineRatio ADR(IEnumerable<Symbol> symbols, Resolution? resolution = null)
         {
-            var name = CreateIndicatorName(QuantConnect.Symbol.Empty, "A/D Ratio", resolution ?? GetSubscription(symbols.First()).Resolution);
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, "A/D Ratio", resolution ?? GetSubscription(symbols.First()).Resolution);
             var adr = new AdvanceDeclineRatio(name);
             foreach (var symbol in symbols)
             {
@@ -1750,7 +1750,7 @@ namespace QuantConnect.Algorithm
         /// <returns>The Advance/Decline Volume Ratio indicator for the requested symbol over the specified period</returns>
         public AdvanceDeclineVolumeRatio ADVR(IEnumerable<Symbol> symbols, Resolution? resolution = null)
         {
-            var name = CreateIndicatorName(QuantConnect.Symbol.Empty, "A/D Volume Rate", resolution ?? GetSubscription(symbols.First()).Resolution);
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, "A/D Volume Rate", resolution ?? GetSubscription(symbols.First()).Resolution);
             var advr = new AdvanceDeclineVolumeRatio(name);
             foreach (var symbol in symbols)
             {
@@ -1814,8 +1814,14 @@ namespace QuantConnect.Algorithm
                     throw new ArgumentOutOfRangeException(nameof(resolution), resolution, "resolution parameter is out of range.");
             }
 
-            var parts = new[] { symbol.ToString(), res }
-                .Where(p => !string.IsNullOrEmpty(p));
+            var parts = new List<string>();
+
+            if (symbol != QuantConnect.Symbol.None && symbol != QuantConnect.Symbol.Empty)
+            {
+                parts.Add(symbol.ToString());
+            }
+            parts.Add(res);
+            
             return Invariant($"{type}({string.Join("_", parts)})").Replace(")(", ",");
         }
 
