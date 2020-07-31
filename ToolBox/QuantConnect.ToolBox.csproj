@@ -350,6 +350,15 @@
     <Compile Include="IQFeedDownloader\IQFeedDownloaderProgram.cs" />
     <Compile Include="IQFeed\IQFeedFileHistoryProvider.cs" />
     <Compile Include="IVolatilityEquityConverter\IVolatilityEquityConverterProgram.cs" />
+    <Compile Include="Polygon\Messages\BaseMessage.cs" />
+    <Compile Include="Polygon\Messages\EquityQuoteMessage.cs" />
+    <Compile Include="Polygon\Messages\EquityTradeMessage.cs" />
+    <Compile Include="Polygon\Messages\CryptoTradeMessage.cs" />
+    <Compile Include="Polygon\Messages\CryptoQuoteMessage.cs" />
+    <Compile Include="Polygon\Messages\ForexQuoteMessage.cs" />
+    <Compile Include="Polygon\PolygonDataQueueHandler.cs" />
+    <Compile Include="Polygon\PolygonSymbolMapper.cs" />
+    <Compile Include="Polygon\PolygonWebSocketClientWrapper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="RandomDataGenerator\DividendSplitMapGenerator.cs" />
     <Compile Include="RandomDataGenerator\ConsoleLeveledOutput.cs" />

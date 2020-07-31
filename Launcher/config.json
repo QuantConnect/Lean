@@ -136,6 +136,10 @@
   "alpaca-secret-key": "",
   "alpaca-trading-mode": "paper",
 
+  // Required for streaming Polygon.io data
+  // To get your access token go to https://polygon.io
+  "polygon-api-key": "",
+
   // parameters to set in the algorithm (the below are just samples)
   "parameters": {
     // Intrinio account user and password
