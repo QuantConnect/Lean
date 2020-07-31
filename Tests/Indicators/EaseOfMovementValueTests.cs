@@ -36,10 +36,12 @@ namespace QuantConnect.Tests.Indicators
         public void TestTradeBarsWithVolume()
         {
             var emv = new EaseOfMovementValue();
-            foreach (var data in TestHelper.GetDataStream(2))
+            foreach (var data in TestHelper.GetDataStream(4))
             {
                 var tradeBar = new TradeBar
                 {
+                    Open = data.Value,
+                    Close = data.Value,
                     High = data.Value,
                     Low = data.Value,
                     Volume = data.Value
