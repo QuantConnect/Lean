@@ -95,7 +95,6 @@ namespace QuantConnect.Tests.Common
                 for (int i = 0; i < tickCount; i++)
                 {
                     var result = results[i];
-                    Assert.AreEqual(Symbols.AAPL, result.Symbol);
                     Assert.AreEqual(i, result.AskPrice);
                     Assert.AreEqual(i, result.AskSize);
                     Assert.AreEqual(time + TimeSpan.FromMilliseconds(i), result.Time);
@@ -139,7 +138,6 @@ namespace QuantConnect.Tests.Common
             {
                 var result = (Tick) Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
-                Assert.AreEqual(tick.Symbol, result.Symbol);
                 Assert.AreEqual(tick.AskPrice, result.AskPrice);
                 Assert.AreEqual(tick.AskSize, result.AskSize);
                 Assert.AreEqual(tick.Time, result.Time);
@@ -178,7 +176,6 @@ namespace QuantConnect.Tests.Common
                 // verify its correct
                 var result = (TradeBar) Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
-                Assert.AreEqual(tradeBar.Symbol, result.Symbol);
                 Assert.AreEqual(tradeBar.Time, result.Time);
                 Assert.AreEqual(tradeBar.DataType, result.DataType);
                 Assert.AreEqual(tradeBar.EndTime, result.EndTime);
@@ -214,7 +211,6 @@ namespace QuantConnect.Tests.Common
                 // verify its correct
                 var result = (QuoteBar)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
-                Assert.AreEqual(quoteBar.Symbol, result.Symbol);
                 Assert.AreEqual(quoteBar.Time, result.Time);
                 Assert.AreEqual(quoteBar.DataType, result.DataType);
                 Assert.AreEqual(quoteBar.EndTime, result.EndTime);
@@ -259,7 +255,6 @@ namespace QuantConnect.Tests.Common
                 Assert.AreEqual(dividend.DataType, result.DataType);
                 Assert.AreEqual(dividend.Distribution, result.Distribution);
                 Assert.AreEqual(dividend.ReferencePrice, result.ReferencePrice);
-                Assert.AreEqual(dividend.Symbol, result.Symbol);
                 Assert.AreEqual(dividend.Time, result.Time);
                 Assert.AreEqual(dividend.EndTime, result.EndTime);
                 Assert.AreEqual(dividend.Value, result.Value);
@@ -281,7 +276,6 @@ namespace QuantConnect.Tests.Common
                 Assert.AreEqual(split.SplitFactor, result.SplitFactor);
                 Assert.AreEqual(split.ReferencePrice, result.ReferencePrice);
                 Assert.AreEqual(split.Time, result.Time);
-                Assert.AreEqual(split.Symbol, result.Symbol);
                 Assert.AreEqual(split.Value, result.Value);
             }
         }
@@ -337,7 +331,6 @@ namespace QuantConnect.Tests.Common
                 Assert.AreEqual(news.Title, result.Title);
                 Assert.AreEqual(news.Url, result.Url);
                 Assert.AreEqual(news.Time, result.Time);
-                Assert.AreEqual(news.Symbol, result.Symbol);
             }
         }
 
@@ -398,7 +391,6 @@ namespace QuantConnect.Tests.Common
                 Assert.IsTrue(news.Symbols.SequenceEqual(result.Symbols));
                 Assert.IsTrue(news.Tags.SequenceEqual(result.Tags));
                 Assert.AreEqual(news.Time, result.Time);
-                Assert.AreEqual(news.Symbol, result.Symbol);
             }
         }
 

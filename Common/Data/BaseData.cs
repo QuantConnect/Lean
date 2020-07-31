@@ -69,21 +69,20 @@ namespace QuantConnect.Data
         /// <summary>
         /// True if this is a fill forward piece of data
         /// </summary>
-        [ProtoMember(2)]
         public bool IsFillForward { get; private set; }
 
         /// <summary>
         /// Current time marker of this data packet.
         /// </summary>
         /// <remarks>All data is timeseries based.</remarks>
-        [ProtoMember(3)]
+        [ProtoMember(2)]
         public DateTime Time { get; set; }
 
         /// <summary>
         /// The end time of this data. Some data covers spans (trade bars) and as such we want
         /// to know the entire time span covered
         /// </summary>
-        [ProtoMember(4)]
+        [ProtoMember(3)]
         public virtual DateTime EndTime
         {
             get { return Time; }
@@ -93,14 +92,13 @@ namespace QuantConnect.Data
         /// <summary>
         /// Symbol representation for underlying Security
         /// </summary>
-        [ProtoMember(5)]
         public Symbol Symbol { get; set; } = Symbol.Empty;
 
         /// <summary>
         /// Value representation of this data packet. All data requires a representative value for this moment in time.
         /// For streams of data this is the price now, for OHLC packets this is the closing price.
         /// </summary>
-        [ProtoMember(6)]
+        [ProtoMember(4)]
         public virtual decimal Value
         {
             get
