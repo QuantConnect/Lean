@@ -33,7 +33,8 @@ namespace QuantConnect.Indicators
         private IDictionary<SecurityIdentifier, TradeBar> _previousPeriod = new Dictionary<SecurityIdentifier, TradeBar>();
         private IDictionary<SecurityIdentifier, TradeBar> _currentPeriod = new Dictionary<SecurityIdentifier, TradeBar>();
         private readonly Func<IEnumerable<TradeBar>, decimal> _computeValue;
-
+        private DateTime? _currentPeriodTime = null;
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="AdvanceDeclineRatio"/> class
         /// </summary>
@@ -141,7 +142,13 @@ namespace QuantConnect.Indicators
 
         private void Enqueue(TradeBar input)
         {
-            if (_currentPeriod.Any(t => t.Value != null) && (input.Time > _currentPeriod.First(t => t.Value != null).Value.Time))
+            if (input.EndTime == _currentPeriodTime)
+            {
+                _previousPeriod[input.Symbol.ID] = input;
+                return;
+            }
+
+            if (input.Time > _currentPeriodTime)
             {
                 _previousPeriod.Clear();
                 foreach (var key in _currentPeriod.Keys.ToList())
@@ -149,11 +156,16 @@ namespace QuantConnect.Indicators
                     _previousPeriod[key] = _currentPeriod[key];
                     _currentPeriod[key] = null;
                 }
+                _currentPeriodTime = input.Time;
             }
 
             if (_currentPeriod.ContainsKey(input.Symbol.ID))
             {
                 _currentPeriod[input.Symbol.ID] = input;
+                if (!_currentPeriodTime.HasValue)
+                {
+                    _currentPeriodTime = input.Time;
+                }
             }
         }
     }
