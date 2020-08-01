@@ -19,4 +19,4 @@ COPY ./Launcher/bin/Debug/ /Lean/Launcher/bin/Debug/
 # Can override with '-w'
 WORKDIR /Lean/Launcher/bin/Debug
 
-ENTRYPOINT [ "mono", "QuantConnect.Lean.Launcher.exe"]
+ENTRYPOINT [ "mono", "QuantConnect.Lean.Launcher.exe" ]
