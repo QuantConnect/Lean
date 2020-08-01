@@ -1,4 +1,4 @@
-<h1>Local Development & Docker Integration w/ VS Code</h1>
+<h1>Local Development & Docker Integration with Visual Studio Code</h1>
 
 
 This document contains information regarding ways to use Visual Studio Code to work with the Lean engine, this includes using Lean’s Docker image in conjunction with local development as well as running Lean locally.
@@ -63,7 +63,8 @@ Before we can use this method with Windows or Mac OS we need to share the Lean d
 <br />
 
 <h2>Lean Configuration</h2>
-Next we need to be sure that our Lean configuration at .\Launcher\config.json is properly set. Just like running lean locally the config must reflect what we want Lean to run.
+
+Next we need to be sure that our Lean configuration at **.\Launcher\config.json** is properly set. Just like running lean locally the config must reflect what we want Lean to run.
 
 You configuration file should look something like this for the following languages:
 

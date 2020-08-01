@@ -39,6 +39,7 @@
                 "${workspaceFolder}/Data",
                 "--config",
                 "${workspaceFolder}/Launcher/config.json"],
+            "console": "externalTerminal"
         },
         {
             "name": "Debug in Container",

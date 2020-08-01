@@ -1,4 +1,4 @@
-<h1>Local Development & Docker Integration w/ VS</h1>
+<h1>Local Development & Docker Integration with Visual Studio</h1>
 
 
 This document contains information regarding ways to use Visual Studio to work with the Lean's Docker image.
@@ -55,7 +55,8 @@ Before we can use this method with Windows or Mac OS we need to share the Lean d
 <br />
 
 <h2>Lean Configuration</h2>
-Next we need to be sure that our Lean configuration at .\Launcher\config.json is properly set. Just like running lean locally the config must reflect what we want Lean to run.
+
+Next we need to be sure that our Lean configuration at **.\Launcher\config.json** is properly set. Just like running lean locally the config must reflect what we want Lean to run.
 
 You configuration file should look something like this for the following languages:
 
@@ -117,6 +118,23 @@ From a terminal launch the run_docker.bat/.sh script; there are a few choices on
 
 <br />
 
+<h1>Connecting to Mono Debugger</h1>
+
+If you launch the script with debugging set to **yes** (y), then you will need to connect to the debugging server with the mono extension that you installed in the setup stage.
+
+To setup the extension do the following:
+   * Go to **Extensions > Mono > Settings...**
+   * Enter the following for the settings:
+     * Remote Host IP: 127.0.0.1
+     * Remote Host Port: 55555
+     * Mono Debug Port: 55555
+   * Click **Save** and then close the extension settings
+  
+Now that the extension is setup use it to connect to the Docker container by using:
+*  **Extensions > Mono > Attach to mono debugger**
+
+The program should then launch and trigger any breakpoints you have set in your C# Algorithm.
+
 <h1>Debugging Python</h1>
 
 Python algorithms require a little extra work in order to be able to debug them locally or in the container. Follow the steps below to get Python debugging working.
@@ -148,6 +166,6 @@ Now that Lean is configured for the python debugger we can make use of the Visua
 20200715 17:12:06.547 Trace:: DebuggerHelper.Initialize(): starting...
 20200715 17:12:06.548 Trace:: DebuggerHelper.Initialize(): waiting for debugger to attach at localhost:5678...
 ```
-6.  Then select **Attach**
+5.  Press enter and then select **Attach**
 
 The debugger will now attach to the python engine and will hit your breakpoints in your algorithm.

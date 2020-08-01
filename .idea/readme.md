@@ -1,4 +1,4 @@
-<h1>Local Development & Docker Integration w/ Pycharm</h1>
+<h1>Local Development & Docker Integration with Pycharm</h1>
 
 This document contains information regarding ways to use Lean’s Docker image in conjunction with local development in Pycharm.
 
@@ -55,7 +55,8 @@ Before we can use this method with Windows or Mac OS we need to share the Lean d
 <br />
 
 <h2>Lean Configuration</h2>
-Next we need to be sure that our Lean configuration at .\Launcher\config.json is properly set. Just like running lean locally the config must reflect what we want Lean to run.
+
+Next we need to be sure that our Lean configuration at **.\Launcher\config.json** is properly set. Just like running lean locally the config must reflect what we want Lean to run.
 
 You configuration file should look something like this:
 

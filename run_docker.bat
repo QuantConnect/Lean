@@ -118,12 +118,9 @@ REM Run built docker command
 %command%
 
 :script_exit
-
-set image=
-set data_dir=
-set results_dir=
-set config_file=
-set python_dir=
-set csharp_dll=
-
-exit
+REM If exit flag is set exit; this is needed for an odd batch bug running from VS Code
+if /I "%exit%" == "Y" (
+    exit
+) else (
+    pause
+)
