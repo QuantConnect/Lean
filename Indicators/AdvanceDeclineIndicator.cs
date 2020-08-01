@@ -83,7 +83,7 @@ namespace QuantConnect.Indicators
 
             foreach (var stock in _currentPeriod)
             {
-                if (_previousPeriod[stock.Key] == null)
+                if (!_previousPeriod.ContainsKey(stock.Key) || _previousPeriod[stock.Key] == null)
                 {
                     continue;
                 }
@@ -156,7 +156,7 @@ namespace QuantConnect.Indicators
                 _currentPeriodTime = input.Time;
             }
 
-            if (_currentPeriod.ContainsKey(input.Symbol.ID))
+            if (_currentPeriod.ContainsKey(input.Symbol.ID) && (!_currentPeriodTime.HasValue || input.Time == _currentPeriodTime))
             {
                 _currentPeriod[input.Symbol.ID] = input;
                 if (!_currentPeriodTime.HasValue)
