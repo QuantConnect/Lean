@@ -16,6 +16,7 @@
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using System;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -130,6 +131,8 @@ namespace QuantConnect.Tests.Indicators
             indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 3, Volume = 1, Time = reference.AddMinutes(2) });
 
             Assert.IsTrue(indicator.IsReady);
+            Assert.AreEqual(2m, indicator.Current.Value);
+            Assert.AreEqual(6, indicator.Samples);
         }
 
         [Test]
@@ -150,6 +153,7 @@ namespace QuantConnect.Tests.Indicators
             indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 3, Volume = 1, Time = reference.AddMinutes(2) });
 
             Assert.IsTrue(indicator.IsReady);
+            Assert.AreEqual(2m, indicator.Current.Value);
         }
 
         protected override string TestFileName => "arms_data.txt";
