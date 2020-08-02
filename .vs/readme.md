@@ -134,38 +134,3 @@ Now that the extension is setup use it to connect to the Docker container by usi
 *  **Extensions > Mono > Attach to mono debugger**
 
 The program should then launch and trigger any breakpoints you have set in your C# Algorithm.
-
-<h1>Debugging Python</h1>
-
-Python algorithms require a little extra work in order to be able to debug them locally or in the container. Follow the steps below to get Python debugging working.
-
-<br />
-
-<h2>Modifying the Configuration</h2>
-
-First in order to debug a Python algorithm in VS Code we must make the following change to our configuration (Launcher\config.json) under the comment debugging configuration:
-
-    "debugging": true,
-    "debugging-method": "PTVSD",
-
-In setting this we are telling Lean to expect a debugger connection using ‘Python Tools for Visual Studio Debugger’. Once this is set Lean will stop upon initialization and await a connection to the debugger via port 5678.
-
-<br />
-
-<h2>Using Attach to Process to Connect</h2>
-
-Now that Lean is configured for the python debugger we can make use of the Visual Studio option **Debug > Attach to Process**
-
-1.  Start Lean either in the container by following “[Running Lean in the Container](#Running-Lean-in-the-Container)” or locally by using **"Start"**
-2.  Open the Attach to Process window and select **Python Remote** as the Connection type.
-3.  Enter **tcp://localhost:5678** as the Connection target.
-4.  Wait for the Lean output to post the following messages:
- ```
-20200715 17:12:06.546 Trace:: PythonInitializer.Initialize(): ended
-20200715 17:12:06.547 Trace:: DebuggerHelper.Initialize(): python initialization done
-20200715 17:12:06.547 Trace:: DebuggerHelper.Initialize(): starting...
-20200715 17:12:06.548 Trace:: DebuggerHelper.Initialize(): waiting for debugger to attach at localhost:5678...
-```
-5.  Press enter and then select **Attach**
-
-The debugger will now attach to the python engine and will hit your breakpoints in your algorithm.
