@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public virtual void FillForwardProperly()
+        public virtual void TimeMovesForward()
         {
             var indicator = CreateIndicator();
             var startDate = new DateTime(2019, 1, 1);

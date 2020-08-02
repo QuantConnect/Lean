@@ -157,7 +157,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public override void FillForwardProperly()
+        public override void TimeMovesForward()
         {
             var indicator = CreateIndicator();
             var period = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;

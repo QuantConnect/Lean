@@ -14,7 +14,7 @@
 */
 
 using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using QuantConnect.Data;
 using QuantConnect.Logging;
@@ -30,7 +30,7 @@ namespace QuantConnect.Indicators
         where T : IBaseData
     {
         /// <summary>the most recent input that was given to this indicator</summary>
-        private ConcurrentDictionary<SecurityIdentifier, T> _previousInput = new ConcurrentDictionary<SecurityIdentifier, T>();
+        private Dictionary<SecurityIdentifier, T> _previousInput = new Dictionary<SecurityIdentifier, T>();
 
         /// <summary>
         /// Event handler that fires after this indicator is updated
@@ -92,7 +92,7 @@ namespace QuantConnect.Indicators
                 {
                     throw new ArgumentException($"IndicatorBase.Update() 'input' expected to be of type {typeof(T)} but is of type {input.GetType()}");
                 }
-                _previousInput.AddOrUpdate(input.Symbol.ID, (T)input);
+                _previousInput[input.Symbol.ID] = (T)input;
 
                 var nextResult = ValidateAndComputeNextValue((T)input);
                 if (nextResult.Status == IndicatorStatus.Success)
@@ -197,7 +197,7 @@ namespace QuantConnect.Indicators
                 }
                 type = type.BaseType;
             }
-            
+
             try
             {
                 // the obj is not an indicator, so let's check for value types, try converting to decimal
