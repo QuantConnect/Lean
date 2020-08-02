@@ -44,7 +44,20 @@ namespace QuantConnect.AlgorithmFactory
             /// <see cref="Language.Python"/> will use 'Python Tools for Visual Studio',
             /// attach manually selecting `Python` code type.
             /// </summary>
-            VisualStudio
+            VisualStudio,
+
+            /// <summary>
+            ///  Python Tool for Visual Studio Debugger for remote python debugging.
+            /// <see cref="Language.Python"/> will use 'Python Extension in VS Code' 
+            ///or 'Python Tools in Visual Studio'
+            /// </summary>
+            PTVSD,
+
+            /// <summary>
+            ///  PyCharm PyDev Debugger for remote python debugging.
+            /// <see cref="Language.Python"/> will use 'Python Debug Server' in PyCharm
+            /// </summary>
+            PyCharm
         }
 
         /// <summary>
@@ -75,6 +88,38 @@ namespace QuantConnect.AlgorithmFactory
                             PythonEngine.RunSimpleString(@"import sys; import time;
 while not sys.gettrace():
     time.sleep(0.25)");
+                            break;
+
+                        case DebuggingMethod.PTVSD:
+                            Log.Trace("DebuggerHelper.Initialize(): waiting for PTVSD debugger to attach at localhost:5678...");
+                            PythonEngine.RunSimpleString("import ptvsd; ptvsd.enable_attach(); ptvsd.wait_for_attach()");
+                            break;
+
+                        case DebuggingMethod.PyCharm:
+                            Log.Trace("DebuggerHelper.Initialize(): Attempting to connect to Pycharm PyDev debugger server...");
+                            PythonEngine.RunSimpleString(@"import pydevd_pycharm;  import time;
+count = 1
+while count <= 10:
+    try:
+        pydevd_pycharm.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True, suspend=False)
+        print('SUCCESS: Connected to local program')
+        break
+    except ConnectionRefusedError:
+        pass
+
+    try:    
+        pydevd_pycharm.settrace('host.docker.internal', port=5678, stdoutToServer=True, stderrToServer=True, suspend=False)
+        print('SUCCESS: Connected to docker container')
+        break
+    except ConnectionRefusedError:
+        pass
+
+    print('\n')
+    print('Failed: Ensure your PyCharm Debugger is actively waiting for a connection at port 5678!')
+    print('Try ' + count.__str__() + ' out of 10')
+    print('\n')
+    count += 1
+    time.sleep(3)");
                             break;
                     }
                     Log.Trace("DebuggerHelper.Initialize(): started");

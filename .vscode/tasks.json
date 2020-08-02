@@ -1,0 +1,111 @@
+{
+    /*
+        VS Code Tasks for the LEAN engine
+        In order to use the build tasks you need msbuild on your system path.
+    */
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "msbuild",
+            "args": [
+                "/p:Configuration=Debug",
+                "/p:DebugType=portable",
+                "/t:build",
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "force build linux",
+            "type": "shell",
+            "command": "msbuild",
+            "args": [
+                "/property:GenerateFullPaths=true",
+                "/p:Configuration=Debug",
+                "/p:DebugType=portable",
+                "/t:build",
+                "/p:ForceLinuxBuild=true"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "run-docker",
+            "type": "shell",
+            "isBackground": true,
+            "windows": {
+                "command": "${workspaceFolder}/run_docker.bat",
+            },
+            "linux": {
+                "command": "${workspaceFolder}/run_docker.sh"
+            },
+            "osx": {
+                "command": "${workspaceFolder}/run_docker.sh"
+            },
+            "args": [
+                "image=quantconnect/lean:latest",
+                "config_file=${workspaceFolder}/Launcher/config.json",
+                "data_dir=${workspaceFolder}/Data",
+                "results_dir=${workspaceFolder}/",
+                "debugging=Y",
+                "python_dir=${workspaceFolder}/Algorithm.Python",
+                "exit=Y"
+            ],
+            "problemMatcher": [
+                {
+                  "pattern": [
+                    {
+                      "regexp": ".",
+                      "file": 1,
+                      "location": 2,
+                      "message": 3
+                    }
+                  ],
+                  "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".",
+                    "endsPattern": ".",
+                  }
+                }
+              ]
+        },
+        {
+            "label": "close-docker",
+            "type": "shell",
+            "command": "docker stop LeanEngine",
+            "presentation": {
+                "echo": false,
+                "reveal": "never",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true,
+            },
+            "linux":{
+                "command": "sudo docker stop LeanEngine"
+            }
+        },
+        {
+            "label": "Run Application",
+            "type": "process",
+            "command": "QuantConnect.Lean.Launcher.exe",
+            "args" : [
+                "--data-folder",
+                "${workspaceFolder}/Data",
+                "--config",
+                "${workspaceFolder}/Launcher/config.json"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/Launcher/bin/Debug/"
+            }
+        }
+    ]
+}

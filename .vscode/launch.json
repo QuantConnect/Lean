@@ -1,0 +1,82 @@
+{
+    /*
+        VS Code Launch configurations for the LEAN engine
+
+        Launch w/ Mono (Local):
+        Builds the project with MSBuild and then launches the program using mono locally;
+        supports debugging. In order to use this you need msbuild and mono on your system path.
+        As well as the Mono Debug extension from the marketplace.
+        
+        Debug in Container:
+        Launches our run_docker script to start the container and attaches to the debugger.
+        Requires that you have built the project at least once as it will transfer the compiled
+        csharp files.
+        Requires Mono Debug extension from the marketplace.
+
+        Attach to Python (Container):
+        Will attempt to attach to LEAN in the container using PTVSD. Requires that the container is
+        actively running and config is set: "debugging": true, "debugging-method": "PTVSD",
+        Requires Python extension from the marketplace.
+
+        Attach to Python (Local):
+        Will attempt to attach to LEAN running locally using PTVSD. Requires that the process is
+        actively running and config is set: "debugging": true, "debugging-method": "PTVSD",
+        Requires Python extension from the marketplace.
+
+    */
+
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch w/ Mono (Local)",
+            "type": "mono",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "cwd": "${workspaceFolder}/Launcher/bin/Debug/",
+            "program": "${workspaceFolder}/Launcher/bin/Debug/QuantConnect.Lean.Launcher.exe",
+            "args": [
+                "--data-folder",
+                "${workspaceFolder}/Data",
+                "--config",
+                "${workspaceFolder}/Launcher/config.json"],
+            "console": "externalTerminal"
+        },
+        {
+            "name": "Debug in Container",
+            "type": "mono",
+            "preLaunchTask": "run-docker",
+            "postDebugTask": "close-docker",
+            "request": "attach",
+            "address": "localhost",
+            "port": 55555
+        },
+        {
+            "name": "Attach to Mono",
+            "type": "mono",
+            "request": "attach",
+            "address": "localhost",
+            "postDebugTask": "close-docker",
+            "port": 55555
+        },
+        {
+            "name": "Attach to Python (Container)",
+            "type": "python",
+            "request": "attach",
+            "port": 5678,
+            "pathMappings":[{ 
+                "localRoot": "${workspaceFolder}", 
+                "remoteRoot": "/Lean/"
+            }]
+        },
+        {
+            "name": "Attach to Python (Local)",
+            "type": "python",
+            "request": "attach",
+            "port": 5678,
+            "pathMappings":[{ 
+                "localRoot": "${workspaceFolder}", 
+                "remoteRoot": "${workspaceFolder}"
+            }]
+        }
+    ]
+}
