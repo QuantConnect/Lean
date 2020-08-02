@@ -81,17 +81,18 @@ namespace QuantConnect.Indicators
             var advStocks = new List<TradeBar>();
             var dclStocks = new List<TradeBar>();
 
+            TradeBar tradeBar;
             foreach (var stock in _currentPeriod)
             {
-                if (!_previousPeriod.ContainsKey(stock.Key) || _previousPeriod[stock.Key] == null)
+                if (!_previousPeriod.TryGetValue(stock.Key, out tradeBar) || tradeBar == null)
                 {
                     continue;
                 }
-                else if (stock.Value.Close < _previousPeriod[stock.Key].Close)
+                else if (stock.Value.Close < tradeBar.Close)
                 {
                     dclStocks.Add(stock.Value);
                 }
-                else if (stock.Value.Close > _previousPeriod[stock.Key].Close)
+                else if (stock.Value.Close > tradeBar.Close)
                 {
                     advStocks.Add(stock.Value);
                 }
