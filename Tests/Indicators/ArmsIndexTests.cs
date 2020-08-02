@@ -16,6 +16,7 @@
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using System;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -121,15 +122,17 @@ namespace QuantConnect.Tests.Indicators
             var reference = System.DateTime.Today;
 
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Volume = 1, Time = reference.AddMinutes(1) });
-            indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 2, Volume = 1, Time = reference.AddMinutes(2) });
+            indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 2, Volume = 60, Time = reference.AddMinutes(2) });
 
             indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 1, Time = reference.AddMinutes(1) });
-            indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 0.5m, Volume = 1, Time = reference.AddMinutes(2) });
+            indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 0.5m, Volume = 10, Time = reference.AddMinutes(2) });
 
             indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 1, Volume = 1, Time = reference.AddMinutes(1) });
-            indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 3, Volume = 1, Time = reference.AddMinutes(2) });
+            indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 3, Volume = 40, Time = reference.AddMinutes(2) });
 
             Assert.IsTrue(indicator.IsReady);
+            Assert.AreEqual(0.2m, indicator.Current.Value);
+            Assert.AreEqual(6, indicator.Samples);
         }
 
         [Test]
@@ -145,11 +148,69 @@ namespace QuantConnect.Tests.Indicators
             // indicator is not ready yet
             Assert.IsFalse(indicator.IsReady);
 
-            indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 2, Volume = 1, Time = reference.AddMinutes(2) });
-            indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 0.5m, Volume = 1, Time = reference.AddMinutes(2) });
-            indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 3, Volume = 1, Time = reference.AddMinutes(2) });
+            indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 2, Volume = 60, Time = reference.AddMinutes(2) });
+            indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 0.5m, Volume = 10, Time = reference.AddMinutes(2) });
+            indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 3, Volume = 40, Time = reference.AddMinutes(2) });
 
             Assert.IsTrue(indicator.IsReady);
+            Assert.AreEqual(0.2m, indicator.Current.Value);
+        }
+
+        [Test]
+        public override void TimeMovesForward()
+        {
+            var indicator = CreateIndicator();
+            var period = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
+
+            if (!period.HasValue)
+            {
+                Assert.Ignore($"{indicator.Name} is not IIndicatorWarmUpPeriodProvider");
+                return;
+            }
+
+            var startDate = new DateTime(2019, 1, 1);
+
+            for (var i = 10; i > 0; i--)
+            {
+                var input = GetInput(Symbols.AAPL, startDate, i);
+                indicator.Update(input);
+            }
+
+            for (var i = 10; i > 0; i--)
+            {
+                var input = GetInput(Symbols.IBM, startDate, i);
+                indicator.Update(input);
+            }
+
+            for (var i = 10; i > 0; i--)
+            {
+                var input = GetInput(Symbols.GOOG, startDate, i);
+                indicator.Update(input);
+            }
+
+            Assert.AreEqual(3, indicator.Samples);
+
+            indicator.Reset();
+
+            for (var i = 0; i < 10; i++)
+            {
+                var input = GetInput(Symbols.AAPL, startDate, i);
+                indicator.Update(input);
+            }
+
+            for (var i = 0; i < 10; i++)
+            {
+                var input = GetInput(Symbols.IBM, startDate, i);
+                indicator.Update(input);
+            }
+
+            for (var i = 0; i < 10; i++)
+            {
+                var input = GetInput(Symbols.GOOG, startDate, i);
+                indicator.Update(input);
+            }
+
+            Assert.AreEqual(30, indicator.Samples);
         }
 
         protected override string TestFileName => "arms_data.txt";

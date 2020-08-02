@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using QuantConnect.Data;
 using QuantConnect.Logging;
@@ -29,7 +30,7 @@ namespace QuantConnect.Indicators
         where T : IBaseData
     {
         /// <summary>the most recent input that was given to this indicator</summary>
-        private T _previousInput;
+        private Dictionary<SecurityIdentifier, T> _previousInput = new Dictionary<SecurityIdentifier, T>();
 
         /// <summary>
         /// Event handler that fires after this indicator is updated
@@ -75,13 +76,14 @@ namespace QuantConnect.Indicators
         /// <returns>True if this indicator is ready, false otherwise</returns>
         public bool Update(IBaseData input)
         {
-            if (_previousInput != null && input.EndTime < _previousInput.EndTime)
+            T _previousSymbolInput = default(T);
+            if (_previousInput.TryGetValue(input.Symbol.ID, out _previousSymbolInput) && input.EndTime < _previousSymbolInput.EndTime)
             {
                 // if we receive a time in the past, log and return
-                Log.Error($"This is a forward only indicator: {Name} Input: {input.EndTime:u} Previous: {_previousInput.EndTime:u}. It will not be updated with this input.");
+                Log.Error($"This is a forward only indicator: {Name} Input: {input.EndTime:u} Previous: {_previousSymbolInput.EndTime:u}. It will not be updated with this input.");
                 return IsReady;
             }
-            if (!ReferenceEquals(input, _previousInput))
+            if (!ReferenceEquals(input, _previousSymbolInput))
             {
                 // compute a new value and update our previous time
                 Samples++;
@@ -90,7 +92,7 @@ namespace QuantConnect.Indicators
                 {
                     throw new ArgumentException($"IndicatorBase.Update() 'input' expected to be of type {typeof(T)} but is of type {input.GetType()}");
                 }
-                _previousInput = (T)input;
+                _previousInput[input.Symbol.ID] = (T)input;
 
                 var nextResult = ValidateAndComputeNextValue((T)input);
                 if (nextResult.Status == IndicatorStatus.Success)
@@ -127,7 +129,7 @@ namespace QuantConnect.Indicators
         public virtual void Reset()
         {
             Samples = 0;
-            _previousInput = default(T);
+            _previousInput.Clear();
             Current = new IndicatorDataPoint(DateTime.MinValue, default(decimal));
         }
 
@@ -195,7 +197,7 @@ namespace QuantConnect.Indicators
                 }
                 type = type.BaseType;
             }
-            
+
             try
             {
                 // the obj is not an indicator, so let's check for value types, try converting to decimal

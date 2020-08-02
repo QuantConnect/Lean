@@ -22,7 +22,7 @@ using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
-    public abstract class CommonIndicatorTests<T> 
+    public abstract class CommonIndicatorTests<T>
         where T : IBaseData
     {
         [Test]
@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Indicators
                 return;
             }
 
-            var startDate = new DateTime(2019,1,1);
+            var startDate = new DateTime(2019, 1, 1);
 
             for (var i = 0; i < period.Value; i++)
             {
@@ -75,9 +75,28 @@ namespace QuantConnect.Tests.Indicators
                 indicator.Update(input);
                 Assert.AreEqual(i == period.Value - 1, indicator.IsReady);
             }
+
+            Assert.AreEqual(period.Value, indicator.Samples);
         }
 
-        private static IBaseData GetInput(DateTime startDate, int value)
+        [Test]
+        public virtual void TimeMovesForward()
+        {
+            var indicator = CreateIndicator();
+            var startDate = new DateTime(2019, 1, 1);
+
+            for (var i = 10; i > 0; i--)
+            {
+                var input = GetInput(startDate, i);
+                indicator.Update(input);
+            }
+            
+            Assert.AreEqual(1, indicator.Samples);
+        }
+
+        protected static IBaseData GetInput(DateTime startDate, int value) => GetInput(Symbols.SPY, startDate, value);
+
+        protected static IBaseData GetInput(Symbol symbol, DateTime startDate, int value)
         {
             if (typeof(T) == typeof(IndicatorDataPoint))
             {
@@ -86,7 +105,7 @@ namespace QuantConnect.Tests.Indicators
 
             return new TradeBar(
                 startDate.AddDays(value),
-                Symbols.SPY,
+                symbol,
                 100m + value,
                 105m + value,
                 95m + value,
