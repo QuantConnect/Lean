@@ -39,18 +39,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void CoarseUniverseRotatesActiveSecurity()
         {
             var startDate = new DateTime(2014, 3, 24);
-            var endDate = new DateTime(2014, 3, 28);
+            var endDate = new DateTime(2014, 3, 29);
 
             var timeProvider = new ManualTimeProvider(TimeZones.NewYork);
             timeProvider.SetCurrentTime(startDate);
 
             var coarseTimes = new List<DateTime>
             {
-                new DateTime(2014, 3, 24, 1, 0, 0, 0),
                 new DateTime(2014, 3, 25, 5, 0, 0, 0),
                 new DateTime(2014, 3, 26, 5, 0, 0, 0),
                 new DateTime(2014, 3, 27, 5, 0, 0, 0),
-                new DateTime(2014, 3, 28, 5, 0, 0, 0)
+                new DateTime(2014, 3, 28, 5, 0, 0, 0),
+                new DateTime(2014, 3, 29, 5, 0, 0, 0)
             }.ToHashSet();
 
             var coarseSymbols = new List<Symbol> { Symbols.SPY, Symbols.AAPL, Symbols.MSFT };
@@ -79,6 +79,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.AddUniverse(
                 coarse =>
                 {
+                    Log.Trace($"Emitted at {algorithm.Time}. Coarse {coarse.First().Time} to {coarse.First().EndTime}");
                     Interlocked.Increment(ref coarseUniverseSelectionCount);
                     emitted.Set();
 
@@ -113,12 +114,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     timeProvider.Advance(TimeSpan.FromHours(1));
 
                     var time = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
+                    algorithm.SetDateTime(timeProvider.GetUtcNow());
                     if (coarseTimes.Contains(time))
                     {
                         // lets wait for coarse to emit
                         if (!emitted.WaitOne(TimeSpan.FromMilliseconds(15000)))
                         {
-                            throw new TimeoutException("Timeout waiting for coarse to emit");
+                            throw new TimeoutException($"Timeout waiting for coarse to emit at {time}");
                         }
                     }
                     var activeSecuritiesCount = algorithm.ActiveSecurities.Count;

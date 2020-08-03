@@ -40,8 +40,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Func<DateTime, bool> customStepEvaluator)
         {
             _underlyingTimeProvider = underlyingTimeProvider;
-            _currentUtc = _underlyingTimeProvider.GetUtcNow();
             _customStepEvaluator = customStepEvaluator;
+
+            // to determine the current time we go backwards up to 2 days until we reach a valid time we don't want to start on an invalid time
+            var utcNow = _underlyingTimeProvider.GetUtcNow();
+            for (var i = 0; i < 48; i++)
+            {
+                var before = utcNow.AddHours(-1 * i);
+                if (_customStepEvaluator(before))
+                {
+                    _currentUtc = before;
+                }
+            }
         }
 
         /// <summary>

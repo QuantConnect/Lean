@@ -323,7 +323,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 // Will try to pull coarse data from the data folder every 30min, file with today's date.
                 // If lean is started today it will trigger initial coarse universe selection
-                var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider);
+                var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider,
+                    // we adjust time to the previous tradable date
+                    time => Time.GetStartTimeForTradeBars(request.Security.Exchange.Hours, time, Time.OneDay, 1, false)
+                );
                 var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
 
                 // aggregates each coarse data point into a single BaseDataCollection
