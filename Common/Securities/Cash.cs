@@ -97,7 +97,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="symbol">The symbol used to represent this cash</param>
         /// <param name="amount">The amount of this currency held</param>
-        /// <param name="conversionRate">The initial conversion rate of this currency into the <see cref="AccountCurrency"/></param>
+        /// <param name="conversionRate">The initial conversion rate of this currency into the <see cref="CashBook.AccountCurrency"/></param>
         public Cash(string symbol, decimal amount, decimal conversionRate)
         {
             if (string.IsNullOrEmpty(symbol))
@@ -226,9 +226,9 @@ namespace QuantConnect.Securities
                 markets.Add(SecurityType.Cfd, markets[SecurityType.Forex]);
             }
 
-            var potentials = Currencies.CurrencyPairs.Select(fx => CreateSymbol(marketMap, fx, markets, SecurityType.Forex))
-                .Concat(Currencies.CfdCurrencyPairs.Select(cfd => CreateSymbol(marketMap, cfd, markets, SecurityType.Cfd)))
-                .Concat(Currencies.CryptoCurrencyPairs.Select(crypto => CreateSymbol(marketMap, crypto, markets, SecurityType.Crypto)));
+            var potentials = CreateSymbolList(Currencies.CurrencyPairs, marketMap, markets, SecurityType.Forex)
+                .Concat(CreateSymbolList(Currencies.CfdCurrencyPairs, marketMap, markets, SecurityType.Cfd))
+                .Concat(CreateSymbolList(Currencies.CryptoCurrencyPairs, marketMap, markets, SecurityType.Crypto));
 
             var minimumResolution = subscriptions.Subscriptions.Select(x => x.Resolution).DefaultIfEmpty(defaultResolution).Min();
 
@@ -281,15 +281,20 @@ namespace QuantConnect.Securities
             return Invariant($"{Symbol}: {CurrencySymbol}{Amount,15:0.00} @ {rate,10:0.00####} = ${Math.Round(ValueInAccountCurrency, 2)}");
         }
 
-        private static Symbol CreateSymbol(IReadOnlyDictionary<SecurityType, string> marketMap, string crypto, Dictionary<SecurityType, string> markets, SecurityType securityType)
+        private static IEnumerable<Symbol> CreateSymbolList(
+            IEnumerable<string> pairs,
+            IReadOnlyDictionary<SecurityType, string> marketMap,
+            IReadOnlyDictionary<SecurityType, string> markets,
+            SecurityType securityType)
         {
             string market;
-            if (!markets.TryGetValue(securityType, out market))
+            if (!markets.TryGetValue(securityType, out market) &&
+                !marketMap.TryGetValue(securityType, out market))
             {
-                market = marketMap[securityType];
+                return new List<Symbol>();
             }
 
-            return QuantConnect.Symbol.Create(crypto, securityType, market);
+            return pairs.Select(ticker => QuantConnect.Symbol.Create(ticker, securityType, market));
         }
 
         private void OnUpdate()
