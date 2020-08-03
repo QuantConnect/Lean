@@ -251,6 +251,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+            _api.SetJob(job);
         }
 
         /// <summary>
