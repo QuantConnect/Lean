@@ -119,6 +119,8 @@ namespace QuantConnect
         private OptionStyle? _optionStyle;
         private OptionRight? _optionRight;
         private DateTime? _date;
+        private string _stringRep;
+        private string _market;
 
         #endregion
 
@@ -202,11 +204,14 @@ namespace QuantConnect
         {
             get
             {
-                var marketCode = ExtractFromProperties(MarketOffset, MarketWidth);
-                var market = QuantConnect.Market.Decode((int)marketCode);
-
-                // if we couldn't find it, send back the numeric representation
-                return market ?? marketCode.ToStringInvariant();
+                if (_market == null)
+                {
+                    var marketCode = ExtractFromProperties(MarketOffset, MarketWidth);
+                    var market = QuantConnect.Market.Decode((int)marketCode);
+                    // if we couldn't find it, send back the numeric representation
+                    _market = market ?? marketCode.ToStringInvariant();
+                }
+                return _market;
             }
         }
 
@@ -895,13 +900,13 @@ namespace QuantConnect
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            var props = EncodeBase36(_properties);
-            props = props.Length == 0 ? "0" : props;
-            if (HasUnderlying)
+            if (_stringRep == null)
             {
-                return $"{_symbol} {props}|{_underlying}";
+                var props = EncodeBase36(_properties);
+                props = props.Length == 0 ? "0" : props;
+                _stringRep = HasUnderlying ? $"{_symbol} {props}|{_underlying}" : $"{_symbol} {props}";
             }
-            return $"{_symbol} {props}";
+            return _stringRep;
         }
 
         #endregion

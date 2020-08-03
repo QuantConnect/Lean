@@ -249,11 +249,11 @@ namespace QuantConnect.Data.Market
         public override void Update(decimal lastTrade, decimal bidPrice, decimal askPrice, decimal volume, decimal bidSize, decimal askSize)
         {
             // update our bid and ask bars - handle null values, this is to give good values for midpoint OHLC
-            if (Bid == null && bidPrice != 0) Bid = new Bar();
-            if (Bid != null) Bid.Update(bidPrice);
+            if (Bid == null && bidPrice != 0) Bid = new Bar(bidPrice, bidPrice, bidPrice, bidPrice);
+            else if (Bid != null) Bid.Update(bidPrice);
 
-            if (Ask == null && askPrice != 0) Ask = new Bar();
-            if (Ask != null) Ask.Update(askPrice);
+            if (Ask == null && askPrice != 0) Ask = new Bar(askPrice, askPrice, askPrice, askPrice);
+            else if (Ask != null) Ask.Update(askPrice);
 
             if (bidSize > 0)
             {
