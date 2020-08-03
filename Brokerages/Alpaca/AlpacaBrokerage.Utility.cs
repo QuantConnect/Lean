@@ -193,6 +193,12 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>The list of bars</returns>
         private IEnumerable<TradeBar> DownloadTradeBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
         {
+            // Only equities supported
+            if (symbol.SecurityType != SecurityType.Equity)
+            {
+                yield break;
+            }
+
             // Only minute/hour/daily resolutions supported
             if (resolution < Resolution.Minute)
             {
