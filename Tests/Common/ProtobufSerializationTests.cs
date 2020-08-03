@@ -23,6 +23,7 @@ using NUnit.Framework;
 using ProtoBuf;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.Benzinga;
+using QuantConnect.Data.Custom.Robintrack;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
@@ -391,6 +392,37 @@ namespace QuantConnect.Tests.Common
                 Assert.IsTrue(news.Symbols.SequenceEqual(result.Symbols));
                 Assert.IsTrue(news.Tags.SequenceEqual(result.Tags));
                 Assert.AreEqual(news.Time, result.Time);
+            }
+        }
+
+        [Test]
+        public void RobintrackRoundTrip()
+        {
+            var symbol = Symbol.CreateBase(
+                typeof(RobintrackHoldings),
+                Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
+                Market.USA);
+
+            var holdings = new RobintrackHoldings
+            {
+                UsersHolding = 1353,
+                TotalUniqueHoldings = 1959393,
+
+                Time = DateTime.UtcNow,
+                Symbol = symbol
+            };
+
+            var serializedHoldings = holdings.ProtobufSerialize();
+            using (var stream = new MemoryStream(serializedHoldings))
+            {
+                var result = (RobintrackHoldings)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+                Assert.AreEqual(holdings.UsersHolding, result.UsersHolding);
+                Assert.AreEqual(holdings.TotalUniqueHoldings, result.TotalUniqueHoldings);
+                Assert.AreEqual(holdings.UniverseHoldingPercent, result.UniverseHoldingPercent);
+
+                Assert.AreEqual(holdings.Time, result.Time);
+                Assert.AreEqual(holdings.EndTime, result.EndTime);
+                Assert.AreEqual(holdings.Value, result.Value);
             }
         }
 

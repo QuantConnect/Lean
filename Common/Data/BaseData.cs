@@ -21,6 +21,7 @@ using Newtonsoft.Json;
 using NodaTime;
 using ProtoBuf;
 using QuantConnect.Data.Custom.Benzinga;
+using QuantConnect.Data.Custom.Robintrack;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Data.Market;
 using QuantConnect.Util;
@@ -39,6 +40,7 @@ namespace QuantConnect.Data
     [ProtoInclude(400, typeof(Split))]
     [ProtoInclude(500, typeof(TiingoNews))]
     [ProtoInclude(600, typeof(BenzingaNews))]
+    [ProtoInclude(700, typeof(RobintrackHoldings))]
     public abstract class BaseData : IBaseData
     {
         private decimal _value;
