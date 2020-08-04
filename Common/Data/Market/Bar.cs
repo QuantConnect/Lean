@@ -23,6 +23,8 @@ namespace QuantConnect.Data.Market
     [ProtoContract(SkipConstructor = true)]
     public class Bar : IBar
     {
+        private bool _openSet;
+
         /// <summary>
         /// Opening price of the bar: Defined as the price at the start of the time period.
         /// </summary>
@@ -63,6 +65,7 @@ namespace QuantConnect.Data.Market
         /// <param name="close">Decimal Close price of this bar</param>
         public Bar(decimal open, decimal high, decimal low, decimal close)
         {
+            _openSet = open != 0;
             Open = open;
             High = high;
             Low = low;
@@ -75,10 +78,23 @@ namespace QuantConnect.Data.Market
         /// <param name="value">The new value</param>
         public void Update(decimal value)
         {
+            Update(ref value);
+        }
+
+        /// <summary>
+        /// Updates the bar with a new value. This will aggregate the OHLC bar
+        /// </summary>
+        /// <param name="value">The new value</param>
+        public void Update(ref decimal value)
+        {
             // Do not accept zero as a new value
             if (value == 0) return;
 
-            if (Open == 0) Open = High = Low = Close = value;
+            if (!_openSet)
+            {
+                Open = High = Low = Close = value;
+                _openSet = true;
+            }
             else if (value > High) High = value;
             else if (value < Low) Low = value;
             Close = value;

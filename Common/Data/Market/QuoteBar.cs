@@ -250,10 +250,10 @@ namespace QuantConnect.Data.Market
         {
             // update our bid and ask bars - handle null values, this is to give good values for midpoint OHLC
             if (Bid == null && bidPrice != 0) Bid = new Bar(bidPrice, bidPrice, bidPrice, bidPrice);
-            else if (Bid != null) Bid.Update(bidPrice);
+            else if (Bid != null) Bid.Update(ref bidPrice);
 
             if (Ask == null && askPrice != 0) Ask = new Bar(askPrice, askPrice, askPrice, askPrice);
-            else if (Ask != null) Ask.Update(askPrice);
+            else if (Ask != null) Ask.Update(ref askPrice);
 
             if (bidSize > 0)
             {
