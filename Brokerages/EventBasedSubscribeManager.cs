@@ -1,10 +1,9 @@
 ﻿using QuantConnect.Data;
+using QuantConnect.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages
 {
@@ -19,34 +18,50 @@ namespace QuantConnect.Brokerages
 
         public override void Subscribe(SubscriptionDataConfig dataConfig)
         {
-            var channel = GetChannel(dataConfig);
-            int count;
-            if (_subscribersByChannel.TryGetValue(channel, out count))
+            try
             {
-                _subscribersByChannel.TryUpdate(channel, count + 1, count);
-                return;
-            }
+                var channel = GetChannel(dataConfig);
+                int count;
+                if (_subscribersByChannel.TryGetValue(channel, out count))
+                {
+                    _subscribersByChannel.TryUpdate(channel, count + 1, count);
+                    return;
+                }
 
-            if (SubscribeImpl?.Invoke(new[] { dataConfig.Symbol }, dataConfig.TickType) == true)
+                if (SubscribeImpl?.Invoke(new[] { dataConfig.Symbol }, dataConfig.TickType) == true)
+                {
+                    _subscribersByChannel.AddOrUpdate(channel, 1);
+                }
+            }
+            catch (Exception exception)
             {
-                _subscribersByChannel.AddOrUpdate(channel, 1);
+                Log.Error(exception);
+                throw;
             }
         }
 
         public override void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            var channel = GetChannel(dataConfig);
-            int count;
-            if (_subscribersByChannel.TryGetValue(channel, out count))
+            try
             {
-                if (count == 1 && UnsubscribeImpl?.Invoke(new[] { dataConfig.Symbol }, dataConfig.TickType) == true)
+                var channel = GetChannel(dataConfig);
+                int count;
+                if (_subscribersByChannel.TryGetValue(channel, out count))
                 {
-                    _subscribersByChannel.TryRemove(channel, out count);
+                    if (count == 1 && UnsubscribeImpl?.Invoke(new[] { dataConfig.Symbol }, dataConfig.TickType) == true)
+                    {
+                        _subscribersByChannel.TryRemove(channel, out count);
+                    }
+                    else
+                    {
+                        _subscribersByChannel.TryUpdate(channel, count - 1, count);
+                    }
                 }
-                else
-                {
-                    _subscribersByChannel.TryUpdate(channel, count - 1, count);
-                }
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception);
+                throw;
             }
         }
 
@@ -55,8 +70,22 @@ namespace QuantConnect.Brokerages
             var channels = _subscribersByChannel.Keys;
             var channelName = GetChannelName(dataConfig.TickType);
 
-            return channels.FirstOrDefault(c => c.Symbol == dataConfig.Symbol.ID.ToString() && c.Name == channelName)
-                ?? new Channel() { Symbol = dataConfig.Symbol.ID.ToString(), Name = channelName };
+            var channel = Find(dataConfig.Symbol, dataConfig.TickType);
+            return channel ?? new Channel() { Symbol = dataConfig.Symbol.ID.ToString(), Name = channelName };
+        }
+
+        internal bool IsSubscribed(Symbol symbol, TickType tickType)
+        {
+            var channel = Find(symbol, tickType);
+            return channel != null;
+        }
+
+        private Channel Find(Symbol symbol, TickType tickType)
+        {
+            var channels = _subscribersByChannel.Keys;
+            var channelName = GetChannelName(tickType);
+
+            return channels.FirstOrDefault(c => c.Symbol == symbol.ID.ToString() && c.Name == channelName);
         }
     }
 }

@@ -56,9 +56,16 @@ namespace QuantConnect.Brokerages.Alpaca
         private readonly ISecurityProvider _securityProvider;
 
         /// <summary>
+        /// The subscription manager
+        /// </summary>
+        private readonly EventBasedSubscribeManager _subscriptionManager;
+
+        /// <summary>
         /// The market hours database
         /// </summary>
         private readonly MarketHoursDatabase _marketHours;
+
+        private readonly AlpacaSymbolMapper _symbolMapper = new AlpacaSymbolMapper();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AlpacaBrokerage"/> class.
@@ -71,6 +78,10 @@ namespace QuantConnect.Brokerages.Alpaca
         public AlpacaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountKeyId, string secretKey, string tradingMode)
             : base("Alpaca Brokerage")
         {
+            _subscriptionManager = new EventBasedSubscribeManager();
+            _subscriptionManager.SubscribeImpl += Subscribe;
+            _subscriptionManager.UnsubscribeImpl += Unsubscribe;
+            _subscriptionManager.GetChannelName += (t) => t.ToString();
             var httpScheme = "https://";
             var alpacaBaseUrl = "api.alpaca.markets";
 
