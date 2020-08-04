@@ -51,8 +51,13 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            if (!CanSubscribe(dataConfig.Symbol))
+            {
+                return Enumerable.Empty<BaseData>().GetEnumerator();
+            }
+
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
-            Subscribe(new[] { dataConfig.Symbol });
+            _subscriptionManager.Subscribe(dataConfig);
 
             return enumerator;
         }
@@ -61,13 +66,14 @@ namespace QuantConnect.Brokerages.Fxcm
         /// Adds the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        private void Subscribe(IEnumerable<Symbol> symbols)
+        /// <param name="tickType">Type of tick data</param>
+        private bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
-            var symbolsToSubscribe = (from symbol in symbols 
-                                      where !_subscribedSymbols.Contains(symbol) && CanSubscribe(symbol)
+            var symbolsToSubscribe = (from symbol in symbols
+                                      where !_subscribedSymbols.Contains(symbol)
                                       select symbol).ToList();
             if (symbolsToSubscribe.Count == 0)
-                return;
+                return false;
 
             Log.Trace("FxcmBrokerage.Subscribe(): {0}", string.Join(",", symbolsToSubscribe));
 
@@ -101,6 +107,7 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 _subscribedSymbols.Add(symbol);
             }
+            return true;
         }
 
         /// <summary>
@@ -109,7 +116,7 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            _subscriptionManager.Unsubscribe(dataConfig);
             _aggregator.Remove(dataConfig);
         }
 
@@ -117,13 +124,14 @@ namespace QuantConnect.Brokerages.Fxcm
         /// Removes the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(IEnumerable<Symbol> symbols)
+        /// <param name="tickType">Type of tick data</param>
+        private bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
-            var symbolsToUnsubscribe = (from symbol in symbols 
-                                        where _subscribedSymbols.Contains(symbol) 
+            var symbolsToUnsubscribe = (from symbol in symbols
+                                        where _subscribedSymbols.Contains(symbol)
                                         select symbol).ToList();
             if (symbolsToUnsubscribe.Count == 0)
-                return;
+                return false;
 
             Log.Trace("FxcmBrokerage.Unsubscribe(): {0}", string.Join(",", symbolsToUnsubscribe));
 
@@ -144,6 +152,7 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 _subscribedSymbols.Remove(symbol);
             }
+            return true;
         }
 
         /// <summary>

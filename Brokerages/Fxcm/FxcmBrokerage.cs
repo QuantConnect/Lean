@@ -62,6 +62,7 @@ namespace QuantConnect.Brokerages.Fxcm
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly ConcurrentQueue<OrderEvent> _orderEventQueue = new ConcurrentQueue<OrderEvent>();
         private readonly FxcmSymbolMapper _symbolMapper = new FxcmSymbolMapper();
+        private readonly EventBasedSubscribeManager _subscriptionManager;
 
         private readonly IList<BaseData> _lastHistoryChunk = new List<BaseData>();
 
@@ -114,6 +115,11 @@ namespace QuantConnect.Brokerages.Fxcm
             _userName = userName;
             _password = password;
             _accountId = accountId;
+
+            _subscriptionManager = new EventBasedSubscribeManager();
+            _subscriptionManager.SubscribeImpl += Subscribe;
+            _subscriptionManager.UnsubscribeImpl += Unsubscribe;
+            _subscriptionManager.GetChannelName += (t) => "quote";
 
             HistoryResponseTimeout = 5000;
             MaximumHistoryRetryAttempts = 1;
