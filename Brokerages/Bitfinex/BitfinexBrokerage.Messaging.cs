@@ -443,7 +443,7 @@ namespace QuantConnect.Brokerages.Bitfinex
     /// <summary>
     /// Represents Bitfinex channel information
     /// </summary>
-    public class BitfinexChannel : BaseWebsocketsBrokerage.Channel
+    public class BitfinexChannel : Channel
     {
         /// <summary>
         /// Represents channel identifier for specific subscription
