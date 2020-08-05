@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -116,7 +117,7 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
+            var prices = GetPricesForMarketFillCheckingPythonWrapper(asset, order.Direction);
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
             // if the order is filled on stale (fill-forward) data, set a warning message on the order event
@@ -461,78 +462,68 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
-        /// This is required due to a limitation in PythonNet to resolved
-        /// overriden methods. <see cref="GetPrices"/>
-        /// </summary>
-        private Prices GetPricesCheckingPythonWrapper(Security asset, OrderDirection direction)
-        {
-            if (PythonWrapper != null)
-            {
-                return PythonWrapper.GetPrices(asset, direction);
-            }
-            return GetPrices(asset, direction);
-        }
-
-        /// <summary>
         /// Get the minimum and maximum price for this security in the last bar:
         /// </summary>
         /// <param name="asset">Security asset we're checking</param>
         /// <param name="direction">The order direction, decides whether to pick bid or ask</param>
         protected virtual Prices GetPrices(Security asset, OrderDirection direction)
         {
-            var low = asset.Low;
-            var high = asset.High;
-            var open = asset.Open;
-            var close = asset.Close;
-            var current = asset.Price;
-            var endTime = asset.Cache.GetData()?.EndTime ?? DateTime.MinValue;
-
             if (direction == OrderDirection.Hold)
             {
-                return new Prices(endTime, current, open, high, low, close);
+                return new Prices(asset);
             }
 
             // Only fill with data types we are subscribed to
-            var subscriptionTypes = Parameters.ConfigProvider
-                .GetSubscriptionDataConfigs(asset.Symbol)
-                .Select(x => x.Type).ToList();
-            // Tick
-            var tick = asset.Cache.GetData<Tick>();
-            if (subscriptionTypes.Contains(typeof(Tick)) && tick != null)
-            {
-                var price = direction == OrderDirection.Sell ? tick.BidPrice : tick.AskPrice;
-                if (price != 0m)
-                {
-                    return new Prices(tick.EndTime, price, 0, 0, 0, 0);
-                }
+            var subscriptionTypes = GetSubscriptionTypes(asset);
 
-                // If the ask/bid spreads are not available for ticks, try the price
-                price = tick.Price;
-                if (price != 0m)
-                {
-                    return new Prices(tick.EndTime, price, 0, 0, 0, 0);
-                }
+            Prices prices;
+
+            if (TryGetPricesFromTradeBar(subscriptionTypes, asset, direction, out prices))
+            {
+                return prices;
             }
 
-            // Quote
-            var quoteBar = asset.Cache.GetData<QuoteBar>();
-            if (subscriptionTypes.Contains(typeof(QuoteBar)) && quoteBar != null)
+            return TryGetPricesFromTick(subscriptionTypes, asset, direction, out prices)
+                ? prices
+                : new Prices(asset);
+        }
+
+        /// <summary>
+        /// Get the minimum and maximum price for this security in the last bar for market fill orders
+        /// </summary>
+        /// <param name="asset">Security asset we're checking</param>
+        /// <param name="direction">The order direction, decides whether to pick bid or ask</param>
+        protected virtual Prices GetPricesForMarketFill(Security asset, OrderDirection direction)
+        {
+            if (direction == OrderDirection.Hold)
             {
-                var bar = direction == OrderDirection.Sell ? quoteBar.Bid : quoteBar.Ask;
-                if (bar != null)
-                {
-                    return new Prices(quoteBar.EndTime, bar);
-                }
+                return new Prices(asset);
             }
 
-            // Trade
-            var tradeBar = asset.Cache.GetData<TradeBar>();
-            if (subscriptionTypes.Contains(typeof(TradeBar)) && tradeBar != null)
+            // Only fill with data types we are subscribed to
+            var subscriptionTypes = GetSubscriptionTypes(asset);
+
+            Prices prices;
+            if (TryGetPricesFromTick(subscriptionTypes, asset, direction, out prices))
             {
-                return new Prices(tradeBar);
+                return prices;
             }
 
-            return new Prices(endTime, current, open, high, low, close);
+            return TryGetPricesFromQuoteBar(subscriptionTypes, asset, direction, out prices)
+                ? prices
+                : new Prices(asset);
+        }
+
+        /// <summary>
+        /// Adjust the fill price with custom requirements
+        /// </summary>
+        /// <param name="asset">Security asset we're checking</param>
+        /// <param name="direction">The order direction, decides whether to pick bid or ask</param>
+        /// <param name="fillPrice">Fill price that needs adjustment (e.g. rounding)</param>
+        /// <returns>Price adjusted to meet custom requirements</returns>
+        protected virtual decimal AdjustFillPrice(Security asset, OrderDirection direction, decimal fillPrice)
+        {
+            return fillPrice;
         }
 
         /// <summary>
@@ -553,6 +544,119 @@ namespace QuantConnect.Orders.Fills
             return true;
         }
 
+        /// <summary>
+        /// This is required due to a limitation in PythonNet to resolved
+        /// overriden methods. <see cref="GetPrices"/>
+        /// </summary>
+        private Prices GetPricesCheckingPythonWrapper(Security asset, OrderDirection direction)
+        {
+            if (PythonWrapper != null)
+            {
+                return PythonWrapper.GetPrices(asset, direction);
+            }
+            return GetPrices(asset, direction);
+        }
+
+        /// <summary>
+        /// This is required due to a limitation in PythonNet to resolved
+        /// overriden methods. <see cref="GetPricesForMarketFill"/>
+        /// </summary>
+        private Prices GetPricesForMarketFillCheckingPythonWrapper(Security asset, OrderDirection direction)
+        {
+            if (PythonWrapper != null)
+            {
+                return PythonWrapper.GetPricesForMarketFill(asset, direction);
+            }
+            return GetPricesForMarketFill(asset, direction);
+        }
+
+        /// <summary>
+        /// Get data types the Security is subscribed to
+        /// </summary>
+        /// <param name="asset">Security which has subscribed data types</param>
+        private List<Type> GetSubscriptionTypes(Security asset)
+        {
+            return Parameters.ConfigProvider
+                .GetSubscriptionDataConfigs(asset.Symbol)
+                .Where(x => asset.Cache.HasData(x.Type))
+                .Select(x => x.Type).ToList();
+        }
+
+        private bool TryGetPricesFromQuoteBar(List<Type> types, Security asset, OrderDirection direction, out Prices prices)
+        {
+            if (!types.Contains(typeof(QuoteBar)))
+            {
+                prices = null;
+                return false;
+            }
+
+            var quoteBar = asset.Cache.GetData<QuoteBar>();
+            if (quoteBar == null)
+            {
+                prices = null;
+                return false;
+            }
+
+            var bar = direction == OrderDirection.Sell ? quoteBar.Bid : quoteBar.Ask;
+            var price = bar != null && bar.Close > 0 ? bar.Close : quoteBar.Close;
+
+            var current = AdjustFillPrice(asset, direction, price);
+            prices = new Prices(quoteBar.EndTime, current, quoteBar.Open, quoteBar.High, quoteBar.Low, quoteBar.Close);
+            return true;
+        }
+
+        private bool TryGetPricesFromTick(List<Type> types, Security asset, OrderDirection direction, out Prices prices)
+        {
+            if (!types.Contains(typeof(Tick)))
+            {
+                prices = null;
+                return false;
+            }
+
+            var price = 0m;
+
+            var tick = asset.Cache.GetData<Tick>();
+            switch (tick?.TickType)
+            {
+                case TickType.Quote:
+                    price = direction == OrderDirection.Sell ? tick.BidPrice : tick.AskPrice;
+                    break;
+                case TickType.Trade:
+                    price = tick.Price;
+                    break;
+            }
+
+            if (price == 0 || tick == null)
+            {
+                prices = null;
+                return false;
+            }
+
+            var current = AdjustFillPrice(asset, direction, price);
+            prices = new Prices(tick.EndTime, current, 0, 0, 0, 0);
+            return true;
+        }
+
+        private bool TryGetPricesFromTradeBar(List<Type> types, Security asset, OrderDirection direction, out Prices prices)
+        {
+            if (!types.Contains(typeof(TradeBar)))
+            {
+                prices = null;
+                return false;
+            }
+
+            var tradeBar = asset.Cache.GetData<TradeBar>();
+            if (tradeBar == null)
+            {
+                prices = null;
+                return false;
+            }
+
+            var current = AdjustFillPrice(asset, direction, tradeBar.Close);
+            prices = new Prices(tradeBar.EndTime, current, tradeBar.Open, tradeBar.High, tradeBar.Low, tradeBar.Close);
+            return true;
+        }
+
         public class Prices
         {
             public readonly DateTime EndTime;
@@ -569,6 +673,12 @@ namespace QuantConnect.Orders.Fills
 
             public Prices(DateTime endTime, IBar bar)
                 : this(endTime, bar.Close, bar.Open, bar.High, bar.Low, bar.Close)
+            {
+            }
+
+            public Prices(Security asset)
+                : this(asset.Cache.GetData()?.EndTime ?? DateTime.MinValue,
+                    asset.Close, asset.Open, asset.High, asset.Low, asset.Close)
             {
             }
 

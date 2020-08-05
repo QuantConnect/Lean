@@ -150,5 +150,18 @@ namespace QuantConnect.Python
                 return (_model.GetPrices(asset, direction) as PyObject).GetAndDispose<Prices>();
             }
         }
+
+        /// <summary>
+        /// Get the minimum and maximum price for this security in the last bar for market fill orders
+        /// </summary>
+        /// <param name="asset">Security asset we're checking</param>
+        /// <param name="direction">The order direction, decides whether to pick bid or ask</param>
+        protected override Prices GetPricesForMarketFill(Security asset, OrderDirection direction)
+        {
+            using (Py.GIL())
+            {
+                return (_model.GetPricesForMarketFill(asset, direction) as PyObject).GetAndDispose<Prices>();
+            }
+        }
     }
 }

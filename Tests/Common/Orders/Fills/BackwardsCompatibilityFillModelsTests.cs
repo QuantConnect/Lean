@@ -288,18 +288,19 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                    "from clr import AddReference\n" +
-                    "AddReference(\"QuantConnect.Common\")\n" +
-                    "from QuantConnect.Orders.Fills import ImmediateFillModel\n" +
-                    "class CustomFillModel(ImmediateFillModel):\n" +
-                    "   def __init__(self):\n" +
-                    "       self.MarketFillWasCalled = False\n" +
-                    "   def MarketFill(self, asset, order):\n" +
-                    "       self.MarketFillWasCalled = True\n" +
-                    "       return super().MarketFill(asset, order)");
+                var customFillModel = PythonEngine.ModuleFromString(
+                    Guid.NewGuid().ToString(),
+                    @"from clr import AddReference
+AddReference('QuantConnect.Common')
+from QuantConnect.Orders.Fills import ImmediateFillModel
+class CustomFillModel(ImmediateFillModel):
+    def __init__(self):
+        self.MarketFillWasCalled = False
+    def MarketFill(self, asset, order):
+        self.MarketFillWasCalled = True
+        return super().MarketFill(asset, order)"
+                ).GetAttr("CustomFillModel").Invoke();
 
-                var customFillModel = module.GetAttr("CustomFillModel").Invoke();
                 var wrapper = new FillModelPythonWrapper(customFillModel);
 
                 var result = wrapper.Fill(new FillModelParameters(
@@ -322,18 +323,19 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                    "from clr import AddReference\n" +
-                    "AddReference(\"QuantConnect.Common\")\n" +
-                    "from QuantConnect.Orders.Fills import FillModel\n" +
-                    "class CustomFillModel(FillModel):\n" +
-                    "   def __init__(self):\n" +
-                    "       self.MarketFillWasCalled = False\n" +
-                    "   def MarketFill(self, asset, order):\n" +
-                    "       self.MarketFillWasCalled = True\n" +
-                    "       return super().MarketFill(asset, order)");
+                var customFillModel = PythonEngine.ModuleFromString(
+                    Guid.NewGuid().ToString(),
+                    @"from clr import AddReference
+AddReference('QuantConnect.Common')
+from QuantConnect.Orders.Fills import FillModel
+class CustomFillModel(FillModel):
+    def __init__(self):
+        self.MarketFillWasCalled = False
+    def MarketFill(self, asset, order):
+        self.MarketFillWasCalled = True
+        return super().MarketFill(asset, order)"
+                ).GetAttr("CustomFillModel").Invoke();
 
-                var customFillModel = module.GetAttr("CustomFillModel").Invoke();
                 var wrapper = new FillModelPythonWrapper(customFillModel);
 
                 var result = wrapper.Fill(new FillModelParameters(
@@ -356,18 +358,19 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                    "from clr import AddReference\n" +
-                    "AddReference(\"QuantConnect.Common\")\n" +
-                    "from QuantConnect.Orders.Fills import FillModel\n" +
-                    "class CustomFillModel(FillModel):\n" +
-                    "   def __init__(self):\n" +
-                    "       self.FillWasCalled = False\n" +
-                    "   def Fill(self, parameters):\n" +
-                    "       self.FillWasCalled = True\n" +
-                    "       return super().Fill(parameters)");
+                var customFillModel = PythonEngine.ModuleFromString(
+                    Guid.NewGuid().ToString(),
+                    @"from clr import AddReference
+AddReference('QuantConnect.Common')
+from QuantConnect.Orders.Fills import FillModel
+class CustomFillModel(FillModel):
+    def __init__(self):
+        self.FillWasCalled = False
+    def Fill(self, parameters):
+        self.FillWasCalled = True
+        return super().Fill(parameters)"
+                ).GetAttr("CustomFillModel").Invoke();
 
-                var customFillModel = module.GetAttr("CustomFillModel").Invoke();
                 var wrapper = new FillModelPythonWrapper(customFillModel);
 
                 var result = wrapper.Fill(new FillModelParameters(
@@ -390,23 +393,24 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                    "from clr import AddReference\n" +
-                    "AddReference(\"QuantConnect.Common\")\n" +
-                    "from QuantConnect.Orders.Fills import FillModel, Fill\n" +
-                    "class CustomFillModel(FillModel):\n" +
-                    "   def __init__(self):\n" +
-                    "       self.FillWasCalled = False\n" +
-                    "       self.MarketFillWasCalled = False\n" +
-                    "   def Fill(self, parameters):\n" +
-                    "       self.FillWasCalled = True\n" +
-                    "       self.Parameters = parameters\n" +
-                    "       return Fill(self.MarketFill(parameters.Security, parameters.Order))\n" +
-                    "   def MarketFill(self, asset, order):\n" +
-                    "       self.MarketFillWasCalled = True\n" +
-                    "       return super().MarketFill(asset, order)");
+                var customFillModel = PythonEngine.ModuleFromString(
+                    Guid.NewGuid().ToString(),
+                    @"from clr import AddReference
+AddReference('QuantConnect.Common')
+from QuantConnect.Orders.Fills import FillModel, Fill
+class CustomFillModel(FillModel):
+    def __init__(self):
+        self.FillWasCalled = False
+        self.MarketFillWasCalled = False
+    def Fill(self, parameters):
+        self.FillWasCalled = True
+        self.Parameters = parameters
+        return Fill(self.MarketFill(parameters.Security, parameters.Order))
+    def MarketFill(self, asset, order):
+        self.MarketFillWasCalled = True
+        return super().MarketFill(asset, order)"
+                ).GetAttr("CustomFillModel").Invoke();
 
-                var customFillModel = module.GetAttr("CustomFillModel").Invoke();
                 var wrapper = new FillModelPythonWrapper(customFillModel);
 
                 var result = wrapper.Fill(new FillModelParameters(
@@ -431,24 +435,28 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                    "from clr import AddReference\n" +
-                    "AddReference(\"QuantConnect.Common\")\n" +
-                    "from QuantConnect.Orders.Fills import FillModel, Fill\n" +
-                    "from QuantConnect.Orders import OrderEvent\n" +
-                    "class CustomFillModel(FillModel):\n" +
-                    "   def __init__(self):\n" +
-                    "       self.FillWasCalled = False\n" +
-                    "       self.GetPricesWasCalled = False\n" +
-                    "   def Fill(self, parameters):\n" +
-                    "       self.FillWasCalled = True\n" +
-                    "       self.Parameters = parameters\n" +
-                    "       return Fill(super().MarketFill(parameters.Security, parameters.Order))\n" +
-                    "   def GetPrices(self, asset, direction):\n" +
-                    "       self.GetPricesWasCalled = True\n" +
-                    "       return super().GetPrices(asset, direction)");
+                var customFillModel = PythonEngine.ModuleFromString(
+                    Guid.NewGuid().ToString(),
+                    @"from clr import AddReference
+AddReference('QuantConnect.Common') 
+from QuantConnect.Orders.Fills import FillModel, Fill
+from QuantConnect.Orders import OrderEvent
+class CustomFillModel(FillModel):
+    def __init__(self):
+        self.FillWasCalled = False
+        self.GetPricesWasCalled = False
+    def Fill(self, parameters):
+        self.FillWasCalled = True
+        self.Parameters = parameters
+        return Fill(super().MarketFill(parameters.Security, parameters.Order))
+    def GetPrices(self, asset, direction):
+        self.GetPricesWasCalled = True
+        return super().GetPrices(asset, direction)
+    def GetPricesForMarketFill(self, asset, direction):
+        self.GetPricesWasCalled = True
+        return self.GetPrices(asset, direction)"
+                ).GetAttr("CustomFillModel").Invoke();
 
-                var customFillModel = module.GetAttr("CustomFillModel").Invoke();
                 var wrapper = new FillModelPythonWrapper(customFillModel);
 
                 var result = wrapper.Fill(new FillModelParameters(
@@ -473,18 +481,20 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                    "from clr import AddReference\n" +
-                    "AddReference(\"QuantConnect.Common\")\n" +
-                    "from QuantConnect.Orders.Fills import ImmediateFillModel\n" +
-                    "class CustomFillModel(ImmediateFillModel):\n" +
-                    "   def __init__(self):\n" +
-                    "       self.MarketFillWasCalled = False\n" +
-                    "   def MarketFill(self, asset, order):\n" +
-                    "       self.MarketFillWasCalled = True\n" +
-                    "       return super().MarketFill(asset, order)");
+                var customFillModel = PythonEngine.ModuleFromString(
+                    Guid.NewGuid().ToString(),
+                    @"
+from clr import AddReference
+AddReference('QuantConnect.Common')
+from QuantConnect.Orders.Fills import ImmediateFillModel
+class CustomFillModel(ImmediateFillModel):
+    def __init__(self):
+        self.MarketFillWasCalled = False
+    def MarketFill(self, asset, order):
+        self.MarketFillWasCalled = True
+        return super().MarketFill(asset, order)"
+                ).GetAttr("CustomFillModel").Invoke();
 
-                var customFillModel = module.GetAttr("CustomFillModel").Invoke();
                 var wrapper = new FillModelPythonWrapper(customFillModel);
 
                 var result = wrapper.Fill(new FillModelParameters(
@@ -637,6 +647,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 GetPricesWasCalled = true;
                 return new Prices(orderDateTime, 12345, 12345, 12345, 12345, 12345);
             }
+
+            protected override Prices GetPricesForMarketFill(Security asset, OrderDirection direction)
+            {
+                return GetPrices(asset, direction);
+            }
         }
 
         private class TestFillModelInheritBaseClassDoesNotOverride : FillModel
@@ -649,6 +664,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 // call base.GetPrices() just to test it show its possible
                 base.GetPrices(asset, direction);
                 return new Prices(orderDateTime, 12345, 12345, 12345, 12345, 12345);
+            }
+
+            protected override Prices GetPricesForMarketFill(Security asset, OrderDirection direction)
+            {
+                return GetPrices(asset, direction);
             }
         }
 
