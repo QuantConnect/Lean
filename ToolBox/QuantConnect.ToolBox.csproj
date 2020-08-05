@@ -356,9 +356,13 @@
     <Compile Include="Polygon\Messages\CryptoTradeMessage.cs" />
     <Compile Include="Polygon\Messages\CryptoQuoteMessage.cs" />
     <Compile Include="Polygon\Messages\ForexQuoteMessage.cs" />
+    <Compile Include="Polygon\PolygonDataDownloader.cs" />
     <Compile Include="Polygon\PolygonDataQueueHandler.cs" />
+    <Compile Include="Polygon\PolygonDownloaderProgram.cs" />
     <Compile Include="Polygon\PolygonSymbolMapper.cs" />
     <Compile Include="Polygon\PolygonWebSocketClientWrapper.cs" />
+    <Compile Include="Polygon\Responses\AggregateRowResponse.cs" />
+    <Compile Include="Polygon\Responses\AggregatesResponse.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="RandomDataGenerator\DividendSplitMapGenerator.cs" />
     <Compile Include="RandomDataGenerator\ConsoleLeveledOutput.cs" />

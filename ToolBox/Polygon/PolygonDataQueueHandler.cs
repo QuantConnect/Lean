@@ -15,23 +15,36 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Net;
+using System.Threading;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NodaTime;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.Polygon.Messages;
+using QuantConnect.ToolBox.Polygon.Responses;
+using HistoryRequest = QuantConnect.Data.HistoryRequest;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.ToolBox.Polygon
 {
     /// <summary>
-    /// An implementation of <see cref="IDataQueueHandler"/> for Polygon.io
+    /// An implementation of <see cref="IDataQueueHandler"/> and <see cref="IHistoryProvider"/> for Polygon.io
     /// </summary>
-    public class PolygonDataQueueHandler : IDataQueueHandler
+    public class PolygonDataQueueHandler : HistoryProviderBase, IDataQueueHandler
     {
+        private const string HistoryBaseUrl = "https://api.polygon.io/v2";
+
+        private readonly string _apiKey = Config.Get("polygon-api-key");
+
         private readonly HashSet<Symbol> _subscribedSymbols = new HashSet<Symbol>();
 
         private readonly List<Tick> _ticks = new List<Tick>();
@@ -44,17 +57,40 @@ namespace QuantConnect.ToolBox.Polygon
         // exchange time zones by symbol
         private readonly Dictionary<Symbol, DateTimeZone> _symbolExchangeTimeZones = new Dictionary<Symbol, DateTimeZone>();
 
+        private int _dataPointCount;
+
+        /// <summary>
+        /// Static constructor for the <see cref="PolygonDataQueueHandler"/> class
+        /// </summary>
+        static PolygonDataQueueHandler()
+        {
+            // Polygon.io requires TLS 1.2
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PolygonDataQueueHandler"/> class
         /// </summary>
-        public PolygonDataQueueHandler()
+        public PolygonDataQueueHandler() : this(true)
         {
-            foreach (var securityType in new[] { SecurityType.Equity, SecurityType.Forex, SecurityType.Crypto })
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PolygonDataQueueHandler"/> class
+        /// </summary>
+        public PolygonDataQueueHandler(bool streamingEnabled)
+        {
+            if (streamingEnabled)
             {
-                var client = new PolygonWebSocketClientWrapper(_symbolMapper, securityType, OnMessage);
-                _webSocketClientWrappers.Add(securityType, client);
+                foreach (var securityType in new[] { SecurityType.Equity, SecurityType.Forex, SecurityType.Crypto })
+                {
+                    var client = new PolygonWebSocketClientWrapper(_apiKey, _symbolMapper, securityType, OnMessage);
+                    _webSocketClientWrappers.Add(securityType, client);
+                }
             }
         }
+
+        #region IDataQueueHandler implementation
 
         /// <summary>
         /// Indicates the connection is live.
@@ -118,6 +154,138 @@ namespace QuantConnect.ToolBox.Polygon
         /// </summary>
         public void Dispose()
         {
+        }
+
+        #endregion
+
+        #region IHistoryProvider implementation
+
+        /// <summary>
+        /// Gets the total number of data points emitted by this history provider
+        /// </summary>
+        public override int DataPointCount => _dataPointCount;
+
+        /// <summary>
+        /// Initializes this history provider to work for the specified job
+        /// </summary>
+        /// <param name="parameters">The initialization parameters</param>
+        public override void Initialize(HistoryProviderInitializeParameters parameters)
+        {
+        }
+
+        /// <summary>
+        /// Gets the history for the requested securities
+        /// </summary>
+        /// <param name="requests">The historical data requests</param>
+        /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
+        /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
+        public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+        {
+            if (string.IsNullOrWhiteSpace(_apiKey))
+            {
+                Log.Error("PolygonDataQueueHandler.GetHistory(): History calls for Polygon.io require an API key.");
+                yield break;
+            }
+
+            foreach (var request in requests)
+            {
+                foreach (var slice in ProcessHistoryRequests(request))
+                {
+                    yield return slice;
+                }
+            }
+        }
+
+        #endregion
+
+        private IEnumerable<Slice> ProcessHistoryRequests(HistoryRequest request)
+        {
+            // check resolution
+            if (request.Resolution != Resolution.Minute &&
+                request.Resolution != Resolution.Hour &&
+                request.Resolution != Resolution.Daily)
+            {
+                Log.Error($"PolygonDataQueueHandler.ProcessHistoryRequests(): unsupported resolution: {request.Resolution}.");
+                yield break;
+            }
+
+            // check security type
+            if (request.Symbol.SecurityType != SecurityType.Equity)
+            {
+                Log.Error($"PolygonDataQueueHandler.ProcessHistoryRequests(): unsupported security type: {request.Symbol.SecurityType}.");
+                yield break;
+            }
+
+            // check tick type
+            if (request.TickType != TickType.Trade)
+            {
+                Log.Error("PolygonDataQueueHandler.ProcessHistoryRequests(): Only history requests for trade bars are supported.");
+                yield break;
+            }
+
+            var ticker = request.Symbol.ID.Symbol;
+            var start = request.StartTimeUtc.ConvertFromUtc(TimeZones.NewYork);
+            var end = request.EndTimeUtc.ConvertFromUtc(TimeZones.NewYork);
+
+            Log.Trace("PolygonDataQueueHandler.ProcessHistoryRequests(): Submitting request: " +
+                      Invariant($"{request.Symbol.SecurityType}-{ticker}: {request.Resolution} {start}->{end}")
+            );
+
+            var historyTimespan = GetHistoryTimespan(request.Resolution);
+
+            var startDate = start.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var endDate = end.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+            // Download and parse data
+            using (var client = new WebClient())
+            {
+                var url = $"{HistoryBaseUrl}/aggs/ticker/{ticker}/range/1/{historyTimespan}/{startDate}/{endDate}?apiKey={_apiKey}";
+
+                var response = client.DownloadString(url);
+
+                var result = JsonConvert.DeserializeObject<AggregatesResponse>(response);
+                if (result.Results == null)
+                {
+                    yield break;
+                }
+
+                foreach (var row in result.Results)
+                {
+                    var utcTime = Time.UnixMillisecondTimeStampToDateTime(row.Timestamp);
+
+                    if (utcTime < request.StartTimeUtc ||
+                        utcTime > request.EndTimeUtc.Add(request.Resolution.ToTimeSpan()))
+                    {
+                        continue;
+                    }
+
+                    var time = utcTime.ConvertFromUtc(TimeZones.NewYork);
+
+                    Interlocked.Increment(ref _dataPointCount);
+
+                    var tradeBar = new TradeBar(time, request.Symbol, row.Open, row.High, row.Low, row.Close, row.Volume);
+
+                    yield return new Slice(tradeBar.EndTime, new[] { tradeBar });
+                }
+            }
+        }
+
+        private static string GetHistoryTimespan(Resolution resolution)
+        {
+            switch (resolution)
+            {
+                case Resolution.Daily:
+                    return "day";
+
+                case Resolution.Hour:
+                    return "hour";
+
+                case Resolution.Minute:
+                    return "minute";
+
+                default:
+                    throw new Exception($"PolygonDataQueueHandler.GetHistoryTimespan(): unsupported resolution: {resolution}.");
+            }
         }
 
         private PolygonWebSocketClientWrapper GetWebSocket(SecurityType securityType)

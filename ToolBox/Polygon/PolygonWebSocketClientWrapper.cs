@@ -16,7 +16,6 @@
 using System;
 using Newtonsoft.Json;
 using QuantConnect.Brokerages;
-using QuantConnect.Configuration;
 using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.Polygon
@@ -25,14 +24,14 @@ namespace QuantConnect.ToolBox.Polygon
     {
         private const string BaseUrl = "wss://socket.polygon.io";
 
-        private readonly string _apiKey = Config.Get("polygon-api-key");
-
+        private readonly string _apiKey;
         private readonly ISymbolMapper _symbolMapper;
         private readonly SecurityType _securityType;
         private readonly Action<string> _messageHandler;
 
-        public PolygonWebSocketClientWrapper(ISymbolMapper symbolMapper, SecurityType securityType, Action<string> messageHandler)
+        public PolygonWebSocketClientWrapper(string apiKey, ISymbolMapper symbolMapper, SecurityType securityType, Action<string> messageHandler)
         {
+            _apiKey = apiKey;
             _symbolMapper = symbolMapper;
             _securityType = securityType;
             _messageHandler = messageHandler;
