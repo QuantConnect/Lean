@@ -33,6 +33,9 @@ namespace QuantConnect.Data.Custom.Tiingo
     [ProtoContract(SkipConstructor = true)]
     public class TiingoNews : IndexedBaseData
     {
+        private List<string> _tags;
+        private List<Symbol> _symbols;
+
         /// <summary>
         /// The domain the news source is from.
         /// </summary>
@@ -63,7 +66,22 @@ namespace QuantConnect.Data.Custom.Tiingo
         /// Tags that are mapped and discovered by Tiingo.
         /// </summary>
         [ProtoMember(14)]
-        public List<string> Tags { get; set; }
+        public List<string> Tags
+        {
+            get
+            {
+                if (_tags == null)
+                {
+                    _tags = new List<string>();
+                }
+                
+                return _tags;
+            }
+            set
+            {
+                _tags = value;
+            }
+        }
 
         /// <summary>
         /// Long-form description of the news story.
@@ -87,7 +105,22 @@ namespace QuantConnect.Data.Custom.Tiingo
         /// What symbols are mentioned in the news story.
         /// </summary>
         [ProtoMember(18)]
-        public List<Symbol> Symbols { get; set; }
+        public List<Symbol> Symbols
+        {
+            get
+            {
+                if (_symbols == null)
+                {
+                    _symbols = new List<Symbol>();
+                }
+                
+                return _symbols;
+            } 
+            set
+            {
+                _symbols = value;
+            }
+        }
 
         /// <summary>
         /// Returns the source for a given index value

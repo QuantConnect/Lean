@@ -336,6 +336,51 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
+        public void TiingoNewsEmptySymbolsTagsRoundTrip()
+        {
+            var symbol = Symbol.CreateBase(
+                typeof(TiingoNews),
+                Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
+                Market.USA);
+
+            var news = new TiingoNews
+            {
+                ArticleID = "1000",
+                CrawlDate = DateTime.UtcNow.AddDays(-1),
+                DataType = MarketDataType.Base,
+                Description = "Round trip to planet Protobuf is successful, ushering us into a new era for mining",
+                PublishedDate = DateTime.UtcNow.Date,
+                Source = "News Corp.",
+                Symbols = new List<Symbol>(),
+                Tags = new List<string>(),
+                Title = "Round Trip To Planet Protobuf Successful",
+                Url = "https://tiingo.com",
+
+                Time = DateTime.UtcNow,
+                Symbol = symbol
+            };
+
+            var serializedNews = news.ProtobufSerialize();
+            using (var stream = new MemoryStream(serializedNews))
+            {
+                var result = (TiingoNews)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+                var clonedResult = (TiingoNews)result.Clone();
+
+                Assert.AreEqual(news.ArticleID, result.ArticleID);
+                Assert.AreEqual(news.CrawlDate, result.CrawlDate);
+                Assert.AreEqual(news.DataType, result.DataType);
+                Assert.AreEqual(news.Description, result.Description);
+                Assert.AreEqual(news.PublishedDate, result.PublishedDate);
+                Assert.AreEqual(news.Source, result.Source);
+                Assert.IsTrue(news.Symbols.SequenceEqual(result.Symbols));
+                Assert.IsTrue(news.Tags.SequenceEqual(result.Tags));
+                Assert.AreEqual(news.Title, result.Title);
+                Assert.AreEqual(news.Url, result.Url);
+                Assert.AreEqual(news.Time, result.Time);
+            }
+        }
+
+        [Test]
         public void BenzingaNewsRoundTrip()
         {
             var symbol = Symbol.CreateBase(
@@ -375,23 +420,55 @@ namespace QuantConnect.Tests.Common
                 Time = DateTime.UtcNow,
                 Symbol = symbol
             };
+        }
+
+        [Test]
+        public void BenzingaNewsEmptyTagsSymbolsRoundTrip()
+        {
+            var symbol = Symbol.CreateBase(
+                typeof(BenzingaNews),
+                Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
+                Market.USA);
+
+            var news = new BenzingaNews
+            {
+                Id = 1000,
+                Author = "Benzinga",
+                DataType = MarketDataType.Base,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                Title = "Round Trip To Planet Protobuf Successful",
+                Teaser = "Round trip to planet Protobuf is successful, ushering us into a new era for mining",
+                Contents = "Round trip to planet Protobuf is successful, ushering us into a new era for mining",
+                Categories = new List<string>
+                {
+                    "aerospace",
+                    "technology"
+                },
+                Symbols = new List<Symbol>(),
+                Tags = new List<string>(),
+
+                Time = DateTime.UtcNow,
+                Symbol = symbol
+            };
 
             var serializedNews = news.ProtobufSerialize();
             using (var stream = new MemoryStream(serializedNews))
             {
                 var result = (BenzingaNews)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
-                Assert.AreEqual(news.Id, result.Id);
-                Assert.AreEqual(news.Author, result.Author);
-                Assert.AreEqual(news.DataType, result.DataType);
-                Assert.AreEqual(news.CreatedAt, result.CreatedAt);
-                Assert.AreEqual(news.UpdatedAt, result.UpdatedAt);
-                Assert.AreEqual(news.Title, result.Title);
-                Assert.AreEqual(news.Teaser, result.Teaser);
-                Assert.AreEqual(news.Contents, result.Contents);
-                Assert.IsTrue(news.Categories.SequenceEqual(result.Categories));
-                Assert.IsTrue(news.Symbols.SequenceEqual(result.Symbols));
-                Assert.IsTrue(news.Tags.SequenceEqual(result.Tags));
-                Assert.AreEqual(news.Time, result.Time);
+                var clonedResult = (BenzingaNews)result.Clone();
+                Assert.AreEqual(news.Id, clonedResult.Id);
+                Assert.AreEqual(news.Author, clonedResult.Author);
+                Assert.AreEqual(news.DataType, clonedResult.DataType);
+                Assert.AreEqual(news.CreatedAt, clonedResult.CreatedAt);
+                Assert.AreEqual(news.UpdatedAt, clonedResult.UpdatedAt);
+                Assert.AreEqual(news.Title, clonedResult.Title);
+                Assert.AreEqual(news.Teaser, clonedResult.Teaser);
+                Assert.AreEqual(news.Contents, clonedResult.Contents);
+                Assert.IsTrue(news.Categories.SequenceEqual(clonedResult.Categories));
+                Assert.IsTrue(news.Symbols.SequenceEqual(clonedResult.Symbols));
+                Assert.IsTrue(news.Tags.SequenceEqual(clonedResult.Tags));
+                Assert.AreEqual(news.Time, clonedResult.Time);
             }
         }
 

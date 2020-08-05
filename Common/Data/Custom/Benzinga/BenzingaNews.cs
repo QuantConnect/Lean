@@ -18,6 +18,7 @@ using NodaTime;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using ProtoBuf;
 
 namespace QuantConnect.Data.Custom.Benzinga
@@ -28,6 +29,10 @@ namespace QuantConnect.Data.Custom.Benzinga
     [ProtoContract(SkipConstructor = true)]
     public class BenzingaNews : IndexedBaseData
     {
+        private List<string> _categories;
+        private List<string> _tags;
+        private List<Symbol> _symbols;
+
         /// <summary>
         /// Unique ID assigned to the article by Benzinga
         /// </summary>
@@ -86,14 +91,44 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// </summary>
         [JsonProperty("channels")]
         [ProtoMember(17)]
-        public List<string> Categories { get; set; }
+        public List<string> Categories
+        {
+            get
+            {
+                if (_categories == null)
+                {
+                    _categories = new List<string>();
+                }
+                
+                return _categories;
+            } 
+            set
+            {
+                _categories = value;
+            }
+        }
 
         /// <summary>
         /// Symbols that this news article mentions
         /// </summary>
         [JsonProperty("stocks")]
         [ProtoMember(18)]
-        public List<Symbol> Symbols { get; set; }
+        public List<Symbol> Symbols
+        {
+            get
+            {
+                if (_symbols == null)
+                {
+                    _symbols = new List<Symbol>();
+                }
+                
+                return _symbols;
+            }
+            set
+            {
+                _symbols = value;
+            }
+        }
 
         /// <summary>
         /// Additional tags that are not channels/categories, but are reoccuring
@@ -103,13 +138,28 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// </summary>
         [JsonProperty("tags")]
         [ProtoMember(19)]
-        public List<string> Tags { get; set; }
+        public List<string> Tags
+        {
+            get
+            {
+                if (_tags == null)
+                {
+                    _tags = new List<string>();
+                }
+                
+                return _tags;
+            }
+            set
+            {
+                _tags = value;
+            }
+        }
 
         /// <summary>
         /// Date that the article was revised on
         /// </summary>
         public override DateTime EndTime => UpdatedAt;
-
+        
         /// <summary>
         /// Determines the actual source from an index contained within a ticker folder
         /// </summary>
@@ -142,11 +192,6 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// <returns>SubscriptionDataSource indicating where data is located and how it's stored</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            if (isLiveMode)
-            {
-                throw new NotImplementedException("BenzingaNews currently does not support live trading mode.");
-            }
-
             return new SubscriptionDataSource(
                 Path.Combine(
                     Globals.DataFolder,
@@ -226,9 +271,6 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// <returns>A clone of the instance</returns>
         public override BaseData Clone()
         {
-            var newCategories = new List<string>(Categories);
-            var newTags = new List<string>(Tags);
-
             return new BenzingaNews
             {
                 Id = Id,
@@ -238,9 +280,9 @@ namespace QuantConnect.Data.Custom.Benzinga
                 Title = Title,
                 Teaser = Teaser,
                 Contents = Contents,
-                Categories = newCategories,
-                Symbols = Symbols,
-                Tags = newTags,
+                Categories = Categories.ToList(),
+                Symbols = Symbols.ToList(),
+                Tags = Tags.ToList(),
 
                 Symbol = Symbol,
                 EndTime = EndTime
