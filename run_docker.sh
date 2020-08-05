@@ -101,7 +101,8 @@ else
 fi
 
 #If debugging is set then set the entrypoint to run mono with a debugger server
-if [ "${debugging,,}" == "y" ]; then
+shopt -s nocasematch
+if [[ "$debugging" == "y" ]]; then
     command+="-p 55555:55555 \
     --entrypoint mono \
     $image --debug --debugger-agent=transport=dt_socket,server=y,address=0.0.0.0:55555,suspend=y \
