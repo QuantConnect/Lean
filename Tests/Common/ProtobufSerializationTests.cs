@@ -364,7 +364,6 @@ namespace QuantConnect.Tests.Common
             using (var stream = new MemoryStream(serializedNews))
             {
                 var result = (TiingoNews)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
-                var clonedResult = (TiingoNews)result.Clone();
 
                 Assert.AreEqual(news.ArticleID, result.ArticleID);
                 Assert.AreEqual(news.CrawlDate, result.CrawlDate);
@@ -456,19 +455,19 @@ namespace QuantConnect.Tests.Common
             using (var stream = new MemoryStream(serializedNews))
             {
                 var result = (BenzingaNews)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
-                var clonedResult = (BenzingaNews)result.Clone();
-                Assert.AreEqual(news.Id, clonedResult.Id);
-                Assert.AreEqual(news.Author, clonedResult.Author);
-                Assert.AreEqual(news.DataType, clonedResult.DataType);
-                Assert.AreEqual(news.CreatedAt, clonedResult.CreatedAt);
-                Assert.AreEqual(news.UpdatedAt, clonedResult.UpdatedAt);
-                Assert.AreEqual(news.Title, clonedResult.Title);
-                Assert.AreEqual(news.Teaser, clonedResult.Teaser);
-                Assert.AreEqual(news.Contents, clonedResult.Contents);
-                Assert.IsTrue(news.Categories.SequenceEqual(clonedResult.Categories));
-                Assert.IsTrue(news.Symbols.SequenceEqual(clonedResult.Symbols));
-                Assert.IsTrue(news.Tags.SequenceEqual(clonedResult.Tags));
-                Assert.AreEqual(news.Time, clonedResult.Time);
+
+                Assert.AreEqual(news.Id, result.Id);
+                Assert.AreEqual(news.Author, result.Author);
+                Assert.AreEqual(news.DataType, result.DataType);
+                Assert.AreEqual(news.CreatedAt, result.CreatedAt);
+                Assert.AreEqual(news.UpdatedAt, result.UpdatedAt);
+                Assert.AreEqual(news.Title, result.Title);
+                Assert.AreEqual(news.Teaser, result.Teaser);
+                Assert.AreEqual(news.Contents, result.Contents);
+                Assert.IsTrue(news.Categories.SequenceEqual(result.Categories));
+                Assert.IsTrue(news.Symbols.SequenceEqual(result.Symbols));
+                Assert.IsTrue(news.Tags.SequenceEqual(result.Tags));
+                Assert.AreEqual(news.Time, result.Time);
             }
         }
 
