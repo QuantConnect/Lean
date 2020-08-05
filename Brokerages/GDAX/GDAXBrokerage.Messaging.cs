@@ -383,16 +383,19 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// Creates websocket message subscriptions for the supplied symbols
         /// </summary>
+        protected bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
+        {
+            Subscribe(symbols);
+            return true;
+        }
+
+        /// <summary>
+        /// Creates websocket message subscriptions for the supplied symbols
+        /// </summary>
         public override void Subscribe(IEnumerable<Symbol> symbols)
         {
             foreach (var item in symbols)
             {
-                if (item.Value.Contains("UNIVERSE") ||
-                    item.SecurityType != SecurityType.Forex && item.SecurityType != SecurityType.Crypto)
-                {
-                    continue;
-                }
-
                 if (!IsSubscribeAvailable(item))
                 {
                     //todo: refactor this outside brokerage
@@ -497,12 +500,36 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// Ends current subscriptions
         /// </summary>
-        public void Unsubscribe(IEnumerable<Symbol> symbols)
+        public bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
             if (WebSocket.IsOpen)
             {
-                WebSocket.Send(JsonConvert.SerializeObject(new { type = "unsubscribe", channels = ChannelNames }));
+                var unsubscribing = ChannelList.Keys
+                    .Except(symbols.Select(t => t.Value));
+
+                var products = unsubscribing
+                    .Select(s => s.Substring(0, 3) + "-" + s.Substring(3))
+                    .ToArray();
+
+                if (products.Length == 0)
+                {
+                    return true;
+                }
+
+                var payload = new
+                {
+                    type = "unsubscribe",
+                    channels = ChannelNames,
+                    product_ids = products
+                };
+
+                WebSocket.Send(JsonConvert.SerializeObject(payload));
+
+                ChannelList = ChannelList
+                    .Where(c => !unsubscribing.Any(s => s.Equals(c.Key)))
+                    .ToDictionary();
             }
+            return true;
         }
 
         private void FillMonitorAction()
@@ -557,6 +584,22 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
             Log.Trace("GDAXBrokerage.FillMonitorAction(): task ended");
+        }
+
+        /// <summary>
+        /// Checks if this brokerage supports the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <returns>returns true if brokerage supports the specified symbol; otherwise false</returns>
+        public bool CanSubscribe(Symbol symbol)
+        {
+            if (symbol.Value.Contains("UNIVERSE") ||
+                    symbol.SecurityType != SecurityType.Forex && symbol.SecurityType != SecurityType.Crypto)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

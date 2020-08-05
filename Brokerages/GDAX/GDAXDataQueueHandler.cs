@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
@@ -28,6 +29,8 @@ namespace QuantConnect.Brokerages.GDAX
     [BrokerageFactory(typeof(GDAXBrokerageFactory))]
     public class GDAXDataQueueHandler : GDAXBrokerage, IDataQueueHandler
     {
+        private readonly EventBasedSubscribeManager _subscribeManager;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="GDAXDataQueueHandler"/> class
         /// </summary>
@@ -35,6 +38,10 @@ namespace QuantConnect.Brokerages.GDAX
             IPriceProvider priceProvider, IDataAggregator aggregator)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator)
         {
+            _subscribeManager = new EventBasedSubscribeManager();
+            _subscribeManager.SubscribeImpl += Subscribe;
+            _subscribeManager.UnsubscribeImpl += Unsubscribe;
+            _subscribeManager.GetChannelName += (t) => "level2";
         }
 
         /// <summary>
@@ -50,8 +57,13 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            if (!CanSubscribe(dataConfig.Symbol))
+            {
+                return Enumerable.Empty<BaseData>().GetEnumerator();
+            }
+
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
-            Subscribe(new[] { dataConfig.Symbol });
+            _subscribeManager.Subscribe(dataConfig);
 
             return enumerator;
         }
@@ -70,7 +82,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            _subscribeManager.Unsubscribe(dataConfig);
             _aggregator.Remove(dataConfig);
         }
     }
