@@ -22,7 +22,7 @@ namespace QuantConnect.Logging
     /// <summary>
     /// ILogHandler implementation that writes log output to console.
     /// </summary>
-    public class ConsoleLogHandler : ILogHandler
+    public class ConsoleLogHandler : BaseLogHandler
     {
         private const string DefaultDateFormat = "yyyyMMdd HH:mm:ss.fff";
         private readonly TextWriter _trace;
@@ -54,7 +54,7 @@ namespace QuantConnect.Logging
         /// Write error message to log
         /// </summary>
         /// <param name="text">The error text to log</param>
-        public void Error(string text)
+        public override void WriteError(string text)
         {
 #if DEBUG
             Console.ForegroundColor = ConsoleColor.Red;
@@ -69,7 +69,7 @@ namespace QuantConnect.Logging
         /// Write debug message to log
         /// </summary>
         /// <param name="text">The debug text to log</param>
-        public void Debug(string text)
+        public override void WriteDebug(string text)
         {
             _trace.WriteLine(DateTime.Now.ToString(_dateFormat, CultureInfo.InvariantCulture) + " DEBUG:: " + text);
         }
@@ -78,17 +78,9 @@ namespace QuantConnect.Logging
         /// Write debug message to log
         /// </summary>
         /// <param name="text">The trace text to log</param>
-        public void Trace(string text)
+        public override void WriteTrace(string text)
         {
             _trace.WriteLine(DateTime.Now.ToString(_dateFormat, CultureInfo.InvariantCulture) + " Trace:: " + text);
-        }
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
         }
     }
 }

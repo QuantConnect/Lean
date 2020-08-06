@@ -107,6 +107,7 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="BaseLogHandler.cs" />
     <Compile Include="CompositeLogHandler.cs" />
     <Compile Include="CompositeNLogHandler.cs" />
     <Compile Include="NLogHandler.cs" />

@@ -22,7 +22,7 @@ namespace QuantConnect.Logging
     /// <summary>
     /// Provides an implementation of <see cref="ILogHandler"/> that writes all log messages to a file on disk.
     /// </summary>
-    public class FileLogHandler : ILogHandler
+    public class FileLogHandler : BaseLogHandler
     {
         private bool _disposed;
 
@@ -57,7 +57,7 @@ namespace QuantConnect.Logging
         /// Write error message to log
         /// </summary>
         /// <param name="text">The error text to log</param>
-        public void Error(string text)
+        public override void WriteError(string text)
         {
             WriteMessage(text, "ERROR");
         }
@@ -66,7 +66,7 @@ namespace QuantConnect.Logging
         /// Write debug message to log
         /// </summary>
         /// <param name="text">The debug text to log</param>
-        public void Debug(string text)
+        public override void WriteDebug(string text)
         {
             WriteMessage(text, "DEBUG");
         }
@@ -75,7 +75,7 @@ namespace QuantConnect.Logging
         /// Write debug message to log
         /// </summary>
         /// <param name="text">The trace text to log</param>
-        public void Trace(string text)
+        public override void WriteTrace(string text)
         {
             WriteMessage(text, "TRACE");
         }
@@ -84,8 +84,8 @@ namespace QuantConnect.Logging
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
+        public override void Dispose()
+        {   
             lock (_lock)
             {
                 if (_writer.IsValueCreated)
@@ -94,6 +94,8 @@ namespace QuantConnect.Logging
                     _writer.Value.Dispose();
                 }
             }
+
+            base.Dispose();
         }
 
         /// <summary>
