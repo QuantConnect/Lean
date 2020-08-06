@@ -394,7 +394,9 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         public override void Subscribe(IEnumerable<Symbol> symbols)
         {
-            foreach (var item in symbols)
+            var fullList = GetSubscribed().Union(symbols);
+            var pendingSymbols = new List<Symbol>();
+            foreach (var item in fullList)
             {
                 if (!IsSubscribeAvailable(item))
                 {
@@ -404,11 +406,12 @@ namespace QuantConnect.Brokerages.GDAX
                 }
                 else
                 {
-                    this.ChannelList[item.Value] = new Channel { Name = item.Value, Symbol = item.Value };
+                    pendingSymbols.Add(item);
                 }
             }
 
-            var products = ChannelList.Select(s => s.Value.Symbol.Substring(0, 3) + "-" + s.Value.Symbol.Substring(3)).ToArray();
+            var products = pendingSymbols
+                .Select(s => s.Value.Substring(0, 3) + "-" + s.Value.Substring(3)).ToArray();
 
             var payload = new
             {
@@ -504,11 +507,8 @@ namespace QuantConnect.Brokerages.GDAX
         {
             if (WebSocket.IsOpen)
             {
-                var unsubscribing = ChannelList.Keys
-                    .Except(symbols.Select(t => t.Value));
-
-                var products = unsubscribing
-                    .Select(s => s.Substring(0, 3) + "-" + s.Substring(3))
+                var products = symbols
+                    .Select(s => s.Value.Substring(0, 3) + "-" + s.Value.Substring(3))
                     .ToArray();
 
                 if (products.Length == 0)
@@ -524,10 +524,6 @@ namespace QuantConnect.Brokerages.GDAX
                 };
 
                 WebSocket.Send(JsonConvert.SerializeObject(payload));
-
-                ChannelList = ChannelList
-                    .Where(c => !unsubscribing.Any(s => s.Equals(c.Key)))
-                    .ToDictionary();
             }
             return true;
         }

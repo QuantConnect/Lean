@@ -48,10 +48,6 @@ namespace QuantConnect.Brokerages
         /// A list of currently active orders
         /// </summary>
         public ConcurrentDictionary<int, Orders.Order> CachedOrderIDs = new ConcurrentDictionary<int, Orders.Order>();
-        /// <summary>
-        /// A list of currently subscribed channels
-        /// </summary>
-        protected Dictionary<string, Channel> ChannelList = new Dictionary<string, Channel>();
         private string _market { get; set; }
         /// <summary>
         /// The api secret
@@ -71,6 +67,8 @@ namespace QuantConnect.Brokerages
         private readonly object _lockerConnectionMonitor = new object();
         private volatile bool _connectionLost;
         private const int _connectionTimeout = 30000;
+
+        protected DataQueueHandlerSubscriptionManager _subscriptionManager;
         #endregion
 
         /// <summary>
@@ -290,17 +288,9 @@ namespace QuantConnect.Brokerages
         /// Gets a list of current subscriptions
         /// </summary>
         /// <returns></returns>
-        protected virtual IList<Symbol> GetSubscribed()
+        protected virtual IEnumerable<Symbol> GetSubscribed()
         {
-            IList<Symbol> list = new List<Symbol>();
-            lock (ChannelList)
-            {
-                foreach (var item in ChannelList)
-                {
-                    list.Add(Symbol.Create(item.Value.Symbol, SecurityType.Forex, _market));
-                }
-            }
-            return list;
+            return _subscriptionManager.GetSubscribedSymbols();
         }
     }
 

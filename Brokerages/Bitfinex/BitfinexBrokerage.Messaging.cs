@@ -45,7 +45,6 @@ namespace QuantConnect.Brokerages.Bitfinex
         private readonly IAlgorithm _algorithm;
         private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromMinutes(1));
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
-        private readonly BitfinexSubscriptionManager _subscriptionManager;
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
         private readonly IDataAggregator _aggregator;
 
@@ -438,16 +437,12 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             _aggregator.Update(tick);
         }
-    }
 
-    /// <summary>
-    /// Represents Bitfinex channel information
-    /// </summary>
-    public class BitfinexChannel : Channel
-    {
         /// <summary>
-        /// Represents channel identifier for specific subscription
+        /// <see cref="BitfinexSubscriptionManager"/> reconnects and subscribes existing Ticker channels.
+        /// No need to do it in main WebSocket
         /// </summary>
-        public string ChannelId { get; set; }
+        /// <returns></returns>
+        protected override IEnumerable<Symbol> GetSubscribed() => new List<Symbol>();
     }
 }

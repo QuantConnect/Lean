@@ -17,6 +17,7 @@ using QuantConnect.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Data
 {
@@ -66,7 +67,7 @@ namespace QuantConnect.Data
                     if (Unsubscribe(new[] { dataConfig.Symbol }, dataConfig.TickType))
                     {
                         _subscribersByChannel.TryRemove(channel, out count);
-                    } 
+                    }
                 }
             }
             catch (Exception exception)
@@ -84,25 +85,25 @@ namespace QuantConnect.Data
 
         public bool IsSubscribed(Symbol symbol, TickType tickType)
         {
-            var channel = Find(symbol, tickType);
-            return channel != null;
+            return _subscribersByChannel.ContainsKey(GetChannel(
+                symbol,
+                tickType));
         }
 
-        private Channel GetChannel(SubscriptionDataConfig dataConfig)
-        {
-            var channels = _subscribersByChannel.Keys;
-            var channelName = ChannelNameFromTickType(dataConfig.TickType);
+        private Channel GetChannel(SubscriptionDataConfig dataConfig) => GetChannel(dataConfig.Symbol, dataConfig.TickType);
 
-            var channel = Find(dataConfig.Symbol, dataConfig.TickType);
-            return channel ?? new Channel() { Symbol = dataConfig.Symbol.ID.ToString(), Name = channelName };
+        private Channel GetChannel(Symbol symbol, TickType tickType)
+        {
+            return new Channel(
+                ChannelNameFromTickType(tickType),
+                symbol);
         }
 
-        private Channel Find(Symbol symbol, TickType tickType)
+        public IEnumerable<Symbol> GetSubscribedSymbols()
         {
-            var channels = _subscribersByChannel.Keys;
-            var channelName = ChannelNameFromTickType(tickType);
-
-            return channels.FirstOrDefault(c => c.Symbol == symbol.ID.ToString() && c.Name == channelName);
+            return _subscribersByChannel.Keys
+                .Select(c => c.Symbol)
+                .Distinct();
         }
     }
 }

@@ -29,8 +29,6 @@ namespace QuantConnect.Brokerages.GDAX
     [BrokerageFactory(typeof(GDAXBrokerageFactory))]
     public class GDAXDataQueueHandler : GDAXBrokerage, IDataQueueHandler
     {
-        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscribeManager;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="GDAXDataQueueHandler"/> class
         /// </summary>
@@ -39,9 +37,11 @@ namespace QuantConnect.Brokerages.GDAX
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator)
         {
             var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            _subscribeManager.SubscribeImpl += Subscribe;
-            _subscribeManager.UnsubscribeImpl += Unsubscribe;
-            _subscribeManager.GetChannelName += (t) => "level2";
+            subscriptionManager.SubscribeImpl += Subscribe;
+            subscriptionManager.UnsubscribeImpl += Unsubscribe;
+            subscriptionManager.GetChannelName += (t) => "level2";
+
+            _subscriptionManager = subscriptionManager;
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
-            _subscribeManager.Subscribe(dataConfig);
+            _subscriptionManager.Subscribe(dataConfig);
 
             return enumerator;
         }
@@ -82,7 +82,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            _subscribeManager.Unsubscribe(dataConfig);
+            _subscriptionManager.Unsubscribe(dataConfig);
             _aggregator.Remove(dataConfig);
         }
     }
