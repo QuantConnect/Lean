@@ -72,7 +72,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly IDataAggregator _aggregator;
         private readonly IB.InteractiveBrokersClient _client;
         private readonly string _agentDescription;
-        private readonly EventBasedSubscribeManager _subscriptionManager;
+        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         private Thread _messageProcessingThread;
 
@@ -248,7 +248,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _port = port;
             _agentDescription = agentDescription;
 
-            _subscriptionManager = new EventBasedSubscribeManager();
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += Subscribe;
             _subscriptionManager.UnsubscribeImpl += Unsubscribe;
             _subscriptionManager.GetChannelName += (t) => "101";

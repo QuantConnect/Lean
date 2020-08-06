@@ -31,7 +31,7 @@ namespace QuantConnect.Brokerages.Bitfinex
     /// <summary>
     /// Handles Bitfinex data subscriptions with multiple websocket connections
     /// </summary>
-    public class BitfinexSubscriptionManager : SubscribeManager
+    public class BitfinexSubscriptionManager : DataQueueHandlerSubscriptionManager
     {
         /// <summary>
         /// Maximum number of subscribed channels per websocket connection

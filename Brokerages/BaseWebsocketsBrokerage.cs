@@ -14,7 +14,7 @@
 */
 
 using Newtonsoft.Json;
-using QuantConnect.Data.Market;
+using QuantConnect.Data;
 using QuantConnect.Logging;
 using RestSharp;
 using System;

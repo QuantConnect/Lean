@@ -265,6 +265,8 @@
     <Compile Include="Brokerages\GDAXBrokerageModel.cs" />
     <Compile Include="Chart.cs" />
     <Compile Include="ChartPoint.cs" />
+    <Compile Include="Data\Channel.cs" />
+    <Compile Include="Data\EventBasedDataQueueHandlerSubscriptionManager.cs" />
     <Compile Include="Data\IDataAggregator.cs" />
     <Compile Include="Data\Auxiliary\MappingExtensions.cs" />
     <Compile Include="Data\Consolidators\Calendar.cs" />
@@ -332,6 +334,7 @@
     <Compile Include="Data\Custom\SmartInsider\SmartInsiderIntention.cs" />
     <Compile Include="Data\Custom\SmartInsider\SmartInsiderTransaction.cs" />
     <Compile Include="Data\IndexedBasedData.cs" />
+    <Compile Include="Data\DataQueueHandlerSubscriptionManager.cs" />
     <Compile Include="Data\UniverseSelection\UniversePythonWrapper.cs" />
     <Compile Include="ExtendedDictionary.cs" />
     <Compile Include="Data\SubscriptionDataConfigExtensions.cs" />

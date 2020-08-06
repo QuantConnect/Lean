@@ -62,7 +62,7 @@ namespace QuantConnect.Brokerages.Fxcm
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly ConcurrentQueue<OrderEvent> _orderEventQueue = new ConcurrentQueue<OrderEvent>();
         private readonly FxcmSymbolMapper _symbolMapper = new FxcmSymbolMapper();
-        private readonly EventBasedSubscribeManager _subscriptionManager;
+        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         private readonly IList<BaseData> _lastHistoryChunk = new List<BaseData>();
 
@@ -116,7 +116,7 @@ namespace QuantConnect.Brokerages.Fxcm
             _password = password;
             _accountId = accountId;
 
-            _subscriptionManager = new EventBasedSubscribeManager();
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += Subscribe;
             _subscriptionManager.UnsubscribeImpl += Unsubscribe;
             _subscriptionManager.GetChannelName += (t) => "quote";

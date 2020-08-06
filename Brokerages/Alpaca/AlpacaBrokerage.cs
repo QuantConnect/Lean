@@ -58,7 +58,7 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <summary>
         /// The subscription manager
         /// </summary>
-        private readonly EventBasedSubscribeManager _subscriptionManager;
+        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         /// <summary>
         /// The market hours database
@@ -78,7 +78,7 @@ namespace QuantConnect.Brokerages.Alpaca
         public AlpacaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountKeyId, string secretKey, string tradingMode)
             : base("Alpaca Brokerage")
         {
-            _subscriptionManager = new EventBasedSubscribeManager();
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += Subscribe;
             _subscriptionManager.UnsubscribeImpl += Unsubscribe;
             _subscriptionManager.GetChannelName += (t) => t.ToString();
