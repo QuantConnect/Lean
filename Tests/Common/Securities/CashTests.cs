@@ -584,6 +584,26 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.DoesNotThrow(() => JsonConvert.SerializeObject(book, Formatting.Indented));
         }
 
+        [Test]
+        public void EnsureCurrencyDataFeedThrowsWithUnsupportedCurrency()
+        {
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var book = new CashBook
+                {
+                    {Currencies.USD, new Cash(Currencies.USD, 100, 1) },
+                    {"ILS", new Cash("ILS", 0, 0.3m) }
+                };
+                var subscriptions = new SubscriptionManager();
+                var dataManager = new DataManagerStub(TimeKeeper);
+                subscriptions.SetDataManager(dataManager);
+                var securities = new SecurityManager(TimeKeeper);
+
+                // System.ArgumentException: In order to maintain cash in ILS you are required to add a subscription for Forex pair ILSUSD or USDILS
+                book.EnsureCurrencyDataFeeds(securities, subscriptions, MarketMap, SecurityChanges.None, dataManager.SecurityService);
+            });
+        }
+
         private static TimeKeeper TimeKeeper
         {
             get { return new TimeKeeper(DateTime.Now, new[] { TimeZone }); }
