@@ -64,5 +64,39 @@ namespace QuantConnect.Tests.Logging
 
             File.Delete(Log.FilePath);
         }
+
+        [Test]
+        public void TestLoggingSpeeds()
+        {
+            var start = DateTime.Now;
+            const string file = "log2.txt";
+
+            //Delete it first, just to make sure it is not there.
+            File.Delete(file);
+            int math = 1;
+
+            using (var log = new FileLogHandler(file))
+            {
+                //Log messages but also do other things in the meantime to test log threading.
+                for (int i = 0; i < 1000000; i++)
+                {
+                    var debugMessage = "debug message " + i;
+                    log.Debug(debugMessage);
+
+                    for (int j = 0; j < 10000; j++)
+                    {
+                        math = math * j;
+                    }
+
+                    log.Debug(math.ToStringInvariant());
+                }
+            }
+
+
+            var end = DateTime.Now;
+            var time = start - end;
+
+            Console.WriteLine(time);
+        }
     }
 }
