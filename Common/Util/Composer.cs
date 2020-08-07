@@ -189,7 +189,19 @@ namespace QuantConnect.Util
                         }
                     }
 
-                    var typeT = _exportedTypes.FirstOrDefault(type1 => type.IsAssignableFrom(type1) && type1.MatchesTypeName(typeName));
+                    var typeT = _exportedTypes.Where(type1 =>
+                            {
+                                try
+                                {
+                                    return type.IsAssignableFrom(type1) && type1.MatchesTypeName(typeName);
+                                }
+                                catch
+                                {
+                                    return false;
+                                }
+                            })
+                        .FirstOrDefault();
+
                     if (typeT != null)
                     {
                         instance = (T)Activator.CreateInstance(typeT);
