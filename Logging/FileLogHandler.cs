@@ -27,7 +27,6 @@ namespace QuantConnect.Logging
         private bool _disposed;
 
         // we need to control synchronization to our stream writer since it's not inherently thread-safe
-        private readonly object _lock = new object();
         private readonly Lazy<TextWriter> _writer;
         private readonly bool _useTimestampPrefix;
 
@@ -85,17 +84,14 @@ namespace QuantConnect.Logging
         /// </summary>
         /// <filterpriority>2</filterpriority>
         public override void Dispose()
-        {   
-            lock (_lock)
-            {
-                if (_writer.IsValueCreated)
-                {
-                    _disposed = true;
-                    _writer.Value.Dispose();
-                }
-            }
-
+        {
             base.Dispose();
+
+            if (_writer.IsValueCreated)
+            {
+                _disposed = true;
+                _writer.Value.Dispose();
+            }
         }
 
         /// <summary>
@@ -118,12 +114,9 @@ namespace QuantConnect.Logging
         /// </summary>
         private void WriteMessage(string text, string level)
         {
-            lock (_lock)
-            {
-                if (_disposed) return;
-                _writer.Value.WriteLine(CreateMessage(text, level));
-                _writer.Value.Flush();
-            }
+            if (_disposed) return;
+            _writer.Value.WriteLine(CreateMessage(text, level));
+            _writer.Value.Flush();
         }
     }
 }

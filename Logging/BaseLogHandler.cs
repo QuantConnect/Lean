@@ -25,9 +25,9 @@ namespace QuantConnect.Logging
     /// </summary>
     public abstract class BaseLogHandler : ILogHandler
     {
-        private ConcurrentQueue<LogEntry> LogsQueue;
+        private readonly ConcurrentQueue<LogEntry> _logsQueue;
         private const string DateFormat = "yyyyMMdd HH:mm:ss";
-        private Thread LogThread;
+        private readonly Thread _logThread;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly AutoResetEvent _messageEvent;
 
@@ -36,11 +36,11 @@ namespace QuantConnect.Logging
         /// </summary>
         public BaseLogHandler()
         {
-            LogsQueue = new ConcurrentQueue<LogEntry>();
+            _logsQueue = new ConcurrentQueue<LogEntry>();
             _messageEvent = new AutoResetEvent(false);
             _cancellationTokenSource = new CancellationTokenSource();
-            LogThread = new Thread(WriteThread) { IsBackground = true, Name = "Logging Thread" };
-            LogThread.Start();
+            _logThread = new Thread(WriteThread) { IsBackground = true, Name = "Logging Thread" };
+            _logThread.Start();
         }
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace QuantConnect.Logging
         public void Error(string text)
         {
             var log = new LogEntry(text, DateTime.UtcNow, LogType.Error);
-            LogsQueue.Enqueue(log);
+            _logsQueue.Enqueue(log);
             _messageEvent.Set();
         }
 
@@ -61,7 +61,7 @@ namespace QuantConnect.Logging
         public void Debug(string text)
         {
             var log = new LogEntry(text, DateTime.UtcNow, LogType.Debug);
-            LogsQueue.Enqueue(log);
+            _logsQueue.Enqueue(log);
             _messageEvent.Set();
         }
 
@@ -72,7 +72,7 @@ namespace QuantConnect.Logging
         public void Trace(string text)
         {
             var log = new LogEntry(text, DateTime.UtcNow, LogType.Trace);
-            LogsQueue.Enqueue(log);
+            _logsQueue.Enqueue(log);
             _messageEvent.Set();
         }
 
@@ -83,11 +83,11 @@ namespace QuantConnect.Logging
         {
             try
             {
-                while(!_cancellationTokenSource.IsCancellationRequested)
+                while(!_cancellationTokenSource.IsCancellationRequested && _messageEvent.WaitOne())
                 {
                     LogEntry entry;
 
-                    while (LogsQueue.TryDequeue(out entry))
+                    while (_logsQueue.TryDequeue(out entry))
                     {
                         switch(entry.MessageType)
                         {
@@ -102,8 +102,6 @@ namespace QuantConnect.Logging
                                 break;
                         }
                     }
-
-                    _messageEvent.WaitOne();
                 }
             } catch (Exception exception)
             {
@@ -133,15 +131,15 @@ namespace QuantConnect.Logging
         public virtual void Dispose()
         {
             try
-            {
+            {   
                 _cancellationTokenSource.Cancel();
-                LogThread.Join(500);
+                _messageEvent.Set();
+                _logThread.Join(500);
             }
             catch (Exception exception)
             {
                 Console.WriteLine("Time out on closing logging thread: " + exception);
             }
-
         }
 
     }

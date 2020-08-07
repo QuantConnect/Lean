@@ -15,6 +15,8 @@
 
 using System;
 using System.IO;
+using System.Threading;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Logging;
 
@@ -65,33 +67,46 @@ namespace QuantConnect.Tests.Logging
             File.Delete(Log.FilePath);
         }
 
-        [Test]
-        public void TestLoggingSpeeds()
+        [TestCase(10)]
+        [TestCase(100)]
+        [TestCase(1000)]
+        public void TestLoggingSpeeds(int x)
         {
             var start = DateTime.Now;
             const string file = "log2.txt";
+            List<Thread> threads = new List<Thread>();
 
-            //Delete it first, just to make sure it is not there.
+            //Delete the file if it exists.
             File.Delete(file);
-            int math = 1;
 
             using (var log = new FileLogHandler(file))
             {
-                //Log messages but also do other things in the meantime to test log threading.
-                for (int i = 0; i < 1000000; i++)
+                //Spin off x threads that will use the log handler
+                for (int i = 0; i < x; i++)
                 {
-                    var debugMessage = "debug message " + i;
-                    log.Debug(debugMessage);
-
-                    for (int j = 0; j < 10000; j++)
+                    var threadNumber = i;
+                    Thread thread = new Thread(() => {
+                        for (int j = 0; j < 1000; j++)
+                        {
+                            var debugMessage = $"debug message {j} for thread {threadNumber}";
+                            log.Debug(debugMessage);
+                        }
+                    })
                     {
-                        math = math * j;
-                    }
+                        IsBackground = true,
+                        Name = $"LogTestThread{i}"
+                    };
 
-                    log.Debug(math.ToStringInvariant());
+                    thread.Start();
+                    threads.Add(thread);
+                }
+
+                //Wait for all threads to complete
+                foreach (var thread in threads)
+                {
+                    thread.Join();
                 }
             }
-
 
             var end = DateTime.Now;
             var time = start - end;
