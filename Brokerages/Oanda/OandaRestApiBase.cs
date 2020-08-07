@@ -28,6 +28,7 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using Timer = System.Timers.Timer;
 
 namespace QuantConnect.Brokerages.Oanda
 {
@@ -37,8 +38,7 @@ namespace QuantConnect.Brokerages.Oanda
     public abstract class OandaRestApiBase : Brokerage, IDataQueueHandler
     {
         private static readonly TimeSpan SubscribeDelay = TimeSpan.FromMilliseconds(250);
-        private DateTime _lastSubscribeRequestUtcTime = DateTime.MinValue;
-        private bool _subscriptionsPending;
+        private Timer _refreshDelay = new Timer();
 
         private bool _isConnected;
 
@@ -64,7 +64,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <summary>
         /// The list of currently subscribed symbols
         /// </summary>
-        protected HashSet<Symbol> SubscribedSymbols = new HashSet<Symbol>();
+        protected IEnumerable<Symbol> SubscribedSymbols => _subscriptionManager.GetSubscribedSymbols();
 
         /// <summary>
         /// A lock object used to synchronize access to subscribed symbols
@@ -90,6 +90,11 @@ namespace QuantConnect.Brokerages.Oanda
         /// The data aggregator
         /// </summary>
         protected IDataAggregator Aggregator;
+
+        /// <summary>
+        /// Data Queue Handler subscription manager
+        /// </summary>
+        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         /// <summary>
         /// The Oanda enviroment
@@ -143,6 +148,20 @@ namespace QuantConnect.Brokerages.Oanda
             AccountId = accountId;
             Agent = agent;
             Aggregator = aggregator;
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager.SubscribeImpl += (s, t) =>
+            {
+                Log.Trace("OandaBrokerage.Subscribe(): {0}", string.Join(",", s.Select(x => x.Value)));
+                ProcessSubscriptionRequest();
+                return true;
+            };
+            _subscriptionManager.UnsubscribeImpl += (s, t) =>
+            {
+                Log.Trace("OandaBrokerage.Unsubscribe(): {0}", string.Join(",", s.Select(x => x.Value)));
+                ProcessSubscriptionRequest();
+                return true;
+            }; ;
+            _subscriptionManager.GetChannelName += (t) => "quote";
 
             PricingConnectionHandler = new DefaultConnectionHandler { MaximumIdleTimeSpan = TimeSpan.FromSeconds(20) };
             PricingConnectionHandler.ConnectionLost += OnPricingConnectionLost;
@@ -333,8 +352,13 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            var enumerator = Aggregator.Add(dataConfig, newDataAvailableHandler); ;
-            Subscribe(new[] { dataConfig.Symbol });
+            if (!CanSubscribe(dataConfig.Symbol))
+            {
+                return Enumerable.Empty<BaseData>().GetEnumerator();
+            }
+
+            var enumerator = Aggregator.Add(dataConfig, newDataAvailableHandler);
+            _subscriptionManager.Subscribe(dataConfig);
 
             return enumerator;
         }
@@ -348,65 +372,13 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
-        /// Adds the specified symbols to the subscription
-        /// </summary>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        private void Subscribe(IEnumerable<Symbol> symbols)
-        {
-            lock (LockerSubscriptions)
-            {
-                var symbolsToSubscribe = (from symbol in symbols
-                                          where !SubscribedSymbols.Contains(symbol) && CanSubscribe(symbol)
-                                          select symbol).ToList();
-                if (symbolsToSubscribe.Count == 0)
-                    return;
-
-                Log.Trace("OandaBrokerage.Subscribe(): {0}", string.Join(",", symbolsToSubscribe.Select(x => x.Value)));
-
-                // Oanda does not allow more than a few rate streaming sessions,
-                // so we only use a single session for all currently subscribed symbols
-                symbolsToSubscribe = symbolsToSubscribe.Union(SubscribedSymbols.ToList()).ToList();
-
-                SubscribedSymbols = symbolsToSubscribe.ToHashSet();
-
-                ProcessSubscriptionRequest();
-            }
-        }
-
-        /// <summary>
         /// Removes the specified configuration
         /// </summary>
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            _subscriptionManager.Unsubscribe(dataConfig);
             Aggregator.Remove(dataConfig);
-        }
-
-        /// <summary>
-        /// Removes the specified symbols from the subscription
-        /// </summary>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        private void Unsubscribe(IEnumerable<Symbol> symbols)
-        {
-            lock (LockerSubscriptions)
-            {
-                var symbolsToUnsubscribe = (from symbol in symbols
-                                            where SubscribedSymbols.Contains(symbol)
-                                            select symbol).ToList();
-                if (symbolsToUnsubscribe.Count == 0)
-                    return;
-
-                Log.Trace("OandaBrokerage.Unsubscribe(): {0}", string.Join(",", symbolsToUnsubscribe.Select(x => x.Value)));
-
-                // Oanda does not allow more than a few rate streaming sessions,
-                // so we only use a single session for all currently subscribed symbols
-                var symbolsToSubscribe = SubscribedSymbols.ToList().Where(x => !symbolsToUnsubscribe.Contains(x)).ToList();
-
-                SubscribedSymbols = symbolsToSubscribe.ToHashSet();
-
-                ProcessSubscriptionRequest();
-            }
         }
 
         /// <summary>
@@ -414,43 +386,25 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         private void ProcessSubscriptionRequest()
         {
-            if (_subscriptionsPending) return;
-
-            _lastSubscribeRequestUtcTime = DateTime.UtcNow;
-            _subscriptionsPending = true;
-
-            Task.Run(() =>
+            if (_refreshDelay.Enabled) _refreshDelay.Stop();
+            _refreshDelay.DisposeSafely();
+            _refreshDelay = new Timer(SubscribeDelay.TotalMilliseconds);
+            _refreshDelay.Elapsed += (sender, args) =>
             {
-                while (true)
+                List<Symbol> symbolsToSubscribe;
+                lock (LockerSubscriptions)
                 {
-                    DateTime requestTime;
-                    List<Symbol> symbolsToSubscribe;
-                    lock (LockerSubscriptions)
-                    {
-                        requestTime = _lastSubscribeRequestUtcTime.Add(SubscribeDelay);
-                        symbolsToSubscribe = SubscribedSymbols.ToList();
-                    }
-
-                    if (DateTime.UtcNow > requestTime)
-                    {
-                        // restart streaming session
-                        SubscribeSymbols(symbolsToSubscribe);
-
-                        lock (LockerSubscriptions)
-                        {
-                            _lastSubscribeRequestUtcTime = DateTime.UtcNow;
-                            if (SubscribedSymbols.Count == symbolsToSubscribe.Count)
-                            {
-                                // no more subscriptions pending, task finished
-                                _subscriptionsPending = false;
-                                break;
-                            }
-                        }
-                    }
-
-                    Thread.Sleep(200);
+                    symbolsToSubscribe = SubscribedSymbols.ToList();
                 }
-            });
+
+                Log.Trace("OandaBrokerage.ProcessSubscriptionRequest(): Updating tickers..." + string.Join(",", symbolsToSubscribe.Select(x => x.Value)));
+
+                // restart streaming session
+                SubscribeSymbols(symbolsToSubscribe);
+
+                _refreshDelay.Stop();
+            };
+            _refreshDelay.Start();
         }
 
         /// <summary>
