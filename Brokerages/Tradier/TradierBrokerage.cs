@@ -86,6 +86,7 @@ namespace QuantConnect.Brokerages.Tradier
         private readonly HashSet<long> _unknownTradierOrderIDs = new HashSet<long>();
         private readonly FixedSizeHashQueue<long> _verifiedUnknownTradierOrderIDs = new FixedSizeHashQueue<long>(1000);
         private readonly FixedSizeHashQueue<int> _cancelledQcOrderIDs = new FixedSizeHashQueue<int>(10000);
+        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         /// <summary>
         /// Event fired when our session has been refreshed/tokens updated
@@ -134,6 +135,21 @@ namespace QuantConnect.Brokerages.Tradier
             _aggregator = aggregator;
             _accountID = accountID;
 
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager.SubscribeImpl += (s, t) =>
+            {
+                Log.Trace("TradierBrokerage.Subscribe(): {0}", string.Join(",", s.Select(x => x.Value)));
+                Refresh();
+                return true;
+            };
+            _subscriptionManager.UnsubscribeImpl += (s, t) =>
+            {
+                Log.Trace("TradierBrokerage.Unsubscribe(): {0}", string.Join(",", s.Select(x => x.Value)));
+                Refresh();
+                return true;
+            }; ;
+            _subscriptionManager.GetChannelName += (t) => "trade";
+
             _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierCachedOpenOrder>();
 
             //Tradier Specific Initialization:
@@ -157,7 +173,7 @@ namespace QuantConnect.Brokerages.Tradier
                 IEnumerator<TradierStreamData> pipe = null;
                 do
                 {
-                    if (_subscriptions.IsEmpty)
+                    if (!Subscriptions.Any())
                     {
                         Thread.Sleep(10);
                         continue;
@@ -223,7 +239,7 @@ namespace QuantConnect.Brokerages.Tradier
 
             // we can poll orders once a second in sandbox and twice a second in production
             double orderPollingIntervalInSeconds = Config.GetDouble("tradier-order-poll-interval", 1.0);
-            var interval = (int)(1000*orderPollingIntervalInSeconds);
+            var interval = (int)(1000 * orderPollingIntervalInSeconds);
             _orderFillTimer = new Timer(state => CheckForFills(), null, interval, interval);
         }
 
@@ -269,7 +285,7 @@ namespace QuantConnect.Brokerages.Tradier
                         response = JsonConvert.DeserializeObject<T>(raw.Content);
                     }
                 }
-                catch(Exception err)
+                catch (Exception err)
                 {
                     // tradier sometimes sends back poorly formed messages, response will be null
                     // and we'll extract from it below
@@ -740,7 +756,7 @@ namespace QuantConnect.Brokerages.Tradier
         {
             // Get the Description attribute value for the enum value
             var fi = value.GetType().GetField(value.ToString());
-            var attributes = (EnumMemberAttribute[]) fi.GetCustomAttributes(typeof (EnumMemberAttribute), false);
+            var attributes = (EnumMemberAttribute[])fi.GetCustomAttributes(typeof(EnumMemberAttribute), false);
 
             if (attributes.Length > 0)
             {
@@ -893,7 +909,7 @@ namespace QuantConnect.Brokerages.Tradier
 
             var holdingQuantity = _securityProvider.GetHoldingsQuantity(order.Symbol);
 
-            var orderRequest = new TradierPlaceOrderRequest(order, TradierOrderClass.Equity,  holdingQuantity);
+            var orderRequest = new TradierPlaceOrderRequest(order, TradierOrderClass.Equity, holdingQuantity);
 
             // do we need to split the order into two pieces?
             bool crossesZero = OrderCrossesZero(order);
@@ -908,7 +924,7 @@ namespace QuantConnect.Brokerages.Tradier
                 // we actually can't place this order until the closingOrder is filled
                 // create another order for the rest, but we'll convert the order type to not be a stop
                 // but a market or a limit order
-                var restOfOrder = new TradierPlaceOrderRequest(order, TradierOrderClass.Equity, 0) {Quantity = Math.Abs(secondOrderQuantity)};
+                var restOfOrder = new TradierPlaceOrderRequest(order, TradierOrderClass.Equity, 0) { Quantity = Math.Abs(secondOrderQuantity) };
                 restOfOrder.ConvertStopOrderTypes();
 
                 _contingentOrdersByQCOrderID.AddOrUpdate(order.Id, new ContingentOrderQueue(order, restOfOrder));
@@ -1352,7 +1368,7 @@ namespace QuantConnect.Brokerages.Tradier
 
         private bool IsUnknownOrderID(KeyValuePair<long, TradierOrder> x)
         {
-                // we don't have it in our local cache
+            // we don't have it in our local cache
             return !_cachedOpenOrdersByTradierOrderID.ContainsKey(x.Key)
                 // the transaction happened after we initialized, make sure they're in the same time zone
                 && x.Value.TransactionDate.ToUniversalTime() > _initializationDateTime.ToUniversalTime()
@@ -1533,16 +1549,16 @@ namespace QuantConnect.Brokerages.Tradier
             switch (order.Type)
             {
                 case TradierOrderType.Limit:
-                    qcOrder = new LimitOrder {LimitPrice = order.Price};
+                    qcOrder = new LimitOrder { LimitPrice = order.Price };
                     break;
                 case TradierOrderType.Market:
                     qcOrder = new MarketOrder();
                     break;
                 case TradierOrderType.StopMarket:
-                    qcOrder = new StopMarketOrder {StopPrice = GetOrder(order.Id).StopPrice};
+                    qcOrder = new StopMarketOrder { StopPrice = GetOrder(order.Id).StopPrice };
                     break;
                 case TradierOrderType.StopLimit:
-                    qcOrder = new StopLimitOrder {LimitPrice = order.Price, StopPrice = GetOrder(order.Id).StopPrice};
+                    qcOrder = new StopLimitOrder { LimitPrice = order.Price, StopPrice = GetOrder(order.Id).StopPrice };
                     break;
 
                 //case TradierOrderType.Credit:
@@ -1688,13 +1704,13 @@ namespace QuantConnect.Brokerages.Tradier
                 case TradierOrderDirection.BuyToCover:
                 case TradierOrderDirection.BuyToClose:
                 case TradierOrderDirection.BuyToOpen:
-                    return (int) order.Quantity;
+                    return (int)order.Quantity;
 
                 case TradierOrderDirection.SellShort:
                 case TradierOrderDirection.Sell:
                 case TradierOrderDirection.SellToOpen:
                 case TradierOrderDirection.SellToClose:
-                    return -(int) order.Quantity;
+                    return -(int)order.Quantity;
 
                 case TradierOrderDirection.None:
                     return 0;
@@ -1713,7 +1729,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 Symbol = Symbol.Create(position.Symbol, SecurityType.Equity, Market.USA),
                 Type = SecurityType.Equity,
-                AveragePrice = position.CostBasis/position.Quantity,
+                AveragePrice = position.CostBasis / position.Quantity,
                 CurrencySymbol = "$",
                 MarketPrice = 0m, //--> GetAccountHoldings does a call to GetQuotes to fill this data in
                 Quantity = position.Quantity
