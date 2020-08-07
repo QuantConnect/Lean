@@ -21,7 +21,7 @@ using System.Threading;
 namespace QuantConnect.Logging
 {
     /// <summary>
-    /// BaseLogHandler that collect messages to later write to the result handler
+    /// BaseLogHandler that collect messages in a queue and then writes them with a dedicated thread
     /// </summary>
     public abstract class BaseLogHandler : ILogHandler
     {

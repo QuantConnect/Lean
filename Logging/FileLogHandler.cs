@@ -20,7 +20,7 @@ using System.IO;
 namespace QuantConnect.Logging
 {
     /// <summary>
-    /// Provides an implementation of <see cref="ILogHandler"/> that writes all log messages to a file on disk.
+    /// Provides an implementation of <see cref="BaseLogHandler"/> that writes all log messages to a file on disk.
     /// </summary>
     public class FileLogHandler : BaseLogHandler
     {
