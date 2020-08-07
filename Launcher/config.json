@@ -76,6 +76,7 @@
   "ib-tws-dir": "C:\\Jts",
   "ib-trading-mode": "paper",
   "ib-enable-delayed-streaming-data": false,
+  "ib-version": "974",
 
   // tradier configuration
   "tradier-account-id": "",
