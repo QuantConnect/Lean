@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using NodaTime;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -30,6 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     public class LiveFillForwardEnumerator : FillForwardEnumerator
     {
         private readonly ITimeProvider _timeProvider;
+        private readonly TimeSpan _fillForwardDelay;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LiveFillForwardEnumerator"/> class that accepts
@@ -50,6 +52,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             : base(enumerator, exchange, fillForwardResolution, isExtendedMarketHours, subscriptionEndTime, dataResolution, dataTimeZone, subscriptionStartTime)
         {
             _timeProvider = timeProvider;
+            _fillForwardDelay = fillForwardResolution.Value == TimeSpan.Zero ?
+                TimeSpan.Zero :
+                TimeSpan.FromMilliseconds(
+                    Config.GetInt($"consumer-batching-timeout-ms", 0)
+                );
         }
 
         /// <summary>
@@ -64,6 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             // convert times to UTC for accurate comparisons and differences across DST changes
             fillForward = null;
+            // Add a delay to the time we expect a data point if we've configured a delay for batching
             var nextExpectedDataPointTimeUtc = previous.EndTime.ConvertToUtc(Exchange.TimeZone) + fillForwardResolution;
             if (next != null)
             {
@@ -80,7 +88,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
 
             // the underlying enumerator returned null, check to see if time has passed for fill forwarding
-            if (nextExpectedDataPointTimeUtc <= _timeProvider.GetUtcNow())
+            if (nextExpectedDataPointTimeUtc <= _timeProvider.GetUtcNow() - _fillForwardDelay)
             {
                 var clone = previous.Clone(true);
                 clone.Time = previous.Time + fillForwardResolution;

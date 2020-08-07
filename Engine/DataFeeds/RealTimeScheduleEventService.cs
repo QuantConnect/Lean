@@ -53,7 +53,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // has past, if we got called earlier lets wait until time is right
                     while (diff.Ticks > 0)
                     {
-                        if (diff.Milliseconds > 25)
+                        if (diff.Milliseconds > 15)
                         {
                             // uses a timer internally, don't trust the accuracy
                             await Task.Delay(diff - TimeSpan.FromMilliseconds(10));

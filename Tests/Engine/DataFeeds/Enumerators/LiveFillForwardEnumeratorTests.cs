@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -166,6 +167,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         {
             var now = DateTime.UtcNow;
             var timeProvider = new ManualTimeProvider(new DateTime(2020, 5, 21, 9, 40, 0, 100), TimeZones.NewYork);
+
             var enqueueableEnumerator = new EnqueueableEnumerator<BaseData>();
             var fillForwardEnumerator = new LiveFillForwardEnumerator(
                 timeProvider,
@@ -203,6 +205,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 Symbol = Symbols.AAPL
             };
 
+
             // Enqueue the first point, which will be emitted ASAP.
             enqueueableEnumerator.Enqueue(openingBar);
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -222,6 +225,132 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             enqueueableEnumerator.Enqueue(secondBar);
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+        }
+
+        [Test]
+        public void DelaysFillForwardForBatchedResolutions()
+        {
+            var configKey = "consumer-batching-timeout-ms";
+            var originalConfigValue = Config.GetInt(configKey, 0);
+            Config.Set(configKey, "100");
+
+            var now = DateTime.UtcNow;
+            var timeProvider = new ManualTimeProvider(new DateTime(2020, 5, 21, 9, 40, 0), TimeZones.NewYork);
+            var enqueueableEnumerator = new EnqueueableEnumerator<BaseData>();
+            var fillForwardEnumerator = new LiveFillForwardEnumerator(
+                timeProvider,
+                enqueueableEnumerator,
+                new SecurityExchange(MarketHoursDatabase.FromDataFolder()
+                    .ExchangeHoursListing
+                    .First(kvp => kvp.Key.Market == Market.USA && kvp.Key.SecurityType == SecurityType.Equity)
+                    .Value
+                    .ExchangeHours),
+                Ref.CreateReadOnly(() => Resolution.Minute.ToTimeSpan()),
+                false,
+                now,
+                Resolution.Minute.ToTimeSpan(),
+                TimeZones.NewYork,
+                new DateTime(2020, 5, 21)
+            );
+            // First data point will be emitted always, regardless of the batching delay
+            var openingBar = new TradeBar
+            {
+                Open = 0.01m,
+                High = 0.01m,
+                Low = 0.01m,
+                Close = 0.01m,
+                Volume = 1,
+                EndTime = new DateTime(2020, 5, 21, 9, 40, 0),
+                Symbol = Symbols.AAPL
+            };
+            var firstTrade = new TradeBar
+            {
+                Open = 1m,
+                High = 2m,
+                Low = 1m,
+                Close = 2m,
+                Volume = 100,
+                EndTime = new DateTime(2020, 5, 21, 9, 41, 0),
+                Symbol = Symbols.AAPL
+            };
+            var secondTrade = new TradeBar
+            {
+                Open = 2m,
+                High = 3m,
+                Low = 2m,
+                Close = 3m,
+                Volume = 200,
+                EndTime = new DateTime(2020, 5, 21, 9, 42, 0),
+                Symbol = Symbols.AAPL
+            };
+            var finalTrade = new TradeBar
+            {
+                Open = 10m,
+                High = 11m,
+                Low = 10m,
+                Close = 11m,
+                Volume = 10000,
+                EndTime = new DateTime(2020, 5, 21, 16, 0, 0)
+            };
+
+            // Enqueue the first point, which will be emitted ASAP.
+            enqueueableEnumerator.Enqueue(openingBar);
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.NotNull(fillForwardEnumerator.Current);
+            Assert.AreEqual(openingBar.Open, ((TradeBar)fillForwardEnumerator.Current).Open);
+            Assert.AreEqual(openingBar.EndTime, ((TradeBar)fillForwardEnumerator.Current).EndTime);
+
+            // Advance the time, we expect a fill-forward bar
+            timeProvider.SetCurrentTime(new DateTime(2020, 5, 21, 9, 41, 0, 0));
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.IsNull(fillForwardEnumerator.Current);
+
+            // Now we expect the data. The firstTrade bar should be fill-forwarded from here on out
+            timeProvider.SetCurrentTime(new DateTime(2020, 5, 21, 9, 41, 0, 100));
+            enqueueableEnumerator.Enqueue(firstTrade);
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(firstTrade.Open, ((TradeBar)fillForwardEnumerator.Current).Open);
+            Assert.AreEqual(firstTrade.EndTime, ((TradeBar)fillForwardEnumerator.Current).EndTime);
+
+            // Expect a fill-forward bar even though the data has passed
+            // the *actual* time frontier (but we're batching data, so we don't expect it just yet)
+            timeProvider.SetCurrentTime(new DateTime(2020, 5, 21, 9, 42, 0, 0));
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.IsNull(fillForwardEnumerator.Current);
+
+            // Now we emit the second trade, since it's cleared the batching delay
+            timeProvider.SetCurrentTime(new DateTime(2020, 5, 21, 9, 42, 0, 100));
+            enqueueableEnumerator.Enqueue(secondTrade);
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(secondTrade.Open, ((TradeBar)fillForwardEnumerator.Current).Open);
+            Assert.AreEqual(secondTrade.EndTime, ((TradeBar)fillForwardEnumerator.Current).EndTime);
+
+            // Assert that fill-forwards occur after the batching interval
+            timeProvider.SetCurrentTime(new DateTime(2020, 5, 21, 9, 43, 0, 100));
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(secondTrade.Open, ((TradeBar)fillForwardEnumerator.Current).Open);
+            Assert.AreEqual(secondTrade.EndTime.AddMinutes(1), ((TradeBar)fillForwardEnumerator.Current).EndTime);
+
+            var endTime = new DateTime(2020, 5, 21, 15, 59, 0);
+            var current = ((TradeBar)fillForwardEnumerator.Current).EndTime.AddMilliseconds(100);
+            while (current < endTime)
+            {
+                current = current.AddMinutes(1);
+                secondTrade.EndTime = current.AddMilliseconds(-100);
+                timeProvider.SetCurrentTime(current);
+                fillForwardEnumerator.MoveNext();
+            }
+
+            // Market close, fill-forward until the next data point (which comes after market close).
+            // We expect that the bar is not emitted since the market has been closed
+            timeProvider.SetCurrentTime(new DateTime(2020, 5, 21, 16, 0, 0, 100));
+            enqueueableEnumerator.Enqueue(finalTrade);
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(secondTrade.Open, ((TradeBar)fillForwardEnumerator.Current).Open);
+            Assert.AreEqual(secondTrade.EndTime.AddMinutes(1), ((TradeBar)fillForwardEnumerator.Current).EndTime);
+
+            Config.Set(configKey, originalConfigValue.ToStringInvariant());
         }
     }
 }
