@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Globalization;
 using System.Threading;
 
 namespace QuantConnect.Logging
@@ -26,7 +25,6 @@ namespace QuantConnect.Logging
     public abstract class BaseLogHandler : ILogHandler
     {
         private readonly ConcurrentQueue<LogEntry> _logsQueue;
-        private const string DateFormat = "yyyyMMdd HH:mm:ss";
         private readonly Thread _logThread;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly AutoResetEvent _messageEvent;
@@ -77,16 +75,16 @@ namespace QuantConnect.Logging
         }
 
         /// <summary>
-        /// Thread function in charge of dispersing log messages
+        /// Thread function in charge of dispersing log messages to abstract write methods
         /// </summary>
-        public void WriteThread()
+        private void WriteThread()
         {
-            try
-            {
-                while(!_cancellationTokenSource.IsCancellationRequested && _messageEvent.WaitOne())
-                {
-                    LogEntry entry;
+            LogEntry entry;
 
+            while (!_cancellationTokenSource.IsCancellationRequested && _messageEvent.WaitOne())
+            {   
+                try
+                {
                     while (_logsQueue.TryDequeue(out entry))
                     {
                         switch(entry.MessageType)
@@ -102,27 +100,28 @@ namespace QuantConnect.Logging
                                 break;
                         }
                     }
+                } catch (Exception exception)
+                {
+                    Console.WriteLine("Logging thread has failed: " + exception);
+                    Thread.Sleep(10);
                 }
-            } catch (Exception exception)
-            {
-                Console.WriteLine("Logging thread has failed: " + exception);
             }
         }
 
         /// <summary>
         /// Function to write a trace statement
         /// </summary>
-        public abstract void WriteTrace(string message);
+        protected abstract void WriteTrace(string message);
 
         /// <summary>
         /// Function to write a debug statement
         /// </summary>
-        public abstract void WriteDebug(string message);
+        protected abstract void WriteDebug(string message);
 
         /// <summary>
         /// Function to write a error statement
         /// </summary>
-        public abstract void WriteError(string message);
+        protected abstract void WriteError(string message);
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -134,13 +133,16 @@ namespace QuantConnect.Logging
             {   
                 _cancellationTokenSource.Cancel();
                 _messageEvent.Set();
-                _logThread.Join(500);
+                if (!_logThread.Join(1000))
+                {
+                    Console.WriteLine($"Timeout waiting for '{_logThread.Name}' thread to stop");
+                    _logThread.Abort();
+                }
             }
             catch (Exception exception)
             {
-                Console.WriteLine("Time out on closing logging thread: " + exception);
+                Console.WriteLine("Error on log handler dispose: " + exception);
             }
         }
-
     }
 }

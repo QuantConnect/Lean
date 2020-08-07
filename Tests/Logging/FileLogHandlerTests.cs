@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Logging
 
         [TestCase(10)]
         [TestCase(100)]
-        [TestCase(1000)]
+        [Ignore("Long logging speed performance test.")]
         public void TestLoggingSpeeds(int x)
         {
             var start = DateTime.Now;

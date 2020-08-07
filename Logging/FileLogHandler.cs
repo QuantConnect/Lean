@@ -56,7 +56,7 @@ namespace QuantConnect.Logging
         /// Write error message to log
         /// </summary>
         /// <param name="text">The error text to log</param>
-        public override void WriteError(string text)
+        protected override void WriteError(string text)
         {
             WriteMessage(text, "ERROR");
         }
@@ -65,7 +65,7 @@ namespace QuantConnect.Logging
         /// Write debug message to log
         /// </summary>
         /// <param name="text">The debug text to log</param>
-        public override void WriteDebug(string text)
+        protected override void WriteDebug(string text)
         {
             WriteMessage(text, "DEBUG");
         }
@@ -74,7 +74,7 @@ namespace QuantConnect.Logging
         /// Write debug message to log
         /// </summary>
         /// <param name="text">The trace text to log</param>
-        public override void WriteTrace(string text)
+        protected override void WriteTrace(string text)
         {
             WriteMessage(text, "TRACE");
         }
