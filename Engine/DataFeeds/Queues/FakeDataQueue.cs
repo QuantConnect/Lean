@@ -37,7 +37,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         private readonly Random _random = new Random();
 
         private readonly Timer _timer;
-        private readonly HashSet<Symbol> _symbols;
+        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
         private readonly object _sync = new object();
         private readonly IDataAggregator _aggregator;
         private readonly MarketHoursDatabase _marketHoursDatabase;
@@ -62,10 +62,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// </summary>
         public FakeDataQueue(IDataAggregator dataAggregator)
         {
-            _symbols = new HashSet<Symbol>();
             _aggregator = dataAggregator;
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _symbolExchangeTimeZones = new Dictionary<Symbol, TimeZoneOffsetProvider>();
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager.SubscribeImpl += (s, t) => true;
+            _subscriptionManager.UnsubscribeImpl += (s, t) => true;
+            _subscriptionManager.GetChannelName += (t) => "trade";
 
             // load it up to start
             PopulateQueue();
@@ -110,10 +113,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
-            lock (_sync)
-            {
-                _symbols.Add(dataConfig.Symbol);
-            }
+            _subscriptionManager.Subscribe(dataConfig);
 
             return enumerator;
         }
@@ -132,10 +132,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            lock (_sync)
-            {
-                _symbols.Remove(dataConfig.Symbol);
-            }
+            _subscriptionManager.Unsubscribe(dataConfig);
             _aggregator.Remove(dataConfig);
         }
 
@@ -162,7 +159,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
             List<Symbol> symbols;
             lock (_sync)
             {
-                symbols = _symbols.ToList();
+                symbols = _subscriptionManager.GetSubscribedSymbols().ToList();
             }
 
             foreach (var symbol in symbols)
