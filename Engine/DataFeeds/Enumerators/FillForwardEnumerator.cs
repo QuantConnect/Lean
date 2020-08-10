@@ -35,6 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     {
         private DateTime? _delistedTime;
         private BaseData _previous;
+        private bool _ended;
         private bool _isFillingForward;
 
         private readonly TimeSpan _dataResolution;
@@ -145,6 +146,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // if we're filling forward we don't need to move next since we haven't emitted _enumerator.Current yet
                 if (!_enumerator.MoveNext())
                 {
+                    _ended = true;
                     if (_delistedTime.HasValue)
                     {
                         // don't fill forward delisted data
@@ -179,6 +181,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     Current = endOfSubscription;
                     return true;
                 }
+            }
+            // If we are filling forward and the underlying is null, let's MoveNext() as long as it didn't end.
+            // This only applies for live trading, so that the LiveFillForwardEnumerator does not stall whenever
+            // we generate a fill-forward bar. The underlying enumerator is advanced so that we don't get stuck
+            // in a cycle of generating infinite fill-forward bars.
+            else if (_enumerator.Current == null && !_ended)
+            {
+                _ended = _enumerator.MoveNext();
             }
 
             var underlyingCurrent = _enumerator.Current;
