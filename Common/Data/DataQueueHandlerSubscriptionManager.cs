@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using System;
 using System.Collections.Concurrent;
@@ -21,11 +22,20 @@ using System.Linq;
 
 namespace QuantConnect.Data
 {
+    /// <summary>
+    /// Count number of subscribers for each channel (Symbol, Socket) pair
+    /// </summary>
     public abstract class DataQueueHandlerSubscriptionManager
     {
-
+        /// <summary>
+        /// Counter
+        /// </summary>
         protected ConcurrentDictionary<Channel, int> _subscribersByChannel = new ConcurrentDictionary<Channel, int>();
 
+        /// <summary>
+        /// Increment number of subscribers for current <see cref="TickType"/>
+        /// </summary>
+        /// <param name="dataConfig">defines the subscription configuration data.</param>        
         public void Subscribe(SubscriptionDataConfig dataConfig)
         {
             try
@@ -50,6 +60,10 @@ namespace QuantConnect.Data
             }
         }
 
+        /// <summary>
+        /// Decrement number of subscribers for current <see cref="TickType"/>
+        /// </summary>
+        /// <param name="dataConfig">defines the subscription configuration data.</param> 
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
             try
@@ -77,12 +91,35 @@ namespace QuantConnect.Data
             }
         }
 
+        /// <summary>
+        /// Describes the way <see cref="IDataQueueHandler"/> implements subscription
+        /// </summary>
+        /// <param name="symbols">Symbols to subscribe</param>
+        /// <param name="tickType">Type of tick data</param>
+        /// <returns>Returns true if subsribed; otherwise false</returns>
         protected abstract bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType);
 
+        /// <summary>
+        /// Describes the way <see cref="IDataQueueHandler"/> implements unsubscription
+        /// </summary>
+        /// <param name="symbols">Symbols to unsubscribe</param>
+        /// <param name="tickType">Type of tick data</param>
+        /// <returns>Returns true if unsubsribed; otherwise false</returns>
         protected abstract bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType);
 
+        /// <summary>
+        /// Brokerage maps <see cref="TickType"/> to real socket/api channel
+        /// </summary>
+        /// <param name="tickType">Type of tick data</param>
+        /// <returns></returns>
         protected abstract string ChannelNameFromTickType(TickType tickType);
 
+        /// <summary>
+        /// Checks if there is existing subscriber for current channel
+        /// </summary>
+        /// <param name="symbol">Symbol</param>
+        /// <param name="tickType">Type of tick data</param>
+        /// <returns>return true if there is one subscriber at least; otherwise false</returns>
         public bool IsSubscribed(Symbol symbol, TickType tickType)
         {
             return _subscribersByChannel.ContainsKey(GetChannel(
@@ -99,6 +136,10 @@ namespace QuantConnect.Data
                 symbol);
         }
 
+        /// <summary>
+        /// Returns subscribed symbols
+        /// </summary>
+        /// <returns>list of <see cref="Symbol"/> currently subscribed</returns>
         public IEnumerable<Symbol> GetSubscribedSymbols()
         {
             return _subscribersByChannel.Keys

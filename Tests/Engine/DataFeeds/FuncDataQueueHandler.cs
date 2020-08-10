@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _subscriptions = new HashSet<SubscriptionDataConfig>();
             _cancellationTokenSource = new CancellationTokenSource();
             _aggregationManager = new TestAggregationManager(timeProvider);
-            _subscriptionManager = new FakeDataQueuehandlerSubscriptionManager();
+            _subscriptionManager = new FakeDataQueuehandlerSubscriptionManager((t) => "quote-trade");
 
             Task.Factory.StartNew(() =>
             {

@@ -14,16 +14,24 @@
 */
 
 using QuantConnect.Data;
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Data
 {
     public class FakeDataQueuehandlerSubscriptionManager : DataQueueHandlerSubscriptionManager
     {
+        private Func<TickType, string> _getChannelName;
+
+        public FakeDataQueuehandlerSubscriptionManager(Func<TickType, string> getChannelName)
+        {
+            _getChannelName = getChannelName;
+        }
+
         protected override bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType) => true;
 
         protected override bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType) => true;
 
-        protected override string ChannelNameFromTickType(TickType tickType) => "quote-trade";
+        protected override string ChannelNameFromTickType(TickType tickType) => _getChannelName(tickType);
     }
 }

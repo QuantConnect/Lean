@@ -19,23 +19,53 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Data
 {
+    /// <summary>
+    /// Overrides <see cref="DataQueueHandlerSubscriptionManager"/> methods using events
+    /// </summary>
     public class EventBasedDataQueueHandlerSubscriptionManager : DataQueueHandlerSubscriptionManager
     {
+        /// <summary>
+        /// Subscription method implementation
+        /// </summary>
         public Func<IEnumerable<Symbol>, TickType, bool> SubscribeImpl;
+        
+        /// <summary>
+        /// Unsubscription method implementation
+        /// </summary>
         public Func<IEnumerable<Symbol>, TickType, bool> UnsubscribeImpl;
 
+        /// <summary>
+        /// Socket channel name
+        /// </summary>
         public Func<TickType, string> GetChannelName;
 
+        /// <summary>
+        /// The way Brokerage subscribes to symbol tickers
+        /// </summary>
+        /// <param name="symbols">Symbols to subscribe</param>
+        /// <param name="tickType">Type of tick data</param>
+        /// <returns></returns>
         protected override bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
             return SubscribeImpl?.Invoke(symbols, tickType) == true;
         }
 
+        /// <summary>
+        /// The way Brokerage unsubscribes from symbol tickers
+        /// </summary>
+        /// <param name="symbols">Symbols to unsubscribe</param>
+        /// <param name="tickType">Type of tick data</param>
+        /// <returns></returns>
         protected override bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
             return UnsubscribeImpl?.Invoke(symbols, tickType) == true;
         }
 
+        /// <summary>
+        /// Channel name
+        /// </summary>
+        /// <param name="tickType">Type of tick data</param>
+        /// <returns>Returns Socket channel name corresponding <paramref name="tickType"/></returns>
         protected override string ChannelNameFromTickType(TickType tickType)
         {
             return GetChannelName?.Invoke(tickType);

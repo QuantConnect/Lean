@@ -18,6 +18,11 @@ namespace QuantConnect.Data
         /// </summary>
         public Symbol Symbol { get; private set; }
 
+        /// <summary>
+        /// Creates an instance of subscription channel
+        /// </summary>
+        /// <param name="channelName">Socket channel name</param>
+        /// <param name="symbol">Associated symbol</param>
         public Channel(string channelName, Symbol symbol)
         {
             if (string.IsNullOrEmpty(channelName))
