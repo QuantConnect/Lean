@@ -17,7 +17,6 @@ set current_dir=%~dp0
 set default_image=quantconnect/research:latest
 set default_data_dir=%current_dir%..\Data\
 set default_notebook_dir=%current_dir%Notebooks\
-set config_file=%current_dir%Notebooks\config.json
 set work_dir=/Lean/Launcher/bin/Debug/
 
 REM If the arg is a file load in the params from the file (run_docker.cfg)
@@ -39,16 +38,16 @@ if not "%*"=="" (
     set /p notebook_dir="Enter absolute path to store notebooks [default: %default_notebook_dir%]: "
 )
 
+if "%image%" == "" (
+    set image=%default_image%
+)
+
 if "%notebook_dir%" == "" (
     set notebook_dir=%default_notebook_dir%
 )
 
 if not exist "%notebook_dir%" (
     mkdir %notebook_dir%
-)
-
-if not exist "%config_file%" (
-    echo { "data-folder": "/home/Data/", "composer-dll-directory": "%work_dir%", "algorithm-language": "Python", "messaging-handler": "QuantConnect.Messaging.Messaging", "job-queue-handler": "QuantConnect.Queues.JobQueue", "api-handler": "QuantConnect.Api.Api" } > %notebook_dir%config.json
 )
 
 if "%data_dir%" == "" (
@@ -60,14 +59,14 @@ if not exist "%data_dir%" (
     goto script_exit
 )
 
-
-docker run -it --rm -p 8888:8888^
+echo Starting docker container; container number is:
+ docker run -d --rm -p 8888:8888^
     --mount type=bind,source=%data_dir%,target=/home/Data,readonly^
     --mount type=bind,source=%notebook_dir%,target=/Lean/Launcher/bin/Debug/Notebooks^
-    quantconnect/research jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --notebook-dir="Notebooks"
+    %image%
 
-
-
+echo Docker container started; will wait 1 second before opening web browser.
+timeout 1 /nobreak
+start "" http://localhost:8888/lab
 
 :script_exit
-pause
