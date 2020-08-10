@@ -22,7 +22,7 @@ set work_dir=/Lean/Launcher/bin/Debug/
 REM If the arg is a file load in the params from the file (run_docker.cfg)
 if exist "%~1" (
     for /f "eol=- delims=" %%a in (%~1) do set "%%a"
-    goto build_command
+    goto verify
 )
 
 REM If the args are just inline args load them in, if not ask questions
@@ -37,6 +37,8 @@ if not "%*"=="" (
     set /p data_dir="Enter absolute path to Data folder [default: %default_data_dir%]: "
     set /p notebook_dir="Enter absolute path to store notebooks [default: %default_notebook_dir%]: "
 )
+
+:verify
 
 if "%image%" == "" (
     set image=%default_image%
