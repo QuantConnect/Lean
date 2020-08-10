@@ -40,10 +40,10 @@ namespace QuantConnect.ToolBox.CoinApi
         private readonly CoinApiSymbolMapper _symbolMapper = new CoinApiSymbolMapper();
         private readonly IDataAggregator _dataAggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
             Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         private readonly TimeSpan _subscribeDelay = TimeSpan.FromMilliseconds(250);
         private readonly object _lockerSubscriptions = new object();
-        private HashSet<Symbol> _subscribedSymbols = new HashSet<Symbol>();
         private DateTime _lastSubscribeRequestUtcTime = DateTime.MinValue;
         private bool _subscriptionsPending;
 
@@ -61,6 +61,10 @@ namespace QuantConnect.ToolBox.CoinApi
             _client.TradeEvent += OnTrade;
             _client.QuoteEvent += OnQuote;
             _client.Error += OnError;
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager.SubscribeImpl += Subscribe;
+            _subscriptionManager.UnsubscribeImpl += Unsubscribe;
+            _subscriptionManager.GetChannelName += (t) => "quote-trade";
         }
 
         /// <summary>
@@ -72,7 +76,7 @@ namespace QuantConnect.ToolBox.CoinApi
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
             var enumerator = _dataAggregator.Add(dataConfig, newDataAvailableHandler);
-            Subscribe(new[] { dataConfig.Symbol });
+            _subscriptionManager.Subscribe(dataConfig);
 
             return enumerator;
         }
@@ -88,25 +92,14 @@ namespace QuantConnect.ToolBox.CoinApi
         /// <summary>
         /// Adds the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        private void Subscribe(IEnumerable<Symbol> symbols)
+        /// <param name="tickType">Type of tick data</param>
+        private bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
-            lock (_lockerSubscriptions)
-            {
-                var symbolsToSubscribe = (from symbol in symbols
-                                          where !_subscribedSymbols.Contains(symbol) && CanSubscribe(symbol)
-                                          select symbol).ToList();
-                if (symbolsToSubscribe.Count == 0)
-                    return;
+            Log.Trace($"CoinApiDataQueueHandler.Subscribe(): {string.Join(",", symbols.Select(x => x.Value))}");
 
-                Log.Trace($"CoinApiDataQueueHandler.Subscribe(): {string.Join(",", symbolsToSubscribe.Select(x => x.Value))}");
-
-                // CoinAPI requires at least 5 seconds between subscription requests so we need to batch them
-                _subscribedSymbols = symbolsToSubscribe.Concat(_subscribedSymbols).ToHashSet();
-
-                ProcessSubscriptionRequest();
-            }
+            ProcessSubscriptionRequest();
+            return true;
         }
 
         /// <summary>
@@ -115,7 +108,7 @@ namespace QuantConnect.ToolBox.CoinApi
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            _subscriptionManager.Unsubscribe(dataConfig);
             _dataAggregator.Remove(dataConfig);
         }
 
@@ -124,23 +117,13 @@ namespace QuantConnect.ToolBox.CoinApi
         /// Removes the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        private void Unsubscribe(IEnumerable<Symbol> symbols)
+        /// <param name="tickType">Type of tick data</param>
+        private bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
-            lock (_lockerSubscriptions)
-            {
-                var symbolsToUnsubscribe = (from symbol in symbols
-                                            where _subscribedSymbols.Contains(symbol)
-                                            select symbol).ToList();
-                if (symbolsToUnsubscribe.Count == 0)
-                    return;
+            Log.Trace($"CoinApiDataQueueHandler.Unsubscribe(): {string.Join(",", symbols.Select(x => x.Value))}");
 
-                Log.Trace($"CoinApiDataQueueHandler.Unsubscribe(): {string.Join(",", symbolsToUnsubscribe.Select(x => x.Value))}");
-
-                // CoinAPI requires at least 5 seconds between subscription requests so we need to batch them
-                _subscribedSymbols = _subscribedSymbols.Where(x => !symbolsToUnsubscribe.Contains(x)).ToHashSet();
-
-                ProcessSubscriptionRequest();
-            }
+            ProcessSubscriptionRequest();
+            return true;
         }
 
         /// <summary>
@@ -195,7 +178,7 @@ namespace QuantConnect.ToolBox.CoinApi
                             requestTime = _nextHelloMessageUtcTime;
                         }
 
-                        symbolsToSubscribe = _subscribedSymbols.ToList();
+                        symbolsToSubscribe = _subscriptionManager.GetSubscribedSymbols().ToList();
                     }
 
                     var timeToWait = requestTime - DateTime.UtcNow;
@@ -209,7 +192,7 @@ namespace QuantConnect.ToolBox.CoinApi
                         lock (_lockerSubscriptions)
                         {
                             _lastSubscribeRequestUtcTime = DateTime.UtcNow;
-                            if (_subscribedSymbols.Count == symbolsToSubscribe.Count)
+                            if (_subscriptionManager.GetSubscribedSymbols().Count() == symbolsToSubscribe.Count)
                             {
                                 // no more subscriptions pending, task finished
                                 _subscriptionsPending = false;
@@ -250,7 +233,7 @@ namespace QuantConnect.ToolBox.CoinApi
         {
             Log.Trace($"CoinApiDataQueueHandler.SubscribeSymbols(): {string.Join(",", symbolsToSubscribe)}");
 
-            SendHelloMessage(_subscribedSymbols.Select(_symbolMapper.GetBrokerageSymbol));
+            SendHelloMessage(_subscriptionManager.GetSubscribedSymbols().Select(_symbolMapper.GetBrokerageSymbol));
         }
 
         private void SendHelloMessage(IEnumerable<string> subscribeFilter)
@@ -279,7 +262,7 @@ namespace QuantConnect.ToolBox.CoinApi
         {
             try
             {
-                var item = new Tick
+                var tick = new Tick
                 {
                     Symbol = _symbolMapper.GetLeanSymbol(trade.symbol_id, SecurityType.Crypto, string.Empty),
                     Time = trade.time_exchange,
@@ -290,7 +273,7 @@ namespace QuantConnect.ToolBox.CoinApi
 
                 lock (_locker)
                 {
-                    _dataAggregator.Update(item);
+                    _dataAggregator.Update(tick);
                 }
             }
             catch (Exception e)
