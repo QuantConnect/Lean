@@ -36,6 +36,8 @@ namespace QuantConnect.Securities
         private DateTime _lastQuoteBarUpdate;
         private DateTime _lastOHLCUpdate;
         private BaseData _lastData;
+        private IReadOnlyList<BaseData> _lastTickQuotes = new List<BaseData>();
+        private IReadOnlyList<BaseData> _lastTickTrades = new List<BaseData>();
         private ConcurrentDictionary<Type, IReadOnlyList<BaseData>> _dataByType = new ConcurrentDictionary<Type, IReadOnlyList<BaseData>>();
 
         /// <summary>
@@ -139,18 +141,30 @@ namespace QuantConnect.Securities
 
         private void AddDataImpl(BaseData data, bool cacheByType)
         {
-            var openInterest = data as OpenInterest;
-            if (openInterest != null)
-            {
-                OpenInterest = (long)openInterest.Value;
-                return;
-            }
-
             var tick = data as Tick;
-            if (tick?.TickType == TickType.OpenInterest)
+            if (tick != null)
             {
-                OpenInterest = (long)tick.Value;
-                return;
+                switch (tick.TickType)
+                {
+                    case TickType.Trade:
+                        if (tick.Quantity != 0) Volume = tick.Quantity;
+                        break;
+
+                    case TickType.Quote:
+                        if (tick.BidPrice != 0) BidPrice = tick.BidPrice;
+                        if (tick.BidSize != 0) BidSize = tick.BidSize;
+
+                        if (tick.AskPrice != 0) AskPrice = tick.AskPrice;
+                        if (tick.AskSize != 0) AskSize = tick.AskSize;
+                        break;
+
+                    case TickType.OpenInterest:
+                        OpenInterest = (long)tick.Value;
+                        return;
+                }
+
+                if (tick.Value != 0) Price = tick.Value;
+                _lastData = data;
             }
 
             // Only cache non fill-forward data.
@@ -171,6 +185,19 @@ namespace QuantConnect.Securities
                     // we overwrite the zero entry so we're not constantly newing up lists
                     ((List<BaseData>)list)[0] = data;
                 }
+
+                if (data.GetType() == typeof(Tick))
+                {
+                    switch (tick?.TickType)
+                    {
+                        case TickType.Trade:
+                            _lastTickTrades = new List<BaseData> { tick };
+                            return;
+                        case TickType.Quote:
+                            _lastTickQuotes = new List<BaseData> { tick };
+                            return;
+                    }
+                }
             }
 
             var isDefaultDataType = SubscriptionManager.IsDefaultDataType(data);
@@ -185,25 +212,6 @@ namespace QuantConnect.Securities
                 && isDefaultDataType)
             {
                 _lastData = data;
-            }
-
-            if (tick != null)
-            {
-                if (tick.Value != 0) Price = tick.Value;
-
-                if (tick.TickType == TickType.Trade && tick.Quantity != 0)
-                {
-                    Volume = tick.Quantity;
-                }
-                if (tick.TickType == TickType.Quote)
-                {
-                    if (tick.BidPrice != 0) BidPrice = tick.BidPrice;
-                    if (tick.BidSize != 0) BidSize = tick.BidSize;
-
-                    if (tick.AskPrice != 0) AskPrice = tick.AskPrice;
-                    if (tick.AskSize != 0) AskSize = tick.AskSize;
-                }
-                return;
             }
 
             var bar = data as IBar;
@@ -256,9 +264,27 @@ namespace QuantConnect.Securities
 #if DEBUG // don't run this in release as we should never fail here, but it's also nice to have here as documentation of intent
             if (data.DistinctBy(d => d.GetType()).Skip(1).Any())
             {
-                throw new ArgumentException("SecurityCache.StoreData data list must contain elements of the same type.");
+                throw new ArgumentException(
+                    "SecurityCache.StoreData data list must contain elements of the same type."
+                );
             }
 #endif
+            if (dataType == typeof(Tick))
+            {
+                var tick = data[data.Count - 1] as Tick;
+                switch (tick?.TickType)
+                {
+                    case TickType.Trade:
+                        _lastTickTrades = data;
+                        break;
+                    case TickType.Quote:
+                        _lastTickQuotes = data;
+                        break;
+                    default:
+                        return;
+                }
+            }
+
             _dataByType[dataType] = data;
         }
 
@@ -294,6 +320,11 @@ namespace QuantConnect.Securities
         /// </summary>
         public IEnumerable<T> GetAll<T>()
         {
+            if (typeof(T) == typeof(Tick))
+            {
+                return _lastTickTrades.Concat(_lastTickQuotes).Cast<T>();
+            }
+
             IReadOnlyList<BaseData> list;
             if (!_dataByType.TryGetValue(typeof(T), out list))
             {

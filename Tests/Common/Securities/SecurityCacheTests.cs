@@ -103,6 +103,56 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void AddData_SecurityCacheHasTradeAndQuoteTick()
+        {
+            // Arrange
+            var securityCache = new SecurityCache();
+            var time = DateTime.Now;
+
+            var quote = new Tick(time, Symbol.Empty, 100, 102) { TickType = TickType.Quote };
+            securityCache.AddData(quote);
+
+            var trade = new Tick(time, Symbol.Empty, 100, 100, 102) {TickType = TickType.Trade};
+            securityCache.AddData(trade);
+
+            var openInterest = new OpenInterest(time, Symbol.Empty, 1000);
+            securityCache.AddData(openInterest);
+
+            // Assert
+            Assert.True(securityCache.GetData().Equals(trade));
+            Assert.True(securityCache.GetData<Tick>().Equals(trade));
+
+            Assert.True(securityCache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Quote).Equals(quote));
+            Assert.True(securityCache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Trade).Equals(trade));
+        }
+
+
+        [Test]
+        public void StoreData_SecurityCacheHasTradeAndQuoteTick()
+        {
+            // Arrange
+            var securityCache = new SecurityCache();
+            var time = DateTime.Now;
+
+            var quote = new Tick(time, Symbol.Empty, 100, 102) { TickType = TickType.Quote };
+            securityCache.StoreData(new[] {quote}, typeof(Tick));
+
+            var trade = new Tick(time, Symbol.Empty, 100, 100, 102) { TickType = TickType.Trade };
+            securityCache.StoreData(new[] { trade }, typeof(Tick));
+
+            // Adding OpenInterest as Tick or OpenInterest should not matter
+            var openInterest = new OpenInterest(time, Symbol.Empty, 1000);
+            securityCache.StoreData(new[] { openInterest }, typeof(Tick));           // Add as Tick
+            securityCache.StoreData(new[] { openInterest }, typeof(OpenInterest));   // Add as OI
+
+            // Assert
+            Assert.True(securityCache.GetData<Tick>().Equals(trade));
+
+            Assert.True(securityCache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Quote).Equals(quote));
+            Assert.True(securityCache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Trade).Equals(trade));
+        }
+
+        [Test]
         [TestCaseSource(nameof(GetSecurityCacheInitialStates))]
         public void AddDataWithSameEndTime_SetsOpenInterestValues(SecurityCache cache, SecuritySeedData seedType)
         {
