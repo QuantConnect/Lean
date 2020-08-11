@@ -233,7 +233,7 @@ namespace QuantConnect.ToolBox.CoinApi
         {
             Log.Trace($"CoinApiDataQueueHandler.SubscribeSymbols(): {string.Join(",", symbolsToSubscribe)}");
 
-            SendHelloMessage(_subscriptionManager.GetSubscribedSymbols().Select(_symbolMapper.GetBrokerageSymbol));
+            SendHelloMessage(symbolsToSubscribe.Select(_symbolMapper.GetBrokerageSymbol));
         }
 
         private void SendHelloMessage(IEnumerable<string> subscribeFilter)
