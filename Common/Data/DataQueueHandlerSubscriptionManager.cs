@@ -142,13 +142,9 @@ namespace QuantConnect.Data
         /// <returns>list of <see cref="Symbol"/> currently subscribed</returns>
         public IEnumerable<Symbol> GetSubscribedSymbols()
         {
-            lock (_subscribersByChannel)
-            {
-                return _subscribersByChannel.Keys
-                    .Select(c => c.Symbol)
-                    .Distinct()
-                    .ToList();
-            }
+            return _subscribersByChannel.Keys
+                .Select(c => c.Symbol)
+                .Distinct();
         }
     }
 }
