@@ -156,11 +156,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// </summary>
         private void PopulateQueue()
         {
-            List<Symbol> symbols;
-            lock (_sync)
-            {
-                symbols = _subscriptionManager.GetSubscribedSymbols().ToList();
-            }
+            var symbols = _subscriptionManager.GetSubscribedSymbols();
+            
 
             foreach (var symbol in symbols)
             {

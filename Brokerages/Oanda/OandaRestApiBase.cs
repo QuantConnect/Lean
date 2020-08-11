@@ -199,12 +199,7 @@ namespace QuantConnect.Brokerages.Oanda
             GetInstrumentList();
 
             // restore rates session
-            List<Symbol> symbolsToSubscribe;
-            lock (LockerSubscriptions)
-            {
-                symbolsToSubscribe = SubscribedSymbols.ToList();
-            }
-            SubscribeSymbols(symbolsToSubscribe);
+            SubscribeSymbols(SubscribedSymbols);
 
             Log.Trace("OnPricingReconnectRequested(): symbols resubscribed.");
         }
@@ -391,12 +386,7 @@ namespace QuantConnect.Brokerages.Oanda
             _refreshDelay = new Timer(SubscribeDelay.TotalMilliseconds);
             _refreshDelay.Elapsed += (sender, args) =>
             {
-                List<Symbol> symbolsToSubscribe;
-                lock (LockerSubscriptions)
-                {
-                    symbolsToSubscribe = SubscribedSymbols.ToList();
-                }
-
+                var symbolsToSubscribe = SubscribedSymbols;
                 Log.Trace("OandaBrokerage.ProcessSubscriptionRequest(): Updating tickers..." + string.Join(",", symbolsToSubscribe.Select(x => x.Value)));
 
                 // restart streaming session
@@ -424,7 +414,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// Subscribes to the requested symbols (using a single streaming session)
         /// </summary>
         /// <param name="symbolsToSubscribe">The list of symbols to subscribe</param>
-        protected void SubscribeSymbols(List<Symbol> symbolsToSubscribe)
+        protected void SubscribeSymbols(IEnumerable<Symbol> symbolsToSubscribe)
         {
             var instruments = symbolsToSubscribe
                 .Select(symbol => SymbolMapper.GetBrokerageSymbol(symbol))
