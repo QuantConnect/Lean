@@ -1364,7 +1364,7 @@ namespace QuantConnect.Algorithm
         public SchaffTrendCycle STC(Symbol symbol, int cyclePeriod, int fastPeriod, int slowPeriod, MovingAverageType movingAverageType = MovingAverageType.Exponential, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"STC({cyclePeriod},{fastPeriod},{slowPeriod})", resolution);
-            var schaffTrendCycle = new SchaffTrendCycle(cyclePeriod, fastPeriod, slowPeriod, movingAverageType);
+            var schaffTrendCycle = new SchaffTrendCycle(name, cyclePeriod, fastPeriod, slowPeriod, movingAverageType);
             RegisterIndicator(symbol, schaffTrendCycle, resolution, selector);
 
             if (EnableAutomaticIndicatorWarmUp)
