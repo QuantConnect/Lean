@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using QuantConnect.Configuration;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -30,8 +31,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class LiveSynchronizer : Synchronizer
     {
         private ITimeProvider _timeProvider;
-        private readonly ManualResetEventSlim _newLiveDataEmitted = new ManualResetEventSlim(false);
         private RealTimeScheduleEventService _realTimeScheduleEventService;
+        private readonly int _batchingDelay = Config.GetInt("consumer-batching-timeout-ms");
+        private readonly ManualResetEventSlim _newLiveDataEmitted = new ManualResetEventSlim(false);
 
         /// <summary>
         /// Continuous UTC time provider
@@ -188,7 +190,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected virtual int GetPulseDueTime(DateTime now)
         {
             // let's wait until the next second starts
-            return 1000 - now.Millisecond;
+            return 1000 - now.Millisecond + _batchingDelay;
         }
 
         protected virtual void OnSubscriptionNewDataAvailable(object sender, EventArgs args)

@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using NodaTime;
-using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -31,7 +30,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     public class LiveFillForwardEnumerator : FillForwardEnumerator
     {
         private readonly ITimeProvider _timeProvider;
-        private readonly TimeSpan _fillForwardDelay;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LiveFillForwardEnumerator"/> class that accepts
@@ -52,7 +50,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             : base(enumerator, exchange, fillForwardResolution, isExtendedMarketHours, subscriptionEndTime, dataResolution, dataTimeZone, subscriptionStartTime)
         {
             _timeProvider = timeProvider;
-            _fillForwardDelay = TimeSpan.FromMilliseconds(Config.GetInt("consumer-batching-timeout-ms"));
         }
 
         /// <summary>
@@ -84,7 +81,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
 
             // the underlying enumerator returned null, check to see if time has passed for fill forwarding
-            if (nextExpectedDataPointTimeUtc <= _timeProvider.GetUtcNow() - _fillForwardDelay)
+            if (nextExpectedDataPointTimeUtc <= _timeProvider.GetUtcNow())
             {
                 var clone = previous.Clone(true);
                 clone.Time = previous.Time + fillForwardResolution;
