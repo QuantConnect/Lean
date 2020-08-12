@@ -49,8 +49,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         /// </summary>
         public int UpdateWeight()
         {
-            var newWeight = _weightFunc();
-            Weight = newWeight >= WeightedWorkScheduler.MaxWorkWeight ? WeightedWorkScheduler.MaxWorkWeight : newWeight;
+            Weight = _weightFunc();
             return Weight;
         }
 

@@ -52,11 +52,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             : base(enumerator, exchange, fillForwardResolution, isExtendedMarketHours, subscriptionEndTime, dataResolution, dataTimeZone, subscriptionStartTime)
         {
             _timeProvider = timeProvider;
-            _fillForwardDelay = fillForwardResolution.Value == TimeSpan.Zero ?
-                TimeSpan.Zero :
-                TimeSpan.FromMilliseconds(
-                    Config.GetInt($"consumer-batching-timeout-ms", 0)
-                );
+            _fillForwardDelay = TimeSpan.FromMilliseconds(Config.GetInt("consumer-batching-timeout-ms"));
         }
 
         /// <summary>

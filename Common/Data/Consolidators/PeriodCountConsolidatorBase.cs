@@ -231,15 +231,11 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
         public override void Scan(DateTime currentLocalTime)
         {
-            if (_workingBar != null && _period.HasValue)
+            if (_workingBar != null && _period.HasValue && _period.Value != TimeSpan.Zero
+                && currentLocalTime - _workingBar.Time >= _period.Value && GetRoundedBarTime(currentLocalTime) > _lastEmit)
             {
-                currentLocalTime = GetRoundedBarTime(currentLocalTime);
-
-                if (_period.Value != TimeSpan.Zero && currentLocalTime - _workingBar.Time >= _period.Value && currentLocalTime > _lastEmit)
-                {
-                    OnDataConsolidated(_workingBar);
-                    _lastEmit = currentLocalTime;
-                }
+                OnDataConsolidated(_workingBar);
+                _lastEmit = currentLocalTime;
             }
         }
 

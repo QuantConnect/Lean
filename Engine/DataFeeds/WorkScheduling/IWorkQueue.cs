@@ -34,5 +34,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         /// Sorts the work queue
         /// </summary>
         void Sort();
+
+        /// <summary>
+        /// Returns the thread priority to use for this work queue
+        /// </summary>
+        ThreadPriority ThreadPriority { get; }
     }
 }

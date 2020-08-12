@@ -110,7 +110,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             WeightedWorkScheduler.Instance.QueueWork(produce,
                 // if the subscription finished we return 0, so the work is prioritized and gets removed
-                () => enqueueable.HasFinished ? 0 : enqueueable.Count);
+                () =>
+                {
+                    if (enqueueable.HasFinished)
+                    {
+                        return 0;
+                    }
+                    var count = enqueueable.Count;
+                    return count > WeightedWorkScheduler.MaxWorkWeight ? WeightedWorkScheduler.MaxWorkWeight : count;
+                }
+            );
 
             return subscription;
         }

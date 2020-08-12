@@ -31,6 +31,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         private AutoResetEvent _workAvailableEvent;
 
         /// <summary>
+        /// Returns the thread priority to use for this work queue
+        /// </summary>
+        public ThreadPriority ThreadPriority => ThreadPriority.Lowest;
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         public WorkQueue()

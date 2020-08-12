@@ -77,7 +77,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
                     var thread = new Thread(() => workQueue.WorkerThread(_newWork, _newWorkEvent))
                     {
                         IsBackground = true,
-                        Priority = ThreadPriority.Lowest,
+                        Priority = workQueue.ThreadPriority,
                         Name = $"WeightedWorkThread{i}"
                     };
                     thread.Start();
