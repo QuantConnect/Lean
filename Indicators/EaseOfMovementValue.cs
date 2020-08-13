@@ -20,26 +20,27 @@ namespace QuantConnect.Indicators
     /// This indicator computes the n-period Ease of Movement Value using the following:
     /// MID = (high_1 + low_1)/2 - (high_0 + low_0)/2 
     /// RATIO = (currentVolume/10000) / (high_1 - low_1)
-    /// EMV = MID/ratio
+    /// EMV = MID/RATIO
+    /// _SMA = n-period of EMV
+    /// Returns _SMA
+    /// Source: https://www.investopedia.com/terms/e/easeofmovement.asp
     /// </summary>
     public class EaseOfMovementValue : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
-
-        private readonly SimpleMovingAverage _SMA;
-        private int _period;
-        private int _scale;
+        private readonly SimpleMovingAverage _sma;
+        private readonly int _scale = 10000;
         private decimal _previousHighMaximum;
         private decimal _previousLowMinimum;
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _SMA.IsReady;
+        public override bool IsReady => _sma.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod { get; }
+        public int WarmUpPeriod => _sma.WarmUpPeriod;
 
         /// <summary>
         /// Initializeds a new instance of the EaseOfMovement class using the specufued period
@@ -59,8 +60,7 @@ namespace QuantConnect.Indicators
         public EaseOfMovementValue(string name, int period, int scale)
             : base(name)
         {
-            _SMA = new SimpleMovingAverage(period);
-            _period = period;
+            _sma = new SimpleMovingAverage(period);
             _scale = scale;
         }
 
@@ -71,7 +71,7 @@ namespace QuantConnect.Indicators
         /// <returns>A a value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            if ((_previousHighMaximum == 0) && (_previousLowMinimum == 0)) 
+            if (_previousHighMaximum == 0 && _previousLowMinimum == 0) 
             {
                 _previousHighMaximum = input.High;
                 _previousLowMinimum = input.Low;
@@ -79,7 +79,8 @@ namespace QuantConnect.Indicators
 
             if (input.Volume == 0 || input.High == input.Low)
             {
-                return 0;
+                _sma.Update(input.Time, 0);
+                return _sma;
             }
 
             var midValue = ((input.High + input.Low) / 2) - ((_previousHighMaximum + _previousLowMinimum) / 2);
@@ -88,9 +89,9 @@ namespace QuantConnect.Indicators
             _previousHighMaximum = input.High;
             _previousLowMinimum = input.Low;
 
-            _SMA.Update(midValue / midRatio);
+            _sma.Update(input.Time, midValue / midRatio);
 
-            return _SMA.Current.Value;
+            return _sma;
         }
 
         /// <summary>
@@ -98,7 +99,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _SMA.Reset();
+            _sma.Reset();
             _previousHighMaximum = 0.0m;
             _previousLowMinimum = 0.0m;
             base.Reset();

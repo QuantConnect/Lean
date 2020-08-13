@@ -498,6 +498,30 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates an EaseOfMovementValue indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose EMV we want</param>
+        /// <param name="period">The period of the EMV</param>
+        /// <param name="scale">The length of the outputed value</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The EaseOfMovementValue indicator for the given parameters</returns>
+        public EaseOfMovementValue EMV(Symbol symbol, int period = 1, int scale = 10000, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"EMV({period}, {scale})", resolution);
+            var easeOfMovementValue = new EaseOfMovementValue(name, period, scale);
+            RegisterIndicator(symbol, easeOfMovementValue, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, easeOfMovementValue, resolution);
+            }
+
+            return easeOfMovementValue;
+        }
+
+        /// <summary>
         /// Creates a new FilteredIdentity indicator for the symbol The indicator will be automatically
         /// updated on the symbol's subscription resolution
         /// </summary>
