@@ -20,7 +20,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using DateTime = System.DateTime;
 using Tick = QuantConnect.Data.Market.Tick;
@@ -233,6 +232,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             timeProvider.SetCurrentTime(reference.AddMinutes(2));
 
+            var dividendCount = 0;
+            var splitCount = 0;
             var j = 0;
             foreach (var enumerator in enumerators)
             {
@@ -240,12 +241,24 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     enumerator.MoveNext();
                     Assert.IsNotNull(enumerator.Current);
+
+                    if (enumerator.Current is Dividend)
+                    {
+                        dividendCount++;
+                    }
+                    if (enumerator.Current is Split)
+                    {
+                        splitCount++;
+                    }
                 }
 
                 enumerator.MoveNext();
                 Assert.IsNull(enumerator.Current);
                 j++;
             }
+
+            Assert.AreEqual(1, dividendCount);
+            Assert.AreEqual(1, splitCount);
         }
 
         private IDataAggregator GetDataAggregator()

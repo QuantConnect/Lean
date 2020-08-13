@@ -71,6 +71,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     consolidator = FilteredIdentityDataConsolidator.ForTickType(dataConfig.TickType);
                     break;
 
+                case nameof(Split):
+                    consolidator = new IdentityDataConsolidator<Split>();
+                    break;
+
+                case nameof(Dividend):
+                    consolidator = new IdentityDataConsolidator<Dividend>();
+                    break;
+
                 default:
                     // streaming custom data subscriptions can pass right through
                     consolidator = new FilteredIdentityDataConsolidator<BaseData>(data => data.GetType() == dataConfig.Type);

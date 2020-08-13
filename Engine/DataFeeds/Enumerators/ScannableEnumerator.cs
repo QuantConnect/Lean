@@ -134,12 +134,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 lock (_consolidator)
                 {
                     // if there is a working bar we will try to pull it out if the time is right, each consolidator knows when it's right
-                    if (_consolidator.WorkingData != null)
-                    {
-                        var utcTime = _timeProvider.GetUtcNow();
-                        var localTime = utcTime.ConvertFromUtc(_timeZone);
-                        _consolidator.Scan(localTime);
-                    }
+                    var localTime = _timeProvider.GetUtcNow().ConvertFromUtc(_timeZone);
+                    _consolidator.Scan(localTime);
                 }
 
                 if (_consolidated)
