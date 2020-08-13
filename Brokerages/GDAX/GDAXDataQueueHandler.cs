@@ -39,7 +39,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// The list of websocket channels to subscribe
         /// </summary>
-        protected override string[] ChannelNames { get; } = { "heartbeat", "level2", "matches" };
+        protected override string[] ChannelNames { get; } = { "heartbeat", "level2", "matches", "user" };
 
         /// <summary>
         /// Get the next ticks from the live trading data queue
