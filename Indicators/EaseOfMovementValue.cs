@@ -82,7 +82,7 @@ namespace QuantConnect.Indicators
                 return 0;
             }
 
-            var midValue = ((input.High + input.Low) / 2) - ((_previousHighMaximum.Value + _previousLowMinimum.Value) / 2);
+            var midValue = ((input.High + input.Low) / 2) - ((_previousHighMaximum + _previousLowMinimum) / 2);
             var midRatio = ((input.Volume / _scale) / (input.High - input.Low));
 
             _previousHighMaximum = input.High;
