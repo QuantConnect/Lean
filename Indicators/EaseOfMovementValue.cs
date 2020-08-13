@@ -28,8 +28,8 @@ namespace QuantConnect.Indicators
         private readonly SimpleMovingAverage _SMA;
         private int _period;
         private int _scale;
-        private decimal? _previousHighMaximum;
-        private decimal? _previousLowMinimum;
+        private decimal _previousHighMaximum;
+        private decimal _previousLowMinimum;
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -71,8 +71,11 @@ namespace QuantConnect.Indicators
         /// <returns>A a value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            if (!_previousHighMaximum.HasValue) _previousHighMaximum = input.High;
-            if (!_previousLowMinimum.HasValue) _previousLowMinimum = input.Low;
+            if ((_previousHighMaximum == 0) && (_previousLowMinimum == 0)) 
+            {
+                _previousHighMaximum = input.High;
+                _previousLowMinimum = input.Low;
+            } 
 
             if (input.Volume == 0 || input.High == input.Low)
             {
