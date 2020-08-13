@@ -26,8 +26,10 @@ namespace QuantConnect.Indicators
     {
 
         private readonly SimpleMovingAverage _SMA;
-        private decimal _previousHighMaximum;
-        private decimal _previousLowMinimum;
+        private int _period;
+        private int _scale;
+        private decimal? _previousHighMaximum;
+        private decimal? _previousLowMinimum;
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
