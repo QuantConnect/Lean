@@ -24,41 +24,42 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class EaseOfMovementValue : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
+
+        private readonly SimpleMovingAverage _SMA;
         private decimal _previousHighMaximum;
         private decimal _previousLowMinimum;
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => Samples >= 2;
+        public override bool IsReady => _SMA.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => 2;
-
-        public override void Reset()
-        {
-            _previousHighMaximum = 0.0m;
-            _previousLowMinimum = 0.0m;
-            base.Reset();
-        }
+        public int WarmUpPeriod { get; }
 
         /// <summary>
         /// Initializeds a new instance of the EaseOfMovement class using the specufued period
         /// </summary>
         /// <param name="period">The period over which to perform to computation</param>
-        public EaseOfMovementValue()
-            : this("EMV()")
+        /// <param name="scale">The size of the number outputed by EMV</param>
+        public EaseOfMovementValue(int period = 1, int scale = 10000)
+            : this($"EMV({period}, {scale})", period, scale)
         {
         }
         /// <summary>
         /// Creates a new EaseOfMovement indicator with the specified period
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        public EaseOfMovementValue(string name)
+        /// <param name="period">The period over which to perform to computation</param>
+        /// <param name="scale">The size of the number outputed by EMV</param>
+        public EaseOfMovementValue(string name, int period, int scale)
             : base(name)
         {
+            _SMA = new SimpleMovingAverage(period);
+            _period = period;
+            _scale = scale;
         }
 
         /// <summary>
@@ -68,8 +69,8 @@ namespace QuantConnect.Indicators
         /// <returns>A a value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            if (_previousHighMaximum == null) _previousHighMaximum = input.High;
-            if (_previousLowMinimum == null) _previousLowMinimum = input.Low;
+            if (!_previousHighMaximum.HasValue) _previousHighMaximum = input.High;
+            if (!_previousLowMinimum.HasValue) _previousLowMinimum = input.Low;
 
             if (input.Volume == 0 || input.High == input.Low)
             {
@@ -77,12 +78,25 @@ namespace QuantConnect.Indicators
             }
 
             var midValue = ((input.High + input.Low) / 2) - ((_previousHighMaximum + _previousLowMinimum) / 2);
-            var midRatio = ((input.Volume / 10000) / (input.High - input.Low));
+            var midRatio = ((input.Volume / _scale) / (input.High - input.Low));
 
             _previousHighMaximum = input.High;
             _previousLowMinimum = input.Low;
 
-            return midValue / midRatio;
+            _SMA.Update(midValue / midRatio);
+
+            return _SMA.Current.Value;
+        }
+
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            _SMA.Reset();
+            _previousHighMaximum = 0.0m;
+            _previousLowMinimum = 0.0m;
+            base.Reset();
         }
     }
 }
