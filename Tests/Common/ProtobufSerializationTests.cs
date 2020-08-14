@@ -23,6 +23,7 @@ using NUnit.Framework;
 using ProtoBuf;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.Benzinga;
+using QuantConnect.Data.Custom.Estimize;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
@@ -33,6 +34,117 @@ namespace QuantConnect.Tests.Common
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class ProtobufSerializationTests
     {
+        [Test]
+        public void SerializeRoundTripEstimizeRelease()
+        {
+            var time = new DateTime(2020, 3, 19, 10, 0, 0);
+            var underlyingSymbol = Symbols.AAPL;
+            var symbol = Symbol.CreateBase(typeof(EstimizeRelease), underlyingSymbol, QuantConnect.Market.USA);
+
+            var item = new EstimizeRelease
+            {
+                Id = "123",
+                Symbol = symbol,
+                FiscalYear = 2020,
+                FiscalQuarter = 1,
+                Eps = 2,
+                Revenue = null,
+                ReleaseDate = time
+            };
+
+            using (var stream = new MemoryStream())
+            {
+                Serializer.Serialize(stream, item);
+                stream.Position = 0;
+
+                var deserialized = Serializer.Deserialize<EstimizeRelease>(stream);
+
+                Assert.AreEqual("123", deserialized.Id);
+                Assert.AreEqual(2020, deserialized.FiscalYear);
+                Assert.AreEqual(1, deserialized.FiscalQuarter);
+                Assert.AreEqual(2, deserialized.Eps);
+                Assert.AreEqual(null, deserialized.Revenue);
+                Assert.AreEqual(time, deserialized.ReleaseDate);
+                Assert.AreEqual(time, deserialized.Time);
+                Assert.AreEqual(time, deserialized.EndTime);
+            }
+        }
+
+        [Test]
+        public void SerializeRoundTripEstimizeConsensus()
+        {
+            var time = new DateTime(2020, 3, 19, 10, 0, 0);
+            var underlyingSymbol = Symbols.AAPL;
+            var symbol = Symbol.CreateBase(typeof(EstimizeConsensus), underlyingSymbol, QuantConnect.Market.USA);
+
+            var item = new EstimizeConsensus
+            {
+                Id = "123",
+                Symbol = symbol,
+                FiscalYear = 2020,
+                FiscalQuarter = 1,
+                Source = Source.WallStreet,
+                Type = QuantConnect.Data.Custom.Estimize.Type.Eps,
+                Count = 3,
+                Mean = 2,
+                UpdatedAt = time
+            };
+
+            using (var stream = new MemoryStream())
+            {
+                Serializer.Serialize(stream, item);
+                stream.Position = 0;
+
+                var deserialized = Serializer.Deserialize<EstimizeConsensus>(stream);
+
+                Assert.AreEqual("123", deserialized.Id);
+                Assert.AreEqual(2020, deserialized.FiscalYear);
+                Assert.AreEqual(1, deserialized.FiscalQuarter);
+                Assert.AreEqual(Source.WallStreet, deserialized.Source);
+                Assert.AreEqual(QuantConnect.Data.Custom.Estimize.Type.Eps, deserialized.Type);
+                Assert.AreEqual(3, deserialized.Count);
+                Assert.AreEqual(2, deserialized.Mean);
+                Assert.AreEqual(time, deserialized.UpdatedAt);
+                Assert.AreEqual(time, deserialized.Time);
+                Assert.AreEqual(time, deserialized.EndTime);
+            }
+        }
+
+        [Test]
+        public void SerializeRoundTripEstimizeEstimate()
+        {
+            var time = new DateTime(2020, 3, 19, 10, 0, 0);
+            var underlyingSymbol = Symbols.AAPL;
+            var symbol = Symbol.CreateBase(typeof(EstimizeEstimate), underlyingSymbol, QuantConnect.Market.USA);
+
+            var item = new EstimizeEstimate
+            {
+                Id = "123",
+                Symbol = symbol,
+                FiscalYear = 2020,
+                FiscalQuarter = 1,
+                Eps = 2,
+                Revenue = null,
+                CreatedAt = time
+            };
+
+            using (var stream = new MemoryStream())
+            {
+                Serializer.Serialize(stream, item);
+                stream.Position = 0;
+
+                var deserialized = Serializer.Deserialize<EstimizeEstimate>(stream);
+                Assert.AreEqual("123", deserialized.Id);
+                Assert.AreEqual(2020, deserialized.FiscalYear);
+                Assert.AreEqual(1, deserialized.FiscalQuarter);
+                Assert.AreEqual(2, deserialized.Eps);
+                Assert.AreEqual(null, deserialized.Revenue);
+                Assert.AreEqual(time, deserialized.CreatedAt);
+                Assert.AreEqual(time, deserialized.Time);
+                Assert.AreEqual(time, deserialized.EndTime);
+            }
+        }
+
         [Test]
         public void SymbolRoundTrip()
         {
