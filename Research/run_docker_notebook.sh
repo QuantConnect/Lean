@@ -59,13 +59,13 @@ if [ ! -d "$notebook_dir" ]; then
     mkdir $notebook_dir
 fi
 
-echo "Starting docker container; container number is:"
+echo "Starting docker container; container id is:"
 sudo docker run -d --rm -p 8888:8888 \
     --mount type=bind,source=$data_dir,target=/Data,readonly \
     --mount type=bind,source=$notebook_dir,target=/Lean/Launcher/bin/Debug/Notebooks \
     $image
 
 echo "Docker container started; will wait 1 second before opening web browser."
-sleep 1s
+sleep 2s
 xdg-open http://localhost:8888/lab
 

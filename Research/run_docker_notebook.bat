@@ -61,14 +61,14 @@ if not exist "%data_dir%" (
     goto script_exit
 )
 
-echo Starting docker container; container number is:
+echo Starting docker container; container id is:
  docker run -d --rm -p 8888:8888^
     --mount type=bind,source=%data_dir%,target=/home/Data,readonly^
     --mount type=bind,source=%notebook_dir%,target=/Lean/Launcher/bin/Debug/Notebooks^
     %image%
 
 echo Docker container started; will wait 1 second before opening web browser.
-timeout 1 /nobreak
+timeout 2 /nobreak
 start "" http://localhost:8888/lab
 
 :script_exit
