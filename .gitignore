@@ -34,8 +34,9 @@
 
 # QC Cloud Setup Bash Files
 *.sh
-# Include docker build scripts for Mac/Linux
+# Include docker launch scripts for Mac/Linux
 !run_docker.sh
+!research/run_docker_notebook.sh
 
 # QC Config Files:
 # config.json
@@ -267,3 +268,6 @@ Launcher/Plugins/*
 /ApiPython/quantconnect.egg-info/*
 
 QuantConnect.Lean.sln.DotSettings*
+
+#User notebook files
+Research/Notebooks
