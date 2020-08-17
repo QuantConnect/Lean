@@ -65,7 +65,7 @@ sudo docker run -d --rm -p 8888:8888 \
     --mount type=bind,source=$notebook_dir,target=/Lean/Launcher/bin/Debug/Notebooks \
     $image
 
-echo "Docker container started; will wait 1 second before opening web browser."
+echo "Docker container started; will wait 2 seconds before opening web browser."
 sleep 2s
 xdg-open http://localhost:8888/lab
 

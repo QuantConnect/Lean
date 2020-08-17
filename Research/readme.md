@@ -23,7 +23,15 @@ From a terminal launch the run_docker.bat/.sh script; there are a few options on
  3. Inline arguments; anything you don't enter will use the default args! ex: `./run_docker.bat image=quantconnect/research:latest`
       *    Accepted args for inline include all listed in the file **docker.cfg**
 
+Once the docker image starts, the script will attempt to open your browser to the Jupyter notebook web app, if this fails go to `localhost:8888`
 
+When you are done with the research environment be sure to stop the container with either docker's dashboard or through the CLI.
+
+
+# Note for C#
+When using C# for research notebooks it requires that you load our CSX file `QuantConnect.csx` into your notebook. In this setup, the file is one directory above the notebooks default dir. Be sure to use the following line to load in this csx file:
+
+`load "../QuantConnect.csx"`
 
 # Build a new image
 For most users this will not be necessary, simply use `docker pull quantconnect/research` to get the latest image.

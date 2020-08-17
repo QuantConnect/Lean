@@ -67,7 +67,7 @@ echo Starting docker container; container id is:
     --mount type=bind,source=%notebook_dir%,target=/Lean/Launcher/bin/Debug/Notebooks^
     %image%
 
-echo Docker container started; will wait 1 second before opening web browser.
+echo Docker container started; will wait 2 seconds before opening web browser.
 timeout 2 /nobreak
 start "" http://localhost:8888/lab
 
