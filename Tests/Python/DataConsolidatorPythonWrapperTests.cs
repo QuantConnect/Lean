@@ -1,8 +1,7 @@
 using System;
 using NUnit.Framework;
 using Python.Runtime;
-using QuantConnect.Data;
-using QuantConnect.Data.Consolidators;
+using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 
@@ -137,6 +136,42 @@ namespace QuantConnect.Tests.Python
                 var type = wrapper.OutputType;
                 Assert.True(type == typeof(QuoteBar));
             }
+        }
+
+        [Test, Category("TravisExclude")]
+        public void RunRegressionAlgorithm()
+        {
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("CustomConsolidatorRegressionAlgorithm",
+                new Dictionary<string, string> {
+                    {"Total Trades", "0"},
+                    {"Average Win", "0%"},
+                    {"Average Loss", "0%"},
+                    {"Compounding Annual Return", "0%"},
+                    {"Drawdown", "0%"},
+                    {"Expectancy", "0"},
+                    {"Net Profit", "0%"},
+                    {"Sharpe Ratio", "0"},
+                    {"Probabilistic Sharpe Ratio", "0%"},
+                    {"Loss Rate", "0%"},
+                    {"Win Rate", "0%"},
+                    {"Profit-Loss Ratio", "0"},
+                    {"Alpha", "0"},
+                    {"Beta", "0"},
+                    {"Annual Standard Deviation", "0"},
+                    {"Annual Variance", "0"},
+                    {"Information Ratio", "-2.53"},
+                    {"Tracking Error", "0.211"},
+                    {"Treynor Ratio", "0"},
+                    {"Total Fees", "$0.00"}
+                },
+                Language.Python,
+                AlgorithmStatus.Completed);
+
+            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+                parameter.Statistics,
+                parameter.AlphaStatistics,
+                parameter.Language,
+                parameter.ExpectedFinalStatus);
         }
     }
 }
