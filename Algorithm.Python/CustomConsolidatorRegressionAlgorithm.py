@@ -32,9 +32,9 @@ class CustomConsolidatorRegressionAlgorithm(QCAlgorithm):
         self.SubscriptionManager.AddConsolidator("SPY", timedConsolidator)
 
         #Create our entirely custom 2 day quote bar consolidator
-        customConsolidator = CustomQuoteBarConsolidator(timedelta(days=2))
-        customConsolidator.DataConsolidated.append(self.OnQuoteBarDataConsolidated)
-        self.SubscriptionManager.AddConsolidator("SPY", customConsolidator)
+        self.customConsolidator = CustomQuoteBarConsolidator(timedelta(days=2))
+        self.customConsolidator.DataConsolidated.append(self.OnQuoteBarDataConsolidated)
+        self.SubscriptionManager.AddConsolidator("SPY", self.customConsolidator)
 
     def OnQuoteBarDataConsolidated(self, sender, bar):
         '''Function assigned to be triggered by consolidators.
@@ -52,6 +52,18 @@ class CustomConsolidatorRegressionAlgorithm(QCAlgorithm):
         self.Debug("Bar Type: " + consolidatorInfo)
         self.Debug("Bar Range: " + bar.Time.ctime() + " - " + bar.EndTime.ctime())
         self.Debug("Bar value: " + str(bar.Close))
+    
+    def OnData(self, slice):
+        test = slice.get_Values()
+
+        if self.customConsolidator.Consolidated and slice.ContainsKey("SPY"):
+            data = slice['SPY']
+            
+            if data.Value > self.customConsolidator.Consolidated.Close:
+                self.SetHoldings("SPY", .5)
+            else :
+                self.SetHoldings("SPY", 0)
+
 
 class DailyTimeQuoteBarConsolidator(QuoteBarConsolidator):
     '''A custom QuoteBar consolidator that inherits from C# class QuoteBarConsolidator. 
