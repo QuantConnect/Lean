@@ -484,7 +484,7 @@ namespace QuantConnect.ToolBox
             if (_appendToZips)
             {
                 var entryName = LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType);
-                Compression.ZipCreateAppendData(filePath, entryName, data);
+                Compression.ZipCreateAppendData(filePath, entryName, data, true);
                 Log.Trace("LeanDataWriter.Write(): Appended: " + filePath);
             }
             else

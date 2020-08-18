@@ -158,26 +158,31 @@ namespace QuantConnect
         /// <param name="path"></param>
         /// <param name="entry"></param>
         /// <param name="data"></param>
+        /// <param name="overrideEntry"></param>
         /// <returns></returns>
-        public static bool ZipCreateAppendData(string path, string entry, string data)
+        public static bool ZipCreateAppendData(string path, string entry, string data, bool overrideEntry = false)
         {
             try
             {
-                if (File.Exists(path))
+                ZipFile zip;
+                if (File.Exists(path) && !overrideEntry)
                 {
-                    using (var zip = ZipFile.Read(path))
-                    {
-                        zip.AddEntry(entry, data);
-                        zip.Save();
-                    }
+                    zip = ZipFile.Read(path);
                 }
                 else
                 {
-                    using (var zip = new ZipFile(path))
+                    zip = new ZipFile(path);
+                }
+
+                using (zip)
+                {
+                    if (zip.ContainsEntry(entry) && overrideEntry)
                     {
-                        zip.AddEntry(entry, data);
-                        zip.Save();
+                        zip.RemoveEntry(entry);
                     }
+
+                    zip.AddEntry(entry, data);
+                    zip.Save();
                 }
             }
             catch (Exception err)
