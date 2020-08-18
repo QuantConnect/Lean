@@ -19,18 +19,13 @@ namespace QuantConnect.Tests.Python
                 var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
                     "from clr import AddReference\n" +
                     "AddReference(\"QuantConnect.Common\")\n" +
-                    "from QuantConnect.Data.Consolidators import *\n" +
-                    "from datetime import timedelta\n" +
-                    "class CustomConsolidator(QuoteBarConsolidator):\n" +
-                    "   def __init__(self,timespan):\n" +
-                    "       super().__init__(timespan)\n" +
+                    "class CustomConsolidator():\n" +
+                    "   def __init__(self):\n" +
                     "       self.UpdateWasCalled = False\n" +
                     "   def Update(self, data):\n" +
-                    "       self.UpdateWasCalled = True\n" +
-                    "timeVar = timedelta(days=1)");
+                    "       self.UpdateWasCalled = True\n");
 
-                var timeVar = module.GetAttr("timeVar");
-                var customConsolidator = module.GetAttr("CustomConsolidator").Invoke(timeVar);
+                var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
                 var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
 
                 var time = DateTime.Today;
@@ -63,9 +58,6 @@ namespace QuantConnect.Tests.Python
                 var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
                     "from clr import AddReference\n" +
                     "AddReference(\"QuantConnect.Common\")\n" +
-                    "from QuantConnect.Data.Market import *\n" +
-                    "from QuantConnect.Data.Consolidators import *\n" +
-                    "from datetime import timedelta\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
                     "       self.ScanWasCalled = False\n" +    
@@ -95,8 +87,6 @@ namespace QuantConnect.Tests.Python
                     "from clr import AddReference\n" +
                     "AddReference(\"QuantConnect.Common\")\n" +
                     "from QuantConnect.Data.Market import *\n" +
-                    "from QuantConnect.Data.Consolidators import *\n" +
-                    "from datetime import timedelta\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
                     "       self.InputType = QuoteBar\n");
@@ -121,8 +111,6 @@ namespace QuantConnect.Tests.Python
                     "from clr import AddReference\n" +
                     "AddReference(\"QuantConnect.Common\")\n" +
                     "from QuantConnect.Data.Market import *\n" +
-                    "from QuantConnect.Data.Consolidators import *\n" +
-                    "from datetime import timedelta\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
                     "       self.OutputType = QuoteBar\n");
