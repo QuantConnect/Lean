@@ -33,10 +33,6 @@ namespace QuantConnect.Brokerages
 
         #region Declarations
         /// <summary>
-        /// The list of queued ticks
-        /// </summary>
-        public List<Tick> Ticks = new List<Tick>();
-        /// <summary>
         /// The websockets client instance
         /// </summary>
         protected IWebSocket WebSocket;

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -31,8 +32,8 @@ namespace QuantConnect.Brokerages.GDAX
         /// Initializes a new instance of the <see cref="GDAXDataQueueHandler"/> class
         /// </summary>
         public GDAXDataQueueHandler(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
-            IPriceProvider priceProvider)
-            : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider)
+            IPriceProvider priceProvider, IDataAggregator aggregator)
+            : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator)
         {
         }
 
@@ -42,37 +43,35 @@ namespace QuantConnect.Brokerages.GDAX
         protected override string[] ChannelNames { get; } = { "heartbeat", "level2", "matches" };
 
         /// <summary>
-        /// Get the next ticks from the live trading data queue
+        /// Subscribe to the specified configuration
         /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            lock (TickLocker)
-            {
-                var copy = Ticks.ToArray();
-                Ticks.Clear();
-                return copy;
-            }
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
+            Subscribe(new[] { dataConfig.Symbol });
+
+            return enumerator;
         }
 
         /// <summary>
-        /// Adds the specified symbols to the subscription
+        /// Sets the job we're subscribing for
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
         {
-            Subscribe(symbols);
         }
 
         /// <summary>
-        /// Removes the specified symbols to the subscription
+        /// Removes the specified configuration
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            Unsubscribe(symbols);
+            Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            _aggregator.Remove(dataConfig);
         }
     }
 }

@@ -16,6 +16,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using ProtoBuf;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 
@@ -25,41 +26,49 @@ namespace QuantConnect.Data.Market
     /// Tick class is the base representation for tick data. It is grouped into a Ticks object
     /// which implements IDictionary and passed into an OnData event handler.
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class Tick : BaseData
     {
         /// <summary>
         /// Type of the Tick: Trade or Quote.
         /// </summary>
+        [ProtoMember(10)]
         public TickType TickType = TickType.Trade;
 
         /// <summary>
         /// Quantity exchanged in a trade.
         /// </summary>
+        [ProtoMember(11)]
         public decimal Quantity = 0;
 
         /// <summary>
         /// Exchange we are executing on. String short code expanded in the MarketCodes.US global dictionary
         /// </summary>
+        [ProtoMember(12)]
         public string Exchange = "";
 
         /// <summary>
         /// Sale condition for the tick.
         /// </summary>
+        [ProtoMember(13)]
         public string SaleCondition = "";
 
         /// <summary>
         /// Bool whether this is a suspicious tick
         /// </summary>
+        [ProtoMember(14)]
         public bool Suspicious = false;
 
         /// <summary>
         /// Bid Price for Tick
         /// </summary>
+        [ProtoMember(15)]
         public decimal BidPrice = 0;
 
         /// <summary>
         /// Asking price for the Tick quote.
         /// </summary>
+        [ProtoMember(16)]
         public decimal AskPrice = 0;
 
         /// <summary>
@@ -76,11 +85,13 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Size of bid quote.
         /// </summary>
+        [ProtoMember(17)]
         public decimal BidSize = 0;
 
         /// <summary>
         /// Size of ask quote.
         /// </summary>
+        [ProtoMember(18)]
         public decimal AskSize = 0;
 
         //In Base Class: Alias of Closing:
@@ -167,6 +178,54 @@ namespace QuantConnect.Data.Market
             TickType = TickType.Quote;
             BidPrice = bid;
             AskPrice = ask;
+        }
+
+        /// <summary>
+        /// Trade tick type constructor
+        /// </summary>
+        /// <param name="time">Full date and time</param>
+        /// <param name="symbol">Underlying equity security symbol</param>
+        /// <param name="saleCondition">The ticks sale condition</param>
+        /// <param name="exchange">The ticks exchange</param>
+        /// <param name="quantity">The quantity traded</param>
+        /// <param name="price">The price of the trade</param>
+        public Tick(DateTime time, Symbol symbol, string saleCondition, string exchange, decimal quantity, decimal price)
+        {
+            Value = price;
+            Time = time;
+            DataType = MarketDataType.Tick;
+            Symbol = symbol;
+            TickType = TickType.Trade;
+            Quantity = quantity;
+            Exchange = exchange;
+            SaleCondition = saleCondition;
+            Suspicious = false;
+        }
+
+        /// <summary>
+        /// Quote tick type constructor
+        /// </summary>
+        /// <param name="time">Full date and time</param>
+        /// <param name="symbol">Underlying equity security symbol</param>
+        /// <param name="saleCondition">The ticks sale condition</param>
+        /// <param name="exchange">The ticks exchange</param>
+        /// <param name="bidSize">The bid size</param>
+        /// <param name="bidPrice">The bid price</param>
+        /// <param name="askSize">The ask size</param>
+        /// <param name="askPrice">The ask price</param>
+        public Tick(DateTime time, Symbol symbol, string saleCondition, string exchange, decimal bidSize, decimal bidPrice, decimal askSize, decimal askPrice)
+        {
+            Time = time;
+            DataType = MarketDataType.Tick;
+            Symbol = symbol;
+            TickType = TickType.Quote;
+            Exchange = exchange;
+            SaleCondition = saleCondition;
+            Suspicious = false;
+            AskPrice = askPrice;
+            AskSize = askSize;
+            BidPrice = bidPrice;
+            BidSize = bidSize;
         }
 
         /// <summary>

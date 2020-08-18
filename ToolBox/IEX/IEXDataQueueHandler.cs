@@ -16,8 +16,8 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Packets;
 using QuantConnect.Configuration;
+using QuantConnect.Packets;
 using Quobject.SocketIoClientDotNet.Client;
 using QuantConnect.Logging;
 using Newtonsoft.Json.Linq;
@@ -32,6 +32,7 @@ using QuantConnect.Interfaces;
 using NodaTime;
 using System.Globalization;
 using static QuantConnect.StringExtensions;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.IEX
 {
@@ -54,19 +55,19 @@ namespace QuantConnect.ToolBox.IEX
         private readonly TaskCompletionSource<bool> _connected = new TaskCompletionSource<bool>();
         private bool _subscribedToAll;
         private int _dataPointCount;
-
-        private readonly BlockingCollection<BaseData> _outputCollection = new BlockingCollection<BaseData>();
+        private readonly IDataAggregator _aggregator;
 
         public string Endpoint { get; internal set; }
 
         public bool IsConnected => _manager.ReadyState == Manager.ReadyStateEnum.OPEN;
 
-        public IEXDataQueueHandler() : this(true)
+        public IEXDataQueueHandler(IDataAggregator aggregator) : this(aggregator, true)
         {
         }
 
-        public IEXDataQueueHandler(bool live)
+        public IEXDataQueueHandler(IDataAggregator aggregator, bool live)
         {
+            _aggregator = aggregator;
             Endpoint = "https://ws-api.iextrading.com/1.0/tops";
 
             if (string.IsNullOrWhiteSpace(_apiKey))
@@ -156,7 +157,8 @@ namespace QuantConnect.ToolBox.IEX
                     Value = lastSalePrice,
                     Quantity = lastSaleSize
                 };
-                _outputCollection.TryAdd(tick);
+
+                _aggregator.Update(tick);
             }
             catch (Exception err)
             {
@@ -166,18 +168,31 @@ namespace QuantConnect.ToolBox.IEX
         }
 
         /// <summary>
-        /// Desktop/Local doesn't support live data from this handler
+        /// Subscribe to the specified configuration
         /// </summary>
-        /// <returns>Tick</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            return _outputCollection.GetConsumingEnumerable();
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
+            Subscribe(new[] { dataConfig.Symbol });
+
+            return enumerator;
+        }
+
+        /// <summary>
+        /// Sets the job we're subscribing for
+        /// </summary>
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
+        {
         }
 
         /// <summary>
         /// Subscribe to symbols
         /// </summary>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public void Subscribe(IEnumerable<Symbol> symbols)
         {
             try
             {
@@ -210,9 +225,20 @@ namespace QuantConnect.ToolBox.IEX
         }
 
         /// <summary>
+        /// Removes the specified configuration
+        /// </summary>
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            _aggregator.Remove(dataConfig);
+        }
+
+
+        /// <summary>
         /// Unsubscribe from symbols
         /// </summary>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public void Unsubscribe(IEnumerable<Symbol> symbols)
         {
             try
             {
@@ -298,7 +324,7 @@ namespace QuantConnect.ToolBox.IEX
 
         private void Dispose(bool disposing)
         {
-            _outputCollection.CompleteAdding();
+            _aggregator.DisposeSafely();
             _cts.Cancel();
             if (_socket != null)
             {
@@ -397,7 +423,7 @@ namespace QuantConnect.ToolBox.IEX
             {
                 suffixes.Add("1m");
             }
-            else if (span.Days < 3*30)
+            else if (span.Days < 3 * 30)
             {
                 suffixes.Add("3m");
             }

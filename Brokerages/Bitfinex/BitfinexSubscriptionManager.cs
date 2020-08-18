@@ -635,7 +635,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
                 lock (_brokerage.TickLocker)
                 {
-                    _brokerage.Ticks.Add(new Tick
+                    _brokerage.EmitTick(new Tick
                     {
                         Value = price,
                         Time = time,
@@ -656,7 +656,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             lock (_brokerage.TickLocker)
             {
-                _brokerage.Ticks.Add(new Tick
+                _brokerage.EmitTick(new Tick
                 {
                     AskPrice = askPrice,
                     BidPrice = bidPrice,

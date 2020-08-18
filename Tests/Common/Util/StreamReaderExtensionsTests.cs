@@ -383,7 +383,7 @@ namespace QuantConnect.Tests.Common.Util
             Console.WriteLine($"GetLine Reader: {getLineReaderMilliSeconds}ms. Count {getLineReaderCount}");
 
             // its 50% faster but lets leave some room to avoid noise
-            Assert.IsTrue((streamReaderMilliSeconds * 1.85d) < getLineReaderMilliSeconds);
+            Assert.IsTrue((streamReaderMilliSeconds * 1.5d) < getLineReaderMilliSeconds);
             Assert.AreEqual(getLineReaderCount, streamReaderCount);
         }
 

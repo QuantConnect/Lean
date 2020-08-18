@@ -32,6 +32,7 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.Setup
 {
@@ -57,6 +58,15 @@ namespace QuantConnect.Tests.Engine.Setup
             _brokerage = new TestBrokerage();
 
             _brokerageSetupHandler = new TestableBrokerageSetupHandler();
+        }
+
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            _dataManager.RemoveAllSubscriptions();
+            _brokerage.DisposeSafely();
+            _transactionHandler.Exit();
+            _resultHandler.Exit();
         }
 
         [Test]

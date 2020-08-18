@@ -43,6 +43,7 @@ namespace QuantConnect.Brokerages.Fxcm
     {
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;
+        private readonly IDataAggregator _aggregator;
         private readonly string _server;
         private readonly string _terminal;
         private readonly string _userName;
@@ -96,16 +97,18 @@ namespace QuantConnect.Brokerages.Fxcm
         /// </summary>
         /// <param name="orderProvider">The order provider</param>
         /// <param name="securityProvider">The holdings provider</param>
+        /// <param name="aggregator">Consolidate ticks</param>
         /// <param name="server">The url of the server</param>
         /// <param name="terminal">The terminal name</param>
         /// <param name="userName">The user name (login id)</param>
         /// <param name="password">The user password</param>
         /// <param name="accountId">The account id</param>
-        public FxcmBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string server, string terminal, string userName, string password, string accountId)
+        public FxcmBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, string server, string terminal, string userName, string password, string accountId)
             : base("FXCM Brokerage")
         {
             _orderProvider = orderProvider;
             _securityProvider = securityProvider;
+            _aggregator = aggregator;
             _server = server;
             _terminal = terminal;
             _userName = userName;

@@ -32,13 +32,13 @@ namespace QuantConnect.ToolBox.CoinApi
     /// <summary>
     /// An implementation of <see cref="IDataQueueHandler"/> for CoinAPI
     /// </summary>
-    public class CoinApiDataQueueHandler : IDataQueueHandler, IDisposable
+    public class CoinApiDataQueueHandler : IDataQueueHandler
     {
         private readonly string _apiKey = Config.Get("coinapi-api-key");
         private readonly CoinApiWsClient _client;
         private readonly object _locker = new object();
-        private readonly List<Tick> _ticks = new List<Tick>();
         private readonly CoinApiSymbolMapper _symbolMapper = new CoinApiSymbolMapper();
+        private readonly IDataAggregator _dataAggregator;
 
         private readonly TimeSpan _subscribeDelay = TimeSpan.FromMilliseconds(250);
         private readonly object _lockerSubscriptions = new object();
@@ -54,26 +54,35 @@ namespace QuantConnect.ToolBox.CoinApi
         /// <summary>
         /// Initializes a new instance of the <see cref="CoinApiDataQueueHandler"/> class
         /// </summary>
-        public CoinApiDataQueueHandler()
+        public CoinApiDataQueueHandler(IDataAggregator dataAggregator)
         {
             _client = new CoinApiWsClient();
             _client.TradeEvent += OnTrade;
             _client.QuoteEvent += OnQuote;
             _client.Error += OnError;
+            _dataAggregator = dataAggregator;
         }
 
         /// <summary>
-        /// Get the next ticks from the live trading data queue
+        /// Subscribe to the specified configuration
         /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            lock (_locker)
-            {
-                var copy = _ticks.ToArray();
-                _ticks.Clear();
-                return copy;
-            }
+            var enumerator = _dataAggregator.Add(dataConfig, newDataAvailableHandler);
+            Subscribe(new[] { dataConfig.Symbol });
+
+            return enumerator;
+        }
+
+        /// <summary>
+        /// Sets the job we're subscribing for
+        /// </summary>
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
+        {
         }
 
         /// <summary>
@@ -81,7 +90,7 @@ namespace QuantConnect.ToolBox.CoinApi
         /// </summary>
         /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        private void Subscribe(IEnumerable<Symbol> symbols)
         {
             lock (_lockerSubscriptions)
             {
@@ -101,11 +110,21 @@ namespace QuantConnect.ToolBox.CoinApi
         }
 
         /// <summary>
+        /// Removes the specified configuration
+        /// </summary>
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            _dataAggregator.Remove(dataConfig);
+        }
+
+
+        /// <summary>
         /// Removes the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        private void Unsubscribe(IEnumerable<Symbol> symbols)
         {
             lock (_lockerSubscriptions)
             {
@@ -139,6 +158,7 @@ namespace QuantConnect.ToolBox.CoinApi
             _client.QuoteEvent -= OnQuote;
             _client.Error -= OnError;
             _client.Dispose();
+            _dataAggregator.DisposeSafely();
         }
 
         /// <summary>
@@ -270,7 +290,7 @@ namespace QuantConnect.ToolBox.CoinApi
 
                 lock (_locker)
                 {
-                    _ticks.Add(item);
+                    _dataAggregator.Update(item);
                 }
             }
             catch (Exception e)
@@ -303,7 +323,7 @@ namespace QuantConnect.ToolBox.CoinApi
                         tick.BidPrice != previousQuote.BidPrice)
                     {
                         _previousQuotes[tick.Symbol] = tick;
-                        _ticks.Add(tick);
+                        _dataAggregator.Update(tick);
                     }
                 }
             }

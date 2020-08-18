@@ -18,7 +18,7 @@ using System;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
 {
-    internal class WorkItem
+    public class WorkItem
     {
         private readonly Func<int> _weightFunc;
 
@@ -47,11 +47,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         /// <summary>
         /// Updates the weight of this work item
         /// </summary>
-        public void UpdateWeight()
+        public int UpdateWeight()
         {
-            var newWeight = _weightFunc();
-
-            Weight = newWeight >= WeightedWorkScheduler.MaxWorkWeight ? WeightedWorkScheduler.MaxWorkWeight : newWeight;
+            Weight = _weightFunc();
+            return Weight;
         }
 
         /// <summary>

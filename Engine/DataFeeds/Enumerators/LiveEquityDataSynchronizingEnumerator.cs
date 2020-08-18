@@ -16,6 +16,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Util;
@@ -30,7 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     {
         private readonly ITimeProvider _timeProvider;
         private readonly DateTimeZone _exchangeTimeZone;
-        private readonly IEnumerator<BaseData> _auxDataEnumerator;
+        private readonly List<IEnumerator<BaseData>> _auxDataEnumerators;
         private readonly IEnumerator<BaseData> _tradeBarAggregator;
 
         /// <summary>
@@ -38,13 +39,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         /// <param name="timeProvider">The source of time used to gauge when this enumerator should emit extra bars when null data is returned from the source enumerator</param>
         /// <param name="exchangeTimeZone">The time zone the raw data is time stamped in</param>
-        /// <param name="auxDataEnumerator">The auxiliary data enumerator</param>
         /// <param name="tradeBarAggregator">The trade bar aggregator enumerator</param>
-        public LiveEquityDataSynchronizingEnumerator(ITimeProvider timeProvider, DateTimeZone exchangeTimeZone, IEnumerator<BaseData> auxDataEnumerator, IEnumerator<BaseData> tradeBarAggregator)
+        /// <param name="auxDataEnumerators">The auxiliary data enumerators</param>
+        public LiveEquityDataSynchronizingEnumerator(ITimeProvider timeProvider, DateTimeZone exchangeTimeZone, IEnumerator<BaseData> tradeBarAggregator, params IEnumerator<BaseData>[] auxDataEnumerators)
         {
             _timeProvider = timeProvider;
             _exchangeTimeZone = exchangeTimeZone;
-            _auxDataEnumerator = auxDataEnumerator;
+            _auxDataEnumerators = auxDataEnumerators.ToList();
             _tradeBarAggregator = tradeBarAggregator;
         }
 
@@ -63,7 +64,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 return true;
 
             // advance enumerators with no current data
-            if (_auxDataEnumerator.Current == null) _auxDataEnumerator.MoveNext();
+            for (var i = 0; i < _auxDataEnumerators.Count; i++)
+            {
+                if (_auxDataEnumerators[i].Current == null)
+                {
+                    _auxDataEnumerators[i].MoveNext();
+                }
+            }
             if (_tradeBarAggregator.Current == null) _tradeBarAggregator.MoveNext();
 
             // check if any enumerator is ready to emit
@@ -83,7 +90,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created.</exception>
         public void Reset()
         {
-            _auxDataEnumerator.Reset();
+            foreach (var auxDataEnumerator in _auxDataEnumerators)
+            {
+                auxDataEnumerator.Reset();
+            }
             _tradeBarAggregator.Reset();
         }
 
@@ -104,23 +114,44 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public void Dispose()
         {
-            _auxDataEnumerator.DisposeSafely();
+            foreach (var auxDataEnumerator in _auxDataEnumerators)
+            {
+                auxDataEnumerator.DisposeSafely();
+            }
             _tradeBarAggregator.DisposeSafely();
         }
 
         private bool DataPointEmitted(DateTime frontierUtc)
         {
-            // check if any enumerator is ready to emit
-            if (_auxDataEnumerator.Current != null && _tradeBarAggregator.Current != null)
+            // we get the aux enumerator that has the smallest endTime if any
+            IEnumerator<BaseData> auxDataEnumerator = null;
+            for (var i = 0; i < _auxDataEnumerators.Count; i++)
             {
-                var auxDataEndTime = _auxDataEnumerator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
+                var currentEnum = _auxDataEnumerators[i];
+                if (currentEnum.Current != null)
+                {
+                    if (auxDataEnumerator == null)
+                    {
+                        auxDataEnumerator = currentEnum;
+                    }
+                    else
+                    {
+                        auxDataEnumerator = auxDataEnumerator.Current.EndTime > currentEnum.Current.EndTime ? currentEnum : auxDataEnumerator;
+                    }
+                }
+            }
+
+            // check if any enumerator is ready to emit
+            if (auxDataEnumerator?.Current != null && _tradeBarAggregator.Current != null)
+            {
+                var auxDataEndTime = auxDataEnumerator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
                 var tradeBarEndTime = _tradeBarAggregator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
                 if (auxDataEndTime < tradeBarEndTime)
                 {
                     if (auxDataEndTime <= frontierUtc)
                     {
-                        Current = _auxDataEnumerator.Current;
-                        _auxDataEnumerator.MoveNext();
+                        Current = auxDataEnumerator.Current;
+                        auxDataEnumerator.MoveNext();
                         return true;
                     }
                 }
@@ -134,13 +165,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     }
                 }
             }
-            else if (_auxDataEnumerator.Current != null)
+            else if (auxDataEnumerator?.Current != null)
             {
-                var auxDataEndTime = _auxDataEnumerator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
+                var auxDataEndTime = auxDataEnumerator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
                 if (auxDataEndTime <= frontierUtc)
                 {
-                    Current = _auxDataEnumerator.Current;
-                    _auxDataEnumerator.MoveNext();
+                    Current = auxDataEnumerator.Current;
+                    auxDataEnumerator.MoveNext();
                     return true;
                 }
             }

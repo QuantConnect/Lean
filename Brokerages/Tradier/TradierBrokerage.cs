@@ -24,6 +24,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -70,6 +71,7 @@ namespace QuantConnect.Brokerages.Tradier
         private const string RequestEndpoint = @"https://api.tradier.com/v1/";
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;
+        private readonly IDataAggregator _aggregator;
 
         private readonly object _fillLock = new object();
         private readonly DateTime _initializationDateTime = DateTime.Now;
@@ -124,11 +126,12 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Create a new Tradier Object:
         /// </summary>
-        public TradierBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountID)
+        public TradierBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, string accountID)
             : base("Tradier Brokerage")
         {
             _orderProvider = orderProvider;
             _securityProvider = securityProvider;
+            _aggregator = aggregator;
             _accountID = accountID;
 
             _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierCachedOpenOrder>();
@@ -148,6 +151,42 @@ namespace QuantConnect.Brokerages.Tradier
             //Swap into sandbox end points / modes.
             _rateLimitPeriod[TradierApiRequestType.Standard] = TimeSpan.FromMilliseconds(500);
             _rateLimitPeriod[TradierApiRequestType.Data] = TimeSpan.FromMilliseconds(500);
+
+            Task.Factory.StartNew(() =>
+            {
+                IEnumerator<TradierStreamData> pipe = null;
+                do
+                {
+                    if (_subscriptions.IsEmpty)
+                    {
+                        Thread.Sleep(10);
+                        continue;
+                    }
+
+                    //If there's been an update to the subscriptions list; recreate the stream.
+                    if (_refresh)
+                    {
+                        var stream = Stream(GetTickers());
+                        pipe = stream.GetEnumerator();
+                        pipe.MoveNext();
+                        _refresh = false;
+                    }
+
+                    if (pipe != null && pipe.Current != null)
+                    {
+                        var tsd = pipe.Current;
+                        if (tsd.Type == "trade")
+                        {
+                            var tick = CreateTick(tsd);
+                            if (tick != null)
+                            {
+                                _aggregator.Update(tick);
+                            }
+                        }
+                        pipe.MoveNext();
+                    }
+                } while (!_disconnect);
+            }, TaskCreationOptions.LongRunning);
         }
 
         #region Tradier client implementation

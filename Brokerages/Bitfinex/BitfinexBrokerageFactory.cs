@@ -15,7 +15,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -83,7 +85,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                 job.BrokerageData["bitfinex-api-key"],
                 job.BrokerageData["bitfinex-api-secret"],
                 algorithm,
-                priceProvider);
+                priceProvider,
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")));
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;

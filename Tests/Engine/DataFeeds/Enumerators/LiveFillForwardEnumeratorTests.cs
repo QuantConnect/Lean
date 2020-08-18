@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -166,6 +167,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         {
             var now = DateTime.UtcNow;
             var timeProvider = new ManualTimeProvider(new DateTime(2020, 5, 21, 9, 40, 0, 100), TimeZones.NewYork);
+
             var enqueueableEnumerator = new EnqueueableEnumerator<BaseData>();
             var fillForwardEnumerator = new LiveFillForwardEnumerator(
                 timeProvider,
@@ -202,6 +204,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 EndTime = new DateTime(2020, 5, 21, 9, 42, 0),
                 Symbol = Symbols.AAPL
             };
+
 
             // Enqueue the first point, which will be emitted ASAP.
             enqueueableEnumerator.Enqueue(openingBar);

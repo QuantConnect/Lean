@@ -26,6 +26,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 using RestSharp;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
@@ -38,10 +39,11 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         {
             var restClient = new RestClient("https://api.pro.coinbase.com");
             var webSocketClient = new WebSocketClientWrapper();
+            var aggregator = new AggregationManager();
 
             var brokerage = new GDAXBrokerage(
                 Config.Get("gdax-url", "wss://ws-feed.pro.coinbase.com"), webSocketClient, restClient,
-                Config.Get("gdax-api-key"), Config.Get("gdax-api-secret"), Config.Get("gdax-passphrase"), null, null);
+                Config.Get("gdax-api-key"), Config.Get("gdax-api-secret"), Config.Get("gdax-passphrase"), null, null, aggregator);
 
             var historyProvider = new BrokerageHistoryProvider();
             historyProvider.SetBrokerage(brokerage);

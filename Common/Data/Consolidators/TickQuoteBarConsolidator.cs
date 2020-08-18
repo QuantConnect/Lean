@@ -91,27 +91,19 @@ namespace QuantConnect.Data.Consolidators
         {
             if (workingBar == null)
             {
-                workingBar = new QuoteBar
-                {
-                    Symbol = data.Symbol,
-                    Time = GetRoundedBarTime(data.Time),
-                    Bid = null,
-                    Ask = null
-                };
+                workingBar = new QuoteBar(GetRoundedBarTime(data.Time), data.Symbol, null, decimal.Zero, null, decimal.Zero, Period);
 
                 // open ask and bid should match previous close ask and bid
                 if (Consolidated != null)
                 {
                     // note that we will only fill forward previous close ask and bid when a new data point comes in and we generate a new working bar which is not a fill forward bar
                     var previous = Consolidated as QuoteBar;
-                    workingBar.Update(0, previous.Bid?.Close ?? 0, previous.Ask?.Close ?? 0, 0, previous.LastBidSize, previous.LastAskSize);
+                    workingBar.Update(decimal.Zero, previous.Bid?.Close ?? decimal.Zero, previous.Ask?.Close ?? decimal.Zero, decimal.Zero, previous.LastBidSize, previous.LastAskSize);
                 }
-
-                if (Period.HasValue) workingBar.Period = Period.Value;
             }
 
             // update the bid and ask
-            workingBar.Update(0, data.BidPrice, data.AskPrice, 0, data.BidSize, data.AskSize);
+            workingBar.Update(decimal.Zero, data.BidPrice, data.AskPrice, decimal.Zero, data.BidSize, data.AskSize);
             if (!Period.HasValue) workingBar.EndTime = GetRoundedBarTime(data.EndTime);
         }
     }

@@ -29,6 +29,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NodaTime;
+using ProtoBuf;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -55,6 +56,48 @@ namespace QuantConnect
     {
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
+
+        /// <summary>
+        /// Serialize a list of ticks using protobuf
+        /// </summary>
+        /// <param name="ticks">The list of ticks to serialize</param>
+        /// <returns>The resulting byte array</returns>
+        public static byte[] ProtobufSerialize(this List<Tick> ticks)
+        {
+            using (var stream = new MemoryStream())
+            {
+                Serializer.Serialize(stream, ticks);
+                return stream.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Serialize a base data instance using protobuf
+        /// </summary>
+        /// <param name="baseData">The data point to serialize</param>
+        /// <returns>The resulting byte array</returns>
+        public static byte[] ProtobufSerialize(this IBaseData baseData)
+        {
+            using (var stream = new MemoryStream())
+            {
+                switch (baseData.DataType)
+                {
+                    case MarketDataType.Tick:
+                        Serializer.SerializeWithLengthPrefix(stream, baseData as Tick, PrefixStyle.Base128, 1);
+                        break;
+                    case MarketDataType.QuoteBar:
+                        Serializer.SerializeWithLengthPrefix(stream, baseData as QuoteBar, PrefixStyle.Base128, 1);
+                        break;
+                    case MarketDataType.TradeBar:
+                        Serializer.SerializeWithLengthPrefix(stream, baseData as TradeBar, PrefixStyle.Base128, 1);
+                        break;
+                    default:
+                        Serializer.SerializeWithLengthPrefix(stream, baseData as BaseData, PrefixStyle.Base128, 1);
+                        break;
+                }
+                return stream.ToArray();
+            }
+        }
 
         /// <summary>
         /// Extension method to get security price is 0 messages for users

@@ -27,6 +27,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.GDAX
 {
@@ -192,6 +193,10 @@ namespace QuantConnect.Brokerages.GDAX
         {
             base.Disconnect();
 
+            if (!_canceller.IsCancellationRequested)
+            {
+                _canceller.Cancel();
+            }
             WebSocket.Close();
         }
 
@@ -435,8 +440,10 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         public override void Dispose()
         {
-            _publicEndpointRateLimiter.Dispose();
-            _privateEndpointRateLimiter.Dispose();
+            _canceller.DisposeSafely();
+            _aggregator.DisposeSafely();
+            _publicEndpointRateLimiter.DisposeSafely();
+            _privateEndpointRateLimiter.DisposeSafely();
         }
     }
 }

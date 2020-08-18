@@ -496,6 +496,19 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
                 _dataQueueHandlerBrokerage.DisposeSafely();
             }
+            else
+            {
+                var dataQueueHandler = Composer.Instance.GetExportedValues<IDataQueueHandler>().FirstOrDefault();
+                if (dataQueueHandler != null)
+                {
+                    Log.Trace($"BrokerageSetupHandler.Setup(): Found data queue handler to dispose: {dataQueueHandler.GetType()}");
+                    dataQueueHandler.DisposeSafely();
+                }
+                else
+                {
+                    Log.Trace("BrokerageSetupHandler.Setup(): did not find any data queue handler to dispose");
+                }
+            }
         }
 
         private void PreloadDataQueueHandler(LiveNodePacket liveJob, IAlgorithm algorithm, IBrokerageFactory factory)

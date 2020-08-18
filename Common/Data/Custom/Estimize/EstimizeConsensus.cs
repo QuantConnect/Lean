@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using NodaTime;
+using ProtoBuf;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Custom.Estimize
@@ -24,29 +25,34 @@ namespace QuantConnect.Data.Custom.Estimize
     /// <summary>
     /// Consensus of the specified release
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class EstimizeConsensus : BaseData
     {
         /// <summary>
         /// The unique identifier for the estimate
         /// </summary>
+        [ProtoMember(10)]
         [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }
 
         /// <summary>
         /// Consensus source (Wall Street or Estimize)
         /// </summary>
+        [ProtoMember(11)]
         [JsonProperty(PropertyName = "source")]
         public Source? Source { get; set; }
 
         /// <summary>
         /// Type of Consensus (EPS or Revenue)
         /// </summary>
+        [ProtoMember(12)]
         [JsonProperty(PropertyName = "type")]
         public Type? Type { get; set; }
 
         /// <summary>
         /// The mean of the distribution of estimates (the "consensus")
         /// </summary>
+        [ProtoMember(13)]
         [JsonProperty(PropertyName = "mean")]
         public decimal? Mean { get; set; }
 
@@ -58,30 +64,35 @@ namespace QuantConnect.Data.Custom.Estimize
         /// <summary>
         /// The highest estimate in the distribution
         /// </summary>
+        [ProtoMember(14)]
         [JsonProperty(PropertyName = "high")]
         public decimal? High { get; set; }
 
         /// <summary>
         /// The lowest estimate in the distribution
         /// </summary>
+        [ProtoMember(15)]
         [JsonProperty(PropertyName = "low")]
         public decimal? Low { get; set; }
 
         /// <summary>
         /// The standard deviation of the distribution
         /// </summary>
+        [ProtoMember(16)]
         [JsonProperty(PropertyName = "standard_deviation")]
         public decimal? StandardDeviation { get; set; }
 
         /// <summary>
         /// The number of estimates in the distribution
         /// </summary>
+        [ProtoMember(17)]
         [JsonProperty(PropertyName = "count")]
         public int? Count { get; set; }
 
         /// <summary>
         /// The timestamp of this consensus (UTC)
         /// </summary>
+        [ProtoMember(18)]
         [JsonProperty(PropertyName = "updated_at")]
         public DateTime UpdatedAt
         {
@@ -92,12 +103,14 @@ namespace QuantConnect.Data.Custom.Estimize
         /// <summary>
         /// The fiscal year for the release
         /// </summary>
+        [ProtoMember(19)]
         [JsonProperty(PropertyName = "fiscal_year")]
         public int? FiscalYear { get; set; }
 
         /// <summary>
         /// The fiscal quarter for the release
         /// </summary>
+        [ProtoMember(20)]
         [JsonProperty(PropertyName = "fiscal_quarter")]
         public int? FiscalQuarter { get; set; }
 

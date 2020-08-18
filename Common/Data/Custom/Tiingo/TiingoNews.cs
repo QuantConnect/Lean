@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using NodaTime;
+using ProtoBuf;
 using QuantConnect.Data.UniverseSelection;
 using static QuantConnect.StringExtensions;
 
@@ -29,54 +30,97 @@ namespace QuantConnect.Data.Custom.Tiingo
     /// https://api.tiingo.com/documentation/news
     /// </summary>
     /// <remarks>Requires setting <see cref="Tiingo.AuthCode"/></remarks>
+    [ProtoContract(SkipConstructor = true)]
     public class TiingoNews : IndexedBaseData
     {
+        private List<string> _tags;
+        private List<Symbol> _symbols;
+
         /// <summary>
         /// The domain the news source is from.
         /// </summary>
+        [ProtoMember(10)]
         public string Source { get; set; }
 
         /// <summary>
         /// The datetime the news story was added to Tiingos database in UTC.
         /// This is always recorded by Tiingo and the news source has no input on this date.
         /// </summary>
+        [ProtoMember(11)]
         public DateTime CrawlDate { get; set; }
 
         /// <summary>
         /// URL of the news article.
         /// </summary>
+        [ProtoMember(12)]
         public string Url { get; set; }
 
         /// <summary>
         /// The datetime the news story was published in UTC. This is usually reported by the news source and not by Tiingo.
         /// If the news source does not declare a published date, Tiingo will use the time the news story was discovered by our crawler farm.
         /// </summary>
+        [ProtoMember(13)]
         public DateTime PublishedDate { get; set; }
 
         /// <summary>
         /// Tags that are mapped and discovered by Tiingo.
         /// </summary>
-        public List<string> Tags { get; set; }
+        [ProtoMember(14)]
+        public List<string> Tags
+        {
+            get
+            {
+                if (_tags == null)
+                {
+                    _tags = new List<string>();
+                }
+                
+                return _tags;
+            }
+            set
+            {
+                _tags = value;
+            }
+        }
 
         /// <summary>
         /// Long-form description of the news story.
         /// </summary>
+        [ProtoMember(15)]
         public string Description { get; set; }
 
         /// <summary>
         /// Title of the news article.
         /// </summary>
+        [ProtoMember(16)]
         public string Title { get; set; }
 
         /// <summary>
         /// Unique identifier specific to the news article.
         /// </summary>
+        [ProtoMember(17)]
         public string ArticleID { get; set; }
 
         /// <summary>
         /// What symbols are mentioned in the news story.
         /// </summary>
-        public List<Symbol> Symbols { get; set; }
+        [ProtoMember(18)]
+        public List<Symbol> Symbols
+        {
+            get
+            {
+                if (_symbols == null)
+                {
+                    _symbols = new List<Symbol>();
+                }
+                
+                return _symbols;
+            } 
+            set
+            {
+                _symbols = value;
+            }
+        }
 
         /// <summary>
         /// Returns the source for a given index value

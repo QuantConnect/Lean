@@ -174,6 +174,12 @@
     <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
       <HintPath>..\packages\NodaTime.1.3.4\lib\net35-Client\NodaTime.dll</HintPath>
     </Reference>
+    <Reference Include="protobuf-net, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <HintPath>..\packages\protobuf-net.3.0.29\lib\net461\protobuf-net.dll</HintPath>
+    </Reference>
+    <Reference Include="protobuf-net.Core, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <HintPath>..\packages\protobuf-net.Core.3.0.29\lib\net461\protobuf-net.Core.dll</HintPath>
+    </Reference>
     <Reference Include="QuantConnect.Fxcm, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Brokerages\Fxcm\QuantConnect.Fxcm.dll</HintPath>
@@ -185,13 +191,24 @@
       <HintPath>..\packages\SuperSocket.ClientEngine.Core.0.10.0\lib\net45\SuperSocket.ClientEngine.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.Immutable, Version=1.2.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.1.7.1\lib\net461\System.Collections.Immutable.dll</HintPath>
+    </Reference>
     <Reference Include="System.Collections.Specialized, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Collections.Specialized.4.3.0\lib\net46\System.Collections.Specialized.dll</HintPath>
     </Reference>
     <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IdentityModel" />
     <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
     <Reference Include="System.Net.NameResolution, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Net.NameResolution.4.3.0\lib\net46\System.Net.NameResolution.dll</HintPath>
     </Reference>
@@ -202,8 +219,14 @@
       <HintPath>..\packages\System.Net.Sockets.4.3.0\lib\net46\System.Net.Sockets.dll</HintPath>
     </Reference>
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
     <Reference Include="System.Runtime, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.4.3.0\lib\net462\System.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Extensions, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.Extensions.4.3.0\lib\net462\System.Runtime.Extensions.dll</HintPath>
@@ -225,6 +248,9 @@
       <HintPath>..\packages\System.Security.Cryptography.X509Certificates.4.3.0\lib\net461\System.Security.Cryptography.X509Certificates.dll</HintPath>
     </Reference>
     <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceModel.Primitives, Version=4.7.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ServiceModel.Primitives.4.7.0\lib\net461\System.ServiceModel.Primitives.dll</HintPath>
+    </Reference>
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -364,6 +390,7 @@
     <Compile Include="Common\Packets\ControlsTests.cs" />
     <Compile Include="Common\Securities\TestDefaultMarginCallModel.cs" />
     <Compile Include="Common\Statistics\AnnualPerformanceTests.cs" />
+    <Compile Include="Common\ProtobufSerializationTests.cs" />
     <Compile Include="Common\Statistics\StatisticsBuilderTests.cs" />
     <Compile Include="Common\Statistics\TrackingErrorTests.cs" />
     <Compile Include="Common\Storage\LocalObjectStoreTests.cs" />
@@ -427,9 +454,11 @@
     <Compile Include="Engine\Alphas\DefaultAlphaHandlerTests.cs" />
     <Compile Include="Engine\Alphas\InsightAnalysisContextTests.cs" />
     <Compile Include="Engine\BrokerageTransactionHandlerTests\BacktestingTransactionHandlerTests.cs" />
+    <Compile Include="Engine\DataFeeds\AggregationManagerTests.cs" />
     <Compile Include="Engine\DataFeeds\BacktestingFutureChainProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\DataPermissionManagerTests.cs" />
-    <Compile Include="Engine\DataFeeds\Enumerators\QuoteBarBuilderEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\ScannableEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\RealTimeScheduleEventServiceTests.cs" />
     <Compile Include="Engine\DataFeeds\SubscriptionDataTests.cs" />
     <Compile Include="Engine\DataFeeds\DataManagerStub.cs" />
     <Compile Include="Engine\DataFeeds\DataManagerTests.cs" />
@@ -624,7 +653,6 @@
     <Compile Include="Engine\DataFeeds\Enumerators\RateLimitEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\RefreshEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\SynchronizingEnumeratorTests.cs" />
-    <Compile Include="Engine\DataFeeds\Enumerators\TradeBarBuilderEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\FileSystemDataFeedTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\FillForwardEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\IEXDataQueueHandlerTests.cs" />

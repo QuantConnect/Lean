@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
@@ -30,7 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public virtual bool ShouldStreamSubscription(LiveNodePacket job, SubscriptionDataConfig config)
         {
-            return IsStreamingType(config) || !config.IsCustomData;
+            return IsStreamingType(config) || !config.IsCustomData && config.Type != typeof(CoarseFundamental);
         }
 
         /// <summary>

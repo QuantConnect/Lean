@@ -21,6 +21,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Tests.Common.Packets
@@ -28,6 +29,12 @@ namespace QuantConnect.Tests.Common.Packets
     [TestFixture]
     public class BacktestNodePacketTests
     {
+        [SetUp]
+        public void SetUp()
+        {
+            Log.DebuggingEnabled = false;
+        }
+
         [TearDown]
         public void TearDown()
         {

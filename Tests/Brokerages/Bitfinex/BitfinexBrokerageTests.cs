@@ -22,6 +22,8 @@ using QuantConnect.Configuration;
 using Moq;
 using QuantConnect.Brokerages;
 using QuantConnect.Tests.Common.Securities;
+using QuantConnect.Data;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {
@@ -59,7 +61,8 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
                     Config.Get("bitfinex-api-key"),
                     Config.Get("bitfinex-api-secret"),
                     algorithm.Object,
-                    priceProvider.Object
+                    priceProvider.Object,
+                    new AggregationManager()
                 );
         }
 

@@ -40,6 +40,7 @@ using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities.Option;
 using Bar = QuantConnect.Data.Market.Bar;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -68,6 +69,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly IAlgorithm _algorithm;
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;
+        private readonly IDataAggregator _aggregator;
         private readonly IB.InteractiveBrokersClient _client;
         private readonly string _agentDescription;
 
@@ -100,7 +102,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly InteractiveBrokersSymbolMapper _symbolMapper = new InteractiveBrokersSymbolMapper();
 
         // Prioritized list of exchanges used to find right futures contract
-        private readonly Dictionary<string, string> _futuresExchanges = new Dictionary< string, string>
+        private readonly Dictionary<string, string> _futuresExchanges = new Dictionary<string, string>
         {
             { Market.CME, "GLOBEX" },
             { Market.NYMEX, "NYMEX" },
@@ -158,11 +160,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="orderProvider">An instance of IOrderProvider used to fetch Order objects by brokerage ID</param>
         /// <param name="securityProvider">The security provider used to give access to algorithm securities</param>
-        public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider)
+        /// <param name="aggregator">consolidate ticks</param>
+        public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator)
             : this(
                 algorithm,
                 orderProvider,
                 securityProvider,
+                aggregator,
                 Config.Get("ib-account"),
                 Config.Get("ib-host", "LOCALHOST"),
                 Config.GetInt("ib-port", 4001),
@@ -183,11 +187,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="orderProvider">An instance of IOrderProvider used to fetch Order objects by brokerage ID</param>
         /// <param name="securityProvider">The security provider used to give access to algorithm securities</param>
         /// <param name="account">The account used to connect to IB</param>
-        public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider, string account)
+        public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, string account)
             : this(
                 algorithm,
                 orderProvider,
                 securityProvider,
+                aggregator,
                 account,
                 Config.Get("ib-host", "LOCALHOST"),
                 Config.GetInt("ib-port", 4001),
@@ -207,6 +212,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="orderProvider">An instance of IOrderProvider used to fetch Order objects by brokerage ID</param>
         /// <param name="securityProvider">The security provider used to give access to algorithm securities</param>
+        /// <param name="aggregator">consolidate ticks</param>
         /// <param name="account">The Interactive Brokers account name</param>
         /// <param name="host">host name or IP address of the machine where TWS is running. Leave blank to connect to the local host.</param>
         /// <param name="port">must match the port specified in TWS on the Configure&gt;API&gt;Socket Port field.</param>
@@ -220,6 +226,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             IAlgorithm algorithm,
             IOrderProvider orderProvider,
             ISecurityProvider securityProvider,
+            IDataAggregator aggregator,
             string account,
             string host,
             int port,
@@ -234,6 +241,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _algorithm = algorithm;
             _orderProvider = orderProvider;
             _securityProvider = securityProvider;
+            _aggregator = aggregator;
             _account = account;
             _host = host;
             _port = port;
@@ -687,7 +695,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         }
 
                         Log.Trace("InteractiveBrokersBrokerage.Connect(): IB message processing thread ended: #" + Thread.CurrentThread.ManagedThreadId);
-                    }) { IsBackground = true };
+                    })
+                    { IsBackground = true };
 
                     _messageProcessingThread.Start();
 
@@ -899,6 +908,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 _client.Dispose();
             }
 
+            _aggregator.DisposeSafely();
             _ibAutomater?.Stop();
 
             _messagingRateLimiter.Dispose();
@@ -1001,7 +1011,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             ContractDetails details;
             if (_contractDetails.TryGetValue(GetUniqueKey(contract), out details))
             {
-                return (decimal) details.MinTick;
+                return (decimal)details.MinTick;
             }
 
             details = GetContractDetails(contract, symbol);
@@ -1011,7 +1021,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return 0;
             }
 
-            return (decimal) details.MinTick;
+            return (decimal)details.MinTick;
         }
 
         private ContractDetails GetContractDetails(Contract contract, Symbol symbol)
@@ -1258,7 +1268,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 _underlyings.Clear();
             }
 
-            Subscribe(null, subscribedSymbols);
+            Subscribe(subscribedSymbols);
         }
 
         /// <summary>
@@ -1758,7 +1768,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     break;
 
                 default:
-                    throw new InvalidEnumArgumentException("orderType", (int) orderType, typeof (OrderType));
+                    throw new InvalidEnumArgumentException("orderType", (int)orderType, typeof(OrderType));
             }
 
             order.BrokerId.Add(ibOrder.OrderId.ToStringInvariant());
@@ -1854,7 +1864,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case OrderDirection.Sell: return IB.ActionSide.Sell;
                 case OrderDirection.Hold: return IB.ActionSide.Undefined;
                 default:
-                    throw new InvalidEnumArgumentException("direction", (int) direction, typeof (OrderDirection));
+                    throw new InvalidEnumArgumentException("direction", (int)direction, typeof(OrderDirection));
             }
         }
 
@@ -2088,7 +2098,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns></returns>
         private string ConvertResolution(Resolution resolution)
         {
-            switch(resolution)
+            switch (resolution)
             {
                 case Resolution.Tick:
                 case Resolution.Second:
@@ -2198,7 +2208,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private static decimal RoundPrice(decimal input, decimal minTick)
         {
             if (minTick == 0) return minTick;
-            return Math.Round(input/minTick)*minTick;
+            return Math.Round(input / minTick) * minTick;
         }
 
         /// <summary>
@@ -2232,43 +2242,33 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private TimeSpan _brokerTimeDiff = new TimeSpan(0);
 
+        /// <summary>
+        /// Sets the job we're subscribing for
+        /// </summary>
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
+        {
+        }
 
         /// <summary>
-        /// IDataQueueHandler interface implementation
+        /// Subscribe to the specified configuration
         /// </summary>
-        ///
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            Tick[] ticks;
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
+            Subscribe(new[] { dataConfig.Symbol });
 
-            lock (_ticks)
-            {
-                ticks = _ticks.ToArray();
-                _ticks.Clear();
-            }
-
-            foreach (var tick in ticks)
-            {
-                yield return tick;
-
-                lock (_sync)
-                {
-                    if (_underlyings.ContainsKey(tick.Symbol))
-                    {
-                        var underlyingTick = tick.Clone();
-                        underlyingTick.Symbol = _underlyings[tick.Symbol];
-                        yield return underlyingTick;
-                    }
-                }
-            }
+            return enumerator;
         }
 
         /// <summary>
         /// Adds the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        private void Subscribe(IEnumerable<Symbol> symbols)
         {
             try
             {
@@ -2334,11 +2334,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
+        /// Removes the specified configuration
+        /// </summary>
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            _aggregator.Remove(dataConfig);
+        }
+
+        /// <summary>
         /// Removes the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        private void Unsubscribe(IEnumerable<Symbol> symbols)
         {
             try
             {
@@ -2647,16 +2656,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return;
             }
 
-            lock (_ticks)
+            if (tick.IsValid())
             {
-                if (tick.IsValid())
+                tick = new Tick(tick)
                 {
-                    tick = new Tick(tick)
-                    {
-                        Time = GetRealTimeTickTime(symbol)
-                    };
+                    Time = GetRealTimeTickTime(symbol)
+                };
 
-                    _ticks.Add(tick);
+                _aggregator.Update(tick);
+
+                if (_underlyings.ContainsKey(tick.Symbol))
+                {
+                    var underlyingTick = tick.Clone() as Tick;
+                    underlyingTick.Symbol = _underlyings[tick.Symbol];
+                    _aggregator.Update(underlyingTick);
                 }
             }
         }
@@ -2920,7 +2933,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var waitResult = 0;
                 while (waitResult == 0)
                 {
-                    waitResult = WaitHandle.WaitAny(new WaitHandle[] {dataDownloading, dataDownloaded}, timeOut*1000);
+                    waitResult = WaitHandle.WaitAny(new WaitHandle[] { dataDownloading, dataDownloaded }, timeOut * 1000);
                 }
 
                 Client.Error -= clientOnError;
@@ -3027,8 +3040,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ConcurrentDictionary<Symbol, int> _subscribedSymbols = new ConcurrentDictionary<Symbol, int>();
         private readonly ConcurrentDictionary<int, SubscriptionEntry> _subscribedTickers = new ConcurrentDictionary<int, SubscriptionEntry>();
         private readonly Dictionary<Symbol, Symbol> _underlyings = new Dictionary<Symbol, Symbol>();
-
-        private readonly List<Tick> _ticks = new List<Tick>();
 
         private class SubscriptionEntry
         {

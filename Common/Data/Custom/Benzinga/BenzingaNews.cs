@@ -18,36 +18,47 @@ using NodaTime;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using ProtoBuf;
 
 namespace QuantConnect.Data.Custom.Benzinga
 {
     /// <summary>
     /// News data powered by Benzinga - https://docs.benzinga.io/benzinga/newsfeed-v2.html
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class BenzingaNews : IndexedBaseData
     {
+        private List<string> _categories;
+        private List<string> _tags;
+        private List<Symbol> _symbols;
+
         /// <summary>
         /// Unique ID assigned to the article by Benzinga
         /// </summary>
         [JsonProperty("id")]
+        [ProtoMember(10)]
         public int Id { get; set; }
 
         /// <summary>
         /// Author of the article
         /// </summary>
         [JsonProperty("author")]
+        [ProtoMember(11)]
         public string Author { get; set; }
 
         /// <summary>
         /// Date the article was published
         /// </summary>
         [JsonProperty("created")]
+        [ProtoMember(12)]
         public DateTime CreatedAt { get; set; }
 
         /// <summary>
         /// Date that the article was revised on
         /// </summary>
         [JsonProperty("updated")]
+        [ProtoMember(13)]
         public DateTime UpdatedAt
         {
             get { return Time; }
@@ -58,31 +69,66 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// Title of the article published
         /// </summary>
         [JsonProperty("title")]
+        [ProtoMember(14)]
         public string Title { get; set; }
 
         /// <summary>
         /// Summary of the article's contents
         /// </summary>
         [JsonProperty("teaser")]
+        [ProtoMember(15)]
         public string Teaser { get; set; }
 
         /// <summary>
         /// Contents of the article
         /// </summary>
         [JsonProperty("body")]
+        [ProtoMember(16)]
         public string Contents { get; set; }
 
         /// <summary>
         /// Categories that relate to the article
         /// </summary>
         [JsonProperty("channels")]
-        public List<string> Categories { get; set; }
+        [ProtoMember(17)]
+        public List<string> Categories
+        {
+            get
+            {
+                if (_categories == null)
+                {
+                    _categories = new List<string>();
+                }
+                
+                return _categories;
+            } 
+            set
+            {
+                _categories = value;
+            }
+        }
 
         /// <summary>
         /// Symbols that this news article mentions
         /// </summary>
         [JsonProperty("stocks")]
-        public List<Symbol> Symbols { get; set; }
+        [ProtoMember(18)]
+        public List<Symbol> Symbols
+        {
+            get
+            {
+                if (_symbols == null)
+                {
+                    _symbols = new List<Symbol>();
+                }
+                
+                return _symbols;
+            }
+            set
+            {
+                _symbols = value;
+            }
+        }
 
         /// <summary>
         /// Additional tags that are not channels/categories, but are reoccuring
@@ -91,13 +137,29 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// celebrities, stock movements (i.e. 'Mid-day Losers' &amp; 'Mid-day Gainers').
         /// </summary>
         [JsonProperty("tags")]
-        public List<string> Tags { get; set; }
+        [ProtoMember(19)]
+        public List<string> Tags
+        {
+            get
+            {
+                if (_tags == null)
+                {
+                    _tags = new List<string>();
+                }
+                
+                return _tags;
+            }
+            set
+            {
+                _tags = value;
+            }
+        }
 
         /// <summary>
         /// Date that the article was revised on
         /// </summary>
         public override DateTime EndTime => UpdatedAt;
-
+        
         /// <summary>
         /// Determines the actual source from an index contained within a ticker folder
         /// </summary>
@@ -132,9 +194,9 @@ namespace QuantConnect.Data.Custom.Benzinga
         {
             if (isLiveMode)
             {
-                throw new NotImplementedException("BenzingaNews currently does not support live trading mode.");
+                throw new NotImplementedException("BenzingaNews currently does not support live trading mode."); 
             }
-
+            
             return new SubscriptionDataSource(
                 Path.Combine(
                     Globals.DataFolder,
@@ -214,9 +276,6 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// <returns>A clone of the instance</returns>
         public override BaseData Clone()
         {
-            var newCategories = new List<string>(Categories);
-            var newTags = new List<string>(Tags);
-
             return new BenzingaNews
             {
                 Id = Id,
@@ -226,9 +285,9 @@ namespace QuantConnect.Data.Custom.Benzinga
                 Title = Title,
                 Teaser = Teaser,
                 Contents = Contents,
-                Categories = newCategories,
-                Symbols = Symbols,
-                Tags = newTags,
+                Categories = Categories.ToList(),
+                Symbols = Symbols.ToList(),
+                Tags = Tags.ToList(),
 
                 Symbol = Symbol,
                 EndTime = EndTime

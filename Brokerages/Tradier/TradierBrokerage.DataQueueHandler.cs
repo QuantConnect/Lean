@@ -21,7 +21,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading;
 using Newtonsoft.Json;
 using NodaTime;
 using QuantConnect.Data;
@@ -48,52 +47,32 @@ namespace QuantConnect.Brokerages.Tradier
         private Stream _tradierStream;
 
         /// <summary>
-        /// Get a stream of ticks from the brokerage
+        /// Sets the job we're subscribing for
         /// </summary>
-        /// <returns>IEnumerable of BaseData</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
         {
-            IEnumerator<TradierStreamData> pipe = null;
-            do
-            {
-                if (_subscriptions.IsEmpty)
-                {
-                    Thread.Sleep(10);
-                    continue;
-                }
+        }
 
-                //If there's been an update to the subscriptions list; recreate the stream.
-                if (_refresh)
-                {
-                    var stream = Stream(GetTickers());
-                    pipe = stream.GetEnumerator();
-                    pipe.MoveNext();
-                    _refresh = false;
-                }
+        /// <summary>
+        /// Subscribe to the specified configuration
+        /// </summary>
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
+        {
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
+            Subscribe(new[] { dataConfig.Symbol });
 
-                if (pipe != null && pipe.Current != null)
-                {
-                    var tsd = pipe.Current;
-                    if (tsd.Type == "trade")
-                    {
-                        var tick = CreateTick(tsd);
-                        if (tick != null)
-                        {
-                            yield return tick;
-                        }
-                    }
-                    pipe.MoveNext();
-                }
-
-            } while (!_disconnect);
+            return enumerator;
         }
 
         /// <summary>
         /// Subscribe to a specific list of symbols
         /// </summary>
-        /// <param name="job">Live job to subscribe with</param>
         /// <param name="symbols">List of symbols to subscribe to</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        private void Subscribe(IEnumerable<Symbol> symbols)
         {
             //Add the symbols to the list if they aren't there already.
             foreach (var symbol in symbols.Where(x => !x.Value.Contains("-UNIVERSE-")))
@@ -109,11 +88,20 @@ namespace QuantConnect.Brokerages.Tradier
         }
 
         /// <summary>
+        /// Removes the specified configuration
+        /// </summary>
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            _aggregator.Remove(dataConfig);
+        }
+
+        /// <summary>
         /// Remove the symbol from the subscription list.
         /// </summary>
-        /// <param name="job">Live Job to subscribe with</param>
         /// <param name="symbols">List of symbols to unsubscribe from</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        private void Unsubscribe(IEnumerable<Symbol> symbols)
         {
             //Remove the symbols from the subscription list if there.
             foreach (var symbol in symbols)
@@ -184,7 +172,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 Exchange = tsd.TradeExchange,
                 TickType = TickType.Trade,
-                Quantity = (int) tsd.TradeSize,
+                Quantity = (int)tsd.TradeSize,
                 Time = time,
                 EndTime = time,
                 Symbol = symbol,

@@ -62,11 +62,6 @@ namespace QuantConnect.Brokerages.Oanda
         protected readonly IConnectionHandler TransactionsConnectionHandler;
 
         /// <summary>
-        /// The list of ticks received
-        /// </summary>
-        protected readonly List<Tick> Ticks = new List<Tick>();
-
-        /// <summary>
         /// The list of currently subscribed symbols
         /// </summary>
         protected HashSet<Symbol> SubscribedSymbols = new HashSet<Symbol>();
@@ -90,6 +85,11 @@ namespace QuantConnect.Brokerages.Oanda
         /// The security provider
         /// </summary>
         protected ISecurityProvider SecurityProvider;
+
+        /// <summary>
+        /// The data aggregator
+        /// </summary>
+        protected IDataAggregator Aggregator;
 
         /// <summary>
         /// The Oanda enviroment
@@ -127,11 +127,12 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="symbolMapper">The symbol mapper.</param>
         /// <param name="orderProvider">The order provider.</param>
         /// <param name="securityProvider">The holdings provider.</param>
+        /// <param name="aggregator">Consolidate ticks</param>
         /// <param name="environment">The Oanda environment (Trade or Practice)</param>
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
         /// <param name="agent">The Oanda agent string</param>
-        protected OandaRestApiBase(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent)
+        protected OandaRestApiBase(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, Environment environment, string accessToken, string accountId, string agent)
             : base("Oanda Brokerage")
         {
             SymbolMapper = symbolMapper;
@@ -141,6 +142,7 @@ namespace QuantConnect.Brokerages.Oanda
             AccessToken = accessToken;
             AccountId = accountId;
             Agent = agent;
+            Aggregator = aggregator;
 
             PricingConnectionHandler = new DefaultConnectionHandler { MaximumIdleTimeSpan = TimeSpan.FromSeconds(20) };
             PricingConnectionHandler.ConnectionLost += OnPricingConnectionLost;
@@ -222,6 +224,8 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override void Dispose()
         {
+            Aggregator.DisposeSafely();
+
             PricingConnectionHandler.ConnectionLost -= OnPricingConnectionLost;
             PricingConnectionHandler.ConnectionRestored -= OnPricingConnectionRestored;
             PricingConnectionHandler.ReconnectRequested -= OnPricingReconnectRequested;
@@ -322,25 +326,32 @@ namespace QuantConnect.Brokerages.Oanda
         public abstract IEnumerable<QuoteBar> DownloadQuoteBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone);
 
         /// <summary>
-        /// Get the next ticks from the live trading data queue
+        /// Subscribe to the specified configuration
         /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            lock (Ticks)
-            {
-                var copy = Ticks.ToArray();
-                Ticks.Clear();
-                return copy;
-            }
+            var enumerator = Aggregator.Add(dataConfig, newDataAvailableHandler); ;
+            Subscribe(new[] { dataConfig.Symbol });
+
+            return enumerator;
+        }
+
+        /// <summary>
+        /// Sets the job we're subscribing for
+        /// </summary>
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
+        {
         }
 
         /// <summary>
         /// Adds the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        private void Subscribe(IEnumerable<Symbol> symbols)
         {
             lock (LockerSubscriptions)
             {
@@ -363,11 +374,20 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
+        /// Removes the specified configuration
+        /// </summary>
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            Aggregator.Remove(dataConfig);
+        }
+
+        /// <summary>
         /// Removes the specified symbols from the subscription
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        private void Unsubscribe(IEnumerable<Symbol> symbols)
         {
             lock (LockerSubscriptions)
             {
@@ -466,6 +486,15 @@ namespace QuantConnect.Brokerages.Oanda
 
                 PricingConnectionHandler.EnableMonitoring(true);
             }
+        }
+
+        /// <summary>
+        /// Emit ticks
+        /// </summary>
+        /// <param name="tick">The new tick to emit</param>
+        protected void EmitTick(Tick tick)
+        {
+            Aggregator.Update(tick);
         }
     }
 }

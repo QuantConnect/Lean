@@ -30,6 +30,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using QuantConnect.Data;
 
 namespace QuantConnect.Brokerages.GDAX
 {
@@ -49,6 +50,7 @@ namespace QuantConnect.Brokerages.GDAX
         private volatile bool _streamLocked;
         private readonly ConcurrentDictionary<Symbol, DefaultOrderBook> _orderBooks = new ConcurrentDictionary<Symbol, DefaultOrderBook>();
         private readonly bool _isDataQueueHandler;
+        protected readonly IDataAggregator _aggregator;
 
         // GDAX has different rate limits for public and private endpoints
         // https://docs.gdax.com/#rate-limits
@@ -66,11 +68,6 @@ namespace QuantConnect.Brokerages.GDAX
         protected virtual string[] ChannelNames { get; } = { "heartbeat", "user" };
 
         /// <summary>
-        /// Locking object for the Ticks list in the data queue handler
-        /// </summary>
-        protected readonly object TickLocker = new object();
-
-        /// <summary>
         /// Constructor for brokerage
         /// </summary>
         /// <param name="wssUrl">websockets url</param>
@@ -81,14 +78,16 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="passPhrase">pass phrase</param>
         /// <param name="algorithm">the algorithm instance is required to retreive account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
+        /// <param name="aggregator">consolidate ticks</param>
         public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
-            IPriceProvider priceProvider)
+            IPriceProvider priceProvider, IDataAggregator aggregator)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.GDAX, "GDAX")
         {
             FillSplit = new ConcurrentDictionary<long, GDAXFill>();
             _passPhrase = passPhrase;
             _algorithm = algorithm;
             _priceProvider = priceProvider;
+            _aggregator = aggregator;
 
             WebSocket.Open += (sender, args) =>
             {
@@ -445,20 +444,17 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="askSize">The ask price</param>
         private void EmitQuoteTick(Symbol symbol, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
         {
-            lock (TickLocker)
+            _aggregator.Update(new Tick
             {
-                Ticks.Add(new Tick
-                {
-                    AskPrice = askPrice,
-                    BidPrice = bidPrice,
-                    Value = (askPrice + bidPrice) / 2m,
-                    Time = DateTime.UtcNow,
-                    Symbol = symbol,
-                    TickType = TickType.Quote,
-                    AskSize = askSize,
-                    BidSize = bidSize
-                });
-            }
+                AskPrice = askPrice,
+                BidPrice = bidPrice,
+                Value = (askPrice + bidPrice) / 2m,
+                Time = DateTime.UtcNow,
+                Symbol = symbol,
+                TickType = TickType.Quote,
+                AskSize = askSize,
+                BidSize = bidSize
+            });
         }
 
         /// <summary>
@@ -468,17 +464,14 @@ namespace QuantConnect.Brokerages.GDAX
         {
             var symbol = ConvertProductId(message.ProductId);
 
-            lock (TickLocker)
+            _aggregator.Update(new Tick
             {
-                Ticks.Add(new Tick
-                {
-                    Value = message.Price,
-                    Time = DateTime.UtcNow,
-                    Symbol = symbol,
-                    TickType = TickType.Trade,
-                    Quantity = message.Size
-                });
-            }
+                Value = message.Price,
+                Time = DateTime.UtcNow,
+                Symbol = symbol,
+                TickType = TickType.Trade,
+                Quantity = message.Size
+            });
         }
 
         /// <summary>
@@ -544,7 +537,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="symbol"></param>
         public void PollTick(Symbol symbol)
         {
-            int delay = 36000000;
+            int delay = 36000;
             var token = _canceller.Token;
             var listener = Task.Factory.StartNew(() =>
             {
@@ -554,18 +547,21 @@ namespace QuantConnect.Brokerages.GDAX
                 {
                     var rate = GetConversionRate(symbol);
 
-                    lock (TickLocker)
+                    var latest = new Tick
                     {
-                        var latest = new Tick
-                        {
-                            Value = rate,
-                            Time = DateTime.UtcNow,
-                            Symbol = symbol
-                        };
-                        Ticks.Add(latest);
+                        Value = rate,
+                        Time = DateTime.UtcNow,
+                        Symbol = symbol
+                    };
+                    _aggregator.Update(latest);
+
+                    int count = 0;
+                    while (++count < delay)
+                    {
+                        if (token.IsCancellationRequested) break;
+                        Thread.Sleep(1000);
                     }
 
-                    Thread.Sleep(delay);
                     if (token.IsCancellationRequested) break;
                 }
 
@@ -598,7 +594,7 @@ namespace QuantConnect.Brokerages.GDAX
         {
             if (WebSocket.IsOpen)
             {
-                WebSocket.Send(JsonConvert.SerializeObject(new {type = "unsubscribe", channels = ChannelNames}));
+                WebSocket.Send(JsonConvert.SerializeObject(new { type = "unsubscribe", channels = ChannelNames }));
             }
         }
 

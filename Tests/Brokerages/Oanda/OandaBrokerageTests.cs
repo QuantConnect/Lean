@@ -22,9 +22,12 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Oanda;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 using Environment = QuantConnect.Brokerages.Oanda.Environment;
 
 namespace QuantConnect.Tests.Brokerages.Oanda
@@ -41,8 +44,9 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             var environment = Config.Get("oanda-environment").ConvertTo<Environment>();
             var accessToken = Config.Get("oanda-access-token");
             var accountId = Config.Get("oanda-account-id");
+            var aggregator = new AggregationManager();
 
-            return new OandaBrokerage(orderProvider, securityProvider, environment, accessToken, accountId);
+            return new OandaBrokerage(orderProvider, securityProvider, aggregator, environment, accessToken, accountId);
         }
 
         /// <summary>
