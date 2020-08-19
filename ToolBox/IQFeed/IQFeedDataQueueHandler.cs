@@ -222,7 +222,6 @@ namespace QuantConnect.ToolBox.IQFeed
                 // Launch the IQ Feed Application:
                 Log.Trace("IQFeed.Connect(): Launching client...");
 
-               
                 if (OS.IsWindows)
                 {
                     // IQConnect is only supported on Windows

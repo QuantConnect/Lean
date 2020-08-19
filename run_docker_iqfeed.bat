@@ -13,10 +13,7 @@ REM WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 REM See the License for the specific language governing permissions and
 REM limitations under the License.
 
-set docker_params=--expose 5009^
-                  --expose 9100^
-                  --expose 9200^
-                  --expose 9300
+set docker_params=
 
 set iqconnect_exec="C:\Program Files (x86)\DTN\IQFeed\iqconnect.exe"
 

@@ -1,7 +1,6 @@
 # Setup IQFeed 
 
-## 1. Sign up for IQFeed.  
-**SPECIAL OFFER (Save \$50 - No Startup Fee)** [Get Free Trial Now](https://bit.ly/349vUCT)
+## 1. Sign up for [IQFeed](https://www.iqfeed.net/trent/index.cfm?displayaction=start&promo=1996499)  
 
 ## 2. Install [IQFeed Client](http://www.iqfeed.net/index.cfm?displayaction=support&section=download)
 
