@@ -102,7 +102,6 @@ namespace QuantConnect.Python
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-
         }
     }
 }

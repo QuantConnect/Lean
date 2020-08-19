@@ -25,7 +25,6 @@ namespace QuantConnect.Tests.Python
     [TestFixture]
     public class DataConsolidatorPythonWrapperTests
     {
-
         [Test]
         public void UpdatePyConsolidator()
         {
