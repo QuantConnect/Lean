@@ -66,85 +66,92 @@ namespace QuantConnect.Lean.Launcher
             Log.FilePath = Path.Combine(Config.Get("results-destination-folder"), "log.txt");
             Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
 
-            //Name thread for the profiler:
-            Thread.CurrentThread.Name = "Algorithm Analysis Thread";
-            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + Globals.Version + " Mode: " + mode + " (" + (Environment.Is64BitProcess ? "64" : "32") + "bit)");
-            Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
-
-            //Import external libraries specific to physical server location (cloud/local)
-            LeanEngineSystemHandlers leanEngineSystemHandlers;
             try
             {
-                leanEngineSystemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
-            }
-            catch (CompositionException compositionException)
-            {
-                Log.Error("Engine.Main(): Failed to load library: " + compositionException);
-                throw;
-            }
+                //Name thread for the profiler:
+                Thread.CurrentThread.Name = "Algorithm Analysis Thread";
+                Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + Globals.Version + " Mode: " + mode + " (" + (Environment.Is64BitProcess ? "64" : "32") + "bit)");
+                Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
 
-            //Setup packeting, queue and controls system: These don't do much locally.
-            leanEngineSystemHandlers.Initialize();
+                //Import external libraries specific to physical server location (cloud/local)
+                LeanEngineSystemHandlers leanEngineSystemHandlers;
+                try
+                {
+                    leanEngineSystemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
+                }
+                catch (CompositionException compositionException)
+                {
+                    Log.Error("Engine.Main(): Failed to load library: " + compositionException);
+                    throw;
+                }
 
-            //-> Pull job from QuantConnect job queue, or, pull local build:
-            string assemblyPath;
-            var job = leanEngineSystemHandlers.JobQueue.NextJob(out assemblyPath);
+                //Setup packeting, queue and controls system: These don't do much locally.
+                leanEngineSystemHandlers.Initialize();
 
-            if (job == null)
-            {
-                const string jobNullMessage = "Engine.Main(): Sorry we could not process this algorithm request.";
-                Log.Error(jobNullMessage);
-                throw new ArgumentException(jobNullMessage);
-            }
+                //-> Pull job from QuantConnect job queue, or, pull local build:
+                string assemblyPath;
+                var job = leanEngineSystemHandlers.JobQueue.NextJob(out assemblyPath);
 
-            LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
-            try
-            {
-                leanEngineAlgorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
-            }
-            catch (CompositionException compositionException)
-            {
-                Log.Error("Engine.Main(): Failed to load library: " + compositionException);
-                throw;
-            }
+                if (job == null)
+                {
+                    const string jobNullMessage = "Engine.Main(): Sorry we could not process this algorithm request.";
+                    Log.Error(jobNullMessage);
+                    throw new ArgumentException(jobNullMessage);
+                }
 
-            // if the job version doesn't match this instance version then we can't process it
-            // we also don't want to reprocess redelivered jobs
-            if (VersionHelper.IsNotEqualVersion(job.Version) || job.Redelivered)
-            {
-                Log.Error("Engine.Run(): Job Version: " + job.Version + "  Deployed Version: " + Globals.Version + " Redelivered: " + job.Redelivered);
-                //Tiny chance there was an uncontrolled collapse of a server, resulting in an old user task circulating.
-                //In this event kill the old algorithm and leave a message so the user can later review.
-                leanEngineSystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, _collapseMessage);
-                leanEngineSystemHandlers.Notify.SetAuthentication(job);
-                leanEngineSystemHandlers.Notify.Send(new RuntimeErrorPacket(job.UserId, job.AlgorithmId, _collapseMessage));
-                leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
-                return;
-            }
+                LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
+                try
+                {
+                    leanEngineAlgorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
+                }
+                catch (CompositionException compositionException)
+                {
+                    Log.Error("Engine.Main(): Failed to load library: " + compositionException);
+                    throw;
+                }
 
-            try
-            {
-                var algorithmManager = new AlgorithmManager(liveMode, job);
+                // if the job version doesn't match this instance version then we can't process it
+                // we also don't want to reprocess redelivered jobs
+                if (VersionHelper.IsNotEqualVersion(job.Version) || job.Redelivered)
+                {
+                    Log.Error("Engine.Run(): Job Version: " + job.Version + "  Deployed Version: " + Globals.Version + " Redelivered: " + job.Redelivered);
+                    //Tiny chance there was an uncontrolled collapse of a server, resulting in an old user task circulating.
+                    //In this event kill the old algorithm and leave a message so the user can later review.
+                    leanEngineSystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, _collapseMessage);
+                    leanEngineSystemHandlers.Notify.SetAuthentication(job);
+                    leanEngineSystemHandlers.Notify.Send(new RuntimeErrorPacket(job.UserId, job.AlgorithmId, _collapseMessage));
+                    leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
+                    return;
+                }
 
-                leanEngineSystemHandlers.LeanManager.Initialize(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, job, algorithmManager);
+                try
+                {
+                    var algorithmManager = new AlgorithmManager(liveMode, job);
 
-                var engine = new Engine.Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode);
-                engine.Run(job, algorithmManager, assemblyPath, WorkerThread.Instance);
-            }
+                    leanEngineSystemHandlers.LeanManager.Initialize(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, job, algorithmManager);
+
+                    var engine = new Engine.Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode);
+                    engine.Run(job, algorithmManager, assemblyPath, WorkerThread.Instance);
+                }
+                finally
+                {
+                    //Delete the message from the job queue:
+                    leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
+                    Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
+
+                    // clean up resources
+                    leanEngineSystemHandlers.Dispose();
+                    leanEngineAlgorithmHandlers.Dispose();
+                    Log.Trace("Program.Main(): Exiting Lean...");
+                
+                    Log.LogHandler.Dispose();
+                    Environment.Exit(0);
+                }
+            } 
             finally
             {
-                //Delete the message from the job queue:
-                leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
-                Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
-
-                // clean up resources
-                leanEngineSystemHandlers.Dispose();
-                leanEngineAlgorithmHandlers.Dispose();
+                // If anything breaks we still need to flush our logging thread
                 Log.LogHandler.Dispose();
-
-                Log.Trace("Program.Main(): Exiting Lean...");
-
-                Environment.Exit(0);
             }
         }
     }
