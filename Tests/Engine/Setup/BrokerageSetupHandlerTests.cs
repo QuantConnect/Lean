@@ -298,6 +298,46 @@ namespace QuantConnect.Tests.Engine.Setup
             Assert.Greater(algorithm.UtcTime, time);
         }
 
+        [Test]
+        public void HasErrorWithZeroTotalPortfolioValue()
+        {
+            var algorithm = new TestAlgorithm();
+
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = new LiveNodePacket
+            {
+                UserId = 1,
+                ProjectId = 1,
+                DeployId = "1",
+                Brokerage = "TestBrokerage",
+                DataQueueHandler = "none",
+                Controls = new Controls { RamAllocation = 4096 } // no real limit
+            };
+
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var brokerage = new Mock<IBrokerage>();
+            var objectStore = new Mock<IObjectStore>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>());
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
+
+            var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+
+            Assert.IsFalse(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
+
+            Assert.AreEqual(1, setupHandler.Errors.Count);
+
+            Assert.That(setupHandler.Errors[0].Message.Contains("No cash balances or holdings were found in the brokerage account."));
+        }
+
         private static TestCaseData[] GetExistingHoldingsAndOrdersTestCaseData()
         {
             return new[]
@@ -476,6 +516,18 @@ namespace QuantConnect.Tests.Engine.Setup
                 GetOpenOrders(algorithm, resultHandler, transactionHandler, brokerage, _supportedSecurityTypes, Resolution.Second);
             }
         }
+    }
+
+    internal class TestBrokerageFactory : BrokerageFactory
+    {
+        public TestBrokerageFactory() : base(typeof(TestBrokerage))
+        {
+        }
+
+        public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>();
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.TestBrokerageModel();
+        public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm) => new TestBrokerage();
+        public override void Dispose() { }
     }
 
     internal class TestBrokerage : Brokerage
