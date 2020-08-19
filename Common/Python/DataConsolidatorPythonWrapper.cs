@@ -28,15 +28,6 @@ namespace QuantConnect.Python
         private readonly dynamic _consolidator;
 
         /// <summary>
-        /// Constructor for initialising the <see cref="DataConsolidatorPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
-        /// </summary>
-        /// <param name="consolidator">Represents a custom python consolidator</param>
-        public DataConsolidatorPythonWrapper(PyObject consolidator)
-        {
-            _consolidator = consolidator;
-        }
-
-        /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
         /// has not produced any data yet.
         /// </summary>
@@ -73,6 +64,15 @@ namespace QuantConnect.Python
         /// Event handler that fires when a new piece of data is produced
         /// </summary>
         public event DataConsolidatedHandler DataConsolidated;
+
+        /// <summary>
+        /// Constructor for initialising the <see cref="DataConsolidatorPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
+        /// </summary>
+        /// <param name="consolidator">Represents a custom python consolidator</param>
+        public DataConsolidatorPythonWrapper(PyObject consolidator)
+        {
+            _consolidator = consolidator;
+        }
         
         /// <summary>
         /// Scans this consolidator to see if it should emit a bar due to time passing
