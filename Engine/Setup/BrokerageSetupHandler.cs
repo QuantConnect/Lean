@@ -361,12 +361,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     return false;
                 }
 
-                if (algorithm.Portfolio.TotalPortfolioValue == 0)
-                {
-                    AddInitializationError("No cash balances or holdings were found in the brokerage account.");
-                    return false;
-                }
-
                 //Finalize Initialization
                 algorithm.PostInitialize();
 
