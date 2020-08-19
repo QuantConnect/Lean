@@ -299,7 +299,7 @@ namespace QuantConnect.Tests.Engine.Setup
         }
 
         [Test]
-        public void HasErrorWithNoCashBalances()
+        public void HasErrorWithZeroTotalPortfolioValue()
         {
             var algorithm = new TestAlgorithm();
 
@@ -335,7 +335,7 @@ namespace QuantConnect.Tests.Engine.Setup
 
             Assert.AreEqual(1, setupHandler.Errors.Count);
 
-            Assert.That(setupHandler.Errors[0].Message.Contains("No cash balances were found in the brokerage account."));
+            Assert.That(setupHandler.Errors[0].Message.Contains("No cash balances or holdings were found in the brokerage account."));
         }
 
         private static TestCaseData[] GetExistingHoldingsAndOrdersTestCaseData()
