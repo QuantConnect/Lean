@@ -293,6 +293,12 @@ namespace QuantConnect.Lean.Engine.Setup
                     return false;
                 }
 
+                if (algorithm.Portfolio.CashBook.TotalValueInAccountCurrency == 0)
+                {
+                    AddInitializationError("No cash balances were found in the brokerage account.");
+                    return false;
+                }
+
                 var supportedSecurityTypes = new HashSet<SecurityType>
                 {
                     SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future, SecurityType.Crypto
