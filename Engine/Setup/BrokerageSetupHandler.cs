@@ -361,16 +361,17 @@ namespace QuantConnect.Lean.Engine.Setup
                     return false;
                 }
 
+                //Finalize Initialization
+                algorithm.PostInitialize();
+
+                BaseSetupHandler.SetupCurrencyConversions(algorithm, parameters.UniverseSelection);
+
                 if (algorithm.Portfolio.TotalPortfolioValue == 0)
                 {
                     AddInitializationError("No cash balances or holdings were found in the brokerage account.");
                     return false;
                 }
 
-                //Finalize Initialization
-                algorithm.PostInitialize();
-
-                BaseSetupHandler.SetupCurrencyConversions(algorithm, parameters.UniverseSelection);
                 //Set the starting portfolio value for the strategy to calculate performance:
                 StartingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
                 StartingDate = DateTime.Now;
