@@ -9,6 +9,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.IQFeed
 {
@@ -18,13 +19,15 @@ namespace QuantConnect.ToolBox.IQFeed
     /// </summary>
     public class IQFeedFileHistoryProvider
     {
-        private readonly ISymbolMapper _symbolMapper;
         private readonly LookupClient _lookupClient;
+        private readonly ISymbolMapper _symbolMapper;
+        private readonly MarketHoursDatabase _marketHoursDatabase;
 
-        public IQFeedFileHistoryProvider(LookupClient lookupClient, ISymbolMapper symbolMapper)
+        public IQFeedFileHistoryProvider(LookupClient lookupClient, ISymbolMapper symbolMapper, MarketHoursDatabase marketHoursDatabase)
         {
             _lookupClient = lookupClient;
             _symbolMapper = symbolMapper;
+            _marketHoursDatabase = marketHoursDatabase;
         }
 
         public IEnumerable<BaseData> ProcessHistoryRequests(HistoryRequest request)
@@ -103,12 +106,14 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <returns>Converted Tick</returns>
         private IEnumerable<BaseData> GetDataFromTickMessages(string filename, HistoryRequest request, bool isEquity)
         {
+            var dataTimeZone = _marketHoursDatabase.GetDataTimeZone(Market.USA, request.Symbol, request.Symbol.SecurityType);
+
             // We need to discard ticks which are not impacting the price, i.e those having BasisForLast = O
             // To get a better understanding how IQFeed is resampling ticks, have a look to this algorithm:
             // https://github.com/mathpaquette/IQFeed.CSharpApiClient/blob/1b33250e057dfd6cd77e5ee35fa16aebfc8fbe79/src/IQFeed.CSharpApiClient.Extensions/Lookup/Historical/Resample/TickMessageExtensions.cs#L41
             foreach (var tick in TickMessage.ParseFromFile(filename).Where(t => t.BasisForLast != 'O'))
             {
-                var time = isEquity ? tick.Timestamp : tick.Timestamp.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
+                var time = isEquity ? tick.Timestamp : tick.Timestamp.ConvertTo(TimeZones.NewYork, dataTimeZone);
                 yield return new Tick(time, request.Symbol, (decimal)tick.Last, (decimal)tick.Bid, (decimal)tick.Ask)
                 { Quantity = tick.LastSize };
             }
@@ -125,10 +130,12 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <returns>Converted TradeBar</returns>
         private IEnumerable<BaseData> GetDataFromDailyMessages(string filename, HistoryRequest request, bool isEquity)
         {
+            var dataTimeZone = _marketHoursDatabase.GetDataTimeZone(Market.USA, request.Symbol, request.Symbol.SecurityType);
+
             foreach (var daily in DailyWeeklyMonthlyMessage.ParseFromFile(filename))
             {
                 var dstartTime = daily.Timestamp.Date;
-                if (!isEquity) dstartTime = dstartTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
+                if (!isEquity) dstartTime = dstartTime.ConvertTo(TimeZones.NewYork, dataTimeZone);
                 yield return new TradeBar(
                     dstartTime,
                     request.Symbol,
@@ -153,10 +160,12 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <returns>Converted TradeBar</returns>
         private IEnumerable<BaseData> GetDataFromIntervalMessages(string filename, HistoryRequest request, bool isEquity)
         {
+            var dataTimeZone = _marketHoursDatabase.GetDataTimeZone(Market.USA, request.Symbol, request.Symbol.SecurityType);
+
             foreach (var interval in IntervalMessage.ParseFromFile(filename))
             {
                 var istartTime = interval.Timestamp - request.Resolution.ToTimeSpan();
-                if (!isEquity) istartTime = istartTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
+                if (!isEquity) istartTime = istartTime.ConvertTo(TimeZones.NewYork, dataTimeZone);
                 yield return new TradeBar(
                     istartTime,
                     request.Symbol,

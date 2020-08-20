@@ -12,7 +12,6 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
     /// </summary>
     public class IQFeedDataDownloader : IDataDownloader
     {
-        // private readonly HistoryPort _historyPort;
         private readonly IQFeedFileHistoryProvider _fileHistoryProvider;
 
         /// <summary>
