@@ -231,11 +231,15 @@ namespace QuantConnect.ToolBox.IQFeed
         {
             try
             {
-                //Launch the IQ Feed Application:
+                // Launch the IQ Feed Application:
                 Log.Trace("IQFeed.Connect(): Launching client...");
 
-                var connector = new IQConnect(Config.Get("iqfeed-productName"), "1.0");
-                connector.Launch();
+                if (OS.IsWindows)
+                {
+                    // IQConnect is only supported on Windows
+                    var connector = new IQConnect(Config.Get("iqfeed-productName"), "1.0");
+                    connector.Launch();
+                }
 
                 // Initialise one admin port
                 Log.Trace("IQFeed.Connect(): Connecting to admin...");

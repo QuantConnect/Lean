@@ -87,6 +87,12 @@ set command=docker run --rm --mount type=bind,source=%config_file%,target=/Lean/
     --name LeanEngine^
     -p 5678:5678
 
+REM If docker_params exist, add them to docker command
+if not "%docker_params%" == "" (
+    set command=%command% %docker_params%
+    echo Applying additional docker parameters to docker command
+)
+
 REM If the csharp dll and pdb are present, mount them
 if not exist "%csharp_dll%" (
     echo Csharp file at '%csharp_dll%' does not exist; no CSharp files will be mounted
