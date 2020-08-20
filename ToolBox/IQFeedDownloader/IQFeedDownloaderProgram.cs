@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using IQFeed.CSharpApiClient;
 using IQFeed.CSharpApiClient.Lookup;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.IQFeed;
@@ -86,8 +87,32 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
                      var data = downloader.Get(symbol, request.Resolution, startDate, endDate);
 
                      // Write the data
-                     var writer = new LeanDataWriter(request.Resolution, symbol, dataDirectory);
-                     writer.Write(data);
+                     if (request.Resolution != Resolution.Tick)
+                     {
+                         var writer = new LeanDataWriter(request.Resolution, symbol, dataDirectory);
+                         writer.Write(data);
+                         return;
+                     }
+
+                     // Write the data (ticks)
+                     var ticksByType = data.Cast<Tick>().GroupBy(x => x.TickType);
+                     var tradeWriter = new LeanDataWriter(request.Resolution, symbol, dataDirectory, TickType.Trade);
+                     var quoteWriter = new LeanDataWriter(request.Resolution, symbol, dataDirectory, TickType.Quote);
+
+                     foreach (var ticks in ticksByType)
+                     {
+                         switch (ticks.Key)
+                         {
+                             case TickType.Trade:
+                                 tradeWriter.Write(ticks);
+                                 break;
+                             case TickType.Quote:
+                                 quoteWriter.Write(ticks);
+                                 break;
+                             default:
+                                 throw new NotSupportedException();
+                         }
+                     }
                  });
                 sw.Stop();
 

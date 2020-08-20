@@ -111,11 +111,29 @@ namespace QuantConnect.ToolBox.IQFeed
             // We need to discard ticks which are not impacting the price, i.e those having BasisForLast = O
             // To get a better understanding how IQFeed is resampling ticks, have a look to this algorithm:
             // https://github.com/mathpaquette/IQFeed.CSharpApiClient/blob/1b33250e057dfd6cd77e5ee35fa16aebfc8fbe79/src/IQFeed.CSharpApiClient.Extensions/Lookup/Historical/Resample/TickMessageExtensions.cs#L41
+            
+            // trades
             foreach (var tick in TickMessage.ParseFromFile(filename).Where(t => t.BasisForLast != 'O'))
             {
                 var time = isEquity ? tick.Timestamp : tick.Timestamp.ConvertTo(TimeZones.NewYork, dataTimeZone);
-                yield return new Tick(time, request.Symbol, (decimal)tick.Last, (decimal)tick.Bid, (decimal)tick.Ask)
-                { Quantity = tick.LastSize };
+                yield return new Tick()
+                {
+                    Value = tick.TickId,
+                    Time = time,
+                    Symbol = request.Symbol,
+                    Quantity = tick.LastSize,
+                    Exchange = tick.TradeMarketCenter.ToStringInvariant(),
+                    SaleCondition = tick.TradeConditions,
+                    BidSize = 0,    // not provided by IQFeed on history
+                    AskSize = 0     // not provided by IQFeed on history
+                };
+            }
+
+            // quotes
+            foreach (var tick in TickMessage.ParseFromFile(filename).Where(t => t.BasisForLast != 'O'))
+            {
+                var time = isEquity ? tick.Timestamp : tick.Timestamp.ConvertTo(TimeZones.NewYork, dataTimeZone);
+                yield return new Tick(time, request.Symbol, (decimal)tick.Last, (decimal)tick.Bid, (decimal)tick.Ask);
             }
 
             File.Delete(filename);
