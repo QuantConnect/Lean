@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void TestTradeBarsWithVolume()
         {
-            var emv = new EaseOfMovementValue();
+            var emv = (EaseOfMovementValue)CreateIndicator();
             foreach (var data in TestHelper.GetDataStream(4))
             {
                 var tradeBar = new TradeBar
@@ -47,12 +47,14 @@ namespace QuantConnect.Tests.Indicators
                     Volume = data.Value
                 };
                 emv.Update(tradeBar);
+
+                Assert.IsTrue(emv.IsReady);
             }
         }
 
         protected override Action<IndicatorBase<TradeBar>, double> Assertion
         {
-            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 1); }
+            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 0.000001); }
         }  
     }
 }
