@@ -283,6 +283,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     foreach (var cash in cashBalance)
                     {
                         Log.Trace("BrokerageSetupHandler.Setup(): Setting " + cash.Currency + " cash to " + cash.Amount);
+
                         algorithm.Portfolio.SetCash(cash.Currency, cash.Amount, 0);
                     }
                 }
@@ -365,6 +366,13 @@ namespace QuantConnect.Lean.Engine.Setup
                 algorithm.PostInitialize();
 
                 BaseSetupHandler.SetupCurrencyConversions(algorithm, parameters.UniverseSelection);
+
+                if (algorithm.Portfolio.TotalPortfolioValue == 0)
+                {
+                    AddInitializationError("No cash balances or holdings were found in the brokerage account.");
+                    return false;
+                }
+
                 //Set the starting portfolio value for the strategy to calculate performance:
                 StartingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
                 StartingDate = DateTime.Now;
