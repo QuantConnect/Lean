@@ -55,7 +55,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
 
             _timer = new Timer
             {
-                AutoReset = true,
+                AutoReset = false,
                 Enabled = true,
                 Interval = 1000,
             };
@@ -70,6 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 lastCount = count;
                 lastTime = DateTime.Now;
                 PopulateQueue();
+                _timer.Reset();
             };
         }
 
@@ -142,6 +143,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 // emits 500k per second
                 for (var i = 0; i < 500000; i++)
                 {
+                    count++;
                     _aggregator.Update(new Tick
                     {
                         Time = DateTime.Now,

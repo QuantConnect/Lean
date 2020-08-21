@@ -39,6 +39,16 @@ namespace QuantConnect.Lean.Engine.Results
     public abstract class BaseResultsHandler
     {
         /// <summary>
+        /// The main loop update interval
+        /// </summary>
+        protected TimeSpan MainUpdateInterval = TimeSpan.FromSeconds(3);
+
+        /// <summary>
+        /// The chart update interval
+        /// </summary>
+        protected TimeSpan ChartUpdateInterval = TimeSpan.FromMinutes(1);
+
+        /// <summary>
         /// The last position consumed from the <see cref="ITransactionHandler.OrderEvents"/> by <see cref="GetDeltaOrders"/>
         /// </summary>
         protected int LastDeltaOrderPosition;
