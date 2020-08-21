@@ -348,7 +348,9 @@ namespace QuantConnect.Tests.Engine.Setup
 
             var isSuccess = hasCashBalance || hasHoldings;
 
-            Assert.AreEqual(isSuccess, setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+            var dataManager = new DataManagerStub(algorithm, new MockDataFeed(), true);
+
+            Assert.AreEqual(isSuccess, setupHandler.Setup(new SetupHandlerParameters(dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
                 transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
 
             if (isSuccess)
