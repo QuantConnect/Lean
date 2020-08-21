@@ -113,7 +113,7 @@ namespace QuantConnect.ToolBox.IQFeed
             {
                 var timestamp = tick.Timestamp.ConvertTo(TimeZones.NewYork, dataTimeZone);
 
-                // trades
+                // trade
                 yield return new Tick(
                     timestamp,
                     request.Symbol,
@@ -123,7 +123,7 @@ namespace QuantConnect.ToolBox.IQFeed
                     (decimal)tick.Last
                 );
 
-                // quotes
+                // quote
                 yield return new Tick(
                     timestamp,
                     request.Symbol,
@@ -152,7 +152,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
             foreach (var daily in DailyWeeklyMonthlyMessage.ParseFromFile(filename))
             {
-                var dStartTime = daily.Timestamp.Date;
+                var dStartTime = daily.Timestamp;
                 dStartTime = dStartTime.ConvertTo(TimeZones.NewYork, dataTimeZone);
                 yield return new TradeBar(
                     dStartTime,
@@ -182,7 +182,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
             foreach (var interval in IntervalMessage.ParseFromFile(filename))
             {
-                var iStartTime = interval.Timestamp - request.Resolution.ToTimeSpan();
+                var iStartTime = interval.Timestamp;
                 iStartTime = iStartTime.ConvertTo(TimeZones.NewYork, dataTimeZone);
                 yield return new TradeBar(
                     iStartTime,
