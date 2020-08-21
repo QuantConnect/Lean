@@ -57,17 +57,15 @@ namespace QuantConnect.ToolBox.IQFeed
                 end = null;
             }
 
-            var isEquity = request.Symbol.SecurityType == SecurityType.Equity;
-
             Log.Trace(
                 $"IQFeedHistoryProvider.ProcessHistoryRequests(): Submitting request: {request.Symbol.SecurityType.ToStringInvariant()}-{ticker}: " +
                 $"{request.Resolution.ToStringInvariant()} {start.ToStringInvariant()}->{(end ?? DateTime.UtcNow.AddMinutes(-1)).ToStringInvariant()}"
             );
 
-            return GetDataFromFile(request, ticker, start, end, isEquity);
+            return GetDataFromFile(request, ticker, start, end);
         }
 
-        private IEnumerable<BaseData> GetDataFromFile(HistoryRequest request, string ticker, DateTime startDate, DateTime? endDate, bool isEquity)
+        private IEnumerable<BaseData> GetDataFromFile(HistoryRequest request, string ticker, DateTime startDate, DateTime? endDate)
         {
             try
             {
@@ -77,16 +75,16 @@ namespace QuantConnect.ToolBox.IQFeed
                 {
                     case Resolution.Tick:
                         filename = _lookupClient.Historical.File.GetHistoryTickTimeframeAsync(ticker, startDate, endDate, dataDirection: DataDirection.Oldest).SynchronouslyAwaitTaskResult();
-                        return GetDataFromTickMessages(filename, request, isEquity);
+                        return GetDataFromTickMessages(filename, request);
 
                     case Resolution.Daily:
                         filename = _lookupClient.Historical.File.GetHistoryDailyTimeframeAsync(ticker, startDate, endDate, dataDirection: DataDirection.Oldest).SynchronouslyAwaitTaskResult();
-                        return GetDataFromDailyMessages(filename, request, isEquity);
+                        return GetDataFromDailyMessages(filename, request);
 
                     default:
                         var interval = new Interval(GetPeriodType(request.Resolution), 1);
                         filename = _lookupClient.Historical.File.GetHistoryIntervalTimeframeAsync(ticker, interval.Seconds, startDate, endDate, dataDirection: DataDirection.Oldest).SynchronouslyAwaitTaskResult();
-                        return GetDataFromIntervalMessages(filename, request, isEquity);
+                        return GetDataFromIntervalMessages(filename, request);
                 }
             }
             catch (Exception e)
@@ -104,17 +102,20 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <param name="request"></param>
         /// <param name="isEquity"></param>
         /// <returns>Converted Tick</returns>
-        private IEnumerable<BaseData> GetDataFromTickMessages(string filename, HistoryRequest request, bool isEquity)
+        private IEnumerable<BaseData> GetDataFromTickMessages(string filename, HistoryRequest request)
         {
+            var dataTimeZone = _marketHoursDatabase.GetDataTimeZone(request.Symbol.ID.Market, request.Symbol, request.Symbol.SecurityType);
+
             // We need to discard ticks which are not impacting the price, i.e those having BasisForLast = O
             // To get a better understanding how IQFeed is resampling ticks, have a look to this algorithm:
             // https://github.com/mathpaquette/IQFeed.CSharpApiClient/blob/1b33250e057dfd6cd77e5ee35fa16aebfc8fbe79/src/IQFeed.CSharpApiClient.Extensions/Lookup/Historical/Resample/TickMessageExtensions.cs#L41
-
             foreach (var tick in TickMessage.ParseFromFile(filename).Where(t => t.BasisForLast != 'O'))
             {
+                var timestamp = tick.Timestamp.ConvertTo(TimeZones.NewYork, dataTimeZone);
+
                 // trades
                 yield return new Tick(
-                    tick.Timestamp,
+                    timestamp,
                     request.Symbol,
                     tick.TradeConditions,
                     tick.TradeMarketCenter.ToStringInvariant(),
@@ -124,7 +125,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
                 // quotes
                 yield return new Tick(
-                    tick.Timestamp,
+                    timestamp,
                     request.Symbol,
                     tick.TradeConditions,
                     tick.TradeMarketCenter.ToStringInvariant(),
@@ -145,16 +146,16 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <param name="request"></param>
         /// <param name="isEquity"></param>
         /// <returns>Converted TradeBar</returns>
-        private IEnumerable<BaseData> GetDataFromDailyMessages(string filename, HistoryRequest request, bool isEquity)
+        private IEnumerable<BaseData> GetDataFromDailyMessages(string filename, HistoryRequest request)
         {
-            var dataTimeZone = _marketHoursDatabase.GetDataTimeZone(Market.USA, request.Symbol, request.Symbol.SecurityType);
+            var dataTimeZone = _marketHoursDatabase.GetDataTimeZone(request.Symbol.ID.Market, request.Symbol, request.Symbol.SecurityType);
 
             foreach (var daily in DailyWeeklyMonthlyMessage.ParseFromFile(filename))
             {
-                var dstartTime = daily.Timestamp.Date;
-                if (!isEquity) dstartTime = dstartTime.ConvertTo(TimeZones.NewYork, dataTimeZone);
+                var dStartTime = daily.Timestamp.Date;
+                dStartTime = dStartTime.ConvertTo(TimeZones.NewYork, dataTimeZone);
                 yield return new TradeBar(
-                    dstartTime,
+                    dStartTime,
                     request.Symbol,
                     (decimal)daily.Open,
                     (decimal)daily.High,
@@ -175,16 +176,16 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <param name="request"></param>
         /// <param name="isEquity"></param>
         /// <returns>Converted TradeBar</returns>
-        private IEnumerable<BaseData> GetDataFromIntervalMessages(string filename, HistoryRequest request, bool isEquity)
+        private IEnumerable<BaseData> GetDataFromIntervalMessages(string filename, HistoryRequest request)
         {
-            var dataTimeZone = _marketHoursDatabase.GetDataTimeZone(Market.USA, request.Symbol, request.Symbol.SecurityType);
+            var dataTimeZone = _marketHoursDatabase.GetDataTimeZone(request.Symbol.ID.Market, request.Symbol, request.Symbol.SecurityType);
 
             foreach (var interval in IntervalMessage.ParseFromFile(filename))
             {
-                var istartTime = interval.Timestamp - request.Resolution.ToTimeSpan();
-                if (!isEquity) istartTime = istartTime.ConvertTo(TimeZones.NewYork, dataTimeZone);
+                var iStartTime = interval.Timestamp - request.Resolution.ToTimeSpan();
+                iStartTime = iStartTime.ConvertTo(TimeZones.NewYork, dataTimeZone);
                 yield return new TradeBar(
-                    istartTime,
+                    iStartTime,
                     request.Symbol,
                     (decimal)interval.Open,
                     (decimal)interval.High,
