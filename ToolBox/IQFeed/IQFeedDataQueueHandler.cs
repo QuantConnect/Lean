@@ -603,22 +603,6 @@ namespace QuantConnect.ToolBox.IQFeed
         }
 
         /// <summary>
-        /// Returns true if this data provide can handle the specified symbol
-        /// </summary>
-        /// <param name="symbol">The symbol to be handled</param>
-        /// <returns>True if this data provider can get data for the symbol, false otherwise</returns>
-        private bool CanHandle(Symbol symbol)
-        {
-            var market = symbol.ID.Market;
-            var securityType = symbol.ID.SecurityType;
-            return
-                (securityType == SecurityType.Equity && market == Market.USA) ||
-                (securityType == SecurityType.Forex && market == Market.FXCM) ||
-                (securityType == SecurityType.Option && market == Market.USA) ||
-                (securityType == SecurityType.Future && IQFeedDataQueueUniverseProvider.FuturesExchanges.Values.Contains(market));
-        }
-
-        /// <summary>
         /// Populate request data
         /// </summary>
         public IEnumerable<Slice> ProcessHistoryRequests(HistoryRequest request)
@@ -690,6 +674,22 @@ namespace QuantConnect.ToolBox.IQFeed
         }
 
         /// <summary>
+        /// Returns true if this data provide can handle the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol to be handled</param>
+        /// <returns>True if this data provider can get data for the symbol, false otherwise</returns>
+        private bool CanHandle(Symbol symbol)
+        {
+            var market = symbol.ID.Market;
+            var securityType = symbol.ID.SecurityType;
+            return
+                (securityType == SecurityType.Equity && market == Market.USA) ||
+                (securityType == SecurityType.Forex && market == Market.FXCM) ||
+                (securityType == SecurityType.Option && market == Market.USA) ||
+                (securityType == SecurityType.Future && IQFeedDataQueueUniverseProvider.FuturesExchanges.Values.Contains(market));
+        }
+
+        /// <summary>
         /// Created new request ID for a given lookup type (tick, intraday bar, daily bar)
         /// </summary>
         /// <param name="lookupType">Lookup type: REQ_HST_TCK (tick), REQ_HST_DWM (daily) or REQ_HST_INT (intraday resolutions)</param>
@@ -699,7 +699,6 @@ namespace QuantConnect.ToolBox.IQFeed
         {
             return lookupType + id.ToStringInvariant("0000000");
         }
-
 
         /// <summary>
         /// Method called when a new Lookup event is fired

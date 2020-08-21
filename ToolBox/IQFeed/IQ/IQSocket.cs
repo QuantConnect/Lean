@@ -98,7 +98,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
         public static IPEndPoint GetEndPoint(PortType portType)
         {
-            return new IPEndPoint(GetIp(Config.Get("iqfeed-host")), GetPort(portType));
+            return new IPEndPoint(GetIp(Config.Get("iqfeed-host", "127.0.0.1")), GetPort(portType));
         }
 
         public static Socket GetSocket()
@@ -190,8 +190,5 @@ namespace QuantConnect.ToolBox.IQFeed
         private CultureInfo _enUS = new CultureInfo("en-US");
         #endregion
     }
- 
-
-
 }
  
