@@ -31,6 +31,7 @@ using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.Polygon.Messages;
 using QuantConnect.ToolBox.Polygon.Responses;
+using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using static QuantConnect.StringExtensions;
 
@@ -47,8 +48,10 @@ namespace QuantConnect.ToolBox.Polygon
 
         private readonly HashSet<Symbol> _subscribedSymbols = new HashSet<Symbol>();
 
-        private readonly List<Tick> _ticks = new List<Tick>();
         private readonly object _locker = new object();
+
+        private readonly IDataAggregator _dataAggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
+            Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
 
         private readonly Dictionary<SecurityType, PolygonWebSocketClientWrapper> _webSocketClientWrappers = new Dictionary<SecurityType, PolygonWebSocketClientWrapper>();
         private readonly PolygonSymbolMapper _symbolMapper = new PolygonSymbolMapper();
@@ -93,30 +96,57 @@ namespace QuantConnect.ToolBox.Polygon
         #region IDataQueueHandler implementation
 
         /// <summary>
+        /// Sets the job we're subscribing for
+        /// </summary>
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
+        {
+        }
+
+        /// <summary>
         /// Indicates the connection is live.
         /// </summary>
         public bool IsConnected => _webSocketClientWrappers.Values.All(client => client.IsOpen);
 
         /// <summary>
-        /// Get the next ticks from the live trading data queue
+        /// Subscribe to the specified configuration
         /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            IEnumerator<BaseData> enumerator;
+            
             lock (_locker)
             {
-                var copy = _ticks.ToArray();
-                _ticks.Clear();
-                return copy;
+                enumerator = _dataAggregator.Add(dataConfig, newDataAvailableHandler);
+            }
+
+            Subscribe(new[] { dataConfig.Symbol });
+
+            return enumerator;
+        }
+
+        /// <summary>
+        /// Removes the specified configuration
+        /// </summary>
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            Unsubscribe(new [] { dataConfig.Symbol });
+
+            lock (_locker)
+            {
+                _dataAggregator.Remove(dataConfig);
             }
         }
 
         /// <summary>
         /// Adds the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        private void Subscribe(IEnumerable<Symbol> symbols)
         {
             foreach (var symbol in symbols)
             {
@@ -133,9 +163,8 @@ namespace QuantConnect.ToolBox.Polygon
         /// <summary>
         /// Removes the specified symbols from the subscription
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
         /// <param name="symbols">The symbols to be removed</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        private void Unsubscribe(IEnumerable<Symbol> symbols)
         {
             foreach (var symbol in symbols)
             {
@@ -347,16 +376,18 @@ namespace QuantConnect.ToolBox.Polygon
             var symbol = _symbolMapper.GetLeanSymbol(trade.Symbol, SecurityType.Equity, Market.USA);
             var time = GetTickTime(symbol, trade.Timestamp);
 
+            var tick = new Tick
+            {
+                TickType = TickType.Trade,
+                Symbol = symbol,
+                Time = time,
+                Value = trade.Price,
+                Quantity = trade.Size
+            };
+
             lock (_locker)
             {
-                _ticks.Add(new Tick
-                {
-                    TickType = TickType.Trade,
-                    Symbol = symbol,
-                    Time = time,
-                    Value = trade.Price,
-                    Quantity = trade.Size
-                });
+                _dataAggregator.Update(tick);
             }
         }
 
@@ -365,19 +396,21 @@ namespace QuantConnect.ToolBox.Polygon
             var symbol = _symbolMapper.GetLeanSymbol(quote.Symbol, SecurityType.Equity, Market.USA);
             var time = GetTickTime(symbol, quote.Timestamp);
 
+            var tick = new Tick
+            {
+                TickType = TickType.Quote,
+                Symbol = symbol,
+                Time = time,
+                AskPrice = quote.AskPrice,
+                BidPrice = quote.BidPrice,
+                AskSize = quote.AskSize,
+                BidSize = quote.BidSize,
+                Value = (quote.AskPrice + quote.BidPrice) / 2m
+            };
+
             lock (_locker)
             {
-                _ticks.Add(new Tick
-                {
-                    TickType = TickType.Quote,
-                    Symbol = symbol,
-                    Time = time,
-                    AskPrice = quote.AskPrice,
-                    BidPrice = quote.BidPrice,
-                    AskSize = quote.AskSize,
-                    BidSize = quote.BidSize,
-                    Value = (quote.AskPrice + quote.BidPrice) / 2m
-                });
+                _dataAggregator.Update(tick);
             }
         }
 
@@ -386,17 +419,19 @@ namespace QuantConnect.ToolBox.Polygon
             var symbol = _symbolMapper.GetLeanSymbol(quote.Symbol, SecurityType.Forex, Market.FXCM);
             var time = GetTickTime(symbol, quote.Timestamp);
 
+            var tick = new Tick
+            {
+                TickType = TickType.Quote,
+                Symbol = symbol,
+                Time = time,
+                AskPrice = quote.AskPrice,
+                BidPrice = quote.BidPrice,
+                Value = (quote.AskPrice + quote.BidPrice) / 2m
+            };
+
             lock (_locker)
             {
-                _ticks.Add(new Tick
-                {
-                    TickType = TickType.Quote,
-                    Symbol = symbol,
-                    Time = time,
-                    AskPrice = quote.AskPrice,
-                    BidPrice = quote.BidPrice,
-                    Value = (quote.AskPrice + quote.BidPrice) / 2m
-                });
+                _dataAggregator.Update(tick);
             }
         }
 
@@ -411,16 +446,18 @@ namespace QuantConnect.ToolBox.Polygon
             var symbol = _symbolMapper.GetLeanSymbol(trade.Symbol, SecurityType.Crypto, market);
             var time = GetTickTime(symbol, trade.Timestamp);
 
+            var tick = new Tick
+            {
+                TickType = TickType.Trade,
+                Symbol = symbol,
+                Time = time,
+                Value = trade.Price,
+                Quantity = trade.Size
+            };
+
             lock (_locker)
             {
-                _ticks.Add(new Tick
-                {
-                    TickType = TickType.Trade,
-                    Symbol = symbol,
-                    Time = time,
-                    Value = trade.Price,
-                    Quantity = trade.Size
-                });
+                _dataAggregator.Update(tick);
             }
         }
 
@@ -435,19 +472,21 @@ namespace QuantConnect.ToolBox.Polygon
             var symbol = _symbolMapper.GetLeanSymbol(quote.Symbol, SecurityType.Crypto, market);
             var time = GetTickTime(symbol, quote.ExchangeTimestamp);
 
+            var tick = new Tick
+            {
+                TickType = TickType.Quote,
+                Symbol = symbol,
+                Time = time,
+                AskPrice = quote.AskPrice,
+                BidPrice = quote.BidPrice,
+                AskSize = quote.AskSize,
+                BidSize = quote.BidSize,
+                Value = (quote.AskPrice + quote.BidPrice) / 2m
+            };
+
             lock (_locker)
             {
-                _ticks.Add(new Tick
-                {
-                    TickType = TickType.Quote,
-                    Symbol = symbol,
-                    Time = time,
-                    AskPrice = quote.AskPrice,
-                    BidPrice = quote.BidPrice,
-                    AskSize = quote.AskSize,
-                    BidSize = quote.BidSize,
-                    Value = (quote.AskPrice + quote.BidPrice) / 2m
-                });
+                _dataAggregator.Update(tick);
             }
         }
 
