@@ -298,8 +298,11 @@ namespace QuantConnect.Tests.Engine.Setup
             Assert.Greater(algorithm.UtcTime, time);
         }
 
-        [Test]
-        public void HasErrorWithZeroTotalPortfolioValue()
+        [TestCase(true, true)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        [TestCase(false, false)]
+        public void HasErrorWithZeroTotalPortfolioValue(bool hasCashBalance, bool hasHoldings)
         {
             var algorithm = new TestAlgorithm();
 
@@ -321,8 +324,21 @@ namespace QuantConnect.Tests.Engine.Setup
             var objectStore = new Mock<IObjectStore>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
-            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
-            brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>());
+            brokerage.Setup(x => x.GetCashBalance()).Returns(
+                hasCashBalance
+                    ? new List<CashAmount>
+                    {
+                        new CashAmount(1000, "USD")
+                    }
+                    : new List<CashAmount>()
+                );
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(
+                hasHoldings
+                    ? new List<Holding>
+                    {
+                        new Holding { Type = SecurityType.Equity, Symbol = Symbols.SPY, Quantity = 1, AveragePrice = 100, MarketPrice = 100 }
+                    }
+                    : new List<Holding>());
             brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
 
             var setupHandler = new BrokerageSetupHandler();
@@ -330,12 +346,21 @@ namespace QuantConnect.Tests.Engine.Setup
             IBrokerageFactory factory;
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
-            Assert.IsFalse(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+            var isSuccess = hasCashBalance || hasHoldings;
+
+            Assert.AreEqual(isSuccess, setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
                 transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
 
-            Assert.AreEqual(1, setupHandler.Errors.Count);
+            if (isSuccess)
+            {
+                Assert.AreEqual(0, setupHandler.Errors.Count);
+            }
+            else
+            {
+                Assert.AreEqual(1, setupHandler.Errors.Count);
 
-            Assert.That(setupHandler.Errors[0].Message.Contains("No cash balances or holdings were found in the brokerage account."));
+                Assert.That(setupHandler.Errors[0].Message.Contains("No cash balances or holdings were found in the brokerage account."));
+            }
         }
 
         private static TestCaseData[] GetExistingHoldingsAndOrdersTestCaseData()
