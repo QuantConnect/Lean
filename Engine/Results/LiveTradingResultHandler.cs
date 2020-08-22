@@ -245,7 +245,7 @@ namespace QuantConnect.Lean.Engine.Results
                         var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                         var complete = new LiveResultPacket(_job, new LiveResult(new LiveResultParameters(chartComplete, orders, Algorithm.Transactions.TransactionRecord, holdings, Algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, orderEvents, serverStatistics)));
                         StoreResult(complete);
-                        _nextChartsUpdate = DateTime.UtcNow.AddMinutes(1);
+                        _nextChartsUpdate = DateTime.UtcNow.Add(ChartUpdateInterval);
                         Log.Debug("LiveTradingResultHandler.Update(): End-store result");
                     }
 
@@ -347,7 +347,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Set the new update time after we've finished processing.
                 // The processing can takes time depending on how large the packets are.
-                _nextUpdate = DateTime.UtcNow.AddSeconds(3);
+                _nextUpdate = DateTime.UtcNow.Add(MainUpdateInterval);
             } // End Update Charts:
         }
 
