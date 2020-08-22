@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void TestTradeBarsWithVolume()
         {
-            var emv = (EaseOfMovementValue)CreateIndicator();
+            var emv = new EaseOfMovementValue();
             foreach (var data in TestHelper.GetDataStream(4))
             {
                 var tradeBar = new TradeBar
@@ -47,14 +47,35 @@ namespace QuantConnect.Tests.Indicators
                     Volume = data.Value
                 };
                 emv.Update(tradeBar);
-
-                Assert.IsTrue(emv.IsReady);
             }
         }
 
         protected override Action<IndicatorBase<TradeBar>, double> Assertion
         {
-            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 0.000001); }
-        }  
+            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 1); }
+        }
+
+        [Test]
+        public virtual void PeriodSet()
+        {
+            var emv = new EaseOfMovementValue(period: 3, scale: 1);
+            var reference = System.DateTime.Today;
+
+            emv.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddMinutes(1) });
+            Assert.AreEqual(0, emv.Current.Value);
+            Assert.IsFalse(emv.IsReady);
+
+            emv.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 3, High = 4, Volume = 200, Time = reference.AddMinutes(2) });
+            Assert.AreEqual(0.005, (double)emv.Current.Value, 0.00001);
+            Assert.IsFalse(emv.IsReady);
+
+            emv.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 5, High = 6, Volume = 300, Time = reference.AddMinutes(3) });
+            Assert.AreEqual(0.00556, (double)emv.Current.Value, 0.00001);
+            Assert.IsTrue(emv.IsReady);
+
+            emv.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 6, High = 7, Volume = 400, Time = reference.AddMinutes(4) });
+            Assert.AreEqual(0.00639, (double)emv.Current.Value, 0.00001);
+            Assert.IsTrue(emv.IsReady);
+        }
     }
 }
