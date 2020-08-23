@@ -142,26 +142,10 @@ namespace QuantConnect.Securities
         private void AddDataImpl(BaseData data, bool cacheByType)
         {
             var tick = data as Tick;
-            if (tick != null)
+            if (tick?.TickType == TickType.OpenInterest)
             {
-                switch (tick.TickType)
-                {
-                    case TickType.Trade:
-                        if (tick.Quantity != 0) Volume = tick.Quantity;
-                        break;
-
-                    case TickType.Quote:
-                        if (tick.BidPrice != 0) BidPrice = tick.BidPrice;
-                        if (tick.BidSize != 0) BidSize = tick.BidSize;
-
-                        if (tick.AskPrice != 0) AskPrice = tick.AskPrice;
-                        if (tick.AskSize != 0) AskSize = tick.AskSize;
-                        break;
-
-                    case TickType.OpenInterest:
-                        OpenInterest = (long)tick.Value;
-                        return;
-                }
+                OpenInterest = (long)tick.Value;
+                return;
             }
 
             // Only cache non fill-forward data.
@@ -213,6 +197,27 @@ namespace QuantConnect.Securities
                 _lastData = data;
             }
 
+            if (tick != null)
+            {
+                if (tick.Value != 0) Price = tick.Value;
+
+                switch (tick.TickType)
+                {
+                    case TickType.Trade:
+                        if (tick.Quantity != 0) Volume = tick.Quantity;
+                        break;
+
+                    case TickType.Quote:
+                        if (tick.BidPrice != 0) BidPrice = tick.BidPrice;
+                        if (tick.BidSize != 0) BidSize = tick.BidSize;
+
+                        if (tick.AskPrice != 0) AskPrice = tick.AskPrice;
+                        if (tick.AskSize != 0) AskSize = tick.AskSize;
+                        break;
+                }
+                return;
+            }
+
             var bar = data as IBar;
             if (bar != null)
             {
@@ -247,7 +252,7 @@ namespace QuantConnect.Securities
                     if (quoteBar.LastAskSize != 0) AskSize = quoteBar.LastAskSize;
                 }
             }
-            else if (data.DataType != MarketDataType.Auxiliary && data.Price != 0)
+            else if (data.DataType != MarketDataType.Auxiliary)
             {
                 Price = data.Price;
             }
