@@ -160,7 +160,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 dataReader,
                 mapFileResolver,
                 false,
-                startTimeLocal);
+                startTimeLocal,
+                true);
 
             // optionally apply fill forward behavior
             if (request.FillForwardResolution.HasValue)
@@ -194,7 +195,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
 
             if (_parallelHistoryRequestsEnabled)
             {
-                return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader);
+                return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader, _factorFileProvider);
             }
             return SubscriptionUtils.Create(subscriptionRequest, reader);
         }

@@ -101,7 +101,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 dataReader,
                 mapFileResolver,
                 _includeAuxiliaryData,
-                request.StartTimeLocal);
+                request.StartTimeLocal,
+                false);
 
             return result;
         }

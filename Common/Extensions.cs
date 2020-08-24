@@ -47,6 +47,7 @@ using QuantConnect.Securities;
 using QuantConnect.Util;
 using Timer = System.Timers.Timer;
 using static QuantConnect.StringExtensions;
+using System.Runtime.CompilerServices;
 
 namespace QuantConnect
 {
@@ -2071,6 +2072,122 @@ namespace QuantConnect
             {
                 return s;
             }
+        }
+
+        /// <summary>
+        /// Normalizes the specified price based on the DataNormalizationMode
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static decimal GetNormalizedPrice(this SubscriptionDataConfig config, decimal price)
+        {
+            switch (config.DataNormalizationMode)
+            {
+                case DataNormalizationMode.Raw:
+                    return price;
+
+                // the price scale factor will be set accordingly based on the mode in update scale factors
+                case DataNormalizationMode.Adjusted:
+                case DataNormalizationMode.SplitAdjusted:
+                    return price * config.PriceScaleFactor;
+
+                case DataNormalizationMode.TotalReturn:
+                    return (price * config.PriceScaleFactor) + config.SumOfDividends;
+
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        /// <summary>
+        /// Adjust prices based on price scale
+        /// </summary>
+        /// <param name="data">Data to be adjusted</param>
+        /// <param name="scale">Price scale</param>
+        /// <returns></returns>
+        public static BaseData Adjust(this BaseData data, decimal scale)
+        {
+            switch (data.DataType)
+            {
+                case MarketDataType.TradeBar:
+                    var tradeBar = data as TradeBar;
+                    if (tradeBar != null)
+                    {
+                        tradeBar.Open = tradeBar.Open * scale;
+                        tradeBar.High = tradeBar.High * scale;
+                        tradeBar.Low = tradeBar.Low * scale;
+                        tradeBar.Close = tradeBar.Close * scale;
+                    }
+                    break;
+                case MarketDataType.Tick:
+                    var securityType = data.Symbol.SecurityType;
+                    var tick = data as Tick;
+                    if (tick != null)
+                    {
+                        if (securityType == SecurityType.Equity)
+                        {
+                            tick.Value = tick.Value * scale;
+                        }
+                        if (securityType == SecurityType.Option
+                            || securityType == SecurityType.Future)
+                        {
+                            if (tick.TickType == TickType.Trade)
+                            {
+                                tick.Value = tick.Value * scale;
+                            }
+                            else if (tick.TickType != TickType.OpenInterest)
+                            {
+                                tick.BidPrice = tick.BidPrice != 0 ? tick.BidPrice * scale : 0;
+                                tick.AskPrice = tick.AskPrice != 0 ? tick.AskPrice * scale : 0;
+
+                                if (tick.BidPrice != 0)
+                                {
+                                    if (tick.AskPrice != 0)
+                                    {
+                                        tick.Value = (tick.BidPrice + tick.AskPrice) / 2m;
+                                    }
+                                    else
+                                    {
+                                        tick.Value = tick.BidPrice;
+                                    }
+                                }
+                                else
+                                {
+                                    tick.Value = tick.AskPrice;
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case MarketDataType.QuoteBar:
+                    var quoteBar = data as QuoteBar;
+                    if (quoteBar != null)
+                    {
+                        if (quoteBar.Ask != null)
+                        {
+                            quoteBar.Ask.Open = quoteBar.Ask.Open * scale;
+                            quoteBar.Ask.High = quoteBar.Ask.High * scale;
+                            quoteBar.Ask.Low = quoteBar.Ask.Low * scale;
+                            quoteBar.Ask.Close = quoteBar.Ask.Close * scale;
+                        }
+                        if (quoteBar.Bid != null)
+                        {
+                            quoteBar.Bid.Open = quoteBar.Bid.Open * scale;
+                            quoteBar.Bid.High = quoteBar.Bid.High * scale;
+                            quoteBar.Bid.Low = quoteBar.Bid.Low * scale;
+                            quoteBar.Bid.Close = quoteBar.Bid.Close * scale;
+                        }
+                        quoteBar.Value = quoteBar.Close;
+                    }
+                    break;
+                case MarketDataType.Auxiliary:
+                case MarketDataType.Base:
+                case MarketDataType.OptionChain:
+                case MarketDataType.FuturesChain:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            return data;
         }
     }
 }

@@ -42,6 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="mapFileResolver">Used for resolving the correct map files</param>
         /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
         /// <param name="startTime">Start date for the data request</param>
+        /// <param name="enablePriceScalling">Applies price factor</param>
         /// <returns>The new auxiliary data enumerator</returns>
         public static IEnumerator<BaseData> CreateEnumerators(
             IEnumerator<BaseData> rawDataEnumerator,
@@ -50,7 +51,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             ITradableDatesNotifier tradableDayNotifier,
             MapFileResolver mapFileResolver,
             bool includeAuxiliaryData,
-            DateTime startTime)
+            DateTime startTime,
+            bool enablePriceScalling)
         {
             var lazyFactorFile =
                 new Lazy<FactorFile>(() => GetFactorFileToUse(config, factorFileProvider));
@@ -70,12 +72,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 includeAuxiliaryData,
                 startTime);
 
-            var priceScaleFactorEnumerator = new PriceScaleFactorEnumerator(
-                rawDataEnumerator,
-                config,
-                lazyFactorFile);
+            var dataEnumerator = rawDataEnumerator;
+            if (enablePriceScalling)
+            {
+                dataEnumerator = new PriceScaleFactorEnumerator(
+                    rawDataEnumerator,
+                    config,
+                    lazyFactorFile);
+            }
 
-            return new SynchronizingEnumerator(priceScaleFactorEnumerator, enumerator);
+            return new SynchronizingEnumerator(dataEnumerator, enumerator);
         }
 
         private static MapFile GetMapFileToUse(

@@ -25,9 +25,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class SubscriptionData
     {
         /// <summary>
+        /// Data
+        /// </summary>
+        protected BaseData _data;
+
+        /// <summary>
         /// Gets the data
         /// </summary>
-        public BaseData Data { get; }
+        public virtual BaseData Data => _data;
 
         /// <summary>
         /// Gets the UTC emit time for this data
@@ -41,7 +46,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="emitTimeUtc">The emit time for the data</param>
         public SubscriptionData(BaseData data, DateTime emitTimeUtc)
         {
-            Data = data;
+            _data = data;
             EmitTimeUtc = emitTimeUtc;
         }
 

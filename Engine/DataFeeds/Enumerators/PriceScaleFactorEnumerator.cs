@@ -89,7 +89,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             if (underlyingReturnValue
                 && Current != null
-                && _factorFile != null)
+                && _factorFile != null
+                && _config.DataNormalizationMode != DataNormalizationMode.Raw)
             {
                 if (Current.Time.Date > _lastTradableDate)
                 {

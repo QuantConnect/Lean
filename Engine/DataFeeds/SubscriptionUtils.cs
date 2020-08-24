@@ -17,7 +17,9 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Lean.Engine.DataFeeds.WorkScheduling;
 using QuantConnect.Logging;
@@ -58,11 +60,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="request">The subscription data request</param>
         /// <param name="enumerator">The data enumerator stack</param>
+        /// <param name="factorFileProvider">The factor file provider</param>
         /// <returns>A new subscription instance ready to consume</returns>
         public static Subscription CreateAndScheduleWorker(
             SubscriptionRequest request,
-            IEnumerator<BaseData> enumerator)
+            IEnumerator<BaseData> enumerator,
+            IFactorFileProvider factorFileProvider)
         {
+            var factorFile = GetFactorFileToUse(request.Configuration, factorFileProvider);
             var exchangeHours = request.Security.Exchange.Hours;
             var enqueueable = new EnqueueableEnumerator<SubscriptionData>(true);
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
@@ -82,8 +87,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             return false;
                         }
 
-                        var subscriptionData = SubscriptionData.Create(subscription.Configuration, exchangeHours,
-                            subscription.OffsetProvider, enumerator.Current);
+                        if (enumerator.Current == null)
+                        {
+                            enqueueable.Enqueue(null);
+                            continue;
+                        }
+
+                        var config = subscription.Configuration;
+                        var data = enumerator.Current;
+                        var emitTimeUtc = timeZoneOffsetProvider.ConvertToUtc(data.EndTime);
+
+                        // Let's round down for any data source that implements a time delta between
+                        // the start of the data and end of the data (usually used with Bars).
+                        // The time delta ensures that the time collected from `EndTime` has
+                        // no look-ahead bias, and is point-in-time.
+                        if (data.Time != data.EndTime)
+                        {
+                            data.Time = data.Time.ExchangeRoundDownInTimeZone(config.Increment, exchangeHours, config.DataTimeZone, config.ExtendedMarketHours);
+                        }
+
+                        var rawData = data.Clone(data.IsFillForward);
+                        var adjustedData = data
+                            .Clone(data.IsFillForward)
+                            .Adjust(GetScaleFactor(factorFile, config.DataNormalizationMode, data.Time.Date));
+
+                        var subscriptionData = new PrecaculatedSubscriptionData(
+                            config, 
+                            rawData, 
+                            adjustedData,
+                            emitTimeUtc);
 
                         // drop the data into the back of the enqueueable
                         enqueueable.Enqueue(subscriptionData);
@@ -122,6 +154,52 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             );
 
             return subscription;
+        }
+
+        private static decimal GetScaleFactor(FactorFile factorFile, DataNormalizationMode mode, DateTime date)
+        {
+            switch (mode)
+            {
+                case DataNormalizationMode.Raw:
+                    return 1;
+
+                case DataNormalizationMode.TotalReturn:
+                case DataNormalizationMode.SplitAdjusted:
+                    return factorFile.GetSplitFactor(date);
+
+                case DataNormalizationMode.Adjusted:
+                    return factorFile.GetPriceScaleFactor(date);
+
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private static FactorFile GetFactorFileToUse(
+            SubscriptionDataConfig config,
+            IFactorFileProvider factorFileProvider)
+        {
+            var factorFileToUse = new FactorFile(config.Symbol.Value, new List<FactorFileRow>());
+
+            if (!config.IsCustomData
+                && config.SecurityType == SecurityType.Equity)
+            {
+                try
+                {
+                    var factorFile = factorFileProvider.Get(config.Symbol);
+                    if (factorFile != null)
+                    {
+                        factorFileToUse = factorFile;
+                    }
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err, "SubscriptionUtils.GetFactorFileToUse(): Factors File: "
+                        + config.Symbol.ID + ": ");
+                }
+            }
+
+            return factorFileToUse;
         }
     }
 }
