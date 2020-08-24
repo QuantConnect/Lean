@@ -61,6 +61,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="request">The subscription data request</param>
         /// <param name="enumerator">The data enumerator stack</param>
         /// <param name="factorFileProvider">The factor file provider</param>
+        /// <param name="enablePriceScale">Enables price factoring</param>
         /// <returns>A new subscription instance ready to consume</returns>
         public static Subscription CreateAndScheduleWorker(
             SubscriptionRequest request,
@@ -189,7 +190,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        private static FactorFile GetFactorFileToUse(
+        /// <summary>
+        /// Gets <see cref="FactorFile"/> for configuration
+        /// </summary>
+        /// <param name="config">Subscription configuration</param>
+        /// <param name="factorFileProvider">The factor file provider</param>
+        /// <returns></returns>
+        public static FactorFile GetFactorFileToUse(
             SubscriptionDataConfig config,
             IFactorFileProvider factorFileProvider)
         {

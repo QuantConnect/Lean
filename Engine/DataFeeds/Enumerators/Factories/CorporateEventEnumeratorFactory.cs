@@ -55,7 +55,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             bool enablePriceScalling)
         {
             var lazyFactorFile =
-                new Lazy<FactorFile>(() => GetFactorFileToUse(config, factorFileProvider));
+                new Lazy<FactorFile>(() => SubscriptionUtils.GetFactorFileToUse(config, factorFileProvider));
 
             var enumerator = new AuxiliaryDataEnumerator(
                 config,
@@ -111,33 +111,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             }
 
             return mapFileToUse;
-        }
-
-        private static FactorFile GetFactorFileToUse(
-            SubscriptionDataConfig config,
-            IFactorFileProvider factorFileProvider)
-        {
-            var factorFileToUse = new FactorFile(config.Symbol.Value, new List<FactorFileRow>());
-
-            if (!config.IsCustomData
-                && config.SecurityType == SecurityType.Equity)
-            {
-                try
-                {
-                    var factorFile = factorFileProvider.Get(config.Symbol);
-                    if (factorFile != null)
-                    {
-                        factorFileToUse = factorFile;
-                    }
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err, "CorporateEventEnumeratorFactory.GetFactorFileToUse(): Factors File: "
-                        + config.Symbol.ID + ": ");
-                }
-            }
-
-            return factorFileToUse;
         }
     }
 }
