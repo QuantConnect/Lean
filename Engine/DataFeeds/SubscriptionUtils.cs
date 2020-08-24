@@ -65,13 +65,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public static Subscription CreateAndScheduleWorker(
             SubscriptionRequest request,
             IEnumerator<BaseData> enumerator,
-            IFactorFileProvider factorFileProvider)
+            IFactorFileProvider factorFileProvider,
+            bool enablePriceScale)
         {
             var factorFile = GetFactorFileToUse(request.Configuration, factorFileProvider);
             var exchangeHours = request.Security.Exchange.Hours;
             var enqueueable = new EnqueueableEnumerator<SubscriptionData>(true);
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
             var subscription = new Subscription(request, enqueueable, timeZoneOffsetProvider);
+            var config = subscription.Configuration;
 
             Func<int, bool> produce = (workBatchSize) =>
             {
@@ -93,29 +95,41 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             continue;
                         }
 
-                        var config = subscription.Configuration;
-                        var data = enumerator.Current;
-                        var emitTimeUtc = timeZoneOffsetProvider.ConvertToUtc(data.EndTime);
+                        SubscriptionData subscriptionData = null;
 
-                        // Let's round down for any data source that implements a time delta between
-                        // the start of the data and end of the data (usually used with Bars).
-                        // The time delta ensures that the time collected from `EndTime` has
-                        // no look-ahead bias, and is point-in-time.
-                        if (data.Time != data.EndTime)
+                        if (enablePriceScale)
                         {
-                            data.Time = data.Time.ExchangeRoundDownInTimeZone(config.Increment, exchangeHours, config.DataTimeZone, config.ExtendedMarketHours);
+                            var data = enumerator.Current;
+                            var emitTimeUtc = timeZoneOffsetProvider.ConvertToUtc(data.EndTime);
+
+                            // Let's round down for any data source that implements a time delta between
+                            // the start of the data and end of the data (usually used with Bars).
+                            // The time delta ensures that the time collected from `EndTime` has
+                            // no look-ahead bias, and is point-in-time.
+                            if (data.Time != data.EndTime)
+                            {
+                                data.Time = data.Time.ExchangeRoundDownInTimeZone(config.Increment, exchangeHours, config.DataTimeZone, config.ExtendedMarketHours);
+                            }
+
+                            var rawData = data.Clone(data.IsFillForward);
+                            var adjustedData = data
+                                .Clone(data.IsFillForward)
+                                .Adjust(GetScaleFactor(factorFile, config.DataNormalizationMode, data.Time.Date));
+
+                            subscriptionData = new PrecaculatedSubscriptionData(
+                                config,
+                                rawData,
+                                adjustedData,
+                                emitTimeUtc);
                         }
-
-                        var rawData = data.Clone(data.IsFillForward);
-                        var adjustedData = data
-                            .Clone(data.IsFillForward)
-                            .Adjust(GetScaleFactor(factorFile, config.DataNormalizationMode, data.Time.Date));
-
-                        var subscriptionData = new PrecaculatedSubscriptionData(
-                            config, 
-                            rawData, 
-                            adjustedData,
-                            emitTimeUtc);
+                        else
+                        {
+                            subscriptionData = SubscriptionData.Create(
+                                subscription.Configuration,
+                                exchangeHours,
+                                subscription.OffsetProvider,
+                                enumerator.Current);
+                        }
 
                         // drop the data into the back of the enqueueable
                         enqueueable.Enqueue(subscriptionData);

@@ -195,7 +195,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
 
             if (_parallelHistoryRequestsEnabled)
             {
-                return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader, _factorFileProvider);
+                return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader, _factorFileProvider, false);
             }
             return SubscriptionUtils.Create(subscriptionRequest, reader);
         }
