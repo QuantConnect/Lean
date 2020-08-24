@@ -153,7 +153,7 @@ namespace QuantConnect.ToolBox.Polygon
                 if (CanSubscribe(symbol) && !_subscribedSymbols.Contains(symbol))
                 {
                     var webSocket = GetWebSocket(symbol.SecurityType);
-                    webSocket.Subscribe(symbol, true);
+                    webSocket.Subscribe(symbol);
 
                     _subscribedSymbols.Add(symbol);
                 }
@@ -171,7 +171,7 @@ namespace QuantConnect.ToolBox.Polygon
                 if (CanSubscribe(symbol) && _subscribedSymbols.Contains(symbol))
                 {
                     var webSocket = GetWebSocket(symbol.SecurityType);
-                    webSocket.Subscribe(symbol, false);
+                    webSocket.Unsubscribe(symbol);
 
                     _subscribedSymbols.Remove(symbol);
                 }
@@ -239,7 +239,9 @@ namespace QuantConnect.ToolBox.Polygon
             }
 
             // check security type
-            if (request.Symbol.SecurityType != SecurityType.Equity)
+            if (request.Symbol.SecurityType != SecurityType.Equity &&
+                request.Symbol.SecurityType != SecurityType.Forex &&
+                request.Symbol.SecurityType != SecurityType.Crypto)
             {
                 Log.Error($"PolygonDataQueueHandler.ProcessHistoryRequests(): unsupported security type: {request.Symbol.SecurityType}.");
                 yield break;
@@ -265,10 +267,20 @@ namespace QuantConnect.ToolBox.Polygon
             var startDate = start.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             var endDate = end.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
+            var tickerPrefix = string.Empty;
+            if (request.Symbol.SecurityType == SecurityType.Forex)
+            {
+                tickerPrefix = "C:";
+            }
+            else if (request.Symbol.SecurityType == SecurityType.Crypto)
+            {
+                tickerPrefix = "X:";
+            }
+
             // Download and parse data
             using (var client = new WebClient())
             {
-                var url = $"{HistoryBaseUrl}/aggs/ticker/{ticker}/range/1/{historyTimespan}/{startDate}/{endDate}?apiKey={_apiKey}";
+                var url = $"{HistoryBaseUrl}/aggs/ticker/{tickerPrefix}{ticker}/range/1/{historyTimespan}/{startDate}/{endDate}?apiKey={_apiKey}";
 
                 var response = client.DownloadString(url);
 
@@ -470,7 +482,7 @@ namespace QuantConnect.ToolBox.Polygon
             }
 
             var symbol = _symbolMapper.GetLeanSymbol(quote.Symbol, SecurityType.Crypto, market);
-            var time = GetTickTime(symbol, quote.ExchangeTimestamp);
+            var time = GetTickTime(symbol, quote.Timestamp);
 
             var tick = new Tick
             {

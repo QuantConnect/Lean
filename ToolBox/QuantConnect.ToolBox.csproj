@@ -351,6 +351,8 @@
     <Compile Include="IQFeed\IQFeedFileHistoryProvider.cs" />
     <Compile Include="IVolatilityEquityConverter\IVolatilityEquityConverterProgram.cs" />
     <Compile Include="Polygon\Messages\BaseMessage.cs" />
+    <Compile Include="Polygon\Messages\BaseQuoteMessage.cs" />
+    <Compile Include="Polygon\Messages\BaseTradeMessage.cs" />
     <Compile Include="Polygon\Messages\EquityQuoteMessage.cs" />
     <Compile Include="Polygon\Messages\EquityTradeMessage.cs" />
     <Compile Include="Polygon\Messages\CryptoTradeMessage.cs" />

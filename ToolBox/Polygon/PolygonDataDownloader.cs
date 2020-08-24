@@ -46,7 +46,9 @@ namespace QuantConnect.ToolBox.Polygon
                 throw new NotSupportedException($"Resolution not supported: {resolution}");
             }
 
-            if (symbol.SecurityType != SecurityType.Equity)
+            if (symbol.SecurityType != SecurityType.Equity &&
+                symbol.SecurityType != SecurityType.Forex && 
+                symbol.SecurityType != SecurityType.Crypto)
             {
                 throw new NotSupportedException($"Security type not supported: {symbol.SecurityType}");
             }

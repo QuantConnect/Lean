@@ -17,7 +17,7 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.ToolBox.Polygon.Messages
 {
-    public class CryptoQuoteMessage : BaseMessage
+    public class CryptoQuoteMessage : BaseQuoteMessage
     {
         [JsonProperty("pair")]
         public string Symbol { get; set; }
@@ -27,21 +27,6 @@ namespace QuantConnect.ToolBox.Polygon.Messages
 
         [JsonProperty("ls")]
         public decimal LastTradeSize { get; set; }
-
-        [JsonProperty("bp")]
-        public decimal BidPrice { get; set; }
-
-        [JsonProperty("bs")]
-        public decimal BidSize { get; set; }
-
-        [JsonProperty("ap")]
-        public decimal AskPrice { get; set; }
-
-        [JsonProperty("as")]
-        public decimal AskSize { get; set; }
-
-        [JsonProperty("t")]
-        public long ExchangeTimestamp { get; set; }
 
         [JsonProperty("x")]
         public int ExchangeId { get; set; }

@@ -21,5 +21,8 @@ namespace QuantConnect.ToolBox.Polygon.Messages
     {
         [JsonProperty("ev")]
         public string EventType { get; set; }
+
+        [JsonProperty("t")]
+        public long Timestamp { get; set; }
     }
 }

@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.ToolBox
             var historyProvider = new PolygonDataQueueHandler(false);
             historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, null));
 
-            var now = DateTime.UtcNow.RoundDown(resolution.ToTimeSpan());
+            var now = new DateTime(2020, 5, 20).RoundDown(resolution.ToTimeSpan());
 
             var requests = new[]
             {
@@ -82,6 +82,16 @@ namespace QuantConnect.Tests.ToolBox
             new TestCaseData(Symbols.SPY, Resolution.Minute, Time.OneDay, false),
             new TestCaseData(Symbols.SPY, Resolution.Hour, Time.OneDay, false),
             new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(15), false),
+
+            // forex
+            new TestCaseData(Symbols.EURUSD, Resolution.Minute, Time.OneDay, false),
+            new TestCaseData(Symbols.EURUSD, Resolution.Hour, Time.OneDay, false),
+            new TestCaseData(Symbols.EURUSD, Resolution.Daily, TimeSpan.FromDays(15), false),
+
+            // crypto
+            new TestCaseData(Symbols.BTCUSD, Resolution.Minute, Time.OneDay, false),
+            new TestCaseData(Symbols.BTCUSD, Resolution.Hour, Time.OneDay, false),
+            new TestCaseData(Symbols.BTCUSD, Resolution.Daily, TimeSpan.FromDays(15), false),
 
             // invalid resolution, no error, empty result
             new TestCaseData(Symbols.SPY, Resolution.Tick, TimeSpan.FromSeconds(15), true),

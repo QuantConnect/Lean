@@ -17,18 +17,18 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.ToolBox.Polygon.Messages
 {
-    public class ForexQuoteMessage : BaseMessage
+    public class BaseQuoteMessage : BaseMessage
     {
-        [JsonProperty("p")]
-        public string Symbol { get; set; }
+        [JsonProperty("bp")]
+        public decimal BidPrice { get; set; }
 
-        [JsonProperty("x")]
-        public string ExchangeId { get; set; }
+        [JsonProperty("bs")]
+        public decimal BidSize { get; set; }
 
-        [JsonProperty("a")]
+        [JsonProperty("ap")]
         public decimal AskPrice { get; set; }
 
-        [JsonProperty("b")]
-        public decimal BidPrice { get; set; }
+        [JsonProperty("as")]
+        public decimal AskSize { get; set; }
     }
 }

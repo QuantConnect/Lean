@@ -20,6 +20,9 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.Polygon
 {
+    /// <summary>
+    /// WebSocket client wrapper for Polygon.io
+    /// </summary>
     public class PolygonWebSocketClientWrapper : WebSocketClientWrapper
     {
         private const string BaseUrl = "wss://socket.polygon.io";
@@ -29,6 +32,13 @@ namespace QuantConnect.ToolBox.Polygon
         private readonly SecurityType _securityType;
         private readonly Action<string> _messageHandler;
 
+        /// <summary>
+        /// Creates a new instance of the <see cref="PolygonWebSocketClientWrapper"/> class
+        /// </summary>
+        /// <param name="apiKey">The Polygon.io API key</param>
+        /// <param name="symbolMapper">The symbol mapper</param>
+        /// <param name="securityType">The security type</param>
+        /// <param name="messageHandler">The message handler</param>
         public PolygonWebSocketClientWrapper(string apiKey, ISymbolMapper symbolMapper, SecurityType securityType, Action<string> messageHandler)
         {
             _apiKey = apiKey;
@@ -47,7 +57,25 @@ namespace QuantConnect.ToolBox.Polygon
             Connect();
         }
 
-        public void Subscribe(Symbol symbol, bool subscribe)
+        /// <summary>
+        /// Subscribes the given symbol
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        public void Subscribe(Symbol symbol)
+        {
+            Subscribe(symbol, true);
+        }
+
+        /// <summary>
+        /// Unsubscribes the given symbol
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        public void Unsubscribe(Symbol symbol)
+        {
+            Subscribe(symbol, false);
+        }
+
+        private void Subscribe(Symbol symbol, bool subscribe)
         {
             var ticker = _symbolMapper.GetBrokerageSymbol(symbol);
 
