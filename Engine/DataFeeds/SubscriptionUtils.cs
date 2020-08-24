@@ -117,7 +117,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 .Clone(data.IsFillForward)
                                 .Adjust(GetScaleFactor(factorFile, config.DataNormalizationMode, data.Time.Date));
 
-                            subscriptionData = new PrecaculatedSubscriptionData(
+                            subscriptionData = new PrecalculatedSubscriptionData(
                                 config,
                                 rawData,
                                 adjustedData,

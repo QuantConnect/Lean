@@ -22,7 +22,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// DTO for storing data and the time at which it should be synchronized
     /// </summary>
-    public class PrecaculatedSubscriptionData : SubscriptionData
+    public class PrecalculatedSubscriptionData : SubscriptionData
     {
         private BaseData _adjustedData;
         private SubscriptionDataConfig _config;
@@ -50,7 +50,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        public PrecaculatedSubscriptionData(SubscriptionDataConfig configuration, BaseData rawData, BaseData adjustedData, DateTime emitTimeUtc)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PrecalculatedSubscriptionData"/> class
+        /// </summary>
+        /// <param name="configuration">The subscription's configuration</param>
+        /// <param name="rawData">The base data</param>
+        /// <param name="adjustedData">The adjusted data</param>
+        /// <param name="emitTimeUtc">The emit time for the data</param>
+        public PrecalculatedSubscriptionData(SubscriptionDataConfig configuration, BaseData rawData, BaseData adjustedData, DateTime emitTimeUtc)
             : base(rawData, emitTimeUtc)
         {
             _config = configuration;

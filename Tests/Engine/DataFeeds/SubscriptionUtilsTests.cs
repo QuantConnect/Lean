@@ -75,7 +75,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Time.EndOfTime
                 ),
                 enumerator,
-                factorFileProfider.Object);
+                factorFileProfider.Object,
+                false);
 
             var count = 0;
             while (enumerator.MoveNextTrueCount > 8)
@@ -108,7 +109,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Time.EndOfTime
                 ),
                 enumerator,
-                factorFileProfider.Object);
+                factorFileProfider.Object,
+                false);
 
             var count = 0;
             while (enumerator.MoveNextTrueCount != 9)
@@ -157,7 +159,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         Time.EndOfTime
                     ),
                     enumerator,
-                    factorFileProfider.Object);
+                    factorFileProfider.Object,
+                    false);
 
                 for (var j = 0; j < dataPoints; j++)
                 {
