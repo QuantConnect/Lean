@@ -727,6 +727,7 @@
     <Compile Include="Research\QuantBookHistoryTests.cs" />
     <Compile Include="Messaging\StreamingMessageHandlerTests.cs" />
     <Compile Include="Python\AlgorithmPythonWrapperTests.cs" />
+    <Compile Include="Python\DataConsolidatorPythonWrapperTests.cs" />
     <Compile Include="Python\MethodOverloadTests.cs" />
     <Compile Include="Python\PandasConverterTests.BackwardsCompatibility.cs" />
     <Compile Include="Python\PortfolioCustomModelTests.cs" />

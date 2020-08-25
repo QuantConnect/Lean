@@ -19,6 +19,7 @@ AddReference("QuantConnect.Common")
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
+from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from datetime import timedelta

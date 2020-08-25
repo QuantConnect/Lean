@@ -49,6 +49,7 @@ namespace QuantConnect.Data.Consolidators
         private PeriodCountConsolidatorBase(IPeriodSpecification periodSpecification)
         {
             _periodSpecification = periodSpecification;
+            _period = _periodSpecification.Period;
         }
 
         /// <summary>

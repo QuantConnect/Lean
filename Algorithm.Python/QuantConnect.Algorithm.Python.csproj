@@ -85,6 +85,7 @@
     <Content Include="Benchmarks\SmartInsiderEventBenchmarkAlgorithm.py" />
     <Content Include="CoarseTiingoNewsUniverseSelectionAlgorithm.py" />
     <Content Include="ConsolidateRegressionAlgorithm.py" />
+    <Content Include="CustomConsolidatorRegressionAlgorithm.py" />
     <Content Include="CustomDataAddDataOnSecuritiesChangedRegressionAlgorithm.py" />
     <Content Include="CustomDataAddDataCoarseSelectionRegressionAlgorithm.py" />
     <Content Include="DynamicSecurityDataAlgorithm.py" />

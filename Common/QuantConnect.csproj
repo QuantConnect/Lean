@@ -380,6 +380,7 @@
     <Compile Include="Packets\LeakyBucketControlParameters.cs" />
     <Compile Include="Packets\LiveResultParameters.cs" />
     <Compile Include="Python\BrokerageMessageHandlerPythonWrapper.cs" />
+    <Compile Include="Python\PythonConsolidator.cs" />
     <Compile Include="Python\MarginCallModelPythonWrapper.cs" />
     <Compile Include="Python\PythonInitializer.cs" />
     <Compile Include="Python\PythonWrapper.cs" />
@@ -462,6 +463,7 @@
     <Compile Include="Python\SecurityInitializerPythonWrapper.cs" />
     <Compile Include="Python\SlippageModelPythonWrapper.cs" />
     <Compile Include="Python\FillModelPythonWrapper.cs" />
+    <Compile Include="Python\DataConsolidatorPythonWrapper.cs" />
     <Compile Include="Python\PandasConverter.cs" />
     <Compile Include="Python\FeeModelPythonWrapper.cs" />
     <Compile Include="Securities\CashBuyingPowerModel.cs" />
