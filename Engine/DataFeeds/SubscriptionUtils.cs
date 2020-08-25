@@ -90,12 +90,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             return false;
                         }
 
-                        if (enumerator.Current == null)
-                        {
-                            enqueueable.Enqueue(null);
-                            continue;
-                        }
-
                         var data = enumerator.Current;
 
                         SubscriptionData subscriptionData = SubscriptionData.Create(
@@ -104,7 +98,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             subscription.OffsetProvider,
                             data,
                             enablePriceScale,
-                            enablePriceScale ? GetScaleFactor(factorFile, config.DataNormalizationMode, data.Time.Date) : 1);
+                            enablePriceScale && data !=null ? GetScaleFactor(factorFile, config.DataNormalizationMode, data.Time.Date) : 1);
                         
                         // drop the data into the back of the enqueueable
                         enqueueable.Enqueue(subscriptionData);
