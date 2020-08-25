@@ -2099,12 +2099,9 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Adjust prices based on price scale
+        /// Scale data based on factor function
         /// </summary>
-        /// <param name="data">Data to be adjusted</param>
-        /// <param name="scale">Price scale</param>
-        /// <returns></returns>
-        public static BaseData Adjust(this BaseData data, decimal scale)
+        public static BaseData Scale(this BaseData data, Func<decimal, decimal> factor)
         {
             switch (data.DataType)
             {
@@ -2112,10 +2109,10 @@ namespace QuantConnect
                     var tradeBar = data as TradeBar;
                     if (tradeBar != null)
                     {
-                        tradeBar.Open = tradeBar.Open * scale;
-                        tradeBar.High = tradeBar.High * scale;
-                        tradeBar.Low = tradeBar.Low * scale;
-                        tradeBar.Close = tradeBar.Close * scale;
+                        tradeBar.Open = factor(tradeBar.Open);
+                        tradeBar.High = factor(tradeBar.High);
+                        tradeBar.Low = factor(tradeBar.Low);
+                        tradeBar.Close = factor(tradeBar.Close);
                     }
                     break;
                 case MarketDataType.Tick:
@@ -2125,19 +2122,19 @@ namespace QuantConnect
                     {
                         if (securityType == SecurityType.Equity)
                         {
-                            tick.Value = tick.Value * scale;
+                            tick.Value = factor(tick.Value);
                         }
                         if (securityType == SecurityType.Option
                             || securityType == SecurityType.Future)
                         {
                             if (tick.TickType == TickType.Trade)
                             {
-                                tick.Value = tick.Value * scale;
+                                tick.Value = factor(tick.Value);
                             }
                             else if (tick.TickType != TickType.OpenInterest)
                             {
-                                tick.BidPrice = tick.BidPrice != 0 ? tick.BidPrice * scale : 0;
-                                tick.AskPrice = tick.AskPrice != 0 ? tick.AskPrice * scale : 0;
+                                tick.BidPrice = tick.BidPrice != 0 ? factor(tick.BidPrice) : 0;
+                                tick.AskPrice = tick.AskPrice != 0 ? factor(tick.AskPrice) : 0;
 
                                 if (tick.BidPrice != 0)
                                 {
@@ -2164,17 +2161,17 @@ namespace QuantConnect
                     {
                         if (quoteBar.Ask != null)
                         {
-                            quoteBar.Ask.Open = quoteBar.Ask.Open * scale;
-                            quoteBar.Ask.High = quoteBar.Ask.High * scale;
-                            quoteBar.Ask.Low = quoteBar.Ask.Low * scale;
-                            quoteBar.Ask.Close = quoteBar.Ask.Close * scale;
+                            quoteBar.Ask.Open = factor(quoteBar.Ask.Open);
+                            quoteBar.Ask.High = factor(quoteBar.Ask.High);
+                            quoteBar.Ask.Low = factor(quoteBar.Ask.Low);
+                            quoteBar.Ask.Close = factor(quoteBar.Ask.Close);
                         }
                         if (quoteBar.Bid != null)
                         {
-                            quoteBar.Bid.Open = quoteBar.Bid.Open * scale;
-                            quoteBar.Bid.High = quoteBar.Bid.High * scale;
-                            quoteBar.Bid.Low = quoteBar.Bid.Low * scale;
-                            quoteBar.Bid.Close = quoteBar.Bid.Close * scale;
+                            quoteBar.Bid.Open = factor(quoteBar.Bid.Open);
+                            quoteBar.Bid.High = factor(quoteBar.Bid.High);
+                            quoteBar.Bid.Low = factor(quoteBar.Bid.Low);
+                            quoteBar.Bid.Close = factor(quoteBar.Bid.Close);
                         }
                         quoteBar.Value = quoteBar.Close;
                     }
@@ -2188,6 +2185,28 @@ namespace QuantConnect
                     throw new ArgumentOutOfRangeException();
             }
             return data;
+        }
+
+        /// <summary>
+        /// Normalize prices based on configuration
+        /// </summary>
+        /// <param name="data">Data to be normalized</param>
+        /// <param name="config">Price scale</param>
+        /// <returns></returns>
+        public static BaseData Normalize(this BaseData data, SubscriptionDataConfig config)
+        {
+            return data?.Scale(p => config.GetNormalizedPrice(p));
+        }
+
+        /// <summary>
+        /// Adjust prices based on price scale
+        /// </summary>
+        /// <param name="data">Data to be adjusted</param>
+        /// <param name="scale">Price scale</param>
+        /// <returns></returns>
+        public static BaseData Adjust(this BaseData data, decimal scale)
+        {
+            return data?.Scale(p => p * scale);
         }
     }
 }

@@ -41,71 +41,18 @@ namespace QuantConnect.Tests.Common.Util
                 false);
         }
 
-        [Test]
-        public void AdjustTradeBar()
+        [TestCase(DataNormalizationMode.Raw, 0.5, 100, 100)]
+        [TestCase(DataNormalizationMode.Adjusted, 0.5, 100, 50)]
+        [TestCase(DataNormalizationMode.SplitAdjusted, 0.5, 100, 50)]
+        [TestCase(DataNormalizationMode.TotalReturn, 0.5, 100, 150)]
+        public void NormalizePrice(DataNormalizationMode mode, decimal factor, decimal dividents, decimal expected)
         {
-            var tb = new TradeBar
-            {
-                Time = new DateTime(2020, 5, 21, 8, 9, 0),
-                Period = TimeSpan.FromHours(1),
-                Symbol = Symbols.SPY,
-                Open = 100,
-                High = 200,
-                Low = 300,
-                Close = 400
-            };
+            _config.DataNormalizationMode = mode;
+            _config.PriceScaleFactor = factor;
+            _config.SumOfDividends = dividents;
 
-            var factor = 0.5m;
-            var adjustedTb = tb.Clone(tb.IsFillForward).Adjust(factor);
-
-            Assert.AreEqual(tb.Open * factor, (adjustedTb as TradeBar).Open);
-            Assert.AreEqual(tb.High * factor, (adjustedTb as TradeBar).High);
-            Assert.AreEqual(tb.Low * factor, (adjustedTb as TradeBar).Low);
-            Assert.AreEqual(tb.Close * factor, (adjustedTb as TradeBar).Close);
+            Assert.AreEqual(expected, _config.GetNormalizedPrice(100));
         }
 
-        [Test]
-        public void AdjustTick()
-        {
-            var tick = new Tick
-            {
-                Time = new DateTime(2020, 5, 21, 8, 9, 0),
-                Symbol = Symbols.SPY,
-                Value = 100
-            };
-
-            var factor = 0.5m;
-            var adjustedTick = tick.Clone(tick.IsFillForward).Adjust(factor);
-
-            Assert.AreEqual(tick.Value * factor, (adjustedTick as Tick).Value);
-        }
-
-        [Test]
-        public void AdjustQuoteBar()
-        {
-            var qb = new QuoteBar(
-                new DateTime(2018, 1, 1),
-                _config.Symbol,
-                new Bar(10, 10, 10, 10),
-                100,
-                new Bar(10, 10, 10, 10),
-                100);
-
-            var factor = 0.5m;
-            var adjustedQb = qb.Clone(qb.IsFillForward).Adjust(factor);
-
-            Assert.AreEqual(qb.Value, qb.Close);
-
-            // bid
-            Assert.AreEqual(qb.Bid.Open * factor, (adjustedQb as QuoteBar).Bid.Open);
-            Assert.AreEqual(qb.Bid.Close * factor, (adjustedQb as QuoteBar).Bid.Close);
-            Assert.AreEqual(qb.Bid.High * factor, (adjustedQb as QuoteBar).Bid.High);
-            Assert.AreEqual(qb.Bid.Low * factor, (adjustedQb as QuoteBar).Bid.Low);
-            // ask
-            Assert.AreEqual(qb.Ask.Open * factor, (adjustedQb as QuoteBar).Ask.Open);
-            Assert.AreEqual(qb.Ask.Close * factor, (adjustedQb as QuoteBar).Ask.Close);
-            Assert.AreEqual(qb.Ask.High * factor, (adjustedQb as QuoteBar).Ask.High);
-            Assert.AreEqual(qb.Ask.Low * factor, (adjustedQb as QuoteBar).Ask.Low);
-        }
     }
 }
