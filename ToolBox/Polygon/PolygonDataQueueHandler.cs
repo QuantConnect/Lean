@@ -48,8 +48,6 @@ namespace QuantConnect.ToolBox.Polygon
 
         private readonly HashSet<Symbol> _subscribedSymbols = new HashSet<Symbol>();
 
-        private readonly object _locker = new object();
-
         private readonly IDataAggregator _dataAggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
             Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
 
@@ -116,12 +114,7 @@ namespace QuantConnect.ToolBox.Polygon
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            IEnumerator<BaseData> enumerator;
-            
-            lock (_locker)
-            {
-                enumerator = _dataAggregator.Add(dataConfig, newDataAvailableHandler);
-            }
+            var enumerator = _dataAggregator.Add(dataConfig, newDataAvailableHandler);
 
             Subscribe(new[] { dataConfig.Symbol });
 
@@ -136,10 +129,7 @@ namespace QuantConnect.ToolBox.Polygon
         {
             Unsubscribe(new [] { dataConfig.Symbol });
 
-            lock (_locker)
-            {
-                _dataAggregator.Remove(dataConfig);
-            }
+            _dataAggregator.Remove(dataConfig);
         }
 
         /// <summary>
@@ -397,10 +387,7 @@ namespace QuantConnect.ToolBox.Polygon
                 Quantity = trade.Size
             };
 
-            lock (_locker)
-            {
-                _dataAggregator.Update(tick);
-            }
+            _dataAggregator.Update(tick);
         }
 
         private void ProcessEquityQuote(EquityQuoteMessage quote)
@@ -420,10 +407,7 @@ namespace QuantConnect.ToolBox.Polygon
                 Value = (quote.AskPrice + quote.BidPrice) / 2m
             };
 
-            lock (_locker)
-            {
-                _dataAggregator.Update(tick);
-            }
+            _dataAggregator.Update(tick);
         }
 
         private void ProcessForexQuote(ForexQuoteMessage quote)
@@ -441,10 +425,7 @@ namespace QuantConnect.ToolBox.Polygon
                 Value = (quote.AskPrice + quote.BidPrice) / 2m
             };
 
-            lock (_locker)
-            {
-                _dataAggregator.Update(tick);
-            }
+            _dataAggregator.Update(tick);
         }
 
         private void ProcessCryptoTrade(CryptoTradeMessage trade)
@@ -467,10 +448,7 @@ namespace QuantConnect.ToolBox.Polygon
                 Quantity = trade.Size
             };
 
-            lock (_locker)
-            {
-                _dataAggregator.Update(tick);
-            }
+            _dataAggregator.Update(tick);
         }
 
         private void ProcessCryptoQuote(CryptoQuoteMessage quote)
@@ -496,10 +474,7 @@ namespace QuantConnect.ToolBox.Polygon
                 Value = (quote.AskPrice + quote.BidPrice) / 2m
             };
 
-            lock (_locker)
-            {
-                _dataAggregator.Update(tick);
-            }
+            _dataAggregator.Update(tick);
         }
 
         private DateTime GetTickTime(Symbol symbol, long timestamp)
