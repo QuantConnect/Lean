@@ -145,26 +145,26 @@ namespace QuantConnect.Tests.Python
         {
             var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("CustomConsolidatorRegressionAlgorithm",
                 new Dictionary<string, string> {
-                    {"Total Trades", "45"},
-                    {"Average Win", "0.45%"},
-                    {"Average Loss", "-0.03%"},
-                    {"Compounding Annual Return", "7.964%"},
-                    {"Drawdown", "0.900%"},
-                    {"Expectancy", "-0.335"},
-                    {"Net Profit", "0.161%"},
-                    {"Sharpe Ratio", "1.383"},
-                    {"Probabilistic Sharpe Ratio", "51.675%"},
-                    {"Loss Rate", "95%"},
-                    {"Win Rate", "5%"},
-                    {"Profit-Loss Ratio", "13.63"},
-                    {"Alpha", "-0.039"},
-                    {"Beta", "0.234"},
-                    {"Annual Standard Deviation", "0.062"},
-                    {"Annual Variance", "0.004"},
-                    {"Information Ratio", "-2.698"},
-                    {"Tracking Error", "0.166"},
-                    {"Treynor Ratio", "0.368"},
-                    {"Total Fees", "$73.35"}
+                    {"Total Trades", "32"},
+                    {"Average Win", "0.42%"},
+                    {"Average Loss", "-0.02%"},
+                    {"Compounding Annual Return", "66.060%"},
+                    {"Drawdown", "0.300%"},
+                    {"Expectancy", "2.979"},
+                    {"Net Profit", "1.071%"},
+                    {"Sharpe Ratio", "8.939"},
+                    {"Probabilistic Sharpe Ratio", "88.793%"},
+                    {"Loss Rate", "81%"},
+                    {"Win Rate", "19%"},
+                    {"Profit-Loss Ratio", "20.22"},
+                    {"Alpha", "0.528"},
+                    {"Beta", "0.35"},
+                    {"Annual Standard Deviation", "0.08"},
+                    {"Annual Variance", "0.006"},
+                    {"Information Ratio", "1.287"},
+                    {"Tracking Error", "0.141"},
+                    {"Treynor Ratio", "2.045"},
+                    {"Total Fees", "$51.40"}
                 },
                 Language.Python,
                 AlgorithmStatus.Completed);
@@ -174,6 +174,56 @@ namespace QuantConnect.Tests.Python
                 parameter.AlphaStatistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus);
+        }
+
+        [Test]
+        public void AttachAndTriggerEvent()
+        {
+            using (Py.GIL())
+            {
+                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                    "from clr import AddReference\n" +
+                    "AddReference(\"QuantConnect.Common\")\n" +
+                    "from QuantConnect.Data.Consolidators import *\n" +
+                    "from datetime import *\n" +
+                    "class ImplementingClass():\n" +
+                    "   def __init__(self):\n" +
+                    "       self.EventCalled = False\n" +
+                    "       self.Consolidator = CustomConsolidator(timedelta(minutes=1))\n" +
+                    "       self.Consolidator.DataConsolidated += self.ConsolidatorEvent\n" +
+                    "   def ConsolidatorEvent(self, sender, bar):\n" +
+                    "       self.EventCalled = True\n" +
+                    "class CustomConsolidator(QuoteBarConsolidator):\n" +
+                    "   def __init__(self,span):\n" +
+                    "       self.Span = span");
+
+                var implementingClass = module.GetAttr("ImplementingClass").Invoke();
+                var customConsolidator = implementingClass.GetAttr("Consolidator");
+                var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
+
+                bool called;
+                implementingClass.GetAttr("EventCalled").TryConvert(out called);
+                Assert.False(called);
+
+                var time = DateTime.Today;
+                var period = TimeSpan.FromMinutes(1);
+                var bar1 = new QuoteBar
+                {
+                    Time = time,
+                    Symbol = Symbols.SPY,
+                    Bid = new Bar(1, 2, 0.75m, 1.25m),
+                    LastBidSize = 3,
+                    Ask = null,
+                    LastAskSize = 0,
+                    Value = 1,
+                    Period = period
+                };
+
+                wrapper.Update(bar1);
+                wrapper.Scan(time.AddMinutes(1));
+                implementingClass.GetAttr("EventCalled").TryConvert(out called);
+                Assert.True(called);
+            }
         }
     }
 }
