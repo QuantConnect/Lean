@@ -38,9 +38,11 @@ namespace QuantConnect.Tests.Indicators
                     Guid.NewGuid().ToString(),
                     @"
 from clr import AddReference
+AddReference('QuantConnect.Common')
 AddReference('QuantConnect.Indicators')
 
-from QuantConnect.Indicators import PythonIndicator
+from QuantConnect import *
+from QuantConnect.Indicators import *
 from collections import deque
 from datetime import datetime, timedelta
 from numpy import sum
@@ -180,8 +182,11 @@ class CustomSimpleMovingAverage(PythonIndicator):
                     Guid.NewGuid().ToString(),
                     @"
 from clr import AddReference
+AddReference('QuantConnect.Common')
 AddReference('QuantConnect.Indicators')
-from QuantConnect.Indicators import PythonIndicator
+
+from QuantConnect import *
+from QuantConnect.Indicators import *
 class GoodCustomIndicator(PythonIndicator):
     def __init__(self):
         self.Value = 0
