@@ -300,7 +300,7 @@ namespace QuantConnect.ToolBox.Polygon
                         continue;
                     }
 
-                    var time = utcTime.ConvertFromUtc(TimeZones.NewYork);
+                    var time = GetTickTime(request.Symbol, utcTime);
 
                     Interlocked.Increment(ref _dataPointCount);
 
@@ -506,6 +506,11 @@ namespace QuantConnect.ToolBox.Polygon
         {
             var utcTime = Time.UnixMillisecondTimeStampToDateTime(timestamp);
 
+            return GetTickTime(symbol, utcTime);
+        }
+
+        private DateTime GetTickTime(Symbol symbol, DateTime utcTime)
+        {
             DateTimeZone exchangeTimeZone;
             if (!_symbolExchangeTimeZones.TryGetValue(symbol, out exchangeTimeZone))
             {

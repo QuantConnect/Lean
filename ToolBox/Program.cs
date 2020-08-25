@@ -173,7 +173,13 @@ namespace QuantConnect.ToolBox
 
                     case "pdl":
                     case "polygondownloader":
-                        PolygonDownloaderProgram.PolygonDownloader(tickers, resolution, fromDate, toDate);
+                        PolygonDownloaderProgram.PolygonDownloader(
+                            tickers,
+                            GetParameterOrExit(optionsObject, "security-type"),
+                            GetParameterOrExit(optionsObject, "market"),
+                            resolution, 
+                            fromDate, 
+                            toDate);
                         break;
 
                     default:
