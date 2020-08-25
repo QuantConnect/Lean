@@ -1027,15 +1027,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     }
                 }
 
-                // update the ticket and order after we've processed the fill, but before the event, this way everything is ready for user code
+                // update the ticket after we've processed the fill, but before the event, this way everything is ready for user code
                 ticket.AddOrderEvent(orderEvent);
-
-                //Option exercise order prices are already set when the order is created
-                //If this is able to change it, it will change the fill price of the security
-                if (order.Type != OrderType.OptionExercise)
-                {
-                    order.Price = ticket.AverageFillPrice;
-                }
             }
             
             //We have an event! :) Order filled, send it in to be handled by algorithm portfolio.
