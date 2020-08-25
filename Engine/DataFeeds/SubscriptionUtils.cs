@@ -96,42 +96,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             continue;
                         }
 
-                        SubscriptionData subscriptionData = null;
+                        var data = enumerator.Current;
 
-                        if (enablePriceScale)
-                        {
-                            var data = enumerator.Current;
-                            var emitTimeUtc = timeZoneOffsetProvider.ConvertToUtc(data.EndTime);
-
-                            // Let's round down for any data source that implements a time delta between
-                            // the start of the data and end of the data (usually used with Bars).
-                            // The time delta ensures that the time collected from `EndTime` has
-                            // no look-ahead bias, and is point-in-time.
-                            if (data.Time != data.EndTime)
-                            {
-                                data.Time = data.Time.ExchangeRoundDownInTimeZone(config.Increment, exchangeHours, config.DataTimeZone, config.ExtendedMarketHours);
-                            }
-
-                            var rawData = data.Clone(data.IsFillForward);
-                            var adjustedData = data
-                                .Clone(data.IsFillForward)
-                                .Adjust(GetScaleFactor(factorFile, config.DataNormalizationMode, data.Time.Date));
-
-                            subscriptionData = new PrecalculatedSubscriptionData(
-                                config,
-                                rawData,
-                                adjustedData,
-                                emitTimeUtc);
-                        }
-                        else
-                        {
-                            subscriptionData = SubscriptionData.Create(
-                                subscription.Configuration,
-                                exchangeHours,
-                                subscription.OffsetProvider,
-                                enumerator.Current);
-                        }
-
+                        SubscriptionData subscriptionData = SubscriptionData.Create(
+                            config,
+                            exchangeHours,
+                            subscription.OffsetProvider,
+                            data,
+                            enablePriceScale,
+                            enablePriceScale ? GetScaleFactor(factorFile, config.DataNormalizationMode, data.Time.Date) : 1);
+                        
                         // drop the data into the back of the enqueueable
                         enqueueable.Enqueue(subscriptionData);
 

@@ -17,6 +17,8 @@
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Securities;
 using System;
 
 namespace QuantConnect.Tests.Common.Util
@@ -41,6 +43,23 @@ namespace QuantConnect.Tests.Common.Util
 
             _config.DataNormalizationMode = DataNormalizationMode.Adjusted;
             _config.PriceScaleFactor = _factor;
+        }
+
+        [TestCase(typeof(SubscriptionData), false, 1)]
+        [TestCase(typeof(SubscriptionData), false, 2)]
+        [TestCase(typeof(PrecalculatedSubscriptionData), true, 1)]
+        [TestCase(typeof(PrecalculatedSubscriptionData), true, 0.5)]
+        public void Create(Type type, bool adjust, decimal scale)
+        {
+            var data = SubscriptionData.Create(
+                _config,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                new TimeZoneOffsetProvider(TimeZones.NewYork, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1)),
+                new Tick(),
+                adjust,
+                scale);
+
+            Assert.True(data.GetType() == type);
         }
 
         [Test]

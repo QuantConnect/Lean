@@ -58,7 +58,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="offsetProvider">The subscription's offset provider</param>
         /// <param name="data">The data being emitted</param>
         /// <returns>A new <see cref="SubscriptionData"/> containing the specified data</returns>
-        public static SubscriptionData Create(SubscriptionDataConfig configuration, SecurityExchangeHours exchangeHours, TimeZoneOffsetProvider offsetProvider, BaseData data)
+        public static SubscriptionData Create(SubscriptionDataConfig configuration, SecurityExchangeHours exchangeHours, TimeZoneOffsetProvider offsetProvider, BaseData data, bool preAdjust = false, decimal factor = 1m)
         {
             if (data == null)
             {
@@ -77,7 +77,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 data.Time = data.Time.ExchangeRoundDownInTimeZone(configuration.Increment, exchangeHours, configuration.DataTimeZone, configuration.ExtendedMarketHours);
             }
 
-            return new SubscriptionData(data, emitTimeUtc);
+            if (preAdjust)
+            {
+                var adjustedData = data
+                    .Clone()
+                    .Adjust(factor);
+                return new PrecalculatedSubscriptionData(configuration, data, adjustedData, emitTimeUtc);
+            }
+            else
+            {
+                return new SubscriptionData(data, emitTimeUtc);
+            }
         }
     }
 }
