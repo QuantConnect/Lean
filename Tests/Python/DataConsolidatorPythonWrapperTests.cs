@@ -184,7 +184,7 @@ namespace QuantConnect.Tests.Python
                 var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
                     "from clr import AddReference\n" +
                     "AddReference(\"QuantConnect.Common\")\n" +
-                    "from QuantConnect.Data.Consolidators import *\n" +
+                    "from QuantConnect.Data.Consolidators import QuoteBarConsolidator\n" +
                     "from datetime import *\n" +
                     "class ImplementingClass():\n" +
                     "   def __init__(self):\n" +
