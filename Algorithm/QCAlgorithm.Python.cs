@@ -474,6 +474,20 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol to register against</param>
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
+        /// <param name="consolidator">The python consolidator to receive subscription data</param>
+        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
+        public void RegisterIndicator(Symbol symbol, PyObject indicator, PyObject consolidator, PyObject selector = null)
+        {
+            IDataConsolidator pyConsolidator = new DataConsolidatorPythonWrapper(consolidator);
+            RegisterIndicator(symbol, indicator, pyConsolidator, selector);
+        }
+
+        /// <summary>
+        /// Registers the consolidator to receive automatic updates as well as configures the indicator to receive updates
+        /// from the consolidator.
+        /// </summary>
+        /// <param name="symbol">The symbol to register against</param>
+        /// <param name="indicator">The indicator to receive data from the consolidator</param>
         /// <param name="consolidator">The consolidator to receive raw subscription data</param>
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
         public void RegisterIndicator(Symbol symbol, PyObject indicator, IDataConsolidator consolidator, PyObject selector = null)
