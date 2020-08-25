@@ -14,19 +14,23 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
+from QuantConnect.Python import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Consolidators import *
+from QuantConnect.Indicators import *
 from QuantConnect.Data.Market import *
 from datetime import *
 
 class CustomConsolidatorRegressionAlgorithm(QCAlgorithm):
-    '''Custom Consolidator Algorithm shows how to build custom consolidators in Python.'''
+    '''Custom Consolidator Regression Algorithm shows some examples of how to build custom 
+    consolidators in Python.'''
 
     def Initialize(self):
         self.SetStartDate(2013,10,4)  
@@ -46,8 +50,14 @@ class CustomConsolidatorRegressionAlgorithm(QCAlgorithm):
 
         #Create our entirely custom 2 day quote bar consolidator
         self.customConsolidator = CustomQuoteBarConsolidator(timedelta(days=2))
-        self.customConsolidator.DataConsolidated.append(self.OnQuoteBarDataConsolidated)
+        self.customConsolidator.DataConsolidated += (self.OnQuoteBarDataConsolidated)
         self.SubscriptionManager.AddConsolidator("SPY", self.customConsolidator)
+
+        #Create an indicator and register a consolidator to it
+        self.movingAverage = SimpleMovingAverage(5)
+        self.customConsolidator2 = CustomQuoteBarConsolidator(timedelta(hours=1))
+        self.RegisterIndicator("SPY", self.movingAverage, self.customConsolidator2)
+
 
     def OnQuoteBarDataConsolidated(self, sender, bar):
         '''Function assigned to be triggered by consolidators.
@@ -72,10 +82,12 @@ class CustomConsolidatorRegressionAlgorithm(QCAlgorithm):
         if self.customConsolidator.Consolidated and slice.ContainsKey("SPY"):
             data = slice['SPY']
             
-            if data.Value > self.customConsolidator.Consolidated.Close:
-                self.SetHoldings("SPY", .5)
-            else :
-                self.SetHoldings("SPY", 0)
+            if self.movingAverage.IsReady:
+                if data.Value > self.movingAverage.Current.Price:
+                    self.SetHoldings("SPY", .5)
+                else :
+                    self.SetHoldings("SPY", 0)
+            
 
 
 class DailyTimeQuoteBarConsolidator(QuoteBarConsolidator):
@@ -120,9 +132,10 @@ class DailyTimeQuoteBarConsolidator(QuoteBarConsolidator):
             #Reset the working bar to None
             self.workingBar = None
 
-class CustomQuoteBarConsolidator():
-    '''A custom quote bar consolidator that implements IDataConsolidator interface, it must implement 
-    all of IDataConsolidator. Reference IDataConsolidator.cs and DataConsolidatorPythonWrapper.py
+class CustomQuoteBarConsolidator(PythonConsolidator):
+    '''A custom quote bar consolidator that inherits from PythonConsolidator and implements 
+    the IDataConsolidator interface, it must implement all of IDataConsolidator. Reference 
+    PythonConsolidator.cs and DataConsolidatorPythonWrapper.py for more information.
 
     This class shows how to implement a consolidator from scratch in Python, this gives us more
     freedom to determine the behavior of the consolidator but can't leverage any of the built in
@@ -132,14 +145,13 @@ class CustomQuoteBarConsolidator():
 
     def __init__(self, period):
 
-        #IDataConsolidator Required Vars
+        #IDataConsolidator required vars for all consolidators
         self.Consolidated = None        #Most recently consolidated piece of data.
         self.WorkingData = None         #Data being currently consolidated
         self.InputType = QuoteBar       #The type consumed by this consolidator
         self.OutputType = QuoteBar      #The type produced by this consolidator
-        self.DataConsolidated = []      #Handler list to place methods to call on consolidation
 
-        #Unique to this Consolidator
+        #Consolidator Variables
         self.Period = period
     
     def Update(self, data):
@@ -159,15 +171,10 @@ class CustomQuoteBarConsolidator():
 
         if self.Period is not None and self.WorkingData is not None:
             if time - self.WorkingData.Time >= self.Period:
-                self.OnDataConsolidated()
 
-    def OnDataConsolidated(self):
-        '''Handle the completed bar'''
+                #Trigger the event handler with a copy of self and the data
+                self.OnDataConsolidated(self, self.WorkingData)
 
-        #Trigger handler events with a copy of self and the data
-        for method in self.DataConsolidated:
-            method(self, self.WorkingData)
-
-        #Set the most recent consolidated piece of data and then clear the workingData
-        self.Consolidated = self.WorkingData
-        self.WorkingData = None      
+                #Set the most recent consolidated piece of data and then clear the workingData
+                self.Consolidated = self.WorkingData
+                self.WorkingData = None
