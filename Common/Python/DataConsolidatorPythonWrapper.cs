@@ -63,7 +63,11 @@ namespace QuantConnect.Python
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
         /// </summary>
-        public event DataConsolidatedHandler DataConsolidated;
+        public event DataConsolidatedHandler DataConsolidated
+        {
+            add { using (Py.GIL()) {_consolidator.DataConsolidated += value;} }
+            remove { using (Py.GIL()) {_consolidator.DataConsolidated -= value;} }
+        }
 
         /// <summary>
         /// Constructor for initialising the <see cref="DataConsolidatorPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
