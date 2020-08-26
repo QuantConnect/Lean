@@ -7,7 +7,7 @@ There is an up to date docker image available at [quantconnect/research](https:/
 # Using the Docker Image
 The docker image we created can be started using the included .bat/.sh file in this directory (Lean/Research). These scripts take care of all the work required to get the notebook container setup and started for use. Including launching a browser to the notebook lab environment for you.
 
-From a terminal launch the run_docker.bat/.sh script; there are a few options on how to launch this:
+From a terminal launch the run_docker_notebook.bat/.sh script; there are a few options on how to launch this:
  1. Launch with no parameters and answer the questions regarding configuration (Press enter for defaults) ex: `./run_docker_notebook.bat`
    
         *   Enter docker image [default: quantconnect/research:latest]:
