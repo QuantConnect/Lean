@@ -44,6 +44,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly PendingRemovalsManager _pendingRemovalsManager;
         private readonly CurrencySubscriptionDataConfigManager _currencySubscriptionDataConfigManager;
         private bool _initializedSecurityBenchmark;
+        private readonly IDataProvider _dataProvider;
         private bool _anyDoesNotHaveFundamentalDataWarningLogged;
 
         /// <summary>
@@ -52,11 +53,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="algorithm">The algorithm to add securities to</param>
         /// <param name="securityService">The security service</param>
         /// <param name="dataPermissionManager">The data permissions manager</param>
+        /// <param name="dataProvider">The data provider to use</param>
         public UniverseSelection(
             IAlgorithm algorithm,
             ISecurityService securityService,
-            IDataPermissionManager dataPermissionManager)
+            IDataPermissionManager dataPermissionManager,
+            IDataProvider dataProvider)
         {
+            _dataProvider = dataProvider;
             _algorithm = algorithm;
             _securityService = securityService;
             _dataPermissionManager = dataPermissionManager;
@@ -107,7 +111,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     // prepare a BaseDataCollection of FineFundamental instances
                     var fineCollection = new BaseDataCollection();
-                    var dataProvider = new DefaultDataProvider();
 
                     // Create a dictionary of CoarseFundamental keyed by Symbol that also has FineFundamental
                     // Coarse raw data has SID collision on: CRHCY R735QTJ8XC9X
@@ -152,7 +155,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var localStartTime = dateTimeUtc.ConvertFromUtc(config.ExchangeTimeZone).AddDays(-1);
                         var factory = new FineFundamentalSubscriptionEnumeratorFactory(_algorithm.LiveMode, x => new[] { localStartTime });
                         var request = new SubscriptionRequest(true, universe, security, new SubscriptionDataConfig(config), localStartTime, localStartTime);
-                        using (var enumerator = factory.CreateEnumerator(request, dataProvider))
+                        using (var enumerator = factory.CreateEnumerator(request, _dataProvider))
                         {
                             if (enumerator.MoveNext())
                             {

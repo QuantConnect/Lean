@@ -151,7 +151,8 @@ namespace QuantConnect.Lean.Engine
                         new UniverseSelection(
                             algorithm,
                             securityService,
-                            AlgorithmHandlers.DataPermissionsManager),
+                            AlgorithmHandlers.DataPermissionsManager,
+                            AlgorithmHandlers.DataProvider),
                         algorithm,
                         algorithm.TimeKeeper,
                         marketHoursDatabase,

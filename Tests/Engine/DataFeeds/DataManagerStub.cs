@@ -93,7 +93,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, ITimeKeeper timeKeeper, MarketHoursDatabase marketHoursDatabase, SecurityService securityService, DataPermissionManager dataPermissionManager, bool liveMode = false)
             : base(dataFeed,
-                new UniverseSelection(algorithm, securityService, dataPermissionManager),
+                new UniverseSelection(algorithm, securityService, dataPermissionManager, new DefaultDataProvider()),
                 algorithm,
                 timeKeeper,
                 marketHoursDatabase,
