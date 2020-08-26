@@ -13,17 +13,27 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
     public class IQFeedDataDownloader : IDataDownloader
     {
         private readonly IQFeedFileHistoryProvider _fileHistoryProvider;
+        private readonly TickType _tickType;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IQFeedDataDownloader"/> class
         /// </summary>
-        /// <param name="username">IQFeed user name</param>
-        /// <param name="password">IQFeed password</param>
-        /// <param name="productName">IQFeed product name</param>
-        /// <param name="productVersion">IQFeed product version</param>
+        /// <param name="fileHistoryProvider"></param>
         public IQFeedDataDownloader(IQFeedFileHistoryProvider fileHistoryProvider)
         {
             _fileHistoryProvider = fileHistoryProvider;
+            _tickType = TickType.Trade;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IQFeedDataDownloader"/> class
+        /// </summary>
+        /// <param name="fileHistoryProvider"></param>
+        /// <param name="tickType"></param>
+        public IQFeedDataDownloader(IQFeedFileHistoryProvider fileHistoryProvider, TickType tickType)
+        {
+            _fileHistoryProvider = fileHistoryProvider;
+            _tickType = tickType;
         }
 
         /// <summary>
@@ -43,7 +53,6 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
                 throw new ArgumentException("The end date must be greater or equal than the start date.");
 
             var dataType = resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar);
-            var tickType = resolution == Resolution.Tick ? TickType.Quote : TickType.Trade;
 
             return _fileHistoryProvider.ProcessHistoryRequests(
                 new HistoryRequest(
@@ -58,7 +67,7 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
                     true,
                     false,
                     DataNormalizationMode.Adjusted,
-                    tickType));
+                    _tickType));
         }
     }
 }

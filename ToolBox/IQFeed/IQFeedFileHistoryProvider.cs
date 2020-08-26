@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,20 +23,22 @@ namespace QuantConnect.ToolBox.IQFeed
         private readonly LookupClient _lookupClient;
         private readonly ISymbolMapper _symbolMapper;
         private readonly MarketHoursDatabase _marketHoursDatabase;
+        private readonly ConcurrentDictionary<string, string> _filesByRequestKeyCache;
 
         public IQFeedFileHistoryProvider(LookupClient lookupClient, ISymbolMapper symbolMapper, MarketHoursDatabase marketHoursDatabase)
         {
             _lookupClient = lookupClient;
             _symbolMapper = symbolMapper;
             _marketHoursDatabase = marketHoursDatabase;
+            _filesByRequestKeyCache = new ConcurrentDictionary<string, string>();
         }
 
         public IEnumerable<BaseData> ProcessHistoryRequests(HistoryRequest request)
         {
             // skipping universe and canonical symbols
             if (!CanHandle(request.Symbol) ||
-                (request.Symbol.ID.SecurityType == SecurityType.Option && request.Symbol.IsCanonical()) ||
-                (request.Symbol.ID.SecurityType == SecurityType.Future && request.Symbol.IsCanonical()))
+                request.Symbol.ID.SecurityType == SecurityType.Option && request.Symbol.IsCanonical() ||
+                request.Symbol.ID.SecurityType == SecurityType.Future && request.Symbol.IsCanonical())
             {
                 return Enumerable.Empty<BaseData>();
             }
@@ -74,8 +77,15 @@ namespace QuantConnect.ToolBox.IQFeed
                 switch (request.Resolution)
                 {
                     case Resolution.Tick:
+                        var requestKey = GetHistoryRequestKey(ticker, startDate, endDate);
+                        var tickFunc = request.TickType == TickType.Trade ? new Func<DateTime, Symbol, TickMessage, Tick>(CreateTradeTick) : CreateQuoteTick;
+
+                        if (_filesByRequestKeyCache.TryRemove(requestKey, out filename))
+                            return GetDataFromTickMessages(filename, request, tickFunc, true);
+                        
                         filename = _lookupClient.Historical.File.GetHistoryTickTimeframeAsync(ticker, startDate, endDate, dataDirection: DataDirection.Oldest).SynchronouslyAwaitTaskResult();
-                        return GetDataFromTickMessages(filename, request);
+                        _filesByRequestKeyCache.AddOrUpdate(requestKey, filename);
+                        return GetDataFromTickMessages(filename, request, tickFunc, false);
 
                     case Resolution.Daily:
                         filename = _lookupClient.Historical.File.GetHistoryDailyTimeframeAsync(ticker, startDate, endDate, dataDirection: DataDirection.Oldest).SynchronouslyAwaitTaskResult();
@@ -100,9 +110,10 @@ namespace QuantConnect.ToolBox.IQFeed
         /// </summary>
         /// <param name="filename"></param>
         /// <param name="request"></param>
-        /// <param name="isEquity"></param>
+        /// <param name="tickFunc"></param>
+        /// <param name="delete"></param>
         /// <returns>Converted Tick</returns>
-        private IEnumerable<BaseData> GetDataFromTickMessages(string filename, HistoryRequest request)
+        private IEnumerable<BaseData> GetDataFromTickMessages(string filename, HistoryRequest request, Func<DateTime, Symbol, TickMessage, Tick> tickFunc, bool delete)
         {
             var dataTimeZone = _marketHoursDatabase.GetDataTimeZone(request.Symbol.ID.Market, request.Symbol, request.Symbol.SecurityType);
 
@@ -112,31 +123,11 @@ namespace QuantConnect.ToolBox.IQFeed
             foreach (var tick in TickMessage.ParseFromFile(filename).Where(t => t.BasisForLast != 'O'))
             {
                 var timestamp = tick.Timestamp.ConvertTo(TimeZones.NewYork, dataTimeZone);
-
-                // trade
-                yield return new Tick(
-                    timestamp,
-                    request.Symbol,
-                    tick.TradeConditions,
-                    tick.TradeMarketCenter.ToStringInvariant(),
-                    tick.LastSize,
-                    (decimal)tick.Last
-                );
-
-                // quote
-                yield return new Tick(
-                    timestamp,
-                    request.Symbol,
-                    tick.TradeConditions,
-                    tick.TradeMarketCenter.ToStringInvariant(),
-                    0, // not provided by IQFeed on history
-                    (decimal)tick.Bid,
-                    0, // not provided by IQFeed on history
-                    (decimal)tick.Ask
-                );
+                yield return tickFunc(timestamp, request.Symbol, tick);
             }
 
-            File.Delete(filename);
+            if (delete)
+                File.Delete(filename);
         }
 
         /// <summary>
@@ -144,7 +135,6 @@ namespace QuantConnect.ToolBox.IQFeed
         /// </summary>
         /// <param name="filename"></param>
         /// <param name="request"></param>
-        /// <param name="isEquity"></param>
         /// <returns>Converted TradeBar</returns>
         private IEnumerable<BaseData> GetDataFromDailyMessages(string filename, HistoryRequest request)
         {
@@ -174,7 +164,6 @@ namespace QuantConnect.ToolBox.IQFeed
         /// </summary>
         /// <param name="filename"></param>
         /// <param name="request"></param>
-        /// <param name="isEquity"></param>
         /// <returns>Converted TradeBar</returns>
         private IEnumerable<BaseData> GetDataFromIntervalMessages(string filename, HistoryRequest request)
         {
@@ -212,6 +201,58 @@ namespace QuantConnect.ToolBox.IQFeed
                 (securityType == SecurityType.Forex && market == Market.FXCM) ||
                 (securityType == SecurityType.Option && market == Market.USA) ||
                 (securityType == SecurityType.Future);
+        }
+
+        /// <summary>
+        /// Create Trade Tick from TickMessage
+        /// </summary>
+        /// <param name="timestamp"></param>
+        /// <param name="symbol"></param>
+        /// <param name="tick"></param>
+        /// <returns>Trade Tick</returns>
+        private static Tick CreateTradeTick(DateTime timestamp, Symbol symbol, ITickMessage tick)
+        {
+            return new Tick(
+                timestamp,
+                symbol,
+                tick.TradeConditions,
+                tick.TradeMarketCenter.ToStringInvariant(),
+                tick.LastSize,
+                (decimal)tick.Last
+            );
+        }
+
+        /// <summary>
+        /// Create Quote Tick from TickMessage
+        /// </summary>
+        /// <param name="timestamp"></param>
+        /// <param name="symbol"></param>
+        /// <param name="tick"></param>
+        /// <returns>Quote Tick</returns>
+        private static Tick CreateQuoteTick(DateTime timestamp, Symbol symbol, ITickMessage tick)
+        {
+            return new Tick(
+                timestamp,
+                symbol,
+                tick.TradeConditions,
+                tick.TradeMarketCenter.ToStringInvariant(),
+                0, // not provided by IQFeed on history
+                (decimal)tick.Bid,
+                0, // not provided by IQFeed on history
+                (decimal)tick.Ask
+            );
+        }
+
+        /// <summary>
+        /// Generate unique key from history request parameters
+        /// </summary>
+        /// <param name="ticker"></param>
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <returns></returns>
+        private static string GetHistoryRequestKey(string ticker, DateTime startDate, DateTime? endDate)
+        {
+            return $"{ticker}-{startDate}-{endDate}";
         }
 
         private static PeriodType GetPeriodType(Resolution resolution)
