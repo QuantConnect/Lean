@@ -1,4 +1,19 @@
-﻿using QuantConnect.Data;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -12,7 +27,6 @@ using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-
     /// <summary>
     /// This regression algorithm tests the order processing of the backtesting brokerage.
     /// We open an equity position that should fill in two parts, on two different bars.
@@ -30,7 +44,6 @@ namespace QuantConnect.Algorithm.CSharp
         public Symbol OptionSymbol;
         private bool _optionBought = false;
         private bool _equityBought = false;
-
         private decimal _optionStrikePrice;
 
         /// <summary>
@@ -42,19 +55,17 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 28);
 
+            // Get our equity
             _security = AddEquity("SPY", Resolution.Hour);
+            _security.SetFillModel(new PartialMarketFillModel(2));
             Spy = _security.Symbol;
 
-            _security.SetFillModel(new PartialMarketFillModel(2));
-
-
+            // Get our option
             _option = AddOption("GOOG");
-            OptionSymbol = _option.Symbol;
-
-            // Set our strike/expiry filter for this option chain
             _option.SetFilter(u => u.IncludeWeeklys()
                                    .Strikes(-2, +2)
                                    .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10)));
+            OptionSymbol = _option.Symbol;
         }
 
         /// <summary>
