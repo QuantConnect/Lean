@@ -51,7 +51,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new UniverseSelection(
                     algorithm,
                     new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(algorithm.Portfolio)),
-                    dataPermissionManager),
+                    dataPermissionManager,
+                    new DefaultDataProvider()),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,

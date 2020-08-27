@@ -15,8 +15,6 @@
 
 using NUnit.Framework;
 using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Report;
 using QuantConnect.Securities;
@@ -46,7 +44,8 @@ namespace QuantConnect.Tests.Report
                         algorithm,
                         RegisteredSecurityDataTypesProvider.Null,
                         new SecurityCacheProvider(algorithm.Portfolio)),
-                    dataPermissionManager),
+                    dataPermissionManager,
+                    new DefaultDataProvider()),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
@@ -60,9 +59,6 @@ namespace QuantConnect.Tests.Report
                 algorithm,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCacheProvider(algorithm.Portfolio));
-
-            var transactions = new BacktestingTransactionHandler();
-            var results = new BacktestingResultHandler();
 
             // Initialize security services and other properties so that we
             // don't get null reference exceptions during our re-calculation

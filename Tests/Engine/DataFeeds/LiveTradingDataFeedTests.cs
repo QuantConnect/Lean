@@ -857,10 +857,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 algorithm,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCacheProvider(algorithm.Portfolio));
+            var fileProvider = new DefaultDataProvider();
             algorithm.Securities.SetSecurityService(securityService);
             var dataPermissionManager = new DataPermissionManager();
             var dataManager = new DataManager(_feed,
-                new UniverseSelection(algorithm, securityService, dataPermissionManager),
+                new UniverseSelection(algorithm, securityService, dataPermissionManager, fileProvider),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
@@ -874,7 +875,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var getNextTicksFunction = Enumerable.Range(0, 20).Select(x => new Tick { Symbol = SymbolCache.GetSymbol(x.ToStringInvariant()) }).ToList();
             _feed.DataQueueHandler = new FuncDataQueueHandler(handler => getNextTicksFunction, new RealTimeProvider());
             var mapFileProvider = new LocalDiskMapFileProvider();
-            var fileProvider = new DefaultDataProvider();
             _feed.Initialize(
                 algorithm,
                 job,
@@ -1158,7 +1158,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm.Securities.SetSecurityService(securityService);
             var dataPermissionManager = new DataPermissionManager();
             _dataManager = new DataManager(_feed,
-                new UniverseSelection(_algorithm, securityService, dataPermissionManager),
+                new UniverseSelection(_algorithm, securityService, dataPermissionManager, fileProvider),
                 _algorithm,
                 _algorithm.TimeKeeper,
                 marketHoursDatabase,
@@ -1482,8 +1482,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new SecurityCacheProvider(algorithm.Portfolio));
             algorithm.Securities.SetSecurityService(securityService);
             var dataPermissionManager = new DataPermissionManager();
+            var fileProvider = new DefaultDataProvider();
             var dataManager = new DataManager(_feed,
-                new UniverseSelection(algorithm, securityService, dataPermissionManager),
+                new UniverseSelection(algorithm, securityService, dataPermissionManager, fileProvider),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
@@ -1534,7 +1535,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var mapFileProvider = new LocalDiskMapFileProvider();
             _feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
-                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider(),
+                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider,
                 dataManager, _synchronizer, new TestDataChannelProvider());
 
             if (!dataQueueStarted.WaitOne(TimeSpan.FromMilliseconds(5000)))
@@ -1991,8 +1992,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new SecurityCacheProvider(algorithm.Portfolio));
             algorithm.Securities.SetSecurityService(securityService);
             var dataPermissionManager = new DataPermissionManager();
+            var dataProvider = new DefaultDataProvider();
             var dataManager = new DataManager(_feed,
-                new UniverseSelection(algorithm, securityService, dataPermissionManager),
+                new UniverseSelection(algorithm, securityService, dataPermissionManager, dataProvider),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
@@ -2031,7 +2033,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var mapFileProvider = new LocalDiskMapFileProvider();
             _feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
-                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider(),
+                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), dataProvider,
                 dataManager, _synchronizer, new TestDataChannelProvider());
 
             var cancellationTokenSource = new CancellationTokenSource();

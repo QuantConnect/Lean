@@ -70,11 +70,13 @@ namespace QuantConnect.Tests.Engine
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
             var dataPermissionManager = new DataPermissionManager();
+            var dataProvider  = new DefaultDataProvider();
             var dataManager = new DataManager(_liveTradingDataFeed,
                 new UniverseSelection(
                     algo,
                     new SecurityService(algo.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algo, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(algo.Portfolio)),
-                    dataPermissionManager),
+                    dataPermissionManager,
+                    dataProvider),
                 algo,
                 algo.TimeKeeper,
                 marketHoursDatabase,
@@ -85,7 +87,7 @@ namespace QuantConnect.Tests.Engine
             _liveSynchronizer = new LiveSynchronizer();
             _liveSynchronizer.Initialize(algo, dataManager);
             _liveTradingDataFeed.Initialize(algo, jobPacket, new LiveTradingResultHandler(), new LocalDiskMapFileProvider(),
-                                            null, new DefaultDataProvider(), dataManager, _liveSynchronizer, new DataChannelProvider());
+                                            null, dataProvider, dataManager, _liveSynchronizer, new DataChannelProvider());
             algo.Initialize();
 
             _config = SecurityTests.CreateTradeBarConfig();
