@@ -11,27 +11,34 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace QuantConnect.ToolBox.Polygon.Messages
+namespace QuantConnect.ToolBox.Polygon.History
 {
-    public class EquityTradeMessage : BaseTradeMessage
+    public class AggregatesResponse
     {
-        [JsonProperty("sym")]
-        public string Symbol { get; set; }
+        [JsonProperty("ticker")]
+        public string Ticker { get; set; }
 
-        [JsonProperty("x")]
-        public int ExchangeId { get; set; }
+        [JsonProperty("status")]
+        public string Status { get; set; }
 
-        [JsonProperty("i")]
-        public string TradeId { get; set; }
+        [JsonProperty("queryCount")]
+        public int QueryCount { get; set; }
 
-        [JsonProperty("z")]
-        public int Tape { get; set; }
+        [JsonProperty("resultsCount")]
+        public int ResultsCount { get; set; }
 
-        [JsonProperty("c")]
-        public int[] Conditions { get; set; }
+        [JsonProperty("adjusted")]
+        public bool Adjusted { get; set; }
+
+        [JsonProperty("results")]
+        public List<AggregateRowResponse> Results { get; set; }
+
+        [JsonProperty("request_id")]
+        public string RequestId { get; set; }
     }
 }

@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -46,6 +47,11 @@ namespace QuantConnect.ToolBox.Polygon
                 var resolution = (Resolution)Enum.Parse(typeof(Resolution), resolutionString);
                 var securityType = (SecurityType)Enum.Parse(typeof(SecurityType), securityTypeString);
 
+                // Polygon.io does not support Crypto historical quotes
+                var tickTypes = securityType == SecurityType.Crypto 
+                    ? new List<TickType> { TickType.Trade } 
+                    : SubscriptionManager.DefaultDataTypes()[securityType];
+
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
                 var startDate = fromDate.ConvertToUtc(TimeZones.NewYork);
@@ -58,23 +64,26 @@ namespace QuantConnect.ToolBox.Polygon
                 {
                     foreach (var ticker in tickers)
                     {
-                        // Download the data
                         var symbol = Symbol.Create(ticker, securityType, market);
 
                         var exchangeTimeZone = marketHoursDatabase.GetExchangeHours(market, symbol, securityType).TimeZone;
                         var dataTimeZone = marketHoursDatabase.GetDataTimeZone(market, symbol, securityType);
 
-                        var data = downloader.Get(symbol, resolution, startDate, endDate)
-                            .Select(x =>
-                                {
-                                    x.Time = x.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
-                                    return x;
-                                }
-                            );
+                        foreach (var tickType in tickTypes)
+                        {
+                            // Download the data
+                            var data = downloader.Get(symbol, resolution, startDate, endDate, tickType)
+                                .Select(x =>
+                                    {
+                                        x.Time = x.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
+                                        return x;
+                                    }
+                                );
 
-                        // Save the data
-                        var writer = new LeanDataWriter(resolution, symbol, dataDirectory);
-                        writer.Write(data);
+                            // Save the data
+                            var writer = new LeanDataWriter(resolution, symbol, dataDirectory, tickType);
+                            writer.Write(data);
+                        }
                     }
                 }
             }

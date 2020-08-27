@@ -15,14 +15,20 @@
 
 using Newtonsoft.Json;
 
-namespace QuantConnect.ToolBox.Polygon.Messages
+namespace QuantConnect.ToolBox.Polygon.WebSocket
 {
-    public class BaseMessage
+    public class EquityQuoteMessage : BaseQuoteMessage
     {
-        [JsonProperty("ev")]
-        public string EventType { get; set; }
+        [JsonProperty("sym")]
+        public string Symbol { get; set; }
 
-        [JsonProperty("t")]
-        public long Timestamp { get; set; }
+        [JsonProperty("bx")]
+        public int BidExchangeId { get; set; }
+
+        [JsonProperty("ax")]
+        public int AskExchangeId { get; set; }
+
+        [JsonProperty("c")]
+        public int Conditions { get; set; }
     }
 }

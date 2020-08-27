@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -26,11 +25,15 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.ToolBox.Polygon.Messages;
-using QuantConnect.ToolBox.Polygon.Responses;
+using QuantConnect.Securities.Crypto;
+using QuantConnect.Securities.Forex;
+using QuantConnect.ToolBox.Polygon.WebSocket;
+using QuantConnect.ToolBox.Polygon.History;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using static QuantConnect.StringExtensions;
@@ -40,9 +43,9 @@ namespace QuantConnect.ToolBox.Polygon
     /// <summary>
     /// An implementation of <see cref="IDataQueueHandler"/> and <see cref="IHistoryProvider"/> for Polygon.io
     /// </summary>
-    public class PolygonDataQueueHandler : HistoryProviderBase, IDataQueueHandler
+    public class PolygonDataQueueHandler : SynchronizingHistoryProvider, IDataQueueHandler
     {
-        private const string HistoryBaseUrl = "https://api.polygon.io/v2";
+        private const string HistoryBaseUrl = "https://api.polygon.io";
 
         private readonly string _apiKey = Config.Get("polygon-api-key");
 
@@ -54,9 +57,18 @@ namespace QuantConnect.ToolBox.Polygon
         private readonly Dictionary<SecurityType, PolygonWebSocketClientWrapper> _webSocketClientWrappers = new Dictionary<SecurityType, PolygonWebSocketClientWrapper>();
         private readonly PolygonSymbolMapper _symbolMapper = new PolygonSymbolMapper();
         private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+        private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
         // exchange time zones by symbol
         private readonly Dictionary<Symbol, DateTimeZone> _symbolExchangeTimeZones = new Dictionary<Symbol, DateTimeZone>();
+
+        // map Polygon exchange -> Lean market
+        // Crypto exchanges from: https://api.polygon.io/v1/meta/crypto-exchanges?apiKey=xxx
+        private readonly Dictionary<int, string> _cryptoExchangeMap = new Dictionary<int, string>
+        {
+            { 1, Market.GDAX },
+            { 2, Market.Bitfinex }
+        };
 
         private int _dataPointCount;
 
@@ -200,31 +212,36 @@ namespace QuantConnect.ToolBox.Polygon
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
         public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
-            if (string.IsNullOrWhiteSpace(_apiKey))
-            {
-                Log.Error("PolygonDataQueueHandler.GetHistory(): History calls for Polygon.io require an API key.");
-                yield break;
-            }
-
+            // create subscription objects from the configs
+            var subscriptions = new List<Subscription>();
             foreach (var request in requests)
             {
-                foreach (var slice in ProcessHistoryRequests(request))
-                {
-                    yield return slice;
-                }
+                var history = GetHistory(request);
+                var subscription = CreateSubscription(request, history);
+
+                subscriptions.Add(subscription);
             }
+
+            return CreateSliceEnumerableFromSubscriptions(subscriptions, sliceTimeZone);
+        }
+
+        /// <summary>
+        /// Gets the history for the requested security
+        /// </summary>
+        /// <param name="request">The historical data request</param>
+        /// <returns>An enumerable of BaseData points</returns>
+        public IEnumerable<BaseData> GetHistory(HistoryRequest request)
+        {
+            return ProcessHistoryRequest(request);
         }
 
         #endregion
 
-        private IEnumerable<Slice> ProcessHistoryRequests(HistoryRequest request)
+        private IEnumerable<BaseData> ProcessHistoryRequest(HistoryRequest request)
         {
-            // check resolution
-            if (request.Resolution != Resolution.Minute &&
-                request.Resolution != Resolution.Hour &&
-                request.Resolution != Resolution.Daily)
+            if (string.IsNullOrWhiteSpace(_apiKey))
             {
-                Log.Error($"PolygonDataQueueHandler.ProcessHistoryRequests(): unsupported resolution: {request.Resolution}.");
+                Log.Error("PolygonDataQueueHandler.GetHistory(): History calls for Polygon.io require an API key.");
                 yield break;
             }
 
@@ -233,44 +250,387 @@ namespace QuantConnect.ToolBox.Polygon
                 request.Symbol.SecurityType != SecurityType.Forex &&
                 request.Symbol.SecurityType != SecurityType.Crypto)
             {
-                Log.Error($"PolygonDataQueueHandler.ProcessHistoryRequests(): unsupported security type: {request.Symbol.SecurityType}.");
+                Log.Error($"PolygonDataQueueHandler.ProcessHistoryRequests(): Unsupported security type: {request.Symbol.SecurityType}.");
                 yield break;
             }
 
             // check tick type
-            if (request.TickType != TickType.Trade)
+            if (request.TickType != TickType.Trade && request.TickType != TickType.Quote)
             {
-                Log.Error("PolygonDataQueueHandler.ProcessHistoryRequests(): Only history requests for trade bars are supported.");
+                Log.Error($"PolygonDataQueueHandler.ProcessHistoryRequests(): Unsupported tick type: {request.TickType}.");
                 yield break;
             }
 
-            var ticker = request.Symbol.ID.Symbol;
-            var start = request.StartTimeUtc.ConvertFromUtc(TimeZones.NewYork);
-            var end = request.EndTimeUtc.ConvertFromUtc(TimeZones.NewYork);
-
+            // check unsupported security type/tick type combinations
+            if (request.Symbol.SecurityType == SecurityType.Forex && request.TickType != TickType.Quote ||
+                request.Symbol.SecurityType == SecurityType.Crypto && request.TickType != TickType.Trade)
+            {
+                Log.Error($"PolygonDataQueueHandler.ProcessHistoryRequests(): Unsupported history request: {request.Symbol.SecurityType}/{request.TickType}.");
+                yield break;
+            }
+            
             Log.Trace("PolygonDataQueueHandler.ProcessHistoryRequests(): Submitting request: " +
-                      Invariant($"{request.Symbol.SecurityType}-{ticker}: {request.Resolution} {start}->{end}")
-            );
+                      Invariant($"{request.Symbol.SecurityType}-{request.TickType}-{request.Symbol.Value}: {request.Resolution} {request.StartTimeUtc}->{request.EndTimeUtc}"));
 
+            switch (request.Resolution)
+            {
+                case Resolution.Tick:
+                    if (request.TickType == TickType.Trade)
+                    {
+                        foreach (var tick in GetTradeTicks(request))
+                        {
+                            Interlocked.Increment(ref _dataPointCount);
+
+                            yield return tick;
+                        }
+                    }
+                    else if (request.TickType == TickType.Quote)
+                    {
+                        foreach (var tick in GetQuoteTicks(request))
+                        {
+                            Interlocked.Increment(ref _dataPointCount);
+
+                            yield return tick;
+                        }
+                    }
+
+                    break;
+
+                case Resolution.Second:
+                    if (request.TickType == TickType.Trade)
+                    {
+                        var ticks = GetTradeTicks(request);
+
+                        foreach (var tradeBar in AggregateTradeTicks(request.Symbol, ticks, request.Resolution.ToTimeSpan()))
+                        {
+                            Interlocked.Increment(ref _dataPointCount);
+
+                            yield return tradeBar;
+                        }
+                    }
+                    else if (request.TickType == TickType.Quote)
+                    {
+                        var ticks = GetQuoteTicks(request);
+
+                        foreach (var quoteBar in AggregateQuoteTicks(request.Symbol, ticks, request.Resolution.ToTimeSpan()))
+                        {
+                            Interlocked.Increment(ref _dataPointCount);
+
+                            yield return quoteBar;
+                        }
+                    }
+
+                    break;
+
+                case Resolution.Minute:
+                case Resolution.Hour:
+                case Resolution.Daily:
+                    if (request.TickType == TickType.Trade)
+                    {
+                        foreach (var tradeBar in GetTradeBars(request))
+                        {
+                            Interlocked.Increment(ref _dataPointCount);
+
+                            yield return tradeBar;
+                        }
+                    }
+                    else if (request.TickType == TickType.Quote)
+                    {
+                        var ticks = GetQuoteTicks(request);
+
+                        foreach (var quoteBar in AggregateQuoteTicks(request.Symbol, ticks, request.Resolution.ToTimeSpan()))
+                        {
+                            Interlocked.Increment(ref _dataPointCount);
+
+                            yield return quoteBar;
+                        }
+                    }
+
+                    break;
+            }
+        }
+
+        private IEnumerable<Tick> GetQuoteTicks(HistoryRequest request)
+        {
+            switch (request.Symbol.SecurityType)
+            {
+                case SecurityType.Equity:
+                    return GetEquityQuoteTicks(request);
+
+                case SecurityType.Forex:
+                    return GetForexQuoteTicks(request);
+
+                default:
+                    return Enumerable.Empty<Tick>();
+            }
+        }
+
+        private IEnumerable<Tick> GetTradeTicks(HistoryRequest request)
+        {
+            switch (request.Symbol.SecurityType)
+            {
+                case SecurityType.Equity:
+                    return GetEquityTradeTicks(request);
+
+                case SecurityType.Crypto:
+                    return GetCryptoTradeTicks(request);
+
+                default:
+                    return Enumerable.Empty<Tick>();
+            }
+        }
+
+        private IEnumerable<Tick> GetForexQuoteTicks(HistoryRequest request)
+        {
+            // https://api.polygon.io/v1/historic/forex/EUR/USD/2020-08-24?apiKey=
+
+            var start = request.StartTimeUtc;
+            var end = request.EndTimeUtc;
+
+            while (start <= end)
+            {
+                using (var client = new WebClient())
+                {
+                    string baseCurrency;
+                    string quoteCurrency;
+                    Forex.DecomposeCurrencyPair(request.Symbol.Value, out baseCurrency, out quoteCurrency);
+
+                    var offset = Convert.ToInt64(Time.DateTimeToUnixTimeStampMilliseconds(start));
+                    var url = $"{HistoryBaseUrl}/v1/historic/forex/{baseCurrency}/{quoteCurrency}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&offset={offset}";
+
+                    var response = client.DownloadString(url);
+
+                    var obj = JObject.Parse(response);
+                    var objTicks = obj["ticks"];
+                    if (objTicks.Type == JTokenType.Null)
+                    {
+                        // current date finished, move to next day
+                        start = start.Date.AddDays(1);
+                        continue;
+                    }
+
+                    foreach (var objTick in objTicks)
+                    {
+                        var row = objTick.ToObject<ForexQuoteTickResponse>();
+
+                        var utcTime = Time.UnixMillisecondTimeStampToDateTime(row.Timestamp);
+
+                        if (utcTime < start)
+                        {
+                            continue;
+                        }
+
+                        start = utcTime.AddMilliseconds(1);
+
+                        if (utcTime > end)
+                        {
+                            yield break;
+                        }
+
+                        var time = GetTickTime(request.Symbol, utcTime);
+
+                        yield return new Tick(time, request.Symbol, row.Bid, row.Ask);
+                    }
+                }
+            }
+        }
+
+        private IEnumerable<Tick> GetCryptoTradeTicks(HistoryRequest request)
+        {
+            // https://api.polygon.io/v1/historic/crypto/BTC/USD/2020-08-24?apiKey=
+
+            var start = request.StartTimeUtc;
+            var end = request.EndTimeUtc;
+
+            while (start <= end)
+            {
+                using (var client = new WebClient())
+                {
+                    var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
+                        request.Symbol.ID.Market,
+                        request.Symbol,
+                        request.Symbol.SecurityType,
+                        Currencies.USD);
+
+                    string baseCurrency;
+                    string quoteCurrency;
+                    Crypto.DecomposeCurrencyPair(request.Symbol, symbolProperties, out baseCurrency, out quoteCurrency);
+
+                    var offset = Convert.ToInt64(Time.DateTimeToUnixTimeStampMilliseconds(start));
+                    var url = $"{HistoryBaseUrl}/v1/historic/crypto/{baseCurrency}/{quoteCurrency}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&offset={offset}";
+
+                    var response = client.DownloadString(url);
+
+                    var obj = JObject.Parse(response);
+                    var objTicks = obj["ticks"];
+                    if (objTicks.Type == JTokenType.Null)
+                    {
+                        // current date finished, move to next day
+                        start = start.Date.AddDays(1);
+                        continue;
+                    }
+
+                    foreach (var objTick in objTicks)
+                    {
+                        var row = objTick.ToObject<CryptoTradeTickResponse>();
+
+                        var utcTime = Time.UnixMillisecondTimeStampToDateTime(row.Timestamp);
+
+                        if (utcTime < start)
+                        {
+                            continue;
+                        }
+
+                        start = utcTime.AddMilliseconds(1);
+
+                        if (utcTime > end)
+                        {
+                            yield break;
+                        }
+
+                        var market = GetMarketFromCryptoExchangeId(row.Exchange);
+                        if (market != request.Symbol.ID.Market)
+                        {
+                            continue;
+                        }
+
+                        var time = GetTickTime(request.Symbol, utcTime);
+
+                        yield return new Tick(time, request.Symbol, string.Empty, string.Empty, row.Size, row.Price);
+                    }
+                }
+            }
+        }
+
+
+        private IEnumerable<Tick> GetEquityQuoteTicks(HistoryRequest request)
+        {
+            // https://api.polygon.io/v2/ticks/stocks/nbbo/SPY/2020-08-24?apiKey=
+
+            var start = request.StartTimeUtc;
+            var end = request.EndTimeUtc;
+
+            while (start <= end)
+            {
+                using (var client = new WebClient())
+                {
+                    var offset = Time.DateTimeToUnixTimeStampNanoseconds(start);
+                    var url = $"{HistoryBaseUrl}/v2/ticks/stocks/nbbo/{request.Symbol.Value}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&timestamp={offset}";
+
+                    var response = client.DownloadString(url);
+
+                    var obj = JObject.Parse(response);
+                    var objTicks = obj["results"];
+                    if (objTicks.Type == JTokenType.Null || !objTicks.Any())
+                    {
+                        // current date finished, move to next day
+                        start = start.Date.AddDays(1);
+                        continue;
+                    }
+
+                    foreach (var objTick in objTicks)
+                    {
+                        var row = objTick.ToObject<EquityQuoteTickResponse>();
+
+                        var utcTime = Time.UnixNanosecondTimeStampToDateTime(row.ExchangeTimestamp);
+
+                        if (utcTime < start)
+                        {
+                            continue;
+                        }
+
+                        start = utcTime.AddMilliseconds(1);
+
+                        if (utcTime > end)
+                        {
+                            yield break;
+                        }
+
+                        var time = GetTickTime(request.Symbol, utcTime);
+
+                        yield return new Tick(time, request.Symbol, string.Empty, string.Empty, row.BidSize, row.BidPrice, row.AskSize, row.AskPrice);
+                    }
+                }
+            }
+        }
+
+        private IEnumerable<Tick> GetEquityTradeTicks(HistoryRequest request)
+        {
+            // https://api.polygon.io/v2/ticks/stocks/trades/SPY/2020-08-24?apiKey=
+
+            var start = request.StartTimeUtc;
+            var end = request.EndTimeUtc;
+
+            while (start <= end)
+            {
+                using (var client = new WebClient())
+                {
+                    var offset = Time.DateTimeToUnixTimeStampNanoseconds(start);
+                    var url = $"{HistoryBaseUrl}/v2/ticks/stocks/trades/{request.Symbol.Value}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&timestamp={offset}";
+
+                    var response = client.DownloadString(url);
+
+                    var obj = JObject.Parse(response);
+                    var objTicks = obj["results"];
+                    if (objTicks.Type == JTokenType.Null || !objTicks.Any())
+                    {
+                        // current date finished, move to next day
+                        start = start.Date.AddDays(1);
+                        continue;
+                    }
+
+                    foreach (var objTick in objTicks)
+                    {
+                        var row = objTick.ToObject<EquityTradeTickResponse>();
+
+                        var utcTime = Time.UnixNanosecondTimeStampToDateTime(row.ExchangeTimestamp);
+
+                        if (utcTime < start)
+                        {
+                            continue;
+                        }
+
+                        start = utcTime.AddMilliseconds(1);
+
+                        if (utcTime > end)
+                        {
+                            yield break;
+                        }
+
+                        var time = GetTickTime(request.Symbol, utcTime);
+
+                        yield return new Tick(time, request.Symbol, string.Empty, string.Empty, row.Size, row.Price);
+                    }
+                }
+            }
+        }
+
+        private IEnumerable<TradeBar> GetTradeBars(HistoryRequest request)
+        {
             var historyTimespan = GetHistoryTimespan(request.Resolution);
 
-            var startDate = start.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-            var endDate = end.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-
-            var tickerPrefix = string.Empty;
-            if (request.Symbol.SecurityType == SecurityType.Forex)
+            string tickerPrefix;
+            switch (request.Symbol.SecurityType)
             {
-                tickerPrefix = "C:";
-            }
-            else if (request.Symbol.SecurityType == SecurityType.Crypto)
-            {
-                tickerPrefix = "X:";
+                case SecurityType.Forex:
+                    tickerPrefix = "C:";
+                    break;
+
+                case SecurityType.Crypto:
+                    tickerPrefix = "X:";
+                    break;
+
+                default:
+                    tickerPrefix = string.Empty;
+                    break;
             }
 
-            // Download and parse data
+            var start = request.StartTimeUtc;
+            var end = request.EndTimeUtc;
+
             using (var client = new WebClient())
             {
-                var url = $"{HistoryBaseUrl}/aggs/ticker/{tickerPrefix}{ticker}/range/1/{historyTimespan}/{startDate}/{endDate}?apiKey={_apiKey}";
+                var url = $"{HistoryBaseUrl}/v2/aggs/ticker/{tickerPrefix}{request.Symbol.Value}/range/1/{historyTimespan}/{start.Date:yyyy-MM-dd}/{end.Date:yyyy-MM-dd}?apiKey={_apiKey}";
 
                 var response = client.DownloadString(url);
 
@@ -284,21 +644,68 @@ namespace QuantConnect.ToolBox.Polygon
                 {
                     var utcTime = Time.UnixMillisecondTimeStampToDateTime(row.Timestamp);
 
-                    if (utcTime < request.StartTimeUtc ||
-                        utcTime > request.EndTimeUtc.Add(request.Resolution.ToTimeSpan()))
+                    if (utcTime < request.StartTimeUtc)
                     {
                         continue;
                     }
 
+                    if (utcTime > request.EndTimeUtc.Add(request.Resolution.ToTimeSpan()))
+                    {
+                        yield break;
+                    }
+
                     var time = GetTickTime(request.Symbol, utcTime);
 
-                    Interlocked.Increment(ref _dataPointCount);
-
-                    var tradeBar = new TradeBar(time, request.Symbol, row.Open, row.High, row.Low, row.Close, row.Volume);
-
-                    yield return new Slice(tradeBar.EndTime, new[] { tradeBar });
+                    yield return new TradeBar(time, request.Symbol, row.Open, row.High, row.Low, row.Close, row.Volume);
                 }
             }
+        }
+
+        private static IEnumerable<TradeBar> AggregateTradeTicks(Symbol symbol, IEnumerable<Tick> ticks, TimeSpan period)
+        {
+            return
+                from t in ticks
+                group t by t.Time.RoundDown(period)
+                into g
+                select new TradeBar
+                {
+                    Symbol = symbol,
+                    Time = g.Key,
+                    Open = g.First().LastPrice,
+                    High = g.Max(t => t.LastPrice),
+                    Low = g.Min(t => t.LastPrice),
+                    Close = g.Last().LastPrice,
+                    Volume = g.Sum(t => t.Quantity),
+                    Period = period
+                };
+        }
+
+        private static IEnumerable<QuoteBar> AggregateQuoteTicks(Symbol symbol, IEnumerable<Tick> ticks, TimeSpan period)
+        {
+            return
+                from t in ticks
+                group t by t.Time.RoundDown(period)
+                into g
+                select new QuoteBar
+                {
+                    Symbol = symbol,
+                    Time = g.Key,
+                    Bid = new Bar
+                    {
+                        Open = g.First().BidPrice,
+                        High = g.Max(b => b.BidPrice),
+                        Low = g.Min(b => b.BidPrice),
+                        Close = g.Last().BidPrice
+                    },
+                    Ask = new Bar
+                    {
+                        Open = g.First().AskPrice,
+                        High = g.Max(b => b.AskPrice),
+                        Low = g.Min(b => b.AskPrice),
+                        Close = g.Last().AskPrice
+                    },
+                    Period = period
+                };
         }
 
         private static string GetHistoryTimespan(Resolution resolution)
@@ -499,18 +906,8 @@ namespace QuantConnect.ToolBox.Polygon
 
         private string GetMarketFromCryptoExchangeId(int exchangeId)
         {
-            // Crypto exchanges from: https://api.polygon.io/v1/meta/crypto-exchanges?apiKey=xxx
-            switch (exchangeId)
-            {
-                case 1:
-                    return Market.GDAX;
-
-                case 2:
-                    return Market.Bitfinex;
-
-                default:
-                    return string.Empty;
-            }
+            string market;
+            return _cryptoExchangeMap.TryGetValue(exchangeId, out market) ? market : string.Empty;
         }
     }
 }

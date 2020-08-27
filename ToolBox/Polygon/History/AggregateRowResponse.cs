@@ -11,24 +11,30 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 using Newtonsoft.Json;
 
-namespace QuantConnect.ToolBox.Polygon.Messages
+namespace QuantConnect.ToolBox.Polygon.History
 {
-    public class ForexQuoteMessage : BaseMessage
+    public class AggregateRowResponse
     {
-        [JsonProperty("p")]
-        public string Symbol { get; set; }
+        [JsonProperty("o")]
+        public decimal Open { get; set; }
 
-        [JsonProperty("x")]
-        public string ExchangeId { get; set; }
+        [JsonProperty("h")]
+        public decimal High { get; set; }
 
-        [JsonProperty("a")]
-        public decimal AskPrice { get; set; }
+        [JsonProperty("l")]
+        public decimal Low { get; set; }
 
-        [JsonProperty("b")]
-        public decimal BidPrice { get; set; }
+        [JsonProperty("c")]
+        public decimal Close { get; set; }
+
+        [JsonProperty("v")]
+        public decimal Volume { get; set; }
+
+        [JsonProperty("t")]
+        public long Timestamp { get; set; }
     }
 }

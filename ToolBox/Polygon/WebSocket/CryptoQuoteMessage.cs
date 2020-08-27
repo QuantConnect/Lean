@@ -15,7 +15,7 @@
 
 using Newtonsoft.Json;
 
-namespace QuantConnect.ToolBox.Polygon.Messages
+namespace QuantConnect.ToolBox.Polygon.WebSocket
 {
     public class CryptoQuoteMessage : BaseQuoteMessage
     {

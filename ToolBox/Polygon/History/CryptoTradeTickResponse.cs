@@ -15,26 +15,23 @@
 
 using Newtonsoft.Json;
 
-namespace QuantConnect.ToolBox.Polygon.Responses
+namespace QuantConnect.ToolBox.Polygon.History
 {
-    public class AggregateRowResponse
+    public class CryptoTradeTickResponse
     {
-        [JsonProperty("o")]
-        public decimal Open { get; set; }
+        [JsonProperty("s")]
+        public decimal Size { get; set; }
 
-        [JsonProperty("h")]
-        public decimal High { get; set; }
+        [JsonProperty("p")]
+        public decimal Price { get; set; }
 
-        [JsonProperty("l")]
-        public decimal Low { get; set; }
-
-        [JsonProperty("c")]
-        public decimal Close { get; set; }
-
-        [JsonProperty("v")]
-        public decimal Volume { get; set; }
+        [JsonProperty("x")]
+        public int Exchange { get; set; }
 
         [JsonProperty("t")]
         public long Timestamp { get; set; }
+
+        [JsonProperty("c")]
+        public int[] Conditions { get; set; }
     }
 }

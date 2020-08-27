@@ -15,14 +15,23 @@
 
 using Newtonsoft.Json;
 
-namespace QuantConnect.ToolBox.Polygon.Messages
+namespace QuantConnect.ToolBox.Polygon.WebSocket
 {
-    public class BaseTradeMessage : BaseMessage
+    public class CryptoTradeMessage : BaseTradeMessage
     {
-        [JsonProperty("p")]
-        public decimal Price { get; set; }
+        [JsonProperty("pair")]
+        public string Symbol { get; set; }
 
-        [JsonProperty("s")]
-        public decimal Size { get; set; }
+        [JsonProperty("c")]
+        public int[] Conditions { get; set; }
+
+        [JsonProperty("i")]
+        public string TradeId { get; set; }
+
+        [JsonProperty("x")]
+        public int ExchangeId { get; set; }
+
+        [JsonProperty("r")]
+        public long ReceivedTimestamp { get; set; }
     }
 }
