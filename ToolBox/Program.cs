@@ -38,6 +38,7 @@ using QuantConnect.ToolBox.KaikoDataConverter;
 using QuantConnect.ToolBox.KrakenDownloader;
 using QuantConnect.ToolBox.NseMarketDataConverter;
 using QuantConnect.ToolBox.OandaDownloader;
+using QuantConnect.ToolBox.Polygon;
 using QuantConnect.ToolBox.QuandlBitfinexDownloader;
 using QuantConnect.ToolBox.QuantQuoteConverter;
 using QuantConnect.ToolBox.RandomDataGenerator;
@@ -168,6 +169,17 @@ namespace QuantConnect.ToolBox
                     case "tecdl":
                     case "tradingeconomicscalendardownloader":
                         TradingEconomicsDataDownloader.TradingEconomicsCalendarDownloaderProgram.TradingEconomicsCalendarDownloader();
+                        break;
+
+                    case "pdl":
+                    case "polygondownloader":
+                        PolygonDownloaderProgram.PolygonDownloader(
+                            tickers,
+                            GetParameterOrExit(optionsObject, "security-type"),
+                            GetParameterOrExit(optionsObject, "market"),
+                            resolution, 
+                            fromDate, 
+                            toDate);
                         break;
 
                     default:

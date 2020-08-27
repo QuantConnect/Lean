@@ -745,6 +745,8 @@
     <Compile Include="Symbols.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />
+    <Compile Include="ToolBox\PolygonHistoryTests.cs" />
+    <Compile Include="ToolBox\PolygonSymbolMapperTests.cs" />
     <Compile Include="ToolBox\EstimizeTests.cs" />
     <Compile Include="ToolBox\IBDownloader\IBDataDownloaderTests.cs" />
     <Compile Include="ToolBox\PsychSignalDataTests.cs" />
