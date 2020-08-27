@@ -72,7 +72,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// The list of websocket channels to subscribe
         /// </summary>
-        protected virtual string[] ChannelNames { get; } = { "heartbeat", "user" };
+        protected virtual string[] ChannelNames { get; } = { "heartbeat" };
 
         /// <summary>
         /// Constructor for brokerage
