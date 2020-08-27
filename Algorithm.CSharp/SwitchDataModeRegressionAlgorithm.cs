@@ -27,30 +27,29 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class SwitchDataModeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private const string UnderlyingTicker = "GOOG";
+        private const string UnderlyingTicker = "AAPL";
 
         private readonly Dictionary<DateTime, decimal?> _expectedCloseValues = new Dictionary<DateTime, decimal?>() {
-            { new DateTime(2015, 4, 21), 533.9282m},
-            { new DateTime(2015, 4, 22), 532.5021m},
-            { new DateTime(2015, 4, 23), 539.34m},
-            { new DateTime(2015, 4, 24), 547m},
-            { new DateTime(2015, 4, 25), 565.2m},
-            { new DateTime(2015, 4, 27), null},
-            { new DateTime(2015, 4, 28), 555.47m}
+            { new DateTime(2014, 6, 6, 9, 57, 0), 86.04398m},
+            { new DateTime(2014, 6, 6, 9, 58, 0), 86.05196m},
+            { new DateTime(2014, 6, 6, 9, 59, 0), 648.29m},
+            { new DateTime(2014, 6, 6, 10, 0, 0), 647.86m},
+            { new DateTime(2014, 6, 6, 10, 1, 0), 646.84m},
+            { new DateTime(2014, 6, 6, 10, 2, 0), 647.64m},
+            { new DateTime(2014, 6, 6, 10, 3, 0), 646.9m}
         };
 
         public override void Initialize()
         {
-            SetStartDate(2015, 4, 20);
-            SetEndDate(2015, 4, 27);
-            SetCash(100000);
+            SetStartDate(2014, 6, 6);
+            SetEndDate(2014, 6, 6);
 
-            var goog = AddEquity(UnderlyingTicker, Resolution.Daily);
+            var aapl = AddEquity(UnderlyingTicker, Resolution.Minute);
         }
 
         public override void OnData(Slice data)
         {
-            if (Time.Month == 4 && Time.Day == 22)
+            if (Time.Hour == 9 && Time.Minute == 58)
             {
                 AddOption(UnderlyingTicker);
             }
@@ -61,9 +60,9 @@ namespace QuantConnect.Algorithm.CSharp
         private void AssertValue(Slice data)
         {
             decimal? value;
-            if (!_expectedCloseValues.TryGetValue(data.Time, out value) || data.Bars.FirstOrDefault().Value?.Close.SmartRounding() != value)
+            if (_expectedCloseValues.TryGetValue(data.Time, out value) && data.Bars.FirstOrDefault().Value?.Close.SmartRounding() != value)
             {
-                throw new Exception($"Expected tradebar price, expected {value} but was {data.Bars.First().Value.Close}");
+                throw new Exception($"Expected tradebar price, expected {value} but was {data.Bars.First().Value.Close.SmartRounding()}");
             }
         }
 
