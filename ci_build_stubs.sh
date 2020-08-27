@@ -79,6 +79,10 @@ function push_to_github {
     # GH_BASE_BRANCH: Branch to merge changes into
     # GH_REPO_ID: Base64 encoded string pointing to repo. Sourced from GH API
 
+    # Deletes any residual files left over by the autogeneration process
+    find ./Algorithm.Python/stubs/QuantConnect -type f -name '*.py_[0-9]' -exec rm {} \;
+    find ./Algorithm.Python/stubs/QuantConnect -type f -name '*.py_[0-9][0-9]' -exec rm {} \;
+
     git add ./Algorithm.Python/stubs/QuantConnect
     git status --porcelain | grep -q "Algorithm.Python/stubs/QuantConnect/Algorithm"
     if [ $? -ne 0 ]; then
