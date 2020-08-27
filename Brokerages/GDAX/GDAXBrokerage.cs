@@ -180,7 +180,6 @@ namespace QuantConnect.Brokerages.GDAX
 
                     Order orderRemoved;
                     _pendingOrders.TryRemove(id, out orderRemoved);
-                    _fillMonitorResetEvent.Set();
                 }
             }
 

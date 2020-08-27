@@ -27,6 +27,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using RestSharp;
 using System.Text.RegularExpressions;
+using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
@@ -62,6 +63,7 @@ namespace QuantConnect.Brokerages.GDAX
         private readonly CancellationTokenSource _ctsFillMonitor = new CancellationTokenSource();
         private readonly Task _fillMonitorTask;
         private readonly AutoResetEvent _fillMonitorResetEvent = new AutoResetEvent(false);
+        private readonly int _fillMonitorTimeout = Config.GetInt("gdax-fill-monitor-timeout", 500);
         private readonly ConcurrentDictionary<string, Order> _pendingOrders = new ConcurrentDictionary<string, Order>();
         private long _lastEmittedFillTradeId;
 
@@ -315,7 +317,6 @@ namespace QuantConnect.Brokerages.GDAX
                 CachedOrderIDs.TryRemove(order.Id, out outOrder);
 
                 _pendingOrders.TryRemove(fill.OrderId, out outOrder);
-                _fillMonitorResetEvent.Set();
             }
 
             OnOrderEvent(orderEvent);
@@ -517,7 +518,7 @@ namespace QuantConnect.Brokerages.GDAX
 
                 while (!_ctsFillMonitor.IsCancellationRequested)
                 {
-                    _fillMonitorResetEvent.WaitOne(TimeSpan.FromSeconds(2), _ctsFillMonitor.Token);
+                    _fillMonitorResetEvent.WaitOne(TimeSpan.FromMilliseconds(_fillMonitorTimeout), _ctsFillMonitor.Token);
 
                     foreach (var kvp in _pendingOrders)
                     {
