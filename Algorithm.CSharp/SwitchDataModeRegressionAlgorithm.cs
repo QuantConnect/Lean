@@ -25,6 +25,11 @@ using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// This regression test algorithm reproduces issue https://github.com/QuantConnect/Lean/issues/4031 
+    /// fixed in PR https://github.com/QuantConnect/Lean/pull/4650
+    /// Adusted data have already been all loaded by the workers so DataNormalizationMode change has no effect in the data itself
+    /// </summary>
     public class SwitchDataModeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "AAPL";
