@@ -20,7 +20,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// DTO for storing data and the time at which it should be synchronized
+    /// Store data both raw and adjusted and the time at which it should be synchronized
     /// </summary>
     public class PrecalculatedSubscriptionData : SubscriptionData
     {
