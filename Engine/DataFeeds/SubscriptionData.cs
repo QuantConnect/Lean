@@ -78,7 +78,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 data.Time = data.Time.ExchangeRoundDownInTimeZone(configuration.Increment, exchangeHours, configuration.DataTimeZone, configuration.ExtendedMarketHours);
             }
 
-            if (factor.HasValue)
+            if (factor.HasValue && factor.Value != 1)
             {
                 var adjustedData = data
                     .Clone()

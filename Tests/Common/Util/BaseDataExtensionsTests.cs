@@ -45,18 +45,17 @@ namespace QuantConnect.Tests.Common.Util
             _config.PriceScaleFactor = _factor;
         }
 
-        [TestCase(typeof(SubscriptionData), false, 1)]
-        [TestCase(typeof(SubscriptionData), false, 2)]
-        [TestCase(typeof(PrecalculatedSubscriptionData), true, 1)]
-        [TestCase(typeof(PrecalculatedSubscriptionData), true, 0.5)]
-        public void Create(Type type, bool adjust, decimal scale)
+        [TestCase(typeof(SubscriptionData), 1)]
+        [TestCase(typeof(PrecalculatedSubscriptionData), 2)]
+        [TestCase(typeof(PrecalculatedSubscriptionData), 0.5)]
+        [TestCase(typeof(SubscriptionData), null)]
+        public void Create(Type type, decimal? scale)
         {
             var data = SubscriptionData.Create(
                 _config,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new TimeZoneOffsetProvider(TimeZones.NewYork, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1)),
                 new Tick(),
-                adjust,
                 scale);
 
             Assert.True(data.GetType() == type);
