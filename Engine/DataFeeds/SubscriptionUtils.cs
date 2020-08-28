@@ -75,6 +75,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
             var subscription = new Subscription(request, enqueueable, timeZoneOffsetProvider);
             var config = subscription.Configuration;
+            var lastTradableDate = DateTime.MinValue;
+            decimal? currentScale = null;
 
             Func<int, bool> produce = (workBatchSize) =>
             {
@@ -92,12 +94,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         var data = enumerator.Current;
 
+                        if (enablePriceScale && data?.Time.Date > lastTradableDate)
+                        {
+                            lastTradableDate = data.Time.Date;
+                            currentScale = GetScaleFactor(factorFile, config.DataNormalizationMode, data.Time.Date);
+                        }
+
                         SubscriptionData subscriptionData = SubscriptionData.Create(
                             config,
                             exchangeHours,
                             subscription.OffsetProvider,
                             data,
-                            enablePriceScale ? GetScaleFactor(factorFile, config.DataNormalizationMode, data?.Time.Date) : null);
+                            enablePriceScale ? currentScale : null);
                         
                         // drop the data into the back of the enqueueable
                         enqueueable.Enqueue(subscriptionData);
@@ -138,12 +146,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return subscription;
         }
 
-        private static decimal? GetScaleFactor(FactorFile factorFile, DataNormalizationMode mode, DateTime? date)
+        private static decimal GetScaleFactor(FactorFile factorFile, DataNormalizationMode mode, DateTime date)
         {
-            if (!date.HasValue)
-            {
-                return null;
-            }
             switch (mode)
             {
                 case DataNormalizationMode.Raw:
@@ -151,10 +155,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 case DataNormalizationMode.TotalReturn:
                 case DataNormalizationMode.SplitAdjusted:
-                    return factorFile.GetSplitFactor(date.Value);
+                    return factorFile.GetSplitFactor(date);
 
                 case DataNormalizationMode.Adjusted:
-                    return factorFile.GetPriceScaleFactor(date.Value);
+                    return factorFile.GetPriceScaleFactor(date);
 
                 default:
                     throw new ArgumentOutOfRangeException();
