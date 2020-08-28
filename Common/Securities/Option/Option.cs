@@ -23,6 +23,7 @@ using Python.Runtime;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities.Option
 {
@@ -435,8 +436,32 @@ namespace QuantConnect.Securities.Option
         /// <param name="universeFunc">new universe selection function</param>
         public void SetFilter(PyObject universeFunc)
         {
-            var pyUniverseFunc = PythonUtil.ToFunc<OptionFilterUniverse, OptionFilterUniverse>(universeFunc);
-            SetFilter(pyUniverseFunc);
+            ContractFilter = new FuncSecurityDerivativeFilter(universe =>
+            {              
+                var optionUniverse = universe as OptionFilterUniverse;
+                using (Py.GIL())
+                {
+                    PyObject result = (universeFunc as dynamic)(optionUniverse);
+
+                    //Try to convert it to the possible outcomes and process it
+                    List<Symbol> list;
+                    OptionFilterUniverse filter;
+
+                    if ((result).TryConvert(out list))
+                    {
+                        optionUniverse = optionUniverse.WhereContains(list);
+                    }
+                    else if ((result).TryConvert(out filter))
+                    {
+                        optionUniverse = filter;
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"QCAlgorithm.AddUniverse: {universeFunc.Repr()} is not a valid argument.");
+                    }
+                }
+                return optionUniverse.ApplyOptionTypesFilter();
+            });
         }
 
         /// <summary>
