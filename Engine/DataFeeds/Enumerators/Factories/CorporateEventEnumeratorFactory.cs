@@ -72,6 +72,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 includeAuxiliaryData,
                 startTime);
 
+            // avoid price scaling for backtesting; calculate it directly in worker 
+            // and allow subscription to extract the the data depending on config data mode
             var dataEnumerator = rawDataEnumerator;
             if (enablePriceScalling)
             {
