@@ -57,12 +57,25 @@ namespace QuantConnect.Algorithm.CSharp
             AssertValue(data);
         }
 
+        public override void OnEndOfAlgorithm()
+        {
+            if (_expectedCloseValues.Count > 0)
+            {
+                throw new Exception($"Not all expected data points were recieved.");
+            }
+        }
+
         private void AssertValue(Slice data)
         {
             decimal? value;
-            if (_expectedCloseValues.TryGetValue(data.Time, out value) && data.Bars.FirstOrDefault().Value?.Close.SmartRounding() != value)
+            if (_expectedCloseValues.TryGetValue(data.Time, out value))
             {
-                throw new Exception($"Expected tradebar price, expected {value} but was {data.Bars.First().Value.Close.SmartRounding()}");
+                if (data.Bars.FirstOrDefault().Value?.Close.SmartRounding() != value)
+                {
+                    throw new Exception($"Expected tradebar price, expected {value} but was {data.Bars.First().Value.Close.SmartRounding()}");
+                }
+
+                _expectedCloseValues.Remove(data.Time);
             }
         }
 
