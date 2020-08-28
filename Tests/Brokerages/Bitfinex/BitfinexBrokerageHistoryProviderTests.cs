@@ -23,6 +23,7 @@ using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Brokerages.Bitfinex;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {
@@ -47,7 +48,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             new TestCaseData(StaticSymbol, Resolution.Daily, TimeSpan.FromDays(-15), true, false),
 
             // invalid symbol, throws "System.ArgumentException : Unknown symbol: XYZ"
-            new TestCaseData(Symbol.Create("XYZ", SecurityType.Crypto, Market.Bitfinex), 
+            new TestCaseData(Symbol.Create("XYZ", SecurityType.Crypto, Market.Bitfinex),
                 Resolution.Daily, TimeSpan.FromDays(15), true, true),
 
             // invalid security type, no error, empty result
@@ -64,7 +65,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
 
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);
-                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, null));
+                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, new DataPermissionManager()));
 
                 var now = DateTime.UtcNow.RoundDown(resolution.ToTimeSpan());
 
