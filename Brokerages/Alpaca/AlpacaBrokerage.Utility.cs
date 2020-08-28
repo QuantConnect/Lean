@@ -31,7 +31,6 @@ namespace QuantConnect.Brokerages.Alpaca
     /// </summary>
     public partial class AlpacaBrokerage
     {
-
         /// <summary>
         /// Retrieves the current quotes for an instrument
         /// </summary>
@@ -53,6 +52,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 TickType = TickType.Quote
             };
         }
+
         private IOrder GenerateAndPlaceOrder(Order order)
         {
             var quantity = (long)order.Quantity;
@@ -170,11 +170,6 @@ namespace QuantConnect.Brokerages.Alpaca
             {
                 Log.Error($"AlpacaBrokerage.OnTradeUpdate(): order id not found: {trade.Order.OrderId}");
             }
-        }
-
-        private static void OnPolygonStreamingClientError(Exception exception)
-        {
-            Log.Error($"PolygonStreamingClient error: {exception.Message}");
         }
 
         private static void OnSockClientError(Exception exception)

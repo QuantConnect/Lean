@@ -24,11 +24,10 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Brokerages.Alpaca
 {
-    [TestFixture, Ignore("This test requires a configured and testable Alpaca practice account. Since it uses the Polygon API, the account needs to be funded.")]
+    [TestFixture, Explicit("This test requires a configured and testable Alpaca practice account. Since it uses the Polygon API, the account needs to be funded.")]
     public class AlpacaBrokerageHistoryProviderTests
     {
         private static TestCaseData[] TestParameters
@@ -74,7 +73,7 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             {
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);
-                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, null));
+                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, new DataPermissionManager()));
 
                 var now = DateTime.UtcNow;
 
