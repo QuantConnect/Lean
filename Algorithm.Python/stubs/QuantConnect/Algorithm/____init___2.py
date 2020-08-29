@@ -1184,7 +1184,7 @@ class QCAlgorithm(System.MarshalByRefObject, QuantConnect.Interfaces.IAccountCur
         pass
 
     @typing.overload
-    def RegisterIndicator(self, symbol: QuantConnect.Symbol, indicator: Python.Runtime.PyObject, consolidator: Python.Runtime.PyObject, selector: Python.Runtime.PyObject) -> None:
+    def RegisterIndicator(self, symbol: QuantConnect.Symbol, indicator: Python.Runtime.PyObject, pyObject: Python.Runtime.PyObject, selector: Python.Runtime.PyObject) -> None:
         pass
 
     @typing.overload
