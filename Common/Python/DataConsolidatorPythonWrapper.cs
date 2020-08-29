@@ -75,6 +75,16 @@ namespace QuantConnect.Python
         /// <param name="consolidator">Represents a custom python consolidator</param>
         public DataConsolidatorPythonWrapper(PyObject consolidator)
         {
+            using (Py.GIL())
+            {
+                foreach (var attributeName in new[] { "InputType", "OutputType", "WorkingData", "Consolidated" })
+                {
+                    if (!consolidator.HasAttr(attributeName))
+                    {
+                        throw new NotImplementedException($"IDataConsolidator.{attributeName} must be implemented. Please implement this missing method on {consolidator.GetPythonType()}");
+                    }
+                }
+            }
             _consolidator = consolidator;
         }
         
