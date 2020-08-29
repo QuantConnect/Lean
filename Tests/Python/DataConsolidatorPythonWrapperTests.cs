@@ -31,9 +31,17 @@ namespace QuantConnect.Tests.Python
             using (Py.GIL())
             {
                 var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                    "from clr import AddReference\n" +
+                    "AddReference(\"QuantConnect.Common\")\n" +
+                    "from QuantConnect import *\n" +
+                    "from QuantConnect.Data.Market import *\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
                     "       self.UpdateWasCalled = False\n" +
+                    "       self.InputType = QuoteBar\n" +
+                    "       self.OutputType = QuoteBar\n" +
+                    "       self.Consolidated = None\n" +
+                    "       self.WorkingData = None\n" +
                     "   def Update(self, data):\n" +
                     "       self.UpdateWasCalled = True\n");
 
@@ -68,9 +76,17 @@ namespace QuantConnect.Tests.Python
             using (Py.GIL())
             {
                 var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                    "from clr import AddReference\n" +
+                    "AddReference(\"QuantConnect.Common\")\n" +
+                    "from QuantConnect import *\n" +
+                    "from QuantConnect.Data.Market import *\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
-                    "       self.ScanWasCalled = False\n" +    
+                    "       self.ScanWasCalled = False\n" +
+                    "       self.InputType = QuoteBar\n" +
+                    "       self.OutputType = QuoteBar\n" +
+                    "       self.Consolidated = None\n" +
+                    "       self.WorkingData = None\n" +
                     "   def Scan(self,time):\n" +
                     "       self.ScanWasCalled = True\n");
 
@@ -100,7 +116,10 @@ namespace QuantConnect.Tests.Python
                     "from QuantConnect.Data.Market import *\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
-                    "       self.InputType = QuoteBar\n");
+                    "       self.InputType = QuoteBar\n" +
+                    "       self.OutputType = QuoteBar\n" +
+                    "       self.Consolidated = None\n" +
+                    "       self.WorkingData = None\n");
 
                 var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
                 var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
@@ -125,7 +144,10 @@ namespace QuantConnect.Tests.Python
                     "from QuantConnect.Data.Market import *\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
-                    "       self.OutputType = QuoteBar\n");
+                    "       self.InputType = QuoteBar\n" +
+                    "       self.OutputType = QuoteBar\n" +
+                    "       self.Consolidated = None\n" +
+                    "       self.WorkingData = None\n");
 
                 var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
                 var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
