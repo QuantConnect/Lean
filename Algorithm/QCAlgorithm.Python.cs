@@ -478,25 +478,47 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
         public void RegisterIndicator(Symbol symbol, PyObject indicator, PyObject consolidator, PyObject selector = null)
         {
-            //Issue #4668 Fix, Need to check if it is a timespan
-            //Try convert does not work for timespan
+
+            // First check if this is just a regular IDataConsolidator
+            IDataConsolidator dataConsolidator;
+            if (consolidator.TryConvert(out dataConsolidator))
+            {
+                RegisterIndicator(symbol, indicator, dataConsolidator, selector);
+                return;
+            } 
+
+            // Then try and wrap it as a custom Python consolidator and register it
+            try
+            {
+                IDataConsolidator pyConsolidator = new DataConsolidatorPythonWrapper(consolidator);
+                RegisterIndicator(symbol, indicator, pyConsolidator, selector);
+                return;
+            }
+            catch 
+            {
+
+            }
+
+            // Finally just try it as a timespan
+            // Issue #4668 Fix, need to try it as a timespan
+            TimeSpan? timeSpan;
             using (Py.GIL())
             {
                 try
                 {
-                    TimeSpan timeSpan = consolidator.As<TimeSpan>();
+                    // tryConvert does not work for timespan
+                    timeSpan = consolidator.As<TimeSpan>();
                     if (timeSpan != default(TimeSpan))
                     {
                         RegisterIndicator(symbol, indicator, timeSpan, selector);
                         return;
                     }
                 }
-                catch {}
+                catch 
+                {
+                    throw new ArgumentException("Invalid Argument");
+                }
             }
-
-            //Wrap the custom Python consolidator and register it
-            IDataConsolidator pyConsolidator = new DataConsolidatorPythonWrapper(consolidator);
-            RegisterIndicator(symbol, indicator, pyConsolidator, selector);
         }
 
         /// <summary>
