@@ -474,49 +474,43 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol to register against</param>
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
-        /// <param name="consolidator">The python consolidator to receive subscription data</param>
+        /// <param name="pyObject">The python object that it is trying to register with, could be consolidator or a timespan</param>
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
-        public void RegisterIndicator(Symbol symbol, PyObject indicator, PyObject consolidator, PyObject selector = null)
+        public void RegisterIndicator(Symbol symbol, PyObject indicator, PyObject pyObject, PyObject selector = null)
         {
-
-            // First check if this is just a regular IDataConsolidator
-            IDataConsolidator dataConsolidator;
-            if (consolidator.TryConvert(out dataConsolidator))
-            {
-                RegisterIndicator(symbol, indicator, dataConsolidator, selector);
-                return;
-            } 
-
-            // Then try and wrap it as a custom Python consolidator and register it
             try
             {
-                IDataConsolidator pyConsolidator = new DataConsolidatorPythonWrapper(consolidator);
-                RegisterIndicator(symbol, indicator, pyConsolidator, selector);
+                // First check if this is just a regular IDataConsolidator
+                IDataConsolidator dataConsolidator;
+                if (!pyObject.TryConvert(out dataConsolidator))
+                {
+                    // If not then try and wrap it as a custom Python consolidator
+                    dataConsolidator = new DataConsolidatorPythonWrapper(pyObject);
+                }
+                RegisterIndicator(symbol, indicator, dataConsolidator, selector);
                 return;
             }
-            catch 
+            catch
             {
 
-            }
+            }     
 
-            // Finally just try it as a timespan
-            // Issue #4668 Fix, need to try it as a timespan
-            TimeSpan? timeSpan;
+            // Finally, since above didn't work, just try it as a timespan
+            // Issue #4668 Fix
             using (Py.GIL())
             {
                 try
                 {
                     // tryConvert does not work for timespan
-                    timeSpan = consolidator.As<TimeSpan>();
+                    TimeSpan? timeSpan = pyObject.As<TimeSpan>();
                     if (timeSpan != default(TimeSpan))
                     {
                         RegisterIndicator(symbol, indicator, timeSpan, selector);
-                        return;
                     }
                 }
                 catch 
                 {
-                    throw new ArgumentException("Invalid Argument");
+                    throw new ArgumentException("Invalid third argument, should be either a valid consolidator or timedelta object");
                 }
             }
         }
