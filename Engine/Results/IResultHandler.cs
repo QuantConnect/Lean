@@ -154,10 +154,5 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="name">The name of the results</param>
         /// <param name="result">The results to save</param>
         void SaveResults(string name, Result result);
-
-        /// <summary>
-        /// Sets the current Data Manager instance
-        /// </summary>
-        void SetDataManager(IDataFeedSubscriptionManager dataManager);
     }
 }

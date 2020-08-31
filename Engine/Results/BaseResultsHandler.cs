@@ -152,11 +152,6 @@ namespace QuantConnect.Lean.Engine.Results
         protected IAlgorithm Algorithm { get; set; }
 
         /// <summary>
-        /// The data manager, used to access current subscriptions
-        /// </summary>
-        protected IDataFeedSubscriptionManager DataManager;
-
-        /// <summary>
         /// Gets or sets the current alpha runtime statistics
         /// </summary>
         protected AlphaRuntimeStatistics AlphaRuntimeStatistics { get; set; }
@@ -354,14 +349,6 @@ namespace QuantConnect.Lean.Engine.Results
         public virtual void SetAlphaRuntimeStatistics(AlphaRuntimeStatistics statistics)
         {
             AlphaRuntimeStatistics = statistics;
-        }
-
-        /// <summary>
-        /// Sets the current Data Manager instance
-        /// </summary>
-        public virtual void SetDataManager(IDataFeedSubscriptionManager dataManager)
-        {
-            DataManager = dataManager;
         }
 
         /// <summary>

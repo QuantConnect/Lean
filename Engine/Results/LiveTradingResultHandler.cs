@@ -1029,53 +1029,6 @@ namespace QuantConnect.Lean.Engine.Results
                 //Set next sample time: 4000 samples per backtest
                 _nextSample = time.Add(ResamplePeriod);
 
-                //Update the asset prices to take a real time sample of the market price even though we're using minute bars
-                if (DataManager != null)
-                {
-                    foreach (var subscription in DataManager.DataFeedSubscriptions)
-                    {
-                        var symbol = subscription.Configuration.Symbol;
-                        var tickType = subscription.Configuration.TickType;
-
-                        // OI subscription doesn't contain asset market prices
-                        if (tickType == TickType.OpenInterest)
-                            continue;
-
-                        Security security;
-                        if (Algorithm.Securities.TryGetValue(symbol, out security))
-                        {
-                            //Sample Portfolio Value:
-                            var price = subscription.RealtimePrice;
-
-                            var last = security.GetLastData();
-                            if (last != null && price > 0)
-                            {
-                                // Prevents changes in previous bar
-                                last = last.Clone(last.IsFillForward);
-
-                                last.Value = price;
-                                security.SetRealTimePrice(last);
-
-                                // Update CashBook for Forex securities
-                                var cash = (from c in Algorithm.Portfolio.CashBook
-                                            where c.Value.SecuritySymbol == last.Symbol
-                                            select c.Value).SingleOrDefault();
-
-                                cash?.Update(last);
-                            }
-                            else
-                            {
-                                // we haven't gotten data yet so just spoof a tick to push through the system to start with
-                                if (price > 0)
-                                {
-                                    var exchangeTime = time.ConvertFromUtc(security.Exchange.TimeZone);
-                                    security.SetMarketPrice(new Tick(exchangeTime, symbol, price, 0, 0) { TickType = TickType.Trade });
-                                }
-                            }
-                        }
-                    }
-                }
-
                 //Sample the portfolio value over time for chart.
                 SampleEquity(time, Math.Round(Algorithm.Portfolio.TotalPortfolioValue, 4));
 

@@ -232,12 +232,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         enqueable.Enqueue(data);
 
                         subscription.OnNewDataAvailable();
-
-                        UpdateSubscriptionRealTimePrice(
-                            subscription,
-                            timeZoneOffsetProvider,
-                            request.Security.Exchange.Hours,
-                            data);
                     });
                     enumerator = enqueable;
                 }
@@ -412,33 +406,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             return subscription;
-        }
-
-        /// <summary>
-        /// Updates the subscription RealTimePrice if the exchange is open
-        /// </summary>
-        /// <param name="subscription">The <see cref="Subscription"/></param>
-        /// <param name="timeZoneOffsetProvider">The <see cref="TimeZoneOffsetProvider"/> used to convert now into the timezone of the exchange</param>
-        /// <param name="exchangeHours">The <see cref="SecurityExchangeHours"/> used to determine
-        /// if the exchange is open and we should update</param>
-        /// <param name="data">The <see cref="BaseData"/> used to update the real time price</param>
-        /// <returns>True if the real time price was updated</returns>
-        protected bool UpdateSubscriptionRealTimePrice(
-            Subscription subscription,
-            TimeZoneOffsetProvider timeZoneOffsetProvider,
-            SecurityExchangeHours exchangeHours,
-            BaseData data)
-        {
-            if (subscription != null &&
-                exchangeHours.IsOpen(
-                    timeZoneOffsetProvider.ConvertFromUtc(_timeProvider.GetUtcNow()),
-                    subscription.Configuration.ExtendedMarketHours))
-            {
-                subscription.RealtimePrice = data.Value;
-                return true;
-            }
-
-            return false;
         }
 
         /// <summary>
