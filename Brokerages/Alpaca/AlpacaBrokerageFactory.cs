@@ -16,11 +16,9 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Alpaca
 {
@@ -97,9 +95,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 algorithm.Portfolio, 
                 keyId, 
                 secretKey, 
-                tradingMode, 
-                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")));
+                tradingMode);
         }
-
     }
 }

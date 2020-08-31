@@ -56,11 +56,6 @@ namespace QuantConnect.Brokerages.Alpaca
         private readonly ISecurityProvider _securityProvider;
 
         /// <summary>
-        /// The data aggregator
-        /// </summary>
-        private readonly IDataAggregator _aggregator;
-
-        /// <summary>
         /// The market hours database
         /// </summary>
         private readonly MarketHoursDatabase _marketHours;
@@ -73,12 +68,9 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="accountKeyId">The Alpaca api key id</param>
         /// <param name="secretKey">The api secret key</param>
         /// <param name="tradingMode">The Alpaca trading mode. paper/live</param>
-        /// <param name="aggregator">consolidate ticks</param>
-        public AlpacaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountKeyId, string secretKey, string tradingMode, IDataAggregator aggregator)
+        public AlpacaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountKeyId, string secretKey, string tradingMode)
             : base("Alpaca Brokerage")
         {
-            _aggregator = aggregator;
-
             var httpScheme = "https://";
             var alpacaBaseUrl = "api.alpaca.markets";
 
@@ -143,7 +135,6 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             Log.Trace("AlpacaBrokerage.Dispose(): Disposing of Alpaca brokerage resources.");
 
-            _aggregator.Dispose();
             _sockClient?.Dispose();
 
             _messagingRateLimiter.Dispose();
