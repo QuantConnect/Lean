@@ -827,7 +827,7 @@ def RunTest():
             );
         }
                 [Test]
-        public void ()
+        public void MonoTest()
         {
             AssetCode(
                 @"
