@@ -15,49 +15,44 @@
 
 using NUnit.Framework;
 using QuantConnect.Brokerages.Binance;
-using QuantConnect.Brokerages.Binance;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Tests.Brokerages.Binance
 {
     [TestFixture]
     public class BinanceSymbolMapperTests
     {
-        private BinanceSymbolMapper mapper;
+        private BinanceSymbolMapper _mapper;
 
         [SetUp]
         public void Setup()
         {
-            mapper = new BinanceSymbolMapper();
+            _mapper = new BinanceSymbolMapper();
         }
 
         #region data
-        public TestCaseData[] CryptoPairs => new[]
+        public static TestCaseData[] CryptoPairs => new[]
         {
             new TestCaseData("ethusdt"),
             new TestCaseData("btcusdt"),
             new TestCaseData("ethbtc")
         };
 
-        public TestCaseData[] RawCryptoSymbols => new[]
+        public static TestCaseData[] RawCryptoSymbols => new[]
         {
             new TestCaseData("ETHUSDT", SecurityType.Crypto, Market.Binance),
             new TestCaseData("ETHBTC", SecurityType.Crypto, Market.Binance),
             new TestCaseData("BTCUSDT", SecurityType.Crypto, Market.Binance),
         };
 
-        public TestCaseData[] CryptoSymbols => new[]
+        public static TestCaseData[] CryptoSymbols => new[]
         {
             new TestCaseData(Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance)),
             new TestCaseData(Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Binance)),
             new TestCaseData(Symbol.Create("ETHBTC", SecurityType.Crypto, Market.Binance))
         };
 
-        public TestCaseData[] CurrencyPairs => new[]
+        public static TestCaseData[] CurrencyPairs => new[]
         {
             new TestCaseData(""),
             new TestCaseData("eurusd"),
@@ -65,7 +60,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
             new TestCaseData("usdjpy")
         };
 
-        public TestCaseData[] UnknownSymbols => new[]
+        public static TestCaseData[] UnknownSymbols => new[]
         {
             new TestCaseData("eth-usd", SecurityType.Crypto, Market.Binance),
             new TestCaseData("BTC/USD", SecurityType.Crypto, Market.Binance),
@@ -75,12 +70,12 @@ namespace QuantConnect.Tests.Brokerages.Binance
             new TestCaseData("btceth", SecurityType.Crypto, Market.Binance)
         };
 
-        public TestCaseData[] UnknownSecurityType => new[]
+        public static TestCaseData[] UnknownSecurityType => new[]
         {
             new TestCaseData("BTCUSDT", SecurityType.Forex, Market.Binance),
         };
 
-        public TestCaseData[] UnknownMarket => new[]
+        public static TestCaseData[] UnknownMarket => new[]
         {
             new TestCaseData("ethusdt", SecurityType.Crypto, Market.GDAX)
         };
@@ -88,88 +83,88 @@ namespace QuantConnect.Tests.Brokerages.Binance
         #endregion
 
         [Test]
-        [TestCaseSource("CryptoPairs")]
+        [TestCaseSource(nameof(CryptoPairs))]
         public void ReturnsCryptoSecurityType(string pair)
         {
-            Assert.AreEqual(SecurityType.Crypto, mapper.GetBrokerageSecurityType(pair));
-            var symbol = mapper.GetLeanSymbol(pair);
-            Assert.AreEqual(SecurityType.Crypto, mapper.GetLeanSecurityType(symbol.Value));
+            Assert.AreEqual(SecurityType.Crypto, _mapper.GetBrokerageSecurityType(pair));
+            var symbol = _mapper.GetLeanSymbol(pair);
+            Assert.AreEqual(SecurityType.Crypto, _mapper.GetLeanSecurityType(symbol.Value));
         }
 
         [Test]
-        [TestCaseSource("CryptoPairs")]
+        [TestCaseSource(nameof(CryptoPairs))]
         public void ReturnsCorrectLeanSymbol(string pair)
         {
-            var symbol = mapper.GetLeanSymbol(pair);
+            var symbol = _mapper.GetLeanSymbol(pair);
             Assert.AreEqual(pair.LazyToUpper(), symbol.Value);
             Assert.AreEqual(SecurityType.Crypto, symbol.ID.SecurityType);
             Assert.AreEqual(Market.Binance, symbol.ID.Market);
         }
 
         [Test]
-        [TestCaseSource("RawCryptoSymbols")]
+        [TestCaseSource(nameof(RawCryptoSymbols))]
         public void ReturnsCorrectLeanSymbol(string pair, SecurityType type, string market)
         {
-            var symbol = mapper.GetLeanSymbol(pair);
+            var symbol = _mapper.GetLeanSymbol(pair);
             Assert.AreEqual(pair.LazyToUpper(), symbol.Value);
             Assert.AreEqual(SecurityType.Crypto, symbol.ID.SecurityType);
             Assert.AreEqual(Market.Binance, symbol.ID.Market);
         }
 
         [Test]
-        [TestCaseSource("CryptoSymbols")]
+        [TestCaseSource(nameof(CryptoSymbols))]
         public void ReturnsCorrectBrokerageSymbol(Symbol symbol)
         {
-            Assert.AreEqual(symbol.Value.LazyToUpper(), mapper.GetBrokerageSymbol(symbol));
+            Assert.AreEqual(symbol.Value.LazyToUpper(), _mapper.GetBrokerageSymbol(symbol));
         }
 
         [Test]
-        [TestCaseSource("CurrencyPairs")]
+        [TestCaseSource(nameof(CurrencyPairs))]
         public void ThrowsOnCurrencyPairs(string pair)
         {
-            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSecurityType(pair));
+            Assert.Throws<ArgumentException>(() => _mapper.GetBrokerageSecurityType(pair));
         }
 
         [Test]
         public void ThrowsOnNullOrEmptySymbols()
         {
             string ticker = null;
-            Assert.IsFalse(mapper.IsKnownBrokerageSymbol(ticker));
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(ticker, SecurityType.Crypto, Market.Binance));
-            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSecurityType(ticker));
+            Assert.IsFalse(_mapper.IsKnownBrokerageSymbol(ticker));
+            Assert.Throws<ArgumentException>(() => _mapper.GetLeanSymbol(ticker, SecurityType.Crypto, Market.Binance));
+            Assert.Throws<ArgumentException>(() => _mapper.GetBrokerageSecurityType(ticker));
 
             ticker = "";
-            Assert.IsFalse(mapper.IsKnownBrokerageSymbol(ticker));
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(ticker, SecurityType.Crypto, Market.Binance));
-            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSecurityType(ticker));
-            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(Symbol.Create(ticker, SecurityType.Crypto, Market.Binance)));
+            Assert.IsFalse(_mapper.IsKnownBrokerageSymbol(ticker));
+            Assert.Throws<ArgumentException>(() => _mapper.GetLeanSymbol(ticker, SecurityType.Crypto, Market.Binance));
+            Assert.Throws<ArgumentException>(() => _mapper.GetBrokerageSecurityType(ticker));
+            Assert.Throws<ArgumentException>(() => _mapper.GetBrokerageSymbol(Symbol.Create(ticker, SecurityType.Crypto, Market.Binance)));
         }
 
         [Test]
-        [TestCaseSource("UnknownSymbols")]
+        [TestCaseSource(nameof(UnknownSymbols))]
         public void ThrowsOnUnknownSymbols(string pair, SecurityType type, string market)
         {
-            Assert.IsFalse(mapper.IsKnownBrokerageSymbol(pair));
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(pair, type, market));
-            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(Symbol.Create(pair, type, market)));
+            Assert.IsFalse(_mapper.IsKnownBrokerageSymbol(pair));
+            Assert.Throws<ArgumentException>(() => _mapper.GetLeanSymbol(pair, type, market));
+            Assert.Throws<ArgumentException>(() => _mapper.GetBrokerageSymbol(Symbol.Create(pair, type, market)));
         }
 
         [Test]
-        [TestCaseSource("UnknownSecurityType")]
+        [TestCaseSource(nameof(UnknownSecurityType))]
         public void ThrowsOnUnknownSecurityType(string pair, SecurityType type, string market)
         {
-            Assert.IsTrue(mapper.IsKnownBrokerageSymbol(pair));
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(pair, type, market));
-            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(Symbol.Create(pair, type, market)));
+            Assert.IsTrue(_mapper.IsKnownBrokerageSymbol(pair));
+            Assert.Throws<ArgumentException>(() => _mapper.GetLeanSymbol(pair, type, market));
+            Assert.Throws<ArgumentException>(() => _mapper.GetBrokerageSymbol(Symbol.Create(pair, type, market)));
         }
 
         [Test]
-        [TestCaseSource("UnknownMarket")]
+        [TestCaseSource(nameof(UnknownMarket))]
         public void ThrowsOnUnknownMarket(string pair, SecurityType type, string market)
         {
-            Assert.IsTrue(mapper.IsKnownBrokerageSymbol(pair));
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(pair, type, market));
-            Assert.AreEqual(pair.LazyToUpper(), mapper.GetBrokerageSymbol(Symbol.Create(pair, type, market)));
+            Assert.IsTrue(_mapper.IsKnownBrokerageSymbol(pair));
+            Assert.Throws<ArgumentException>(() => _mapper.GetLeanSymbol(pair, type, market));
+            Assert.AreEqual(pair.LazyToUpper(), _mapper.GetBrokerageSymbol(Symbol.Create(pair, type, market)));
         }
     }
 }

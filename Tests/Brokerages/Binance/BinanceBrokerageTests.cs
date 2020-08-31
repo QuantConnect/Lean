@@ -14,10 +14,7 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using NUnit.Framework;
@@ -29,13 +26,14 @@ using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Orders;
 using QuantConnect.Logging;
 using System.Threading;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Brokerages.Binance
 {
-    [TestFixture, Ignore("This test requires a configured and testable Binance practice account")]
+    [TestFixture, Explicit("This test requires a configured and testable Binance practice account")]
     public partial class BinanceBrokerageTests : BrokerageTests
     {
-        private BinanceRestApiClient _bibanceApi;
+        private BinanceRestApiClient _binanceApi;
 
         /// <summary>
         /// Creates the brokerage under test and connects it
@@ -45,25 +43,25 @@ namespace QuantConnect.Tests.Brokerages.Binance
         /// <returns></returns>
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
-            var securities = new SecurityManager(new TimeKeeper(DateTime.UtcNow, new[] { TimeZones.NewYork }));
-            securities.Add(Symbol, CreateSecurity(Symbol));
+            var securities = new SecurityManager(new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork))
+            {
+                { Symbol, CreateSecurity(Symbol) }
+            };
+
             var transactions = new SecurityTransactionManager(null, securities);
             transactions.SetOrderProcessor(new FakeOrderProcessor());
 
             var algorithm = new Mock<IAlgorithm>();
             algorithm.Setup(a => a.Transactions).Returns(transactions);
-            algorithm.Setup(a => a.BrokerageModel).Returns(new BinanceBrokerageModel(AccountType.Cash));
+            algorithm.Setup(a => a.BrokerageModel).Returns(new BinanceBrokerageModel());
             algorithm.Setup(a => a.Portfolio).Returns(new SecurityPortfolioManager(securities, transactions));
-
-            var priceProvider = new Mock<IPriceProvider>();
-            priceProvider.Setup(a => a.GetLastPrice(It.IsAny<Symbol>())).Returns(1.234m);
 
             var wssUrl = Config.Get("binance-wss", "wss://stream.binance.com:9443");
             var restUrl = Config.Get("binance-rest", "https://api.binance.com");
             var apiKey = Config.Get("binance-api-key");
             var apiSecret = Config.Get("binance-api-secret");
 
-            _bibanceApi = new BinanceRestApiClient(
+            _binanceApi = new BinanceRestApiClient(
                 new BinanceSymbolMapper(),
                 algorithm.Object?.Portfolio,
                 restUrl,
@@ -76,7 +74,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
                     apiKey,
                     apiSecret,
                     algorithm.Object,
-                    priceProvider.Object
+                    new AggregationManager()
                 );
         }
 
@@ -88,7 +86,8 @@ namespace QuantConnect.Tests.Brokerages.Binance
         /// <summary>
         /// Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected override Symbol Symbol => Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance);
+        protected override Symbol Symbol => StaticSymbol;
+        private static Symbol StaticSymbol => Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance);
 
         /// <summary>
         /// Gets the security type associated with the <see cref="BrokerageTests.Symbol" />
@@ -96,29 +95,29 @@ namespace QuantConnect.Tests.Brokerages.Binance
         protected override SecurityType SecurityType => SecurityType.Crypto;
 
         //no stop limit support in v1
-        public override TestCaseData[] OrderParameters => new[]
+        public static TestCaseData[] OrderParameters => new[]
         {
-            new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
-            new TestCaseData(new StopLimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopLimitOrder"),
+            new TestCaseData(new MarketOrderTestParameters(StaticSymbol)).SetName("MarketOrder"),
+            new TestCaseData(new LimitOrderTestParameters(StaticSymbol, HighPrice, LowPrice)).SetName("LimitOrder"),
+            new TestCaseData(new StopLimitOrderTestParameters(StaticSymbol, HighPrice, LowPrice)).SetName("StopLimitOrder"),
         };
 
         /// <summary>
         /// Gets a high price for the specified symbol so a limit sell won't fill
         /// </summary>
-        protected override decimal HighPrice => 300m;
+        private const decimal HighPrice = 300m;
 
         /// <summary>
         /// Gets a low price for the specified symbol so a limit buy won't fill
         /// </summary>
-        protected override decimal LowPrice => 100m;
+        private const decimal LowPrice = 100m;
 
         /// <summary>
         /// Gets the current market price of the specified security
         /// </summary>
         protected override decimal GetAskPrice(Symbol symbol)
         {
-            var prices = _bibanceApi.GetTickers();
+            var prices = _binanceApi.GetTickers();
             return prices
                 .FirstOrDefault(t => t.Symbol == SymbolMapper.GetBrokerageSymbol(symbol))
                 .Price;

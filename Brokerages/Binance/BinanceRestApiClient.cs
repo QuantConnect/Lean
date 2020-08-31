@@ -15,7 +15,6 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
@@ -29,7 +28,6 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.Binance
 {
@@ -132,7 +130,6 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public IEnumerable<Messages.OpenOrder> GetOpenOrders()
         {
-            var list = new List<Orders.Order>();
             var queryString = $"timestamp={GetNonce()}";
             var endpoint = $"/api/v3/openOrders?{queryString}&signature={AuthenticationToken(queryString)}";
             var request = new RestRequest(endpoint, Method.GET);
@@ -152,7 +149,7 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         /// <param name="order">The order to be placed</param>
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
-        public bool PlaceOrder(Orders.Order order)
+        public bool PlaceOrder(Order order)
         {
             // supported time in force values {GTC, IOC, FOK}
             // use GTC as LEAN doesn't support others yet
@@ -163,14 +160,13 @@ namespace QuantConnect.Brokerages.Binance
                 { "side", ConvertOrderDirection(order.Direction) }
             };
 
-            decimal ticker = 0, stopPrice = 0m;
             switch (order.Type)
             {
                 case OrderType.Limit:
                     body["type"] = (order.Properties as BinanceOrderProperties)?.PostOnly == true
                         ? "LIMIT_MAKER"
                         : "LIMIT";
-                    body["price"] = (order as LimitOrder).LimitPrice.ToString(CultureInfo.InvariantCulture);
+                    body["price"] = ((LimitOrder) order).LimitPrice.ToString(CultureInfo.InvariantCulture);
                     // timeInForce is not required for LIMIT_MAKER
                     if (Equals(body["type"], "LIMIT"))
                         body["timeInForce"] = "GTC";
@@ -179,8 +175,8 @@ namespace QuantConnect.Brokerages.Binance
                     body["type"] = "MARKET";
                     break;
                 case OrderType.StopLimit:
-                    ticker = GetTickerPrice(order);
-                    stopPrice = (order as StopLimitOrder).StopPrice;
+                    var ticker = GetTickerPrice(order);
+                    var stopPrice = ((StopLimitOrder) order).StopPrice;
                     if (order.Direction == OrderDirection.Sell)
                     {
                         body["type"] = stopPrice <= ticker ? "STOP_LOSS_LIMIT" : "TAKE_PROFIT_LIMIT";
@@ -191,13 +187,13 @@ namespace QuantConnect.Brokerages.Binance
                     }
                     body["timeInForce"] = "GTC";
                     body["stopPrice"] = stopPrice.ToString(CultureInfo.InvariantCulture);
-                    body["price"] = (order as StopLimitOrder).LimitPrice.ToString(CultureInfo.InvariantCulture);
+                    body["price"] = ((StopLimitOrder) order).LimitPrice.ToString(CultureInfo.InvariantCulture);
                     break;
                 default:
                     throw new NotSupportedException($"BinanceBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
             }
 
-            var endpoint = $"/api/v3/order";
+            const string endpoint = "/api/v3/order";
             body["timestamp"] = GetNonce();
             body["signature"] = AuthenticationToken(body.ToQueryString());
             var request = new RestRequest(endpoint, Method.POST);
@@ -248,7 +244,7 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         /// <param name="order">The new order information</param>
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
-        public bool UpdateOrder(Orders.Order order)
+        public bool UpdateOrder(Order order)
         {
             throw new NotSupportedException("BinanceBrokerage.UpdateOrder: Order update not supported. Please cancel and re-create.");
         }
@@ -258,7 +254,7 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         /// <param name="order">The order to cancel</param>
         /// <returns>True if the request was submitted for cancellation, false otherwise</returns>
-        public bool CancelOrder(Orders.Order order)
+        public bool CancelOrder(Order order)
         {
             var success = new List<bool>();
             IDictionary<string, object> body = new Dictionary<string, object>()
@@ -308,16 +304,16 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns>An enumerable of bars covering the span specified in the request</returns>
         public IEnumerable<Messages.Kline> GetHistory(Data.HistoryRequest request)
         {
-            string resolution = ConvertResolution(request.Resolution);
-            long resolutionInMS = (long)request.Resolution.ToTimeSpan().TotalMilliseconds;
-            string symbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
-            long startMTS = (long)Time.DateTimeToUnixTimeStamp(request.StartTimeUtc) * 1000;
-            long endMTS = (long)Time.DateTimeToUnixTimeStamp(request.EndTimeUtc) * 1000;
-            string endpoint = $"/api/v1/klines?symbol={symbol}&interval={resolution}&limit=1000";
+            var resolution = ConvertResolution(request.Resolution);
+            var resolutionInMs = (long)request.Resolution.ToTimeSpan().TotalMilliseconds;
+            var symbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
+            var startMs = (long)Time.DateTimeToUnixTimeStamp(request.StartTimeUtc) * 1000;
+            var endMs = (long)Time.DateTimeToUnixTimeStamp(request.EndTimeUtc) * 1000;
+            var endpoint = $"/api/v1/klines?symbol={symbol}&interval={resolution}&limit=1000";
 
-            while ((endMTS - startMTS) > resolutionInMS)
+            while (endMs - startMs > resolutionInMs)
             {
-                var timeframe = $"&startTime={startMTS}&endTime={endMTS}";
+                var timeframe = $"&startTime={startMs}&endTime={endMs}";
 
                 var restRequest = new RestRequest(endpoint + timeframe, Method.GET);
                 var response = ExecuteRestRequest(restRequest);
@@ -331,8 +327,7 @@ namespace QuantConnect.Brokerages.Binance
                     .Select(entries => new Messages.Kline(entries))
                     .ToList();
 
-                startMTS = klines.Last().OpenTime + resolutionInMS;
-                var period = request.Resolution.ToTimeSpan();
+                startMs = klines.Last().OpenTime + resolutionInMs;
 
                 foreach (var kline in klines)
                 {
@@ -390,8 +385,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public Messages.PriceTicker[] GetTickers()
         {
-
-            string endpoint = $"/api/v3/ticker/price";
+            const string endpoint = "/api/v3/ticker/price";
             var req = new RestRequest(endpoint, Method.GET);
             var response = ExecuteRestRequest(req);
             if (response.StatusCode != HttpStatusCode.OK)

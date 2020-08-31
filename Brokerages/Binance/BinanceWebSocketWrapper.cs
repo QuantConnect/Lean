@@ -13,15 +13,14 @@
  * limitations under the License.
 */
 
-using QuantConnect.Logging;
 using System;
 
 namespace QuantConnect.Brokerages.Binance
 {
     /// <summary>
-    /// Wrapper class for a Bitfinex websocket connection
+    /// Wrapper class for a Binance websocket connection
     /// </summary>
-    public class BinanceWebSocketWrapper : WebSocketWrapper
+    public class BinanceWebSocketWrapper : WebSocketClientWrapper
     {
         /// <summary>
         /// The unique Id for the connection

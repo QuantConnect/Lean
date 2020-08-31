@@ -13,13 +13,11 @@
  * limitations under the License.
  */
 
-using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -28,8 +26,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.Binance
@@ -62,11 +58,12 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
-        /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
-        public BinanceBrokerage(string wssUrl, string restUrl, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider)
+        /// <param name="aggregator">the aggregator for consolidating ticks</param>
+        public BinanceBrokerage(string wssUrl, string restUrl, string apiKey, string apiSecret, IAlgorithm algorithm, IDataAggregator aggregator)
             : base(new RestClient(restUrl), apiKey, apiSecret, Market.Binance, "Binance")
         {
             _algorithm = algorithm;
+            _aggregator = aggregator;
 
             _wssUrl = wssUrl;
             _apiClient = new BinanceRestApiClient(
@@ -80,7 +77,7 @@ namespace QuantConnect.Brokerages.Binance
             _apiClient.OrderStatusChanged += (s, e) => OnOrderEvent(e);
             _apiClient.Message += (s, e) => OnMessage(e);
 
-            WebSocket = new WebSocketWrapper();
+            WebSocket = new WebSocketClientWrapper();
             
             WebSocket.Message += OnMessage;
             WebSocket.Error += OnError;
@@ -349,7 +346,7 @@ namespace QuantConnect.Brokerages.Binance
                 Log.Error(err);
             }
 
-            OnMessageImpl(sender, e, handler);
+            OnMessageImpl(e, handler);
         }
 
         /// <summary>
@@ -417,7 +414,7 @@ namespace QuantConnect.Brokerages.Binance
             }
             Wait(() => !TickerWebSocket.IsOpen);
 
-            var streams = symbolsToSubscribe.Select((s) => string.Format(CultureInfo.InvariantCulture, "{0}@depth/{0}@trade", s.Value.LazyToLower()));
+            var streams = symbolsToSubscribe.Select((s) => string.Format(CultureInfo.InvariantCulture, "{0}@depth/{0}@trade", s.Value.ToLowerInvariant()));
             TickerWebSocket.Initialize($"{_wssUrl}/stream?streams={string.Join("/", streams)}");
 
             Log.Trace($"BaseWebsocketsBrokerage(): Reconnecting... IsConnected: {IsConnected}");
@@ -449,38 +446,37 @@ namespace QuantConnect.Brokerages.Binance
         #endregion
 
         #region IDataQueueHandler
+
         /// <summary>
-        /// Get the next ticks from the live trading data queue
+        /// Sets the job we're subscribing for
         /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
         {
-            lock (TickLocker)
-            {
-                var copy = Ticks.ToArray();
-                Ticks.Clear();
-                return copy;
-            }
         }
 
         /// <summary>
-        /// Adds the specified symbols to the subscription
+        /// Subscribe to the specified configuration
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            Subscribe(symbols);
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
+            Subscribe(new[] { dataConfig.Symbol });
+
+            return enumerator;
         }
 
         /// <summary>
-        /// Removes the specified symbols to the subscription
+        /// Removes the specified configuration
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            Unsubscribe(symbols);
+            Unsubscribe(new[] { dataConfig.Symbol });
+            _aggregator.Remove(dataConfig);
         }
 
         #endregion

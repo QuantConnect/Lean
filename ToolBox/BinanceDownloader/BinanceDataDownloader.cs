@@ -31,15 +31,15 @@ namespace QuantConnect.ToolBox.BinanceDownloader
     {
         private readonly BinanceBrokerage _brokerage;
         private readonly BinanceSymbolMapper _symbolMapper = new BinanceSymbolMapper();
-        private const string _rest = "https://api.binance.com";
-        private const string _wss = "wss://stream.binance.com:9443";
+        private const string RestApiUrl = "https://api.binance.com";
+        private const string WebSocketUrl = "wss://stream.binance.com:9443";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BinanceDataDownloader"/> class
         /// </summary>
         public BinanceDataDownloader()
         {
-            _brokerage = new BinanceBrokerage(_wss, _rest, null, null,null, null);
+            _brokerage = new BinanceBrokerage(WebSocketUrl, RestApiUrl, null, null,null, null);
         }
 
         /// <summary>

@@ -16,9 +16,10 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 using QuantConnect.Util;
-using RestSharp;
 
 namespace QuantConnect.Brokerages.Binance
 {
@@ -55,7 +56,8 @@ namespace QuantConnect.Brokerages.Binance
         /// <summary>
         /// The brokerage model
         /// </summary>
-        public override IBrokerageModel BrokerageModel => new BinanceBrokerageModel();
+        /// <param name="orderProvider">The order provider</param>
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new BinanceBrokerageModel();
 
         /// <summary>
         /// Create the Brokerage instance
@@ -73,15 +75,13 @@ namespace QuantConnect.Brokerages.Binance
                     throw new Exception($"BinanceBrokerageFactory.CreateBrokerage: Missing {item} in config.json");
             }
 
-            var priceProvider = new ApiPriceProvider(job.UserId, job.UserToken);
-
             var brokerage = new BinanceBrokerage(
                 job.BrokerageData["binance-wss"],
                 job.BrokerageData["binance-rest"],
                 job.BrokerageData["binance-api-key"],
                 job.BrokerageData["binance-api-secret"],
                 algorithm,
-                priceProvider);
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")));
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;

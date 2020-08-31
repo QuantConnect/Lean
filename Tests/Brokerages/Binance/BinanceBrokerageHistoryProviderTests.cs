@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
     [TestFixture]
     public partial class BinanceBrokerageTests
     {
-        public TestCaseData[] ValidHistory
+        public static TestCaseData[] ValidHistory
         {
             get
             {
@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
             }
         }
 
-        public TestCaseData[] NoHistory
+        public static TestCaseData[] NoHistory
         {
             get
             {
@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
             }
         }
 
-        public TestCaseData[] InvalidHistory
+        public static TestCaseData[] InvalidHistory
         {
             get
             {
@@ -73,8 +73,8 @@ namespace QuantConnect.Tests.Brokerages.Binance
         }
 
         [Test]
-        [TestCaseSource("ValidHistory")]
-        [TestCaseSource("InvalidHistory")]
+        [TestCaseSource(nameof(ValidHistory))]
+        [TestCaseSource(nameof(InvalidHistory))]
         public void GetsHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool throwsException)
         {
             TestDelegate test = () =>
@@ -83,7 +83,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
 
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);
-                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false));
+                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, null));
 
                 var now = DateTime.UtcNow;
 
@@ -136,7 +136,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
         }
 
         [Test]
-        [TestCaseSource("NoHistory")]
+        [TestCaseSource(nameof(NoHistory))]
         public void GetEmptyHistory(Symbol symbol, Resolution resolution, TimeSpan period)
         {
             TestDelegate test = () =>
@@ -145,7 +145,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
 
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);
-                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null,false));
+                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null,false, null));
 
                 var now = DateTime.UtcNow;
 

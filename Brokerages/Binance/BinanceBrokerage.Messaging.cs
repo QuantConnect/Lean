@@ -13,19 +13,16 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using QuantConnect.Brokerages.Binance.Messages;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
-using RestSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Net;
+using QuantConnect.Data;
 
 namespace QuantConnect.Brokerages.Binance
 {
@@ -34,6 +31,8 @@ namespace QuantConnect.Brokerages.Binance
         private readonly ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
         private volatile bool _streamLocked;
         private readonly ConcurrentDictionary<Symbol, BinanceOrderBook> _orderBooks = new ConcurrentDictionary<Symbol, BinanceOrderBook>();
+        private readonly IDataAggregator _aggregator;
+
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
         /// </summary>
@@ -58,18 +57,18 @@ namespace QuantConnect.Brokerages.Binance
             {
                 WebSocketMessage e;
                 _messageBuffer.TryDequeue(out e);
-                OnMessageImpl(this, e, (msg) =>
+                OnMessageImpl(
+                    e, (msg) =>
                 {
                     switch (msg.Event)
                     {
                         case EventType.Execution:
                             OnUserMessageImpl(msg);
                             break;
+
                         case EventType.Trade:
                         case EventType.OrderBook:
                             OnStreamMessageImpl(msg);
-                            break;
-                        default:
                             break;
                     }
                 });
@@ -92,11 +91,11 @@ namespace QuantConnect.Brokerages.Binance
             }
         }
 
-        private void OnMessageImpl(object sender, WebSocketMessage e, Action<BaseMessage> handler)
+        private void OnMessageImpl(WebSocketMessage e, Action<BaseMessage> handler)
         {
             try
             {
-                var msg = Messages.BaseMessage.Parse(e.Message);
+                var msg = BaseMessage.Parse(e.Message);
                 if (msg != null)
                 {
                     handler(msg);
@@ -114,7 +113,7 @@ namespace QuantConnect.Brokerages.Binance
             switch (message.Event)
             {
                 case EventType.Execution:
-                    var upd = message.ToObject<Messages.Execution>();
+                    var upd = message.ToObject<Execution>();
                     if (upd.ExecutionType.Equals("TRADE", StringComparison.OrdinalIgnoreCase))
                     {
                         OnFillOrder(upd);
@@ -130,11 +129,11 @@ namespace QuantConnect.Brokerages.Binance
             switch (message.Event)
             {
                 case EventType.OrderBook:
-                    var updates = message.ToObject<Messages.OrderBookUpdateMessage>();
+                    var updates = message.ToObject<OrderBookUpdateMessage>();
                     OnOrderBookUpdate(updates);
                     break;
                 case EventType.Trade:
-                    var trade = message.ToObject<Messages.Trade>();
+                    var trade = message.ToObject<Trade>();
                     EmitTradeTick(
                         _symbolMapper.GetLeanSymbol(trade.Symbol),
                         Time.UnixMillisecondTimeStampToDateTime(trade.Time),
@@ -152,10 +151,10 @@ namespace QuantConnect.Brokerages.Binance
             try
             {
                 var symbol = _symbolMapper.GetLeanSymbol(ticker.Symbol);
-                BinanceOrderBook orderBook = null;
+                BinanceOrderBook orderBook;
                 if (_orderBooks.ContainsKey(symbol))
                 {
-                    orderBook = _orderBooks[symbol] as BinanceOrderBook;
+                    orderBook = _orderBooks[symbol];
                 }
                 else
                 {
@@ -201,34 +200,38 @@ namespace QuantConnect.Brokerages.Binance
 
         private void EmitQuoteTick(Symbol symbol, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
         {
+            var tick = new Tick
+            {
+                AskPrice = askPrice,
+                BidPrice = bidPrice,
+                Value = (askPrice + bidPrice) / 2m,
+                Time = DateTime.UtcNow,
+                Symbol = symbol,
+                TickType = TickType.Quote,
+                AskSize = askSize,
+                BidSize = bidSize
+            };
+
             lock (TickLocker)
             {
-                Ticks.Add(new Tick
-                {
-                    AskPrice = askPrice,
-                    BidPrice = bidPrice,
-                    Value = (askPrice + bidPrice) / 2m,
-                    Time = DateTime.UtcNow,
-                    Symbol = symbol,
-                    TickType = TickType.Quote,
-                    AskSize = askSize,
-                    BidSize = bidSize
-                });
+                _aggregator.Update(tick);
             }
         }
 
         private void EmitTradeTick(Symbol symbol, DateTime time, decimal price, decimal quantity)
         {
+            var tick = new Tick
+            {
+                Symbol = symbol,
+                Value = price,
+                Quantity = Math.Abs(quantity),
+                Time = time,
+                TickType = TickType.Trade
+            };
+
             lock (TickLocker)
             {
-                Ticks.Add(new Tick
-                {
-                    Symbol = symbol,
-                    Value = price,
-                    Quantity = Math.Abs(quantity),
-                    Time = time,
-                    TickType = TickType.Trade
-                });
+                _aggregator.Update(tick);
             }
         }
 
