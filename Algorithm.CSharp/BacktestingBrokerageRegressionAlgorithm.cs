@@ -39,9 +39,11 @@ namespace QuantConnect.Algorithm.CSharp
     class BacktestingBrokerageRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Security _security;
-        public Symbol Spy;
+        private Symbol _spy;
+        private OrderTicket _equityBuy;
         private Option _option;
-        public Symbol OptionSymbol;
+        private Symbol _optionSymbol;
+        private OrderTicket _optionBuy;
         private bool _optionBought = false;
         private bool _equityBought = false;
         private decimal _optionStrikePrice;
@@ -51,21 +53,21 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetCash(1000000);
+            SetCash(100000);
             SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 28);
 
             // Get our equity
             _security = AddEquity("SPY", Resolution.Hour);
             _security.SetFillModel(new PartialMarketFillModel(2));
-            Spy = _security.Symbol;
+            _spy = _security.Symbol;
 
             // Get our option
             _option = AddOption("GOOG");
             _option.SetFilter(u => u.IncludeWeeklys()
                                    .Strikes(-2, +2)
                                    .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10)));
-            OptionSymbol = _option.Symbol;
+            _optionSymbol = _option.Symbol;
         }
 
         /// <summary>
@@ -74,10 +76,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {   
-            if (!_equityBought && data.ContainsKey(Spy)) {
+            if (!_equityBought && data.ContainsKey(_spy)) {
                 //Buy our Equity
-                var quantity = CalculateOrderQuantity(Spy, .1m);
-                MarketOrder(Spy, quantity, asynchronous: true);
+                var quantity = CalculateOrderQuantity(_spy, .1m);
+                _equityBuy = MarketOrder(_spy, quantity, asynchronous: true);
                 _equityBought = true;
             }
 
@@ -85,7 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 // Buy our option
                 OptionChain chain;
-                if (data.OptionChains.TryGetValue(OptionSymbol, out chain))
+                if (data.OptionChains.TryGetValue(_optionSymbol, out chain))
                 {
                     // Find the second call strike under market price expiring today
                     var contracts = (
@@ -100,7 +102,7 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         var optionToBuy = contracts.FirstOrDefault();
                         _optionStrikePrice = optionToBuy.Strike;
-                        MarketOrder(optionToBuy.Symbol, 2);
+                        _optionBuy = MarketOrder(optionToBuy.Symbol, 1);
                         _optionBought = true;
                     }
                 }
@@ -120,12 +122,15 @@ namespace QuantConnect.Algorithm.CSharp
             switch(order.Type)
             {
                 case OrderType.Market:
-                    VerifyMarketOrder(order);
+                    VerifyMarketOrder(order, orderEvent);
                     break;
 
                 case OrderType.OptionExercise:
-                    VerifyOptionExercise(order);
+                    VerifyOptionExercise(order, orderEvent);
                     break;
+
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -133,7 +138,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// To verify Market orders is process correctly
         /// </summary>
         /// <param name="order">Order object to analyze</param>
-        public void VerifyMarketOrder(Order order)
+        public void VerifyMarketOrder(Order order, OrderEvent orderEvent)
         {
             switch(order.Status)
             {
@@ -145,6 +150,11 @@ namespace QuantConnect.Algorithm.CSharp
                     if (order.LastFillTime == null) 
                     {
                         throw new Exception("LastFillTime should not be null");
+                    }
+
+                    if (order.Quantity/2 != orderEvent.FillQuantity)
+                    {
+                        throw new Exception("Order size should be half");
                     }
                     break;
 
@@ -165,12 +175,51 @@ namespace QuantConnect.Algorithm.CSharp
         /// To verify OptionExercise orders is process correctly
         /// </summary>
         /// <param name="order">Order object to analyze</param>
-        public void VerifyOptionExercise(Order order)
+        public void VerifyOptionExercise(Order order, OrderEvent orderEvent)
         {
             // If the option price isn't the same as the strike price, its incorrect
             if (order.Price != _optionStrikePrice)
             {
                 throw new Exception("OptionExercise order price should be strike price!!");
+            }
+
+            if (orderEvent.Quantity != 1)
+            {
+                throw new Exception("OrderEvent Quantity should be 1");
+            }
+        }
+
+        /// <summary>
+        /// Runs after algorithm, used to check our portfolio and orders
+        /// </summary>
+        public override void OnEndOfAlgorithm()
+        {
+            if (!Portfolio.ContainsKey(_optionBuy.Symbol) || !Portfolio.ContainsKey(_optionBuy.Symbol.Underlying) || !Portfolio.ContainsKey(_equityBuy.Symbol))
+            {
+                throw new Exception("Portfolio does not contain the Symbols we purchased");
+            }
+
+            //Check option holding, should not be invested since it expired, profit should be -400
+            var optionHolding = Portfolio[_optionBuy.Symbol];
+            if (optionHolding.Invested || optionHolding.Profit != -400)
+            {
+                throw new Exception("Options holding does not match expected outcome");
+            }
+
+            //Check the option underlying symbol since we should have bought it at exercise
+            //Quantity should be 100, AveragePrice should be option strike price
+            var optionExerciseHolding = Portfolio[_optionBuy.Symbol.Underlying];
+            if (!optionExerciseHolding.Invested || optionExerciseHolding.Quantity != 100 || optionExerciseHolding.AveragePrice != _optionBuy.Symbol.ID.StrikePrice)
+            {
+                throw new Exception("Equity holding for exercised option does not match expected outcome");
+            }
+
+            //Check equity holding, should be invested, profit should be
+            //Quantity should be 50, AveragePrice should be ticket AverageFillPrice
+            var equityHolding = Portfolio[_equityBuy.Symbol];
+            if (!equityHolding.Invested || equityHolding.Quantity != 50 || equityHolding.AveragePrice != _equityBuy.AverageFillPrice)
+            {
+                throw new Exception("Equity holding does not match expected outcome");
             }
         }
 
@@ -178,7 +227,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// PartialMarketFillModel that allows the user to set the number of fills and restricts
         /// the fill to only one per bar.
         /// </summary>
-        public class PartialMarketFillModel : ImmediateFillModel
+        private class PartialMarketFillModel : ImmediateFillModel
         {
             private readonly decimal _percent;
             private readonly Dictionary<long, decimal> _absoluteRemainingByOrderId = new Dictionary<long, decimal>();
@@ -249,26 +298,26 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "3"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.08%"},
-            {"Compounding Annual Return", "-6.043%"},
-            {"Drawdown", "0.100%"},
+            {"Average Loss", "-0.40%"},
+            {"Compounding Annual Return", "-22.335%"},
+            {"Drawdown", "0.400%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-0.080%"},
-            {"Sharpe Ratio", "-7.915"},
+            {"Net Profit", "-0.323%"},
+            {"Sharpe Ratio", "-0.888"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.005"},
-            {"Beta", "0.116"},
-            {"Annual Standard Deviation", "0.002"},
+            {"Alpha", "0.035"},
+            {"Beta", "0.183"},
+            {"Annual Standard Deviation", "0.004"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "10.295"},
-            {"Tracking Error", "0.018"},
-            {"Treynor Ratio", "-0.164"},
-            {"Total Fees", "$3.54"},
-            {"Fitness Score", "0.062"},
-            {"OrderListHash", "1399223394"}
+            {"Information Ratio", "12.058"},
+            {"Tracking Error", "0.017"},
+            {"Treynor Ratio", "-0.018"},
+            {"Total Fees", "$2.00"},
+            {"Fitness Score", "0.213"},
+            {"OrderListHash", "-1514011542"}
         };
     }
 }
