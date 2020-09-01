@@ -55,19 +55,19 @@ namespace QuantConnect.ToolBox.IEX
         private readonly TaskCompletionSource<bool> _connected = new TaskCompletionSource<bool>();
         private bool _subscribedToAll;
         private int _dataPointCount;
-        private readonly IDataAggregator _aggregator;
+        private readonly IDataAggregator _aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
+            Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
 
         public string Endpoint { get; internal set; }
 
         public bool IsConnected => _manager.ReadyState == Manager.ReadyStateEnum.OPEN;
 
-        public IEXDataQueueHandler(IDataAggregator aggregator) : this(aggregator, true)
+        public IEXDataQueueHandler() : this(true)
         {
         }
 
-        public IEXDataQueueHandler(IDataAggregator aggregator, bool live)
+        public IEXDataQueueHandler(bool live)
         {
-            _aggregator = aggregator;
             Endpoint = "https://ws-api.iextrading.com/1.0/tops";
 
             if (string.IsNullOrWhiteSpace(_apiKey))

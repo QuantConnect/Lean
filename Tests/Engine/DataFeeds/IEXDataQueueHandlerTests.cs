@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void IEXCouldConnect()
         {
-            var iex = new IEXDataQueueHandler(new AggregationManager());
+            var iex = new IEXDataQueueHandler();
             Thread.Sleep(5000);
             Assert.IsTrue(iex.IsConnected);
             iex = null;
@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void IEXCouldSubscribeToAll()
         {
-            var iex = new IEXDataQueueHandler(new AggregationManager());
+            var iex = new IEXDataQueueHandler();
 
             ProcessFeed(
                 iex.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbol.Create("firehose", SecurityType.Equity, Market.USA), Resolution.Second), (s, e) => { }),
@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void IEXCouldSubscribe()
         {
-            var iex = new IEXDataQueueHandler(new AggregationManager());
+            var iex = new IEXDataQueueHandler();
 
             Array.ForEach(new[] { "FB", "AAPL", "XIV", "PTN", "USO" }, (ticker) =>
             {
@@ -127,7 +127,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void IEXCouldSubscribeManyTimes()
         {
-            var iex = new IEXDataQueueHandler(new AggregationManager());
+            var iex = new IEXDataQueueHandler();
 
             var configs = new[] {
                 GetSubscriptionDataConfig<TradeBar>(Symbol.Create("MBLY", SecurityType.Equity, Market.USA), Resolution.Second),
@@ -170,7 +170,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void IEXCouldSubscribeAndUnsubscribe()
         {
             // MBLY is the most liquid IEX instrument
-            var iex = new IEXDataQueueHandler(new AggregationManager());
+            var iex = new IEXDataQueueHandler();
             var unsubscribed = false;
             Action<BaseData> callback = (tick) =>
             {
@@ -212,7 +212,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void IEXCouldReconnect()
         {
-            var iex = new IEXDataQueueHandler(new AggregationManager());
+            var iex = new IEXDataQueueHandler();
             var realEndpoint = iex.Endpoint;
             Thread.Sleep(1000);
             iex.Dispose();
@@ -263,7 +263,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             TestDelegate test = () =>
             {
-                var historyProvider = new IEXDataQueueHandler(new AggregationManager());
+                var historyProvider = new IEXDataQueueHandler();
                 historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, new DataPermissionManager()));
 
                 var now = DateTime.UtcNow;

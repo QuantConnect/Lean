@@ -50,7 +50,8 @@ namespace QuantConnect.ToolBox.IQFeed
         private Level1Port _level1Port;
         private HistoryPort _historyPort;
 
-        private readonly IDataAggregator _aggregator;
+        private readonly IDataAggregator _aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
+            Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
 
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
@@ -60,11 +61,10 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <summary>
         /// IQFeedDataQueueHandler is an implementation of IDataQueueHandler:
         /// </summary>
-        public IQFeedDataQueueHandler(IDataAggregator aggregator)
+        public IQFeedDataQueueHandler()
         {
             _symbols = new HashSet<Symbol>();
             _underlyings = new Dictionary<Symbol, Symbol>();
-            _aggregator = aggregator;
 
             if (!IsConnected) Connect();
         }
