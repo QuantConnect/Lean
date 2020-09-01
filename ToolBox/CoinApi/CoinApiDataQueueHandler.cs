@@ -38,7 +38,8 @@ namespace QuantConnect.ToolBox.CoinApi
         private readonly CoinApiWsClient _client;
         private readonly object _locker = new object();
         private readonly CoinApiSymbolMapper _symbolMapper = new CoinApiSymbolMapper();
-        private readonly IDataAggregator _dataAggregator;
+        private readonly IDataAggregator _dataAggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
+            Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
 
         private readonly TimeSpan _subscribeDelay = TimeSpan.FromMilliseconds(250);
         private readonly object _lockerSubscriptions = new object();
@@ -54,13 +55,12 @@ namespace QuantConnect.ToolBox.CoinApi
         /// <summary>
         /// Initializes a new instance of the <see cref="CoinApiDataQueueHandler"/> class
         /// </summary>
-        public CoinApiDataQueueHandler(IDataAggregator dataAggregator)
+        public CoinApiDataQueueHandler()
         {
             _client = new CoinApiWsClient();
             _client.TradeEvent += OnTrade;
             _client.QuoteEvent += OnQuote;
             _client.Error += OnError;
-            _dataAggregator = dataAggregator;
         }
 
         /// <summary>

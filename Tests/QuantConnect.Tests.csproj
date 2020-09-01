@@ -361,6 +361,7 @@
     <Compile Include="Algorithm\Framework\Selection\OpenInterestFutureUniverseSelectionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Selection\QC500UniverseSelectionModelTests.cs" />
     <Compile Include="API\NodeTests.cs" />
+    <Compile Include="Brokerages\BrokerageFactoryTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageAdditionalTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexFeeModelTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexSymbolMapperTests.cs" />
@@ -745,6 +746,7 @@
     <Compile Include="Symbols.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />
+    <Compile Include="ToolBox\BasicTests.cs" />
     <Compile Include="ToolBox\PolygonHistoryTests.cs" />
     <Compile Include="ToolBox\PolygonSymbolMapperTests.cs" />
     <Compile Include="ToolBox\EstimizeTests.cs" />
