@@ -44,8 +44,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     case DataNormalizationMode.SplitAdjusted:
                         return _adjustedData;
 
+                    case DataNormalizationMode.TotalReturn:
+                        return _adjustedData.Clone().Scale(p => p + _config.SumOfDividends);
+
                     default:
-                        return _data;
+                        throw new ArgumentOutOfRangeException();
                 }
             }
         }
