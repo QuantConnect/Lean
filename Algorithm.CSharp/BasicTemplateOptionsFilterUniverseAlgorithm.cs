@@ -48,9 +48,10 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(UnderlyingTicker);
             OptionSymbol = option.Symbol;
 
-            // Set our custom universe filter
-            option.SetFilter(universe => from symbol in universe.WeeklysOnly().Expiration(0, 10)
+            // Set our custom universe filter, Expires today, is a call, and is within 10 dollars of the current price
+            option.SetFilter(universe => from symbol in universe.WeeklysOnly().Expiration(0, 1)
                                          where symbol.ID.OptionRight != OptionRight.Put &&
+                                              -10 < universe.Underlying.Price - symbol.ID.StrikePrice &&
                                               universe.Underlying.Price - symbol.ID.StrikePrice < 10
                                          select symbol);
 
@@ -65,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
                 OptionChain chain;
                 if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
                 {
-                    // Get the first call strike under market price expiring today
+                    // Get the first ITM call expiring today
                     var contract = (
                         from optionContract in chain.OrderByDescending(x => x.Strike)
                         where optionContract.Expiry == Time.Date

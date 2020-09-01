@@ -48,10 +48,11 @@ class BasicTemplateOptionsFilterUniverseAlgorithm(QCAlgorithm):
         self.SetBenchmark(equity.Symbol)
 
     def FilterFunction(self, universe):
-        universe = universe.WeeklysOnly().Expiration(0, 10)
+        #Expires today, is a call, and is within 10 dollars of the current price
+        universe = universe.WeeklysOnly().Expiration(0, 1)
         return [symbol for symbol in universe 
                 if symbol.ID.OptionRight != OptionRight.Put 
-                and universe.Underlying.Price - symbol.ID.StrikePrice < 10]
+                and -10 < universe.Underlying.Price - symbol.ID.StrikePrice < 10]
 
     def OnData(self,slice):
         if self.Portfolio.Invested: return
@@ -68,8 +69,3 @@ class BasicTemplateOptionsFilterUniverseAlgorithm(QCAlgorithm):
             
             if contracts:
                 self.MarketOrder(contracts[0].Symbol, 1)
-
-    def OnOrderEvent(self, orderEvent):
-        # Order fill event handler. On an order fill update the resulting information is passed to this method.
-        # <param name="orderEvent">Order event details containing details of the evemts</param>
-        self.Log(str(orderEvent))

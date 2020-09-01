@@ -47,7 +47,7 @@ class FilterUniverseRegressionAlgorithm(QCAlgorithm):
         self.SetBenchmark(equity.Symbol)
 
     def FilterFunction(self, universe):
-        universe = universe.WeeklysOnly().CallsOnly().Expiration(0, 10)
+        universe = universe.WeeklysOnly().Strikes(-5, +5).CallsOnly().Expiration(0, 1)
         return universe
 
     def OnData(self,slice):
@@ -63,7 +63,3 @@ class FilterUniverseRegressionAlgorithm(QCAlgorithm):
             if contracts:
                 self.MarketOrder(contracts[0].Symbol, 1)
 
-    def OnOrderEvent(self, orderEvent):
-        # Order fill event handler. On an order fill update the resulting information is passed to this method.
-        # <param name="orderEvent">Order event details containing details of the evemts</param>
-        self.Log(str(orderEvent))
