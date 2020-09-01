@@ -26,6 +26,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private BaseData _adjustedData;
         private SubscriptionDataConfig _config;
+        private DataNormalizationMode _mode;
+        private decimal _sumOfDividends;
 
         /// <summary>
         /// Gets the data
@@ -42,10 +44,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // the price scale factor will be set accordingly based on the mode in update scale factors
                     case DataNormalizationMode.Adjusted:
                     case DataNormalizationMode.SplitAdjusted:
-                        return _adjustedData;
+                        if (_mode == DataNormalizationMode.Adjusted || _mode == DataNormalizationMode.SplitAdjusted)
+                        {
+                            return _adjustedData;
+                        }
+                        else
+                        {
+                            _mode = _config.DataNormalizationMode;
+                            return _adjustedData.Scale(p => p - _sumOfDividends);
+                        }
 
                     case DataNormalizationMode.TotalReturn:
-                        return _adjustedData.Clone().Scale(p => p + _config.SumOfDividends);
+                        if (_mode == DataNormalizationMode.TotalReturn)
+                        {
+                            return _adjustedData;
+                        }
+                        else
+                        {
+                            _mode = _config.DataNormalizationMode;
+                            return _adjustedData.Scale(p => p + _sumOfDividends);
+                        }
 
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -59,12 +77,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="configuration">The subscription's configuration</param>
         /// <param name="rawData">The base data</param>
         /// <param name="adjustedData">The adjusted data</param>
+        /// <param name="normalizationMode">Specifies how data is normalized</param>
+        /// <param name="sumOfDividends">The sum of dividends accrued</param>
         /// <param name="emitTimeUtc">The emit time for the data</param>
-        public PrecalculatedSubscriptionData(SubscriptionDataConfig configuration, BaseData rawData, BaseData adjustedData, DateTime emitTimeUtc)
+        public PrecalculatedSubscriptionData(SubscriptionDataConfig configuration, BaseData rawData, BaseData adjustedData, DataNormalizationMode normalizationMode, decimal sumOfDividends, DateTime emitTimeUtc)
             : base(rawData, emitTimeUtc)
         {
             _config = configuration;
             _adjustedData = adjustedData;
+            _mode = normalizationMode;
+            _sumOfDividends = sumOfDividends;
         }
     }
 }

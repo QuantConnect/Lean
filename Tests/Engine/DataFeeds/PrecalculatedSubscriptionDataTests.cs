@@ -56,30 +56,46 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             };
 
             var factor = 0.5m;
+            var sumOfDividends = 100m;
             var adjustedTb = tb.Clone(tb.IsFillForward).Adjust(factor);
 
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.Utc);
             var offsetProvider = new TimeZoneOffsetProvider(TimeZones.Utc, new DateTime(2020, 5, 21), new DateTime(2020, 5, 22));
 
             var emitTimeUtc = offsetProvider.ConvertToUtc(tb.EndTime);
+            _config.SumOfDividends = sumOfDividends;
 
             var subscriptionData = new PrecalculatedSubscriptionData(
                 _config,
                 tb,
                 adjustedTb,
+                DataNormalizationMode.Adjusted,
+                sumOfDividends,
                 emitTimeUtc);
 
             _config.DataNormalizationMode = DataNormalizationMode.Raw;
-            Assert.AreEqual(tb.Open, tb.Open);
-            Assert.AreEqual(tb.High, tb.High);
-            Assert.AreEqual(tb.Low, tb.Low);
-            Assert.AreEqual(tb.Close, tb.Close);
+            Assert.AreEqual(tb.Open, (subscriptionData.Data as TradeBar).Open);
+            Assert.AreEqual(tb.High, (subscriptionData.Data as TradeBar).High);
+            Assert.AreEqual(tb.Low, (subscriptionData.Data as TradeBar).Low);
+            Assert.AreEqual(tb.Close, (subscriptionData.Data as TradeBar).Close);
 
             _config.DataNormalizationMode = DataNormalizationMode.Adjusted;
-            Assert.AreEqual(tb.Open * factor, (adjustedTb as TradeBar).Open);
-            Assert.AreEqual(tb.High * factor, (adjustedTb as TradeBar).High);
-            Assert.AreEqual(tb.Low * factor, (adjustedTb as TradeBar).Low);
-            Assert.AreEqual(tb.Close * factor, (adjustedTb as TradeBar).Close);
+            Assert.AreEqual(tb.Open * factor, (subscriptionData.Data as TradeBar).Open);
+            Assert.AreEqual(tb.High * factor, (subscriptionData.Data as TradeBar).High);
+            Assert.AreEqual(tb.Low * factor, (subscriptionData.Data as TradeBar).Low);
+            Assert.AreEqual(tb.Close * factor, (subscriptionData.Data as TradeBar).Close);
+
+            _config.DataNormalizationMode = DataNormalizationMode.TotalReturn;
+            Assert.AreEqual(tb.Open * factor + sumOfDividends, (subscriptionData.Data as TradeBar).Open);
+            Assert.AreEqual(tb.High * factor + sumOfDividends, (subscriptionData.Data as TradeBar).High);
+            Assert.AreEqual(tb.Low * factor + sumOfDividends, (subscriptionData.Data as TradeBar).Low);
+            Assert.AreEqual(tb.Close * factor + sumOfDividends, (subscriptionData.Data as TradeBar).Close);
+
+            _config.DataNormalizationMode = DataNormalizationMode.SplitAdjusted;
+            Assert.AreEqual(tb.Open * factor, (subscriptionData.Data as TradeBar).Open);
+            Assert.AreEqual(tb.High * factor, (subscriptionData.Data as TradeBar).High);
+            Assert.AreEqual(tb.Low * factor, (subscriptionData.Data as TradeBar).Low);
+            Assert.AreEqual(tb.Close * factor, (subscriptionData.Data as TradeBar).Close);
         }
     }
 }

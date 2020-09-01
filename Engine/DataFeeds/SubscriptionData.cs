@@ -14,7 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Indicators;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -78,17 +80,42 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 data.Time = data.Time.ExchangeRoundDownInTimeZone(configuration.Increment, exchangeHours, configuration.DataTimeZone, configuration.ExtendedMarketHours);
             }
 
-            if (factor.HasValue && factor.Value != 1)
+            if (factor.HasValue && (factor.Value != 1 || configuration.SumOfDividends != 0))
             {
-                var adjustedData = data
-                    .Clone()
-                    .Adjust(factor.Value);
-                return new PrecalculatedSubscriptionData(configuration, data, adjustedData, emitTimeUtc);
+                var sumOfDividends = configuration.SumOfDividends;
+                var mode = configuration.DataNormalizationMode != DataNormalizationMode.Raw
+                    ? configuration.DataNormalizationMode
+                    : DataNormalizationMode.Adjusted;
+
+                BaseData adjustedData = data.Clone();
+
+                if (mode == DataNormalizationMode.Adjusted || mode == DataNormalizationMode.SplitAdjusted)
+                {
+                    if (factor.Value != 1)
+                    {
+                        adjustedData.Adjust(factor.Value);
+                    }
+                }
+                else if (mode == DataNormalizationMode.TotalReturn)
+                {
+                    if (factor.Value != 1 && configuration.SumOfDividends != 0)
+                    {
+                        adjustedData.Scale(p => p * factor.Value + sumOfDividends);
+                    }
+                    else if (factor.Value != 1)
+                    {
+                        adjustedData.Adjust(factor.Value);
+                    }
+                    else
+                    {
+                        adjustedData.Scale(p => p + sumOfDividends);
+                    }
+                }
+
+                return new PrecalculatedSubscriptionData(configuration, data, adjustedData, mode, sumOfDividends, emitTimeUtc);
             }
-            else
-            {
-                return new SubscriptionData(data, emitTimeUtc);
-            }
+
+            return new SubscriptionData(data, emitTimeUtc);
         }
     }
 }
