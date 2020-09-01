@@ -44,7 +44,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // the price scale factor will be set accordingly based on the mode in update scale factors
                     case DataNormalizationMode.Adjusted:
                     case DataNormalizationMode.SplitAdjusted:
-                        if (_mode == DataNormalizationMode.Adjusted || _mode == DataNormalizationMode.SplitAdjusted)
+                        if (_mode == DataNormalizationMode.Adjusted || _mode == DataNormalizationMode.SplitAdjusted || _sumOfDividends == 0)
                         {
                             return _adjustedData;
                         }
@@ -55,7 +55,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
 
                     case DataNormalizationMode.TotalReturn:
-                        if (_mode == DataNormalizationMode.TotalReturn)
+                        if (_mode == DataNormalizationMode.TotalReturn || _sumOfDividends == 0)
                         {
                             return _adjustedData;
                         }
