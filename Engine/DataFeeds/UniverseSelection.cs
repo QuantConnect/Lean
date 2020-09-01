@@ -73,6 +73,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 algorithm.SubscriptionManager,
                 _securityService,
                 dataPermissionManager.GetResolution(Resolution.Minute));
+            // TODO: next step is to merge currency internal subscriptions under the same 'internal manager' instance and we could move this directly into the DataManager class
             _internalSubscriptionManager = new InternalSubscriptionManager(_algorithm, internalConfigResolution);
         }
 

@@ -71,7 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     // low resolution subscriptions we will add internal Resolution.Minute subscriptions
                     // if we don't already have this symbol added
-                    var config = new SubscriptionDataConfig(request.Configuration, resolution: _resolution, isInternalFeed: true);
+                    var config = new SubscriptionDataConfig(request.Configuration, resolution: _resolution, isInternalFeed: true, extendedHours: true);
                     var internalRequest = new SubscriptionRequest(false, null, request.Security, config, request.StartTimeUtc, request.EndTimeUtc);
                     if (existing)
                     {
@@ -85,12 +85,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 else if (!lowResolution && alreadyInternal)
                 {
+                    _subscriptionRequests.Remove(request.Configuration.Symbol);
                     // the user added a higher resolution configuration, we can remove the internal we added
                     foreach (var subscriptionRequest in internalRequests)
                     {
                         Removed?.Invoke(this, subscriptionRequest);
                     }
-                    _subscriptionRequests.Remove(request.Configuration.Symbol);
                 }
             }
         }
@@ -108,12 +108,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (userConfigs.Count == 0 || userConfigs.Any(config => config.Resolution <= Resolution.Minute))
                 {
+                    _subscriptionRequests.Remove(request.Configuration.Symbol);
                     // if we had a config and the user no longer has a config for this symbol we remove the internal subscription
                     foreach (var subscriptionRequest in _subscriptionRequests[request.Configuration.Symbol])
                     {
                         Removed?.Invoke(this, subscriptionRequest);
                     }
-                    _subscriptionRequests.Remove(request.Configuration.Symbol);
                 }
             }
         }

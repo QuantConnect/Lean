@@ -28,6 +28,7 @@ using QuantConnect.Packets;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System.IO;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.Alphas;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -699,7 +700,7 @@ namespace QuantConnect.Lean.Engine.Results
 
             var time = Algorithm.UtcTime;
 
-            if (time > _nextSample || forceProcess)
+            if (ShouldSampleCharts(time) && time > _nextSample || forceProcess)
             {
                 //Set next sample time: 4000 samples per backtest
                 _nextSample = time.Add(ResamplePeriod);
