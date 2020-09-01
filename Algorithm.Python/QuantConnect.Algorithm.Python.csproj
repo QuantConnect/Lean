@@ -91,6 +91,7 @@
     <Content Include="DynamicSecurityDataAlgorithm.py" />
     <Content Include="ConfidenceWeightedFrameworkAlgorithm.py" />
     <Content Include="ExtendedMarketTradingRegressionAlgorithm.py" />
+    <Content Include="FilterUniverseRegressionAlgorithm.py" />
     <Content Include="FineFundamentalFilteredUniverseRegressionAlgorithm.py" />
     <Content Include="KerasNeuralNetworkAlgorithm.py" />
     <Content Include="CustomDataUsingMapFileRegressionAlgorithm.py" />
