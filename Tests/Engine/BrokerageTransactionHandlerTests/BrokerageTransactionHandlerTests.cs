@@ -944,7 +944,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             // cash sync happened
             Assert.AreNotEqual(lastSyncDateAfter, lastSyncDateBefore);
 
-            Assert.AreEqual(0, brokerage.GetCashBalanceCallCount);
+            Assert.AreEqual(1, brokerage.GetCashBalanceCallCount);
         }
 
         [Test]
