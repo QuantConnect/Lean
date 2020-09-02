@@ -431,9 +431,9 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     DailyPortfolioValue = currentPortfolioValue;
                 }
-
-                PreviousUtcSampleTime = time;
             }
+
+            PreviousUtcSampleTime = time;
         }
 
         /// <summary>
