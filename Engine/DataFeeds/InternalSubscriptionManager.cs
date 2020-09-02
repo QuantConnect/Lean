@@ -108,9 +108,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (userConfigs.Count == 0 || userConfigs.Any(config => config.Resolution <= Resolution.Minute))
                 {
+                    var requests = _subscriptionRequests[request.Configuration.Symbol];
                     _subscriptionRequests.Remove(request.Configuration.Symbol);
                     // if we had a config and the user no longer has a config for this symbol we remove the internal subscription
-                    foreach (var subscriptionRequest in _subscriptionRequests[request.Configuration.Symbol])
+                    foreach (var subscriptionRequest in requests)
                     {
                         Removed?.Invoke(this, subscriptionRequest);
                     }

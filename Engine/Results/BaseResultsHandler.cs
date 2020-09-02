@@ -431,9 +431,10 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     DailyPortfolioValue = currentPortfolioValue;
                 }
-
-                PreviousUtcSampleTime = time;
             }
+
+            // this time goes into the sample, we keep him updated because sample is called before we update anything, so the sampled values are from the last call
+            PreviousUtcSampleTime = time;
         }
 
         /// <summary>
