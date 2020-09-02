@@ -936,12 +936,13 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var lastSyncDateBefore = transactionHandler.GetLastSyncDate();
 
             // Advance current time UTC
-            transactionHandler.TestCurrentTimeUtc = transactionHandler.TestCurrentTimeUtc.AddDays(2);
+            transactionHandler.TestCurrentTimeUtc = transactionHandler.TestCurrentTimeUtc.AddHours(2);
 
             transactionHandler.ProcessSynchronousEvents();
             var lastSyncDateAfter = transactionHandler.GetLastSyncDate();
 
-            Assert.AreEqual(lastSyncDateAfter, lastSyncDateBefore);
+            // cash sync happened
+            Assert.AreNotEqual(lastSyncDateAfter, lastSyncDateBefore);
 
             Assert.AreEqual(0, brokerage.GetCashBalanceCallCount);
         }
