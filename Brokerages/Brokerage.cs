@@ -250,7 +250,7 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the cash sync should be performed</returns>
         public virtual bool ShouldPerformCashSync(DateTime currentTimeUtc)
         {
-            // every morning flip this switch back
+            // every hour flip this switch back
             var currentTimeNewYork = currentTimeUtc.ConvertFromUtc(TimeZones.NewYork);
             if (_syncedLiveBrokerageCash && currentTimeNewYork.Hour != LastSyncHour)
             {
@@ -306,7 +306,7 @@ namespace QuantConnect.Brokerages
                     }
                 }
 
-                // if we were returned our balances, update everything and flip our flag as having performed sync today
+                // if we were returned our balances, update everything and flip our flag as having performed sync in this hour
                 foreach (var kvp in algorithm.Portfolio.CashBook)
                 {
                     var cash = kvp.Value;
