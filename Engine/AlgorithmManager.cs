@@ -957,6 +957,8 @@ namespace QuantConnect.Lean.Engine
                     }
                 }
             }
+
+            Log.Trace("ProcessVolatilityHistoryRequirements(): finished.");
         }
 
         /// <summary>
