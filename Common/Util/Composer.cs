@@ -64,18 +64,26 @@ namespace QuantConnect.Util
                 new DirectoryInfo(PluginDirectory).FullName != primaryDllLookupDirectory;
             _composableParts = Task.Run(() =>
             {
-                var catalogs = new List<ComposablePartCatalog>
+                try
                 {
-                    new DirectoryCatalog(primaryDllLookupDirectory, "*.dll"),
-                    new DirectoryCatalog(primaryDllLookupDirectory, "*.exe")
-                };
-                if (loadFromPluginDir)
-                {
-                    catalogs.Add(new DirectoryCatalog(PluginDirectory, "*.dll"));
+                    var catalogs = new List<ComposablePartCatalog>
+                    {
+                        new DirectoryCatalog(primaryDllLookupDirectory, "*.dll"),
+                        new DirectoryCatalog(primaryDllLookupDirectory, "*.exe")
+                    };
+                    if (loadFromPluginDir)
+                    {
+                        catalogs.Add(new DirectoryCatalog(PluginDirectory, "*.dll"));
+                    }
+                    var aggregate = new AggregateCatalog(catalogs);
+                    _compositionContainer = new CompositionContainer(aggregate);
+                    return _compositionContainer.Catalog.Parts.ToList();
                 }
-                var aggregate = new AggregateCatalog(catalogs);
-                _compositionContainer = new CompositionContainer(aggregate);
-                return _compositionContainer.Catalog.Parts.ToList();
+                catch (Exception exception)
+                {
+                    Log.Error(exception);
+                }
+                return new List<ComposablePartDefinition>();
             });
 
             // for performance we will load our assemblies and keep their exported types
@@ -157,6 +165,23 @@ namespace QuantConnect.Util
                     values = new List<T> {instance};
                     _exportedValues[typeof (T)] = values;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets the first type T instance if any
+        /// </summary>
+        /// <typeparam name="T">The contract type</typeparam>
+        public T GetPart<T>()
+        {
+            lock (_exportedValuesLockObject)
+            {
+                IEnumerable values;
+                if (_exportedValues.TryGetValue(typeof(T), out values))
+                {
+                    return ((IList<T>)values).FirstOrDefault();
+                }
+                return default(T);
             }
         }
 

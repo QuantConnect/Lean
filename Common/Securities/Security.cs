@@ -608,20 +608,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Update any security properties based on the latest realtime data and time
-        /// </summary>
-        /// <param name="data">New data packet from LEAN</param>
-        public void SetRealTimePrice(BaseData data)
-        {
-            //Add new point to cache:
-            if (data == null) return;
-            Cache.AddData(data);
-
-            if (data is OpenInterest || data.Price == 0m) return;
-            Holdings.UpdateMarketPrice(Price);
-        }
-
-        /// <summary>
         /// Returns true if the security contains at least one subscription that represents custom data
         /// </summary>
         [Obsolete("This method is obsolete. Use the 'SubscriptionDataConfig' exposed by" +

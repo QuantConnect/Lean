@@ -459,6 +459,7 @@
     <Compile Include="Engine\DataFeeds\BacktestingFutureChainProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\DataPermissionManagerTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\ScannableEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\InternalSubscriptionManagerTests.cs" />
     <Compile Include="Engine\DataFeeds\RealTimeScheduleEventServiceTests.cs" />
     <Compile Include="Engine\DataFeeds\SubscriptionDataTests.cs" />
     <Compile Include="Engine\DataFeeds\DataManagerStub.cs" />
@@ -670,7 +671,6 @@
     <Compile Include="Engine\DefaultBrokerageMessageHandler.cs" />
     <Compile Include="Common\Exceptions\StackExceptionInterpreterTests.cs" />
     <Compile Include="Engine\PerformanceBenchmarkAlgorithms.cs" />
-    <Compile Include="Engine\RealTimePriceUpdateTests.cs" />
     <Compile Include="Engine\Setup\BrokerageSetupHandlerTests.cs" />
     <Compile Include="Engine\TestResultHandler.cs" />
     <Compile Include="ExpectedAlphaStatistics.cs" />

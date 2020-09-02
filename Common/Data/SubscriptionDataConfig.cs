@@ -380,7 +380,7 @@ namespace QuantConnect.Data
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Invariant($"{Symbol.Value},{MappedSymbol},{Resolution},{Type.Name},{TickType},{DataNormalizationMode}");
+            return Invariant($"{Symbol.Value},{MappedSymbol},{Resolution},{Type.Name},{TickType},{DataNormalizationMode}{(IsInternalFeed ? ",Internal" : string.Empty)}");
         }
     }
 }

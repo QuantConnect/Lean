@@ -23,7 +23,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
-using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Alphas;
 using QuantConnect.Lean.Engine.TransactionHandlers;
@@ -62,11 +62,17 @@ namespace QuantConnect.Lean.Engine.Results
         private readonly int _streamedChartLimit;
         private readonly int _streamedChartGroupSize;
 
+        private bool _sampleChartAlways;
+        private bool _shouldSampleCharts;
+        private DateTime _lastChartSampleLogicCheck;
+        private readonly Dictionary<string, SecurityExchangeHours> _exchangeHours;
+
         /// <summary>
         /// Creates a new instance
         /// </summary>
         public LiveTradingResultHandler()
         {
+            _exchangeHours = new Dictionary<string, SecurityExchangeHours>();
             _cancellationTokenSource = new CancellationTokenSource();
             ResamplePeriod = TimeSpan.FromSeconds(2);
             NotificationPeriod = TimeSpan.FromSeconds(1);
@@ -97,6 +103,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         protected override void Run()
         {
+            // give the algorithm time to initialize, else we will log an error right away
+            Thread.Sleep(TimeSpan.FromSeconds(3));
+
             // -> 1. Run Primary Sender Loop: Continually process messages from queue as soon as they arrive.
             while (!(ExitTriggered && Messages.Count == 0))
             {
@@ -1022,59 +1031,12 @@ namespace QuantConnect.Lean.Engine.Results
         {
             var time = DateTime.UtcNow;
 
-            if (time > _nextSample || forceProcess)
+            if (ShouldSampleCharts(time) && time > _nextSample || forceProcess)
             {
                 Log.Debug("LiveTradingResultHandler.ProcessSynchronousEvents(): Enter");
 
                 //Set next sample time: 4000 samples per backtest
                 _nextSample = time.Add(ResamplePeriod);
-
-                //Update the asset prices to take a real time sample of the market price even though we're using minute bars
-                if (DataManager != null)
-                {
-                    foreach (var subscription in DataManager.DataFeedSubscriptions)
-                    {
-                        var symbol = subscription.Configuration.Symbol;
-                        var tickType = subscription.Configuration.TickType;
-
-                        // OI subscription doesn't contain asset market prices
-                        if (tickType == TickType.OpenInterest)
-                            continue;
-
-                        Security security;
-                        if (Algorithm.Securities.TryGetValue(symbol, out security))
-                        {
-                            //Sample Portfolio Value:
-                            var price = subscription.RealtimePrice;
-
-                            var last = security.GetLastData();
-                            if (last != null && price > 0)
-                            {
-                                // Prevents changes in previous bar
-                                last = last.Clone(last.IsFillForward);
-
-                                last.Value = price;
-                                security.SetRealTimePrice(last);
-
-                                // Update CashBook for Forex securities
-                                var cash = (from c in Algorithm.Portfolio.CashBook
-                                            where c.Value.SecuritySymbol == last.Symbol
-                                            select c.Value).SingleOrDefault();
-
-                                cash?.Update(last);
-                            }
-                            else
-                            {
-                                // we haven't gotten data yet so just spoof a tick to push through the system to start with
-                                if (price > 0)
-                                {
-                                    var exchangeTime = time.ConvertFromUtc(security.Exchange.TimeZone);
-                                    security.SetMarketPrice(new Tick(exchangeTime, symbol, price, 0, 0) { TickType = TickType.Trade });
-                                }
-                            }
-                        }
-                    }
-                }
 
                 //Sample the portfolio value over time for chart.
                 SampleEquity(time, Math.Round(Algorithm.Portfolio.TotalPortfolioValue, 4));
@@ -1112,6 +1074,72 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             Log.Debug("LiveTradingResultHandler.ProcessSynchronousEvents(): Exit");
+        }
+
+        /// <summary>
+        /// Event fired each time that we add/remove securities from the data feed.
+        /// On Security change we re determine when should we sample charts, if the user added Crypto, Forex or an extended market hours subscription
+        /// we will always sample charts. Else, we will keep the exchange per market to query later on demand
+        /// </summary>
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            if (_sampleChartAlways)
+            {
+                return;
+            }
+            foreach (var securityChange in changes.AddedSecurities)
+            {
+                var symbol = securityChange.Symbol;
+                if (symbol.SecurityType == QuantConnect.SecurityType.Base)
+                {
+                    // ignore custom data
+                    continue;
+                }
+
+                // if the user added Crypto, Forex or an extended market hours subscription just sample always, one way trip.
+                _sampleChartAlways = symbol.SecurityType == QuantConnect.SecurityType.Crypto
+                                     || symbol.SecurityType == QuantConnect.SecurityType.Forex
+                                     || Algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).Any(config => config.ExtendedMarketHours);
+
+                if (!_exchangeHours.ContainsKey(securityChange.Symbol.ID.Market))
+                {
+                    // per market we keep track of the exchange hours
+                    _exchangeHours[securityChange.Symbol.ID.Market] = securityChange.Exchange.Hours;
+                }
+            }
+        }
+
+        /// <summary>
+        /// True if this result handler should sample charts
+        /// </summary>
+        /// <remarks>This is used to disable live trading charting on extended market hours unless user is consuming data</remarks>
+        protected override bool ShouldSampleCharts(DateTime utcDateTime)
+        {
+            if (_sampleChartAlways || _exchangeHours.Count == 0)
+            {
+                return true;
+            }
+
+            if (_lastChartSampleLogicCheck.Minute == utcDateTime.Minute)
+            {
+                // we cache the value for a minute
+                return _shouldSampleCharts;
+            }
+            _lastChartSampleLogicCheck = utcDateTime;
+
+            foreach (var exchangeHour in _exchangeHours.Values)
+            {
+                if (exchangeHour.IsOpen(utcDateTime.ConvertFromUtc(exchangeHour.TimeZone), false))
+                {
+                    // one of the users exchanges is open
+                    _shouldSampleCharts = true;
+                    return true;
+                }
+            }
+
+            // no user exchange is open
+            _shouldSampleCharts = false;
+            return false;
         }
 
         private static void DictionarySafeAdd<T>(Dictionary<string, T> dictionary, string key, T value, string dictionaryName)

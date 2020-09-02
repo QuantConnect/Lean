@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 
 namespace QuantConnect.Tests.Common.Util
 {
-    [TestFixture, Parallelizable(ParallelScope.All)]
+    [TestFixture]
     public class RateGateTests
     {
         [Test, Ignore("Running multiple tests at once causes this test to fail")]
