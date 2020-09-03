@@ -71,7 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     // low resolution subscriptions we will add internal Resolution.Minute subscriptions
                     // if we don't already have this symbol added
-                    var config = new SubscriptionDataConfig(request.Configuration, resolution: _resolution, isInternalFeed: true, extendedHours: true);
+                    var config = new SubscriptionDataConfig(request.Configuration, resolution: _resolution, isInternalFeed: true, extendedHours: true, isFilteredSubscription: false);
                     var internalRequest = new SubscriptionRequest(false, null, request.Security, config, request.StartTimeUtc, request.EndTimeUtc);
                     if (existing)
                     {
