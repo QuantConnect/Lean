@@ -18,9 +18,6 @@ using QuantConnect.Securities;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages
 {
@@ -34,6 +31,10 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BinanceBrokerageModel"/> class
+        /// </summary>
+        /// <param name="accountType">The type of account to be modeled, defaults to <see cref="AccountType.Cash"/></param>
         public BinanceBrokerageModel(AccountType accountType = AccountType.Cash) : base(accountType)
         {
             if (accountType == AccountType.Margin)

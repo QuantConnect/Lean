@@ -27,8 +27,9 @@ namespace QuantConnect.Tests.Brokerages.Binance
     [TestFixture]
     public class BinanceFeeModelTests
     {
-        protected Symbol Symbol => Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance);
-        protected Security Security
+        private static Symbol Symbol => Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance);
+
+        private static Security Security
         {
             get
             {
@@ -55,14 +56,15 @@ namespace QuantConnect.Tests.Brokerages.Binance
                 return security;
             }
         }
-        protected OrderSubmissionData OrderSubmissionData => new OrderSubmissionData(Security.BidPrice, Security.AskPrice, (Security.BidPrice + Security.AskPrice) / 2);
 
-        protected decimal HighPrice => 1000m;
-        protected decimal LowPrice => 100m;
+        private static OrderSubmissionData OrderSubmissionData => new OrderSubmissionData(Security.BidPrice, Security.AskPrice, (Security.BidPrice + Security.AskPrice) / 2);
 
-        protected decimal Quantity => 1m;
+        private static decimal HighPrice => 1000m;
+        private static decimal LowPrice => 100m;
 
-        public TestCaseData[] MakerOrders => new[]
+        private static decimal Quantity => 1m;
+
+        public static TestCaseData[] MakerOrders => new[]
         {
             new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
             new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice) { OrderSubmissionData = OrderSubmissionData}),
@@ -71,14 +73,14 @@ namespace QuantConnect.Tests.Brokerages.Binance
             new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties() { PostOnly = true }))
         };
 
-        public TestCaseData[] TakerOrders => new[]
+        public static TestCaseData[] TakerOrders => new[]
         {
             new TestCaseData(new MarketOrderTestParameters(Symbol)),
             new TestCaseData(new MarketOrderTestParameters(Symbol, new BinanceOrderProperties() { PostOnly = true })),
             new TestCaseData(new LimitOrderTestParameters(Symbol, LowPrice, HighPrice) { OrderSubmissionData = OrderSubmissionData})
         };
 
-        public TestCaseData[] CustomMakerOrders => new[]
+        public static TestCaseData[] CustomMakerOrders => new[]
         {
             new TestCaseData(0.001m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
             new TestCaseData(0.0009m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice) { OrderSubmissionData = OrderSubmissionData}),
@@ -87,27 +89,27 @@ namespace QuantConnect.Tests.Brokerages.Binance
             new TestCaseData(0.0006m, 0.0008m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties() { PostOnly = true }))
         };
 
-        public TestCaseData[] CustomTakerOrders => new[]
+        public static TestCaseData[] CustomTakerOrders => new[]
         {
             new TestCaseData(0.0007m, 0.0009m, new MarketOrderTestParameters(Symbol)),
-            new TestCaseData(0.0006m, 0.0008m, new MarketOrderTestParameters(Symbol, new BinanceOrderProperties() { PostOnly = true })),
+            new TestCaseData(0.0006m, 0.0008m, new MarketOrderTestParameters(Symbol, new BinanceOrderProperties { PostOnly = true })),
             new TestCaseData(0.0005m, 0.0006m, new LimitOrderTestParameters(Symbol, LowPrice, HighPrice) { OrderSubmissionData = OrderSubmissionData})
         };
 
         [Test]
-        public void GetFeeModelTest()
+        public static void GetFeeModelTest()
         {
-            BinanceBrokerageModel model = new BinanceBrokerageModel();
+            var model = new BinanceBrokerageModel();
             Assert.IsInstanceOf<BinanceFeeModel>(model.GetFeeModel(Security));
         }
 
         [Test]
-        [TestCaseSource("MakerOrders")]
+        [TestCaseSource(nameof(MakerOrders))]
         public void ReturnShortOrderMakerFees(OrderTestParameters parameters)
         {
             IFeeModel feeModel = new BinanceFeeModel();
 
-            Order order = parameters.CreateShortOrder(Quantity);
+            var order = parameters.CreateShortOrder(Quantity);
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : LowPrice;
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
@@ -118,12 +120,12 @@ namespace QuantConnect.Tests.Brokerages.Binance
         }
 
         [Test]
-        [TestCaseSource("TakerOrders")]
+        [TestCaseSource(nameof(TakerOrders))]
         public void ReturnShortOrderTakerFees(OrderTestParameters parameters)
         {
             IFeeModel feeModel = new BinanceFeeModel();
 
-            Order order = parameters.CreateShortOrder(Quantity);
+            var order = parameters.CreateShortOrder(Quantity);
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : LowPrice;
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
@@ -134,12 +136,12 @@ namespace QuantConnect.Tests.Brokerages.Binance
         }
 
         [Test]
-        [TestCaseSource("MakerOrders")]
+        [TestCaseSource(nameof(MakerOrders))]
         public void ReturnLongOrderMakerFees(OrderTestParameters parameters)
         {
             IFeeModel feeModel = new BinanceFeeModel();
 
-            Order order = parameters.CreateLongOrder(Quantity);
+            var order = parameters.CreateLongOrder(Quantity);
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : HighPrice;
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
@@ -150,12 +152,12 @@ namespace QuantConnect.Tests.Brokerages.Binance
         }
 
         [Test]
-        [TestCaseSource("TakerOrders")]
+        [TestCaseSource(nameof(TakerOrders))]
         public void ReturnLongOrderTakerFees(OrderTestParameters parameters)
         {
             IFeeModel feeModel = new BinanceFeeModel();
 
-            Order order = parameters.CreateLongOrder(Quantity);
+            var order = parameters.CreateLongOrder(Quantity);
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : HighPrice;
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
@@ -166,12 +168,12 @@ namespace QuantConnect.Tests.Brokerages.Binance
         }
 
         [Test]
-        [TestCaseSource("CustomMakerOrders")]
+        [TestCaseSource(nameof(CustomMakerOrders))]
         public void ReturnShortOrderCustomMakerFees(decimal mFee, decimal tFee, OrderTestParameters parameters)
         {
             IFeeModel feeModel = new BinanceFeeModel(mFee, tFee);
 
-            Order order = parameters.CreateShortOrder(Quantity);
+            var order = parameters.CreateShortOrder(Quantity);
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : LowPrice;
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
@@ -182,12 +184,12 @@ namespace QuantConnect.Tests.Brokerages.Binance
         }
 
         [Test]
-        [TestCaseSource("CustomTakerOrders")]
+        [TestCaseSource(nameof(CustomTakerOrders))]
         public void ReturnShortOrderCustomTakerFees(decimal mFee, decimal tFee, OrderTestParameters parameters)
         {
             IFeeModel feeModel = new BinanceFeeModel(mFee, tFee);
 
-            Order order = parameters.CreateShortOrder(Quantity);
+            var order = parameters.CreateShortOrder(Quantity);
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : LowPrice;
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
@@ -198,12 +200,12 @@ namespace QuantConnect.Tests.Brokerages.Binance
         }
 
         [Test]
-        [TestCaseSource("CustomMakerOrders")]
+        [TestCaseSource(nameof(CustomMakerOrders))]
         public void ReturnLongOrderCustomMakerFees(decimal mFee, decimal tFee, OrderTestParameters parameters)
         {
             IFeeModel feeModel = new BinanceFeeModel(mFee, tFee);
 
-            Order order = parameters.CreateLongOrder(Quantity);
+            var order = parameters.CreateLongOrder(Quantity);
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : HighPrice;
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
@@ -214,12 +216,12 @@ namespace QuantConnect.Tests.Brokerages.Binance
         }
 
         [Test]
-        [TestCaseSource("CustomTakerOrders")]
+        [TestCaseSource(nameof(CustomTakerOrders))]
         public void ReturnLongOrderCustomTakerFees(decimal mFee, decimal tFee, OrderTestParameters parameters)
         {
             IFeeModel feeModel = new BinanceFeeModel(mFee, tFee);
 
-            Order order = parameters.CreateLongOrder(Quantity);
+            var order = parameters.CreateLongOrder(Quantity);
             var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : HighPrice;
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 

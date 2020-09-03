@@ -248,7 +248,7 @@ namespace QuantConnect.Brokerages.Binance
 
                 var symbol = _symbolMapper.GetLeanSymbol(data.Symbol);
                 var fillPrice = data.LastExecutedPrice;
-                var fillQuantity = data.LastExecutedQuantity;
+                var fillQuantity = data.Direction == OrderDirection.Sell ? -data.LastExecutedQuantity : data.LastExecutedQuantity;
                 var updTime = Time.UnixMillisecondTimeStampToDateTime(data.TransactionTime);
                 var orderFee = new OrderFee(new CashAmount(data.Fee, data.FeeCurrency));
                 var status = ConvertOrderStatus(data.OrderStatus);

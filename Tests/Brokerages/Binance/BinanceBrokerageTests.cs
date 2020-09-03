@@ -87,14 +87,13 @@ namespace QuantConnect.Tests.Brokerages.Binance
         /// Gets the symbol to be traded, must be shortable
         /// </summary>
         protected override Symbol Symbol => StaticSymbol;
-        private static Symbol StaticSymbol => Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance);
+        private static Symbol StaticSymbol => Symbol.Create("ETHBTC", SecurityType.Crypto, Market.Binance);
 
         /// <summary>
         /// Gets the security type associated with the <see cref="BrokerageTests.Symbol" />
         /// </summary>
         protected override SecurityType SecurityType => SecurityType.Crypto;
 
-        //no stop limit support in v1
         public static TestCaseData[] OrderParameters => new[]
         {
             new TestCaseData(new MarketOrderTestParameters(StaticSymbol)).SetName("MarketOrder"),
@@ -105,21 +104,24 @@ namespace QuantConnect.Tests.Brokerages.Binance
         /// <summary>
         /// Gets a high price for the specified symbol so a limit sell won't fill
         /// </summary>
-        private const decimal HighPrice = 300m;
+        private const decimal HighPrice = 0.04m;
 
         /// <summary>
         /// Gets a low price for the specified symbol so a limit buy won't fill
         /// </summary>
-        private const decimal LowPrice = 100m;
+        private const decimal LowPrice = 0.01m;
 
         /// <summary>
         /// Gets the current market price of the specified security
         /// </summary>
         protected override decimal GetAskPrice(Symbol symbol)
         {
+            var brokerageSymbol = SymbolMapper.GetBrokerageSymbol(symbol);
+
             var prices = _binanceApi.GetTickers();
+
             return prices
-                .FirstOrDefault(t => t.Symbol == SymbolMapper.GetBrokerageSymbol(symbol))
+                .FirstOrDefault(t => t.Symbol == brokerageSymbol)
                 .Price;
         }
 
@@ -131,7 +133,49 @@ namespace QuantConnect.Tests.Brokerages.Binance
         /// <summary>
         /// Gets the default order quantity. Min order 10USD.
         /// </summary>
-        protected override decimal GetDefaultQuantity() => 0.1m;
+        protected override decimal GetDefaultQuantity() => 0.01m;
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CancelOrders(OrderTestParameters parameters)
+        {
+            base.CancelOrders(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromZero(OrderTestParameters parameters)
+        {
+            base.LongFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromLong(OrderTestParameters parameters)
+        {
+            base.CloseFromLong(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromZero(OrderTestParameters parameters)
+        {
+            base.ShortFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromShort(OrderTestParameters parameters)
+        {
+            base.CloseFromShort(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromLong(OrderTestParameters parameters)
+        {
+            base.ShortFromLong(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromShort(OrderTestParameters parameters)
+        {
+            base.LongFromShort(parameters);
+        }
 
         [Test, Ignore("Holdings are now set to 0 swaps at the start of each launch. Not meaningful.")]
         public override void GetAccountHoldings()

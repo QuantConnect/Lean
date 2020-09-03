@@ -22,6 +22,8 @@ using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using System;
+using System.Linq;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Brokerages.Binance
 {
@@ -83,7 +85,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
 
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);
-                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, null));
+                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, new DataPermissionManager()));
 
                 var now = DateTime.UtcNow;
 
@@ -145,7 +147,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
 
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);
-                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null,false, null));
+                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null,false, new DataPermissionManager()));
 
                 var now = DateTime.UtcNow;
 
@@ -165,7 +167,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
                                        TickType.Quote)
                 };
 
-                var history = historyProvider.GetHistory(requests, TimeZones.Utc);
+                var history = historyProvider.GetHistory(requests, TimeZones.Utc).ToList();
 
                 Log.Trace("Data points retrieved: " + historyProvider.DataPointCount);
                 Assert.AreEqual(0, historyProvider.DataPointCount);

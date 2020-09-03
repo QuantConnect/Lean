@@ -311,7 +311,7 @@ namespace QuantConnect.Brokerages.Binance
             var endMs = (long)Time.DateTimeToUnixTimeStamp(request.EndTimeUtc) * 1000;
             var endpoint = $"/api/v1/klines?symbol={symbol}&interval={resolution}&limit=1000";
 
-            while (endMs - startMs > resolutionInMs)
+            while (endMs - startMs >= resolutionInMs)
             {
                 var timeframe = $"&startTime={startMs}&endTime={endMs}";
 

@@ -28,16 +28,16 @@ namespace QuantConnect.Tests.Brokerages.Binance
         public void GetsExchangeInfo()
         {
             var downloader = new BinanceExchangeInfoDownloader();
-            var tickers = downloader.Get();
+            var tickers = downloader.Get().ToList();
 
-            Assert.IsTrue(tickers.Count() > 0);
+            Assert.IsTrue(tickers.Any());
 
             foreach (var t in tickers)
             {
                 Assert.IsTrue(t.StartsWith(Market.Binance, StringComparison.OrdinalIgnoreCase));
             }
 
-            Log.Trace("Tickers retrieved: " + tickers.Count());
+            Log.Trace("Tickers retrieved: " + tickers.Count);
         }
     }
 }
