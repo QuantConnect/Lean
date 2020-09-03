@@ -18,16 +18,13 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
-using QuantConnect.Data.Market;
-using QuantConnect.Python;
-using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Python
 {
-    class PythonOptionTests
+    [TestFixture]
+    public class PythonOptionTests
     {
-
         [Test]
         public void PythonFilterFunctionReturnsList()
         {
