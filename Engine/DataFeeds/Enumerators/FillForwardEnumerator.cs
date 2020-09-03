@@ -263,9 +263,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 return false;
             }
 
+            var nextPreviousTimeDelta = next.Time - previous.Time;
+
             // check to see if the gap between previous and next warrants fill forward behavior
-            var nextPreviousTimeDelta = nextTimeUtc - previousTimeUtc;
-            if (nextPreviousTimeDelta <= fillForwardResolution && nextPreviousTimeDelta <= _dataResolution)
+            var nextPreviousTimeUtcDelta = nextTimeUtc - previousTimeUtc;
+            if (nextPreviousTimeUtcDelta <= fillForwardResolution && nextPreviousTimeUtcDelta <= _dataResolution)
             {
                 fillForward = null;
                 return false;
@@ -277,7 +279,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             // 1. the next fill forward bar. 09:00-10:00 followed by 10:00-11:00 where 01:00 is the fill forward resolution
             // 2. the next data resolution bar, same as above but with the data resolution instead
             // 3. the next fill forward bar following the next market open, 15:00-16:00 followed by 09:00-10:00 the following open market day
-            // 4. the next data resolution bar following thenext market open, same as above but with the data resolution instead
+            // 4. the next data resolution bar following the next market open, same as above but with the data resolution instead
 
             // the precedence for validation is based on the order of the end times, obviously if a potential match
             // is before a later match, the earliest match should win.
@@ -288,7 +290,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var potentialUtc = _offsetProvider.ConvertToUtc(item.ReferenceDateTime) + item.Interval;
                 var potentialInTimeZone = _offsetProvider.ConvertFromUtc(potentialUtc);
                 var potentialBarEndTime = RoundDown(potentialInTimeZone, item.Interval);
-                if (potentialBarEndTime < next.EndTime)
+                var nextEndTime = _offsetProvider.ConvertFromUtc(previousTimeUtc) + nextPreviousTimeDelta + _dataResolution;
+                if (potentialBarEndTime < nextEndTime)
                 {
                     var nextFillForwardBarStartTime = potentialBarEndTime - item.Interval;
                     if (Exchange.IsOpenDuringBar(nextFillForwardBarStartTime, potentialBarEndTime, _isExtendedMarketHours))
