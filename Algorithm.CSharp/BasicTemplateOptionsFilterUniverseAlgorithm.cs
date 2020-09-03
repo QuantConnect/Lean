@@ -15,9 +15,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
@@ -31,7 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="options" />
     /// <meta name="tag" content="filter selection" />
-    public class BasicTemplateOptionsFilterUniverseAlgorithm : QCAlgorithm
+    public class BasicTemplateOptionsFilterUniverseAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "GOOG";
         public Symbol OptionSymbol;
@@ -40,20 +42,17 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 24);
-            SetCash(10000);
+            SetCash(100000);
 
             var equity = AddEquity(UnderlyingTicker);
             var option = AddOption(UnderlyingTicker);
+            OptionSymbol = option.Symbol;
 
-            // set our custom filter for this option chain
-            option.SetFilter(universe => from symbol in universe
-                                                          .WeeklysOnly()
-                                                           // Expiration method accepts TimeSpan objects or integer for days.
-                                                           // The following statements yield the same filtering criteria
-                                                          .Expiration(0, 10)
-                                                          // .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10))
+            // Set our custom universe filter, Expires today, is a call, and is within 10 dollars of the current price
+            option.SetFilter(universe => from symbol in universe.WeeklysOnly().Expiration(0, 1)
                                          where symbol.ID.OptionRight != OptionRight.Put &&
-                                              universe.Underlying.Price - symbol.ID.StrikePrice < 60
+                                              -10 < universe.Underlying.Price - symbol.ID.StrikePrice &&
+                                              universe.Underlying.Price - symbol.ID.StrikePrice < 10
                                          select symbol);
 
             // use the underlying equity as the benchmark
@@ -67,14 +66,13 @@ namespace QuantConnect.Algorithm.CSharp
                 OptionChain chain;
                 if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
                 {
-                    // find the second call strike under market price expiring today
+                    // Get the first ITM call expiring today
                     var contract = (
                         from optionContract in chain.OrderByDescending(x => x.Strike)
-                        where optionContract.Right == OptionRight.Call
                         where optionContract.Expiry == Time.Date
                         where optionContract.Strike < chain.Underlying.Price
                         select optionContract
-                        ).Skip(2).FirstOrDefault();
+                        ).FirstOrDefault();
 
                     if (contract != null)
                     {
@@ -88,5 +86,62 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Log(orderEvent.ToString());
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "1"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$1.00"},
+            {"Fitness Score", "0"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "0"},
+            {"Return Over Maximum Drawdown", "0"},
+            {"Portfolio Turnover", "0"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "-1214175458"}
+        };
     }
 }

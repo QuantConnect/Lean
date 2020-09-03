@@ -22,14 +22,13 @@ from QuantConnect.Algorithm import *
 from datetime import timedelta
 
 ### <summary>
-### This example demonstrates how to add options for a given underlying equity security.
-### It also shows how you can prefilter contracts easily based on strikes and expirations.
-### It also shows how you can inspect the option chain to pick a specific option contract to trade.
+### This regression algorithm is for testing a custom Python filter for options
+### that returns a OptionFilterUniverse.
 ### </summary>
-### <meta name="tag" content="using data" />
 ### <meta name="tag" content="options" />
 ### <meta name="tag" content="filter selection" />
-class BasicTemplateOptionsFilterUniverseAlgorithm(QCAlgorithm):
+### <meta name="tag" content="regression test" />
+class FilterUniverseRegressionAlgorithm(QCAlgorithm):
     UnderlyingTicker = "GOOG"
 
     def Initialize(self):
@@ -48,11 +47,8 @@ class BasicTemplateOptionsFilterUniverseAlgorithm(QCAlgorithm):
         self.SetBenchmark(equity.Symbol)
 
     def FilterFunction(self, universe):
-        #Expires today, is a call, and is within 10 dollars of the current price
-        universe = universe.WeeklysOnly().Expiration(0, 1)
-        return [symbol for symbol in universe 
-                if symbol.ID.OptionRight != OptionRight.Put 
-                and -10 < universe.Underlying.Price - symbol.ID.StrikePrice < 10]
+        universe = universe.WeeklysOnly().Strikes(-5, +5).CallsOnly().Expiration(0, 1)
+        return universe
 
     def OnData(self,slice):
         if self.Portfolio.Invested: return
@@ -61,11 +57,9 @@ class BasicTemplateOptionsFilterUniverseAlgorithm(QCAlgorithm):
             
             if kvp.Key != self.OptionSymbol: continue
 
-            # Get the first call strike under market price expiring today
             chain = kvp.Value
-            contracts = [option for option in sorted(chain, key = lambda x:x.Strike, reverse = True)
-                         if option.Expiry.date() == self.Time.date()
-                         and option.Strike < chain.Underlying.Price]
+            contracts = [option for option in sorted(chain, key = lambda x:x.Strike, reverse = True)]
             
             if contracts:
                 self.MarketOrder(contracts[0].Symbol, 1)
+
