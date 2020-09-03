@@ -12,12 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
-using System.Collections.Generic;
-using System.Data;
 using System.IO;
-using QuantConnect.Data;
-using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox
 {
@@ -26,11 +23,11 @@ namespace QuantConnect.ToolBox
     /// </summary>
     public class ExchangeInfoUpdater
     {
-        protected readonly IExchangeInfoDownloader eidl;
+        private readonly IExchangeInfoDownloader _eidl;
 
         public ExchangeInfoUpdater(IExchangeInfoDownloader eidl)
         {
-            this.eidl = eidl;
+            _eidl = eidl;
         }
 
         /// <summary>
@@ -48,18 +45,18 @@ namespace QuantConnect.ToolBox
 
             using (var writer = new StreamWriter(tmp))
             {
-                bool fetch = false;
+                var fetch = false;
                 // skip the first header line, also skip #'s as these are comment lines
                 foreach (var line in File.ReadLines(file))
                 {
-                    if (!line.StartsWithInvariant(eidl.Market, true))
+                    if (!line.StartsWithInvariant(_eidl.Market, true))
                     {
                         writer.WriteLine(line);
 
                     }
                     else if (!fetch)
                     {
-                        foreach (var upd in eidl.Get())
+                        foreach (var upd in _eidl.Get())
                         {
                             writer.WriteLine(upd);
                         }
@@ -70,7 +67,7 @@ namespace QuantConnect.ToolBox
                 if (!fetch)
                 {
                     writer.WriteLine(Environment.NewLine);
-                    foreach (var upd in eidl.Get())
+                    foreach (var upd in _eidl.Get())
                     {
                         writer.WriteLine(upd);
                     }

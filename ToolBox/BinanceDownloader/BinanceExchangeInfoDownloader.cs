@@ -48,6 +48,12 @@ namespace QuantConnect.ToolBox.BinanceDownloader
 
                 foreach (var symbol in exchangeInfo.Symbols)
                 {
+                    if (!symbol.IsSpotTradingAllowed && !symbol.IsMarginTradingAllowed)
+                    {
+                        // exclude derivatives
+                        continue;
+                    }
+
                     var priceFilter = symbol.Filters
                         .First(f => f.GetValue("filterType").ToString() == "PRICE_FILTER")
                         .GetValue("tickSize");
