@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Brokerages.Binance
 {
@@ -24,23 +23,6 @@ namespace QuantConnect.Brokerages.Binance
     /// </summary>
     public class BinanceSymbolMapper : ISymbolMapper
     {
-        /// <summary>
-        /// Symbols that are both active and delisted
-        /// </summary>
-        public static List<Symbol> KnownSymbols
-        {
-            get
-            {
-                var symbols = new List<Symbol>();
-                var mapper = new BinanceSymbolMapper();
-                foreach (var tp in KnownSymbolStrings)
-                {
-                    symbols.Add(mapper.GetLeanSymbol(tp, mapper.GetBrokerageSecurityType(tp), Market.Binance));
-                }
-                return symbols;
-            }
-        }
-
         /// <summary>
         /// The list of known Binance symbols.
         /// </summary>
@@ -112,14 +94,6 @@ namespace QuantConnect.Brokerages.Binance
             "HBARBNB","HBARBTC","HBARUSDT","NKNBNB","NKNBTC","NKNUSDT","XRPBUSD","ETHBUSD","BCHABCBUSD","LTCBUSD",
             "LINKBUSD","ETCBUSD","STXBNB","STXBTC","STXUSDT","KAVABNB","KAVABTC","KAVAUSDT","BUSDNGN","BNBNGN",
             "BTCNGN"
-        };
-
-        /// <summary>
-        /// The list of known Binance currencies.
-        /// </summary>
-        private static readonly HashSet<string> KnownFiatCurrencies = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "USD"
         };
 
         /// <summary>
@@ -221,18 +195,6 @@ namespace QuantConnect.Brokerages.Binance
         }
 
         /// <summary>
-        /// Checks if the currency is supported by Binance
-        /// </summary>
-        /// <returns>True if Binance supports the currency</returns>
-        public bool IsPeggedFiatCurrency(string currency)
-        {
-            if (string.IsNullOrWhiteSpace(currency))
-                return false;
-
-            return KnownFiatCurrencies.Any(fiat => string.Equals($"T{fiat}", currency) || string.Equals($"{fiat}T", currency));
-        }
-
-        /// <summary>
         /// Checks if the symbol is supported by Binance
         /// </summary>
         /// <param name="symbol">The Lean symbol</param>
@@ -242,21 +204,21 @@ namespace QuantConnect.Brokerages.Binance
             if (string.IsNullOrWhiteSpace(symbol?.Value) || symbol.Value.Length <= 3)
                 return false;
 
-            var BinanceSymbol = ConvertLeanSymbolToBrokerageSymbol(symbol.Value);
+            var binanceSymbol = ConvertLeanSymbolToBrokerageSymbol(symbol.Value);
 
-            return IsKnownBrokerageSymbol(BinanceSymbol) && GetBrokerageSecurityType(BinanceSymbol) == symbol.SecurityType;
+            return IsKnownBrokerageSymbol(binanceSymbol) && GetBrokerageSecurityType(binanceSymbol) == symbol.SecurityType;
         }
 
         /// <summary>
         /// Converts an Binance symbol to a Lean symbol string
         /// </summary>
-        private static string ConvertBrokerageSymbolToLeanSymbol(string BinanceSymbol)
+        private static string ConvertBrokerageSymbolToLeanSymbol(string binanceSymbol)
         {
-            if (string.IsNullOrWhiteSpace(BinanceSymbol))
-                throw new ArgumentException($"Invalid Binance symbol: {BinanceSymbol}");
+            if (string.IsNullOrWhiteSpace(binanceSymbol))
+                throw new ArgumentException($"Invalid Binance symbol: {binanceSymbol}");
 
             // return as it is due to Binance has similar Symbol format
-            return BinanceSymbol.LazyToUpper();
+            return binanceSymbol.LazyToUpper();
         }
 
         /// <summary>
