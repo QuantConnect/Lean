@@ -216,7 +216,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                 }
                 _algorithm.OnEndOfTimeStep();
-                Thread.Sleep(10);
+                Thread.Sleep(25);
             }
             Assert.IsFalse(tokenSource.IsCancellationRequested);
             Assert.AreNotEqual(0, internalDataCount);

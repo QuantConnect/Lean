@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System.Runtime.CompilerServices;
 using ProtoBuf;
 
 namespace QuantConnect.Data.Market
@@ -76,6 +77,7 @@ namespace QuantConnect.Data.Market
         /// Updates the bar with a new value. This will aggregate the OHLC bar
         /// </summary>
         /// <param name="value">The new value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Update(decimal value)
         {
             Update(ref value);
@@ -85,6 +87,7 @@ namespace QuantConnect.Data.Market
         /// Updates the bar with a new value. This will aggregate the OHLC bar
         /// </summary>
         /// <param name="value">The new value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Update(ref decimal value)
         {
             // Do not accept zero as a new value

@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -951,6 +952,7 @@ namespace QuantConnect
         /// <param name="dateTime">Base DateTime object we're rounding down.</param>
         /// <param name="interval">Timespan interval to round to.</param>
         /// <returns>Rounded datetime</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DateTime RoundDown(this DateTime dateTime, TimeSpan interval)
         {
             if (interval == TimeSpan.Zero)
@@ -975,6 +977,7 @@ namespace QuantConnect
         /// <param name="sourceTimeZone">Time zone of the date time</param>
         /// <param name="roundingTimeZone">Time zone in which the rounding is performed</param>
         /// <returns>The rounded date time in the source time zone</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DateTime RoundDownInTimeZone(this DateTime dateTime, TimeSpan roundingInterval, DateTimeZone sourceTimeZone, DateTimeZone roundingTimeZone)
         {
             var dateTimeInRoundingTimeZone = dateTime.ConvertTo(sourceTimeZone, roundingTimeZone);
