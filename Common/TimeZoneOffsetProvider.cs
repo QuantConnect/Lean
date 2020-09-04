@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using NodaTime;
 using NodaTime.TimeZones;
 
@@ -82,6 +83,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="utcTime">The time in UTC to get an offset to local</param>
         /// <returns>The offset in ticks between UTC and the local time zone</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long GetOffsetTicks(DateTime utcTime)
         {
             // keep advancing our discontinuity until the requested time, don't recompute if already at max value
@@ -105,6 +107,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="localTime">The local time to be converted to UTC</param>
         /// <returns>The specified time in UTC</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DateTime ConvertToUtc(DateTime localTime)
         {
             // it's important to walk forward to the next time zone discontinuity
@@ -140,6 +143,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="utcTime">The time to convert from utc</param>
         /// <returns>The same instant in time represented in the <see cref="TimeZone"/></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual DateTime ConvertFromUtc(DateTime utcTime)
         {
             return new DateTime(utcTime.Ticks + GetOffsetTicks(utcTime));
