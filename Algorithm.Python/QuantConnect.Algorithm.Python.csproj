@@ -227,6 +227,7 @@
     <None Include="RenkoConsolidatorAlgorithm.py" />
     <None Include="RollingWindowAlgorithm.py" />
     <None Include="ScheduledEventsAlgorithm.py" />
+    <None Include="ScheduledQueuingAlgorithm.py" />
     <None Include="ScheduledUniverseSelectionModelRegressionAlgorithm.py" />
     <None Include="SectorExposureRiskFrameworkAlgorithm.py" />
     <None Include="StandardDeviationExecutionModelRegressionAlgorithm.py" />

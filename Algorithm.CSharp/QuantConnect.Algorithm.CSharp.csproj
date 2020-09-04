@@ -367,6 +367,7 @@
     <Compile Include="RegressionAlgorithm.cs" />
     <Compile Include="RenkoConsolidatorAlgorithm.cs" />
     <Compile Include="ScheduledEventsAlgorithm.cs" />
+    <Compile Include="ScheduledQueuingAlgorithm.cs" />
     <Compile Include="StressSymbolsAlgorithm.cs" />
     <Compile Include="StressSymbols.cs" />
     <Compile Include="TickDataFilteringAlgorithm.cs" />
