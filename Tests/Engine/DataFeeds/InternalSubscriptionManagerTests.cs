@@ -28,6 +28,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Queues;
 using QuantConnect.Lean.Engine.TransactionHandlers;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
@@ -165,6 +166,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm.SetLiveMode(true);
             var added = false;
             var first = true;
+            var internalDataCount = 0;
             var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             foreach (var timeSlice in _synchronizer.StreamData(tokenSource.Token))
             {
@@ -182,6 +184,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else if (!timeSlice.IsTimePulse)
                 {
+                    if (timeSlice.SecuritiesUpdateData.Count > 0)
+                    {
+                        internalDataCount += timeSlice.SecuritiesUpdateData.Count(
+                            data => data.IsInternalConfig && data.Target.Symbol == Symbols.AAPL
+                        );
+                    }
                     if (first)
                     {
                         Assert.IsTrue(_algorithm.SubscriptionManager.SubscriptionDataConfigService
@@ -211,6 +219,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 Thread.Sleep(10);
             }
             Assert.IsFalse(tokenSource.IsCancellationRequested);
+            Assert.AreNotEqual(0, internalDataCount);
         }
 
         [Test]
