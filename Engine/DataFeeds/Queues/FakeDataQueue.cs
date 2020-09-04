@@ -33,7 +33,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
     /// </summary>
     public class FakeDataQueue : IDataQueueHandler
     {
-        private int count;
+        private int _count;
         private readonly Random _random = new Random();
 
         private readonly Timer _timer;
@@ -44,12 +44,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         private readonly Dictionary<Symbol, TimeZoneOffsetProvider> _symbolExchangeTimeZones;
 
         /// <summary>
+        /// Continuous UTC time provider
+        /// </summary>
+        protected virtual ITimeProvider TimeProvider { get; } = RealTimeProvider.Instance;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="FakeDataQueue"/> class to randomly emit data for each symbol
         /// </summary>
         public FakeDataQueue()
+            : this(new AggregationManager())
+        {
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FakeDataQueue"/> class to randomly emit data for each symbol
+        /// </summary>
+        public FakeDataQueue(IDataAggregator dataAggregator)
         {
             _symbols = new HashSet<Symbol>();
-            _aggregator = new AggregationManager();
+            _aggregator = dataAggregator;
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _symbolExchangeTimeZones = new Dictionary<Symbol, TimeZoneOffsetProvider>();
 
@@ -71,9 +85,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
             _timer.Elapsed += (sender, args) =>
             {
                 var elapsed = (DateTime.UtcNow - lastTime);
-                var ticksPerSecond = (count - lastCount)/elapsed.TotalSeconds;
+                var ticksPerSecond = (_count - lastCount)/elapsed.TotalSeconds;
                 Log.Trace("TICKS PER SECOND:: " + ticksPerSecond.ToStringInvariant("000000.0") + " ITEMS IN QUEUE:: " + 0);
-                lastCount = count;
+                lastCount = _count;
                 lastTime = DateTime.UtcNow;
                 PopulateQueue();
                 try
@@ -160,14 +174,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 // emits 500k per second
                 for (var i = 0; i < 500000; i++)
                 {
+                    var now = TimeProvider.GetUtcNow();
                     if (trades)
                     {
-                        count++;
+                        _count++;
                         _aggregator.Update(new Tick
                         {
-                            Time = offsetProvider.ConvertFromUtc(DateTime.UtcNow),
+                            Time = offsetProvider.ConvertFromUtc(now),
                             Symbol = symbol,
-                            Value = 10 + (decimal)Math.Abs(Math.Sin(DateTime.UtcNow.TimeOfDay.TotalMinutes)),
+                            Value = 10 + (decimal)Math.Abs(Math.Sin(now.TimeOfDay.TotalMinutes)),
                             TickType = TickType.Trade,
                             Quantity = _random.Next(10, (int)_timer.Interval)
                         });
@@ -175,11 +190,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
 
                     if (quotes)
                     {
-                        count++;
-                        var bid = 10 + (decimal) Math.Abs(Math.Sin(DateTime.UtcNow.TimeOfDay.TotalMinutes));
+                        _count++;
+                        var bid = 10 + (decimal) Math.Abs(Math.Sin(now.TimeOfDay.TotalMinutes));
                         var bidSize = _random.Next(10, (int) _timer.Interval);
                         var askSize = _random.Next(10, (int)_timer.Interval);
-                        var time = offsetProvider.ConvertFromUtc(DateTime.UtcNow);
+                        var time = offsetProvider.ConvertFromUtc(now);
                         _aggregator.Update(new Tick(time, symbol, "", "",bid, bidSize, bid * 1.01m, askSize));
                     }
                 }
@@ -193,7 +208,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
             {
                 // read the exchange time zone from market-hours-database
                 var exchangeTimeZone = _marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType).TimeZone;
-                _symbolExchangeTimeZones[symbol] = offsetProvider = new TimeZoneOffsetProvider(exchangeTimeZone, DateTime.UtcNow, Time.EndOfTime);
+                _symbolExchangeTimeZones[symbol] = offsetProvider = new TimeZoneOffsetProvider(exchangeTimeZone, TimeProvider.GetUtcNow(), Time.EndOfTime);
             }
             return offsetProvider;
         }

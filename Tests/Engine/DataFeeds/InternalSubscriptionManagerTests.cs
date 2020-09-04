@@ -19,15 +19,19 @@ using System.Linq;
 using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
+using QuantConnect.Brokerages.Paper;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Queues;
+using QuantConnect.Lean.Engine.TransactionHandlers;
+using QuantConnect.Logging;
+using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -42,41 +46,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [SetUp]
         public void Setup()
         {
-            _dataFeed = new TestableLiveTradingDataFeed(new FakeDataQueue());
-            _algorithm = new AlgorithmStub(createDataManager: false);
-            _synchronizer = new LiveSynchronizer();
-            var registeredTypesProvider = new RegisteredSecurityDataTypesProvider();
-            var securityService = new SecurityService(_algorithm.Portfolio.CashBook,
-                MarketHoursDatabase.FromDataFolder(),
-                SymbolPropertiesDatabase.FromDataFolder(),
-                _algorithm,
-                registeredTypesProvider,
-                new SecurityCacheProvider(_algorithm.Portfolio));
-            var universeSelection = new UniverseSelection(
-                _algorithm,
-                securityService,
-                new DataPermissionManager(), 
-                new DefaultDataProvider(),
-                Resolution.Second);
-            _dataManager = new DataManager(_dataFeed, universeSelection, _algorithm, new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork),
-                MarketHoursDatabase.FromDataFolder(),
-                true,
-                new RegisteredSecurityDataTypesProvider(), 
-                new DataPermissionManager());
-            _synchronizer.Initialize(_algorithm, _dataManager);
-            _dataFeed.Initialize(_algorithm,
-                new LiveNodePacket(),
-                new TestResultHandler(),
-                new LocalDiskMapFileProvider(),
-                new LocalDiskFactorFileProvider(),
-                new DefaultDataProvider(),
-                _dataManager,
-                _synchronizer,
-                new DataChannelProvider());
-            _algorithm.SubscriptionManager.SetDataManager(_dataManager);
-            _algorithm.Securities.SetSecurityService(securityService);
-            _algorithm.SetFinishedWarmingUp();
-            _algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
+            SetupImpl(null, null, null);
         }
 
         [TearDown]
@@ -183,6 +153,76 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
+        public void PreMarketDataSetsCache()
+        {
+            var dataQueueTest = new FakeDataQueueTest();
+            dataQueueTest.ManualTimeProvider.SetCurrentTimeUtc(new DateTime(2020, 09, 03, 10, 0, 0));
+            TearDown();
+            var liveSynchronizer = new TestableLiveSynchronizer(dataQueueTest.ManualTimeProvider);
+            var dataAggregator = new TestAggregationManager(dataQueueTest.ManualTimeProvider);
+            SetupImpl(dataQueueTest, liveSynchronizer, dataAggregator);
+
+            _algorithm.SetDateTime(dataQueueTest.ManualTimeProvider.GetUtcNow());
+            _algorithm.SetLiveMode(true);
+            var added = false;
+            var first = true;
+            var internalDataCount = 0;
+            var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            foreach (var timeSlice in _synchronizer.StreamData(tokenSource.Token))
+            {
+                dataQueueTest.ManualTimeProvider.AdvanceSeconds(60);
+                _algorithm.SetDateTime(dataQueueTest.ManualTimeProvider.GetUtcNow());
+                if (dataQueueTest.ManualTimeProvider.GetUtcNow() >= new DateTime(2020, 09, 03, 13, 0, 0))
+                {
+                    Assert.Fail("Timeout expect pre market data to set security prices");
+                }
+                if (!added)
+                {
+                    added = true;
+                    _algorithm.AddEquity("IBM", Resolution.Minute);
+                    _algorithm.AddEquity("AAPL", Resolution.Hour);
+                }
+                else if (!timeSlice.IsTimePulse)
+                {
+                    if (timeSlice.SecuritiesUpdateData.Count > 0)
+                    {
+                        internalDataCount += timeSlice.SecuritiesUpdateData.Count(
+                            data => data.IsInternalConfig && data.Target.Symbol == Symbols.AAPL
+                        );
+                    }
+                    if (first)
+                    {
+                        Assert.IsTrue(_algorithm.SubscriptionManager.SubscriptionDataConfigService
+                            .GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second));
+                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true)
+                            .Any(config => config.IsInternalFeed && config.Resolution == Resolution.Second));
+                        first = false;
+                    }
+                    else if(_algorithm.Securities["AAPL"].Price != 0 && _algorithm.Securities["IBM"].Price != 0)
+                    {
+                        _algorithm.SetHoldings("AAPL", 0.01);
+                        _algorithm.SetHoldings("IBM", 0.01);
+
+                        var orders = _algorithm.Transactions.GetOpenOrders("AAPL");
+                        Assert.AreEqual(1, orders.Count);
+                        Assert.AreEqual(Symbols.AAPL, orders[0].Symbol);
+                        Assert.AreEqual(OrderStatus.Submitted, orders[0].Status);
+
+                        orders = _algorithm.Transactions.GetOpenOrders("IBM");
+                        Assert.AreEqual(1, orders.Count);
+                        Assert.AreEqual(Symbols.IBM, orders[0].Symbol);
+                        Assert.AreEqual(OrderStatus.Submitted, orders[0].Status);
+                        break;
+                    }
+                }
+                _algorithm.OnEndOfTimeStep();
+                Thread.Sleep(10);
+            }
+            Assert.IsFalse(tokenSource.IsCancellationRequested);
+            Assert.AreNotEqual(0, internalDataCount);
+        }
+
+        [Test]
         public void UniverseSelectionAddAndRemove()
         {
             _algorithm.SetLiveMode(true);
@@ -203,7 +243,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             _algorithm.UniverseSettings,
                             time =>
                             {
-                                return first ? new[] { "SPY" } : new[] { "AAPL" };
+                                return first ? new[] { "IBM" } : new[] { "AAPL" };
                             }
                     );
                 }
@@ -212,7 +252,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     if (first)
                     {
                         Assert.IsTrue(_algorithm.SubscriptionManager.SubscriptionDataConfigService
-                            .GetSubscriptionDataConfigs(Symbols.SPY, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second));
+                            .GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second));
                         Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any());
                         first = false;
                     }
@@ -220,7 +260,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         Assert.IsTrue(_algorithm.SubscriptionManager.SubscriptionDataConfigService
                             .GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second));
-                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.SPY, includeInternalConfigs: true).Any());
+                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true).Any());
                         break;
                     }
                 }
@@ -267,6 +307,62 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private static SubscriptionDataConfig GetConfig(Symbol symbol, Resolution resolution)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), symbol, resolution, TimeZones.Utc, TimeZones.Utc, false, false, false);
+        }
+
+        private class FakeDataQueueTest : FakeDataQueue
+        {
+            public ManualTimeProvider ManualTimeProvider { get; } = new ManualTimeProvider();
+
+            protected override ITimeProvider TimeProvider => ManualTimeProvider;
+        }
+
+        private void SetupImpl(IDataQueueHandler dataQueueHandler, Synchronizer synchronizer, IDataAggregator dataAggregator)
+        {
+            _dataFeed = new TestableLiveTradingDataFeed(dataQueueHandler ?? new FakeDataQueue(dataAggregator ?? new AggregationManager()));
+            _algorithm = new AlgorithmStub(createDataManager: false);
+            _synchronizer = synchronizer ?? new LiveSynchronizer();
+            var registeredTypesProvider = new RegisteredSecurityDataTypesProvider();
+            var securityService = new SecurityService(_algorithm.Portfolio.CashBook,
+                MarketHoursDatabase.FromDataFolder(),
+                SymbolPropertiesDatabase.FromDataFolder(),
+                _algorithm,
+                registeredTypesProvider,
+                new SecurityCacheProvider(_algorithm.Portfolio));
+            var universeSelection = new UniverseSelection(
+                _algorithm,
+                securityService,
+                new DataPermissionManager(),
+                new DefaultDataProvider(),
+                Resolution.Second);
+            _dataManager = new DataManager(_dataFeed, universeSelection, _algorithm, new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork),
+                MarketHoursDatabase.FromDataFolder(),
+                true,
+                new RegisteredSecurityDataTypesProvider(),
+                new DataPermissionManager());
+            _synchronizer.Initialize(_algorithm, _dataManager);
+            _dataFeed.Initialize(_algorithm,
+                new LiveNodePacket(),
+                new TestResultHandler(),
+                new LocalDiskMapFileProvider(),
+                new LocalDiskFactorFileProvider(),
+                new DefaultDataProvider(),
+                _dataManager,
+                _synchronizer,
+                new DataChannelProvider());
+            _algorithm.SubscriptionManager.SetDataManager(_dataManager);
+            _algorithm.Securities.SetSecurityService(securityService);
+            _algorithm.SetFinishedWarmingUp();
+            var backtestingTransactionHandler = new BacktestingTransactionHandler();
+            backtestingTransactionHandler.Initialize(_algorithm, new PaperBrokerage(_algorithm, new LiveNodePacket()), new TestResultHandler());
+            _algorithm.Transactions.SetOrderProcessor(backtestingTransactionHandler);
+            _algorithm.PostInitialize();
+        }
+        private class TestAggregationManager : AggregationManager
+        {
+            public TestAggregationManager(ITimeProvider timeProvider)
+            {
+                TimeProvider = timeProvider;
+            }
         }
     }
 }

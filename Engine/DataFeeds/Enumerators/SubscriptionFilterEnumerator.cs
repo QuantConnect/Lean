@@ -1,3 +1,19 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -19,11 +35,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public event EventHandler<Exception> DataFilterError;
 
+        private readonly bool _liveMode;
         private readonly Security _security;
         private readonly DateTime _endTime;
-        private readonly IEnumerator<BaseData> _enumerator;
+        private readonly bool _extendedMarketHours;
         private readonly SecurityExchange _exchange;
         private readonly ISecurityDataFilter _dataFilter;
+        private readonly IEnumerator<BaseData> _enumerator;
 
         /// <summary>
         /// Convenience method to wrap the enumerator and attach the data filter event to log and alery users of errors
@@ -32,11 +50,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="enumerator">The source enumerator to be wrapped</param>
         /// <param name="security">The security who's data is being enumerated</param>
         /// <param name="endTime">The end time of the subscription</param>
+        /// <param name="extendedMarketHours">True if extended market hours are enabled</param>
+        /// <param name="liveMode">True if live mode</param>
         /// <returns>A new instance of the <see cref="SubscriptionFilterEnumerator"/> class that has had it's <see cref="DataFilterError"/>
         /// event subscribed to to send errors to the result handler</returns>
-        public static SubscriptionFilterEnumerator WrapForDataFeed(IResultHandler resultHandler, IEnumerator<BaseData> enumerator, Security security, DateTime endTime)
+        public static SubscriptionFilterEnumerator WrapForDataFeed(IResultHandler resultHandler, IEnumerator<BaseData> enumerator, Security security, DateTime endTime, bool extendedMarketHours, bool liveMode)
         {
-            var filter = new SubscriptionFilterEnumerator(enumerator, security, endTime);
+            var filter = new SubscriptionFilterEnumerator(enumerator, security, endTime, extendedMarketHours, liveMode);
             filter.DataFilterError += (sender, exception) =>
             {
                 Log.Error(exception, "WrapForDataFeed");
@@ -51,13 +71,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="enumerator">The source enumerator to be wrapped</param>
         /// <param name="security">The security containing an exchange and data filter</param>
         /// <param name="endTime">The end time of the subscription</param>
-        public SubscriptionFilterEnumerator(IEnumerator<BaseData> enumerator, Security security, DateTime endTime)
+        /// <param name="extendedMarketHours">True if extended market hours are enabled</param>
+        /// <param name="liveMode">True if live mode</param>
+        public SubscriptionFilterEnumerator(IEnumerator<BaseData> enumerator, Security security, DateTime endTime, bool extendedMarketHours, bool liveMode)
         {
+            _liveMode = liveMode;
             _enumerator = enumerator;
             _security = security;
             _endTime = endTime;
             _exchange = _security.Exchange;
             _dataFilter = _security.DataFilter;
+            _extendedMarketHours = extendedMarketHours;
         }
 
         /// <summary>
@@ -113,8 +137,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     }
 
                     // verify that the bar is within the exchange's market hours
-                    if (current.DataType != MarketDataType.Auxiliary && !_exchange.IsOpenDuringBar(current.Time, current.EndTime, _security.IsExtendedMarketHours))
+                    if (current.DataType != MarketDataType.Auxiliary && !_exchange.IsOpenDuringBar(current.Time, current.EndTime, _extendedMarketHours))
                     {
+                        if (_liveMode && !current.IsFillForward)
+                        {
+                            // TODO: replace for setting security.RealTimePrice not to modify security cache data directly
+                            _security.SetMarketPrice(current);
+                        }
                         continue;
                     }
 
