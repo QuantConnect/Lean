@@ -290,6 +290,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var potentialUtc = _offsetProvider.ConvertToUtc(item.ReferenceDateTime) + item.Interval;
                 var potentialInTimeZone = _offsetProvider.ConvertFromUtc(potentialUtc);
                 var potentialBarEndTime = RoundDown(potentialInTimeZone, item.Interval);
+                // apply the same timezone to next and potential bars
+                // calculate next endTime by adding duration to the previous data time because incoming next.EndTime is swallowing one hour
                 var nextEndTime = _offsetProvider.ConvertFromUtc(previousTimeUtc) + nextPreviousTimeDelta + _dataResolution;
                 if (potentialBarEndTime < nextEndTime)
                 {

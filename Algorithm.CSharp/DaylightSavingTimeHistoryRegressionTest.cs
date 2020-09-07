@@ -24,12 +24,8 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Basic template algorithm simply initializes the date range and cash. This is a skeleton
-    /// framework you can use for designing an algorithm.
+    /// Regression test algorithm simply fetch history on boarder of Daylight Saving Time shift
     /// </summary>
-    /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="using quantconnect" />
-    /// <meta name="tag" content="trading and orders" />
     public class DaylightSavingTimeHistoryRegressionTest : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol[] _symbols = new[]
@@ -45,11 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2011, 11, 10);  //Set Start Date
             SetEndDate(2011, 11, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
-            
-            // Find more symbols here: http://quantconnect.com/data
-            // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
-            // Futures Resolution: Tick, Second, Minute
-            // Options Resolution: Minute Only.
+
             for (int i = 0; i < _symbols.Length; i++)
             {
                 var symbol = _symbols[i];
@@ -64,9 +56,6 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception($"Duplicated bars were issued for time {time}");
                 }
             }
-
-            // There are other assets with similar methods. See "Selecting Options" etc for more details.
-            // AddFuture, AddForex, AddCfd, AddOption
         }
 
         /// <summary>
@@ -77,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
