@@ -13,12 +13,17 @@
  * limitations under the License.
 */
 
+using Apache.Arrow;
+using Apache.Arrow.Ipc;
+using Apache.Arrow.Memory;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace QuantConnect.Python
 {
@@ -50,6 +55,7 @@ namespace QuantConnect.Python
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
         public PyObject GetDataFrame(IEnumerable<Slice> data)
         {
+            /*
             var maxLevels = 0;
             var sliceDataDict = new Dictionary<Symbol, PandasData>();
 
@@ -88,6 +94,132 @@ namespace QuantConnect.Python
                 }
                 var dataFrames = sliceDataDict.Select(x => x.Value.ToPandasDataFrame(maxLevels));
                 return _pandas.concat(dataFrames.ToArray(), Py.kw("sort", true));
+            }
+            */
+            var allocator = new NativeMemoryAllocator();
+            var recordBatchBuilder = new RecordBatch.Builder(allocator);
+
+            var symbols = new List<string>();
+            var times = new List<DateTimeOffset>();
+            var tradeBarOpen = new List<double>();
+            var tradeBarHigh = new List<double>();
+            var tradeBarLow = new List<double>();
+            var tradeBarClose = new List<double>();
+            var tradeBarVolume = new List<double>();
+           
+            var quoteBarBidOpen = new List<double>();
+            var quoteBarBidHigh = new List<double>();
+            var quoteBarBidLow = new List<double>();
+            var quoteBarBidClose = new List<double>();  
+            var quoteBarBidVolume = new List<double>();   
+            var quoteBarAskOpen = new List<double>();
+            var quoteBarAskHigh = new List<double>();
+            var quoteBarAskLow = new List<double>();
+            var quoteBarAskClose = new List<double>();  
+            var quoteBarAskVolume = new List<double>();   
+            
+            foreach (var slice in data)
+            {
+                foreach (var symbol in slice.Keys)
+                {
+                    //var ticks = slice.Ticks.ContainsKey(symbol) ? slice.Ticks[symbol] : null;
+                    var tradeBar = slice.Bars.ContainsKey(symbol) ? slice.Bars[symbol] : null;
+                    var quoteBar = slice.QuoteBars.ContainsKey(symbol) ? slice.QuoteBars[symbol] : null;
+
+                    if (tradeBar != null)
+                    {
+                        tradeBarOpen.Add((double) tradeBar.Open);
+                        tradeBarHigh.Add((double) tradeBar.High);
+                        tradeBarLow.Add((double) tradeBar.Low);
+                        tradeBarClose.Add((double) tradeBar.Close);
+                        tradeBarVolume.Add((double) tradeBar.Volume);
+                        symbols.Add(tradeBar.Symbol.ID.ToString());
+                        times.Add(new DateTimeOffset(tradeBar.EndTime));
+                    }
+
+                    if (quoteBar != null)
+                    {
+                        if (quoteBar.Bid != null)
+                        {
+                            quoteBarBidOpen.Add((double) quoteBar.Bid.Open);
+                            quoteBarBidHigh.Add((double) quoteBar.Bid.High);
+                            quoteBarBidLow.Add((double) quoteBar.Bid.Low);
+                            quoteBarBidClose.Add((double) quoteBar.Bid.Close);
+                            quoteBarBidVolume.Add((double) quoteBar.LastBidSize);
+                        }
+                        else
+                        {
+                            quoteBarBidOpen.Add(double.NaN);
+                            quoteBarBidHigh.Add(double.NaN);
+                            quoteBarBidLow.Add(double.NaN);
+                            quoteBarBidClose.Add(double.NaN);
+                            quoteBarBidVolume.Add(double.NaN);
+                        }
+
+                        if (quoteBar.Ask != null)
+                        {
+                            quoteBarAskOpen.Add((double) quoteBar.Open);
+                            quoteBarAskHigh.Add((double) quoteBar.High);
+                            quoteBarAskLow.Add((double) quoteBar.Low);
+                            quoteBarAskClose.Add((double) quoteBar.Close);
+                            quoteBarAskVolume.Add((double) quoteBar.LastAskSize);
+                        }
+                        else
+                        {
+                            quoteBarAskOpen.Add(double.NaN);
+                            quoteBarAskHigh.Add(double.NaN);
+                            quoteBarAskLow.Add(double.NaN);
+                            quoteBarAskClose.Add(double.NaN);
+                            quoteBarAskVolume.Add(double.NaN);
+                        }
+
+                        //symbols.Add(quoteBar.Symbol.ID.ToString());
+                        //times.Add(new DateTimeOffset(quoteBar.EndTime));
+                    }
+                }
+            }
+
+            recordBatchBuilder.Append("time", false, col => col.Timestamp(array => array.AppendRange(times)));
+            recordBatchBuilder.Append("open", true, col => col.Double(array => array.AppendRange(tradeBarOpen)));
+            recordBatchBuilder.Append("high", true, col => col.Double(array => array.AppendRange(tradeBarHigh)));
+            recordBatchBuilder.Append("low", true, col => col.Double(array => array.AppendRange(tradeBarLow)));
+            recordBatchBuilder.Append("close", true, col => col.Double(array => array.AppendRange(tradeBarClose)));
+            recordBatchBuilder.Append("volume", true, col => col.Double(array => array.AppendRange(tradeBarVolume)));
+            recordBatchBuilder.Append("symbol", true, col => col.String(array => array.AppendRange(symbols)));
+            //recordBatchBuilder.Append("bidopen", true, col => col.Double(array => array.AppendRange(quoteBarBidOpen)));
+            //recordBatchBuilder.Append("bidhigh", true, col => col.Double(array => array.AppendRange(quoteBarBidHigh)));
+            //recordBatchBuilder.Append("bidlow", true, col => col.Double(array => array.AppendRange(quoteBarBidLow)));
+            //recordBatchBuilder.Append("bidclose", true, col => col.Double(array => array.AppendRange(quoteBarBidClose)));
+            //recordBatchBuilder.Append("bidsize", true, col => col.Double(array => array.AppendRange(quoteBarBidVolume)));
+            //recordBatchBuilder.Append("askopen", true, col => col.Double(array => array.AppendRange(quoteBarAskOpen)));
+            //recordBatchBuilder.Append("askhigh", true, col => col.Double(array => array.AppendRange(quoteBarAskHigh)));
+            //recordBatchBuilder.Append("asklow", true, col => col.Double(array => array.AppendRange(quoteBarAskLow)));
+            //recordBatchBuilder.Append("askclose", true, col => col.Double(array => array.AppendRange(quoteBarAskClose)));
+            //recordBatchBuilder.Append("asksize", true, col => col.Double(array => array.AppendRange(quoteBarAskVolume)));
+
+            var recordBatch = recordBatchBuilder.Build();
+            var ms = new MemoryStream();
+            using (var writer = new ArrowStreamWriter(ms, recordBatch.Schema))
+            {
+                writer.WriteRecordBatchAsync(recordBatch).SynchronouslyAwaitTask();
+                
+                var rawBytes = ms.ToArray();
+                var arrowBuffer = new ArrowBuffer(rawBytes);
+
+                using (Py.GIL())
+                {
+                    dynamic pa = PythonEngine.ImportModule("pyarrow");
+                    var pinned = arrowBuffer.Memory.Pin();
+                    unsafe
+                    {
+                        Console.WriteLine(recordBatch.Length);
+                        Console.WriteLine(rawBytes.Length);
+                        Console.WriteLine(arrowBuffer.Length);
+                        
+                        dynamic buf = pa.foreign_buffer(((long) (new IntPtr(pinned.Pointer))).ToPython(), arrowBuffer.Length.ToPython());
+                        return pa.ipc.open_stream(buf).read_pandas();
+                    }
+                }
             }
         }
 
