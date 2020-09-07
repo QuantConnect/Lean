@@ -273,6 +273,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 return false;
             }
 
+            // define how many hours we swallowed when assigned next.EndTime
+            var daylightMovement = nextEndTimeUtc - (previousTimeUtc + nextPreviousTimeDelta + _dataResolution);
+
             // every bar emitted MUST be of the data resolution.
 
             // compute end times of the four potential fill forward scenarios
@@ -292,7 +295,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var potentialBarEndTime = RoundDown(potentialInTimeZone, item.Interval);
                 // apply the same timezone to next and potential bars
                 // calculate next endTime by adding duration to the previous data time because incoming next.EndTime is swallowing one hour
-                var nextEndTime = _offsetProvider.ConvertFromUtc(previousTimeUtc) + nextPreviousTimeDelta + _dataResolution;
+                var nextEndTime = next.EndTime - daylightMovement;
                 if (potentialBarEndTime < nextEndTime)
                 {
                     var nextFillForwardBarStartTime = potentialBarEndTime - item.Interval;
