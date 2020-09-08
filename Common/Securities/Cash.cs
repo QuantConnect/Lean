@@ -304,37 +304,6 @@ namespace QuantConnect.Securities
                 .Select(x => QuantConnect.Symbol.Create(x.Key.Symbol, securityType, market));
         }
 
-        //private static bool GetMarketForSecurityType(
-        //    SecurityType securityType,
-        //    IReadOnlyDictionary<SecurityType, string> marketMap,
-        //    IReadOnlyDictionary<SecurityType, string> markets,
-        //    out string market)
-        //{
-        //    if (!markets.TryGetValue(securityType, out market) &&
-        //        !marketMap.TryGetValue(securityType, out market))
-        //    {
-        //        return false;
-        //    }
-
-        //    return true;
-        //}
-
-        //private static IEnumerable<Symbol> CreateSymbolList(
-        //    IEnumerable<string> pairs,
-        //    IReadOnlyDictionary<SecurityType, string> marketMap,
-        //    IReadOnlyDictionary<SecurityType, string> markets,
-        //    SecurityType securityType)
-        //{
-        //    string market;
-        //    if (!markets.TryGetValue(securityType, out market) &&
-        //        !marketMap.TryGetValue(securityType, out market))
-        //    {
-        //        return new List<Symbol>();
-        //    }
-
-        //    return pairs.Select(ticker => QuantConnect.Symbol.Create(ticker, securityType, market));
-        //}
-
         private void OnUpdate()
         {
             Updated?.Invoke(this, EventArgs.Empty);
