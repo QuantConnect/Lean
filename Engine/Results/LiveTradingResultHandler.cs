@@ -736,8 +736,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Optional string message describing reason for status change.</param>
         public void SendStatusUpdate(AlgorithmStatus status, string message = "")
         {
-            var msg = status + (string.IsNullOrEmpty(message) ? string.Empty : " " + message);
-            Log.Trace("LiveTradingResultHandler.SendStatusUpdate(): " + msg);
+            Log.Trace($"LiveTradingResultHandler.SendStatusUpdate(): status: '{status}'. {(string.IsNullOrEmpty(message) ? string.Empty : " " + message)}");
             var packet = new AlgorithmStatusPacket(_job.AlgorithmId, _job.ProjectId, status, message);
             Messages.Enqueue(packet);
         }

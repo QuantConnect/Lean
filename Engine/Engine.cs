@@ -482,7 +482,6 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         private IHistoryProvider GetHistoryProvider(string historyProvider)
         {
-            historyProvider = Config.Get("history-provider", historyProvider);
             if (historyProvider.IsNullOrEmpty())
             {
                 historyProvider = Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider");
