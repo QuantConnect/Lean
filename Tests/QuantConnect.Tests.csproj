@@ -724,6 +724,7 @@
     <Compile Include="Indicators\RateOfChangeTests.cs" />
     <Compile Include="Indicators\EaseOfMovementValueTests.cs" />
     <Compile Include="Indicators\StochasticTests.cs" />
+    <Compile Include="Research\QuantBookFundamentalTests.cs" />
     <Compile Include="Research\QuantBookIndicatorsTests.cs" />
     <Compile Include="Research\QuantBookHistoryTests.cs" />
     <Compile Include="Messaging\StreamingMessageHandlerTests.cs" />
@@ -760,6 +761,9 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="Research\RegressionScripts\Test_QuantBookFundamental.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Research\RegressionScripts\Test_QuantBookIndicator.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
