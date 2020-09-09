@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="mapFileResolver">Used for resolving the correct map files</param>
         /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
         /// <param name="startTime">Start date for the data request</param>
-        /// <param name="enablePriceScalling">Applies price factor</param>
+        /// <param name="enablePriceScaling">Applies price factor</param>
         /// <returns>The new auxiliary data enumerator</returns>
         public static IEnumerator<BaseData> CreateEnumerators(
             IEnumerator<BaseData> rawDataEnumerator,
@@ -52,7 +52,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             MapFileResolver mapFileResolver,
             bool includeAuxiliaryData,
             DateTime startTime,
-            bool enablePriceScalling)
+            bool enablePriceScaling = true)
         {
             var lazyFactorFile =
                 new Lazy<FactorFile>(() => SubscriptionUtils.GetFactorFileToUse(config, factorFileProvider));
@@ -75,7 +75,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             // avoid price scaling for backtesting; calculate it directly in worker 
             // and allow subscription to extract the the data depending on config data mode
             var dataEnumerator = rawDataEnumerator;
-            if (enablePriceScalling)
+            if (enablePriceScaling)
             {
                 dataEnumerator = new PriceScaleFactorEnumerator(
                     rawDataEnumerator,

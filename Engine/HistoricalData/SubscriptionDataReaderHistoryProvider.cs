@@ -160,8 +160,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 dataReader,
                 mapFileResolver,
                 false,
-                startTimeLocal,
-                true);
+                startTimeLocal);
 
             // optionally apply fill forward behavior
             if (request.FillForwardResolution.HasValue)
