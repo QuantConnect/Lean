@@ -263,8 +263,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 return false;
             }
 
-            var nextPreviousTimeDelta = next.Time - previous.Time;
-
             // check to see if the gap between previous and next warrants fill forward behavior
             var nextPreviousTimeUtcDelta = nextTimeUtc - previousTimeUtc;
             if (nextPreviousTimeUtcDelta <= fillForwardResolution && nextPreviousTimeUtcDelta <= _dataResolution)
@@ -273,7 +271,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 return false;
             }
 
-            // define how many hours we swallowed when assigned next.EndTime
+            // define real delta, can be bigger than data resolution, for example during weekend
+            var nextPreviousTimeDelta = next.Time - previous.Time;
+
+            // 1. Utc => allows us to define did we swallow hour when calculated EndTime (Time+Period) or not,
+            // for example, with data resolution 1 day and dataTimeZone = UTC we have next.Time 20111105 20:00, next.EndTime = 20111106 20:00
+            // but converting these values to UTC we have next.Time 20111106 00:00 (recognized as EDT), next.EndTime = 20111107 01:00 (recognized as EST)
+            // 2. previous.Time - next.Time => gives us real delta time in local time zone - not necessary equals data resolution(for weekend)
+            // 3. dataResolution => we use EndTime
             var daylightMovement = nextEndTimeUtc - (previousTimeUtc + nextPreviousTimeDelta + _dataResolution);
 
             // every bar emitted MUST be of the data resolution.
@@ -293,8 +298,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var potentialUtc = _offsetProvider.ConvertToUtc(item.ReferenceDateTime) + item.Interval;
                 var potentialInTimeZone = _offsetProvider.ConvertFromUtc(potentialUtc);
                 var potentialBarEndTime = RoundDown(potentialInTimeZone, item.Interval);
-                // apply the same timezone to next and potential bars
-                // calculate next endTime by adding duration to the previous data time because incoming next.EndTime is swallowing one hour
+                // apply the same timezone to next and potential bars because incoming next.EndTime can swallow one hour
                 var nextEndTime = next.EndTime - daylightMovement;
                 if (potentialBarEndTime < nextEndTime)
                 {
