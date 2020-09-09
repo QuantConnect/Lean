@@ -1107,16 +1107,16 @@ namespace QuantConnect.Tests.Algorithm
         {
             var algo = new QCAlgorithm();
             algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
-            algo.AddSecurity(SecurityType.Forex, "EURUSD");
+            var symbol = algo.AddForex("EURUSD", market: Market.FXCM).Symbol;
             algo.SetCash(100000);
             algo.SetCash("BTC", 0, 8000);
             algo.SetBrokerageModel(BrokerageName.FxcmBrokerage);
-            algo.Securities[Symbols.EURUSD].FeeModel = new ConstantFeeModel(0);
-            Security eurusd = algo.Securities[Symbols.EURUSD];
+            algo.Securities[symbol].FeeModel = new ConstantFeeModel(0);
+            Security eurusd = algo.Securities[symbol];
             // Set Price to $26
             Update(eurusd, 26);
             // So 100000/26 = 3846, After Rounding off becomes 3000
-            var actual = algo.CalculateOrderQuantity(Symbols.EURUSD, 1m);
+            var actual = algo.CalculateOrderQuantity(symbol, 1m);
             Assert.AreEqual(3000m, actual);
 
             var btcusd = algo.AddCrypto("BTCUSD", market: Market.GDAX);
@@ -1133,15 +1133,15 @@ namespace QuantConnect.Tests.Algorithm
         {
             var algo = new QCAlgorithm();
             algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
-            algo.AddSecurity(SecurityType.Forex, "EURUSD");
+            var symbol = algo.AddForex("EURUSD", market: Market.FXCM).Symbol;
             algo.SetCash(100000);
             algo.SetBrokerageModel(BrokerageName.FxcmBrokerage);
-            algo.Securities[Symbols.EURUSD].FeeModel = new ConstantFeeModel(0);
-            Security eurusd = algo.Securities[Symbols.EURUSD];
+            algo.Securities[symbol].FeeModel = new ConstantFeeModel(0);
+            Security eurusd = algo.Securities[symbol];
             // Set Price to $26
             Update(eurusd, 26);
             // So -100000/26 = -3846, After Rounding off becomes -3000
-            var actual = algo.CalculateOrderQuantity(Symbols.EURUSD, -1m);
+            var actual = algo.CalculateOrderQuantity(symbol, -1m);
             Assert.AreEqual(-3000m, actual);
 
             var btcusd = algo.AddCrypto("BTCUSD", market: Market.GDAX);
@@ -1158,15 +1158,15 @@ namespace QuantConnect.Tests.Algorithm
         {
             var algo = new QCAlgorithm();
             algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
-            algo.AddSecurity(SecurityType.Forex, "EURUSD");
+            var symbol = algo.AddForex("EURUSD", market: Market.FXCM).Symbol;
             algo.SetCash(10000);
             algo.SetBrokerageModel(BrokerageName.FxcmBrokerage);
-            algo.Securities[Symbols.EURUSD].FeeModel = new ConstantFeeModel(0);
-            Security eurusd = algo.Securities[Symbols.EURUSD];
+            algo.Securities[symbol].FeeModel = new ConstantFeeModel(0);
+            Security eurusd = algo.Securities[symbol];
             // Set Price to $25
             Update(eurusd, 25);
             // So 10000/25 = 400, After Rounding off becomes 0
-            var actual = algo.CalculateOrderQuantity(Symbols.EURUSD, 1m);
+            var actual = algo.CalculateOrderQuantity(symbol, 1m);
             Assert.AreEqual(0m, actual);
         }
 

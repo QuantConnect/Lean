@@ -98,7 +98,7 @@ namespace QuantConnect.Tests
 
         private static Symbol CreateForexSymbol(string symbol)
         {
-            return Symbol.Create(symbol, SecurityType.Forex, Market.FXCM);
+            return Symbol.Create(symbol, SecurityType.Forex, Market.Oanda);
         }
 
         private static Symbol CreateEquitySymbol(string symbol)

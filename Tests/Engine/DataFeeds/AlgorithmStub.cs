@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 AddSecurity(SecurityType.Forex, ticker, resolution);
                 var symbol = SymbolCache.GetSymbol(ticker);
-                Securities[symbol].Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard));
+                //Securities[symbol].Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard));
             }
             foreach (var ticker in crypto ?? new List<string>())
             {
