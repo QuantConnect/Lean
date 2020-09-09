@@ -47,6 +47,7 @@ using QuantConnect.Securities;
 using QuantConnect.Util;
 using Timer = System.Timers.Timer;
 using static QuantConnect.StringExtensions;
+using System.Runtime.CompilerServices;
 
 namespace QuantConnect
 {
@@ -2071,6 +2072,141 @@ namespace QuantConnect
             {
                 return s;
             }
+        }
+
+        /// <summary>
+        /// Normalizes the specified price based on the DataNormalizationMode
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static decimal GetNormalizedPrice(this SubscriptionDataConfig config, decimal price)
+        {
+            switch (config.DataNormalizationMode)
+            {
+                case DataNormalizationMode.Raw:
+                    return price;
+
+                // the price scale factor will be set accordingly based on the mode in update scale factors
+                case DataNormalizationMode.Adjusted:
+                case DataNormalizationMode.SplitAdjusted:
+                    return price * config.PriceScaleFactor;
+
+                case DataNormalizationMode.TotalReturn:
+                    return (price * config.PriceScaleFactor) + config.SumOfDividends;
+
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        /// <summary>
+        /// Scale data based on factor function
+        /// </summary>
+        public static BaseData Scale(this BaseData data, Func<decimal, decimal> factor)
+        {
+            switch (data.DataType)
+            {
+                case MarketDataType.TradeBar:
+                    var tradeBar = data as TradeBar;
+                    if (tradeBar != null)
+                    {
+                        tradeBar.Open = factor(tradeBar.Open);
+                        tradeBar.High = factor(tradeBar.High);
+                        tradeBar.Low = factor(tradeBar.Low);
+                        tradeBar.Close = factor(tradeBar.Close);
+                    }
+                    break;
+                case MarketDataType.Tick:
+                    var securityType = data.Symbol.SecurityType;
+                    var tick = data as Tick;
+                    if (tick != null)
+                    {
+                        if (securityType == SecurityType.Equity)
+                        {
+                            tick.Value = factor(tick.Value);
+                        }
+                        if (securityType == SecurityType.Option
+                            || securityType == SecurityType.Future)
+                        {
+                            if (tick.TickType == TickType.Trade)
+                            {
+                                tick.Value = factor(tick.Value);
+                            }
+                            else if (tick.TickType != TickType.OpenInterest)
+                            {
+                                tick.BidPrice = tick.BidPrice != 0 ? factor(tick.BidPrice) : 0;
+                                tick.AskPrice = tick.AskPrice != 0 ? factor(tick.AskPrice) : 0;
+
+                                if (tick.BidPrice != 0)
+                                {
+                                    if (tick.AskPrice != 0)
+                                    {
+                                        tick.Value = (tick.BidPrice + tick.AskPrice) / 2m;
+                                    }
+                                    else
+                                    {
+                                        tick.Value = tick.BidPrice;
+                                    }
+                                }
+                                else
+                                {
+                                    tick.Value = tick.AskPrice;
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case MarketDataType.QuoteBar:
+                    var quoteBar = data as QuoteBar;
+                    if (quoteBar != null)
+                    {
+                        if (quoteBar.Ask != null)
+                        {
+                            quoteBar.Ask.Open = factor(quoteBar.Ask.Open);
+                            quoteBar.Ask.High = factor(quoteBar.Ask.High);
+                            quoteBar.Ask.Low = factor(quoteBar.Ask.Low);
+                            quoteBar.Ask.Close = factor(quoteBar.Ask.Close);
+                        }
+                        if (quoteBar.Bid != null)
+                        {
+                            quoteBar.Bid.Open = factor(quoteBar.Bid.Open);
+                            quoteBar.Bid.High = factor(quoteBar.Bid.High);
+                            quoteBar.Bid.Low = factor(quoteBar.Bid.Low);
+                            quoteBar.Bid.Close = factor(quoteBar.Bid.Close);
+                        }
+                        quoteBar.Value = quoteBar.Close;
+                    }
+                    break;
+                case MarketDataType.Auxiliary:
+                case MarketDataType.Base:
+                case MarketDataType.OptionChain:
+                case MarketDataType.FuturesChain:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            return data;
+        }
+
+        /// <summary>
+        /// Normalize prices based on configuration
+        /// </summary>
+        /// <param name="data">Data to be normalized</param>
+        /// <param name="config">Price scale</param>
+        /// <returns></returns>
+        public static BaseData Normalize(this BaseData data, SubscriptionDataConfig config)
+        {
+            return data?.Scale(p => config.GetNormalizedPrice(p));
+        }
+
+        /// <summary>
+        /// Adjust prices based on price scale
+        /// </summary>
+        /// <param name="data">Data to be adjusted</param>
+        /// <param name="scale">Price scale</param>
+        /// <returns></returns>
+        public static BaseData Adjust(this BaseData data, decimal scale)
+        {
+            return data?.Scale(p => p * scale);
         }
     }
 }

@@ -239,6 +239,7 @@
     <Compile Include="DataFeeds\NullDataFeed.cs" />
     <Compile Include="DataFeeds\PendingRemovalsManager.cs" />
     <Compile Include="DataFeeds\WorkScheduling\IWorkQueue.cs" />
+    <Compile Include="DataFeeds\PrecalculatedSubscriptionData.cs" />
     <Compile Include="DataFeeds\WorkScheduling\WeightedWorkScheduler.cs" />
     <Compile Include="DataFeeds\RealTimeScheduleEventService.cs" />
     <Compile Include="DataFeeds\PredicateTimeProvider.cs" />

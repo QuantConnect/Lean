@@ -78,7 +78,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _mapFileProvider,
                 _factorFileProvider,
                 _dataProvider,
-                includeAuxiliaryData: true);
+                includeAuxiliaryData: true,
+                enablePriceScaling: false);
 
             IsActive = true;
         }
@@ -98,7 +99,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var enumerator = _subscriptionFactory.CreateEnumerator(request, _dataProvider);
             enumerator = ConfigureEnumerator(request, false, enumerator);
 
-            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator);
+            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator, _factorFileProvider, true);
         }
 
         /// <summary>
@@ -160,7 +161,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // define our data enumerator
             var enumerator = factory.CreateEnumerator(request, _dataProvider);
-            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator);
+            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator, _factorFileProvider, true);
         }
 
         /// <summary>

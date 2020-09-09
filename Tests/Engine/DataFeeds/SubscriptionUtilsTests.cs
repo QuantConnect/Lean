@@ -18,10 +18,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using Moq;
 using NUnit.Framework;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -59,6 +62,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var dataPoints = 10;
             var enumerator = new TestDataEnumerator { MoveNextTrueCount = dataPoints };
+            var factorFileProfider = new Mock<IFactorFileProvider>();
+            factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(FactorFile.Read(_security.Symbol.Value, _config.Market));
 
             var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
@@ -69,7 +74,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     DateTime.UtcNow,
                     Time.EndOfTime
                 ),
-                enumerator);
+                enumerator,
+                factorFileProfider.Object,
+                false);
 
             var count = 0;
             while (enumerator.MoveNextTrueCount > 8)
@@ -89,6 +96,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void ThrowingEnumeratorStackDisposesOfSubscription()
         {
             var enumerator = new TestDataEnumerator { MoveNextTrueCount = 10, ThrowException = true};
+            var factorFileProfider = new Mock<IFactorFileProvider>();
+            factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(FactorFile.Read(_security.Symbol.Value, _config.Market));
 
             var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
@@ -99,7 +108,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     DateTime.UtcNow,
                     Time.EndOfTime
                 ),
-                enumerator);
+                enumerator,
+                factorFileProfider.Object,
+                false);
 
             var count = 0;
             while (enumerator.MoveNextTrueCount != 9)
@@ -135,6 +146,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var dataPoints = 10;
 
                 var enumerator = new TestDataEnumerator {MoveNextTrueCount = dataPoints};
+                var factorFileProfider = new Mock<IFactorFileProvider>();
+                factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(FactorFile.Read(_security.Symbol.Value, _config.Market));
 
                 var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                     new SubscriptionRequest(
@@ -145,7 +158,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         DateTime.UtcNow,
                         Time.EndOfTime
                     ),
-                    enumerator);
+                    enumerator,
+                    factorFileProfider.Object,
+                    false);
 
                 for (var j = 0; j < dataPoints; j++)
                 {
