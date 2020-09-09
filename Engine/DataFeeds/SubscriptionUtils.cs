@@ -110,7 +110,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             data,
                             mode,
                             enablePriceScale ? currentScale : null);
-                        
+
                         // drop the data into the back of the enqueueable
                         enqueueable.Enqueue(subscriptionData);
 
@@ -150,25 +150,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return subscription;
         }
 
-        private static decimal GetScaleFactor(FactorFile factorFile, DataNormalizationMode mode, DateTime date)
-        {
-            switch (mode)
-            {
-                case DataNormalizationMode.Raw:
-                    return 1;
-
-                case DataNormalizationMode.TotalReturn:
-                case DataNormalizationMode.SplitAdjusted:
-                    return factorFile.GetSplitFactor(date);
-
-                case DataNormalizationMode.Adjusted:
-                    return factorFile.GetPriceScaleFactor(date);
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
         /// <summary>
         /// Gets <see cref="FactorFile"/> for configuration
         /// </summary>
@@ -201,5 +182,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             return factorFileToUse;
         }
+
+        private static decimal GetScaleFactor(FactorFile factorFile, DataNormalizationMode mode, DateTime date)
+        {
+            switch (mode)
+            {
+                case DataNormalizationMode.Raw:
+                    return 1;
+
+                case DataNormalizationMode.TotalReturn:
+                case DataNormalizationMode.SplitAdjusted:
+                    return factorFile.GetSplitFactor(date);
+
+                case DataNormalizationMode.Adjusted:
+                    return factorFile.GetPriceScaleFactor(date);
+
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
     }
 }
