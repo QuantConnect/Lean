@@ -44,7 +44,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 else
                 {
-                    throw new ArgumentException($"{_config.DataNormalizationMode} data were requested, but expected {_mode}");
+                    throw new ArgumentException($"DataNormalizationMode.{_config.DataNormalizationMode} was requested for " 
+                                                + $"symbol {_data.Symbol} but only {_mode} and Raw DataNormalizationMode are available. " 
+                                                + "Please configure the desired DataNormalizationMode initially when adding the Symbol");
                 }
             }
         }
