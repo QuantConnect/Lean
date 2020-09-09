@@ -8,9 +8,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
+using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
@@ -19,11 +20,18 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
     /// </summary>
     internal sealed class SockClient : IDisposable
     {
+        private const int ConnectionTimeout = 30000;
+
         private readonly WebSocketClientWrapper _webSocket;
 
         private readonly string _keyId;
 
         private readonly string _secretKey;
+
+        /// <summary>
+        /// Returns true if we're currently connected to the broker
+        /// </summary>
+        public bool IsConnected => _webSocket.IsOpen;
 
         /// <summary>
         /// Creates new instance of <see cref="SockClient"/> object.
@@ -109,19 +117,39 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <summary>
         /// Opens connection to Alpaca streaming API.
         /// </summary>
-        /// <returns>Waitable task object for handling action completion in asyncronious mode.</returns>
-        public Task ConnectAsync()
+        public void Connect()
         {
-            return Task.Run(() => _webSocket.Connect());
+            var connectedEvent = new ManualResetEvent(false);
+            EventHandler onOpenAction = (s, e) =>
+            {
+                connectedEvent.Set();
+            };
+
+            _webSocket.Open += onOpenAction;
+
+            try
+            {
+                _webSocket.Connect();
+
+                if (!connectedEvent.WaitOne(ConnectionTimeout))
+                {
+                    throw new Exception("SockClient.Connect(): WebSocket connection timeout.");
+                }
+            }
+            finally
+            {
+                _webSocket.Open -= onOpenAction;
+
+                connectedEvent.DisposeSafely();
+            }
         }
 
         /// <summary>
         /// Closes connection to Alpaca streaming API.
         /// </summary>
-        /// <returns>Waitable task object for handling action completion in asyncronious mode.</returns>
-        public Task DisconnectAsync()
+        public void Disconnect()
         {
-            return Task.Run(() => _webSocket.Close());
+            _webSocket.Close();
         }
 
         /// <inheritdoc />

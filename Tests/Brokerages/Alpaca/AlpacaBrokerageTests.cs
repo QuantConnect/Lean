@@ -25,14 +25,13 @@ using NUnit.Framework;
 using QuantConnect.Brokerages.Alpaca;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Alpaca
 {
-    [TestFixture, Ignore("This test requires a configured and testable Alpaca practice account")]
-    public partial class AlpacaBrokerageTests : BrokerageTests
+    [TestFixture, Explicit("This test requires a configured and testable Alpaca practice account")]
+    public class AlpacaBrokerageTests : BrokerageTests
     {
         /// <summary>
         /// Creates the brokerage under test and connects it
@@ -43,9 +42,8 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             var keyId = Config.Get("alpaca-key-id");
             var secretKey = Config.Get("alpaca-secret-key");
             var tradingMode = Config.Get("alpaca-trading-mode");
-            var aggregator = new AggregationManager();
 
-            return new AlpacaBrokerage(orderProvider, securityProvider, keyId, secretKey, tradingMode, false, aggregator);
+            return new AlpacaBrokerage(orderProvider, securityProvider, keyId, secretKey, tradingMode);
         }
 
         /// <summary>

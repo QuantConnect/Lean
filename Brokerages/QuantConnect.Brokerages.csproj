@@ -193,7 +193,6 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Alpaca\AlpacaBrokerage.cs" />
-    <Compile Include="Alpaca\AlpacaBrokerage.DataQueueHandler.cs" />
     <Compile Include="Alpaca\AlpacaBrokerage.Utility.cs" />
     <Compile Include="Alpaca\AlpacaBrokerageFactory.cs" />
     <Compile Include="Alpaca\Markets\AlpacaTradingClient.cs" />
@@ -228,7 +227,6 @@
     <Compile Include="Alpaca\Markets\Enums\TimeInForce.cs" />
     <Compile Include="Alpaca\Markets\Enums\TradeConfirmEmail.cs" />
     <Compile Include="Alpaca\Markets\Enums\TradeEvent.cs" />
-    <Compile Include="Alpaca\Markets\Environment\EnvironmentExtensions.cs" />
     <Compile Include="Alpaca\Markets\Environment\Environments.cs" />
     <Compile Include="Alpaca\Markets\Environment\IEnvironment.cs" />
     <Compile Include="Alpaca\Markets\Environment\LiveEnvironment.cs" />
@@ -329,18 +327,11 @@
     <Compile Include="Alpaca\Markets\Parameters\ListOrdersRequest.cs" />
     <Compile Include="Alpaca\Markets\Parameters\NewOrderRequest.cs" />
     <Compile Include="Alpaca\Markets\Parameters\PolygonDataClientConfiguration.cs" />
-    <Compile Include="Alpaca\Markets\Parameters\PolygonStreamingClientConfiguration.cs" />
     <Compile Include="Alpaca\Markets\Parameters\PortfolioHistoryRequest.cs" />
-    <Compile Include="Alpaca\Markets\Parameters\StreamingClientConfiguration.cs" />
     <Compile Include="Alpaca\Markets\PolygonDataClient.cs" />
-    <Compile Include="Alpaca\Markets\PolygonStreamingClient.cs" />
     <Compile Include="Alpaca\Markets\RateThrottler.cs" />
     <Compile Include="Alpaca\Markets\SockClient.cs" />
     <Compile Include="Alpaca\Markets\ThrottleParameters.cs" />
-    <Compile Include="Alpaca\Markets\WebSocket\IWebSocketFactory.cs" />
-    <Compile Include="Alpaca\Markets\WebSocket\StreamingClientBase.cs" />
-    <Compile Include="Alpaca\Markets\WebSocket\SynchronizationQueue.cs" />
-    <Compile Include="Alpaca\Markets\WebSocket\WebSocketClientFactory.cs" />
     <Compile Include="Backtesting\BacktestingBrokerage.cs" />
     <Compile Include="Backtesting\BacktestingBrokerageFactory.cs" />
     <Compile Include="Backtesting\BasicOptionAssignmentSimulation.cs" />
