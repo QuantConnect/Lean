@@ -84,22 +84,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (factor.HasValue && (factor.Value != 1 || configuration.SumOfDividends != 0))
             {
                 var sumOfDividends = configuration.SumOfDividends;
-                var mode = normalizationMode != DataNormalizationMode.Raw
-                    ? normalizationMode
-                    : DataNormalizationMode.Adjusted;
 
                 BaseData normalizedData = data.Clone();
 
-                if (mode == DataNormalizationMode.Adjusted || mode == DataNormalizationMode.SplitAdjusted)
+                if (normalizationMode == DataNormalizationMode.Adjusted || normalizationMode == DataNormalizationMode.SplitAdjusted)
                 {
                     normalizedData.Adjust(factor.Value);
                 }
-                else if (mode == DataNormalizationMode.TotalReturn)
+                else if (normalizationMode == DataNormalizationMode.TotalReturn)
                 {
                     normalizedData.Scale(p => p * factor.Value + sumOfDividends);
                 }
 
-                return new PrecalculatedSubscriptionData(configuration, data, normalizedData, mode, emitTimeUtc);
+                return new PrecalculatedSubscriptionData(configuration, data, normalizedData, normalizationMode, emitTimeUtc);
             }
 
             return new SubscriptionData(data, emitTimeUtc);

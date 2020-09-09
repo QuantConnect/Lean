@@ -93,7 +93,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
 
                         var data = enumerator.Current;
-                        var mode = config.DataNormalizationMode;
+                        var mode = config.DataNormalizationMode != DataNormalizationMode.Raw
+                            ? config.DataNormalizationMode
+                            : DataNormalizationMode.Adjusted;
                         if (enablePriceScale && data?.Time.Date > lastTradableDate)
                         {
                             lastTradableDate = data.Time.Date;
