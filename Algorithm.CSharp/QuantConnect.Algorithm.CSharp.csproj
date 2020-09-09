@@ -168,6 +168,7 @@
     <Compile Include="AltData\TiingoNewsAlgorithm.cs" />
     <Compile Include="AutomaticIndicatorWarmupDataTypeRegressionAlgorithm.cs" />
     <Compile Include="AutomaticIndicatorWarmupRegressionAlgorithm.cs" />
+    <Compile Include="BacktestingBrokerageRegressionAlgorithm.cs" />
     <Compile Include="ExtendedMarketTradingRegressionAlgorithm.cs" />
     <Compile Include="CoarseTiingoNewsUniverseSelectionAlgorithm.cs" />
     <Compile Include="DelistedFutureLiquidateRegressionAlgorithm.cs" />
@@ -200,6 +201,7 @@
     <Compile Include="MarginRemainingRegressionAlgorithm.cs" />
     <Compile Include="NoMarginCallExpectedRegressionAlgorithm.cs" />
     <Compile Include="ObjectStoreExampleAlgorithm.cs" />
+    <Compile Include="OrderImmutabilityRegressionAlgorithm.cs" />
     <Compile Include="OrderSubmissionDataRegressionAlgorithm.cs" />
     <Compile Include="RegisterIndicatorRegressionAlgorithm.cs" />
     <Compile Include="ScheduledEventsOrderRegressionAlgorithm.cs" />

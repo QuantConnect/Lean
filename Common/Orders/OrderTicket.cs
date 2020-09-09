@@ -409,7 +409,10 @@ namespace QuantConnect.Orders
             lock (_orderEventsLock)
             {
                 _orderEvents.Add(orderEvent);
-                if (orderEvent.FillQuantity != 0)
+
+                //Update the ticket and order, if it is a OptionExercise order we must only update it if the fill price is not zero
+                //this fixes issue #2846 where average price is skewed by the removal of the option.
+                if (orderEvent.FillQuantity != 0 && (_order.Type != OrderType.OptionExercise || orderEvent.FillPrice != 0))
                 {
                     // keep running totals of quantity filled and the average fill price so we
                     // don't need to compute these on demand
@@ -417,6 +420,8 @@ namespace QuantConnect.Orders
                     var quantityWeightedFillPrice = _orderEvents.Where(x => x.Status.IsFill())
                         .Aggregate(0m, (d, x) => d + x.AbsoluteFillQuantity*x.FillPrice);
                     _averageFillPrice = quantityWeightedFillPrice/Math.Abs(_quantityFilled);
+
+                    _order.Price = _averageFillPrice;
                 }
             }
 
