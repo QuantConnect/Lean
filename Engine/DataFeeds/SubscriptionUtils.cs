@@ -93,11 +93,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
 
                         var data = enumerator.Current;
-
+                        var mode = config.DataNormalizationMode;
                         if (enablePriceScale && data?.Time.Date > lastTradableDate)
                         {
                             lastTradableDate = data.Time.Date;
-                            currentScale = GetScaleFactor(factorFile, config.DataNormalizationMode, data.Time.Date);
+                            currentScale = GetScaleFactor(factorFile, mode, data.Time.Date);
                         }
 
                         SubscriptionData subscriptionData = SubscriptionData.Create(
@@ -105,6 +105,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             exchangeHours,
                             subscription.OffsetProvider,
                             data,
+                            mode,
                             enablePriceScale ? currentScale : null);
                         
                         // drop the data into the back of the enqueueable

@@ -59,9 +59,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="exchangeHours">The exchange hours of the security</param>
         /// <param name="offsetProvider">The subscription's offset provider</param>
         /// <param name="data">The data being emitted</param>
+        /// <param name="normalizationMode">Specifies how data is normalized</param>
         /// <param name="factor">price scale factor</param>
         /// <returns>A new <see cref="SubscriptionData"/> containing the specified data</returns>
-        public static SubscriptionData Create(SubscriptionDataConfig configuration, SecurityExchangeHours exchangeHours, TimeZoneOffsetProvider offsetProvider, BaseData data, decimal? factor = null)
+        public static SubscriptionData Create(SubscriptionDataConfig configuration, SecurityExchangeHours exchangeHours, TimeZoneOffsetProvider offsetProvider, BaseData data, DataNormalizationMode normalizationMode, decimal? factor = null)
         {
             if (data == null)
             {
@@ -83,36 +84,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (factor.HasValue && (factor.Value != 1 || configuration.SumOfDividends != 0))
             {
                 var sumOfDividends = configuration.SumOfDividends;
-                var mode = configuration.DataNormalizationMode != DataNormalizationMode.Raw
-                    ? configuration.DataNormalizationMode
+                var mode = normalizationMode != DataNormalizationMode.Raw
+                    ? normalizationMode
                     : DataNormalizationMode.Adjusted;
 
-                BaseData adjustedData = data.Clone();
+                BaseData normalizedData = data.Clone();
 
                 if (mode == DataNormalizationMode.Adjusted || mode == DataNormalizationMode.SplitAdjusted)
                 {
-                    if (factor.Value != 1)
-                    {
-                        adjustedData.Adjust(factor.Value);
-                    }
+                    normalizedData.Adjust(factor.Value);
                 }
                 else if (mode == DataNormalizationMode.TotalReturn)
                 {
-                    if (factor.Value != 1 && configuration.SumOfDividends != 0)
-                    {
-                        adjustedData.Scale(p => p * factor.Value + sumOfDividends);
-                    }
-                    else if (factor.Value != 1)
-                    {
-                        adjustedData.Adjust(factor.Value);
-                    }
-                    else
-                    {
-                        adjustedData.Scale(p => p + sumOfDividends);
-                    }
+                    normalizedData.Scale(p => p * factor.Value + sumOfDividends);
                 }
 
-                return new PrecalculatedSubscriptionData(configuration, data, adjustedData, mode, sumOfDividends, emitTimeUtc);
+                return new PrecalculatedSubscriptionData(configuration, data, normalizedData, mode, emitTimeUtc);
             }
 
             return new SubscriptionData(data, emitTimeUtc);

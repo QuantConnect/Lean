@@ -13,9 +13,8 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Data;
-using QuantConnect.Securities;
+using System;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -24,10 +23,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class PrecalculatedSubscriptionData : SubscriptionData
     {
-        private BaseData _adjustedData;
+        private BaseData _normalizedData;
         private SubscriptionDataConfig _config;
-        private DataNormalizationMode _mode;
-        private decimal _sumOfDividends;
+        private readonly DataNormalizationMode _mode;
 
         /// <summary>
         /// Gets the data
@@ -36,37 +34,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             get
             {
-                switch (_config.DataNormalizationMode)
+                if (_config.DataNormalizationMode == DataNormalizationMode.Raw)
                 {
-                    case DataNormalizationMode.Raw:
-                        return _data;
-
-                    // the price scale factor will be set accordingly based on the mode in update scale factors
-                    case DataNormalizationMode.Adjusted:
-                    case DataNormalizationMode.SplitAdjusted:
-                        if (_mode == DataNormalizationMode.Adjusted || _mode == DataNormalizationMode.SplitAdjusted || _sumOfDividends == 0)
-                        {
-                            return _adjustedData;
-                        }
-                        else
-                        {
-                            _mode = _config.DataNormalizationMode;
-                            return _adjustedData.Scale(p => p - _sumOfDividends);
-                        }
-
-                    case DataNormalizationMode.TotalReturn:
-                        if (_mode == DataNormalizationMode.TotalReturn || _sumOfDividends == 0)
-                        {
-                            return _adjustedData;
-                        }
-                        else
-                        {
-                            _mode = _config.DataNormalizationMode;
-                            return _adjustedData.Scale(p => p + _sumOfDividends);
-                        }
-
-                    default:
-                        throw new ArgumentOutOfRangeException();
+                    return _data;
+                }
+                else if (_config.DataNormalizationMode == _mode)
+                {
+                    return _normalizedData;
+                }
+                else
+                {
+                    throw new ArgumentException($"{_config.DataNormalizationMode} data were requested, but expected {_mode}");
                 }
             }
         }
@@ -76,17 +54,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="configuration">The subscription's configuration</param>
         /// <param name="rawData">The base data</param>
-        /// <param name="adjustedData">The adjusted data</param>
+        /// <param name="normalizedData">The normalized calculated based on raw data</param>
         /// <param name="normalizationMode">Specifies how data is normalized</param>
-        /// <param name="sumOfDividends">The sum of dividends accrued</param>
         /// <param name="emitTimeUtc">The emit time for the data</param>
-        public PrecalculatedSubscriptionData(SubscriptionDataConfig configuration, BaseData rawData, BaseData adjustedData, DataNormalizationMode normalizationMode, decimal sumOfDividends, DateTime emitTimeUtc)
+        public PrecalculatedSubscriptionData(SubscriptionDataConfig configuration, BaseData rawData, BaseData normalizedData, DataNormalizationMode normalizationMode, DateTime emitTimeUtc)
             : base(rawData, emitTimeUtc)
         {
             _config = configuration;
-            _adjustedData = adjustedData;
+            _normalizedData = normalizedData;
             _mode = normalizationMode;
-            _sumOfDividends = sumOfDividends;
         }
     }
 }

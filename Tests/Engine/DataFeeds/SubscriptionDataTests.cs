@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.Utc);
             var offsetProvider = new TimeZoneOffsetProvider(TimeZones.Utc, new DateTime(2020, 5, 21), new DateTime(2020, 5, 22));
 
-            var subscription = SubscriptionData.Create(config, exchangeHours, offsetProvider, tb);
+            var subscription = SubscriptionData.Create(config, exchangeHours, offsetProvider, tb, config.DataNormalizationMode);
 
             Assert.AreEqual(new DateTime(2020, 5, 21, 8, 0, 0), subscription.Data.Time);
             Assert.AreEqual(new DateTime(2020, 5, 21, 9, 0, 0), subscription.Data.EndTime);
@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.Utc);
             var offsetProvider = new TimeZoneOffsetProvider(TimeZones.Utc, new DateTime(2020, 5, 21), new DateTime(2020, 5, 22));
 
-            var subscription = SubscriptionData.Create(config, exchangeHours, offsetProvider, data);
+            var subscription = SubscriptionData.Create(config, exchangeHours, offsetProvider, data, config.DataNormalizationMode);
 
             Assert.AreEqual(new DateTime(2020, 5, 21, 8, 9, 0), subscription.Data.Time);
             Assert.AreEqual(new DateTime(2020, 5, 21, 8, 9, 0), subscription.Data.EndTime);
@@ -119,6 +119,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new TimeZoneOffsetProvider(TimeZones.NewYork, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1)),
                 tb,
+                config.DataNormalizationMode,
                 scale);
 
             Assert.True(data.GetType() == typeof(SubscriptionData));
@@ -163,6 +164,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new TimeZoneOffsetProvider(TimeZones.NewYork, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1)),
                 tb,
+                config.DataNormalizationMode,
                 scale);
 
             Assert.True(data.GetType() == type);
@@ -207,6 +209,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new TimeZoneOffsetProvider(TimeZones.NewYork, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1)),
                 tb,
+                config.DataNormalizationMode,
                 scale);
 
             Assert.True(data.GetType() == type);
@@ -252,6 +255,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new TimeZoneOffsetProvider(TimeZones.NewYork, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1)),
                 tb,
+                config.DataNormalizationMode,
                 scale);
 
             Assert.True(data.GetType() == type);

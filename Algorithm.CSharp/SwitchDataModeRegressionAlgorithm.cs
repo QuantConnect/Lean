@@ -14,21 +14,19 @@
  *
 */
 
-using Accord.Math;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-// ReSharper disable InvokeAsExtensionMethod -- .net 4.7.2 added ToHashSet and it looks like our version of mono has it as well causing ambiguity in the cloud
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// This regression test algorithm reproduces issue https://github.com/QuantConnect/Lean/issues/4031 
     /// fixed in PR https://github.com/QuantConnect/Lean/pull/4650
-    /// Adusted data have already been all loaded by the workers so DataNormalizationMode change has no effect in the data itself
+    /// Adjusted data have already been all loaded by the workers so DataNormalizationMode change has no effect in the data itself
     /// </summary>
     public class SwitchDataModeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {

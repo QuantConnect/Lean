@@ -70,7 +70,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 tb,
                 adjustedTb,
                 DataNormalizationMode.Adjusted,
-                sumOfDividends,
                 emitTimeUtc);
 
             _config.DataNormalizationMode = DataNormalizationMode.Raw;
@@ -86,16 +85,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(tb.Close * factor, (subscriptionData.Data as TradeBar).Close);
 
             _config.DataNormalizationMode = DataNormalizationMode.TotalReturn;
-            Assert.AreEqual(tb.Open * factor + sumOfDividends, (subscriptionData.Data as TradeBar).Open);
-            Assert.AreEqual(tb.High * factor + sumOfDividends, (subscriptionData.Data as TradeBar).High);
-            Assert.AreEqual(tb.Low * factor + sumOfDividends, (subscriptionData.Data as TradeBar).Low);
-            Assert.AreEqual(tb.Close * factor + sumOfDividends, (subscriptionData.Data as TradeBar).Close);
+            Assert.Throws<ArgumentException>(() =>
+                {
+                    var data = subscriptionData.Data;
+                }
+            );
 
             _config.DataNormalizationMode = DataNormalizationMode.SplitAdjusted;
-            Assert.AreEqual(tb.Open * factor, (subscriptionData.Data as TradeBar).Open);
-            Assert.AreEqual(tb.High * factor, (subscriptionData.Data as TradeBar).High);
-            Assert.AreEqual(tb.Low * factor, (subscriptionData.Data as TradeBar).Low);
-            Assert.AreEqual(tb.Close * factor, (subscriptionData.Data as TradeBar).Close);
+            Assert.Throws<ArgumentException>(() =>
+                {
+                    var data = subscriptionData.Data;
+                }
+            );
         }
     }
 }
