@@ -147,11 +147,5 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         {
             base.LongFromShort(parameters);
         }
-
-        [Test]
-        public override void GetCashBalanceContainsUSD()
-        {
-            Assert.Pass("USD currency is not required.");
-        }
     }
 }
