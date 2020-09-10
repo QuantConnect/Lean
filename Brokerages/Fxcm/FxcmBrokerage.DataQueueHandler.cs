@@ -67,7 +67,7 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <param name="tickType">Type of tick data</param>
         private bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
-            if (symbols.Count() == 0)
+            if (symbols.Any())
                 return false;
 
             Log.Trace("FxcmBrokerage.Subscribe(): {0}", string.Join(",", symbols));
@@ -118,7 +118,7 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <param name="tickType">Type of tick data</param>
         private bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
-            if (symbols.Count() == 0)
+            if (symbols.Any())
                 return false;
 
             Log.Trace("FxcmBrokerage.Unsubscribe(): {0}", string.Join(",", symbols));
