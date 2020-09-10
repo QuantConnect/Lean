@@ -406,7 +406,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
                 foreach (var candle in candles)
                 {
-                    yield return new TradeBar()
+                    yield return new TradeBar
                     {
                         Time = Time.UnixMillisecondTimeStampToDateTime(candle.Timestamp),
                         Symbol = request.Symbol,
