@@ -201,9 +201,15 @@ namespace QuantConnect.Brokerages.Bitfinex
             webSocket.ConnectionHandler.ReconnectRequested += OnReconnectRequested;
             webSocket.ConnectionHandler.Initialize(webSocket.ConnectionId);
 
+            int connections;
+            lock (_locker)
+            {
+                connections = _channelsByWebSocket.Count;
+            }
+
             Log.Trace("BitfinexSubscriptionManager.GetFreeWebSocket(): New websocket added: " +
                       $"Hashcode: {webSocket.GetHashCode()}, " +
-                      $"WebSocket connections: {_channelsByWebSocket.Count}");
+                      $"WebSocket connections: {connections}");
 
             return webSocket;
         }
@@ -290,7 +296,9 @@ namespace QuantConnect.Brokerages.Bitfinex
             lock (_locker)
             {
                 if (!_channelsByWebSocket.TryGetValue(webSocket, out channels))
-                return;
+                {
+                    return;
+                }
             }
 
             Log.Trace($"BitfinexSubscriptionManager.OnReconnectRequested(): Resubscribing channels. [Id: {connectionHandler.ConnectionId}]");
@@ -335,13 +343,14 @@ namespace QuantConnect.Brokerages.Bitfinex
                             case "hb":
                                 return;
 
-                            // trade
-                            case "tu":
+                            // trade execution
+                            case "te":
                                 OnUpdate(webSocket, channel.ToStringInvariant(), token[2].ToObject<string[]>());
                                 break;
 
-                            // ignore
-                            case "te":
+                            // ignored -- trades already handled in "te" message
+                            // https://github.com/bitfinexcom/bitfinex-api-node#te-vs-tu-messages
+                            case "tu":
                                 break;
 
                             default:

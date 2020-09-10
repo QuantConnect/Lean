@@ -38,7 +38,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <summary>
         /// Unix Epoch
         /// </summary>
-        public readonly DateTime dt1970 = new DateTime(1970, 1, 1);
+        public readonly DateTime UnixEpoch = new DateTime(1970, 1, 1);
 
         /// <summary>
         /// ApiKey Header
@@ -63,7 +63,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             // The nonce provided must be strictly increasing but should not exceed the MAX_SAFE_INTEGER constant value of 9007199254740991.
             lock (_lockerNonce)
             {
-                var nonce = (long) Math.Truncate((DateTime.UtcNow - dt1970).TotalMilliseconds * 1000);
+                var nonce = (long) Math.Truncate((DateTime.UtcNow - UnixEpoch).TotalMilliseconds * 1000);
 
                 if (nonce == _lastNonce)
                 {

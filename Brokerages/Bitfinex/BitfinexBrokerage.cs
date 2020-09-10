@@ -214,10 +214,11 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 if (item.Status.IsOpen())
                 {
-                    var cached = CachedOrderIDs.Where(c => c.Value.BrokerId.Contains(item.BrokerId.First()));
-                    if (cached.Any())
+                    var cached = CachedOrderIDs
+                        .FirstOrDefault(c => c.Value.BrokerId.Contains(item.BrokerId.First()));
+                    if (cached.Value != null)
                     {
-                        CachedOrderIDs[cached.First().Key] = item;
+                        CachedOrderIDs[cached.Key] = item;
                     }
                 }
             }
@@ -455,7 +456,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            Unsubscribe(new[] { dataConfig.Symbol });
             _aggregator.Remove(dataConfig);
         }
 

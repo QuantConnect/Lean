@@ -28,7 +28,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using QuantConnect.Brokerages.Bitfinex.Messages;
 using Order = QuantConnect.Orders.Order;
 
@@ -50,8 +49,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
         private readonly IDataAggregator _aggregator;
 
-        // map ClientOrderId -> LEAN order
+        // map Bitfinex ClientOrderId -> LEAN order (only used for orders submitted in PlaceOrder, not for existing orders)
         private readonly ConcurrentDictionary<long, Order> _orderMap = new ConcurrentDictionary<long, Order>();
+        private readonly object _clientOrderIdLocker = new object();
         private long _nextClientOrderId;
 
         /// <summary>
@@ -168,7 +168,22 @@ namespace QuantConnect.Brokerages.Bitfinex
 
         private long GetNextClientOrderId()
         {
-            return Interlocked.Increment(ref _nextClientOrderId);
+            lock (_clientOrderIdLocker)
+            {
+                // ensure unique id
+                var id = Convert.ToInt64(Time.DateTimeToUnixTimeStampMilliseconds(DateTime.UtcNow));
+
+                if (id > _nextClientOrderId)
+                {
+                    _nextClientOrderId = id;
+                }
+                else
+                {
+                    _nextClientOrderId++;
+                }
+            }
+
+            return _nextClientOrderId;
         }
 
         /// <summary>
@@ -362,6 +377,12 @@ namespace QuantConnect.Brokerages.Bitfinex
                     CachedOrderIDs.TryRemove(order.Id, out outOrder);
                 }
 
+                if (bitfinexOrder.ClientOrderId > 0)
+                {
+                    Order removed;
+                    _orderMap.TryRemove(bitfinexOrder.ClientOrderId, out removed);
+                }
+
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Bitfinex Order Event")
                 {
                     Status = OrderStatus.Canceled
@@ -421,8 +442,15 @@ namespace QuantConnect.Brokerages.Bitfinex
                 {
                     Order outOrder;
                     CachedOrderIDs.TryRemove(order.Id, out outOrder);
+
                     decimal ignored;
                     _fills.TryRemove(order.Id, out ignored);
+
+                    var clientOrderId = _orderMap.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerId)).Key;
+                    if (clientOrderId > 0)
+                    {
+                        _orderMap.TryRemove(clientOrderId, out outOrder);
+                    }
                 }
 
                 OnOrderEvent(orderEvent);
