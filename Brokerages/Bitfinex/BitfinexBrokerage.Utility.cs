@@ -19,12 +19,14 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using RestSharp;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
-using QuantConnect.Orders.Fees;
+using QuantConnect.Brokerages.Bitfinex.Messages;
+using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -36,23 +38,40 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <summary>
         /// Unix Epoch
         /// </summary>
-        public readonly DateTime dt1970 = new DateTime(1970, 1, 1);
+        public readonly DateTime UnixEpoch = new DateTime(1970, 1, 1);
+
         /// <summary>
-        /// Key Header
+        /// ApiKey Header
         /// </summary>
-        public const string KeyHeader = "X-BFX-APIKEY";
+        public const string ApiKeyHeader = "bfx-apikey";
+
+        /// <summary>
+        /// Nonce Header
+        /// </summary>
+        public const string NonceHeader = "bfx-nonce";
+
         /// <summary>
         /// Signature Header
         /// </summary>
-        public const string SignatureHeader = "X-BFX-SIGNATURE";
-        /// <summary>
-        /// Payload Header
-        /// </summary>
-        public const string PayloadHeader = "X-BFX-PAYLOAD";
+        public const string SignatureHeader = "bfx-signature";
+
+        private long _lastNonce;
+        private readonly object _lockerNonce = new object();
 
         private long GetNonce()
         {
-            return (DateTime.UtcNow - dt1970).Ticks;
+            // The nonce provided must be strictly increasing but should not exceed the MAX_SAFE_INTEGER constant value of 9007199254740991.
+            lock (_lockerNonce)
+            {
+                var nonce = (long) Math.Truncate((DateTime.UtcNow - UnixEpoch).TotalMilliseconds * 1000);
+
+                if (nonce == _lastNonce)
+                {
+                    _lastNonce = ++nonce;
+                }
+
+                return nonce;
+            }
         }
 
         /// <summary>
@@ -60,19 +79,21 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// https://docs.bitfinex.com/docs/rest-auth
         /// </summary>
         /// <param name="request">the rest request</param>
-        /// <param name="payload">the body of the request</param>
+        /// <param name="endpoint">The API endpoint</param>
+        /// <param name="parameters">the body of the request</param>
         /// <returns>a token representing the request params</returns>
-        private void SignRequest(IRestRequest request, string payload)
+        private void SignRequest(IRestRequest request, string endpoint, IDictionary<string, object> parameters)
         {
-            using (HMACSHA384 hmac = new HMACSHA384(Encoding.UTF8.GetBytes(ApiSecret)))
+            using (var hmac = new HMACSHA384(Encoding.UTF8.GetBytes(ApiSecret)))
             {
-                byte[] payloadByte = Encoding.UTF8.GetBytes(payload);
-                string payloadBase64 = Convert.ToBase64String(payloadByte, Base64FormattingOptions.None);
-                string payloadSha384hmac = ByteArrayToString(hmac.ComputeHash(Encoding.UTF8.GetBytes(payloadBase64)));
+                var json = JsonConvert.SerializeObject(parameters.ToDictionary(p => p.Key, p => p.Value));
+                var nonce = GetNonce().ToStringInvariant();
+                var payload = $"/api{endpoint}{nonce}{json}";
+                var signature = ByteArrayToString(hmac.ComputeHash(Encoding.UTF8.GetBytes(payload)));
 
-                request.AddHeader(KeyHeader, ApiKey);
-                request.AddHeader(PayloadHeader, payloadBase64);
-                request.AddHeader(SignatureHeader, payloadSha384hmac);
+                request.AddHeader(ApiKeyHeader, ApiKey);
+                request.AddHeader(NonceHeader, nonce);
+                request.AddHeader(SignatureHeader, signature);
             }
         }
 
@@ -84,16 +105,17 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns>a token representing the request params</returns>
         private string AuthenticationToken(string payload)
         {
-            using (HMACSHA384 hmac = new HMACSHA384(Encoding.UTF8.GetBytes(ApiSecret)))
+            using (var hmac = new HMACSHA384(Encoding.UTF8.GetBytes(ApiSecret)))
             {
                 return ByteArrayToString(hmac.ComputeHash(Encoding.UTF8.GetBytes(payload)));
             }
         }
 
-        private Func<Messages.Wallet, bool> WalletFilter(AccountType accountType)
+        private Func<Wallet, bool> WalletFilter(AccountType accountType)
         {
-            return wallet => wallet.Type.Equals("exchange") && accountType == AccountType.Cash ||
-                wallet.Type.Equals("trading") && accountType == AccountType.Margin;
+            return wallet =>
+                wallet.Type.Equals("exchange") && accountType == AccountType.Cash ||
+                wallet.Type.Equals("margin") && accountType == AccountType.Margin;
         }
 
         /// <summary>
@@ -103,16 +125,18 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public Tick GetTick(Symbol symbol)
         {
-            string endpoint = GetEndpoint($"pubticker/{_symbolMapper.GetBrokerageSymbol(symbol)}");
-            var req = new RestRequest(endpoint, Method.GET);
-            var response = ExecuteRestRequest(req);
+            var endpoint = $"/{ApiVersion}/ticker/{_symbolMapper.GetBrokerageSymbol(symbol)}";
+
+            var restRequest = new RestRequest(endpoint, Method.GET);
+            var response = ExecuteRestRequest(restRequest);
+
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 throw new Exception($"BitfinexBrokerage.GetTick: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
             }
 
-            var tick = JsonConvert.DeserializeObject<Messages.Tick>(response.Content);
-            return new Tick(Time.UnixTimeStampToDateTime(tick.Timestamp), symbol, tick.Bid, tick.Ask) { Quantity = tick.Volume };
+            var tick = JsonConvert.DeserializeObject<Ticker>(response.Content);
+            return new Tick(DateTime.UtcNow, symbol, tick.LastPrice, tick.Bid, tick.Ask);
         }
 
         /// <summary>
@@ -125,63 +149,47 @@ namespace QuantConnect.Brokerages.Bitfinex
             return $"/{ApiVersion}/{method}";
         }
 
-        /// <summary>
-        /// Returns the complete order update endpoint for current Bitfinex API version
-        /// </summary>
-        private string GetOrderUpdateEndpoint()
-        {
-            return GetEndpoint("order/cancel/replace");
-        }
-
         private static OrderStatus ConvertOrderStatus(Messages.Order order)
         {
-            if (order.IsLive && order.ExecutedAmount == 0)
+            if (order.Status == "ACTIVE")
             {
-                return Orders.OrderStatus.Submitted;
+                return OrderStatus.Submitted;
             }
-            else if (order.ExecutedAmount > 0 && order.RemainingAmount > 0)
+            else if (order.Status.StartsWith("PARTIALLY FILLED"))
             {
-                return Orders.OrderStatus.PartiallyFilled;
+                return OrderStatus.PartiallyFilled;
             }
-            else if (order.RemainingAmount == 0)
+            else if (order.Status.StartsWith("EXECUTED"))
             {
-                return Orders.OrderStatus.Filled;
+                return OrderStatus.Filled;
             }
-            else if (order.IsCancelled)
+            else if (order.Status.StartsWith("CANCELED"))
             {
-                return Orders.OrderStatus.Canceled;
+                return OrderStatus.Canceled;
             }
 
-            return Orders.OrderStatus.None;
+            return OrderStatus.None;
         }
 
         private static string ConvertOrderType(AccountType accountType, OrderType orderType)
         {
-            string outputOrderType = string.Empty;
+            string outputOrderType;
             switch (orderType)
             {
                 case OrderType.Limit:
                 case OrderType.Market:
-                    outputOrderType = orderType.ToLower();
+                    outputOrderType = orderType.ToStringInvariant().ToUpperInvariant();
                     break;
+
                 case OrderType.StopMarket:
-                    outputOrderType = "stop";
+                    outputOrderType = "STOP";
                     break;
+
                 default:
                     throw new NotSupportedException($"BitfinexBrokerage.ConvertOrderType: Unsupported order type: {orderType}");
             }
 
-            return (accountType == AccountType.Cash ? "exchange " : "") + outputOrderType;
-        }
-
-        private static string ConvertOrderDirection(OrderDirection orderDirection)
-        {
-            if (orderDirection == OrderDirection.Buy || orderDirection == OrderDirection.Sell)
-            {
-                return orderDirection.ToLower();
-            }
-
-            throw new NotSupportedException($"BitfinexBrokerage.ConvertOrderDirection: Unsupported order direction: {orderDirection}");
+            return (accountType == AccountType.Cash ? "EXCHANGE " : "") + outputOrderType;
         }
 
         /// <summary>
@@ -196,10 +204,12 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 case OrderType.Limit:
                     return ((LimitOrder)order).LimitPrice;
+
                 case OrderType.Market:
                     // Order price must be positive for market order too;
                     // refuses for price = 0
                     return 1;
+
                 case OrderType.StopMarket:
                     return ((StopMarketOrder)order).StopPrice;
             }
@@ -207,14 +217,14 @@ namespace QuantConnect.Brokerages.Bitfinex
             throw new NotSupportedException($"BitfinexBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
         }
 
-        private Holding ConvertHolding(Messages.Position position)
+        private Holding ConvertHolding(Position position)
         {
             var holding = new Holding
             {
                 Symbol = _symbolMapper.GetLeanSymbol(position.Symbol),
-                AveragePrice = position.AveragePrice,
+                AveragePrice = position.BasePrice,
                 Quantity = position.Amount,
-                UnrealizedPnL = position.PL,
+                UnrealizedPnL = position.ProfitLoss,
                 CurrencySymbol = "$",
                 Type = SecurityType.Crypto
             };
@@ -235,8 +245,9 @@ namespace QuantConnect.Brokerages.Bitfinex
 
         private Func<Messages.Order, bool> OrderFilter(AccountType accountType)
         {
-            return order => (order.IsExchange && accountType == AccountType.Cash) ||
-                (!order.IsExchange && accountType == AccountType.Margin);
+            return order =>
+                order.IsExchange && accountType == AccountType.Cash ||
+                !order.IsExchange && accountType == AccountType.Margin;
         }
 
         /// <summary>
@@ -274,84 +285,6 @@ namespace QuantConnect.Brokerages.Bitfinex
             foreach (byte b in ba)
                 hex.AppendFormat(CultureInfo.InvariantCulture, "{0:x2}", b);
             return hex.ToString();
-        }
-
-        private bool SubmitOrder(string endpoint, Order order)
-        {
-            LockStream();
-
-            var payload = new JsonObject();
-            payload.Add("request", endpoint);
-            payload.Add("nonce", GetNonce().ToStringInvariant());
-            payload.Add("symbol", _symbolMapper.GetBrokerageSymbol(order.Symbol));
-            payload.Add("amount", Math.Abs(order.Quantity).ToString(CultureInfo.InvariantCulture));
-            payload.Add("side", ConvertOrderDirection(order.Direction));
-            payload.Add("type", ConvertOrderType(_algorithm.BrokerageModel.AccountType, order.Type));
-            payload.Add("price", GetOrderPrice(order).ToString(CultureInfo.InvariantCulture));
-
-            if (order.BrokerId.Any())
-            {
-                payload.Add("order_id", Parse.Long(order.BrokerId.FirstOrDefault()));
-            }
-
-            var orderProperties = order.Properties as BitfinexOrderProperties;
-            if (orderProperties != null)
-            {
-                if (order.Type == OrderType.Limit)
-                {
-                    payload.Add("is_hidden", orderProperties.Hidden);
-                    payload.Add("is_postonly", orderProperties.PostOnly);
-                }
-            }
-
-            var request = new RestRequest(endpoint, Method.POST);
-            request.AddJsonBody(payload.ToString());
-            SignRequest(request, payload.ToString());
-
-            var response = ExecuteRestRequest(request);
-            var orderFee = OrderFee.Zero;
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                var raw = JsonConvert.DeserializeObject<Messages.Order>(response.Content);
-
-                if (string.IsNullOrEmpty(raw?.Id))
-                {
-                    var errorMessage = $"Error parsing response from place order: {response.Content}";
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Bitfinex Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
-
-                    UnlockStream();
-                    return true;
-                }
-
-                var brokerId = raw.Id;
-                if (CachedOrderIDs.ContainsKey(order.Id))
-                {
-                    CachedOrderIDs[order.Id].BrokerId.Clear();
-                    CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
-                }
-                else
-                {
-                    order.BrokerId.Add(brokerId);
-                    CachedOrderIDs.TryAdd(order.Id, order);
-                }
-
-                var isUpdate = endpoint.Equals(GetOrderUpdateEndpoint());
-
-                // Generate submitted event
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Bitfinex Order Event") { Status = isUpdate ? OrderStatus.UpdateSubmitted : OrderStatus.Submitted });
-                Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
-
-                UnlockStream();
-                return true;
-            }
-
-            var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {response.Content}";
-            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Bitfinex Order Event") { Status = OrderStatus.Invalid });
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
-
-            UnlockStream();
-            return true;
         }
 
         /// <summary>

@@ -21,7 +21,6 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using RestSharp;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -49,8 +48,6 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
-            { "bitfinex-rest" , Config.Get("bitfinex-rest", "https://api.bitfinex.com")},
-            { "bitfinex-url" , Config.Get("bitfinex-url", "wss://api.bitfinex.com/ws")},
             { "bitfinex-api-key", Config.Get("bitfinex-api-key")},
             { "bitfinex-api-secret", Config.Get("bitfinex-api-secret")}
         };
@@ -69,7 +66,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public override IBrokerage CreateBrokerage(Packets.LiveNodePacket job, IAlgorithm algorithm)
         {
-            var required = new[] { "bitfinex-rest", "bitfinex-url", "bitfinex-api-secret", "bitfinex-api-key" };
+            var required = new[] { "bitfinex-api-secret", "bitfinex-api-key" };
 
             foreach (var item in required)
             {
@@ -80,8 +77,6 @@ namespace QuantConnect.Brokerages.Bitfinex
             var priceProvider = new ApiPriceProvider(job.UserId, job.UserToken);
 
             var brokerage = new BitfinexBrokerage(
-                job.BrokerageData["bitfinex-url"],
-                job.BrokerageData["bitfinex-rest"],
                 job.BrokerageData["bitfinex-api-key"],
                 job.BrokerageData["bitfinex-api-secret"],
                 algorithm,
