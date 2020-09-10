@@ -827,7 +827,7 @@ def RunTest():
             );
         }
                 [Test]
-        public void MonoTest()
+        public void SanityClrInstallation()
         {
             AssetCode(
                 @"
