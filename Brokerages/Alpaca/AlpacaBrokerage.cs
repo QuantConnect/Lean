@@ -60,8 +60,6 @@ namespace QuantConnect.Brokerages.Alpaca
         /// </summary>
         private readonly MarketHoursDatabase _marketHours;
 
-        private readonly AlpacaSymbolMapper _symbolMapper = new AlpacaSymbolMapper();
-
         /// <summary>
         /// Initializes a new instance of the <see cref="AlpacaBrokerage"/> class.
         /// </summary>
