@@ -826,7 +826,7 @@ def RunTest():
     return cop.summary()"
             );
         }
-                [Test]
+        [Test]
         public void SanityClrInstallation()
         {
             AssetCode(
