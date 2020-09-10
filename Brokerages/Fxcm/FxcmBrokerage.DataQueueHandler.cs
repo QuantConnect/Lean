@@ -31,8 +31,6 @@ namespace QuantConnect.Brokerages.Fxcm
     /// </summary>
     public partial class FxcmBrokerage
     {
-        private readonly HashSet<Symbol> _subscribedSymbols = new HashSet<Symbol>();
-
         #region IDataQueueHandler implementation
 
         /// <summary>
@@ -69,16 +67,13 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <param name="tickType">Type of tick data</param>
         private bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
-            var symbolsToSubscribe = (from symbol in symbols
-                                      where !_subscribedSymbols.Contains(symbol)
-                                      select symbol).ToList();
-            if (symbolsToSubscribe.Count == 0)
+            if (symbols.Count() == 0)
                 return false;
 
-            Log.Trace("FxcmBrokerage.Subscribe(): {0}", string.Join(",", symbolsToSubscribe));
+            Log.Trace("FxcmBrokerage.Subscribe(): {0}", string.Join(",", symbols));
 
             var request = new MarketDataRequest();
-            foreach (var symbol in symbolsToSubscribe)
+            foreach (var symbol in symbols)
             {
                 TradingSecurity fxcmSecurity;
                 if (_fxcmInstruments.TryGetValue(_symbolMapper.GetBrokerageSymbol(symbol), out fxcmSecurity))
@@ -103,10 +98,6 @@ namespace QuantConnect.Brokerages.Fxcm
                 _gateway.sendMessage(request);
             }
 
-            foreach (var symbol in symbolsToSubscribe)
-            {
-                _subscribedSymbols.Add(symbol);
-            }
             return true;
         }
 
@@ -127,16 +118,13 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <param name="tickType">Type of tick data</param>
         private bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
-            var symbolsToUnsubscribe = (from symbol in symbols
-                                        where _subscribedSymbols.Contains(symbol)
-                                        select symbol).ToList();
-            if (symbolsToUnsubscribe.Count == 0)
+            if (symbols.Count() == 0)
                 return false;
 
-            Log.Trace("FxcmBrokerage.Unsubscribe(): {0}", string.Join(",", symbolsToUnsubscribe));
+            Log.Trace("FxcmBrokerage.Unsubscribe(): {0}", string.Join(",", symbols));
 
             var request = new MarketDataRequest();
-            foreach (var symbol in symbolsToUnsubscribe)
+            foreach (var symbol in symbols)
             {
                 request.addRelatedSymbol(_fxcmInstruments[_symbolMapper.GetBrokerageSymbol(symbol)]);
             }
@@ -148,10 +136,6 @@ namespace QuantConnect.Brokerages.Fxcm
                 _gateway.sendMessage(request);
             }
 
-            foreach (var symbol in symbolsToUnsubscribe)
-            {
-                _subscribedSymbols.Remove(symbol);
-            }
             return true;
         }
 

@@ -331,7 +331,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 _rates[instrument.getSymbol()] = message;
 
                 // if instrument is subscribed, add ticks to list
-                if (_subscribedSymbols.Contains(symbol))
+                if (_subscriptionManager.IsSubscribed(symbol, TickType.Quote))
                 {
                     // For some unknown reason, messages returned by SubscriptionRequestTypeFactory.SUBSCRIBE
                     // have message.getDate() rounded to the second, so we use message.getMakingTime() instead
