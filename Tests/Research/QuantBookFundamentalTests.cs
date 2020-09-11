@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Research
     [TestFixture]
     public class QuantBookFundamentalTests
     {
-        private dynamic _testModule;
+        private dynamic _module;
         private DateTime _startDate;
         private DateTime _endDate;
 
@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Research
 
             using (Py.GIL())
             {
-                _testModule = Py.Import("Test_QuantBookFundamental").GetAttr("FundamentalHistoryTest").Invoke();
+                _module = Py.Import("Test_QuantBookFundamental");
             }
         }
 
@@ -75,7 +75,8 @@ namespace QuantConnect.Tests.Research
                     return;
                 }
 
-                var data = _testModule.getFundamentals(input[0], input[1], _startDate, _endDate);
+                var testModule = _module.FundamentalHistoryTest();
+                var data = testModule.getFundamentals(input[0], input[1], _startDate, _endDate);
                 Assert.IsTrue(data.GetType() == typeof(PyObject));
             }
         }
@@ -101,7 +102,8 @@ namespace QuantConnect.Tests.Research
         {
             using (Py.GIL())
             {
-                var data = _testModule.getFundamentals(input[0], input[1], _startDate, _endDate);
+                var testModule = _module.FundamentalHistoryTest();
+                var data = testModule.getFundamentals(input[0], input[1], _startDate, _endDate);
                 Assert.AreEqual(input[2], data.ToString().GetHashCode());
             }
         }
@@ -145,7 +147,8 @@ namespace QuantConnect.Tests.Research
         {
             using (Py.GIL())
             {
-                var data = _testModule.getFundamentals(input[0], input[1], input[2], input[3]);
+                var testModule = _module.FundamentalHistoryTest();
+                var data = testModule.getFundamentals(input[0], input[1], input[2], input[3]);
                 Assert.IsEmpty(data);
             }
         }
