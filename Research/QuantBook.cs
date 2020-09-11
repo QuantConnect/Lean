@@ -179,6 +179,12 @@ namespace QuantConnect.Research
         /// <returns>pandas DataFrame</returns>
         public PyObject GetFundamental(PyObject input, string selector, DateTime? start = null, DateTime? end = null)
         {
+            //Null selector is not allowed for Python DataFrame
+            if (string.IsNullOrWhiteSpace(selector))
+            {
+                throw new Exception("Invalid selector. Cannot be None, empty or consist only of white-space characters");
+            }
+
             //Covert to symbols
             var symbols = PyConvertToSymbols(input);
             
@@ -221,7 +227,7 @@ namespace QuantConnect.Research
                 var result = new DataDictionary<IEnumerable<dynamic>>();
                 foreach (var kvp in data)
                 {
-                    var temp = kvp.Value.Select(x => new { Value = GetPropertyValue(x, selector), Time = x.Time }).ToList();
+                    var temp = kvp.Value.Select(x => new SelectedData(x.Time, GetPropertyValue(x, selector), selector));
                     result[kvp.Key] = temp;
                 }
 
@@ -859,6 +865,21 @@ namespace QuantConnect.Research
                 }
             });
             return data;
+        }
+    }
+
+    //Public class for SelectedData
+    public class SelectedData
+    {
+        public DateTime Time;
+        public dynamic Value;
+        public string Selector;
+
+        public SelectedData(DateTime time, dynamic value, string selector)
+        {
+            Time = time;
+            Value = value;
+            Selector = selector;
         }
     }
 }
