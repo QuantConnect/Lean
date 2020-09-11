@@ -22,20 +22,11 @@ from QuantConnect import *
 from QuantConnect.Data import *
 from QuantConnect.Research import *
 from datetime import datetime, timedelta
-from custom_data import QuandlFuture, Nifty
 import pandas as pd
 
 class FundamentalHistoryTest():
-    def __init__(self, var, start, end):
+    def __init__(self):
         self.qb = QuantBook()
-        self.var = var
-        self.start = start
-        self.end = end
 
-        self.qb.AddEquity("AAPL")
-        self.qb.AddEquity("GOOG")
-        self.qb.AddEquity("SPY")
-
-    def getData(self):
-        self.data = self.qb.GetFundamental(self.var, "ValuationRatios.PERatio", self.start, self.end)
-        return self.data
+    def getFundamentals(self, ticker, selector, start, end):
+        return self.qb.GetFundamental(ticker, selector, start, end)
