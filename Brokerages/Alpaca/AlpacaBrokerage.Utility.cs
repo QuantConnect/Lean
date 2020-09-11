@@ -31,7 +31,6 @@ namespace QuantConnect.Brokerages.Alpaca
     /// </summary>
     public partial class AlpacaBrokerage
     {
-
         /// <summary>
         /// Retrieves the current quotes for an instrument
         /// </summary>
@@ -53,6 +52,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 TickType = TickType.Quote
             };
         }
+
         private IOrder GenerateAndPlaceOrder(Order order)
         {
             var quantity = (long)order.Quantity;
@@ -172,11 +172,6 @@ namespace QuantConnect.Brokerages.Alpaca
             }
         }
 
-        private static void OnPolygonStreamingClientError(Exception exception)
-        {
-            Log.Error($"PolygonStreamingClient error: {exception.Message}");
-        }
-
         private static void OnSockClientError(Exception exception)
         {
             Log.Error($"SockClient error: {exception.Message}");
@@ -193,6 +188,12 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>The list of bars</returns>
         private IEnumerable<TradeBar> DownloadTradeBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
         {
+            // Only equities supported
+            if (symbol.SecurityType != SecurityType.Equity)
+            {
+                yield break;
+            }
+
             // Only minute/hour/daily resolutions supported
             if (resolution < Resolution.Minute)
             {

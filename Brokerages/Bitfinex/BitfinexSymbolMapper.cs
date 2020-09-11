@@ -289,7 +289,8 @@ namespace QuantConnect.Brokerages.Bitfinex
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 return false;
 
-            return KnownSymbolStrings.Contains(brokerageSymbol);
+            // Strip leading 't' char
+            return KnownSymbolStrings.Contains(brokerageSymbol.Substring(1));
         }
 
         /// <summary>
@@ -324,11 +325,11 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         private static string ConvertBitfinexSymbolToLeanSymbol(string bitfinexSymbol)
         {
-            if (string.IsNullOrWhiteSpace(bitfinexSymbol))
+            if (string.IsNullOrWhiteSpace(bitfinexSymbol) || !bitfinexSymbol.StartsWith("t"))
                 throw new ArgumentException($"Invalid Bitfinex symbol: {bitfinexSymbol}");
 
-            // return as it is due to Bitfinex has similar Symbol format
-            return bitfinexSymbol.ToUpperInvariant();
+            // Strip leading 't' char
+            return bitfinexSymbol.Substring(1).ToUpperInvariant();
         }
 
         /// <summary>
@@ -339,8 +340,8 @@ namespace QuantConnect.Brokerages.Bitfinex
             if (string.IsNullOrWhiteSpace(leanSymbol))
                 throw new ArgumentException($"Invalid Lean symbol: {leanSymbol}");
 
-            // return as it is due to Bitfinex has similar Symbol format
-            return leanSymbol.ToUpperInvariant();
+            // Prepend 't' for Trading pairs
+            return "t" + leanSymbol.ToUpperInvariant();
         }
     }
 }

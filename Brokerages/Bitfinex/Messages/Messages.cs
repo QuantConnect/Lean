@@ -14,14 +14,9 @@
 */
 
 using Newtonsoft.Json;
-using QuantConnect.Orders;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
 
 namespace QuantConnect.Brokerages.Bitfinex.Messages
 {
-
     //several simple objects to facilitate json conversion
 #pragma warning disable 1591
 
@@ -44,75 +39,21 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         public string Level => Code == 10301 ? "Warning" : "Error";
     }
 
-    public class Order
-    {
-        public string Id { get; set; }
-        public decimal Price { get; set; }
-        [JsonProperty("avg_execution_price")]
-        public decimal PriceAvg { get; set; }
-        public string Symbol { get; set; }
-        public string Type { get; set; }
-        public string Side { get; set; }
-        public double Timestamp { get; set; }
-        [JsonProperty("is_live")]
-        public bool IsLive { get; set; }
-        [JsonProperty("is_cancelled")]
-        public bool IsCancelled { get; set; }
-        [JsonProperty("original_amount")]
-        public decimal OriginalAmount { get; set; }
-        [JsonProperty("remaining_amount")]
-        public decimal RemainingAmount { get; set; }
-        [JsonProperty("executed_amount")]
-        public decimal ExecutedAmount { get; set; }
-
-        public bool IsExchange => Type.StartsWith("exchange", StringComparison.OrdinalIgnoreCase);
-    }
-
-    public class Position
-    {
-        public int Id { get; set; }
-        public string Symbol { get; set; }
-        [JsonProperty("base")]
-        public decimal AveragePrice { get; set; }
-        public decimal Amount { get; set; }
-        public double Timestamp { get; set; }
-        public decimal Swap { get; set; }
-        public decimal PL { get; set; }
-    }
-
-    public class Wallet
-    {
-        public string Type { get; set; }
-        public string Currency { get; set; }
-        public decimal Amount { get; set; }
-        public decimal Available { get; set; }
-    }
-
-    public class Tick
-    {
-        public decimal Mid { get; set; }
-        public decimal Bid { get; set; }
-        public decimal Ask { get; set; }
-        [JsonProperty("last_price")]
-        public decimal LastPrice { get; set; }
-        public decimal Low { get; set; }
-        public decimal High { get; set; }
-        public decimal Volume { get; set; }
-        public double Timestamp { get; set; }
-    }
-
     public class ChannelSubscription : BaseMessage
     {
         public string Channel { get; set; }
+
         [JsonProperty("chanId")]
         public string ChannelId { get; set; }
-        [JsonProperty("pair")]
+
+        [JsonProperty("symbol")]
         public string Symbol { get; set; }
     }
 
     public class ChannelUnsubscribing : BaseMessage
     {
         public string Status { get; set; }
+
         [JsonProperty("chanId")]
         public string ChannelId { get; set; }
     }

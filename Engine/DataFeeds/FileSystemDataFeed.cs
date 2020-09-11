@@ -78,7 +78,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _mapFileProvider,
                 _factorFileProvider,
                 _dataProvider,
-                includeAuxiliaryData: true);
+                includeAuxiliaryData: true,
+                enablePriceScaling: false);
 
             IsActive = true;
         }
@@ -98,7 +99,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var enumerator = _subscriptionFactory.CreateEnumerator(request, _dataProvider);
             enumerator = ConfigureEnumerator(request, false, enumerator);
 
-            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator);
+            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator, _factorFileProvider, true);
         }
 
         /// <summary>
@@ -160,7 +161,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // define our data enumerator
             var enumerator = factory.CreateEnumerator(request, _dataProvider);
-            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator);
+            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator, _factorFileProvider, true);
         }
 
         /// <summary>
@@ -200,13 +201,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(request.Configuration);
 
                 enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, fillForwardResolution,
-                    request.Security.IsExtendedMarketHours, request.EndTimeLocal, request.Configuration.Resolution.ToTimeSpan(), request.Configuration.DataTimeZone, request.StartTimeLocal);
+                    request.Configuration.ExtendedMarketHours, request.EndTimeLocal, request.Configuration.Resolution.ToTimeSpan(), request.Configuration.DataTimeZone, request.StartTimeLocal);
             }
 
             // optionally apply exchange/user filters
             if (request.Configuration.IsFilteredSubscription)
             {
-                enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(_resultHandler, enumerator, request.Security, request.EndTimeLocal);
+                enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(_resultHandler, enumerator, request.Security, request.EndTimeLocal, request.Configuration.ExtendedMarketHours, false);
             }
 
             return enumerator;

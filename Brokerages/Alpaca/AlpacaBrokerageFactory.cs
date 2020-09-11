@@ -16,11 +16,9 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Alpaca
 {
@@ -92,19 +90,12 @@ namespace QuantConnect.Brokerages.Alpaca
                 throw new Exception("Available trading mode: paper/live");
             }
 
-            var handlesMarketData = job.DataQueueHandler.EndsWith("AlpacaBrokerage");
-
-            var brokerage = new AlpacaBrokerage(algorithm.Transactions, 
+            return new AlpacaBrokerage(
+                algorithm.Transactions, 
                 algorithm.Portfolio, 
                 keyId, 
                 secretKey, 
-                tradingMode, 
-                handlesMarketData,
-                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")));
-            Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
-
-            return brokerage;
+                tradingMode);
         }
-
     }
 }

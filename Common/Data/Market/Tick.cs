@@ -16,6 +16,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Runtime.CompilerServices;
 using ProtoBuf;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -625,6 +626,7 @@ namespace QuantConnect.Data.Market
         /// <param name="volume">Volume of this trade</param>
         /// <param name="bidSize">The size of the current bid, if available</param>
         /// <param name="askSize">The size of the current ask, if available</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Update(decimal lastTrade, decimal bidPrice, decimal askPrice, decimal volume, decimal bidSize, decimal askSize)
         {
             Value = lastTrade;
@@ -638,6 +640,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Check if tick contains valid data (either a trade, or a bid or ask)
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsValid()
         {
             return (TickType == TickType.Trade && LastPrice > 0.0m && Quantity > 0) ||

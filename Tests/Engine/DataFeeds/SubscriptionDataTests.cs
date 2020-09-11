@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.Utc);
             var offsetProvider = new TimeZoneOffsetProvider(TimeZones.Utc, new DateTime(2020, 5, 21), new DateTime(2020, 5, 22));
 
-            var subscription = SubscriptionData.Create(config, exchangeHours, offsetProvider, tb);
+            var subscription = SubscriptionData.Create(config, exchangeHours, offsetProvider, tb, config.DataNormalizationMode);
 
             Assert.AreEqual(new DateTime(2020, 5, 21, 8, 0, 0), subscription.Data.Time);
             Assert.AreEqual(new DateTime(2020, 5, 21, 9, 0, 0), subscription.Data.EndTime);
@@ -79,10 +79,191 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.Utc);
             var offsetProvider = new TimeZoneOffsetProvider(TimeZones.Utc, new DateTime(2020, 5, 21), new DateTime(2020, 5, 22));
 
-            var subscription = SubscriptionData.Create(config, exchangeHours, offsetProvider, data);
+            var subscription = SubscriptionData.Create(config, exchangeHours, offsetProvider, data, config.DataNormalizationMode);
 
             Assert.AreEqual(new DateTime(2020, 5, 21, 8, 9, 0), subscription.Data.Time);
             Assert.AreEqual(new DateTime(2020, 5, 21, 8, 9, 0), subscription.Data.EndTime);
+        }
+
+        [TestCase(1, 0)]
+        [TestCase(null, 0)]
+        [TestCase(null, 1000)]
+        public void CreateDefaults(decimal? scale, decimal dividends)
+        {
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Hour,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                false,
+                false,
+                false
+            );
+
+            config.SumOfDividends = dividends;
+
+            var tb = new TradeBar
+            {
+                Time = new DateTime(2020, 5, 21, 8, 9, 0),
+                Period = TimeSpan.FromHours(1),
+                Symbol = Symbols.SPY,
+                Open = 100,
+                High = 200,
+                Low = 300,
+                Close = 400
+            };
+
+            var data = SubscriptionData.Create(
+                config,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                new TimeZoneOffsetProvider(TimeZones.NewYork, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1)),
+                tb,
+                config.DataNormalizationMode,
+                scale);
+
+            Assert.True(data.GetType() == typeof(SubscriptionData));
+
+            Assert.AreEqual(tb.Open, (data.Data as TradeBar).Open);
+            Assert.AreEqual(tb.High, (data.Data as TradeBar).High);
+            Assert.AreEqual(tb.Low, (data.Data as TradeBar).Low);
+            Assert.AreEqual(tb.Close, (data.Data as TradeBar).Close);
+        }
+
+        [TestCase(typeof(SubscriptionData), 1)]
+        [TestCase(typeof(PrecalculatedSubscriptionData), 2)]
+        [TestCase(typeof(PrecalculatedSubscriptionData), 0.5)]
+        public void CreateZeroDividends(Type type, decimal? scale)
+        {
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Hour,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                false,
+                false,
+                false
+            );
+
+            config.SumOfDividends = 0;
+
+            var tb = new TradeBar
+            {
+                Time = new DateTime(2020, 5, 21, 8, 9, 0),
+                Period = TimeSpan.FromHours(1),
+                Symbol = Symbols.SPY,
+                Open = 100,
+                High = 200,
+                Low = 300,
+                Close = 400
+            };
+
+            var data = SubscriptionData.Create(
+                config,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                new TimeZoneOffsetProvider(TimeZones.NewYork, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1)),
+                tb,
+                config.DataNormalizationMode,
+                scale);
+
+            Assert.True(data.GetType() == type);
+
+            Assert.AreEqual(tb.Open * scale, (data.Data as TradeBar).Open);
+            Assert.AreEqual(tb.High * scale, (data.Data as TradeBar).High);
+            Assert.AreEqual(tb.Low * scale, (data.Data as TradeBar).Low);
+            Assert.AreEqual(tb.Close * scale, (data.Data as TradeBar).Close);
+        }
+
+        [TestCase(typeof(PrecalculatedSubscriptionData), 1)]
+        [TestCase(typeof(PrecalculatedSubscriptionData), 2)]
+        [TestCase(typeof(PrecalculatedSubscriptionData), 0.5)]
+        public void CreateAdjustedNotZeroDividends(Type type, decimal? scale)
+        {
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Hour,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                false,
+                false,
+                false
+            );
+
+            config.SumOfDividends = 100;
+
+            var tb = new TradeBar
+            {
+                Time = new DateTime(2020, 5, 21, 8, 9, 0),
+                Period = TimeSpan.FromHours(1),
+                Symbol = Symbols.SPY,
+                Open = 100,
+                High = 200,
+                Low = 300,
+                Close = 400
+            };
+
+            var data = SubscriptionData.Create(
+                config,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                new TimeZoneOffsetProvider(TimeZones.NewYork, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1)),
+                tb,
+                config.DataNormalizationMode,
+                scale);
+
+            Assert.True(data.GetType() == type);
+
+            Assert.AreEqual(tb.Open * scale, (data.Data as TradeBar).Open);
+            Assert.AreEqual(tb.High * scale, (data.Data as TradeBar).High);
+            Assert.AreEqual(tb.Low * scale, (data.Data as TradeBar).Low);
+            Assert.AreEqual(tb.Close * scale, (data.Data as TradeBar).Close);
+        }
+
+        [TestCase(typeof(PrecalculatedSubscriptionData), 1)]
+        [TestCase(typeof(PrecalculatedSubscriptionData), 2)]
+        [TestCase(typeof(PrecalculatedSubscriptionData), 0.5)]
+        public void CreateTotalNotZeroDividends(Type type, decimal? scale)
+        {
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Hour,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                false,
+                false,
+                false
+            );
+
+            config.SumOfDividends = 100;
+            config.DataNormalizationMode = DataNormalizationMode.TotalReturn;
+
+            var tb = new TradeBar
+            {
+                Time = new DateTime(2020, 5, 21, 8, 9, 0),
+                Period = TimeSpan.FromHours(1),
+                Symbol = Symbols.SPY,
+                Open = 100,
+                High = 200,
+                Low = 300,
+                Close = 400
+            };
+
+            var data = SubscriptionData.Create(
+                config,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                new TimeZoneOffsetProvider(TimeZones.NewYork, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1)),
+                tb,
+                config.DataNormalizationMode,
+                scale);
+
+            Assert.True(data.GetType() == type);
+
+            Assert.AreEqual(tb.Open * scale + config.SumOfDividends, (data.Data as TradeBar).Open);
+            Assert.AreEqual(tb.High * scale + config.SumOfDividends, (data.Data as TradeBar).High);
+            Assert.AreEqual(tb.Low * scale + config.SumOfDividends, (data.Data as TradeBar).Low);
+            Assert.AreEqual(tb.Close * scale + config.SumOfDividends, (data.Data as TradeBar).Close);
         }
 
         internal class MyCustomData : BaseData

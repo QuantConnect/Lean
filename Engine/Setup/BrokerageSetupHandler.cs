@@ -506,7 +506,7 @@ namespace QuantConnect.Lean.Engine.Setup
             }
             else
             {
-                var dataQueueHandler = Composer.Instance.GetExportedValues<IDataQueueHandler>().FirstOrDefault();
+                var dataQueueHandler = Composer.Instance.GetPart<IDataQueueHandler>();
                 if (dataQueueHandler != null)
                 {
                     Log.Trace($"BrokerageSetupHandler.Setup(): Found data queue handler to dispose: {dataQueueHandler.GetType()}");

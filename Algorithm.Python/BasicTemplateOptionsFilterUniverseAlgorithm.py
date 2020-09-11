@@ -33,40 +33,39 @@ class BasicTemplateOptionsFilterUniverseAlgorithm(QCAlgorithm):
     UnderlyingTicker = "GOOG"
 
     def Initialize(self):
-        self.SetStartDate(2015, 12, 16)
+        self.SetStartDate(2015, 12, 24)
         self.SetEndDate(2015, 12, 24)
         self.SetCash(100000)
 
-        equity = self.AddEquity(self.UnderlyingTicker);
+        equity = self.AddEquity(self.UnderlyingTicker)
         option = self.AddOption(self.UnderlyingTicker)
-        self.option_symbol = option.Symbol
+        self.OptionSymbol = option.Symbol
 
-        # set our strike/expiry filter for this option chain
-        # SetFilter method accepts timedelta objects or integer for days.
-        # The following statements yield the same filtering criteria
-        option.SetFilter(-10, +10, 0, 10)
-        # option.SetFilter(-10, 10, timedelta(0), timedelta(10))
+        # Set our custom universe filter
+        option.SetFilter(self.FilterFunction)
 
         # use the underlying equity as the benchmark
         self.SetBenchmark(equity.Symbol)
+
+    def FilterFunction(self, universe):
+        #Expires today, is a call, and is within 10 dollars of the current price
+        universe = universe.WeeklysOnly().Expiration(0, 1)
+        return [symbol for symbol in universe 
+                if symbol.ID.OptionRight != OptionRight.Put 
+                and -10 < universe.Underlying.Price - symbol.ID.StrikePrice < 10]
 
     def OnData(self,slice):
         if self.Portfolio.Invested: return
 
         for kvp in slice.OptionChains:
-            if kvp.Key != self.option_symbol: continue
-            chain = kvp.Value
-            # find the call options expiring today
-            contracts = [i for i in chain if i.Right ==  OptionRight.Call and i.Expiry.date() == self.Time.date()]
-            # sorted the contracts by their strike, find the second strike under market price 
-            sorted_contracts = [i for i in sorted(contracts, key = lambda x:x.Strike, reverse = True) if i.Strike < chain.Underlying.Price]
-            # if found, trade it
-            if len(sorted_contracts) == 0: 
-                self.Log("No call contracts expiring today")
-                return
-            self.MarketOrder(sorted_contracts[1].Symbol, 1)
+            
+            if kvp.Key != self.OptionSymbol: continue
 
-    def OnOrderEvent(self, orderEvent):
-        # Order fill event handler. On an order fill update the resulting information is passed to this method.
-        # <param name="orderEvent">Order event details containing details of the evemts</param>
-        self.Log(str(orderEvent))
+            # Get the first call strike under market price expiring today
+            chain = kvp.Value
+            contracts = [option for option in sorted(chain, key = lambda x:x.Strike, reverse = True)
+                         if option.Expiry.date() == self.Time.date()
+                         and option.Strike < chain.Underlying.Price]
+            
+            if contracts:
+                self.MarketOrder(contracts[0].Symbol, 1)

@@ -2209,14 +2209,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             return DataQueueHandler;
         }
 
-        public bool UpdateRealTimePrice(
-            Subscription subscription,
-            TimeZoneOffsetProvider timeZoneOffsetProvider,
-            SecurityExchangeHours exchangeHours)
-        {
-            return UpdateSubscriptionRealTimePrice(subscription, timeZoneOffsetProvider, exchangeHours, new Tick());
-        }
-
         public override void Exit()
         {
             base.Exit();

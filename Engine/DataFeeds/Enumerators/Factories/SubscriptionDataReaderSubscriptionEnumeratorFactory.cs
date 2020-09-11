@@ -38,6 +38,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly ZipDataCacheProvider _zipDataCacheProvider;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private readonly IMapFileProvider _mapFileProvider;
+        private readonly bool _enablePriceScaling;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionDataReaderSubscriptionEnumeratorFactory"/> class
@@ -49,12 +50,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="includeAuxiliaryData">True to check for auxiliary data, false otherwise</param>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
         /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
+        /// <param name="enablePriceScaling">Applies price factor</param>
         public SubscriptionDataReaderSubscriptionEnumeratorFactory(IResultHandler resultHandler,
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
             IDataProvider dataProvider,
             bool includeAuxiliaryData,
-            Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null
+            Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null,
+            bool enablePriceScaling = true
             )
         {
             _resultHandler = resultHandler;
@@ -64,6 +67,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             _isLiveMode = false;
             _includeAuxiliaryData = includeAuxiliaryData;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
+            _enablePriceScaling = enablePriceScaling;
         }
 
         /// <summary>
@@ -101,7 +105,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 dataReader,
                 mapFileResolver,
                 _includeAuxiliaryData,
-                request.StartTimeLocal);
+                request.StartTimeLocal,
+                _enablePriceScaling);
 
             return result;
         }

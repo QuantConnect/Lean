@@ -136,7 +136,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 Time = time,
                 EndTime = time + config.Increment
             })
-            .Select(d => SubscriptionData.Create(config, security.Exchange.Hours, offsetProvider, d))
+            .Select(d => SubscriptionData.Create(config, security.Exchange.Hours, offsetProvider, d, config.DataNormalizationMode))
             .ToList();
 
             dataPointCount = data.Count;
