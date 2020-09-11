@@ -135,7 +135,7 @@ namespace QuantConnect.Brokerages.Tradier
             _aggregator = aggregator;
             _accountID = accountID;
 
-            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager(t => "trade");
             _subscriptionManager.SubscribeImpl += (s, t) =>
             {
                 Log.Trace("TradierBrokerage.Subscribe(): {0}", string.Join(",", s.Select(x => x.Value)));
@@ -147,8 +147,7 @@ namespace QuantConnect.Brokerages.Tradier
                 Log.Trace("TradierBrokerage.Unsubscribe(): {0}", string.Join(",", s.Select(x => x.Value)));
                 Refresh();
                 return true;
-            }; ;
-            _subscriptionManager.GetChannelName += (t) => "trade";
+            };
 
             _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierCachedOpenOrder>();
 

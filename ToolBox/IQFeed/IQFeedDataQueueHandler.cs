@@ -66,7 +66,7 @@ namespace QuantConnect.ToolBox.IQFeed
         {
             _symbols = new HashSet<Symbol>();
             _underlyings = new Dictionary<Symbol, Symbol>();
-            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager(t => "quote-trade-oi");
             _subscriptionManager.SubscribeImpl += (s, t) =>
             {
                 Subscribe(s);
@@ -78,8 +78,6 @@ namespace QuantConnect.ToolBox.IQFeed
                 Unsubscribe(s);
                 return true;
             };
-
-            _subscriptionManager.GetChannelName += (t) => "quote-trade-oi";
 
             if (!IsConnected) Connect();
         }

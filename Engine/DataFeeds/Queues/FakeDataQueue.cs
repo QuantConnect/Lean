@@ -65,10 +65,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
             _aggregator = dataAggregator;
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _symbolExchangeTimeZones = new Dictionary<Symbol, TimeZoneOffsetProvider>();
-            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager(t => "trade");
             _subscriptionManager.SubscribeImpl += (s, t) => true;
             _subscriptionManager.UnsubscribeImpl += (s, t) => true;
-            _subscriptionManager.GetChannelName += (t) => "trade";
 
             // load it up to start
             PopulateQueue();

@@ -71,7 +71,7 @@ namespace QuantConnect.ToolBox.IEX
 
         public IEXDataQueueHandler(bool live)
         {
-            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager(t => "quote-trade");
             _subscriptionManager.SubscribeImpl += (s, t) =>
             {
                 Subscribe(s);
@@ -83,8 +83,6 @@ namespace QuantConnect.ToolBox.IEX
                 Unsubscribe(s);
                 return true;
             };
-
-            _subscriptionManager.GetChannelName += (t) => "quote-trade";
 
             Endpoint = "https://ws-api.iextrading.com/1.0/tops";
 

@@ -116,10 +116,9 @@ namespace QuantConnect.Brokerages.Fxcm
             _password = password;
             _accountId = accountId;
 
-            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager(t => "quote");
             _subscriptionManager.SubscribeImpl += (s, t) => Subscribe(s);
             _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
-            _subscriptionManager.GetChannelName += (t) => "quote";
 
             HistoryResponseTimeout = 5000;
             MaximumHistoryRetryAttempts = 1;

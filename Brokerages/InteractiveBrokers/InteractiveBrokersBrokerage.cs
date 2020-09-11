@@ -248,10 +248,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _port = port;
             _agentDescription = agentDescription;
 
-            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager(t => "101");
             _subscriptionManager.SubscribeImpl += (s, t) => Subscribe(s);
             _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
-            _subscriptionManager.GetChannelName += (t) => "101";
 
             Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Starting IB Automater...");
 

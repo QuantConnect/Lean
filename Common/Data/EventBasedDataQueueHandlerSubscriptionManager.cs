@@ -25,6 +25,15 @@ namespace QuantConnect.Data
     public class EventBasedDataQueueHandlerSubscriptionManager : DataQueueHandlerSubscriptionManager
     {
         /// <summary>
+        /// Creates an instance of <see cref="EventBasedDataQueueHandlerSubscriptionManager"/>
+        /// </summary>
+        /// <param name="getChannelName">Convert TickType into string</param>
+        public EventBasedDataQueueHandlerSubscriptionManager(Func<TickType, string> getChannelName)
+        {
+            _getChannelName = getChannelName;
+        }
+
+        /// <summary>
         /// Subscription method implementation
         /// </summary>
         public Func<IEnumerable<Symbol>, TickType, bool> SubscribeImpl;
@@ -37,7 +46,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Socket channel name
         /// </summary>
-        public Func<TickType, string> GetChannelName;
+        private Func<TickType, string> _getChannelName;
 
         /// <summary>
         /// The way Brokerage subscribes to symbol tickers
@@ -68,7 +77,7 @@ namespace QuantConnect.Data
         /// <returns>Returns Socket channel name corresponding <paramref name="tickType"/></returns>
         protected override string ChannelNameFromTickType(TickType tickType)
         {
-            return GetChannelName?.Invoke(tickType);
+            return _getChannelName?.Invoke(tickType);
         }
     }
 }

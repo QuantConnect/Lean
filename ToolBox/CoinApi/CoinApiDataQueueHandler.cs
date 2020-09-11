@@ -61,10 +61,9 @@ namespace QuantConnect.ToolBox.CoinApi
             _client.TradeEvent += OnTrade;
             _client.QuoteEvent += OnQuote;
             _client.Error += OnError;
-            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager(t => "quote-trade");
             _subscriptionManager.SubscribeImpl += (s, t) => Subscribe(s);
             _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
-            _subscriptionManager.GetChannelName += (t) => "quote-trade";
         }
 
         /// <summary>

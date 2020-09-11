@@ -148,7 +148,7 @@ namespace QuantConnect.Brokerages.Oanda
             AccountId = accountId;
             Agent = agent;
             Aggregator = aggregator;
-            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager(t => "quote");
             _subscriptionManager.SubscribeImpl += (s, t) =>
             {
                 Log.Trace("OandaBrokerage.Subscribe(): {0}", string.Join(",", s.Select(x => x.Value)));
@@ -160,8 +160,7 @@ namespace QuantConnect.Brokerages.Oanda
                 Log.Trace("OandaBrokerage.Unsubscribe(): {0}", string.Join(",", s.Select(x => x.Value)));
                 ProcessSubscriptionRequest();
                 return true;
-            }; ;
-            _subscriptionManager.GetChannelName += (t) => "quote";
+            };
 
             PricingConnectionHandler = new DefaultConnectionHandler { MaximumIdleTimeSpan = TimeSpan.FromSeconds(20) };
             PricingConnectionHandler.ConnectionLost += OnPricingConnectionLost;
