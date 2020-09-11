@@ -36,7 +36,7 @@ namespace QuantConnect.Brokerages.GDAX
             IPriceProvider priceProvider, IDataAggregator aggregator)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator)
         {
-            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager(t => "level2");
+            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             subscriptionManager.SubscribeImpl += (s,t) =>
             {
                 Subscribe(s);

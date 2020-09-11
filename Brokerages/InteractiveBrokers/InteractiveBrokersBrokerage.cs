@@ -248,7 +248,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _port = port;
             _agentDescription = agentDescription;
 
-            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager(t => "101");
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += (s, t) => Subscribe(s);
             _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
 

@@ -116,7 +116,7 @@ namespace QuantConnect.Brokerages.Fxcm
             _password = password;
             _accountId = accountId;
 
-            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager(t => "quote");
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += (s, t) => Subscribe(s);
             _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
 

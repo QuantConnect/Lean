@@ -148,7 +148,7 @@ namespace QuantConnect.Brokerages.Oanda
             AccountId = accountId;
             Agent = agent;
             Aggregator = aggregator;
-            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager(t => "quote");
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += (s, t) =>
             {
                 ProcessSubscriptionRequest();

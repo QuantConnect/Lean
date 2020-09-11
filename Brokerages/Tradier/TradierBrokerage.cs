@@ -135,7 +135,7 @@ namespace QuantConnect.Brokerages.Tradier
             _aggregator = aggregator;
             _accountID = accountID;
 
-            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager(t => "trade");
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += (s, t) =>
             {
                 Refresh();

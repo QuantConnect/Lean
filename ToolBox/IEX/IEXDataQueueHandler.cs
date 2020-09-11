@@ -71,7 +71,7 @@ namespace QuantConnect.ToolBox.IEX
 
         public IEXDataQueueHandler(bool live)
         {
-            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager(t => "quote-trade");
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += (s, t) =>
             {
                 Subscribe(s);

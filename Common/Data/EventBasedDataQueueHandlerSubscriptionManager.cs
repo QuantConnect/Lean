@@ -27,6 +27,11 @@ namespace QuantConnect.Data
     public class EventBasedDataQueueHandlerSubscriptionManager : DataQueueHandlerSubscriptionManager
     {
         /// <summary>
+        /// Creates an instance of <see cref="EventBasedDataQueueHandlerSubscriptionManager"/> with a single channel name
+        /// </summary>
+        public EventBasedDataQueueHandlerSubscriptionManager() : this(t => Channel.Single) {}
+
+        /// <summary>
         /// Creates an instance of <see cref="EventBasedDataQueueHandlerSubscriptionManager"/>
         /// </summary>
         /// <param name="getChannelName">Convert TickType into string</param>
