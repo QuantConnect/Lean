@@ -656,12 +656,11 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             try
             {
-                var symbol = _symbolMapper.GetLeanSymbol(channel.Symbol);
                 var time = Time.UnixMillisecondTimeStampToDateTime(double.Parse(entries[1], NumberStyles.Float, CultureInfo.InvariantCulture));
                 var amount = decimal.Parse(entries[2], NumberStyles.Float, CultureInfo.InvariantCulture);
                 var price = decimal.Parse(entries[3], NumberStyles.Float, CultureInfo.InvariantCulture);
 
-                EmitTradeTick(symbol, time, price, amount);
+                EmitTradeTick(channel.Symbol, time, price, amount);
             }
             catch (Exception e)
             {
