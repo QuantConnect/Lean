@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Research
     [TestFixture]
     public class QuantBookFundamentalTests
     {
-        private dynamic _module;
+        private dynamic _testModule;
         private DateTime _startDate;
         private DateTime _endDate;
 
@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Research
 
             using (Py.GIL())
             {
-                _module = Py.Import("Test_QuantBookFundamental");
+                _testModule = Py.Import("Test_QuantBookFundamental").GetAttr("FundamentalHistoryTest").Invoke();
             }
         }
 
@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Research
         private static readonly object[] FundamentalRequestTestCases =
         {
             new object[] {new List<string> {"AAPL", "GOOG"}, "ValuationRatios.PERatio"},
-            new object[] {"IBM", null},
+            new object[] {"IBM", "EarningReports.AccessionNumber"},
             new object[] {Symbol.Create("AAPL", SecurityType.Equity, Market.USA), "ValuationRatios"},
             new object[]
             {
@@ -67,16 +67,15 @@ namespace QuantConnect.Tests.Research
             using (Py.GIL())
             {
                 // Skip string test because it will fail;
-                // Has to be tested inside of a Notebook to work as it should, due to PythonNet converting the string
-                // we implemented a bool variable in QuantBook's constructor (_isPythonNotebook), when a string is sent
+                // Has to be tested inside of a Notebook to work as it should, due to PythonNet converting the string automatically
+                // We implemented a bool variable in QuantBook's constructor (_isPythonNotebook), when a string is sent
                 // to GetFundamental we check the bool and route it to the appropriate Python function if it is True.
                 if (input[0].GetType() == typeof(string))
                 {
                     return;
                 }
 
-                var testModule = _module.FundamentalHistoryTest();
-                var data = testModule.getFundamentals(input[0], input[1], _startDate, _endDate);
+                var data = _testModule.getFundamentals(input[0], input[1], _startDate, _endDate);
                 Assert.IsTrue(data.GetType() == typeof(PyObject));
             }
         }
@@ -89,7 +88,7 @@ namespace QuantConnect.Tests.Research
             Assert.IsTrue(data.GetType() == typeof(DataDictionary<IEnumerable<object>>));
         }
 
-        // Different requests and their output hashes
+        // Different requests and their expected hashes
         private static readonly object[] PyDataTestCases =
         {
             new object[] {new List<string> {"AAPL"}, "ValuationRatios.PERatio", 295370642},
@@ -102,9 +101,7 @@ namespace QuantConnect.Tests.Research
         {
             using (Py.GIL())
             {
-                var testModule = _module.FundamentalHistoryTest();
-                var data = testModule.getFundamentals(input[0], input[1], _startDate, _endDate);
-
+                var data = _testModule.getFundamentals(input[0], input[1], _startDate, _endDate);
                 Assert.AreEqual(input[2], data.ToString().GetHashCode());
             }
         }
@@ -112,92 +109,52 @@ namespace QuantConnect.Tests.Research
         // Different requests and their expected values
         private static readonly object[] CSharpDataTestCases =
         {
-            new object[] {new List<string> {"AAPL"}, "ValuationRatios.PERatio", 60081761},
-            new object[] {"BAC", "ValuationRatios.PERatio", 34563592},
-            new object[] {Symbol.Create("IBM", SecurityType.Equity, Market.USA), "ValuationRatios", 44455753},
-            new object[] {new List<Symbol> {Symbol.Create("AIG", SecurityType.Equity, Market.USA)}, "FinancialStatements", 27146710}
-        };
+            new object[] {new List<string> {"AAPL"}, "ValuationRatios.PERatio", 13.272502m},
+            new object[] {"BAC", "ValuationRatios.PERatio", 19.111111d},
+            new object[] {Symbol.Create("IBM", SecurityType.Equity, Market.USA), "ValuationRatios.BookValuePerShare", 22.5177},
+            new object[] {new List<Symbol> {Symbol.Create("AIG", SecurityType.Equity, Market.USA)}, "FinancialStatements.NumberOfShareHolders", 36319}
+        }; 
 
-        [TestCaseSource(nameof(CSharpDataTestCases))]
+          [TestCaseSource(nameof(CSharpDataTestCases))]
         public void CSharpFundamentalData(dynamic input)
         {
             var qb = new QuantBook();
             var data = qb.GetFundamental(input[0], input[1], _startDate, _endDate);
 
-            //Hash doesn't work? Different hashes each time?
-            //TODO: FIGURE OUT A WAY TO VERIFY DATA!!!
+            foreach (var collection in data.Values)
+            {
+                foreach (var selectedData in collection)
+                {
+                    Assert.AreEqual(input[2], selectedData.Value);
+                    Assert.AreEqual(_startDate, selectedData.Time);
+                }
+            }
         }
 
-        [Test]
-        public void PyNonExistentDataRequest()
+        // Different requests that should all return null
+        // Nonexistent data; No delta time; start date after end date
+        private static readonly object[] NullRequestTestCases =
+        {
+            new object[] {Symbol.Create("AIG", SecurityType.Equity, Market.USA), "ValuationRatios.PERatio", new DateTime(1990, 4, 1),  new DateTime(1990, 4, 1)},
+            new object[] {Symbol.Create("AAPL", SecurityType.Equity, Market.USA), "ValuationRatios.PERatio", new DateTime(2014, 3, 31), new DateTime(2014, 3, 31)},
+            new object[] {Symbol.Create("IBM", SecurityType.Equity, Market.USA), "ValuationRatios.BookValuePerShare", new DateTime(2014, 4, 1), new DateTime(2014, 3, 31)},
+        };
+
+        [TestCaseSource(nameof(NullRequestTestCases))]
+        public void PyReturnNullTest(dynamic input)
         {
             using (Py.GIL())
             {
-                var testModule = _module.FundamentalHistoryTest();
-
-                var start = new DateTime(1990, 4, 1);
-                var end = new DateTime(1990, 4, 1);
-                var symbol = Symbol.Create("AIG", SecurityType.Equity, Market.USA);
-                var data = testModule.getFundamentals(symbol, null, start, end);
-
+                var data = _testModule.getFundamentals(input[0], input[1], input[2], input[3]);
                 Assert.IsEmpty(data);
             }
         }
 
-        [Test]
-        public void PyNoDeltaRequest()
+        [TestCaseSource(nameof(NullRequestTestCases))]
+        public void CSharpReturnNullTest(dynamic input)
         {
-            using (Py.GIL())
-            {
-                var testModule = _module.FundamentalHistoryTest();
-
-                var symbol = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-                var data = testModule.getFundamentals(symbol, null, _startDate, _startDate);
-
-                Assert.IsEmpty(data);
-            }
-        }
-
-        [Test]
-        public void PyBadDatesRequest()
-        {
-            using (Py.GIL())
-            {
-                var testModule = _module.FundamentalHistoryTest();
-
-                var symbol = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-                var data = testModule.getFundamentals(symbol, null, _endDate, _startDate);
-
-                Assert.IsEmpty(data);
-            }
-        }
-
-        [Test]
-        public void CSharpNonExistentDataRequest()
-        {
-            var start = new DateTime(1990, 4, 1);
-            var end = new DateTime(1990, 4, 1);
-            var symbol = Symbol.Create("AIG", SecurityType.Equity, Market.USA);
             var qb = new QuantBook();
-            var data = qb.GetFundamental(symbol, null, start, end);
-            Assert.IsEmpty(data);
-        }
-
-        [Test]
-        public void CSharpNoDeltaRequest()
-        {
-            var symbol = Symbol.Create("AIG", SecurityType.Equity, Market.USA);
-            var qb = new QuantBook();
-            var data = qb.GetFundamental(symbol, null, _startDate, _startDate);
-            Assert.IsEmpty(data);
-        }
-
-        [Test]
-        public void CSharpBadDatesRequest()
-        {
-            var symbol = Symbol.Create("AIG", SecurityType.Equity, Market.USA);
-            var qb = new QuantBook();
-            var data = qb.GetFundamental(symbol, null, _endDate, _startDate);
+            var data = qb.GetFundamental(input[0], input[1], input[2], input[3]);
             Assert.IsEmpty(data);
         }
     }
