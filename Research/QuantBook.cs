@@ -55,7 +55,6 @@ namespace QuantConnect.Research
             Logging.Log.LogHandler =
                 Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
 
-            
             //Determine if we are in a Python Notebook
             try
             {
@@ -65,7 +64,6 @@ namespace QuantConnect.Research
                         "import IPython\n" +
                         "def IsPythonNotebook():\n" +
                         "   return (IPython.get_ipython() != None)\n").GetAttr("IsPythonNotebook").Invoke();
-
                     isPython.TryConvert(out _isPythonNotebook);
                 }
             }
