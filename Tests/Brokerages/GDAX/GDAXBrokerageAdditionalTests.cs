@@ -115,7 +115,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
                 Thread.Sleep(5000);
 
-                dqh.Unsubscribe(symbols, TickType.Quote);
+                dqh.Unsubscribe(symbols);
 
                 dqh.Disconnect();
                 Assert.IsFalse(dqh.IsConnected);

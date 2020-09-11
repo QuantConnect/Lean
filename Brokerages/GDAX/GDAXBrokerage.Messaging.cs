@@ -383,15 +383,6 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// Creates websocket message subscriptions for the supplied symbols
         /// </summary>
-        protected bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
-        {
-            Subscribe(symbols);
-            return true;
-        }
-
-        /// <summary>
-        /// Creates websocket message subscriptions for the supplied symbols
-        /// </summary>
         public override void Subscribe(IEnumerable<Symbol> symbols)
         {
             var fullList = GetSubscribed().Union(symbols);
@@ -503,18 +494,13 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// Ends current subscriptions
         /// </summary>
-        public bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
+        public bool Unsubscribe(IEnumerable<Symbol> symbols)
         {
             if (WebSocket.IsOpen)
             {
                 var products = symbols
                     .Select(s => s.Value.Substring(0, 3) + "-" + s.Value.Substring(3))
                     .ToArray();
-
-                if (products.Length == 0)
-                {
-                    return true;
-                }
 
                 var payload = new
                 {
@@ -580,22 +566,6 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
             Log.Trace("GDAXBrokerage.FillMonitorAction(): task ended");
-        }
-
-        /// <summary>
-        /// Checks if this brokerage supports the specified symbol
-        /// </summary>
-        /// <param name="symbol">The symbol</param>
-        /// <returns>returns true if brokerage supports the specified symbol; otherwise false</returns>
-        public bool CanSubscribe(Symbol symbol)
-        {
-            if (symbol.Value.Contains("UNIVERSE") ||
-                    symbol.SecurityType != SecurityType.Forex && symbol.SecurityType != SecurityType.Crypto)
-            {
-                return false;
-            }
-
-            return true;
         }
     }
 }

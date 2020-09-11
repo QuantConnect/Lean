@@ -374,7 +374,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             string actual = null;
             _wss.Setup(w => w.IsOpen).Returns(true);
             _wss.Setup(w => w.Send(It.IsAny<string>())).Callback<string>(c => actual = c);
-            _unit.Unsubscribe(new List<Symbol> { Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX) }, TickType.Quote);
+            _unit.Unsubscribe(new List<Symbol> { Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX) });
             StringAssert.Contains("user", actual);
             StringAssert.Contains("heartbeat", actual);
             StringAssert.DoesNotContain("matches", actual);

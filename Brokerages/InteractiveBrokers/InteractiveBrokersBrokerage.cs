@@ -249,8 +249,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _agentDescription = agentDescription;
 
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            _subscriptionManager.SubscribeImpl += Subscribe;
-            _subscriptionManager.UnsubscribeImpl += Unsubscribe;
+            _subscriptionManager.SubscribeImpl += (s, t) => Subscribe(s);
+            _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
             _subscriptionManager.GetChannelName += (t) => "101";
 
             Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Starting IB Automater...");
@@ -1274,7 +1274,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 _underlyings.Clear();
             }
 
-            Subscribe(subscribedSymbols, TickType.OpenInterest);
+            Subscribe(subscribedSymbols);
         }
 
         /// <summary>
@@ -2279,8 +2279,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Adds the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        /// <param name="tickType">Type of tick data</param>
-        private bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
+        private bool Subscribe(IEnumerable<Symbol> symbols)
         {
             try
             {
@@ -2358,8 +2357,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Removes the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        /// <param name="tickType">Type of tick data</param>
-        private bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
+        private bool Unsubscribe(IEnumerable<Symbol> symbols)
         {
             try
             {

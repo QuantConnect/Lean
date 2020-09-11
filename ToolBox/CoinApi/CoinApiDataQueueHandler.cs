@@ -62,8 +62,8 @@ namespace QuantConnect.ToolBox.CoinApi
             _client.QuoteEvent += OnQuote;
             _client.Error += OnError;
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            _subscriptionManager.SubscribeImpl += Subscribe;
-            _subscriptionManager.UnsubscribeImpl += Unsubscribe;
+            _subscriptionManager.SubscribeImpl += (s, t) => Subscribe(s);
+            _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
             _subscriptionManager.GetChannelName += (t) => "quote-trade";
         }
 
@@ -98,8 +98,7 @@ namespace QuantConnect.ToolBox.CoinApi
         /// Adds the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        /// <param name="tickType">Type of tick data</param>
-        private bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
+        private bool Subscribe(IEnumerable<Symbol> symbols)
         {
             Log.Trace($"CoinApiDataQueueHandler.Subscribe(): {string.Join(",", symbols.Select(x => x.Value))}");
 
@@ -122,8 +121,7 @@ namespace QuantConnect.ToolBox.CoinApi
         /// Removes the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        /// <param name="tickType">Type of tick data</param>
-        private bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
+        private bool Unsubscribe(IEnumerable<Symbol> symbols)
         {
             Log.Trace($"CoinApiDataQueueHandler.Unsubscribe(): {string.Join(",", symbols.Select(x => x.Value))}");
 

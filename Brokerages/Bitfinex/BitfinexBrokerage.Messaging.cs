@@ -84,7 +84,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         public BitfinexBrokerage(IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator)
             : base(WebSocketUrl, websocket, restClient, apiKey, apiSecret, Market.Bitfinex, "Bitfinex")
         {
-            _subscriptionManager = new BitfinexSubscriptionManager(this, WebSocketUrl, _symbolMapper);
+            SubscriptionManager = new BitfinexSubscriptionManager(this, WebSocketUrl, _symbolMapper);
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _algorithm = algorithm;
             _aggregator = aggregator;
@@ -130,7 +130,11 @@ namespace QuantConnect.Brokerages.Bitfinex
             Log.Trace("BitfinexBrokerage.SubscribeAuth(): Sent authentication request.");
         }
 
-
+        /// <summary>
+        /// Should be empty, Bitfinex brokerage manages his public channels including subscribe/unsubscribe/reconnect methods using <see cref="BitfinexSubscriptionManager"/>
+        /// Not used in master
+        /// </summary>
+        /// <param name="symbols"></param>
         public override void Subscribe(IEnumerable<Symbol> symbols) { }
 
         private long GetNextClientOrderId()
@@ -439,8 +443,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <summary>
-        /// <see cref="BitfinexSubscriptionManager"/> reconnects and subscribes existing Ticker channels.
-        /// No need to do it in main WebSocket
+        /// Should be empty. <see cref="BitfinexSubscriptionManager"/> manages each <see cref="BitfinexWebSocketWrapper"/> individually
         /// </summary>
         /// <returns></returns>
         protected override IEnumerable<Symbol> GetSubscribed() => new List<Symbol>();

@@ -68,7 +68,10 @@ namespace QuantConnect.Brokerages
         private volatile bool _connectionLost;
         private const int _connectionTimeout = 30000;
 
-        protected DataQueueHandlerSubscriptionManager _subscriptionManager;
+        /// <summary>
+        /// Count subscribers for each (symbol, tickType) combination
+        /// </summary>
+        protected DataQueueHandlerSubscriptionManager SubscriptionManager;
         #endregion
 
         /// <summary>
@@ -290,7 +293,7 @@ namespace QuantConnect.Brokerages
         /// <returns></returns>
         protected virtual IEnumerable<Symbol> GetSubscribed()
         {
-            return _subscriptionManager.GetSubscribedSymbols();
+            return SubscriptionManager.GetSubscribedSymbols();
         }
     }
 

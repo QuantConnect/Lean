@@ -64,12 +64,8 @@ namespace QuantConnect.Brokerages.Fxcm
         /// Adds the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        /// <param name="tickType">Type of tick data</param>
-        private bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
+        private bool Subscribe(IEnumerable<Symbol> symbols)
         {
-            if (symbols.Any())
-                return false;
-
             Log.Trace("FxcmBrokerage.Subscribe(): {0}", string.Join(",", symbols));
 
             var request = new MarketDataRequest();
@@ -115,12 +111,8 @@ namespace QuantConnect.Brokerages.Fxcm
         /// Removes the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        /// <param name="tickType">Type of tick data</param>
-        private bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
+        private bool Unsubscribe(IEnumerable<Symbol> symbols)
         {
-            if (symbols.Any())
-                return false;
-
             Log.Trace("FxcmBrokerage.Unsubscribe(): {0}", string.Join(",", symbols));
 
             var request = new MarketDataRequest();

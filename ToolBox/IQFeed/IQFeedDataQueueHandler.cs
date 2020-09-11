@@ -67,13 +67,13 @@ namespace QuantConnect.ToolBox.IQFeed
             _symbols = new HashSet<Symbol>();
             _underlyings = new Dictionary<Symbol, Symbol>();
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            _subscriptionManager.SubscribeImpl += (s, e) =>
+            _subscriptionManager.SubscribeImpl += (s, t) =>
             {
                 Subscribe(s);
                 return true;
             };
 
-            _subscriptionManager.UnsubscribeImpl += (s, e) =>
+            _subscriptionManager.UnsubscribeImpl += (s, t) =>
             {
                 Unsubscribe(s);
                 return true;

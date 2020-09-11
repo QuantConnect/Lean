@@ -37,11 +37,15 @@ namespace QuantConnect.Brokerages.GDAX
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator)
         {
             var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            subscriptionManager.SubscribeImpl += Subscribe;
-            subscriptionManager.UnsubscribeImpl += Unsubscribe;
+            subscriptionManager.SubscribeImpl += (s,t) =>
+            {
+                Subscribe(s);
+                return true;
+            };
+            subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
             subscriptionManager.GetChannelName += (t) => "level2";
 
-            _subscriptionManager = subscriptionManager;
+            SubscriptionManager = subscriptionManager;
         }
 
         /// <summary>
@@ -63,7 +67,7 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
-            _subscriptionManager.Subscribe(dataConfig);
+            SubscriptionManager.Subscribe(dataConfig);
 
             return enumerator;
         }
@@ -82,8 +86,24 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            _subscriptionManager.Unsubscribe(dataConfig);
+            SubscriptionManager.Unsubscribe(dataConfig);
             _aggregator.Remove(dataConfig);
+        }
+
+        /// <summary>
+        /// Checks if this brokerage supports the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <returns>returns true if brokerage supports the specified symbol; otherwise false</returns>
+        private bool CanSubscribe(Symbol symbol)
+        {
+            if (symbol.Value.Contains("UNIVERSE") ||
+                symbol.SecurityType != SecurityType.Forex && symbol.SecurityType != SecurityType.Crypto)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

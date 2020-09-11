@@ -30,7 +30,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Counter
         /// </summary>
-        protected ConcurrentDictionary<Channel, int> _subscribersByChannel = new ConcurrentDictionary<Channel, int>();
+        protected ConcurrentDictionary<Channel, int> SubscribersByChannel = new ConcurrentDictionary<Channel, int>();
 
         /// <summary>
         /// Increment number of subscribers for current <see cref="TickType"/>
@@ -42,15 +42,15 @@ namespace QuantConnect.Data
             {
                 var channel = GetChannel(dataConfig);
                 int count;
-                if (_subscribersByChannel.TryGetValue(channel, out count))
+                if (SubscribersByChannel.TryGetValue(channel, out count))
                 {
-                    _subscribersByChannel.TryUpdate(channel, count + 1, count);
+                    SubscribersByChannel.TryUpdate(channel, count + 1, count);
                     return;
                 }
 
                 if (Subscribe(new[] { dataConfig.Symbol }, dataConfig.TickType))
                 {
-                    _subscribersByChannel.AddOrUpdate(channel, 1);
+                    SubscribersByChannel.AddOrUpdate(channel, 1);
                 }
             }
             catch (Exception exception)
@@ -70,17 +70,17 @@ namespace QuantConnect.Data
             {
                 var channel = GetChannel(dataConfig);
                 int count;
-                if (_subscribersByChannel.TryGetValue(channel, out count))
+                if (SubscribersByChannel.TryGetValue(channel, out count))
                 {
                     if (count > 1)
                     {
-                        _subscribersByChannel.TryUpdate(channel, count - 1, count);
+                        SubscribersByChannel.TryUpdate(channel, count - 1, count);
                         return;
                     }
 
                     if (Unsubscribe(new[] { dataConfig.Symbol }, dataConfig.TickType))
                     {
-                        _subscribersByChannel.TryRemove(channel, out count);
+                        SubscribersByChannel.TryRemove(channel, out count);
                     }
                 }
             }
@@ -122,7 +122,7 @@ namespace QuantConnect.Data
         /// <returns>return true if there is one subscriber at least; otherwise false</returns>
         public bool IsSubscribed(Symbol symbol, TickType tickType)
         {
-            return _subscribersByChannel.ContainsKey(GetChannel(
+            return SubscribersByChannel.ContainsKey(GetChannel(
                 symbol,
                 tickType));
         }
@@ -142,7 +142,7 @@ namespace QuantConnect.Data
         /// <returns>list of <see cref="Symbol"/> currently subscribed</returns>
         public IEnumerable<Symbol> GetSubscribedSymbols()
         {
-            return _subscribersByChannel.Keys
+            return SubscribersByChannel.Keys
                 .Select(c => c.Symbol)
                 .Distinct();
         }

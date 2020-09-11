@@ -103,8 +103,8 @@ namespace QuantConnect.ToolBox.Polygon
             }
 
             var subscriber = new EventBasedDataQueueHandlerSubscriptionManager();
-            subscriber.SubscribeImpl += (s, t) => Subscribe(s, t);
-            subscriber.UnsubscribeImpl += (s, t) => Unsubscribe(s, t);
+            subscriber.SubscribeImpl += Subscribe;
+            subscriber.UnsubscribeImpl += Unsubscribe;
             subscriber.GetChannelName += (t) => t.ToString();
 
             _subscriptionManager = subscriber;
