@@ -37,7 +37,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Continuous UTC time provider
         /// </summary>
-        protected ITimeProvider TimeProvider { get; set; } = new RealTimeProvider();
+        protected ITimeProvider TimeProvider { get; set; } = RealTimeProvider.Instance;
 
         /// <summary>
         /// Add new subscription to current <see cref="IDataAggregator"/> instance

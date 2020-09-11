@@ -180,7 +180,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             // so to combat this we deliberately filter the results from the data reader to fix these cases
             // which only apply to non-tick data
 
-            reader = new SubscriptionFilterEnumerator(reader, security, endTimeLocal);
+            reader = new SubscriptionFilterEnumerator(reader, security, endTimeLocal, config.ExtendedMarketHours, false);
             reader = new FilterEnumerator<BaseData>(reader, data =>
             {
                 // allow all ticks
@@ -194,7 +194,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
 
             if (_parallelHistoryRequestsEnabled)
             {
-                return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader);
+                return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader, _factorFileProvider, false);
             }
             return SubscriptionUtils.Create(subscriptionRequest, reader);
         }

@@ -169,7 +169,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The loaded <see cref="IDataQueueHandler"/></returns>
         protected virtual IDataQueueHandler GetDataQueueHandler()
         {
-            _job.DataQueueHandler = Config.Get("data-queue-handler", _job.DataQueueHandler);
             Log.Trace($"LiveTradingDataFeed.GetDataQueueHandler(): will use {_job.DataQueueHandler}");
             return Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(_job.DataQueueHandler);
         }
@@ -232,12 +231,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         enqueable.Enqueue(data);
 
                         subscription.OnNewDataAvailable();
-
-                        UpdateSubscriptionRealTimePrice(
-                            subscription,
-                            timeZoneOffsetProvider,
-                            request.Security.Exchange.Hours,
-                            data);
                     });
                     enumerator = enqueable;
                 }
@@ -265,7 +258,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // define market hours and user filters to incoming data
                 if (request.Configuration.IsFilteredSubscription)
                 {
-                    enumerator = new SubscriptionFilterEnumerator(enumerator, request.Security, localEndTime);
+                    enumerator = new SubscriptionFilterEnumerator(enumerator, request.Security, localEndTime, request.Configuration.ExtendedMarketHours, true);
                 }
 
                 // finally, make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
@@ -412,33 +405,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             return subscription;
-        }
-
-        /// <summary>
-        /// Updates the subscription RealTimePrice if the exchange is open
-        /// </summary>
-        /// <param name="subscription">The <see cref="Subscription"/></param>
-        /// <param name="timeZoneOffsetProvider">The <see cref="TimeZoneOffsetProvider"/> used to convert now into the timezone of the exchange</param>
-        /// <param name="exchangeHours">The <see cref="SecurityExchangeHours"/> used to determine
-        /// if the exchange is open and we should update</param>
-        /// <param name="data">The <see cref="BaseData"/> used to update the real time price</param>
-        /// <returns>True if the real time price was updated</returns>
-        protected bool UpdateSubscriptionRealTimePrice(
-            Subscription subscription,
-            TimeZoneOffsetProvider timeZoneOffsetProvider,
-            SecurityExchangeHours exchangeHours,
-            BaseData data)
-        {
-            if (subscription != null &&
-                exchangeHours.IsOpen(
-                    timeZoneOffsetProvider.ConvertFromUtc(_timeProvider.GetUtcNow()),
-                    subscription.Configuration.ExtendedMarketHours))
-            {
-                subscription.RealtimePrice = data.Value;
-                return true;
-            }
-
-            return false;
         }
 
         /// <summary>

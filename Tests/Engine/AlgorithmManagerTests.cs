@@ -160,6 +160,10 @@ namespace QuantConnect.Tests.Engine
             public ConcurrentQueue<Packet> Messages { get; set; }
             public bool IsActive { get; }
 
+            public void OnSecuritiesChanged(SecurityChanges changes)
+            {
+            }
+
             public void Initialize(AlgorithmNodePacket job,
                 IMessagingHandler messagingHandler,
                 IApi api,

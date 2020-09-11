@@ -96,7 +96,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 
         private class InjectionEnumerator : IEnumerator<BaseData>
         {
-            private bool _wasInjected;
+            private volatile bool _wasInjected;
             private readonly IEnumerator<BaseData> _underlyingEnumerator;
 
             public BaseData Current { get; private set; }
@@ -110,8 +110,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 
             public void InjectDataPoint(BaseData baseData)
             {
-                _wasInjected = true;
-                Current = baseData;
+                // we use a lock because the main algorithm thread is the one injecting and the base exchange is the thread pulling MoveNext()
+                lock (_underlyingEnumerator)
+                {
+                    _wasInjected = true;
+                    Current = baseData;
+                }
             }
 
             public void Dispose()
@@ -121,14 +125,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 
             public bool MoveNext()
             {
-                if (_wasInjected)
+                lock (_underlyingEnumerator)
                 {
-                    _wasInjected = false;
+                    if (_wasInjected)
+                    {
+                        _wasInjected = false;
+                        return true;
+                    }
+                    _underlyingEnumerator.MoveNext();
+                    Current = _underlyingEnumerator.Current;
                     return true;
                 }
-                _underlyingEnumerator.MoveNext();
-                Current = _underlyingEnumerator.Current;
-                return true;
             }
 
             public void Reset()

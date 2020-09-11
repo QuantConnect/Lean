@@ -17,7 +17,6 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;

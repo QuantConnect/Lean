@@ -20,7 +20,9 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 using Timer = System.Timers.Timer;
 
@@ -31,21 +33,39 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
     /// </summary>
     public class FakeDataQueue : IDataQueueHandler
     {
-        private int count;
+        private int _count;
         private readonly Random _random = new Random();
 
         private readonly Timer _timer;
         private readonly HashSet<Symbol> _symbols;
         private readonly object _sync = new object();
         private readonly IDataAggregator _aggregator;
+        private readonly MarketHoursDatabase _marketHoursDatabase;
+        private readonly Dictionary<Symbol, TimeZoneOffsetProvider> _symbolExchangeTimeZones;
+
+        /// <summary>
+        /// Continuous UTC time provider
+        /// </summary>
+        protected virtual ITimeProvider TimeProvider { get; } = RealTimeProvider.Instance;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FakeDataQueue"/> class to randomly emit data for each symbol
         /// </summary>
         public FakeDataQueue()
+            : this(new AggregationManager())
         {
-            _aggregator = new AggregationManager();
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FakeDataQueue"/> class to randomly emit data for each symbol
+        /// </summary>
+        public FakeDataQueue(IDataAggregator dataAggregator)
+        {
             _symbols = new HashSet<Symbol>();
+            _aggregator = dataAggregator;
+            _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            _symbolExchangeTimeZones = new Dictionary<Symbol, TimeZoneOffsetProvider>();
 
             // load it up to start
             PopulateQueue();
@@ -61,16 +81,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
             };
 
             var lastCount = 0;
-            var lastTime = DateTime.Now;
+            var lastTime = DateTime.UtcNow;
             _timer.Elapsed += (sender, args) =>
             {
-                var elapsed = (DateTime.Now - lastTime);
-                var ticksPerSecond = (count - lastCount)/elapsed.TotalSeconds;
-                Console.WriteLine("TICKS PER SECOND:: " + ticksPerSecond.ToStringInvariant("000000.0") + " ITEMS IN QUEUE:: " + 0);
-                lastCount = count;
-                lastTime = DateTime.Now;
+                var elapsed = (DateTime.UtcNow - lastTime);
+                var ticksPerSecond = (_count - lastCount)/elapsed.TotalSeconds;
+                Log.Trace("TICKS PER SECOND:: " + ticksPerSecond.ToStringInvariant("000000.0") + " ITEMS IN QUEUE:: " + 0);
+                lastCount = _count;
+                lastTime = DateTime.UtcNow;
                 PopulateQueue();
-                _timer.Reset();
+                try
+                {
+                    _timer.Reset();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // pass
+                }
             };
         }
 
@@ -140,20 +167,50 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
 
             foreach (var symbol in symbols)
             {
+                var offsetProvider = GetTimeZoneOffsetProvider(symbol);
+                var trades = SubscriptionManager.DefaultDataTypes()[symbol.SecurityType].Contains(TickType.Trade);
+                var quotes = SubscriptionManager.DefaultDataTypes()[symbol.SecurityType].Contains(TickType.Quote);
+
                 // emits 500k per second
                 for (var i = 0; i < 500000; i++)
                 {
-                    count++;
-                    _aggregator.Update(new Tick
+                    var now = TimeProvider.GetUtcNow();
+                    if (trades)
                     {
-                        Time = DateTime.Now,
-                        Symbol = symbol,
-                        Value = 10 + (decimal)Math.Abs(Math.Sin(DateTime.Now.TimeOfDay.TotalMinutes)),
-                        TickType = TickType.Trade,
-                        Quantity = _random.Next(10, (int)_timer.Interval)
-                    });
+                        _count++;
+                        _aggregator.Update(new Tick
+                        {
+                            Time = offsetProvider.ConvertFromUtc(now),
+                            Symbol = symbol,
+                            Value = 10 + (decimal)Math.Abs(Math.Sin(now.TimeOfDay.TotalMinutes)),
+                            TickType = TickType.Trade,
+                            Quantity = _random.Next(10, (int)_timer.Interval)
+                        });
+                    }
+
+                    if (quotes)
+                    {
+                        _count++;
+                        var bid = 10 + (decimal) Math.Abs(Math.Sin(now.TimeOfDay.TotalMinutes));
+                        var bidSize = _random.Next(10, (int) _timer.Interval);
+                        var askSize = _random.Next(10, (int)_timer.Interval);
+                        var time = offsetProvider.ConvertFromUtc(now);
+                        _aggregator.Update(new Tick(time, symbol, "", "",bid, bidSize, bid * 1.01m, askSize));
+                    }
                 }
             }
+        }
+
+        private TimeZoneOffsetProvider GetTimeZoneOffsetProvider(Symbol symbol)
+        {
+            TimeZoneOffsetProvider offsetProvider;
+            if (!_symbolExchangeTimeZones.TryGetValue(symbol, out offsetProvider))
+            {
+                // read the exchange time zone from market-hours-database
+                var exchangeTimeZone = _marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType).TimeZone;
+                _symbolExchangeTimeZones[symbol] = offsetProvider = new TimeZoneOffsetProvider(exchangeTimeZone, TimeProvider.GetUtcNow(), Time.EndOfTime);
+            }
+            return offsetProvider;
         }
     }
 }

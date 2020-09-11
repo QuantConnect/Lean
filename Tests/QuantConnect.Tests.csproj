@@ -376,7 +376,6 @@
     <Compile Include="Common\Brokerages\FxcmBrokerageModelTests.cs" />
     <Compile Include="Common\Data\Auxiliary\FactorFileRowTests.cs" />
     <Compile Include="Brokerages\GDAX\GDAXBrokerageHistoryProviderTests.cs" />
-    <Compile Include="Brokerages\Alpaca\AlpacaBrokerageDataQueueHandlerTests.cs" />
     <Compile Include="Brokerages\Alpaca\AlpacaBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\Alpaca\AlpacaBrokerageTests.cs" />
     <Compile Include="Common\Data\Auxiliary\FactorFileTests.cs" />
@@ -450,6 +449,8 @@
     <Compile Include="Common\Util\RateLimit\LeakyBucketTests.cs" />
     <Compile Include="Common\Util\SeriesJsonConverterTests.cs" />
     <Compile Include="Common\Util\StreamReaderEnumerableTests.cs" />
+    <Compile Include="Common\Util\BaseDataExtensionsTests.cs" />
+    <Compile Include="Common\Util\SubscriptionDataConfigExtensionsTests.cs" />
     <Compile Include="Common\Util\ValidateTests.cs" />
     <Compile Include="Engine\AlgorithmTimeLimitManagerTests.cs" />
     <Compile Include="Engine\Alphas\DefaultAlphaHandlerTests.cs" />
@@ -459,7 +460,9 @@
     <Compile Include="Engine\DataFeeds\BacktestingFutureChainProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\DataPermissionManagerTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\ScannableEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\InternalSubscriptionManagerTests.cs" />
     <Compile Include="Engine\DataFeeds\RealTimeScheduleEventServiceTests.cs" />
+    <Compile Include="Engine\DataFeeds\PrecalculatedSubscriptionDataTests.cs" />
     <Compile Include="Engine\DataFeeds\SubscriptionDataTests.cs" />
     <Compile Include="Engine\DataFeeds\DataManagerStub.cs" />
     <Compile Include="Engine\DataFeeds\DataManagerTests.cs" />
@@ -670,7 +673,6 @@
     <Compile Include="Engine\DefaultBrokerageMessageHandler.cs" />
     <Compile Include="Common\Exceptions\StackExceptionInterpreterTests.cs" />
     <Compile Include="Engine\PerformanceBenchmarkAlgorithms.cs" />
-    <Compile Include="Engine\RealTimePriceUpdateTests.cs" />
     <Compile Include="Engine\Setup\BrokerageSetupHandlerTests.cs" />
     <Compile Include="Engine\TestResultHandler.cs" />
     <Compile Include="ExpectedAlphaStatistics.cs" />
@@ -725,6 +727,7 @@
     <Compile Include="Indicators\EaseOfMovementValueTests.cs" />
     <Compile Include="Indicators\StochasticTests.cs" />
     <Compile Include="Research\QuantBookFundamentalTests.cs" />
+    <Compile Include="Python\PythonOptionTests.cs" />
     <Compile Include="Research\QuantBookIndicatorsTests.cs" />
     <Compile Include="Research\QuantBookHistoryTests.cs" />
     <Compile Include="Messaging\StreamingMessageHandlerTests.cs" />
@@ -864,7 +867,7 @@
     <Content Include="TestData\gdax_accounts.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\gdax_match.txt">
+    <Content Include="TestData\gdax_fill.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\gdax_holding.txt">

@@ -67,7 +67,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             var result = _enumerator.MoveNext();
             if (result)
             {
-                Current = SubscriptionData.Create(_configuration, _exchangeHours, _offsetProvider, _enumerator.Current);
+                Current = SubscriptionData.Create(_configuration, _exchangeHours, _offsetProvider, _enumerator.Current, _configuration.DataNormalizationMode);
             }
             return result;
         }

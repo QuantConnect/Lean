@@ -201,9 +201,15 @@ namespace QuantConnect.Brokerages.Bitfinex
             webSocket.ConnectionHandler.ReconnectRequested += OnReconnectRequested;
             webSocket.ConnectionHandler.Initialize(webSocket.ConnectionId);
 
+            int connections;
+            lock (_locker)
+            {
+                connections = _channelsByWebSocket.Count;
+            }
+
             Log.Trace("BitfinexSubscriptionManager.GetFreeWebSocket(): New websocket added: " +
                       $"Hashcode: {webSocket.GetHashCode()}, " +
-                      $"WebSocket connections: {_channelsByWebSocket.Count}");
+                      $"WebSocket connections: {connections}");
 
             return webSocket;
         }
@@ -290,7 +296,9 @@ namespace QuantConnect.Brokerages.Bitfinex
             lock (_locker)
             {
                 if (!_channelsByWebSocket.TryGetValue(webSocket, out channels))
-                return;
+                {
+                    return;
+                }
             }
 
             Log.Trace($"BitfinexSubscriptionManager.OnReconnectRequested(): Resubscribing channels. [Id: {connectionHandler.ConnectionId}]");
@@ -319,26 +327,46 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 var token = JToken.Parse(e.Message);
 
+                webSocket.ConnectionHandler.KeepAlive(DateTime.UtcNow);
+
                 if (token is JArray)
                 {
                     var channel = token[0].ToObject<int>();
-                    // heartbeat
-                    if (token[1].Type == JTokenType.String && token[1].Value<string>() == "hb")
+
+                    if (token[1].Type == JTokenType.String)
                     {
-                        webSocket.ConnectionHandler.KeepAlive(DateTime.UtcNow);
-                        return;
+                        var type = token[1].Value<string>();
+
+                        switch (type)
+                        {
+                            // heartbeat
+                            case "hb":
+                                return;
+
+                            // trade execution
+                            case "te":
+                                OnUpdate(webSocket, channel.ToStringInvariant(), token[2].ToObject<string[]>());
+                                break;
+
+                            // ignored -- trades already handled in "te" message
+                            // https://github.com/bitfinexcom/bitfinex-api-node#te-vs-tu-messages
+                            case "tu":
+                                break;
+
+                            default:
+                                Log.Trace($"BitfinexSubscriptionManager.OnMessage(): Unexpected message type: {type}");
+                                return;
+                        }
                     }
 
                     // public channels
-                    if (channel != 0)
+                    else if (channel != 0 && token[1].Type == JTokenType.Array)
                     {
-                        webSocket.ConnectionHandler.KeepAlive(DateTime.UtcNow);
-
-                        if (token.Count() == 2)
+                        if (token[1][0].Type == JTokenType.Array)
                         {
                             OnSnapshot(
                                 webSocket,
-                                token[0].ToObject<string>(),
+                                channel.ToStringInvariant(),
                                 token[1].ToObject<string[][]>()
                             );
                         }
@@ -347,8 +375,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                             // pass channel id as separate arg
                             OnUpdate(
                                 webSocket,
-                                token[0].ToObject<string>(),
-                                token.ToObject<string[]>().Skip(1).ToArray()
+                                channel.ToStringInvariant(),
+                                token[1].ToObject<string[]>()
                             );
                         }
                     }
@@ -361,16 +389,20 @@ namespace QuantConnect.Brokerages.Bitfinex
                         case "subscribed":
                             OnSubscribe(webSocket, token.ToObject<Messages.ChannelSubscription>());
                             return;
+
                         case "unsubscribed":
                             OnUnsubscribe(webSocket, token.ToObject<Messages.ChannelUnsubscribing>());
                             return;
+
                         case "auth":
                         case "info":
                         case "ping":
                             return;
+
                         case "error":
                             Log.Error($"BitfinexSubscriptionManager.OnMessage(): {e.Message}");
                             return;
+
                         default:
                             Log.Trace($"BitfinexSubscriptionManager.OnMessage(): Unexpected message format: {e.Message}");
                             break;
@@ -462,9 +494,6 @@ namespace QuantConnect.Brokerages.Bitfinex
                     case "book":
                         ProcessOrderBookSnapshot(channel, entries);
                         return;
-                    case "trades":
-                        ProcessTradesSnapshot(channel, entries);
-                        return;
                 }
             }
             catch (Exception e)
@@ -514,24 +543,6 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
-        private void ProcessTradesSnapshot(BitfinexChannel channel, string[][] entries)
-        {
-            try
-            {
-                var symbol = _symbolMapper.GetLeanSymbol(channel.Symbol);
-                foreach (var entry in entries)
-                {
-                    // pass time, price, amount
-                    EmitTradeTick(symbol, entry.Skip(1).ToArray());
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-                throw;
-            }
-        }
-
         private void OnUpdate(BitfinexWebSocketWrapper webSocket, string channelId, string[] entries)
         {
             try
@@ -560,6 +571,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     case "book":
                         ProcessOrderBookUpdate(channel, entries);
                         return;
+
                     case "trades":
                         ProcessTradeUpdate(channel, entries);
                         return;
@@ -610,13 +622,12 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             try
             {
-                string eventType = entries[0];
-                if (eventType == "tu")
-                {
-                    var symbol = _symbolMapper.GetLeanSymbol(channel.Symbol);
-                    // pass time, price, amount
-                    EmitTradeTick(symbol, new[] { entries[3], entries[4], entries[5] });
-                }
+                var symbol = _symbolMapper.GetLeanSymbol(channel.Symbol);
+                var time = Time.UnixMillisecondTimeStampToDateTime(double.Parse(entries[1], NumberStyles.Float, CultureInfo.InvariantCulture));
+                var amount = decimal.Parse(entries[2], NumberStyles.Float, CultureInfo.InvariantCulture);
+                var price = decimal.Parse(entries[3], NumberStyles.Float, CultureInfo.InvariantCulture);
+
+                EmitTradeTick(symbol, time, price, amount);
             }
             catch (Exception e)
             {
@@ -625,14 +636,10 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
-        private void EmitTradeTick(Symbol symbol, string[] entries)
+        private void EmitTradeTick(Symbol symbol, DateTime time, decimal price, decimal amount)
         {
             try
             {
-                var time = Time.UnixTimeStampToDateTime(double.Parse(entries[0], NumberStyles.Float, CultureInfo.InvariantCulture));
-                var price = decimal.Parse(entries[1], NumberStyles.Float, CultureInfo.InvariantCulture);
-                var amount = decimal.Parse(entries[2], NumberStyles.Float, CultureInfo.InvariantCulture);
-
                 lock (_brokerage.TickLocker)
                 {
                     _brokerage.EmitTick(new Tick

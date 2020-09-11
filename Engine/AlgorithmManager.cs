@@ -260,6 +260,7 @@ namespace QuantConnect.Lean.Engine
                     }
 
                     realtime.OnSecuritiesChanged(timeSlice.SecurityChanges);
+                    results.OnSecuritiesChanged(timeSlice.SecurityChanges);
                 }
 
                 //Update the securities properties: first before calling user code to avoid issues with data
@@ -956,6 +957,8 @@ namespace QuantConnect.Lean.Engine
                     }
                 }
             }
+
+            Log.Trace("ProcessVolatilityHistoryRequirements(): finished.");
         }
 
         /// <summary>
