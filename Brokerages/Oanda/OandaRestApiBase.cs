@@ -151,13 +151,11 @@ namespace QuantConnect.Brokerages.Oanda
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager(t => "quote");
             _subscriptionManager.SubscribeImpl += (s, t) =>
             {
-                Log.Trace("OandaBrokerage.Subscribe(): {0}", string.Join(",", s.Select(x => x.Value)));
                 ProcessSubscriptionRequest();
                 return true;
             };
             _subscriptionManager.UnsubscribeImpl += (s, t) =>
             {
-                Log.Trace("OandaBrokerage.Unsubscribe(): {0}", string.Join(",", s.Select(x => x.Value)));
                 ProcessSubscriptionRequest();
                 return true;
             };

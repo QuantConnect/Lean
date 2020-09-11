@@ -99,8 +99,6 @@ namespace QuantConnect.ToolBox.CoinApi
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
         private bool Subscribe(IEnumerable<Symbol> symbols)
         {
-            Log.Trace($"CoinApiDataQueueHandler.Subscribe(): {string.Join(",", symbols.Select(x => x.Value))}");
-
             ProcessSubscriptionRequest();
             return true;
         }
@@ -122,8 +120,6 @@ namespace QuantConnect.ToolBox.CoinApi
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
         private bool Unsubscribe(IEnumerable<Symbol> symbols)
         {
-            Log.Trace($"CoinApiDataQueueHandler.Unsubscribe(): {string.Join(",", symbols.Select(x => x.Value))}");
-
             ProcessSubscriptionRequest();
             return true;
         }

@@ -16,6 +16,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Data
 {
@@ -56,6 +58,7 @@ namespace QuantConnect.Data
         /// <returns></returns>
         protected override bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
+            Log.Trace("EventBasedDataQueueHandlerSubscriptionManager.Subscribe(): {0}", string.Join(",", symbols.Select(x => x.Value)));
             return SubscribeImpl?.Invoke(symbols, tickType) == true;
         }
 
@@ -67,6 +70,7 @@ namespace QuantConnect.Data
         /// <returns></returns>
         protected override bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
+            Log.Trace("EventBasedDataQueueHandlerSubscriptionManager.Unsubscribe(): {0}", string.Join(",", symbols.Select(x => x.Value)));
             return UnsubscribeImpl?.Invoke(symbols, tickType) == true;
         }
 

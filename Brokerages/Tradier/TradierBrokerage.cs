@@ -138,13 +138,11 @@ namespace QuantConnect.Brokerages.Tradier
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager(t => "trade");
             _subscriptionManager.SubscribeImpl += (s, t) =>
             {
-                Log.Trace("TradierBrokerage.Subscribe(): {0}", string.Join(",", s.Select(x => x.Value)));
                 Refresh();
                 return true;
             };
             _subscriptionManager.UnsubscribeImpl += (s, t) =>
             {
-                Log.Trace("TradierBrokerage.Unsubscribe(): {0}", string.Join(",", s.Select(x => x.Value)));
                 Refresh();
                 return true;
             };

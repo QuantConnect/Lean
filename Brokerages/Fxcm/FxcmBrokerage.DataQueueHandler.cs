@@ -66,8 +66,6 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
         private bool Subscribe(IEnumerable<Symbol> symbols)
         {
-            Log.Trace("FxcmBrokerage.Subscribe(): {0}", string.Join(",", symbols));
-
             var request = new MarketDataRequest();
             foreach (var symbol in symbols)
             {
