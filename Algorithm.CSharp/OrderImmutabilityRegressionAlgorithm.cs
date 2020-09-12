@@ -95,6 +95,25 @@ namespace QuantConnect.Algorithm.CSharp
                 Error("Broker IDs should not be the same!");
                 throw new Exception("Broker IDs should not be the same!");
             }
+
+            //Try and manipulate the orderV1 using UpdateOrderRequest
+            //NOTICE: Orders should only be updated through their tickets!
+            var updateFields = new UpdateOrderFields { Quantity = 99, Tag = "Pepe2!" };
+            var updateRequest = new UpdateOrderRequest(DateTime.Now, orderEvent.OrderId, updateFields);
+            orderV1.ApplyUpdateOrderRequest(updateRequest);
+            var orderV4 = Transactions.GetOrderById(orderEvent.OrderId);
+
+            if (orderV4.Quantity == orderV1.Quantity)
+            {
+                Error("Order quantity should not be the same!");
+                throw new Exception("Order quantity should not be the same!");
+            }
+
+            if (orderV4.Tag == orderV1.Tag)
+            {
+                Error("Order tag should not be the same!");
+                throw new Exception("Order tag should not be the same!");
+            }
         }
 
         /// <summary>
