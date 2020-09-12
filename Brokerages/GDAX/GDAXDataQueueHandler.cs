@@ -94,7 +94,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <returns>returns true if brokerage supports the specified symbol; otherwise false</returns>
-        private bool CanSubscribe(Symbol symbol)
+        private static bool CanSubscribe(Symbol symbol)
         {
             if (symbol.Value.Contains("UNIVERSE") ||
                 symbol.SecurityType != SecurityType.Forex && symbol.SecurityType != SecurityType.Crypto)

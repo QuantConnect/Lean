@@ -742,7 +742,7 @@ namespace QuantConnect.ToolBox.Polygon
             return client;
         }
 
-        private bool CanSubscribe(Symbol symbol)
+        private static bool CanSubscribe(Symbol symbol)
         {
             var securityType = symbol.ID.SecurityType;
 
