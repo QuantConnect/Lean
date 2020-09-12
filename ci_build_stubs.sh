@@ -86,8 +86,38 @@ function push_to_github {
     git add ./Algorithm.Python/stubs/QuantConnect
     git status --porcelain | grep -q "Algorithm.Python/stubs/QuantConnect/Algorithm"
     if [ $? -ne 0 ]; then
-	echo "New stubs were not generated, skipping creating PR..."
-	exit 0
+        echo "New stubs were not generated, skipping creating PR..."
+
+        # Merge commits will not contain any changes. Let's look at the previous commit instead.
+        git diff-tree --no-commit-id --name-only -r HEAD~1 | grep -q "Algorithm.Python/stubs/QuantConnect/Algorithm"
+        if [ $? -ne 0 ]; then
+            echo "HEAD commit contains no new updates to stubs. Exiting..."
+            exit 0
+        fi
+        
+        sudo apt-get update
+        sudo apt-get install -y awscli
+
+        # Stubs upload for Skylight deployment
+        local tag_graphql_query='{ "query": "query { repository(name: \"Lean\", owner: \"QuantConnect\") { refs(refPrefix: \"refs/tags/\", first: 1, orderBy: { field: TAG_COMMIT_DATE, direction: DESC }) { nodes { name } } } }" }'
+        local stubs_version_number_response=$(curl -s -H "Authorization: bearer $GH_API_KEY" -X POST --data-raw "$tag_graphql_query" https://api.github.com/graphql 2>/dev/null)
+        local stubs_version_number=$(echo "$stubs_version_number_response" | jq .data.repository.refs.nodes[0].name | sed -s 's/"//g')
+        local s3_bucket="skylight.quantconnect.com"
+
+        cd ./Algorithm.Python/stubs/
+        zip -r stubs.zip QuantConnect/
+
+        aws s3 cp stubs.zip "s3://$s3_bucket/stubs/stubs_v$stubs_version_number.zip" --acl public-read
+
+        if [ $? -ne 0 ]; then
+            echo "Pushing stubs to s3 failed"
+            exit 1
+        fi
+
+        echo "stubs_v$stubs_version_number.zip" > stubs_release.txt
+        aws s3 cp stubs_release.txt "s3://$s3_bucket/stubs/stubs_release.txt" --acl public-read
+
+        exit $?;
     fi
 
     git config --global user.email "$DEPLOYER_EMAIL"
@@ -107,7 +137,7 @@ function push_to_github {
 
     if [ $? -ne 0 ]; then
         echo "GitHub PR creation failed"
-	exit 1
+        exit 1
     fi
 }
 
