@@ -37,8 +37,7 @@ namespace QuantConnect.Brokerages.Oanda
     /// </summary>
     public abstract class OandaRestApiBase : Brokerage, IDataQueueHandler
     {
-        private static readonly TimeSpan SubscribeDelay = TimeSpan.FromMilliseconds(250);
-        private Timer _refreshDelay = new Timer();
+        private AutoResetEvent _refreshEvent = new AutoResetEvent(false);
 
         private bool _isConnected;
 
@@ -149,16 +148,8 @@ namespace QuantConnect.Brokerages.Oanda
             Agent = agent;
             Aggregator = aggregator;
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            _subscriptionManager.SubscribeImpl += (s, t) =>
-            {
-                ProcessSubscriptionRequest();
-                return true;
-            };
-            _subscriptionManager.UnsubscribeImpl += (s, t) =>
-            {
-                ProcessSubscriptionRequest();
-                return true;
-            };
+            _subscriptionManager.SubscribeImpl += (s, t) => Refresh();
+            _subscriptionManager.UnsubscribeImpl += (s, t) => Refresh(); ;
 
             PricingConnectionHandler = new DefaultConnectionHandler { MaximumIdleTimeSpan = TimeSpan.FromSeconds(20) };
             PricingConnectionHandler.ConnectionLost += OnPricingConnectionLost;
@@ -171,6 +162,31 @@ namespace QuantConnect.Brokerages.Oanda
             TransactionsConnectionHandler.ConnectionRestored += OnTransactionsConnectionRestored;
             TransactionsConnectionHandler.ReconnectRequested += OnTransactionsReconnectRequested;
             TransactionsConnectionHandler.Initialize(null);
+
+            Task.Factory.StartNew(
+                () =>
+                {
+                    do
+                    {
+                        _refreshEvent.WaitOne();
+                        Thread.Sleep(TimeSpan.FromMilliseconds(10));
+                        lock (LockerSubscriptions)
+                        {
+                            var symbolsToSubscribe = SubscribedSymbols;
+                            Log.Trace(
+                                "OandaBrokerage.ProcessSubscriptionRequest(): Updating tickers..." + string.Join(
+                                    ",",
+                                    symbolsToSubscribe.Select(x => x.Value)
+                                )
+                            );
+
+                            // restart streaming session
+                            SubscribeSymbols(symbolsToSubscribe);
+                        }
+                    } while (_isConnected);
+                },
+                TaskCreationOptions.LongRunning
+            );
         }
 
         private void OnPricingConnectionLost(object sender, EventArgs e)
@@ -236,6 +252,7 @@ namespace QuantConnect.Brokerages.Oanda
         public override void Dispose()
         {
             Aggregator.DisposeSafely();
+            _refreshEvent.DisposeSafely();
 
             PricingConnectionHandler.ConnectionLost -= OnPricingConnectionLost;
             PricingConnectionHandler.ConnectionRestored -= OnPricingConnectionRestored;
@@ -374,30 +391,9 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
-        /// Groups multiple subscribe/unsubscribe calls to avoid closing and reopening the streaming session on each call
-        /// </summary>
-        private void ProcessSubscriptionRequest()
-        {
-            if (_refreshDelay.Enabled) _refreshDelay.Stop();
-            _refreshDelay.DisposeSafely();
-            _refreshDelay = new Timer(SubscribeDelay.TotalMilliseconds);
-            _refreshDelay.Elapsed += (sender, args) =>
-            {
-                var symbolsToSubscribe = SubscribedSymbols;
-                Log.Trace("OandaBrokerage.ProcessSubscriptionRequest(): Updating tickers..." + string.Join(",", symbolsToSubscribe.Select(x => x.Value)));
-
-                // restart streaming session
-                SubscribeSymbols(symbolsToSubscribe);
-
-                _refreshDelay.Stop();
-            };
-            _refreshDelay.Start();
-        }
-
-        /// <summary>
         /// Returns true if this brokerage supports the specified symbol
         /// </summary>
-        private static bool CanSubscribe(Symbol symbol)
+        private bool CanSubscribe(Symbol symbol)
         {
             // ignore unsupported security types
             if (symbol.ID.SecurityType != SecurityType.Forex && symbol.ID.SecurityType != SecurityType.Cfd)
@@ -405,6 +401,12 @@ namespace QuantConnect.Brokerages.Oanda
 
             // ignore universe symbols
             return !symbol.Value.Contains("-UNIVERSE-");
+        }
+
+        private bool Refresh()
+        {
+            _refreshEvent.Set();
+            return true;
         }
 
         /// <summary>
