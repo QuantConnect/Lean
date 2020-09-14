@@ -37,7 +37,9 @@ namespace QuantConnect.Brokerages.Oanda
     /// </summary>
     public abstract class OandaRestApiBase : Brokerage, IDataQueueHandler
     {
-        private AutoResetEvent _refreshEvent = new AutoResetEvent(false);
+        private static readonly TimeSpan SubscribeDelay = TimeSpan.FromMilliseconds(250);
+        private ManualResetEvent _refreshEvent = new ManualResetEvent(false);
+        private CancellationTokenSource _streamingCancellationTokenSource = new CancellationTokenSource();
 
         private bool _isConnected;
 
@@ -169,21 +171,20 @@ namespace QuantConnect.Brokerages.Oanda
                     do
                     {
                         _refreshEvent.WaitOne();
-                        Thread.Sleep(TimeSpan.FromMilliseconds(10));
-                        lock (LockerSubscriptions)
-                        {
-                            var symbolsToSubscribe = SubscribedSymbols;
-                            Log.Trace(
-                                "OandaBrokerage.ProcessSubscriptionRequest(): Updating tickers..." + string.Join(
-                                    ",",
-                                    symbolsToSubscribe.Select(x => x.Value)
-                                )
-                            );
+                        Thread.Sleep(SubscribeDelay);
 
-                            // restart streaming session
-                            SubscribeSymbols(symbolsToSubscribe);
+                        if (!_isConnected)
+                        {
+                            continue;
                         }
-                    } while (_isConnected);
+
+                        _refreshEvent.Reset();
+
+                        var symbolsToSubscribe = SubscribedSymbols;
+                        // restart streaming session
+                        SubscribeSymbols(symbolsToSubscribe);
+                        
+                    } while (!_streamingCancellationTokenSource.IsCancellationRequested);
                 },
                 TaskCreationOptions.LongRunning
             );
@@ -253,6 +254,8 @@ namespace QuantConnect.Brokerages.Oanda
         {
             Aggregator.DisposeSafely();
             _refreshEvent.DisposeSafely();
+
+            _streamingCancellationTokenSource.Cancel();
 
             PricingConnectionHandler.ConnectionLost -= OnPricingConnectionLost;
             PricingConnectionHandler.ConnectionRestored -= OnPricingConnectionRestored;
