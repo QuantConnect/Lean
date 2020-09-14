@@ -200,14 +200,13 @@ namespace QuantConnect.Lean.Engine.Results
                     var serverStatistics = GetServerStatistics(utcNow);
 
                     // Only send holdings updates when we have changes in orders, except for first time, then we want to send all
-                    foreach (var kvp in Algorithm.Securities.OrderBy(x => x.Key.Value))
+                    foreach (var kvp in Algorithm.Securities
+                        // we send non internal, non canonical and tradable securities. When securities are removed they are marked as non tradable
+                        .Where(pair => pair.Value.IsTradable && !pair.Value.IsInternalFeed() && !pair.Key.IsCanonical())
+                        .OrderBy(x => x.Key.Value))
                     {
                         var security = kvp.Value;
-
-                        if (!security.IsInternalFeed() && !security.Symbol.IsCanonical())
-                        {
-                            DictionarySafeAdd(holdings, security.Symbol.Value, new Holding(security), "holdings");
-                        }
+                        DictionarySafeAdd(holdings, security.Symbol.Value, new Holding(security), "holdings");
                     }
 
                     //Add the algorithm statistics first.
