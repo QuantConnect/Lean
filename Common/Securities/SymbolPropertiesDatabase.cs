@@ -148,6 +148,26 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets a list of symbol properties for the specified market/security-type
+        /// </summary>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="securityType">The security type of the symbol</param>
+        /// <returns>An IEnumerable of symbol properties matching the specified market/security-type</returns>
+        public IEnumerable<KeyValuePair<SecurityDatabaseKey, SymbolProperties>> GetSymbolPropertiesList(string market, SecurityType securityType)
+        {
+            foreach (var entry in _entries)
+            {
+                var key = entry.Key;
+                var symbolProperties = entry.Value;
+
+                if (key.Market == market && key.SecurityType == securityType)
+                {
+                    yield return new KeyValuePair<SecurityDatabaseKey, SymbolProperties>(key, symbolProperties);
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets the instance of the <see cref="SymbolPropertiesDatabase"/> class produced by reading in the symbol properties
         /// data found in /Data/symbol-properties/
         /// </summary>
