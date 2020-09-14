@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -63,6 +64,13 @@ namespace QuantConnect.Algorithm.CSharp
                 // Create an UpdateOrderRequest and send it to the ticket
                 var updateFields = new UpdateOrderFields { Quantity = 20, Tag = "Pepe", LimitPrice = data[_spy].Low};
                 var response = _ticket.Update(updateFields);
+
+                // Test order time
+                if (_originalOrder.Time != UtcTime)
+                {
+                    Error("Order Time should be UtcTime!");
+                    throw new Exception("Order Time should be UtcTime!");
+                }
             }
         }
 
@@ -90,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
             orderV2.BrokerId.Add("FAKE BROKER ID");
             var orderV3 = Transactions.GetOrderById(orderEvent.OrderId);
 
-            if (orderV2.BrokerId == orderV3.BrokerId)
+            if (orderV2.BrokerId.SequenceEqual(orderV3.BrokerId))
             {
                 Error("Broker IDs should not be the same!");
                 throw new Exception("Broker IDs should not be the same!");
