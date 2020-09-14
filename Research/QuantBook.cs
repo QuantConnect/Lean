@@ -217,6 +217,12 @@ namespace QuantConnect.Research
                 end = start.AddDays(1);
             }
 
+            // Load a canonical option Symbol if the user provides us with an underlying Symbol
+            if (symbol.SecurityType != SecurityType.Option)
+            {
+                symbol = AddOption(symbol.Value, resolution, symbol.ID.Market).Symbol;
+            }
+
             IEnumerable<Symbol> symbols;
             if (symbol.IsCanonical())
             {
