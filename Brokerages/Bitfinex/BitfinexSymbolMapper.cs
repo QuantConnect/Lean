@@ -29,12 +29,11 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// The list of known Bitfinex symbols.
         /// https://api.bitfinex.com/v1/symbols
         /// </summary>
-        public static readonly HashSet<string> KnownSymbolStrings =
+        public static readonly HashSet<string> KnownTickers =
             new HashSet<string>(SymbolPropertiesDatabase
                 .FromDataFolder()
                 .GetSymbolPropertiesList(Market.Bitfinex, SecurityType.Crypto)
-                .Select(x => x.Key.Symbol),
-            StringComparer.OrdinalIgnoreCase);
+                .Select(x => x.Key.Symbol));
 
         /// <summary>
         /// Converts a Lean symbol instance to an Bitfinex symbol
@@ -132,7 +131,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 return false;
 
             // Strip leading 't' char
-            return KnownSymbolStrings.Contains(brokerageSymbol.Substring(1));
+            return KnownTickers.Contains(brokerageSymbol.Substring(1));
         }
 
         /// <summary>

@@ -28,7 +28,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <summary>
         /// The list of known Oanda symbols.
         /// </summary>
-        public static readonly HashSet<string> KnownSymbolStrings =
+        public static readonly HashSet<string> KnownTickers =
             new HashSet<string>(SymbolPropertiesDatabase
                     .FromDataFolder()
                     .GetSymbolPropertiesList(Market.Oanda, SecurityType.Forex)
@@ -36,8 +36,7 @@ namespace QuantConnect.Brokerages.Oanda
                     .Concat(SymbolPropertiesDatabase
                         .FromDataFolder()
                         .GetSymbolPropertiesList(Market.Oanda, SecurityType.Cfd)
-                        .Select(x => ConvertLeanSymbolToOandaSymbol(x.Key.Symbol))),
-                StringComparer.OrdinalIgnoreCase);
+                        .Select(x => ConvertLeanSymbolToOandaSymbol(x.Key.Symbol))));
 
         /// <summary>
         /// The list of known Oanda currencies.
@@ -129,7 +128,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if Oanda supports the symbol</returns>
         public bool IsKnownBrokerageSymbol(string brokerageSymbol)
         {
-            return KnownSymbolStrings.Contains(brokerageSymbol);
+            return KnownTickers.Contains(brokerageSymbol);
         }
 
         /// <summary>
