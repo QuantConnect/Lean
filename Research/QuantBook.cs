@@ -54,26 +54,6 @@ namespace QuantConnect.Research
         {
             Logging.Log.LogHandler =
                 Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
-
-            //Determine if we are in a Python Notebook
-            try
-            {
-                using (Py.GIL())
-                {
-                    var isPython = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                        "import IPython\n" +
-                        "def IsPythonNotebook():\n" +
-                        "   return (IPython.get_ipython() != None)\n").GetAttr("IsPythonNotebook").Invoke();
-                    isPython.TryConvert(out _isPythonNotebook);
-                }
-            }
-            catch
-            {
-                //Default to true
-                _isPythonNotebook = true;
-            }
-
-            Logging.Log.Trace($"QuantBook started; Is Python: {_isPythonNotebook}");
         }
 
         /// <summary>
@@ -88,6 +68,26 @@ namespace QuantConnect.Research
                 {
                     _pandas = Py.Import("pandas");
                 }
+
+                //Determine if we are in a Python Notebook
+                try
+                {
+                    using (Py.GIL())
+                    {
+                        var isPython = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                            "import IPython\n" +
+                            "def IsPythonNotebook():\n" +
+                            "   return (IPython.get_ipython() != None)\n").GetAttr("IsPythonNotebook").Invoke();
+                        isPython.TryConvert(out _isPythonNotebook);
+                    }
+                }
+                catch
+                {
+                    //Default to true
+                    _isPythonNotebook = true;
+                }
+
+                Logging.Log.Trace($"QuantBook started; Is Python: {_isPythonNotebook}");
 
                 // By default, set start date to end data which is yesterday
                 SetStartDate(EndDate);
