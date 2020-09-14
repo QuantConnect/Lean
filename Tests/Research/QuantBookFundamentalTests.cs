@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Research
         {
             var qb = new QuantBook();
             var data = qb.GetFundamental(input[0], input[1], _startDate, _endDate);
-            Assert.IsTrue(data.GetType() == typeof(DataDictionary<IEnumerable<object>>));
+            Assert.IsTrue(data.GetType() == typeof(List<DataDictionary<dynamic>>));
         }
 
         // Different requests and their expected hashes
@@ -125,12 +125,12 @@ namespace QuantConnect.Tests.Research
             var qb = new QuantBook();
             var data = qb.GetFundamental(input[0], input[1], _startDate, _endDate);
 
-            foreach (var collection in data.Values)
+            foreach (var day in data)
             {
-                foreach (var selectedData in collection)
+                foreach (var value in day.Values)
                 {
-                    Assert.AreEqual(input[2], selectedData.Value);
-                    Assert.AreEqual(_startDate, selectedData.Time);
+                    Assert.AreEqual(input[2], value);
+                    Assert.AreEqual(_startDate, day.Time);
                 }
             }
         }

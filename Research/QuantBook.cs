@@ -30,7 +30,6 @@ using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Linq;
 using QuantConnect.Data.UniverseSelection;
@@ -54,6 +53,31 @@ namespace QuantConnect.Research
         {
             Logging.Log.LogHandler =
                 Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+
+            //Determine if we are in a Python Notebook
+            try
+            {
+                using (Py.GIL())
+                {
+                    var isPython = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                        "try:\n" +
+                        "   import IPython\n" +
+                        "   def IsPythonNotebook():\n" +
+                        "       return (IPython.get_ipython() != None)\n" +
+                        "except:\n" +
+                        "   print('No IPython installed')\n" +
+                        "   def IsPythonNotebook():\n" +
+                        "       return false\n").GetAttr("IsPythonNotebook").Invoke();
+                    isPython.TryConvert(out _isPythonNotebook);
+                }
+            }
+            catch
+            {
+                //Default to false
+                _isPythonNotebook = false;
+            }
+
+            Logging.Log.Trace($"QuantBook started; Is Python: {_isPythonNotebook}");
         }
 
         /// <summary>
@@ -68,26 +92,6 @@ namespace QuantConnect.Research
                 {
                     _pandas = Py.Import("pandas");
                 }
-
-                //Determine if we are in a Python Notebook
-                try
-                {
-                    using (Py.GIL())
-                    {
-                        var isPython = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                            "import IPython\n" +
-                            "def IsPythonNotebook():\n" +
-                            "   return (IPython.get_ipython() != None)\n").GetAttr("IsPythonNotebook").Invoke();
-                        isPython.TryConvert(out _isPythonNotebook);
-                    }
-                }
-                catch
-                {
-                    //Default to true
-                    _isPythonNotebook = true;
-                }
-
-                Logging.Log.Trace($"QuantBook started; Is Python: {_isPythonNotebook}");
 
                 // By default, set start date to end data which is yesterday
                 SetStartDate(EndDate);
@@ -211,26 +215,38 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>Enumerable collection of DataDictionaries, one dictionary for each day there is data</returns>
-        public DataDictionary<IEnumerable<dynamic>> GetFundamental(IEnumerable<Symbol> symbols, string selector, DateTime? start = null, DateTime? end = null)
+        public IEnumerable<DataDictionary<dynamic>> GetFundamental(IEnumerable<Symbol> symbols, string selector, DateTime? start = null, DateTime? end = null)
         {
-            if (selector.IsNullOrEmpty())
-            {
-                return GetAllFundamental(symbols, start, end);
-            }
-            else
-            {
-                var data = GetAllFundamental(symbols, start, end);
+            var data = GetAllFundamental(symbols, start, end);
 
-                //Filter out the requested data; always include time
-                var result = new DataDictionary<IEnumerable<dynamic>>();
-                foreach (var kvp in data)
+            // Convert the data to proper form; a list of DataDictionaries to represent a day
+            var result = new List<DataDictionary<dynamic>>();
+            foreach (var kvp in data)
+            {
+                foreach (var value in kvp.Value)
                 {
-                    var temp = kvp.Value.Select(x => new SelectedData(x.Time, GetPropertyValue(x, selector), selector));
-                    result[kvp.Key] = temp;
-                }
+                    // Take the whole value, may need to be replaced
+                    dynamic valueToAdd = value;
 
-                return result;
+                    // Check our results to see if there is a dictionary for this day
+                    var dayDictionary = result.Find(x => x.Time == value.Time) ?? new DataDictionary<dynamic>(value.Time);
+
+                    // Put the value in at that date; filter if there is a selector
+                    if (!selector.IsNullOrEmpty())
+                    {
+                        valueToAdd = GetPropertyValue(value, selector);
+                    }
+
+                    dayDictionary.Add(kvp.Key, valueToAdd);
+
+                    // Add the dayDictionary in if it isn't already
+                    if (!result.Contains(dayDictionary))
+                    {
+                        result.Add(dayDictionary);
+                    }
+                }
             }
+            return result;
         }
 
         /// <summary>
@@ -241,7 +257,7 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>Enumerable collection of DataDictionaries, one Dictionary for each day there is data.</returns>
-        public DataDictionary<IEnumerable<dynamic>> GetFundamental(Symbol symbol, string selector, DateTime? start = null, DateTime? end = null)
+        public IEnumerable<DataDictionary<dynamic>> GetFundamental(Symbol symbol, string selector, DateTime? start = null, DateTime? end = null)
         {
             var list = new List<Symbol>
             {
@@ -259,7 +275,7 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>Enumerable collection of DataDictionaries, one dictionary for each day there is data.</returns>
-        public DataDictionary<IEnumerable<dynamic>> GetFundamental(IEnumerable<string> tickers, string selector, DateTime? start = null, DateTime? end = null)
+        public IEnumerable<DataDictionary<dynamic>> GetFundamental(IEnumerable<string> tickers, string selector, DateTime? start = null, DateTime? end = null)
         {
             var list = new List<Symbol>();
             foreach (var ticker in tickers)
@@ -810,14 +826,14 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>DataDictionary of Enumerable IBaseData</returns>
-        private DataDictionary<IEnumerable<dynamic>> GetAllFundamental(IEnumerable<Symbol> symbols, DateTime? start = null, DateTime? end = null)
+        private Dictionary<Symbol, List<BaseData>> GetAllFundamental(IEnumerable<Symbol> symbols, DateTime? start = null, DateTime? end = null)
         {
             //SubscriptionRequest does not except nullable DateTimes, so set a startTime and endTime
             var startTime = start.HasValue ? (DateTime)start : QuantConnect.Time.BeginningOfTime;
             var endTime = end.HasValue ? (DateTime)end : QuantConnect.Time.EndOfTime;
 
             //Collection to store our results
-            var data = new DataDictionary<IEnumerable<dynamic>>();
+            var data = new Dictionary<Symbol, List<BaseData>>();
 
             //Build factory
             var factory = new FineFundamentalSubscriptionEnumeratorFactory(false);
@@ -863,21 +879,6 @@ namespace QuantConnect.Research
                 }
             });
             return data;
-        }
-    }
-
-    //Public class for SelectedData
-    public class SelectedData
-    {
-        public DateTime Time;
-        public dynamic Value;
-        public string Selector;
-
-        public SelectedData(DateTime time, dynamic value, string selector)
-        {
-            Time = time;
-            Value = value;
-            Selector = selector;
         }
     }
 }
