@@ -137,25 +137,23 @@ namespace QuantConnect.Brokerages.Bitfinex
                     for (int i = subscriptions.Count - 1; i >= 0; i--)
                     {
                         var webSocket = subscriptions[i];
+                        _onUnsubscribeEvent.Reset();
                         try
                         {
-                            lock (_locker)
+                            Channel channel = new Channel(channelName, symbol);
+                            List<Channel> channels;
+                            if (_channelsByWebSocket.TryGetValue(webSocket, out channels) && channels.Contains(channel))
                             {
-                                Channel channel = new Channel(channelName, symbol);
-                                List<Channel> channels;
-                                if (_channelsByWebSocket.TryGetValue(webSocket, out channels) && channels.Contains(channel))
-                                {
-                                    UnsubscribeChannel(webSocket, channel);
+                                UnsubscribeChannel(webSocket, channel);
 
-                                    if (_onUnsubscribeEvent.WaitOne(TimeSpan.FromSeconds(30)))
-                                    {
-                                        states.Add(true);
-                                    }
-                                    else
-                                    {
-                                        Log.Trace($"BitfinexBrokerage.Unsubscribe(): Could not unsubscribe from {symbol.Value}.");
-                                        states.Add(false);
-                                    }
+                                if (_onUnsubscribeEvent.WaitOne(TimeSpan.FromSeconds(30)))
+                                {
+                                    states.Add(true);
+                                }
+                                else
+                                {
+                                    Log.Trace($"BitfinexBrokerage.Unsubscribe(): Could not unsubscribe from {symbol.Value}.");
+                                    states.Add(false);
                                 }
                             }
                         }
