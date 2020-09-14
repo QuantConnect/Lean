@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 8);
             SetCash(100000);
 
-            _eurusd = QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM);
+            _eurusd = QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda);
             var eurgbp = AddForex("EURGBP", Resolution.Daily);
             _dataPointsPerSymbol.Add(eurgbp.Symbol, 0);
         }
@@ -145,8 +145,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "5.893"},
-            {"Tracking Error", "0.131"},
+            {"Information Ratio", "5.853"},
+            {"Tracking Error", "0.107"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Fitness Score", "0"},

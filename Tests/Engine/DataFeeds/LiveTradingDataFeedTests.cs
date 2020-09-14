@@ -203,7 +203,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var endDate = _startDate.AddDays(10);
             var feed = RunDataFeed(equities: new List<string> { "SPY" });
 
-            var forexFxcmUserUniverse = UserDefinedUniverse.CreateSymbol(SecurityType.Forex, Market.FXCM);
+            var forexFxcmUserUniverse = UserDefinedUniverse.CreateSymbol(SecurityType.Forex, Market.Oanda);
             var emittedData = false;
             var newDataCount = 0;
             var securityChanges = 0;
@@ -1130,7 +1130,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         {
                             var ticks = new List<Tick>
                             {
-                                new Tick(tickTimeUtc.ConvertFromUtc(config.DataTimeZone), config.Symbol, 1, 2)
+                                new Tick(tickTimeUtc.ConvertFromUtc(config.ExchangeTimeZone), config.Symbol, 1, 2)
                                 {
                                     Quantity = 1,
                                     // Symbol could not be in the Securities collections for the custom Universe tests. AlgorithmManager is in charge of adding them, and we are not executing that code here.

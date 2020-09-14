@@ -402,11 +402,11 @@ namespace QuantConnect.Tests.Common.Util
                 new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Daily, TickType.Quote, "spy_quote_american.zip", "spy_quote_american_put_1920000_20160219.csv", "option/usa/daily"),
 
                 // forex
-                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Tick, TickType.Quote, "20160217_quote.zip", "20160217_eurusd_tick_quote.csv", "forex/fxcm/tick/eurusd"),
-                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Second, TickType.Quote, "20160217_quote.zip", "20160217_eurusd_second_quote.csv", "forex/fxcm/second/eurusd"),
-                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Minute, TickType.Quote, "20160217_quote.zip", "20160217_eurusd_minute_quote.csv", "forex/fxcm/minute/eurusd"),
-                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Hour, TickType.Quote, "eurusd.zip", "eurusd.csv", "forex/fxcm/hour"),
-                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Daily, TickType.Quote, "eurusd.zip", "eurusd.csv", "forex/fxcm/daily"),
+                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Tick, TickType.Quote, "20160217_quote.zip", "20160217_eurusd_tick_quote.csv", "forex/oanda/tick/eurusd"),
+                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Second, TickType.Quote, "20160217_quote.zip", "20160217_eurusd_second_quote.csv", "forex/oanda/second/eurusd"),
+                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Minute, TickType.Quote, "20160217_quote.zip", "20160217_eurusd_minute_quote.csv", "forex/oanda/minute/eurusd"),
+                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Hour, TickType.Quote, "eurusd.zip", "eurusd.csv", "forex/oanda/hour"),
+                new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Daily, TickType.Quote, "eurusd.zip", "eurusd.csv", "forex/oanda/daily"),
 
                 // cfd
                 new LeanDataTestParameters(Symbols.DE10YBEUR, date, Resolution.Tick, TickType.Quote, "20160217_quote.zip", "20160217_de10ybeur_tick_quote.csv", "cfd/fxcm/tick/de10ybeur"),

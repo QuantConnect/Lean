@@ -994,7 +994,7 @@ def Test(slice, keys, default_value):
 
                 var result = string.Empty;
                 Assert.DoesNotThrow(() => result = test(GetPythonSlice(), new[] { Symbols.EURUSD }, new Tick()));
-                Assert.AreEqual("EURUSD 5O: 0.0", result);
+                Assert.AreEqual("EURUSD 8G: 0.0", result);
             }
         }
 
