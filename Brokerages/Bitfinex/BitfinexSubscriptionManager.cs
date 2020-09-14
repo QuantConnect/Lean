@@ -202,7 +202,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             webSocket.Send(JsonConvert.SerializeObject(new
             {
                 @event = "unsubscribe",
-                channelId
+                chanId = channelId.ToStringInvariant()
             }));
         }
 
