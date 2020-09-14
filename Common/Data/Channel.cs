@@ -23,6 +23,12 @@ namespace QuantConnect.Data
     /// </summary>
     public class Channel
     {
+
+        /// <summary>
+        /// Represents an internal channel name for all brokerage channels in case we don't differentiate them
+        /// </summary>
+        public static string Single = "common";
+
         /// <summary>
         /// The name of the channel
         /// </summary>
@@ -96,10 +102,5 @@ namespace QuantConnect.Data
                 return hash;
             }
         }
-
-        /// <summary>
-        /// Represents an internal channel name for all brokerage channels in case we don't differentiate them
-        /// </summary>
-        public static string Single = "common";
     }
 }

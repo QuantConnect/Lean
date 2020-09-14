@@ -92,6 +92,30 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Returns subscribed symbols
+        /// </summary>
+        /// <returns>list of <see cref="Symbol"/> currently subscribed</returns>
+        public IEnumerable<Symbol> GetSubscribedSymbols()
+        {
+            return SubscribersByChannel.Keys
+                .Select(c => c.Symbol)
+                .Distinct();
+        }
+
+        /// <summary>
+        /// Checks if there is existing subscriber for current channel
+        /// </summary>
+        /// <param name="symbol">Symbol</param>
+        /// <param name="tickType">Type of tick data</param>
+        /// <returns>return true if there is one subscriber at least; otherwise false</returns>
+        public bool IsSubscribed(Symbol symbol, TickType tickType)
+        {
+            return SubscribersByChannel.ContainsKey(GetChannel(
+                symbol,
+                tickType));
+        }
+
+        /// <summary>
         /// Describes the way <see cref="IDataQueueHandler"/> implements subscription
         /// </summary>
         /// <param name="symbols">Symbols to subscribe</param>
@@ -114,19 +138,6 @@ namespace QuantConnect.Data
         /// <returns></returns>
         protected abstract string ChannelNameFromTickType(TickType tickType);
 
-        /// <summary>
-        /// Checks if there is existing subscriber for current channel
-        /// </summary>
-        /// <param name="symbol">Symbol</param>
-        /// <param name="tickType">Type of tick data</param>
-        /// <returns>return true if there is one subscriber at least; otherwise false</returns>
-        public bool IsSubscribed(Symbol symbol, TickType tickType)
-        {
-            return SubscribersByChannel.ContainsKey(GetChannel(
-                symbol,
-                tickType));
-        }
-
         private Channel GetChannel(SubscriptionDataConfig dataConfig) => GetChannel(dataConfig.Symbol, dataConfig.TickType);
 
         private Channel GetChannel(Symbol symbol, TickType tickType)
@@ -134,17 +145,6 @@ namespace QuantConnect.Data
             return new Channel(
                 ChannelNameFromTickType(tickType),
                 symbol);
-        }
-
-        /// <summary>
-        /// Returns subscribed symbols
-        /// </summary>
-        /// <returns>list of <see cref="Symbol"/> currently subscribed</returns>
-        public IEnumerable<Symbol> GetSubscribedSymbols()
-        {
-            return SubscribersByChannel.Keys
-                .Select(c => c.Symbol)
-                .Distinct();
         }
     }
 }

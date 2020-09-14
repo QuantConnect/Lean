@@ -45,7 +45,7 @@ namespace QuantConnect.Brokerages.Tradier
         private Timer _refreshDelay = new Timer();
         private Stream _tradierStream;
 
-        public IEnumerable<Symbol> Subscriptions => _subscriptionManager.GetSubscribedSymbols();
+        private IEnumerable<Symbol> Subscriptions => _subscriptionManager.GetSubscribedSymbols();
 
         /// <summary>
         /// Sets the job we're subscribing for
