@@ -239,14 +239,14 @@ namespace QuantConnect.Research
 
                     dayDictionary.Add(kvp.Key, valueToAdd);
 
-                    // Add the dayDictionary in if it isn't already
+                    // Add the dayDictionary to the results if it isn't already entered
                     if (!result.Contains(dayDictionary))
                     {
                         result.Add(dayDictionary);
                     }
                 }
             }
-            return result;
+            return result.OrderBy(day => day.Time).ToList();
         }
 
         /// <summary>
