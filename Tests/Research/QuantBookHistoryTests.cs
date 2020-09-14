@@ -17,6 +17,9 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Securities;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Research;
 
 namespace QuantConnect.Tests.Research
 {
@@ -178,6 +181,35 @@ namespace QuantConnect.Tests.Research
                 var firstIndex = (DateTime)(startEndHistory.index.values[0][4] as PyObject).AsManagedObject(typeof(DateTime));
                 Assert.GreaterOrEqual(startDate.AddDays(-1).Date, firstIndex.Date);
             }
+        }
+
+        [Test]
+        public void OptionUnderlyingSymbolQuantBookHistory()
+        {
+            var qb = new QuantBook();
+            var twx = qb.AddEquity("TWX");
+            var twxOptions = qb.AddOption("TWX");
+
+            var historyByOptionSymbol = qb.GetOptionHistory(twxOptions.Symbol, new DateTime(2014, 6, 5), new DateTime(2014, 6, 6));
+            var historyByEquitySymbol = qb.GetOptionHistory(twx.Symbol, new DateTime(2014, 6, 5), new DateTime(2014, 6, 6));
+
+            List<DateTime> expiry;
+            List<DateTime> byUnderlyingExpiry;
+
+            historyByOptionSymbol.GetExpiryDates().TryConvert(out expiry);
+            historyByEquitySymbol.GetExpiryDates().TryConvert(out byUnderlyingExpiry);
+
+            List<decimal> strikes;
+            List<decimal> byUnderlyingStrikes;
+
+            historyByOptionSymbol.GetStrikes().TryConvert(out strikes);
+            historyByEquitySymbol.GetStrikes().TryConvert(out byUnderlyingStrikes);
+
+            Assert.IsTrue(expiry.Count > 0);
+            Assert.IsTrue(expiry.SequenceEqual(byUnderlyingExpiry));
+
+            Assert.IsTrue(strikes.Count > 0);
+            Assert.IsTrue(strikes.SequenceEqual(byUnderlyingStrikes));
         }
 
         [TestCase(182, 2)]
