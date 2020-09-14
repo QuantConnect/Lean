@@ -45,7 +45,6 @@ namespace QuantConnect.Brokerages.Bitfinex
         private readonly IAlgorithm _algorithm;
         private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromMinutes(1));
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
-        private readonly BitfinexSubscriptionManager _subscriptionManager;
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
         private readonly IDataAggregator _aggregator;
 
@@ -85,7 +84,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         public BitfinexBrokerage(IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator)
             : base(WebSocketUrl, websocket, restClient, apiKey, apiSecret, Market.Bitfinex, "Bitfinex")
         {
-            _subscriptionManager = new BitfinexSubscriptionManager(this, WebSocketUrl, _symbolMapper);
+            SubscriptionManager = new BitfinexSubscriptionManager(this, WebSocketUrl, _symbolMapper);
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _algorithm = algorithm;
             _aggregator = aggregator;
@@ -132,39 +131,11 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <summary>
-        /// Subscribes to the requested symbols (using an individual streaming channel)
+        /// Should be empty, Bitfinex brokerage manages his public channels including subscribe/unsubscribe/reconnect methods using <see cref="BitfinexSubscriptionManager"/>
+        /// Not used in master
         /// </summary>
-        /// <param name="symbols">The list of symbols to subscribe</param>
-        public override void Subscribe(IEnumerable<Symbol> symbols)
-        {
-            foreach (var symbol in symbols)
-            {
-                if (_subscriptionManager.IsSubscribed(symbol) ||
-                    symbol.Value.Contains("UNIVERSE") ||
-                    !_symbolMapper.IsKnownLeanSymbol(symbol) ||
-                    symbol.SecurityType != _symbolMapper.GetLeanSecurityType(symbol.Value))
-                {
-                    continue;
-                }
-
-                _subscriptionManager.Subscribe(symbol);
-
-                Log.Trace($"BitfinexBrokerage.Subscribe(): Sent subscribe for {symbol.Value}.");
-            }
-        }
-
-        /// <summary>
-        /// Ends current subscriptions
-        /// </summary>
-        private void Unsubscribe(IEnumerable<Symbol> symbols)
-        {
-            foreach (var symbol in symbols)
-            {
-                _subscriptionManager.Unsubscribe(symbol);
-
-                Log.Trace($"BitfinexBrokerage.Unsubscribe(): Sent unsubscribe for {symbol.Value}.");
-            }
-        }
+        /// <param name="symbols"></param>
+        public override void Subscribe(IEnumerable<Symbol> symbols) { }
 
         private long GetNextClientOrderId()
         {
@@ -472,31 +443,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <summary>
-        /// Gets a list of current subscriptions
+        /// Should be empty. <see cref="BitfinexSubscriptionManager"/> manages each <see cref="BitfinexWebSocketWrapper"/> individually
         /// </summary>
         /// <returns></returns>
-        protected override IList<Symbol> GetSubscribed()
-        {
-            IList<Symbol> list = new List<Symbol>();
-            lock (ChannelList)
-            {
-                foreach (var ticker in ChannelList.Select(x => x.Value.Symbol).Distinct())
-                {
-                    list.Add(_symbolMapper.GetLeanSymbol(ticker));
-                }
-            }
-            return list;
-        }
-    }
-
-    /// <summary>
-    /// Represents Bitfinex channel information
-    /// </summary>
-    public class BitfinexChannel : BaseWebsocketsBrokerage.Channel
-    {
-        /// <summary>
-        /// Represents channel identifier for specific subscription
-        /// </summary>
-        public string ChannelId { get; set; }
+        protected override IEnumerable<Symbol> GetSubscribed() => new List<Symbol>();
     }
 }

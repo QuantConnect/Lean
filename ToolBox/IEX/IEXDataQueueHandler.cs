@@ -33,6 +33,8 @@ using NodaTime;
 using System.Globalization;
 using static QuantConnect.StringExtensions;
 using QuantConnect.Util;
+using CoinAPI.WebSocket.V1.DataModels;
+using System.Linq;
 
 namespace QuantConnect.ToolBox.IEX
 {
@@ -57,6 +59,7 @@ namespace QuantConnect.ToolBox.IEX
         private int _dataPointCount;
         private readonly IDataAggregator _aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
             Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         public string Endpoint { get; internal set; }
 
@@ -68,6 +71,19 @@ namespace QuantConnect.ToolBox.IEX
 
         public IEXDataQueueHandler(bool live)
         {
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager.SubscribeImpl += (s, t) =>
+            {
+                Subscribe(s);
+                return true;
+            };
+
+            _subscriptionManager.UnsubscribeImpl += (s, t) =>
+            {
+                Unsubscribe(s);
+                return true;
+            };
+
             Endpoint = "https://ws-api.iextrading.com/1.0/tops";
 
             if (string.IsNullOrWhiteSpace(_apiKey))
@@ -175,8 +191,13 @@ namespace QuantConnect.ToolBox.IEX
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            if (dataConfig.SecurityType != SecurityType.Equity)
+            {
+                return Enumerable.Empty<BaseData>().GetEnumerator();
+            }
+
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
-            Subscribe(new[] { dataConfig.Symbol });
+            _subscriptionManager.Subscribe(dataConfig);
 
             return enumerator;
         }
@@ -200,7 +221,6 @@ namespace QuantConnect.ToolBox.IEX
                 foreach (var symbol in symbols)
                 {
                     // IEX only supports equities
-                    if (symbol.SecurityType != SecurityType.Equity) continue;
                     if (symbol.Value.Equals("firehose", StringComparison.InvariantCultureIgnoreCase))
                     {
                         _subscribedToAll = true;
@@ -230,7 +250,7 @@ namespace QuantConnect.ToolBox.IEX
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            _subscriptionManager.Unsubscribe(dataConfig);
             _aggregator.Remove(dataConfig);
         }
 

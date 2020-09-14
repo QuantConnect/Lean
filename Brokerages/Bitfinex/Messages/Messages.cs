@@ -44,7 +44,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         public string Channel { get; set; }
 
         [JsonProperty("chanId")]
-        public string ChannelId { get; set; }
+        public int ChannelId { get; set; }
 
         [JsonProperty("symbol")]
         public string Symbol { get; set; }
@@ -55,7 +55,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
         public string Status { get; set; }
 
         [JsonProperty("chanId")]
-        public string ChannelId { get; set; }
+        public int ChannelId { get; set; }
     }
 
     public class AuthResponseMessage: BaseMessage

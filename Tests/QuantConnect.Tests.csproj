@@ -380,7 +380,10 @@
     <Compile Include="Brokerages\Alpaca\AlpacaBrokerageTests.cs" />
     <Compile Include="Common\Data\Auxiliary\FactorFileTests.cs" />
     <Compile Include="Common\Data\Auxiliary\MapFileTests.cs" />
+    <Compile Include="Common\Data\ChannelTests.cs" />
     <Compile Include="Common\Data\Custom\TradingEconomicsTests.cs" />
+    <Compile Include="Common\Data\DataQueueHandlerSubscriptionManagerTests.cs" />
+    <Compile Include="Common\Data\FakeDataQueuehandlerSubscriptionManager.cs" />
     <Compile Include="Common\Data\Fundamental\FineFundamentalTests.cs" />
     <Compile Include="Common\Orders\OrderEventTests.cs" />
     <Compile Include="Common\ExtendedDictionaryTests.cs" />

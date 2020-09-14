@@ -52,6 +52,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
         private readonly IDataAggregator _aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
             Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
@@ -65,6 +66,18 @@ namespace QuantConnect.ToolBox.IQFeed
         {
             _symbols = new HashSet<Symbol>();
             _underlyings = new Dictionary<Symbol, Symbol>();
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager.SubscribeImpl += (s, t) =>
+            {
+                Subscribe(s);
+                return true;
+            };
+
+            _subscriptionManager.UnsubscribeImpl += (s, t) =>
+            {
+                Unsubscribe(s);
+                return true;
+            };
 
             if (!IsConnected) Connect();
         }
@@ -77,8 +90,13 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            if (!CanSubscribe(dataConfig.Symbol))
+            {
+                return Enumerable.Empty<BaseData>().GetEnumerator();
+            }
+
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
-            Subscribe(new[] { dataConfig.Symbol });
+            _subscriptionManager.Subscribe(dataConfig);
 
             return enumerator;
         }
@@ -93,40 +111,37 @@ namespace QuantConnect.ToolBox.IQFeed
             {
                 foreach (var symbol in symbols)
                 {
-                    if (CanSubscribe(symbol))
+                    lock (_sync)
                     {
-                        lock (_sync)
+                        Log.Trace("IQFeed.Subscribe(): Subscribe Request: " + symbol.ToString());
+
+                        if (_symbols.Add(symbol))
                         {
-                            Log.Trace("IQFeed.Subscribe(): Subscribe Request: " + symbol.ToString());
+                            // processing canonical option symbol to subscribe to underlying prices
+                            var subscribeSymbol = symbol;
 
-                            if (_symbols.Add(symbol))
+                            if (symbol.ID.SecurityType == SecurityType.Option && symbol.IsCanonical())
                             {
-                                // processing canonical option symbol to subscribe to underlying prices
-                                var subscribeSymbol = symbol;
+                                subscribeSymbol = symbol.Underlying;
+                                _underlyings.Add(subscribeSymbol, symbol);
+                            }
 
-                                if (symbol.ID.SecurityType == SecurityType.Option && symbol.IsCanonical())
-                                {
-                                    subscribeSymbol = symbol.Underlying;
-                                    _underlyings.Add(subscribeSymbol, symbol);
-                                }
+                            if (symbol.ID.SecurityType == SecurityType.Future && symbol.IsCanonical())
+                            {
+                                // do nothing for now. Later might add continuous contract symbol.
+                                return;
+                            }
 
-                                if (symbol.ID.SecurityType == SecurityType.Future && symbol.IsCanonical())
-                                {
-                                    // do nothing for now. Later might add continuous contract symbol.
-                                    return;
-                                }
+                            var ticker = _symbolUniverse.GetBrokerageSymbol(subscribeSymbol);
 
-                                var ticker = _symbolUniverse.GetBrokerageSymbol(subscribeSymbol);
-
-                                if (!string.IsNullOrEmpty(ticker))
-                                {
-                                    _level1Port.Subscribe(ticker);
-                                    Log.Trace("IQFeed.Subscribe(): Subscribe Processed: {0} ({1})", symbol.Value, ticker);
-                                }
-                                else
-                                {
-                                    Log.Error("IQFeed.Subscribe(): Symbol {0} was not found in IQFeed symbol universe", symbol.Value);
-                                }
+                            if (!string.IsNullOrEmpty(ticker))
+                            {
+                                _level1Port.Subscribe(ticker);
+                                Log.Trace("IQFeed.Subscribe(): Subscribe Processed: {0} ({1})", symbol.Value, ticker);
+                            }
+                            else
+                            {
+                                Log.Error("IQFeed.Subscribe(): Symbol {0} was not found in IQFeed symbol universe", symbol.Value);
                             }
                         }
                     }
@@ -144,7 +159,7 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            Unsubscribe(new Symbol[] { dataConfig.Symbol });
+            _subscriptionManager.Unsubscribe(dataConfig);
             _aggregator.Remove(dataConfig);
         }
 
@@ -293,7 +308,7 @@ namespace QuantConnect.ToolBox.IQFeed
         /// </summary>
         /// <param name="symbol">The symbol to be handled</param>
         /// <returns>True if this data provider can get data for the symbol, false otherwise</returns>
-        private bool CanSubscribe(Symbol symbol)
+        private static bool CanSubscribe(Symbol symbol)
         {
             var market = symbol.ID.Market;
             var securityType = symbol.ID.SecurityType;

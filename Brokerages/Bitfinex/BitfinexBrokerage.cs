@@ -427,7 +427,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         #endregion
 
         #region IDataQueueHandler
-        
+
         /// <summary>
         /// Sets the job we're subscribing for
         /// </summary>
@@ -444,8 +444,16 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            var symbol = dataConfig.Symbol;
+            if (symbol.Value.Contains("UNIVERSE") ||
+                !_symbolMapper.IsKnownLeanSymbol(symbol) ||
+                symbol.SecurityType != _symbolMapper.GetLeanSecurityType(symbol.Value))
+            {
+                return Enumerable.Empty<BaseData>().GetEnumerator();
+            }
+
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
-            Subscribe(new[] { dataConfig.Symbol });
+            SubscriptionManager.Subscribe(dataConfig);
 
             return enumerator;
         }
@@ -456,7 +464,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            Unsubscribe(new[] { dataConfig.Symbol });
+            SubscriptionManager.Unsubscribe(dataConfig);
             _aggregator.Remove(dataConfig);
         }
 

@@ -385,14 +385,10 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         public override void Subscribe(IEnumerable<Symbol> symbols)
         {
-            foreach (var item in symbols)
+            var fullList = GetSubscribed().Union(symbols);
+            var pendingSymbols = new List<Symbol>();
+            foreach (var item in fullList)
             {
-                if (item.Value.Contains("UNIVERSE") ||
-                    item.SecurityType != SecurityType.Forex && item.SecurityType != SecurityType.Crypto)
-                {
-                    continue;
-                }
-
                 if (!IsSubscribeAvailable(item))
                 {
                     //todo: refactor this outside brokerage
@@ -401,11 +397,12 @@ namespace QuantConnect.Brokerages.GDAX
                 }
                 else
                 {
-                    this.ChannelList[item.Value] = new Channel { Name = item.Value, Symbol = item.Value };
+                    pendingSymbols.Add(item);
                 }
             }
 
-            var products = ChannelList.Select(s => s.Value.Symbol.Substring(0, 3) + "-" + s.Value.Symbol.Substring(3)).ToArray();
+            var products = pendingSymbols
+                .Select(s => s.Value.Substring(0, 3) + "-" + s.Value.Substring(3)).ToArray();
 
             var payload = new
             {
@@ -497,12 +494,24 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// Ends current subscriptions
         /// </summary>
-        public void Unsubscribe(IEnumerable<Symbol> symbols)
+        public bool Unsubscribe(IEnumerable<Symbol> symbols)
         {
             if (WebSocket.IsOpen)
             {
-                WebSocket.Send(JsonConvert.SerializeObject(new { type = "unsubscribe", channels = ChannelNames }));
+                var products = symbols
+                    .Select(s => s.Value.Substring(0, 3) + "-" + s.Value.Substring(3))
+                    .ToArray();
+
+                var payload = new
+                {
+                    type = "unsubscribe",
+                    channels = ChannelNames,
+                    product_ids = products
+                };
+
+                WebSocket.Send(JsonConvert.SerializeObject(payload));
             }
+            return true;
         }
 
         private void FillMonitorAction()
