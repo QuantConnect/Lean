@@ -291,20 +291,22 @@ namespace QuantConnect.Securities
             IReadOnlyDictionary<SecurityType, string> markets
             )
         {
-            string market;
             var marketJoin = new HashSet<string>();
-            if (marketMap.TryGetValue(securityType, out market))
             {
-                marketJoin.Add(market);
-            }
-            if(markets.TryGetValue(securityType, out market))
-            {
-                marketJoin.Add(market);
+                string market;
+                if (marketMap.TryGetValue(securityType, out market))
+                {
+                    marketJoin.Add(market);
+                }
+                if (markets.TryGetValue(securityType, out market))
+                {
+                    marketJoin.Add(market);
+                }
             }
             
-            return SymbolPropertiesDatabase.FromDataFolder()
+            return marketJoin.SelectMany(market => SymbolPropertiesDatabase.FromDataFolder()
                 .GetSymbolPropertiesList(market, securityType)
-                .Select(x => QuantConnect.Symbol.Create(x.Key.Symbol, securityType, market));
+                .Select(x => QuantConnect.Symbol.Create(x.Key.Symbol, securityType, market)));
         }
 
         private void OnUpdate()
