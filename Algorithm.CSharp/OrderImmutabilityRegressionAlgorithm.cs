@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -31,6 +32,8 @@ namespace QuantConnect.Algorithm.CSharp
     public class OrderImmutabilityRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private readonly Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        private OrderTicket _ticket;
+        private Order _originalOrder;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -38,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2013, 10, 08);  //Set Start Date
-            SetEndDate(2013, 10, 17);    //Set End Date
+            SetEndDate(2013, 10, 09);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             AddEquity("SPY", Resolution.Daily);
         }
@@ -51,17 +54,35 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                SetHoldings(_spy, 1);
+                _ticket = LimitOrder(_spy, 10, 100);
                 Debug("Purchased Stock");
+
+                // Here we will show how to correctly change an order, we will then verify at End of Algorithm!
+                // First get the order as it is now, should be a copy, so it wont be updated!
+                _originalOrder = Transactions.GetOrderById(_ticket.OrderId);
+
+                // Create an UpdateOrderRequest and send it to the ticket
+                var updateFields = new UpdateOrderFields { Quantity = 20, Tag = "Pepe", LimitPrice = data[_spy].Low};
+                var response = _ticket.Update(updateFields);
+
+                // Test order time
+                if (_originalOrder.Time != UtcTime)
+                {
+                    Error("Order Time should be UtcTime!");
+                    throw new Exception("Order Time should be UtcTime!");
+                }
             }
         }
 
         /// <summary>
         /// All order events get pushed through this function
+        /// This function will test that what we get from Transactions is indeed a clone
+        /// The only authentic way to change the order is to change through the order ticket!
         /// </summary>
         /// <param name="orderEvent">OrderEvent object that contains all the information about the event</param>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
+
             // Get the order twice, since they are clones they should NOT be the same
             var orderV1 = Transactions.GetOrderById(orderEvent.OrderId);
             var orderV2 = Transactions.GetOrderById(orderEvent.OrderId);
@@ -72,37 +93,56 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("Orders should be clones, hence not equal!");
             }
 
-            //Try and manipulate the orderV1 using UpdateOrderRequest
-            //NOTICE: Orders should only be updated through their tickets!
-            var updateFields = new UpdateOrderFields { Quantity = 99, Tag = "Pepe" };
-            var updateRequest = new UpdateOrderRequest(DateTime.Now, orderEvent.OrderId, updateFields);
-            orderV1.ApplyUpdateOrderRequest(updateRequest);
-
-            //Get another copy of the order and compare
+            // Try and manipulate orderV2 using the only external accessor BrokerID, since we
+            // are changing a clone the BrokerIDs should not be the same
+            orderV2.BrokerId.Add("FAKE BROKER ID");
             var orderV3 = Transactions.GetOrderById(orderEvent.OrderId);
 
-            if (orderV1.Quantity == orderV3.Quantity)
+            if (orderV2.BrokerId.SequenceEqual(orderV3.BrokerId))
             {
-                Error("Quantities should not be changed!");
-                throw new Exception("Quantities should not be changed!");
-            }
-            
-            if (orderV1.Tag == orderV3.Tag)
-            {
-                Error("Tag should not be changed!");
-                throw new Exception("Tag should not be changed!");
+                Error("Broker IDs should not be the same!");
+                throw new Exception("Broker IDs should not be the same!");
             }
 
-            //Try and manipulate orderV2 using the only external accessor BrokerID
-            orderV2.BrokerId.Add("FAKE BROKER ID");
-
-            //Get another copy of the order and compare
+            //Try and manipulate the orderV1 using UpdateOrderRequest
+            //NOTICE: Orders should only be updated through their tickets!
+            var updateFields = new UpdateOrderFields { Quantity = 99, Tag = "Pepe2!" };
+            var updateRequest = new UpdateOrderRequest(DateTime.Now, orderEvent.OrderId, updateFields);
+            orderV1.ApplyUpdateOrderRequest(updateRequest);
             var orderV4 = Transactions.GetOrderById(orderEvent.OrderId);
 
-            if (orderV2.BrokerId == orderV4.BrokerId)
+            if (orderV4.Quantity == orderV1.Quantity)
             {
-                Error("BrokerIDs should not be the same!");
-                throw new Exception("BrokerIDs should not be the same!");
+                Error("Order quantity should not be the same!");
+                throw new Exception("Order quantity should not be the same!");
+            }
+
+            if (orderV4.Tag == orderV1.Tag)
+            {
+                Error("Order tag should not be the same!");
+                throw new Exception("Order tag should not be the same!");
+            }
+        }
+
+        /// <summary>
+        /// Will run at End of Algorithm
+        /// We will be using this to check our order was updated!
+        /// </summary>
+        public override void OnEndOfAlgorithm()
+        {
+            //Get an updated copy of the order and compare to our original
+            var updatedOrder = Transactions.GetOrderById(_ticket.OrderId);
+
+            if (updatedOrder.Quantity == _originalOrder.Quantity)
+            {
+                Error("Quantities should have been updated!");
+                throw new Exception("Quantities should have been updated!");
+            }
+
+            if (updatedOrder.Tag == _originalOrder.Tag)
+            {
+                Error("Tag should have been updated!");
+                throw new Exception("Tag should have been updated!");
             }
         }
 
@@ -124,25 +164,25 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "246.000%"},
-            {"Drawdown", "1.100%"},
+            {"Compounding Annual Return", "-5.591%"},
+            {"Drawdown", "0.000%"},
             {"Expectancy", "0"},
-            {"Net Profit", "3.459%"},
-            {"Sharpe Ratio", "10.11"},
-            {"Probabilistic Sharpe Ratio", "83.150%"},
+            {"Net Profit", "-0.032%"},
+            {"Sharpe Ratio", "-9.862"},
+            {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.935"},
-            {"Beta", "-0.119"},
-            {"Annual Standard Deviation", "0.16"},
-            {"Annual Variance", "0.026"},
-            {"Information Ratio", "-4.556"},
-            {"Tracking Error", "0.221"},
-            {"Treynor Ratio", "-13.568"},
-            {"Total Fees", "$3.26"},
-            {"Fitness Score", "0.111"},
-            {"OrderListHash", "1268340653"}
+            {"Alpha", "0.007"},
+            {"Beta", "-0.582"},
+            {"Annual Standard Deviation", "0.004"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-10.999"},
+            {"Tracking Error", "0.011"},
+            {"Treynor Ratio", "0.067"},
+            {"Total Fees", "$1.00"},
+            {"Fitness Score", "0.007"},
+            {"OrderListHash", "1715759777"}
         };
     }
 }
