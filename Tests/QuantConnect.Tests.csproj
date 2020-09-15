@@ -443,6 +443,7 @@
     <Compile Include="Common\Statistics\ProbabilisticSharpeRatioTests.cs" />
     <Compile Include="Common\StringExtensionsTests.cs" />
     <Compile Include="Common\Util\ConcurrentSetTests.cs" />
+    <Compile Include="Common\Util\PythonUtilTests.cs" />
     <Compile Include="Common\Util\RateGateTests.cs" />
     <Compile Include="Common\Util\ListComparerTests.cs" />
     <Compile Include="Common\Util\RateLimit\FixedIntervalRefillStrategyTests.cs" />
@@ -764,9 +765,6 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
-    <Content Include="Research\RegressionScripts\Test_QuantBookFundamental.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Research\RegressionScripts\Test_QuantBookIndicator.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
