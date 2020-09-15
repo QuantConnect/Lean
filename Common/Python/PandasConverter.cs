@@ -348,9 +348,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
             var allocator = new NativeMemoryAllocator();
             var mhdb = MarketHoursDatabase.FromDataFolder();
-
+            var additionalIndexes = new List<string>();
+            
             var tradeBarSymbols = new StringArray.Builder();
             var tradeBarTimes = new TimestampArray.Builder();
+            var tradeBarExpiry = new TimestampArray.Builder();
             var tradeBarOpen = new DoubleArray.Builder();
             var tradeBarHigh = new DoubleArray.Builder();
             var tradeBarLow = new DoubleArray.Builder();
@@ -359,6 +361,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
             var quoteBarSymbols = new StringArray.Builder();
             var quoteBarTimes = new TimestampArray.Builder();
+            var quoteBarExpiry = new TimestampArray.Builder();
             var quoteBarBidOpen = new DoubleArray.Builder();
             var quoteBarBidHigh = new DoubleArray.Builder();
             var quoteBarBidLow = new DoubleArray.Builder();
@@ -385,8 +388,10 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             var tickBidSize = new DoubleArray.Builder();
             var tickAskPrice = new DoubleArray.Builder();
             var tickAskSize = new DoubleArray.Builder();
+            var tickExpiry = new TimestampArray.Builder();
 
             var openInterestTimes = new TimestampArray.Builder();
+            var openInterestExpiry = new TimestampArray.Builder();
             var openInterestSymbols = new StringArray.Builder();
             var openInterestValue = new DoubleArray.Builder();
 
@@ -409,11 +414,34 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         tradeBarVolume.Append((double) tradeBar.Volume);
 
                         tradeBarSymbols.Append(sid);
-                        tradeBarTimes.Append(new DateTimeOffset(tradeBar.EndTime));
+                        tradeBarTimes.Append(new DateTimeOffset(tradeBar.EndTime.Ticks, TimeSpan.Zero));
+
+                        if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
+                        {
+                            tradeBarExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
+                        }
                     }
 
                     if (quoteBar != null)
                     {
+                        // To maintain old behavior and backwards compatibility, we will set the "OHLC" for TradeBars
+                        // when no TradeBar exists in this timestep.
+                        if (tradeBar == null)
+                        {
+                            tradeBarOpen.Append((double) quoteBar.Open);
+                            tradeBarHigh.Append((double) quoteBar.High);
+                            tradeBarLow.Append((double) quoteBar.Low);
+                            tradeBarClose.Append((double) quoteBar.Close);
+                            tradeBarVolume.Append(double.NaN);
+
+                            tradeBarSymbols.Append(sid);
+                            tradeBarTimes.Append(new DateTimeOffset(quoteBar.EndTime.Ticks, TimeSpan.Zero));
+
+                            if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
+                            {
+                                tradeBarExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
+                            }
+                        }
                         if (quoteBar.Bid != null)
                         {
                             quoteBarBidOpen.Append((double) quoteBar.Bid.Open);
@@ -449,7 +477,12 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         }
 
                         quoteBarSymbols.Append(quoteBar.Symbol.ID.ToString());
-                        quoteBarTimes.Append(new DateTimeOffset(quoteBar.EndTime));
+                        quoteBarTimes.Append(new DateTimeOffset(quoteBar.EndTime.Ticks, TimeSpan.Zero));
+                        
+                        if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
+                        {
+                            quoteBarExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
+                        }
                     }
 
                     if (ticks != null)
@@ -459,7 +492,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             if (tick.TickType == TickType.Trade || tick.TickType == TickType.Quote)
                             {
                                 tickSymbols.Append(sid);
-                                tickTimes.Append(new DateTimeOffset(tick.EndTime));
+                                tickTimes.Append(new DateTimeOffset(tick.EndTime.Ticks, TimeSpan.Zero));
+                                if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
+                                {
+                                    tickExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
+                                }
                             }
 
                             if (tick.TickType == TickType.Trade)
@@ -503,9 +540,14 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             }
                             else
                             {
-                                openInterestTimes.Append(new DateTimeOffset(tick.EndTime));
+                                openInterestTimes.Append(new DateTimeOffset(tick.EndTime.Ticks, TimeSpan.Zero));
                                 openInterestSymbols.Append(sid);
                                 openInterestValue.Append((double)tick.Value);
+                                                            
+                                if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
+                                {
+                                    openInterestExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
+                                }
                             }
                         }
                     }
@@ -513,18 +555,26 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             }
 
             var recordBatches = new List<RecordBatch>();
+            var hasExpiry = false;
+            var hasStrike = false;
+            var hasOptionRight = false;
 
             if (tradeBarTimes.Length != 0)
             {
                 var tradeBarRecordBatchBuilder = new RecordBatch.Builder(allocator);
 
-                tradeBarRecordBatchBuilder.Append("time", false, tradeBarTimes.Build());
-                tradeBarRecordBatchBuilder.Append("symbol", true, tradeBarSymbols.Build());
+                tradeBarRecordBatchBuilder.Append("time", false, tradeBarTimes.Build(allocator));
+                tradeBarRecordBatchBuilder.Append("symbol", true, tradeBarSymbols.Build(allocator));
                 tradeBarRecordBatchBuilder.Append("open", true, tradeBarOpen.Build(allocator));
                 tradeBarRecordBatchBuilder.Append("high", true, tradeBarHigh.Build(allocator));
                 tradeBarRecordBatchBuilder.Append("low", true, tradeBarLow.Build(allocator));
                 tradeBarRecordBatchBuilder.Append("close", true, tradeBarClose.Build(allocator));
                 tradeBarRecordBatchBuilder.Append("volume", true, tradeBarVolume.Build(allocator));
+                if (tradeBarExpiry.Length != 0)
+                {
+                    tradeBarRecordBatchBuilder.Append("expiry", true, tradeBarExpiry.Build(allocator));
+                    hasExpiry = true;
+                }
 
                 recordBatches.Add(tradeBarRecordBatchBuilder.Build());
             }
@@ -545,6 +595,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 quoteBarRecordBatchBuilder.Append("asklow", true, quoteBarAskLow.Build(allocator));
                 quoteBarRecordBatchBuilder.Append("askclose", true, quoteBarAskClose.Build(allocator));
                 quoteBarRecordBatchBuilder.Append("asksize", true, quoteBarAskVolume.Build(allocator));
+                if (quoteBarExpiry.Length != 0)
+                {
+                    quoteBarRecordBatchBuilder.Append("expiry", true, quoteBarExpiry.Build(allocator));
+                    hasExpiry = true;
+                }
 
                 recordBatches.Add(quoteBarRecordBatchBuilder.Build());
             }
@@ -553,33 +608,34 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             {
                 var tickRecordBatchBuilder = new RecordBatch.Builder();
 
-                tickRecordBatchBuilder.Append("time", false, tickTimes.Build());
-                tickRecordBatchBuilder.Append("symbol", false, tickSymbols.Build());
+                tickRecordBatchBuilder.Append("time", false, tickTimes.Build(allocator));
+                tickRecordBatchBuilder.Append("symbol", false, tickSymbols.Build(allocator));
 
-                if (tickHasTrades || tickHasQuotes)
+                if (hasSuspicious)
                 {
-                    if (hasSuspicious)
-                    {
-                        tickRecordBatchBuilder.Append("suspicious", true, tickSuspicious.Build());
-                    }
-                    if (hasExchange)
-                    {
-                        tickRecordBatchBuilder.Append("exchange", true, tickExchange.Build());
-                    }
+                    tickRecordBatchBuilder.Append("suspicious", true, tickSuspicious.Build(allocator));
+                }
+                if (hasExchange)
+                {
+                    tickRecordBatchBuilder.Append("exchange", true, tickExchange.Build(allocator));
+                }
+                if (tickHasTrades)
+                {
+                    tickRecordBatchBuilder.Append("lastprice", tickHasQuotes, tickValue.Build(allocator));
+                    tickRecordBatchBuilder.Append("quantity", tickHasQuotes, tickQuantity.Build(allocator));
+                }
+                if (tickHasQuotes)
+                {
+                    tickRecordBatchBuilder.Append("bidprice", tickHasTrades, tickBidPrice.Build(allocator));
+                    tickRecordBatchBuilder.Append("bidsize", tickHasTrades, tickBidSize.Build(allocator));
+                    tickRecordBatchBuilder.Append("askprice", tickHasTrades, tickAskPrice.Build(allocator));
+                    tickRecordBatchBuilder.Append("asksize", tickHasTrades, tickAskSize.Build(allocator));
+                }
 
-                    if (tickHasTrades)
-                    {
-                        tickRecordBatchBuilder.Append("lastprice", tickHasQuotes, tickValue.Build());
-                        tickRecordBatchBuilder.Append("quantity", tickHasQuotes, tickQuantity.Build());
-                    }
-
-                    if (tickHasQuotes)
-                    {
-                        tickRecordBatchBuilder.Append("bidprice", tickHasTrades, tickBidPrice.Build());
-                        tickRecordBatchBuilder.Append("bidsize", tickHasTrades, tickBidSize.Build());
-                        tickRecordBatchBuilder.Append("askprice", tickHasTrades, tickAskPrice.Build());
-                        tickRecordBatchBuilder.Append("asksize", tickHasTrades, tickAskSize.Build());
-                    }
+                if (tickExpiry.Length != 0)
+                {
+                    tickRecordBatchBuilder.Append("expiry", true, tickExpiry.Build(allocator));
+                    hasExpiry = true;
                 }
 
                 recordBatches.Add(tickRecordBatchBuilder.Build());
@@ -589,9 +645,14 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             {
                 var openInterestBatchBuilder = new RecordBatch.Builder();
 
-                openInterestBatchBuilder.Append("time", false, openInterestTimes.Build());
-                openInterestBatchBuilder.Append("symbol", false, openInterestSymbols.Build());
-                openInterestBatchBuilder.Append("openinterest", false, openInterestValue.Build());
+                openInterestBatchBuilder.Append("time", false, openInterestTimes.Build(allocator));
+                openInterestBatchBuilder.Append("symbol", false, openInterestSymbols.Build(allocator));
+                openInterestBatchBuilder.Append("openinterest", false, openInterestValue.Build(allocator));
+                if (openInterestExpiry.Length != 0)
+                {
+                    openInterestBatchBuilder.Append("expiry", false, openInterestExpiry.Build(allocator));
+                    hasExpiry = true;
+                }
 
                 recordBatches.Add(openInterestBatchBuilder.Build());
             }
@@ -625,10 +686,18 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                     Py.kw("split_blocks", true),
                                     Py.kw("self_destruct", true)
                                 );
-                                df.set_index("symbol", Py.kw("inplace", true));
+                                
+                                var timeIdx = 1;
+                                if (hasExpiry)
+                                {
+                                    df.set_index("expiry", Py.kw("inplace", true));
+                                    df = df.tz_localize(null, Py.kw("copy", false));
+                                    timeIdx++;
+                                }
+                                
+                                df.set_index("symbol", Py.kw("append", hasExpiry), Py.kw("inplace", true));
                                 df.set_index("time", Py.kw("append", true), Py.kw("inplace", true));
-
-                                dataFrames.Add(df);
+                                dataFrames.Add(df.tz_localize(null, Py.kw("level", timeIdx.ToPython()), Py.kw("copy", false)));
                             }
                         }
                     }
