@@ -344,15 +344,17 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 var dataFrames = sliceDataDict.Select(x => x.Value.ToPandasDataFrame(maxLevels));
                 return _pandas.concat(dataFrames.ToArray(), Py.kw("sort", true));
             }
-            */
+            /**/
 
             var allocator = new NativeMemoryAllocator();
-            var mhdb = MarketHoursDatabase.FromDataFolder();
-            var additionalIndexes = new List<string>();
-            
+
             var tradeBarSymbols = new StringArray.Builder();
             var tradeBarTimes = new TimestampArray.Builder();
+
             var tradeBarExpiry = new TimestampArray.Builder();
+            var tradeBarStrike = new DoubleArray.Builder();
+            var tradeBarRight = new StringArray.Builder();
+
             var tradeBarOpen = new DoubleArray.Builder();
             var tradeBarHigh = new DoubleArray.Builder();
             var tradeBarLow = new DoubleArray.Builder();
@@ -361,7 +363,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
             var quoteBarSymbols = new StringArray.Builder();
             var quoteBarTimes = new TimestampArray.Builder();
+
             var quoteBarExpiry = new TimestampArray.Builder();
+            var quoteBarStrike = new DoubleArray.Builder();
+            var quoteBarRight = new StringArray.Builder();
+
             var quoteBarBidOpen = new DoubleArray.Builder();
             var quoteBarBidHigh = new DoubleArray.Builder();
             var quoteBarBidLow = new DoubleArray.Builder();
@@ -374,13 +380,18 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             var quoteBarAskVolume = new DoubleArray.Builder();
 
             var tickSymbols = new StringArray.Builder();
+            var tickTimes = new TimestampArray.Builder();
+
+            var tickExpiry = new TimestampArray.Builder();
+            var tickStrike = new DoubleArray.Builder();
+            var tickRight = new StringArray.Builder();
+
             var tickExchange = new StringArray.Builder();
             var hasExchange = false;
             var tickSuspicious = new BooleanArray.Builder();
             var hasSuspicious = false;
 
             var tickHasTrades = false;
-            var tickTimes = new TimestampArray.Builder();
             var tickValue = new DoubleArray.Builder();
             var tickQuantity = new DoubleArray.Builder();
             var tickHasQuotes = false;
@@ -388,11 +399,14 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             var tickBidSize = new DoubleArray.Builder();
             var tickAskPrice = new DoubleArray.Builder();
             var tickAskSize = new DoubleArray.Builder();
-            var tickExpiry = new TimestampArray.Builder();
 
             var openInterestTimes = new TimestampArray.Builder();
-            var openInterestExpiry = new TimestampArray.Builder();
             var openInterestSymbols = new StringArray.Builder();
+
+            var openInterestExpiry = new TimestampArray.Builder();
+            var openInterestStrike = new DoubleArray.Builder();
+            var openInterestRight = new StringArray.Builder();
+
             var openInterestValue = new DoubleArray.Builder();
 
             foreach (var slice in data)
@@ -419,6 +433,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
                         {
                             tradeBarExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
+                        }
+                        if (symbol.SecurityType == SecurityType.Option)
+                        {
+                            tradeBarStrike.Append((double) symbol.ID.StrikePrice);
+                            tradeBarRight.Append(symbol.ID.OptionRight.ToString());
                         }
                     }
 
@@ -478,10 +497,15 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
                         quoteBarSymbols.Append(quoteBar.Symbol.ID.ToString());
                         quoteBarTimes.Append(new DateTimeOffset(quoteBar.EndTime.Ticks, TimeSpan.Zero));
-                        
+
                         if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
                         {
                             quoteBarExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
+                        }
+                        if (symbol.SecurityType == SecurityType.Option)
+                        {
+                            quoteBarStrike.Append((double) symbol.ID.StrikePrice);
+                            quoteBarRight.Append(symbol.ID.OptionRight.ToString());
                         }
                     }
 
@@ -496,6 +520,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                 if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
                                 {
                                     tickExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
+                                }
+                                if (symbol.SecurityType == SecurityType.Option)
+                                {
+                                    tickStrike.Append((double) symbol.ID.StrikePrice);
+                                    tickRight.Append(symbol.ID.OptionRight.ToString());
                                 }
                             }
 
@@ -543,10 +572,15 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                 openInterestTimes.Append(new DateTimeOffset(tick.EndTime.Ticks, TimeSpan.Zero));
                                 openInterestSymbols.Append(sid);
                                 openInterestValue.Append((double)tick.Value);
-                                                            
+
                                 if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
                                 {
                                     openInterestExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
+                                }
+                                if (symbol.SecurityType == SecurityType.Option)
+                                {
+                                    openInterestStrike.Append((double) symbol.ID.StrikePrice);
+                                    openInterestRight.Append(symbol.ID.OptionRight.ToString());
                                 }
                             }
                         }
@@ -564,16 +598,21 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 var tradeBarRecordBatchBuilder = new RecordBatch.Builder(allocator);
 
                 tradeBarRecordBatchBuilder.Append("time", false, tradeBarTimes.Build(allocator));
-                tradeBarRecordBatchBuilder.Append("symbol", true, tradeBarSymbols.Build(allocator));
-                tradeBarRecordBatchBuilder.Append("open", true, tradeBarOpen.Build(allocator));
-                tradeBarRecordBatchBuilder.Append("high", true, tradeBarHigh.Build(allocator));
-                tradeBarRecordBatchBuilder.Append("low", true, tradeBarLow.Build(allocator));
-                tradeBarRecordBatchBuilder.Append("close", true, tradeBarClose.Build(allocator));
+                tradeBarRecordBatchBuilder.Append("symbol", false, tradeBarSymbols.Build(allocator));
+                tradeBarRecordBatchBuilder.Append("open", false, tradeBarOpen.Build(allocator));
+                tradeBarRecordBatchBuilder.Append("high", false, tradeBarHigh.Build(allocator));
+                tradeBarRecordBatchBuilder.Append("low", false, tradeBarLow.Build(allocator));
+                tradeBarRecordBatchBuilder.Append("close", false, tradeBarClose.Build(allocator));
                 tradeBarRecordBatchBuilder.Append("volume", true, tradeBarVolume.Build(allocator));
                 if (tradeBarExpiry.Length != 0)
                 {
                     tradeBarRecordBatchBuilder.Append("expiry", true, tradeBarExpiry.Build(allocator));
                     hasExpiry = true;
+                }
+                if (tradeBarStrike.Length != 0)
+                {
+                    tradeBarRecordBatchBuilder.Append("strike", false, tradeBarStrike.Build(allocator));
+                    tradeBarRecordBatchBuilder.Append("right", false, tradeBarRight.Build(allocator));
                 }
 
                 recordBatches.Add(tradeBarRecordBatchBuilder.Build());
@@ -584,7 +623,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 var quoteBarRecordBatchBuilder = new RecordBatch.Builder(allocator);
 
                 quoteBarRecordBatchBuilder.Append("time", false, quoteBarTimes.Build());
-                quoteBarRecordBatchBuilder.Append("symbol", true, quoteBarSymbols.Build());
+                quoteBarRecordBatchBuilder.Append("symbol", false, quoteBarSymbols.Build());
                 quoteBarRecordBatchBuilder.Append("bidopen", true, quoteBarBidOpen.Build(allocator));
                 quoteBarRecordBatchBuilder.Append("bidhigh", true, quoteBarBidHigh.Build(allocator));
                 quoteBarRecordBatchBuilder.Append("bidlow", true, quoteBarBidLow.Build(allocator));
@@ -599,6 +638,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 {
                     quoteBarRecordBatchBuilder.Append("expiry", true, quoteBarExpiry.Build(allocator));
                     hasExpiry = true;
+                }
+                if (quoteBarStrike.Length != 0)
+                {
+                    quoteBarRecordBatchBuilder.Append("strike", false, quoteBarStrike.Build(allocator));
+                    quoteBarRecordBatchBuilder.Append("right", false, quoteBarRight.Build(allocator));
                 }
 
                 recordBatches.Add(quoteBarRecordBatchBuilder.Build());
@@ -637,6 +681,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                     tickRecordBatchBuilder.Append("expiry", true, tickExpiry.Build(allocator));
                     hasExpiry = true;
                 }
+                if (tickStrike.Length != 0)
+                {
+                    tickRecordBatchBuilder.Append("strike", false, tickStrike.Build(allocator));
+                    tickRecordBatchBuilder.Append("right", false, tickRight.Build(allocator));
+                }
 
                 recordBatches.Add(tickRecordBatchBuilder.Build());
             }
@@ -652,6 +701,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 {
                     openInterestBatchBuilder.Append("expiry", false, openInterestExpiry.Build(allocator));
                     hasExpiry = true;
+                }
+                if (openInterestStrike.Length != 0)
+                {
+                    openInterestBatchBuilder.Append("strike", false, openInterestStrike.Build(allocator));
+                    openInterestBatchBuilder.Append("right", false, openInterestRight.Build(allocator));
                 }
 
                 recordBatches.Add(openInterestBatchBuilder.Build());
@@ -686,7 +740,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                     Py.kw("split_blocks", true),
                                     Py.kw("self_destruct", true)
                                 );
-                                
+
                                 var timeIdx = 1;
                                 if (hasExpiry)
                                 {
@@ -694,7 +748,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                     df = df.tz_localize(null, Py.kw("copy", false));
                                     timeIdx++;
                                 }
-                                
+
                                 df.set_index("symbol", Py.kw("append", hasExpiry), Py.kw("inplace", true));
                                 df.set_index("time", Py.kw("append", true), Py.kw("inplace", true));
                                 dataFrames.Add(df.tz_localize(null, Py.kw("level", timeIdx.ToPython()), Py.kw("copy", false)));
