@@ -356,6 +356,7 @@
     <Compile Include="Bitfinex\Converters\TickerConverter.cs" />
     <Compile Include="Bitfinex\Converters\PositionConverter.cs" />
     <Compile Include="Bitfinex\Converters\WalletConverter.cs" />
+    <Compile Include="GDAX\GDAXSymbolMapper.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersStateManager.cs" />
     <Compile Include="IOrderBookUpdater.cs" />
     <Compile Include="DefaultOrderBook.cs" />
