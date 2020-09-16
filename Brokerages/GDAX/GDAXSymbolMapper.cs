@@ -165,7 +165,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         /// <param name="symbol">The Lean symbol</param>
         /// <returns>True if GDAX supports the symbol</returns>
-        public static bool IsKnownLeanSymbol(Symbol symbol)
+        public bool IsKnownLeanSymbol(Symbol symbol)
         {
             if (string.IsNullOrWhiteSpace(symbol?.Value))
             {
@@ -191,7 +191,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// Converts a Lean symbol to a GDAX symbol
         /// </summary>
-        private static string ConvertLeanSymbolToGdaxSymbol(string leanSymbol)
+        private string ConvertLeanSymbolToGdaxSymbol(string leanSymbol)
         {
             var symbol = Symbol.Create(leanSymbol, SecurityType.Crypto, Market.GDAX);
 
