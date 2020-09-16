@@ -433,7 +433,7 @@ namespace QuantConnect.Research
                 allSymbols.Add(symbol);
             }
 
-            return new FutureHistory(History(allSymbols, start, end.Value, resolution, false));
+            return new FutureHistory(History(allSymbols, start, end.Value, resolution));
         }
 
         /// <summary>
