@@ -201,7 +201,7 @@ namespace QuantConnect.Research
                 var data = new PyDict();
                 foreach (var day in fundamentalData.OrderBy(x => x.Key))
                 {
-                    var orderedValues = day.Value.OrderBy(x => x.Key.ID.ToString());
+                    var orderedValues = day.Value.OrderBy(x => x.Key.ID.ToString()).ToList();
                     var columns = orderedValues.Select(x => x.Key.ID.ToString());
                     var values = orderedValues.Select(x => x.Value);
                     var row = _pandas.Series(values, columns);
@@ -766,7 +766,6 @@ namespace QuantConnect.Research
 
             //Build factory
             var factory = new FineFundamentalSubscriptionEnumeratorFactory(false);
-            var fileProvider = new DefaultDataProvider();
 
             //Get all data for each symbol and fill our dictionary
             var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
@@ -784,7 +783,7 @@ namespace QuantConnect.Research
                     );
                 var security = Securities.CreateSecurity(symbol, config);
                 var request = new SubscriptionRequest(false, null, security, config, startTime.ConvertToUtc(TimeZones.NewYork), endTime.ConvertToUtc(TimeZones.NewYork));
-                using (var enumerator = factory.CreateEnumerator(request, fileProvider))
+                using (var enumerator = factory.CreateEnumerator(request, _dataProvider))
                 {
                     while (enumerator.MoveNext())
                     {

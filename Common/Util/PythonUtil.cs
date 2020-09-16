@@ -275,7 +275,7 @@ namespace QuantConnect.Util
                 }
                 else
                 {
-                    throw new Exception($"Cannot convert object {input.Repr()} to symbol");
+                    throw new ArgumentException($"Cannot convert object {input.Repr()} to symbol");
                 }
             }
             return symbolsList;
