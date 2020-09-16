@@ -27,6 +27,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Apache.Arrow.Types;
 using QuantConnect.Securities;
+using Array = System.Array;
 
 namespace QuantConnect.Python
 {
@@ -36,6 +37,68 @@ namespace QuantConnect.Python
     public class PandasConverter
     {
         private static dynamic _pandas;
+        private PandasArrowMemoryAllocator allocator = new PandasArrowMemoryAllocator();
+
+        private StringArray.Builder tradeBarSymbols = new StringArray.Builder();
+        private TimestampArray.Builder tradeBarTimes = new TimestampArray.Builder();
+
+        private TimestampArray.Builder tradeBarExpiry = new TimestampArray.Builder();
+        private DoubleArray.Builder tradeBarStrike = new DoubleArray.Builder();
+        private StringArray.Builder tradeBarRight = new StringArray.Builder();
+
+        private DoubleArray.Builder tradeBarOpen = new DoubleArray.Builder();
+        private DoubleArray.Builder tradeBarHigh = new DoubleArray.Builder();
+        private DoubleArray.Builder tradeBarLow = new DoubleArray.Builder();
+        private DoubleArray.Builder tradeBarClose = new DoubleArray.Builder();
+        private DoubleArray.Builder tradeBarVolume = new DoubleArray.Builder();
+
+        private StringArray.Builder quoteBarSymbols = new StringArray.Builder();
+        private TimestampArray.Builder quoteBarTimes = new TimestampArray.Builder();
+
+        private TimestampArray.Builder quoteBarExpiry = new TimestampArray.Builder();
+        private DoubleArray.Builder quoteBarStrike = new DoubleArray.Builder();
+        private StringArray.Builder quoteBarRight = new StringArray.Builder();
+
+        private DoubleArray.Builder quoteBarBidOpen = new DoubleArray.Builder();
+        private DoubleArray.Builder quoteBarBidHigh = new DoubleArray.Builder();
+        private DoubleArray.Builder quoteBarBidLow = new DoubleArray.Builder();
+        private DoubleArray.Builder quoteBarBidClose = new DoubleArray.Builder();
+        private DoubleArray.Builder quoteBarBidVolume = new DoubleArray.Builder();
+        private DoubleArray.Builder quoteBarAskOpen = new DoubleArray.Builder();
+        private DoubleArray.Builder quoteBarAskHigh = new DoubleArray.Builder();
+        private DoubleArray.Builder quoteBarAskLow = new DoubleArray.Builder();
+        private DoubleArray.Builder quoteBarAskClose = new DoubleArray.Builder();
+        private DoubleArray.Builder quoteBarAskVolume = new DoubleArray.Builder();
+
+        private StringArray.Builder tickSymbols = new StringArray.Builder();
+        private TimestampArray.Builder tickTimes = new TimestampArray.Builder();
+
+        private TimestampArray.Builder tickExpiry = new TimestampArray.Builder();
+        private DoubleArray.Builder tickStrike = new DoubleArray.Builder();
+        private StringArray.Builder tickRight = new StringArray.Builder();
+
+        private StringArray.Builder tickExchange = new StringArray.Builder();
+        private bool hasExchange = false;
+        private BooleanArray.Builder tickSuspicious = new BooleanArray.Builder();
+        private bool hasSuspicious = false;
+
+        private bool tickHasTrades = false;
+        private DoubleArray.Builder tickValue = new DoubleArray.Builder();
+        private DoubleArray.Builder tickQuantity = new DoubleArray.Builder();
+        private bool tickHasQuotes = false;
+        private DoubleArray.Builder tickBidPrice = new DoubleArray.Builder();
+        private DoubleArray.Builder tickBidSize = new DoubleArray.Builder();
+        private DoubleArray.Builder tickAskPrice = new DoubleArray.Builder();
+        private DoubleArray.Builder tickAskSize = new DoubleArray.Builder();
+
+        private TimestampArray.Builder openInterestTimes = new TimestampArray.Builder();
+        private StringArray.Builder openInterestSymbols = new StringArray.Builder();
+
+        private TimestampArray.Builder openInterestExpiry = new TimestampArray.Builder();
+        private DoubleArray.Builder openInterestStrike = new DoubleArray.Builder();
+        private StringArray.Builder openInterestRight = new StringArray.Builder();
+
+        private DoubleArray.Builder openInterestValue = new DoubleArray.Builder();
 
         /// <summary>
         /// Creates an instance of <see cref="PandasConverter"/>.
@@ -304,110 +367,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
         public PyObject GetDataFrame(IEnumerable<Slice> data)
         {
-            /*
-            var maxLevels = 0;
-            var sliceDataDict = new Dictionary<Symbol, PandasData>();
-
-            foreach (var slice in data)
-            {
-                foreach (var key in slice.Keys)
-                {
-                    var baseData = slice[key];
-
-                    PandasData value;
-                    if (!sliceDataDict.TryGetValue(key, out value))
-                    {
-                        sliceDataDict.Add(key, value = new PandasData(baseData));
-                        maxLevels = Math.Max(maxLevels, value.Levels);
-                    }
-
-                    if (value.IsCustomData)
-                    {
-                        value.Add(baseData);
-                    }
-                    else
-                    {
-                        var ticks = slice.Ticks.ContainsKey(key) ? slice.Ticks[key] : null;
-                        var tradeBars = slice.Bars.ContainsKey(key) ? slice.Bars[key] : null;
-                        var quoteBars = slice.QuoteBars.ContainsKey(key) ? slice.QuoteBars[key] : null;
-                        value.Add(ticks, tradeBars, quoteBars);
-                    }
-                }
-            }
-
-            using (Py.GIL())
-            {
-                if (sliceDataDict.Count == 0)
-                {
-                    return _pandas.DataFrame();
-                }
-                var dataFrames = sliceDataDict.Select(x => x.Value.ToPandasDataFrame(maxLevels));
-                return _pandas.concat(dataFrames.ToArray(), Py.kw("sort", true));
-            }
-            /**/
-
-            var allocator = new NativeMemoryAllocator();
-
-            var tradeBarSymbols = new StringArray.Builder();
-            var tradeBarTimes = new TimestampArray.Builder();
-
-            var tradeBarExpiry = new TimestampArray.Builder();
-            var tradeBarStrike = new DoubleArray.Builder();
-            var tradeBarRight = new StringArray.Builder();
-
-            var tradeBarOpen = new DoubleArray.Builder();
-            var tradeBarHigh = new DoubleArray.Builder();
-            var tradeBarLow = new DoubleArray.Builder();
-            var tradeBarClose = new DoubleArray.Builder();
-            var tradeBarVolume = new DoubleArray.Builder();
-
-            var quoteBarSymbols = new StringArray.Builder();
-            var quoteBarTimes = new TimestampArray.Builder();
-
-            var quoteBarExpiry = new TimestampArray.Builder();
-            var quoteBarStrike = new DoubleArray.Builder();
-            var quoteBarRight = new StringArray.Builder();
-
-            var quoteBarBidOpen = new DoubleArray.Builder();
-            var quoteBarBidHigh = new DoubleArray.Builder();
-            var quoteBarBidLow = new DoubleArray.Builder();
-            var quoteBarBidClose = new DoubleArray.Builder();
-            var quoteBarBidVolume = new DoubleArray.Builder();
-            var quoteBarAskOpen = new DoubleArray.Builder();
-            var quoteBarAskHigh = new DoubleArray.Builder();
-            var quoteBarAskLow = new DoubleArray.Builder();
-            var quoteBarAskClose = new DoubleArray.Builder();
-            var quoteBarAskVolume = new DoubleArray.Builder();
-
-            var tickSymbols = new StringArray.Builder();
-            var tickTimes = new TimestampArray.Builder();
-
-            var tickExpiry = new TimestampArray.Builder();
-            var tickStrike = new DoubleArray.Builder();
-            var tickRight = new StringArray.Builder();
-
-            var tickExchange = new StringArray.Builder();
-            var hasExchange = false;
-            var tickSuspicious = new BooleanArray.Builder();
-            var hasSuspicious = false;
-
-            var tickHasTrades = false;
-            var tickValue = new DoubleArray.Builder();
-            var tickQuantity = new DoubleArray.Builder();
-            var tickHasQuotes = false;
-            var tickBidPrice = new DoubleArray.Builder();
-            var tickBidSize = new DoubleArray.Builder();
-            var tickAskPrice = new DoubleArray.Builder();
-            var tickAskSize = new DoubleArray.Builder();
-
-            var openInterestTimes = new TimestampArray.Builder();
-            var openInterestSymbols = new StringArray.Builder();
-
-            var openInterestExpiry = new TimestampArray.Builder();
-            var openInterestStrike = new DoubleArray.Builder();
-            var openInterestRight = new StringArray.Builder();
-
-            var openInterestValue = new DoubleArray.Builder();
+            ClearBuilders();
 
             foreach (var slice in data)
             {
@@ -451,7 +411,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             tradeBarHigh.Append((double) quoteBar.High);
                             tradeBarLow.Append((double) quoteBar.Low);
                             tradeBarClose.Append((double) quoteBar.Close);
-                            tradeBarVolume.Append(double.NaN);
+                            tradeBarVolume.AppendNull();
 
                             tradeBarSymbols.Append(sid);
                             tradeBarTimes.Append(new DateTimeOffset(quoteBar.EndTime.Ticks, TimeSpan.Zero));
@@ -471,11 +431,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         }
                         else
                         {
-                            quoteBarBidOpen.Append(double.NaN);
-                            quoteBarBidHigh.Append(double.NaN);
-                            quoteBarBidLow.Append(double.NaN);
-                            quoteBarBidClose.Append(double.NaN);
-                            quoteBarBidVolume.Append(double.NaN);
+                            quoteBarBidOpen.AppendNull();
+                            quoteBarBidHigh.AppendNull();
+                            quoteBarBidLow.AppendNull();
+                            quoteBarBidClose.AppendNull();
+                            quoteBarBidVolume.AppendNull();
                         }
 
                         if (quoteBar.Ask != null)
@@ -488,11 +448,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         }
                         else
                         {
-                            quoteBarAskOpen.Append(double.NaN);
-                            quoteBarAskHigh.Append(double.NaN);
-                            quoteBarAskLow.Append(double.NaN);
-                            quoteBarAskClose.Append(double.NaN);
-                            quoteBarAskVolume.Append(double.NaN);
+                            quoteBarAskOpen.AppendNull();
+                            quoteBarAskHigh.AppendNull();
+                            quoteBarAskLow.AppendNull();
+                            quoteBarAskClose.AppendNull();
+                            quoteBarAskVolume.AppendNull();
                         }
 
                         quoteBarSymbols.Append(quoteBar.Symbol.ID.ToString());
@@ -547,17 +507,17 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                 tickSuspicious.Append(tick.Suspicious);
                                 tickExchange.Append(tick.Exchange);
 
-                                tickBidPrice.Append(double.NaN);
-                                tickBidSize.Append(double.NaN);
-                                tickAskPrice.Append(double.NaN);
-                                tickAskSize.Append(double.NaN);
+                                tickBidPrice.AppendNull();
+                                tickBidSize.AppendNull();
+                                tickAskPrice.AppendNull();
+                                tickAskSize.AppendNull();
                             }
                             else if (tick.TickType == TickType.Quote)
                             {
                                 tickHasQuotes = true;
 
-                                tickValue.Append(double.NaN);
-                                tickQuantity.Append(double.NaN);
+                                tickValue.AppendNull();
+                                tickQuantity.AppendNull();
 
                                 tickSuspicious.Append(tick.Suspicious);
                                 tickExchange.Append(tick.Exchange);
@@ -748,6 +708,16 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                     df = df.tz_localize(null, Py.kw("copy", false));
                                     timeIdx++;
                                 }
+                                if (hasStrike)
+                                {
+                                    df.set_index("strike", Py.kw("inplace", true));
+                                    timeIdx++;
+                                }
+                                if (hasOptionRight)
+                                {
+                                    df.set_index("type", Py.kw("inplace", true));
+                                    timeIdx++;
+                                }
 
                                 df.set_index("symbol", Py.kw("append", hasExpiry), Py.kw("inplace", true));
                                 df.set_index("time", Py.kw("append", true), Py.kw("inplace", true));
@@ -770,8 +740,74 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 }
 
                 final_df.sort_index(Py.kw("inplace", true));
+                allocator.Free();
                 return _pandas.DataFrame(final_df);
             }
+        }
+
+        private void ClearBuilders()
+        {
+            hasExchange = false;
+            hasSuspicious = false;
+            tickHasTrades = false;
+            tickHasQuotes = false;
+
+            tradeBarSymbols.Clear();
+            tradeBarTimes.Clear();
+
+            tradeBarExpiry.Clear();
+            tradeBarStrike.Clear();
+            tradeBarRight.Clear();
+
+            tradeBarOpen.Clear();
+            tradeBarHigh.Clear();
+            tradeBarLow.Clear();
+            tradeBarClose.Clear();
+            tradeBarVolume.Clear();
+
+            quoteBarSymbols.Clear();
+            quoteBarTimes.Clear();
+
+            quoteBarExpiry.Clear();
+            quoteBarStrike.Clear();
+            quoteBarRight.Clear();
+
+            quoteBarBidOpen.Clear();
+            quoteBarBidHigh.Clear();
+            quoteBarBidLow.Clear();
+            quoteBarBidClose.Clear();
+            quoteBarBidVolume.Clear();
+            quoteBarAskOpen.Clear();
+            quoteBarAskHigh.Clear();
+            quoteBarAskLow.Clear();
+            quoteBarAskClose.Clear();
+            quoteBarAskVolume.Clear();
+
+            tickSymbols.Clear();
+            tickTimes.Clear();
+
+            tickExpiry.Clear();
+            tickStrike.Clear();
+            tickRight.Clear();
+
+            tickExchange.Clear();
+            tickSuspicious.Clear();
+
+            tickValue.Clear();
+            tickQuantity.Clear();
+            tickBidPrice.Clear();
+            tickBidSize.Clear();
+            tickAskPrice.Clear();
+            tickAskSize.Clear();
+
+            openInterestTimes.Clear();
+            openInterestSymbols.Clear();
+
+            openInterestExpiry.Clear();
+            openInterestStrike.Clear();
+            openInterestRight.Clear();
+
+            openInterestValue.Clear();
         }
 
         /// <summary>
