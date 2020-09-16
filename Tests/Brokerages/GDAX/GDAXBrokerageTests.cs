@@ -162,7 +162,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         {
             const decimal orderQuantity = 6.1m;
 
-            _unit.PlaceOrder(new MarketOrder("BTCUSD", orderQuantity, DateTime.UtcNow)
+            _unit.PlaceOrder(new MarketOrder(Symbols.BTCUSD, orderQuantity, DateTime.UtcNow)
             {
                 // set the quote currency here to prevent the test from accessing algorithm.Securities
                 PriceCurrency = "USD"
@@ -356,18 +356,18 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
             var gotBTCUSD = false;
             var gotGBPUSD = false;
-            var gotBTCETH = false;
+            var gotETHBTC = false;
 
             _unit.Subscribe(GetSubscriptionDataConfig<Tick>(Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX), Resolution.Tick), (s, e) => { gotBTCUSD = true; });
             StringAssert.Contains("[\"BTC-USD\"]", actual);
             _unit.Subscribe(GetSubscriptionDataConfig<Tick>(Symbol.Create("GBPUSD", SecurityType.Forex, Market.FXCM), Resolution.Tick), (s, e) => { gotGBPUSD = true; });
-            _unit.Subscribe(GetSubscriptionDataConfig<Tick>(Symbol.Create("BTCETH", SecurityType.Crypto, Market.GDAX), Resolution.Tick), (s, e) => { gotBTCETH = true; });
-            StringAssert.Contains("[\"BTC-USD\",\"BTC-ETH\"]", actual);
+            _unit.Subscribe(GetSubscriptionDataConfig<Tick>(Symbol.Create("ETHBTC", SecurityType.Crypto, Market.GDAX), Resolution.Tick), (s, e) => { gotETHBTC = true; });
+            StringAssert.Contains("[\"BTC-USD\",\"ETH-BTC\"]", actual);
             Thread.Sleep(1000);
 
             Assert.IsFalse(gotBTCUSD);
             Assert.IsTrue(gotGBPUSD);
-            Assert.IsFalse(gotBTCETH);
+            Assert.IsFalse(gotETHBTC);
         }
 
         [Test]
@@ -396,24 +396,16 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         }
 
         [Test]
-        public void ErrorTest()
+        public void InvalidSymbolSubscribeTest()
         {
             string actual = null;
-
-            // subscribe to invalid symbol
-            const string expected = "[\"BTC-LTC\"]";
             _wss.Setup(w => w.Send(It.IsAny<string>())).Callback<string>(c => actual = c);
 
+            // subscribe to invalid symbol
             _unit.Subscribe(new[] { Symbol.Create("BTCLTC", SecurityType.Crypto, Market.GDAX) });
 
-            StringAssert.Contains(expected, actual);
-
-            BrokerageMessageType messageType = 0;
-            _unit.Message += (sender, e) => { messageType = e.Type; };
-            const string json = "{\"type\":\"error\",\"message\":\"Failed to subscribe\",\"reason\":\"Invalid product ID provided\"}";
-            _unit.OnMessage(_unit, GDAXTestsHelpers.GetArgs(json));
-
-            Assert.AreEqual(BrokerageMessageType.Error, messageType);
+            // subscribe is not called for invalid symbols
+            Assert.IsNull(actual);
         }
 
         private SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
