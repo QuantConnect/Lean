@@ -13,7 +13,12 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Text;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Securities;
 
@@ -100,5 +105,92 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1, spList.Count);
             Assert.IsTrue(spList[0].Key.Symbol.Contains("*"));
         }
+
+        #region GDAX brokerage
+
+        [Test, Explicit]
+        public void FetchSymbolPropertiesFromGdax()
+        {
+            const string url = "https://api.pro.coinbase.com/products";
+
+            var sb = new StringBuilder();
+
+            using (var wc = new WebClient())
+            {
+                var json = wc.DownloadString(url);
+
+                var rows = JsonConvert.DeserializeObject<List<GDAXSymbolInfo>>(json);
+                foreach (var row in rows.OrderBy(x => x.Id))
+                {
+                    sb.AppendLine("gdax," +
+                                  $"{row.BaseCurrency}{row.QuoteCurrency}," +
+                                  "crypto," +
+                                  $"{row.DisplayName}," +
+                                  $"{row.QuoteCurrency}," +
+                                  "1," +
+                                  $"{row.QuoteIncrement.NormalizeToStr()}," +
+                                  $"{row.BaseIncrement.NormalizeToStr()}");
+                }
+            }
+
+            Console.WriteLine(sb.ToString());
+        }
+
+        public class GDAXSymbolInfo
+        {
+            [JsonProperty("id")]
+            public string Id { get; set; }
+
+            [JsonProperty("base_currency")]
+            public string BaseCurrency { get; set; }
+
+            [JsonProperty("quote_currency")]
+            public string QuoteCurrency { get; set; }
+
+            [JsonProperty("base_min_size")]
+            public decimal BaseMinSize { get; set; }
+
+            [JsonProperty("base_max_size")]
+            public decimal BaseMaxSize { get; set; }
+
+            [JsonProperty("quote_increment")]
+            public decimal QuoteIncrement { get; set; }
+
+            [JsonProperty("base_increment")]
+            public decimal BaseIncrement { get; set; }
+
+            [JsonProperty("display_name")]
+            public string DisplayName { get; set; }
+
+            [JsonProperty("min_market_funds")]
+            public decimal MinMarketFunds { get; set; }
+
+            [JsonProperty("max_market_funds")]
+            public decimal MaxMarketFunds { get; set; }
+
+            [JsonProperty("margin_enabled")]
+            public bool MarginEnabled { get; set; }
+
+            [JsonProperty("post_only")]
+            public bool PostOnly { get; set; }
+
+            [JsonProperty("limit_only")]
+            public bool LimitOnly { get; set; }
+
+            [JsonProperty("cancel_only")]
+            public bool CancelOnly { get; set; }
+
+            [JsonProperty("trading_disabled")]
+            public bool TradingDisabled { get; set; }
+
+            [JsonProperty("status")]
+            public string Status { get; set; }
+
+            [JsonProperty("status_message")]
+            public string StatusMessage { get; set; }
+        }
+
+        #endregion
+
     }
 }
