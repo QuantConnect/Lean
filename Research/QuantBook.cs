@@ -201,8 +201,10 @@ namespace QuantConnect.Research
                 var data = new PyDict();
                 foreach (var day in fundamentalData.OrderBy(x => x.Key))
                 {
-                    var columnIndex = day.Value.Keys.Select(x => x.Value);
-                    var row = _pandas.Series(day.Value.Values, columnIndex);
+                    var orderedValues = day.Value.OrderBy(x => x.Key.ID.ToString());
+                    var columns = orderedValues.Select(x => x.Key.ID.ToString());
+                    var values = orderedValues.Select(x => x.Value);
+                    var row = _pandas.Series(values, columns);
                     data.SetItem(day.Key.ToPython(), row);
                 }
 
