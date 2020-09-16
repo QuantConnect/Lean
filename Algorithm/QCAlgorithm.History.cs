@@ -250,7 +250,7 @@ namespace QuantConnect.Algorithm
 
                 var exchange = GetExchangeHours(x);
                 var res = GetResolution(x, resolution);
-                var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange);
+                var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, GetDataTimeZone(x));
                 return _historyRequestFactory.CreateHistoryRequest(config, start, Time.RoundDown(res.ToTimeSpan()), exchange, res);
             });
 
@@ -307,7 +307,7 @@ namespace QuantConnect.Algorithm
             if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
 
             resolution = GetResolution(symbol, resolution);
-            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, GetExchangeHours(symbol));
+            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, GetExchangeHours(symbol), GetDataTimeZone(symbol));
 
             return History(symbol, start, Time.RoundDown(resolution.Value.ToTimeSpan()), resolution);
         }
@@ -337,7 +337,7 @@ namespace QuantConnect.Algorithm
             }
 
             resolution = GetResolution(symbol, resolution);
-            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, GetExchangeHours(symbol));
+            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, GetExchangeHours(symbol), GetDataTimeZone(symbol));
             return History<T>(symbol, start, Time.RoundDown(resolution.Value.ToTimeSpan()), resolution).Memoize();
         }
 
@@ -524,7 +524,7 @@ namespace QuantConnect.Algorithm
             Func<int, BaseData> getLastKnownPriceForPeriods = backwardsPeriods =>
             {
                 var startTimeUtc = _historyRequestFactory
-                    .GetStartTimeAlgoTz(security.Symbol, backwardsPeriods, resolution, security.Exchange.Hours)
+                    .GetStartTimeAlgoTz(security.Symbol, backwardsPeriods, resolution, security.Exchange.Hours, GetDataTimeZone(security.Symbol))
                     .ConvertToUtc(_localTimeKeeper.TimeZone);
 
                 var request = new HistoryRequest(
@@ -629,7 +629,7 @@ namespace QuantConnect.Algorithm
             {
                 var res = GetResolution(x, resolution);
                 var exchange = GetExchangeHours(x);
-                var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange);
+                var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, GetDataTimeZone(x));
                 var end = Time.RoundDown(res.ToTimeSpan());
 
                 return GetMatchingSubscriptions(x, typeof(BaseData), resolution)
@@ -697,6 +697,11 @@ namespace QuantConnect.Algorithm
             }
 
             return MarketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType).ExchangeHours;
+        }
+
+        private DateTimeZone GetDataTimeZone(Symbol symbol)
+        {
+            return MarketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType).DataTimeZone;
         }
 
         private Resolution GetResolution(Symbol symbol, Resolution? resolution)

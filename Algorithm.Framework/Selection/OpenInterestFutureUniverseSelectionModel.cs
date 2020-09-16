@@ -95,7 +95,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         {
             var current = _algorithm.UtcTime;
             var endTime = Instant.FromDateTimeUtc(_algorithm.UtcTime).InZone(exchangeHours.TimeZone).ToDateTimeUnspecified();
-            var previousDay = Time.GetStartTimeForTradeBars(exchangeHours, endTime, Time.OneDay, 1, true);
+            var previousDay = Time.GetStartTimeForTradeBars(exchangeHours, endTime, Time.OneDay, 1, true, exchangeHours.TimeZone);
             var requests = symbols.Select(
                     symbol => new HistoryRequest(
                         previousDay,

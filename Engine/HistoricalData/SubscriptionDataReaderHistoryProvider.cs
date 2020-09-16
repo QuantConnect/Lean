@@ -89,10 +89,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         private Subscription CreateSubscription(HistoryRequest request, DateTime startUtc, DateTime endUtc)
         {
             // data reader expects these values in local times
-            var startTimeLocal = startUtc.ConvertFromUtc(request.ExchangeHours.TimeZone)
-                .ConvertTo(request.DataTimeZone, request.ExchangeHours.TimeZone);
-            var endTimeLocal = endUtc.ConvertFromUtc(request.ExchangeHours.TimeZone)
-                .ConvertTo(request.DataTimeZone, request.ExchangeHours.TimeZone);
+            var startTimeLocal = startUtc.ConvertFromUtc(request.ExchangeHours.TimeZone);
+            var endTimeLocal = endUtc.ConvertFromUtc(request.ExchangeHours.TimeZone);
 
             var config = new SubscriptionDataConfig(request.DataType,
                 request.Symbol,

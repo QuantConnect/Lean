@@ -199,25 +199,26 @@ namespace QuantConnect.Report
         private static IEnumerable<Slice> GetHistory(IAlgorithm algorithm, List<Security> securities, Resolution resolution)
         {
             var historyRequests = new List<Data.HistoryRequest>();
+            var historyRequestFactory = new HistoryRequestFactory(algorithm);
 
             // Create the history requests
             foreach (var security in securities)
             {
-                var historyRequestFactory = new HistoryRequestFactory(algorithm);
                 var configs = algorithm.SubscriptionManager
                     .SubscriptionDataConfigService
                     .GetSubscriptionDataConfigs(security.Symbol, includeInternalConfigs: true);
+
+                // we need to order and select a specific configuration type
+                // so the conversion rate is deterministic
+                var configToUse = configs.OrderBy(x => x.TickType).First();
 
                 var startTime = historyRequestFactory.GetStartTimeAlgoTz(
                     security.Symbol,
                     1,
                     resolution,
-                    security.Exchange.Hours);
+                    security.Exchange.Hours,
+                    configToUse.DataTimeZone);
                 var endTime = algorithm.EndDate;
-
-                // we need to order and select a specific configuration type
-                // so the conversion rate is deterministic
-                var configToUse = configs.OrderBy(x => x.TickType).First();
 
                 historyRequests.Add(historyRequestFactory.CreateHistoryRequest(
                     configToUse,

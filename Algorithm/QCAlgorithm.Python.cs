@@ -779,7 +779,7 @@ namespace QuantConnect.Algorithm
 
                 var res = GetResolution(x, resolution);
                 var exchange = GetExchangeHours(x);
-                var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange);
+                var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, GetDataTimeZone(security.Symbol));
                 return _historyRequestFactory.CreateHistoryRequest(config, start, Time.RoundDown(res.ToTimeSpan()), exchange, res);
             });
 
@@ -841,7 +841,7 @@ namespace QuantConnect.Algorithm
             if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
 
             var res = GetResolution(symbol, resolution);
-            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, GetExchangeHours(symbol));
+            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, GetExchangeHours(symbol), GetDataTimeZone(symbol));
             var end = Time.RoundDown(res.ToTimeSpan());
             return History(type, symbol, start, end, resolution);
         }

@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Common
             var end = new DateTime(2015, 09, 01, 12, 0, 1);
             var barSize = TimeSpan.FromMinutes(1);
             var hours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
-            var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 1, false);
+            var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 1, false, TimeZones.NewYork);
             // round down and back up a single bar
             Assert.AreEqual(end.RoundDown(barSize).Subtract(barSize), start);
         }
@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Common
             var end = new DateTime(2015, 09, 01, 12, 0, 0);
             var barSize = TimeSpan.FromHours(1);
             var hours = SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours();
-            var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 7, false);
+            var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 7, false, hours.TimeZone);
             // from noon, back up to 9am (3 hours) then skip night, so from 4pm, back up to noon, 4 more hours
             Assert.AreEqual(end.AddDays(-1), start);
         }
@@ -76,7 +76,7 @@ namespace QuantConnect.Tests.Common
             var expectedStart = new DateTime(2015, 08, 21);
             var barSize = TimeSpan.FromDays(1);
             var hours = SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours();
-            var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 7, false);
+            var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 7, false, hours.TimeZone);
             // from noon, back up to 9am (3 hours) then skip night, so from 4pm, back up to noon, 4 more hours
             Assert.AreEqual(expectedStart, start);
         }

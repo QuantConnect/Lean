@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using NodaTime;
 using QuantConnect.Logging;
@@ -525,19 +526,19 @@ namespace QuantConnect
         /// <param name="barCount">The number of bars requested</param>
         /// <param name="extendedMarketHours">True to allow extended market hours bars, otherwise false for only normal market hours</param>
         /// <returns>The start time that would provide the specified number of bars ending at the specified end time, rounded down by the requested bar size</returns>
-        public static DateTime GetStartTimeForTradeBars(SecurityExchangeHours exchangeHours, DateTime end, TimeSpan barSize, int barCount, bool extendedMarketHours)
+        public static DateTime GetStartTimeForTradeBars(SecurityExchangeHours exchangeHours, DateTime end, TimeSpan barSize, int barCount, bool extendedMarketHours, DateTimeZone dataTimeZone)
         {
             if (barSize <= TimeSpan.Zero)
             {
                 throw new ArgumentException("barSize must be greater than TimeSpan.Zero", nameof(barSize));
             }
 
-            var current = end.RoundDown(barSize);
+            var current = end.RoundDownInTimeZone(barSize, exchangeHours.TimeZone, dataTimeZone);
             for (int i = 0; i < barCount;)
             {
                 var previous = current;
                 current = current - barSize;
-                if (exchangeHours.IsOpen(current, previous, extendedMarketHours))
+                if (exchangeHours.IsOpen(current.ConvertTo(dataTimeZone, exchangeHours.TimeZone), previous.ConvertTo(dataTimeZone, exchangeHours.TimeZone), extendedMarketHours))
                 {
                     i++;
                 }

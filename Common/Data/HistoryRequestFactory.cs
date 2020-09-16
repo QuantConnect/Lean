@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Linq;
+using NodaTime;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -83,12 +85,13 @@ namespace QuantConnect.Data
             Symbol symbol,
             int periods,
             Resolution resolution,
-            SecurityExchangeHours exchange)
+            SecurityExchangeHours exchange,
+            DateTimeZone dataTimeZone)
         {
-            var isExtendedMarketHours = _algorithm.SubscriptionManager
+            var configs = _algorithm.SubscriptionManager
                 .SubscriptionDataConfigService
-                .GetSubscriptionDataConfigs(symbol)
-                .IsExtendedMarketHours();
+                .GetSubscriptionDataConfigs(symbol);
+            var isExtendedMarketHours = configs.IsExtendedMarketHours();
 
             var timeSpan = resolution.ToTimeSpan();
             // make this a minimum of one second
@@ -99,7 +102,8 @@ namespace QuantConnect.Data
                 _algorithm.UtcTime.ConvertFromUtc(exchange.TimeZone),
                 timeSpan,
                 periods,
-                isExtendedMarketHours);
+                isExtendedMarketHours,
+                dataTimeZone);
             return localStartTime.ConvertTo(exchange.TimeZone, _algorithm.TimeZone);
         }
     }
