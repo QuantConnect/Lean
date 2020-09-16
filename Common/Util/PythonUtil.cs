@@ -228,5 +228,57 @@ namespace QuantConnect.Util
                 "def to_func(pyobject, t1, t2):\n" +
                 "    return Func[t1, t2](pyobject)");
         }
+
+        /// <summary>
+        /// Convert Python input to a list of Symbols
+        /// </summary>
+        /// <param name="input">Object with the desired property</param>
+        /// <returns>List of Symbols</returns>
+        public static IEnumerable<Symbol> ConvertToSymbols(PyObject input)
+        {
+            List<Symbol> symbolsList;
+            Symbol symbol;
+
+            // Handle the possible types of conversions
+            if (PyList.IsListType(input))
+            {
+                List<string> symbolsStringList;
+
+                //Check if an entry in the list is a string type, if so then try and convert the whole list
+                if (PyString.IsStringType(input[0]) && input.TryConvert(out symbolsStringList))
+                {
+                    symbolsList = new List<Symbol>();
+                    foreach (var stringSymbol in symbolsStringList)
+                    {
+                        symbol = QuantConnect.Symbol.Create(stringSymbol, SecurityType.Equity, Market.USA);
+                        symbolsList.Add(symbol);
+                    }
+                }
+                //Try converting it to list of symbols, if it fails throw exception
+                else if (!input.TryConvert(out symbolsList))
+                {
+                    throw new ArgumentException($"Cannot convert list {input.Repr()} to symbols");
+                }
+            }
+            else
+            {
+                //Check if its a single string, and try and convert it
+                string symbolString;
+                if (PyString.IsStringType(input) && input.TryConvert(out symbolString))
+                {
+                    symbol = QuantConnect.Symbol.Create(symbolString, SecurityType.Equity, Market.USA);
+                    symbolsList = new List<Symbol> { symbol };
+                }
+                else if (input.TryConvert(out symbol))
+                {
+                    symbolsList = new List<Symbol> { symbol };
+                }
+                else
+                {
+                    throw new ArgumentException($"Cannot convert object {input.Repr()} to symbol");
+                }
+            }
+            return symbolsList;
+        }
     }
 }

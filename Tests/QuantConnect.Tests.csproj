@@ -446,6 +446,7 @@
     <Compile Include="Common\Statistics\ProbabilisticSharpeRatioTests.cs" />
     <Compile Include="Common\StringExtensionsTests.cs" />
     <Compile Include="Common\Util\ConcurrentSetTests.cs" />
+    <Compile Include="Common\Util\PythonUtilTests.cs" />
     <Compile Include="Common\Util\RateGateTests.cs" />
     <Compile Include="Common\Util\ListComparerTests.cs" />
     <Compile Include="Common\Util\RateLimit\FixedIntervalRefillStrategyTests.cs" />
@@ -729,6 +730,7 @@
     <Compile Include="Indicators\RateOfChangeTests.cs" />
     <Compile Include="Indicators\EaseOfMovementValueTests.cs" />
     <Compile Include="Indicators\StochasticTests.cs" />
+    <Compile Include="Research\QuantBookFundamentalTests.cs" />
     <Compile Include="Python\PythonOptionTests.cs" />
     <Compile Include="Research\QuantBookIndicatorsTests.cs" />
     <Compile Include="Research\QuantBookHistoryTests.cs" />

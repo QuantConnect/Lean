@@ -104,3 +104,10 @@ class MultipleSecuritiesHistoryTest(SecurityHistoryTest):
     def test_period_overload(self, period):
         history = self.qb.History(self.qb.Securities.Keys, period)
         return history['close'].unstack(level=0)
+
+class FundamentalHistoryTest():
+    def __init__(self):
+        self.qb = QuantBook()
+
+    def getFundamentals(self, ticker, selector, start, end):
+        return self.qb.GetFundamental(ticker, selector, start, end)
