@@ -19,38 +19,28 @@ namespace QuantConnect.Python
 
         protected override IMemoryOwner<byte> AllocateInternal(int length, out int bytesAllocated)
         {
-            PandasMemoryOwner owner = null;
-            if (_free.Count == 0)
-            {
-                owner = new PandasMemoryOwner(base.AllocateInternal(length, out bytesAllocated));
-                _used.Add(owner);
-
-                return owner;
-            }
-
+            PandasMemoryOwner owner;
             for (var i = 0; i < _free.Count; i++)
             {
                 var memory = _free[i];
-                if (length < memory.Original.Memory.Length)
+                if (length > memory.Original.Memory.Length)
                 {
-                    owner = memory;
-                    bytesAllocated = 0;
-                    _free.Remove(owner);
-                    _used.Add(owner);
-                    owner.RestoreSlice();
-                    owner.Slice(0, length);
-                    return owner;
+                    continue;
                 }
 
-                if (memory.Original.Memory.Length == length)
+                owner = memory;
+                bytesAllocated = 0;
+
+                _free.Remove(owner);
+                _used.Add(owner);
+                owner.RestoreSlice();
+
+                if (length == memory.Original.Memory.Length)
                 {
-                    owner = memory;
-                    bytesAllocated = 0;
-                    _free.Remove(owner);
-                    _used.Add(owner);
-                    owner.RestoreSlice();
-                    return owner;
+                    owner.Slice(0, length);
                 }
+
+                return owner;
             }
 
             owner = new PandasMemoryOwner(base.AllocateInternal(length, out bytesAllocated));
@@ -63,7 +53,7 @@ namespace QuantConnect.Python
         {
             foreach (var used in _used)
             {
-                used.Memory.Span.Fill(0);
+                used.Original.Memory.Span.Fill(0);
                 _free.Add(used);
             }
 

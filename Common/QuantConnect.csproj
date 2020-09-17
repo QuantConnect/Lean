@@ -107,8 +107,8 @@
     <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Apache.Arrow, Version=1.0.1.0, Culture=neutral, PublicKeyToken=204f54e5a45c07df">
-      <HintPath>..\packages\Apache.Arrow.1.0.1\lib\netstandard1.3\Apache.Arrow.dll</HintPath>
+    <Reference Include="Apache.Arrow, Version=2.0.0.0, Culture=neutral, PublicKeyToken=204f54e5a45c07df">
+      <HintPath>..\packages\Apache.Arrow.2.0.0-SNAPSHOT\lib\net461\Apache.Arrow.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="CloneExtensions, Version=1.3.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -261,8 +261,8 @@
     <Reference Include="System.ServiceModel.Primitives, Version=4.7.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.ServiceModel.Primitives.4.7.0\lib\net461\System.ServiceModel.Primitives.dll</HintPath>
     </Reference>
-    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51">
-      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.2\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll</HintPath>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Xml.Linq" />
@@ -504,6 +504,7 @@
     <Compile Include="Packets\LeakyBucketControlParameters.cs" />
     <Compile Include="Packets\LiveResultParameters.cs" />
     <Compile Include="Python\BrokerageMessageHandlerPythonWrapper.cs" />
+    <Compile Include="Python\PandasArrowMemoryAllocator.cs" />
     <Compile Include="Python\PythonConsolidator.cs" />
     <Compile Include="Python\MarginCallModelPythonWrapper.cs" />
     <Compile Include="Python\PythonInitializer.cs" />
