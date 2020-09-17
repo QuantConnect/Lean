@@ -76,7 +76,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     resolution,
                     hours,
                     configToUse.DataTimeZone);
-                var endTime = algorithm.Time.RoundDown(resolution.ToTimeSpan());
+                var endTime = algorithm.Time;
 
                 historyRequests.Add(historyRequestFactory.CreateHistoryRequest(
                     configToUse,

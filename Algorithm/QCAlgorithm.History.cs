@@ -251,7 +251,7 @@ namespace QuantConnect.Algorithm
                 var exchange = GetExchangeHours(x);
                 var res = GetResolution(x, resolution);
                 var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, GetDataTimeZone(x));
-                return _historyRequestFactory.CreateHistoryRequest(config, start, Time.RoundDown(res.ToTimeSpan()), exchange, res);
+                return _historyRequestFactory.CreateHistoryRequest(config, start, Time, exchange, res);
             });
 
             return History(requests.Where(x => x != null)).Get<T>().Memoize();
@@ -309,7 +309,7 @@ namespace QuantConnect.Algorithm
             resolution = GetResolution(symbol, resolution);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, GetExchangeHours(symbol), GetDataTimeZone(symbol));
 
-            return History(symbol, start, Time.RoundDown(resolution.Value.ToTimeSpan()), resolution);
+            return History(symbol, start, Time, resolution);
         }
 
         /// <summary>
@@ -338,7 +338,7 @@ namespace QuantConnect.Algorithm
 
             resolution = GetResolution(symbol, resolution);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, GetExchangeHours(symbol), GetDataTimeZone(symbol));
-            return History<T>(symbol, start, Time.RoundDown(resolution.Value.ToTimeSpan()), resolution).Memoize();
+            return History<T>(symbol, start, Time, resolution).Memoize();
         }
 
         /// <summary>
@@ -630,7 +630,7 @@ namespace QuantConnect.Algorithm
                 var res = GetResolution(x, resolution);
                 var exchange = GetExchangeHours(x);
                 var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, GetDataTimeZone(x));
-                var end = Time.RoundDown(res.ToTimeSpan());
+                var end = Time;
 
                 return GetMatchingSubscriptions(x, typeof(BaseData), resolution)
                     .Select(config => _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res));
