@@ -20,14 +20,18 @@ using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.IdentityModel.Protocols.WSTrust;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Apache.Arrow.Types;
+using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 using Array = System.Array;
 
 namespace QuantConnect.Python
@@ -38,6 +42,9 @@ namespace QuantConnect.Python
     public class PandasConverter
     {
         private static dynamic _pandas;
+        private static dynamic _pa;
+        private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
+
         private PandasArrowMemoryAllocator allocator = new PandasArrowMemoryAllocator();
 
         private StringArray.Builder tradeBarSymbols = new StringArray.Builder();
@@ -96,7 +103,12 @@ namespace QuantConnect.Python
         private StringArray.Builder openInterestRight = new StringArray.Builder();
 
         private DoubleArray.Builder openInterestValue = new DoubleArray.Builder();
-        
+
+        //private Dictionary<Type, string[]> _customDataColumns = new Dictionary<Type, string[]>();
+        //private Dictionary<Type, List<MemberInfo>> _customDataMembers = new Dictionary<Type, List<MemberInfo>>();
+        //private Dictionary<string, IArrowArrayBuilder> _customDataBuilders = new Dictionary<string, IArrowArrayBuilder>();
+        //private Dictionary<string, List<PyObject>> _customDataObjects = new Dictionary<string, List<PyObject>>();
+
         private bool hasExchange;
         private bool hasSuspicious;
         private bool hasExpiry;
@@ -114,6 +126,10 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
+                    // pyarrow is used to create a DataFrame without having to serialize the data.
+                    // It also allows us to construct a DataFrame as a zero-copy operation.
+                    _pa = PythonEngine.ImportModule("pyarrow");
+
                     // this python Remapper class will work as a proxy and adjust the
                     // input to its methods using the provided 'mapper' callable object
                     _pandas = PythonEngine.ModuleFromString("remapper",
@@ -381,7 +397,6 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                     var tradeBar = slice.Bars.ContainsKey(symbol) ? slice.Bars[symbol] : null;
                     var quoteBar = slice.QuoteBars.ContainsKey(symbol) ? slice.QuoteBars[symbol] : null;
                     var ticks = slice.Ticks.ContainsKey(symbol) ? slice.Ticks[symbol] : null;
-
                     var sid = symbol.ID.ToString();
 
                     if (tradeBar != null)
@@ -615,11 +630,81 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             }
                         }
                     }
+
+                    /*
+                    if (tradeBar == null && quoteBar == null && ticks == null)
+                    {
+                        // If we've made it this far, we're dealing with an instance of custom data.
+                        var baseData = (BaseData)slice[symbol];
+                        var baseDataType = baseData.GetType();
+
+                        var columns = (baseData as DynamicData)?.GetStorageDictionary()?.Select(x => x.Key)
+                            ?.ToHashSet()
+                            ?.ToArray();
+
+                        if (columns == null && !_customDataColumns.TryGetValue(baseDataType, out columns))
+                        {
+                            var members = baseDataType.GetMembers()
+                                .Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property)
+                                .ToList();
+
+                            var duplicateKeys = members.GroupBy(x => x.Name.ToLowerInvariant())
+                                .Where(x => x.Count() > 1)
+                                .Select(x => x.Key)
+                                .ToList();
+
+                            if (duplicateKeys.Count != 0)
+                            {
+                                throw new ArgumentException($"PandasConverter.GetDataFrame(): Duplicate keys \"{string.Join(", ", duplicateKeys)}\" were found in the class {baseDataType.FullName}");
+                            }
+
+                            // If the custom data derives from market data (i.e. Tick, TradeBar, QuoteBar), exclude its keys
+                            columns = members.Select(x => x.Name.ToLowerInvariant()).ToHashSet().ToArray();
+                            var columnsFiltered = columns.Except(_baseDataProperties)
+                                .Except(GetPropertiesNames(typeof(QuoteBar), baseDataType))
+                                .Except(GetPropertiesNames(typeof(TradeBar), baseDataType))
+                                .Except(GetPropertiesNames(typeof(Tick), baseDataType))
+                                .ToList();
+
+                            columnsFiltered.Add("value");
+                            columns = columnsFiltered.ToArray();
+                            _customDataColumns[baseDataType] = columns;
+                            _customDataMembers[baseDataType] = members.Where(x => columns.Contains(x.Name.ToLowerInvariant())).ToList();
+                        }
+
+                        foreach (var member in _customDataMembers[baseDataType])
+                        {
+                            var columnName = member.Name;
+                            var property = member as PropertyInfo;
+                            var field = member as FieldInfo;
+                            var memberType = property?.PropertyType ?? field.FieldType;
+
+                            IArrowArrayBuilder builder;
+                            if (!_customDataBuilders.TryGetValue(columnName, out builder))
+                            {
+                                builder = CreateBuilder(memberType);
+                                _customDataBuilders[columnName] = builder;
+                            }
+
+                            if (!AppendToBuilder(builder, baseData, memberType, property, field))
+                            {
+                                List<PyObject> customObjects;
+                                if (!_customDataObjects.TryGetValue(columnName, out customObjects))
+                                {
+                                    customObjects = new List<PyObject>();
+                                    _customDataObjects[columnName] = customObjects;
+                                }
+
+                                customObjects.Add((property?.GetValue(baseData) ?? field.GetValue(baseData)).ToPython());
+                            }
+                        }
+                    }
+                    */
                 }
             }
 
             var recordBatches = new List<RecordBatch>();
-            
+
             if (tradeBarTimes.Length != 0)
             {
                 var tradeBarRecordBatchBuilder = new RecordBatch.Builder(allocator);
@@ -737,6 +822,15 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 recordBatches.Add(openInterestBatchBuilder.Build());
             }
 
+            //if (_customDataColumns.Count != 0)
+            //{
+            //    foreach (var kvp in _customDataBuilders)
+            //    {
+            //        var columnName = kvp.Key;
+            //        var builder = kvp.Value;
+            //    }
+            //}
+
             using (Py.GIL())
             {
                 if (recordBatches.Count == 0)
@@ -744,11 +838,10 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                     return _pandas.DataFrame();
                 }
 
-                dynamic pa = PythonEngine.ImportModule("pyarrow");
                 var dataFrames = new List<dynamic>();
                 foreach (var recordBatch in recordBatches)
                 {
-                    using (var ms = new MemoryStream(0))
+                    using (var ms = new MemoryStream())
                     using (var writer = new ArrowStreamWriter(ms, recordBatch.Schema))
                     {
                         writer.WriteRecordBatchAsync(recordBatch).SynchronouslyAwaitTask();
@@ -758,55 +851,70 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             {
                                 var pinned = arrowBuffer.Memory.Pin();
 
-                                dynamic buf = pa.foreign_buffer(
-                                    ((long) new IntPtr(pinned.Pointer)).ToPython(),
-                                    arrowBuffer.Length.ToPython()
+                                dynamic buf = _pa.foreign_buffer(
+                                    (long) new IntPtr(pinned.Pointer),
+                                    arrowBuffer.Length
                                 );
-                                dynamic df = pa.ipc.open_stream(buf).read_pandas(
-                                    Py.kw("split_blocks", true),
-                                    Py.kw("self_destruct", true)
+                                dynamic df = _pa.ipc.open_stream(buf).read_pandas(
+                                    split_blocks: true,
+                                    self_destruct: true
                                 );
 
                                 var timeIdx = 1;
                                 if (hasExpiry)
                                 {
-                                    df.set_index("expiry", Py.kw("inplace", true));
-                                    df = df.tz_localize(null, Py.kw("copy", false));
-                                    df.reset_index(Py.kw("inplace", true));
-                                    df["expiry"] = df["expiry"].fillna("");
-                                    df.set_index("expiry", Py.kw("inplace", true));
+                                    df.set_index("expiry", inplace: true);
+                                    df = df.tz_localize(null, copy: false);
                                     timeIdx++;
                                 }
                                 if (hasStrike)
                                 {
                                     df["strike"] = df["strike"].fillna("");
-                                    df.set_index("strike", Py.kw("append", hasExpiry), Py.kw("inplace", true));
+                                    df.set_index("strike", append: hasExpiry, inplace: true);
                                     timeIdx++;
                                 }
                                 if (hasOptionRight)
                                 {
                                     df["type"] = df["type"].fillna("");
-                                    df.set_index("type", Py.kw("append", hasExpiry || hasStrike), Py.kw("inplace", true));
+                                    df.set_index("type", append: hasExpiry || hasStrike, inplace: true);
                                     timeIdx++;
                                 }
 
-                                df.set_index("symbol", Py.kw("append", hasExpiry || hasStrike || hasOptionRight), Py.kw("inplace", true));
-                                df.set_index("time", Py.kw("append", true), Py.kw("inplace", true));
-                                dataFrames.Add(df.tz_localize(null, Py.kw("level", timeIdx.ToPython()), Py.kw("copy", false)));
+                                df.set_index(new PyList(new []{ new PyString("symbol"), new PyString("time") }), append: hasExpiry || hasStrike || hasOptionRight, inplace: true);
+                                dataFrames.Add(df.tz_localize(null, level: timeIdx, copy: false));
                             }
                         }
                     }
                 }
 
                 dynamic final_df = dataFrames[0];
-                if (dataFrames.Count > 1) 
+                if (dataFrames.Count > 1)
                 {
-                    final_df = final_df.join(dataFrames.Skip(1).ToArray(), Py.kw("how", "outer"));
+                    final_df = final_df.join(dataFrames.Skip(1).ToArray(), how: "outer");
                 }
 
-                final_df.sort_index(Py.kw("inplace", true));
+                final_df.sort_index(inplace: true);
+                if (hasStrike)
+                {
+                    // Current version of pandas doesn't like whenever we join or append an index
+                    // with no null time values (NaT). It resets any empty string to NaT and
+                    // doesn't allow for indexing with '', which is required for backwards compatibility.
+                    final_df.reset_index(inplace: true);
+                    final_df["expiry"] = final_df["expiry"].fillna("");
+                    final_df.set_index("expiry", inplace: true);
+                    final_df.set_index(new PyList(new[]
+                    {
+                        new PyString("strike"),
+                        new PyString("type"),
+                        new PyString("symbol"),
+                        new PyString("time")
+                    }), append: true, inplace: true);
+                }
+
+                // Cleans up any resources we've used to allow for the next generation of DataFrames
+                // to be created with potentially zero allocations.
                 allocator.Free();
-                
+
                 return _pandas.DataFrame(final_df);
             }
         }
@@ -879,6 +987,127 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             openInterestValue.Clear();
         }
 
+        private IArrowArrayBuilder CreateBuilder(Type memberType)
+        {
+            if (memberType == typeof(byte))
+            {
+                return new UInt8Array.Builder();
+            }
+            if (memberType == typeof(sbyte))
+            {
+                return new Int8Array.Builder();
+            }
+            if (memberType == typeof(ushort))
+            {
+                return new UInt16Array.Builder();
+            }
+            if (memberType == typeof(short))
+            {
+                return new Int16Array.Builder();
+            }
+            if (memberType == typeof(int))
+            {
+                return new Int32Array.Builder();
+            }
+            if (memberType == typeof(uint))
+            {
+                return new UInt32Array.Builder();
+            }
+            if (memberType == typeof(long))
+            {
+                return new Int64Array.Builder();
+            }
+            if (memberType == typeof(ulong))
+            {
+                return new UInt64Array.Builder();
+            }
+            if (memberType == typeof(float))
+            {
+                return new FloatArray.Builder();
+            }
+            if (memberType == typeof(double))
+            {
+                return new DoubleArray.Builder();
+            }
+            if (memberType == typeof(decimal))
+            {
+                return new DoubleArray.Builder();
+            }
+            if (memberType == typeof(DateTime))
+            {
+                return new TimestampArray.Builder();
+            }
+
+            return null;
+        }
+
+        private bool AppendToBuilder(IArrowArrayBuilder builder, BaseData baseData, Type memberType, PropertyInfo property, FieldInfo field)
+        {
+            if (memberType == typeof(byte))
+            {
+                ((UInt8Array.Builder)builder).Append((byte)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                return true;
+            }
+            if (memberType == typeof(sbyte))
+            {
+                ((Int8Array.Builder)builder).Append((sbyte)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                return true;
+            }
+            if (memberType == typeof(ushort))
+            {
+                ((UInt16Array.Builder)builder).Append((ushort)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                return true;
+            }
+            if (memberType == typeof(short))
+            {
+                ((Int16Array.Builder)builder).Append((short)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                return true;
+            }
+            if (memberType == typeof(int))
+            {
+                ((Int32Array.Builder)builder).Append((int)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                return true;
+            }
+            if (memberType == typeof(uint))
+            {
+                ((UInt32Array.Builder)builder).Append((uint)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                return true;
+            }
+            if (memberType == typeof(long))
+            {
+                ((Int64Array.Builder)builder).Append((long)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                return true;
+            }
+            if (memberType == typeof(ulong))
+            {
+                ((UInt64Array.Builder)builder).Append((ulong)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                return true;
+            }
+            if (memberType == typeof(float))
+            {
+                ((FloatArray.Builder)builder).Append((float)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                return true;
+            }
+            if (memberType == typeof(double))
+            {
+                ((DoubleArray.Builder)builder).Append((double)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                return true;
+            }
+            if (memberType == typeof(decimal))
+            {
+                ((DoubleArray.Builder)builder).Append((double)((decimal)(property?.GetValue(baseData) ?? field.GetValue(baseData))));
+                return true;
+            }
+            if (memberType == typeof(DateTime))
+            {
+                ((TimestampArray.Builder)builder).Append(new DateTimeOffset(((DateTime)(property?.GetValue(baseData) ?? field.GetValue(baseData))).Ticks, TimeSpan.Zero));
+                return true;
+            }
+
+            // Object type, i.e. a C# class passed to Python via pythonnet
+            return false;
+        }
+
         /// <summary>
         /// Converts an enumerable of <see cref="IBaseData"/> in a pandas.DataFrame
         /// </summary>
@@ -936,6 +1165,19 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
                 return _pandas.DataFrame(pyDict, columns: data.Keys.Select(x => x.ToLowerInvariant()).OrderBy(x => x));
             }
+        }
+
+        /// <summary>
+        /// Get the lower-invariant name of properties of the type that a another type is assignable from
+        /// </summary>
+        /// <param name="baseType">The type that is assignable from</param>
+        /// <param name="type">The type that is assignable by</param>
+        /// <returns>List of string. Empty list if not assignable from</returns>
+        private static IEnumerable<string> GetPropertiesNames(Type baseType, Type type)
+        {
+            return baseType.IsAssignableFrom(type)
+                ? baseType.GetProperties().Select(x => x.Name.ToLowerInvariant())
+                : Enumerable.Empty<string>();
         }
 
         /// <summary>
