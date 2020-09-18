@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Python.Runtime;
 
 namespace QuantConnect.Notifications
 {
@@ -48,6 +49,19 @@ namespace QuantConnect.Notifications
 
             // start counting reset time based on first invocation of NotificationManager
             _resetTime = default(DateTime);
+        }
+
+        /// <summary>
+        /// Send an email to the address specified for live trading notifications.
+        /// </summary>
+        /// <param name="subject">Subject of the email</param>
+        /// <param name="message">Message body, up to 10kb</param>
+        /// <param name="data">Data attachment (optional)</param>
+        /// <param name="address">Email address to send to</param>
+        /// <param name="headers">Optional email headers to use</param>
+        public bool Email(string address, string subject, string message, string data, PyObject headers)
+        {
+            return Email(address, subject, message, data, headers.ConvertToDictionary<string, string>());
         }
 
         /// <summary>
