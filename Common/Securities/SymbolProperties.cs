@@ -28,7 +28,6 @@ namespace QuantConnect.Securities
         public string Description
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -37,7 +36,6 @@ namespace QuantConnect.Securities
         public string QuoteCurrency
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -55,7 +53,6 @@ namespace QuantConnect.Securities
         public decimal MinimumPriceVariation
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -64,23 +61,33 @@ namespace QuantConnect.Securities
         public decimal LotSize
         {
             get;
-            private set;
+        }
+
+        /// <summary>
+        /// The brokerage symbol
+        /// </summary>
+        public string BrokerageSymbol
+        {
+            get;
         }
 
         /// <summary>
         /// Creates an instance of the <see cref="SymbolProperties"/> class
         /// </summary>
-        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize)
+        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize, string brokerageSymbol)
         {
             Description = description;
             QuoteCurrency = quoteCurrency;
             ContractMultiplier = contractMultiplier;
             MinimumPriceVariation = minimumPriceVariation;
             LotSize = lotSize;
-            if(LotSize <= 0)
+
+            if (LotSize <= 0)
             {
                 throw new ArgumentException("SymbolProperties LotSize can not be less than or equal to 0");
             }
+
+            BrokerageSymbol = brokerageSymbol;
         }
 
         /// <summary>
@@ -90,7 +97,7 @@ namespace QuantConnect.Securities
         /// <returns>A default instance of the<see cref="SymbolProperties"/> class</returns>
         public static SymbolProperties GetDefault(string quoteCurrency)
         {
-            return new SymbolProperties("", quoteCurrency.LazyToUpper(), 1, 0.01m, 1);
+            return new SymbolProperties(string.Empty, quoteCurrency.LazyToUpper(), 1, 0.01m, 1, string.Empty);
         }
     }
 }
