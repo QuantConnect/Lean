@@ -1,4 +1,4 @@
-market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_variation,lot_size
+market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_variation,lot_size,brokerage_symbol
 
 #
 # Use # signs for comments
@@ -349,98 +349,99 @@ oanda,USDTRY,forex,USD/TRY,TRY,1,0.00001,1
 oanda,USDZAR,forex,USD/ZAR,ZAR,1,0.00001,1
 oanda,ZARJPY,forex,ZAR/JPY,JPY,1,0.001,1
 
-gdax,ALGOEUR,crypto,ALGO/EUR,EUR,1,0.0001,1
-gdax,ALGOGBP,crypto,ALGO/GBP,GBP,1,0.0001,1
-gdax,ALGOUSD,crypto,ALGO/USD,USD,1,0.0001,1
-gdax,ATOMBTC,crypto,ATOM/BTC,BTC,1,0.000001,0.1
-gdax,ATOMUSD,crypto,ATOM/USD,USD,1,0.001,0.1
-gdax,BANDBTC,crypto,BAND/BTC,BTC,1,0.00000001,0.01
-gdax,BANDEUR,crypto,BAND/EUR,EUR,1,0.0001,0.01
-gdax,BANDGBP,crypto,BAND/GBP,GBP,1,0.0001,0.01
-gdax,BANDUSD,crypto,BAND/USD,USD,1,0.0001,0.01
-gdax,BATETH,crypto,BAT/ETH,ETH,1,0.00000001,1
-gdax,BATUSDC,crypto,BAT/USDC,USDC,1,0.000001,1
-gdax,BCHBTC,crypto,BCH/BTC,BTC,1,0.00001,0.00000001
-gdax,BCHEUR,crypto,BCH/EUR,EUR,1,0.01,0.00000001
-gdax,BCHGBP,crypto,BCH/GBP,GBP,1,0.01,0.00000001
-gdax,BCHUSD,crypto,BCH/USD,USD,1,0.01,0.00000001
-gdax,BTCEUR,crypto,BTC/EUR,EUR,1,0.01,0.00000001
-gdax,BTCGBP,crypto,BTC/GBP,GBP,1,0.01,0.00000001
-gdax,BTCUSD,crypto,BTC/USD,USD,1,0.01,0.00000001
-gdax,BTCUSDC,crypto,BTC/USDC,USDC,1,0.01,0.00000001
-gdax,CGLDBTC,crypto,CGLD/BTC,BTC,1,0.00000001,0.01
-gdax,CGLDEUR,crypto,CGLD/EUR,EUR,1,0.0001,0.01
-gdax,CGLDGBP,crypto,CGLD/GBP,GBP,1,0.0001,0.01
-gdax,CGLDUSD,crypto,CGLD/USD,USD,1,0.0001,0.01
-gdax,COMPBTC,crypto,COMP/BTC,BTC,1,0.000001,0.001
-gdax,COMPUSD,crypto,COMP/USD,USD,1,0.01,0.001
-gdax,CVCUSDC,crypto,CVC/USDC,USDC,1,0.000001,1
-gdax,DAIUSD,crypto,DAI/USD,USD,1,0.000001,0.00001
-gdax,DAIUSDC,crypto,DAI/USDC,USDC,1,0.000001,0.00001
-gdax,DASHBTC,crypto,DASH/BTC,BTC,1,0.00000001,0.001
-gdax,DASHUSD,crypto,DASH/USD,USD,1,0.001,0.001
-gdax,DNTUSDC,crypto,DNT/USDC,USDC,1,0.000001,1
-gdax,EOSBTC,crypto,EOS/BTC,BTC,1,0.000001,0.1
-gdax,EOSEUR,crypto,EOS/EUR,EUR,1,0.001,0.1
-gdax,EOSUSD,crypto,EOS/USD,USD,1,0.001,0.1
-gdax,ETCBTC,crypto,ETC/BTC,BTC,1,0.000001,0.00000001
-gdax,ETCEUR,crypto,ETC/EUR,EUR,1,0.001,0.00000001
-gdax,ETCGBP,crypto,ETC/GBP,GBP,1,0.001,0.00000001
-gdax,ETCUSD,crypto,ETC/USD,USD,1,0.001,0.00000001
-gdax,ETHBTC,crypto,ETH/BTC,BTC,1,0.00001,0.00000001
-gdax,ETHDAI,crypto,ETH/DAI,DAI,1,0.01,0.0001
-gdax,ETHEUR,crypto,ETH/EUR,EUR,1,0.01,0.00000001
-gdax,ETHGBP,crypto,ETH/GBP,GBP,1,0.01,0.00000001
-gdax,ETHUSD,crypto,ETH/USD,USD,1,0.01,0.00000001
-gdax,ETHUSDC,crypto,ETH/USDC,USDC,1,0.01,0.00000001
-gdax,GNTUSDC,crypto,GNT/USDC,USDC,1,0.000001,1
-gdax,KNCBTC,crypto,KNC/BTC,BTC,1,0.00000001,0.1
-gdax,KNCUSD,crypto,KNC/USD,USD,1,0.0001,0.1
-gdax,LINKETH,crypto,LINK/ETH,ETH,1,0.00000001,0.01
-gdax,LINKEUR,crypto,LINK/EUR,EUR,1,0.00001,0.01
-gdax,LINKGBP,crypto,LINK/GBP,GBP,1,0.00001,0.01
-gdax,LINKUSD,crypto,LINK/USD,USD,1,0.00001,0.01
-gdax,LOOMUSDC,crypto,LOOM/USDC,USDC,1,0.000001,1
-gdax,LRCUSD,crypto,LRC/USD,USD,1,0.0001,0.000001
-gdax,LTCBTC,crypto,LTC/BTC,BTC,1,0.000001,0.00000001
-gdax,LTCEUR,crypto,LTC/EUR,EUR,1,0.01,0.00000001
-gdax,LTCGBP,crypto,LTC/GBP,GBP,1,0.01,0.00000001
-gdax,LTCUSD,crypto,LTC/USD,USD,1,0.01,0.00000001
-gdax,MANAUSDC,crypto,MANA/USDC,USDC,1,0.000001,1
-gdax,MKRBTC,crypto,MKR/BTC,BTC,1,0.00001,0.000001
-gdax,MKRUSD,crypto,MKR/USD,USD,1,0.0001,0.000001
-gdax,NMRBTC,crypto,NMR/BTC,BTC,1,0.00000001,0.001
-gdax,NMREUR,crypto,NMR/EUR,EUR,1,0.0001,0.001
-gdax,NMRGBP,crypto,NMR/GBP,GBP,1,0.0001,0.001
-gdax,NMRUSD,crypto,NMR/USD,USD,1,0.0001,0.001
-gdax,OMGBTC,crypto,OMG/BTC,BTC,1,0.00000001,0.1
-gdax,OMGEUR,crypto,OMG/EUR,EUR,1,0.0001,0.1
-gdax,OMGGBP,crypto,OMG/GBP,GBP,1,0.0001,0.1
-gdax,OMGUSD,crypto,OMG/USD,USD,1,0.0001,0.1
-gdax,OXTUSD,crypto,OXT/USD,USD,1,0.0001,1
-gdax,REPBTC,crypto,REP/BTC,BTC,1,0.000001,0.000001
-gdax,REPUSD,crypto,REP/USD,USD,1,0.01,0.000001
-gdax,UMABTC,crypto,UMA/BTC,BTC,1,0.00000001,0.001
-gdax,UMAEUR,crypto,UMA/EUR,EUR,1,0.001,0.001
-gdax,UMAGBP,crypto,UMA/GBP,GBP,1,0.001,0.001
-gdax,UMAUSD,crypto,UMA/USD,USD,1,0.001,0.001
-gdax,XLMBTC,crypto,XLM/BTC,BTC,1,0.00000001,1
-gdax,XLMEUR,crypto,XLM/EUR,EUR,1,0.000001,1
-gdax,XLMUSD,crypto,XLM/USD,USD,1,0.000001,1
-gdax,XRPBTC,crypto,XRP/BTC,BTC,1,0.00000001,1
-gdax,XRPEUR,crypto,XRP/EUR,EUR,1,0.0001,0.000001
-gdax,XRPGBP,crypto,XRP/GBP,GBP,1,0.0001,0.000001
-gdax,XRPUSD,crypto,XRP/USD,USD,1,0.0001,0.000001
-gdax,XTZBTC,crypto,XTZ/BTC,BTC,1,0.00000001,0.01
-gdax,XTZEUR,crypto,XTZ/EUR,EUR,1,0.00001,0.01
-gdax,XTZGBP,crypto,XTZ/GBP,GBP,1,0.00001,0.01
-gdax,XTZUSD,crypto,XTZ/USD,USD,1,0.0001,0.01
-gdax,YFIUSD,crypto,YFI/USD,USD,1,0.01,0.000001
-gdax,ZECBTC,crypto,ZEC/BTC,BTC,1,0.000001,0.0001
-gdax,ZECUSDC,crypto,ZEC/USDC,USDC,1,0.01,0.00000001
-gdax,ZRXBTC,crypto,ZRX/BTC,BTC,1,0.00000001,0.00001
-gdax,ZRXEUR,crypto,ZRX/EUR,EUR,1,0.000001,0.00001
-gdax,ZRXUSD,crypto,ZRX/USD,USD,1,0.000001,0.00001
+gdax,ALGOEUR,crypto,Algorand-Euro,EUR,1,0.0001,1,ALGO-EUR
+gdax,ALGOGBP,crypto,Algorand-British Pound,GBP,1,0.0001,1,ALGO-GBP
+gdax,ALGOUSD,crypto,Algorand-United States Dollar,USD,1,0.0001,1,ALGO-USD
+gdax,ATOMBTC,crypto,Cosmos-Bitcoin,BTC,1,0.000001,0.1,ATOM-BTC
+gdax,ATOMUSD,crypto,Cosmos-United States Dollar,USD,1,0.001,0.1,ATOM-USD
+gdax,BANDBTC,crypto,Band Protocol-Bitcoin,BTC,1,0.00000001,0.01,BAND-BTC
+gdax,BANDEUR,crypto,Band Protocol-Euro,EUR,1,0.0001,0.01,BAND-EUR
+gdax,BANDGBP,crypto,Band Protocol-British Pound,GBP,1,0.0001,0.01,BAND-GBP
+gdax,BANDUSD,crypto,Band Protocol-United States Dollar,USD,1,0.0001,0.01,BAND-USD
+gdax,BATETH,crypto,Basic Attention Token-Ether,ETH,1,0.00000001,1,BAT-ETH
+gdax,BATUSDC,crypto,Basic Attention Token-USD Coin,USDC,1,0.000001,1,BAT-USDC
+gdax,BCHBTC,crypto,Bitcoin Cash-Bitcoin,BTC,1,0.00001,0.00000001,BCH-BTC
+gdax,BCHEUR,crypto,Bitcoin Cash-Euro,EUR,1,0.01,0.00000001,BCH-EUR
+gdax,BCHGBP,crypto,Bitcoin Cash-British Pound,GBP,1,0.01,0.00000001,BCH-GBP
+gdax,BCHUSD,crypto,Bitcoin Cash-United States Dollar,USD,1,0.01,0.00000001,BCH-USD
+gdax,BTCEUR,crypto,Bitcoin-Euro,EUR,1,0.01,0.00000001,BTC-EUR
+gdax,BTCGBP,crypto,Bitcoin-British Pound,GBP,1,0.01,0.00000001,BTC-GBP
+gdax,BTCUSD,crypto,Bitcoin-United States Dollar,USD,1,0.01,0.00000001,BTC-USD
+gdax,BTCUSDC,crypto,Bitcoin-USD Coin,USDC,1,0.01,0.00000001,BTC-USDC
+gdax,CGLDBTC,crypto,Celo-Bitcoin,BTC,1,0.00000001,0.01,CGLD-BTC
+gdax,CGLDEUR,crypto,Celo-Euro,EUR,1,0.0001,0.01,CGLD-EUR
+gdax,CGLDGBP,crypto,Celo-British Pound,GBP,1,0.0001,0.01,CGLD-GBP
+gdax,CGLDUSD,crypto,Celo-United States Dollar,USD,1,0.0001,0.01,CGLD-USD
+gdax,COMPBTC,crypto,Compound-Bitcoin,BTC,1,0.000001,0.001,COMP-BTC
+gdax,COMPUSD,crypto,Compound-United States Dollar,USD,1,0.01,0.001,COMP-USD
+gdax,CVCUSDC,crypto,Civic-USD Coin,USDC,1,0.000001,1,CVC-USDC
+gdax,DAIUSD,crypto,Dai-United States Dollar,USD,1,0.000001,0.00001,DAI-USD
+gdax,DAIUSDC,crypto,Dai-USD Coin,USDC,1,0.000001,0.00001,DAI-USDC
+gdax,DASHBTC,crypto,Dash-Bitcoin,BTC,1,0.00000001,0.001,DASH-BTC
+gdax,DASHUSD,crypto,Dash-United States Dollar,USD,1,0.001,0.001,DASH-USD
+gdax,DNTUSDC,crypto,district0x-USD Coin,USDC,1,0.000001,1,DNT-USDC
+gdax,EOSBTC,crypto,EOS-Bitcoin,BTC,1,0.000001,0.1,EOS-BTC
+gdax,EOSEUR,crypto,EOS-Euro,EUR,1,0.001,0.1,EOS-EUR
+gdax,EOSUSD,crypto,EOS-United States Dollar,USD,1,0.001,0.1,EOS-USD
+gdax,ETCBTC,crypto,Ether Classic-Bitcoin,BTC,1,0.000001,0.00000001,ETC-BTC
+gdax,ETCEUR,crypto,Ether Classic-Euro,EUR,1,0.001,0.00000001,ETC-EUR
+gdax,ETCGBP,crypto,Ether Classic-British Pound,GBP,1,0.001,0.00000001,ETC-GBP
+gdax,ETCUSD,crypto,Ether Classic-United States Dollar,USD,1,0.001,0.00000001,ETC-USD
+gdax,ETHBTC,crypto,Ether-Bitcoin,BTC,1,0.00001,0.00000001,ETH-BTC
+gdax,ETHDAI,crypto,Ether-Dai,DAI,1,0.01,0.0001,ETH-DAI
+gdax,ETHEUR,crypto,Ether-Euro,EUR,1,0.01,0.00000001,ETH-EUR
+gdax,ETHGBP,crypto,Ether-British Pound,GBP,1,0.01,0.00000001,ETH-GBP
+gdax,ETHUSD,crypto,Ether-United States Dollar,USD,1,0.01,0.00000001,ETH-USD
+gdax,ETHUSDC,crypto,Ether-USD Coin,USDC,1,0.01,0.00000001,ETH-USDC
+gdax,GNTUSDC,crypto,Golem-USD Coin,USDC,1,0.000001,1,GNT-USDC
+gdax,KNCBTC,crypto,Kyber Network-Bitcoin,BTC,1,0.00000001,0.1,KNC-BTC
+gdax,KNCUSD,crypto,Kyber Network-United States Dollar,USD,1,0.0001,0.1,KNC-USD
+gdax,LINKETH,crypto,Chainlink-Ether,ETH,1,0.00000001,0.01,LINK-ETH
+gdax,LINKEUR,crypto,Chainlink-Euro,EUR,1,0.00001,0.01,LINK-EUR
+gdax,LINKGBP,crypto,Chainlink-British Pound,GBP,1,0.00001,0.01,LINK-GBP
+gdax,LINKUSD,crypto,Chainlink-United States Dollar,USD,1,0.00001,0.01,LINK-USD
+gdax,LOOMUSDC,crypto,Loom Network-USD Coin,USDC,1,0.000001,1,LOOM-USDC
+gdax,LRCUSD,crypto,Loopring-United States Dollar,USD,1,0.0001,0.000001,LRC-USD
+gdax,LTCBTC,crypto,Litecoin-Bitcoin,BTC,1,0.000001,0.00000001,LTC-BTC
+gdax,LTCEUR,crypto,Litecoin-Euro,EUR,1,0.01,0.00000001,LTC-EUR
+gdax,LTCGBP,crypto,Litecoin-British Pound,GBP,1,0.01,0.00000001,LTC-GBP
+gdax,LTCUSD,crypto,Litecoin-United States Dollar,USD,1,0.01,0.00000001,LTC-USD
+gdax,MANAUSDC,crypto,Decentraland-USD Coin,USDC,1,0.000001,1,MANA-USDC
+gdax,MKRBTC,crypto,Maker-Bitcoin,BTC,1,0.00001,0.000001,MKR-BTC
+gdax,MKRUSD,crypto,Maker-United States Dollar,USD,1,0.0001,0.000001,MKR-USD
+gdax,NMRBTC,crypto,Numeraire-Bitcoin,BTC,1,0.00000001,0.001,NMR-BTC
+gdax,NMREUR,crypto,Numeraire-Euro,EUR,1,0.0001,0.001,NMR-EUR
+gdax,NMRGBP,crypto,Numeraire-British Pound,GBP,1,0.0001,0.001,NMR-GBP
+gdax,NMRUSD,crypto,Numeraire-United States Dollar,USD,1,0.0001,0.001,NMR-USD
+gdax,OMGBTC,crypto,OMG Network-Bitcoin,BTC,1,0.00000001,0.1,OMG-BTC
+gdax,OMGEUR,crypto,OMG Network-Euro,EUR,1,0.0001,0.1,OMG-EUR
+gdax,OMGGBP,crypto,OMG Network-British Pound,GBP,1,0.0001,0.1,OMG-GBP
+gdax,OMGUSD,crypto,OMG Network-United States Dollar,USD,1,0.0001,0.1,OMG-USD
+gdax,OXTUSD,crypto,Orchid-United States Dollar,USD,1,0.0001,1,OXT-USD
+gdax,REPBTC,crypto,Augur-Bitcoin,BTC,1,0.000001,0.000001,REP-BTC
+gdax,REPUSD,crypto,Augur-United States Dollar,USD,1,0.01,0.000001,REP-USD
+gdax,UMABTC,crypto,UMA-Bitcoin,BTC,1,0.00000001,0.001,UMA-BTC
+gdax,UMAEUR,crypto,UMA-Euro,EUR,1,0.001,0.001,UMA-EUR
+gdax,UMAGBP,crypto,UMA-British Pound,GBP,1,0.001,0.001,UMA-GBP
+gdax,UMAUSD,crypto,UMA-United States Dollar,USD,1,0.001,0.001,UMA-USD
+gdax,UNIUSD,crypto,Uniswap-United States Dollar,USD,1,0.0001,0.000001,UNI-USD
+gdax,XLMBTC,crypto,Stellar-Bitcoin,BTC,1,0.00000001,1,XLM-BTC
+gdax,XLMEUR,crypto,Stellar-Euro,EUR,1,0.000001,1,XLM-EUR
+gdax,XLMUSD,crypto,Stellar-United States Dollar,USD,1,0.000001,1,XLM-USD
+gdax,XRPBTC,crypto,XRP-Bitcoin,BTC,1,0.00000001,1,XRP-BTC
+gdax,XRPEUR,crypto,XRP-Euro,EUR,1,0.0001,0.000001,XRP-EUR
+gdax,XRPGBP,crypto,XRP-British Pound,GBP,1,0.0001,0.000001,XRP-GBP
+gdax,XRPUSD,crypto,XRP-United States Dollar,USD,1,0.0001,0.000001,XRP-USD
+gdax,XTZBTC,crypto,Tezos-Bitcoin,BTC,1,0.00000001,0.01,XTZ-BTC
+gdax,XTZEUR,crypto,Tezos-Euro,EUR,1,0.00001,0.01,XTZ-EUR
+gdax,XTZGBP,crypto,Tezos-British Pound,GBP,1,0.00001,0.01,XTZ-GBP
+gdax,XTZUSD,crypto,Tezos-United States Dollar,USD,1,0.0001,0.01,XTZ-USD
+gdax,YFIUSD,crypto,yearn.finance-United States Dollar,USD,1,0.01,0.000001,YFI-USD
+gdax,ZECBTC,crypto,Zcash-Bitcoin,BTC,1,0.000001,0.0001,ZEC-BTC
+gdax,ZECUSDC,crypto,Zcash-USD Coin,USDC,1,0.01,0.00000001,ZEC-USDC
+gdax,ZRXBTC,crypto,0x-Bitcoin,BTC,1,0.00000001,0.00001,ZRX-BTC
+gdax,ZRXEUR,crypto,0x-Euro,EUR,1,0.000001,0.00001,ZRX-EUR
+gdax,ZRXUSD,crypto,0x-United States Dollar,USD,1,0.000001,0.00001,ZRX-USD
 
 bitfinex,AAABBB,crypto,Abulaba-BBB,BBB,1,0.00001,0.00000001
 bitfinex,ABSETH,crypto,Absolute-Ethereum,ETH,1,0.00001,0.00000001

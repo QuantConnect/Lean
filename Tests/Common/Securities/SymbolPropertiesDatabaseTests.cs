@@ -111,32 +111,60 @@ namespace QuantConnect.Tests.Common.Securities
         [Test, Explicit]
         public void FetchSymbolPropertiesFromGdax()
         {
-            const string url = "https://api.pro.coinbase.com/products";
+            const string urlCurrencies = "https://api.pro.coinbase.com/currencies";
+            const string urlProducts = "https://api.pro.coinbase.com/products";
 
             var sb = new StringBuilder();
 
             using (var wc = new WebClient())
             {
-                var json = wc.DownloadString(url);
+                var jsonCurrencies = wc.DownloadString(urlCurrencies);
+                var rowsCurrencies = JsonConvert.DeserializeObject<List<GdaxCurrency>>(jsonCurrencies);
+                var currencyDescriptions = rowsCurrencies.ToDictionary(x => x.Id, x => x.Name);
 
-                var rows = JsonConvert.DeserializeObject<List<GDAXSymbolInfo>>(json);
-                foreach (var row in rows.OrderBy(x => x.Id))
+                var jsonProducts = wc.DownloadString(urlProducts);
+
+                var rowsProducts = JsonConvert.DeserializeObject<List<GdaxProduct>>(jsonProducts);
+                foreach (var row in rowsProducts.OrderBy(x => x.Id))
                 {
+                    string baseDescription, quoteDescription;
+                    if (!currencyDescriptions.TryGetValue(row.BaseCurrency, out baseDescription))
+                    {
+                        baseDescription = row.BaseCurrency;
+                    }
+                    if (!currencyDescriptions.TryGetValue(row.QuoteCurrency, out quoteDescription))
+                    {
+                        quoteDescription = row.QuoteCurrency;
+                    }
+
                     sb.AppendLine("gdax," +
                                   $"{row.BaseCurrency}{row.QuoteCurrency}," +
                                   "crypto," +
-                                  $"{row.DisplayName}," +
+                                  $"{baseDescription}-{quoteDescription}," +
                                   $"{row.QuoteCurrency}," +
                                   "1," +
                                   $"{row.QuoteIncrement.NormalizeToStr()}," +
-                                  $"{row.BaseIncrement.NormalizeToStr()}");
+                                  $"{row.BaseIncrement.NormalizeToStr()}," +
+                                  $"{row.Id}");
                 }
             }
 
             Console.WriteLine(sb.ToString());
         }
 
-        public class GDAXSymbolInfo
+        public class GdaxCurrency
+        {
+            [JsonProperty("id")] 
+            public string Id { get; set; }
+
+            [JsonProperty("name")] 
+            public string Name { get; set; }
+
+            [JsonProperty("min_size")]
+            public decimal MinSize { get; set; }
+        }
+
+        public class GdaxProduct
         {
             [JsonProperty("id")]
             public string Id { get; set; }
