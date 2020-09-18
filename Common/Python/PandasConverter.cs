@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization.Configuration;
 using System.Threading.Tasks;
 using Apache.Arrow.Types;
 using QuantConnect.Data.Market;
@@ -43,7 +44,7 @@ namespace QuantConnect.Python
     {
         private static dynamic _pandas;
         private static dynamic _pa;
-        private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
+        private static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
 
         private PandasArrowMemoryAllocator allocator = new PandasArrowMemoryAllocator();
 
@@ -104,10 +105,12 @@ namespace QuantConnect.Python
 
         private DoubleArray.Builder openInterestValue = new DoubleArray.Builder();
 
-        //private Dictionary<Type, string[]> _customDataColumns = new Dictionary<Type, string[]>();
-        //private Dictionary<Type, List<MemberInfo>> _customDataMembers = new Dictionary<Type, List<MemberInfo>>();
-        //private Dictionary<string, IArrowArrayBuilder> _customDataBuilders = new Dictionary<string, IArrowArrayBuilder>();
-        //private Dictionary<string, List<PyObject>> _customDataObjects = new Dictionary<string, List<PyObject>>();
+        private Dictionary<Type, List<MemberInfo>> _customDataMembers = new Dictionary<Type, List<MemberInfo>>();
+        private Dictionary<string, IArrowArrayBuilder> _customDataBuilders = new Dictionary<string, IArrowArrayBuilder>();
+
+        private List<string> _customDataSymbols = new List<string>();
+        private List<DateTimeOffset> _customDataTimes = new List<DateTimeOffset>();
+        private Dictionary<string, List<PyObject>> _customDataObjects = new Dictionary<string, List<PyObject>>();
 
         private bool hasExchange;
         private bool hasSuspicious;
@@ -631,18 +634,18 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         }
                     }
 
-                    /*
                     if (tradeBar == null && quoteBar == null && ticks == null)
                     {
                         // If we've made it this far, we're dealing with an instance of custom data.
                         var baseData = (BaseData)slice[symbol];
                         var baseDataType = baseData.GetType();
 
-                        var columns = (baseData as DynamicData)?.GetStorageDictionary()?.Select(x => x.Key)
-                            ?.ToHashSet()
-                            ?.ToArray();
+                        var dynamicData = (baseData as DynamicData)?.GetStorageDictionary();
+                        var dynamicColumns = dynamicData?.Select(kvp => kvp.Key)
+                            ?.ToHashSet();
 
-                        if (columns == null && !_customDataColumns.TryGetValue(baseDataType, out columns))
+                        List<MemberInfo> customMembers;
+                        if (dynamicColumns == null && !_customDataMembers.TryGetValue(baseDataType, out customMembers))
                         {
                             var members = baseDataType.GetMembers()
                                 .Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property)
@@ -659,7 +662,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             }
 
                             // If the custom data derives from market data (i.e. Tick, TradeBar, QuoteBar), exclude its keys
-                            columns = members.Select(x => x.Name.ToLowerInvariant()).ToHashSet().ToArray();
+                            var columns = members.Select(x => x.Name.ToLowerInvariant()).ToHashSet().ToArray();
                             var columnsFiltered = columns.Except(_baseDataProperties)
                                 .Except(GetPropertiesNames(typeof(QuoteBar), baseDataType))
                                 .Except(GetPropertiesNames(typeof(TradeBar), baseDataType))
@@ -668,8 +671,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
                             columnsFiltered.Add("value");
                             columns = columnsFiltered.ToArray();
-                            _customDataColumns[baseDataType] = columns;
                             _customDataMembers[baseDataType] = members.Where(x => columns.Contains(x.Name.ToLowerInvariant())).ToList();
+                        }
+                        else
+                        {
+                            _customDataMembers[baseDataType] = new List<MemberInfo>();
                         }
 
                         foreach (var member in _customDataMembers[baseDataType])
@@ -698,8 +704,38 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                 customObjects.Add((property?.GetValue(baseData) ?? field.GetValue(baseData)).ToPython());
                             }
                         }
+
+                        if (dynamicColumns != null)
+                        {
+                            foreach (var columnName in dynamicColumns)
+                            {
+                                var columnEntry = dynamicData[columnName];
+                                var entryType = columnEntry.GetType();
+
+                                IArrowArrayBuilder builder;
+                                if (!_customDataBuilders.TryGetValue(columnName, out builder))
+                                {
+                                    builder = CreateBuilder(entryType);
+                                    _customDataBuilders[columnName] = builder;
+                                }
+
+                                if (!AppendToBuilder(builder, entryType, columnEntry))
+                                {
+                                    List<PyObject> customObjects;
+                                    if (!_customDataObjects.TryGetValue(columnName, out customObjects))
+                                    {
+                                        customObjects = new List<PyObject>();
+                                        _customDataObjects[columnName] = customObjects;
+                                    }
+
+                                    customObjects.Add(columnEntry.ToPython());
+                                }
+                            }
+                        }
+
+                        _customDataTimes.Add(new DateTimeOffset(baseData.EndTime.Ticks, TimeSpan.Zero));
+                        _customDataSymbols.Add(sid);
                     }
-                    */
                 }
             }
 
@@ -822,14 +858,30 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 recordBatches.Add(openInterestBatchBuilder.Build());
             }
 
-            //if (_customDataColumns.Count != 0)
-            //{
-            //    foreach (var kvp in _customDataBuilders)
-            //    {
-            //        var columnName = kvp.Key;
-            //        var builder = kvp.Value;
-            //    }
-            //}
+            if (_customDataSymbols.Count != 0)
+            {
+                var customDataRecordBatchBuilder = new RecordBatch.Builder(allocator);
+
+                foreach (var kvp in _customDataMembers)
+                {
+                    var baseDataType = kvp.Key;
+                    foreach (var member in kvp.Value)
+                    {
+                        var columnName = member.Name.ToLowerInvariant();
+                        var property = member as PropertyInfo;
+                        var field = member as FieldInfo;
+                        var memberType = property?.PropertyType ?? field.FieldType;
+                        var builder = _customDataBuilders[columnName];
+
+                        AppendToRecordBatch(customDataRecordBatchBuilder, memberType, columnName, builder, allocator);
+                    }
+                }
+
+                customDataRecordBatchBuilder.Append("time", false, action => action.Timestamp(builder => builder.AppendRange(_customDataTimes).Build(allocator)));
+                customDataRecordBatchBuilder.Append("symbol", false, action => action.String(builder => builder.AppendRange(_customDataSymbols).Build(allocator)));
+
+                recordBatches.Add(customDataRecordBatchBuilder.Build());
+            }
 
             using (Py.GIL())
             {
@@ -881,6 +933,20 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                 }
 
                                 df.set_index(new PyList(new []{ new PyString("symbol"), new PyString("time") }), append: hasExpiry || hasStrike || hasOptionRight, inplace: true);
+                                if (_customDataSymbols.Count != 0)
+                                {
+                                    var series = new List<dynamic>();
+                                    foreach (var kvp in _customDataObjects)
+                                    {
+                                        var columnName = kvp.Key;
+                                        var values = kvp.Value;
+
+                                        series.Add(_pandas.Series(values.ToArray(), name: columnName));
+                                    }
+
+                                    df = df.join(series.ToArray(), how: "outer");
+                                }
+
                                 dataFrames.Add(df.tz_localize(null, level: timeIdx, copy: false));
                             }
                         }
@@ -985,6 +1051,22 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             openInterestRight.Clear();
 
             openInterestValue.Clear();
+
+            foreach (var kvp in _customDataMembers)
+            {
+                var memberType = kvp.Key;
+                foreach (var member in kvp.Value)
+                {
+                    var objects = _customDataObjects[member.Name];
+                    var builder = _customDataBuilders[member.Name];
+
+                    ClearBuilder(builder, memberType);
+                    objects.Clear();
+                }
+            }
+
+            _customDataSymbols.Clear();
+            _customDataTimes.Clear();
         }
 
         private IArrowArrayBuilder CreateBuilder(Type memberType)
@@ -1037,75 +1119,223 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             {
                 return new TimestampArray.Builder();
             }
+            if (memberType == typeof(string))
+            {
+                return new StringArray.Builder();
+            }
 
             return null;
         }
 
         private bool AppendToBuilder(IArrowArrayBuilder builder, BaseData baseData, Type memberType, PropertyInfo property, FieldInfo field)
         {
+            return AppendToBuilder(builder, memberType, (property != null ? property.GetValue(baseData) : field.GetValue(baseData)));
+        }
+
+        private bool AppendToBuilder(IArrowArrayBuilder builder, Type memberType, object value)
+        {
             if (memberType == typeof(byte))
             {
-                ((UInt8Array.Builder)builder).Append((byte)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                ((UInt8Array.Builder)builder).Append((byte)value);
                 return true;
             }
             if (memberType == typeof(sbyte))
             {
-                ((Int8Array.Builder)builder).Append((sbyte)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                ((Int8Array.Builder)builder).Append((sbyte)value);
                 return true;
             }
             if (memberType == typeof(ushort))
             {
-                ((UInt16Array.Builder)builder).Append((ushort)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                ((UInt16Array.Builder)builder).Append((ushort)value);
                 return true;
             }
             if (memberType == typeof(short))
             {
-                ((Int16Array.Builder)builder).Append((short)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                ((Int16Array.Builder)builder).Append((short)value);
                 return true;
             }
             if (memberType == typeof(int))
             {
-                ((Int32Array.Builder)builder).Append((int)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                ((Int32Array.Builder)builder).Append((int)value);
                 return true;
             }
             if (memberType == typeof(uint))
             {
-                ((UInt32Array.Builder)builder).Append((uint)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                ((UInt32Array.Builder)builder).Append((uint)value);
                 return true;
             }
             if (memberType == typeof(long))
             {
-                ((Int64Array.Builder)builder).Append((long)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                ((Int64Array.Builder)builder).Append((long)value);
                 return true;
             }
             if (memberType == typeof(ulong))
             {
-                ((UInt64Array.Builder)builder).Append((ulong)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                ((UInt64Array.Builder)builder).Append((ulong)value);
                 return true;
             }
             if (memberType == typeof(float))
             {
-                ((FloatArray.Builder)builder).Append((float)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                ((FloatArray.Builder)builder).Append((float)value);
                 return true;
             }
             if (memberType == typeof(double))
             {
-                ((DoubleArray.Builder)builder).Append((double)(property?.GetValue(baseData) ?? field.GetValue(baseData)));
+                ((DoubleArray.Builder)builder).Append((double)value);
                 return true;
             }
             if (memberType == typeof(decimal))
             {
-                ((DoubleArray.Builder)builder).Append((double)((decimal)(property?.GetValue(baseData) ?? field.GetValue(baseData))));
+                ((DoubleArray.Builder)builder).Append((double)((decimal)value));
                 return true;
             }
             if (memberType == typeof(DateTime))
             {
-                ((TimestampArray.Builder)builder).Append(new DateTimeOffset(((DateTime)(property?.GetValue(baseData) ?? field.GetValue(baseData))).Ticks, TimeSpan.Zero));
+                ((TimestampArray.Builder)builder).Append(new DateTimeOffset(((DateTime)value).Ticks, TimeSpan.Zero));
+                return true;
+            }
+            if (memberType == typeof(string))
+            {
+                ((StringArray.Builder)builder).Append((string)value);
                 return true;
             }
 
-            // Object type, i.e. a C# class passed to Python via pythonnet
             return false;
+        }
+
+        private bool AppendToRecordBatch(RecordBatch.Builder customDataRecordBatchBuilder, Type memberType, string columnName, IArrowArrayBuilder builder, MemoryAllocator allocator = null)
+        {
+            if (memberType == typeof(byte))
+            {
+                customDataRecordBatchBuilder.Append(columnName, true, ((UInt8Array.Builder)builder).Build(allocator));
+                return true;
+            }
+            if (memberType == typeof(sbyte))
+            {
+                customDataRecordBatchBuilder.Append(columnName, true, ((Int8Array.Builder)builder).Build(allocator));
+                return true;
+            }
+            if (memberType == typeof(ushort))
+            {
+                customDataRecordBatchBuilder.Append(columnName, true, ((UInt16Array.Builder)builder).Build(allocator));
+                return true;
+            }
+            if (memberType == typeof(short))
+            {
+                customDataRecordBatchBuilder.Append(columnName, true, ((Int16Array.Builder)builder).Build(allocator));
+                return true;
+            }
+            if (memberType == typeof(int))
+            {
+                customDataRecordBatchBuilder.Append(columnName, true, ((Int32Array.Builder)builder).Build(allocator));
+                return true;
+            }
+            if (memberType == typeof(uint))
+            {
+                customDataRecordBatchBuilder.Append(columnName, true, ((UInt32Array.Builder)builder).Build(allocator));
+                return true;
+            }
+            if (memberType == typeof(long))
+            {
+                customDataRecordBatchBuilder.Append(columnName, true, ((Int64Array.Builder)builder).Build(allocator));
+                return true;
+            }
+            if (memberType == typeof(ulong))
+            {
+                customDataRecordBatchBuilder.Append(columnName, true, ((UInt64Array.Builder)builder).Build(allocator));
+                return true;
+            }
+            if (memberType == typeof(float))
+            {
+                customDataRecordBatchBuilder.Append(columnName, true, ((FloatArray.Builder)builder).Build(allocator));
+                return true;
+            }
+            if (memberType == typeof(double) || memberType == typeof(decimal))
+            {
+                customDataRecordBatchBuilder.Append(columnName, true, ((DoubleArray.Builder)builder).Build(allocator));
+                return true;
+            }
+            if (memberType == typeof(DateTime))
+            {
+                customDataRecordBatchBuilder.Append(columnName, true, ((TimestampArray.Builder)builder).Build(allocator));
+                return true;
+            }
+            if (memberType == typeof(string))
+            {
+                customDataRecordBatchBuilder.Append(columnName, true, ((StringArray.Builder)builder).Build(allocator));
+                return true;
+            }
+
+            return false;
+        }
+
+        private void ClearBuilder(IArrowArrayBuilder builder, Type memberType)
+        {
+            if (memberType == typeof(byte))
+            {
+                ((UInt8Array.Builder)builder).Clear();
+                return;
+            }
+            if (memberType == typeof(sbyte))
+            {
+                ((Int8Array.Builder)builder).Clear();
+                return;
+            }
+            if (memberType == typeof(ushort))
+            {
+                ((UInt16Array.Builder)builder).Clear();
+                return;
+            }
+            if (memberType == typeof(short))
+            {
+                ((Int16Array.Builder)builder).Clear();
+                return;
+            }
+            if (memberType == typeof(int))
+            {
+                ((Int32Array.Builder)builder).Clear();
+                return;
+            }
+            if (memberType == typeof(uint))
+            {
+                ((UInt32Array.Builder)builder).Clear();
+                return;
+            }
+            if (memberType == typeof(long))
+            {
+                ((Int64Array.Builder)builder).Clear();
+                return;
+            }
+            if (memberType == typeof(ulong))
+            {
+                ((UInt64Array.Builder)builder).Clear();
+                return;
+            }
+            if (memberType == typeof(float))
+            {
+                ((FloatArray.Builder)builder).Clear();
+                return;
+            }
+            if (memberType == typeof(double))
+            {
+                ((DoubleArray.Builder)builder).Clear();
+                return;
+            }
+            if (memberType == typeof(decimal))
+            {
+                ((DoubleArray.Builder)builder).Clear();
+                return;
+            }
+            if (memberType == typeof(DateTime))
+            {
+                ((TimestampArray.Builder)builder).Clear();
+                return;
+            }
+            if (memberType == typeof(string))
+            {
+                ((StringArray.Builder)builder).Clear();
+                return;
+            }
         }
 
         /// <summary>
