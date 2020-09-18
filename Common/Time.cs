@@ -533,6 +533,7 @@ namespace QuantConnect
                 throw new ArgumentException("barSize must be greater than TimeSpan.Zero", nameof(barSize));
             }
 
+            // need to round down in data timezone because data is stored in this time zone
             var current = end.RoundDownInTimeZone(barSize, exchangeHours.TimeZone, dataTimeZone);
             for (int i = 0; i < barCount;)
             {
