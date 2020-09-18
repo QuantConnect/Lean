@@ -538,7 +538,7 @@ namespace QuantConnect
             {
                 var previous = current;
                 current = current - barSize;
-                if (exchangeHours.IsOpen(current.ConvertTo(dataTimeZone, exchangeHours.TimeZone), previous.ConvertTo(dataTimeZone, exchangeHours.TimeZone), extendedMarketHours))
+                if (exchangeHours.IsOpen(current, previous, extendedMarketHours))
                 {
                     i++;
                 }
