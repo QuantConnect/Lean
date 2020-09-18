@@ -689,7 +689,7 @@ namespace QuantConnect.Tests.Common.Securities
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Future, Symbols.Fut_SPY_Feb19_2016),
                     new Cash(Currencies.USD, 0, 1m),
-                    new SymbolProperties("", Currencies.USD, 50, 0.01m, 1),
+                    new SymbolProperties("", Currencies.USD, 50, 0.01m, 1, string.Empty),
                     ErrorCurrencyConverter.Instance,
                     RegisteredSecurityDataTypesProvider.Null,
                     new SecurityCache()
@@ -723,7 +723,7 @@ namespace QuantConnect.Tests.Common.Securities
                     SecurityExchangeHours,
                     CreateTradeBarDataConfig(SecurityType.Future, Symbols.Fut_SPY_Feb19_2016),
                     new Cash(Currencies.USD, 0, 1m),
-                    new SymbolProperties("", Currencies.USD, 50, 0.01m, 1),
+                    new SymbolProperties("", Currencies.USD, 50, 0.01m, 1, string.Empty),
                     ErrorCurrencyConverter.Instance,
                     RegisteredSecurityDataTypesProvider.Null,
                     new SecurityCache()

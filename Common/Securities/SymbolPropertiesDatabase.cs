@@ -227,7 +227,8 @@ namespace QuantConnect.Securities
                 quoteCurrency: csv[4],
                 contractMultiplier: csv[5].ToDecimal(),
                 minimumPriceVariation: csv[6].ToDecimalAllowExponent(),
-                lotSize: csv[7].ToDecimal());
+                lotSize: csv[7].ToDecimal(),
+                brokerageSymbol: csv.Length > 8 ? csv[8] : string.Empty);
         }
 
 
