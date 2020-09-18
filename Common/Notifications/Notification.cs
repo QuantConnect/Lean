@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Util;
 
 namespace QuantConnect.Notifications
@@ -94,6 +95,11 @@ namespace QuantConnect.Notifications
     public class NotificationEmail : Notification
     {
         /// <summary>
+        /// Optional email headers
+        /// </summary>
+        public Dictionary<string, string> Headers;
+
+        /// <summary>
         /// Send to address:
         /// </summary>
         public string Address;
@@ -121,7 +127,8 @@ namespace QuantConnect.Notifications
         /// <param name="subject">Subject of the email. Will set to <see cref="string.Empty"/> if null</param>
         /// <param name="message">Message body of the email. Will set to <see cref="string.Empty"/> if null</param>
         /// <param name="data">Data to attach to the email. Will set to <see cref="string.Empty"/> if null</param>
-        public NotificationEmail(string address, string subject = "", string message = "", string data = "")
+        /// <param name="headers">Optional email headers to use</param>
+        public NotificationEmail(string address, string subject = "", string message = "", string data = "", Dictionary<string, string> headers = null)
         {
             if (!Validate.EmailAddress(address))
             {
@@ -132,6 +139,7 @@ namespace QuantConnect.Notifications
             Data = data ?? string.Empty;
             Message = message ?? string.Empty;
             Subject = subject ?? string.Empty;
+            Headers = headers;
         }
     }
 }
