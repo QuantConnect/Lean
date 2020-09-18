@@ -32,11 +32,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using System.Threading.Tasks;
+using QuantConnect.Lean.Engine.Setup;
 
 namespace QuantConnect.Research
 {
@@ -48,6 +50,10 @@ namespace QuantConnect.Research
         private dynamic _pandas;
         private IDataCacheProvider _dataCacheProvider;
         private IDataProvider _dataProvider;
+        private LeanEngineSystemHandlers _systemHandlers;
+        private LeanEngineAlgorithmHandlers _algorithmHandlers;
+        private AlgorithmManager _algorithmManager;
+        private DataManager _dataManager;
         private static bool _isPythonNotebook;
 
         static QuantBook()
@@ -101,21 +107,23 @@ namespace QuantConnect.Research
                 // Sets PandasConverter
                 SetPandasConverter();
 
-                // Initialize History Provider
+                // Get our handlers
                 var composer = new Composer();
-                var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer);
-                var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(composer);
-                // init the API
-                systemHandlers.Initialize();
-                systemHandlers.LeanManager.Initialize(systemHandlers,
-                    algorithmHandlers,
-                    new BacktestNodePacket(),
-                    new AlgorithmManager(false));
-                systemHandlers.LeanManager.SetAlgorithm(this);
+                _algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer);
+                _systemHandlers = LeanEngineSystemHandlers.FromConfiguration(composer);
 
-                algorithmHandlers.ObjectStore.Initialize("QuantBook",
-                    Config.GetInt("job-user-id"),
-                    Config.GetInt("project-id"),
+                // Initialize the system handlers
+                _systemHandlers.Initialize();
+                _systemHandlers.LeanManager.Initialize(_systemHandlers, _algorithmHandlers, new BacktestNodePacket(), new AlgorithmManager(false));
+                _systemHandlers.LeanManager.SetAlgorithm(this);
+
+                // Store our data providers
+                _dataCacheProvider = new ZipDataCacheProvider(_algorithmHandlers.DataProvider);
+                _dataProvider = _algorithmHandlers.DataProvider;
+
+                // Start up the handlers we need
+                // Object store
+                _algorithmHandlers.ObjectStore.Initialize("QuantBook", Config.GetInt("job-user-id"), Config.GetInt("project-id"), 
                     Config.Get("api-access-token"),
                     new Controls
                     {
@@ -123,13 +131,10 @@ namespace QuantConnect.Research
                         PersistenceIntervalSeconds = -1,
                         StorageLimitMB = Config.GetInt("storage-limit-mb", 5),
                         StorageFileCount = Config.GetInt("storage-file-count", 100),
-                        StoragePermissions = (FileAccess) Config.GetInt("storage-permissions", (int)FileAccess.ReadWrite)
+                        StoragePermissions = (FileAccess)Config.GetInt("storage-permissions", (int)FileAccess.ReadWrite)
                     });
-                SetObjectStore(algorithmHandlers.ObjectStore);
 
-                _dataCacheProvider = new ZipDataCacheProvider(algorithmHandlers.DataProvider);
-                _dataProvider = algorithmHandlers.DataProvider;
-
+                // Security service
                 var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
                 var registeredTypes = new RegisteredSecurityDataTypesProvider();
                 var securityService = new SecurityService(Portfolio.CashBook,
@@ -138,33 +143,45 @@ namespace QuantConnect.Research
                     this,
                     registeredTypes,
                     new SecurityCacheProvider(Portfolio));
-                Securities.SetSecurityService(securityService);
-                SubscriptionManager.SetDataManager(
-                    new DataManager(new NullDataFeed(),
-                        new UniverseSelection(this, securityService, algorithmHandlers.DataPermissionsManager, algorithmHandlers.DataProvider),
-                        this,
-                        TimeKeeper,
-                        MarketHoursDatabase,
-                        false,
-                        registeredTypes,
-                        algorithmHandlers.DataPermissionsManager));
+                
 
-                var mapFileProvider = algorithmHandlers.MapFileProvider;
+                // Data Manager
+                _dataManager = new DataManager(_algorithmHandlers.DataFeed,
+                    new UniverseSelection(
+                        this,
+                        securityService,
+                        _algorithmHandlers.DataPermissionsManager,
+                        _algorithmHandlers.DataProvider),
+                    this,
+                    TimeKeeper,
+                    MarketHoursDatabase,
+                    false,
+                    registeredTypes,
+                    _algorithmHandlers.DataPermissionsManager);
+
+                // Setup history provider
                 HistoryProvider = composer.GetExportedValueByTypeName<IHistoryProvider>(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider"));
                 HistoryProvider.Initialize(
                     new HistoryProviderInitializeParameters(
                         null,
-                        null,
-                        algorithmHandlers.DataProvider,
+                        _systemHandlers.Api,
+                        _algorithmHandlers.DataProvider,
                         _dataCacheProvider,
-                        mapFileProvider,
-                        algorithmHandlers.FactorFileProvider,
+                        _algorithmHandlers.MapFileProvider,
+                        _algorithmHandlers.FactorFileProvider,
                         null,
                         true,
-                        algorithmHandlers.DataPermissionsManager
+                        _algorithmHandlers.DataPermissionsManager
                     )
                 );
 
+                // Set our algorithm internals
+                SetObjectStore(_algorithmHandlers.ObjectStore);
+                Securities.SetSecurityService(securityService);
+                SubscriptionManager.SetDataManager(_dataManager);
+                Transactions.SetOrderProcessor(_algorithmHandlers.Transactions);
+
+                // Set our options and future chain providers
                 SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider()));
                 SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider()));
             }
@@ -172,6 +189,91 @@ namespace QuantConnect.Research
             {
                 throw new Exception("QuantBook.Main(): " + exception);
             }
+        }
+
+        /// <summary>
+        /// Run this as an algorithm for the given time
+        /// This function seeks to emulate a mini engine to run an Algorithm through
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        public void Run(DateTime start, DateTime end)
+        {
+            // Backtest start time
+            var startTime = DateTime.UtcNow;
+
+            // Change our dates according to requested range
+            SetStartDate(start);
+            SetEndDate(end);
+
+            // Maybe not important??? Fetch job information from config
+            string assemblyPath;
+            var job = _systemHandlers.JobQueue.NextJob(out assemblyPath);
+
+            //Setup synchronizer
+            var synchronizer = new Synchronizer();
+            synchronizer.Initialize(this, _dataManager);
+
+            // Initialize the brokerage
+            IBrokerageFactory factory;
+            IBrokerage brokerage = _algorithmHandlers.Setup.CreateBrokerage(job, this, out factory);
+
+            // initialize the default brokerage message handler
+            BrokerageMessageHandler = factory.CreateBrokerageMessageHandler(this, job, _systemHandlers.Api);
+
+            //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
+            _algorithmHandlers.Setup.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, this, brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime, _algorithmHandlers.ObjectStore));
+            _algorithmHandlers.Results.SetAlgorithm(this, _algorithmHandlers.Setup.StartingPortfolioValue);
+
+            //-> Initialize messaging system
+            _systemHandlers.Notify.SetAuthentication(job);
+
+            //Manager for the Algorithm 
+            var algorithmManager = new AlgorithmManager(false, job);
+
+            // Initialize all our handlers
+            _algorithmHandlers.DataFeed.Initialize(this, job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider,
+                _algorithmHandlers.DataProvider, _dataManager, (IDataFeedTimeProvider)synchronizer, _algorithmHandlers.DataPermissionsManager.DataChannelProvider);
+            _algorithmHandlers.Results.Initialize(job, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.Transactions);
+            _algorithmHandlers.Transactions.Initialize(this, brokerage, _algorithmHandlers.Results);
+            _algorithmHandlers.RealTime.Setup(this, job, _algorithmHandlers.Results, _systemHandlers.Api, algorithmManager.TimeLimit);
+            _algorithmHandlers.Alphas.Initialize(job, this, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.Transactions);
+
+            _algorithmHandlers.Alphas.OnAfterAlgorithmInitialized(this);
+
+            //Run the Algorithm
+            algorithmManager.Run(
+                job,
+                this,
+                synchronizer,
+                _algorithmHandlers.Transactions,
+                _algorithmHandlers.Results, 
+                _algorithmHandlers.RealTime,
+                _systemHandlers.LeanManager,
+                _algorithmHandlers.Alphas,
+                CancellationToken.None
+            );
+
+            // Diagnostics Completed, Send Result Packet:
+            var totalSeconds = (DateTime.UtcNow - startTime).TotalSeconds;
+            var dataPoints = algorithmManager.DataPoints + HistoryProvider.DataPointCount;
+            var kps = dataPoints / (double)1000 / totalSeconds;
+            _algorithmHandlers.Results.DebugMessage($"Algorithm Id:({job.AlgorithmId}) completed in {totalSeconds:F2} seconds at {kps:F0}k data points per second. Processing total of {dataPoints:N0} data points.");
+
+            // Shut everything we don't need down
+            synchronizer.DisposeSafely();
+
+            _algorithmHandlers.Results.Exit();
+            _algorithmHandlers.DataFeed.Exit();
+            _algorithmHandlers.Alphas.Exit();
+            _algorithmHandlers.Transactions.Exit();
+            _algorithmHandlers.RealTime.Exit();
+
+            brokerage.Disconnect();
+            brokerage.Dispose();
+
+            // Tell the Lean Manager we have finished
+            _systemHandlers.LeanManager.OnAlgorithmEnd();
         }
 
         /// <summary>
@@ -192,7 +294,7 @@ namespace QuantConnect.Research
 
             //Covert to symbols
             var symbols = PythonUtil.ConvertToSymbols(input);
-            
+
             //Fetch the data
             var fundamentalData = GetAllFundamental(symbols, selector, start, end);
 
@@ -208,7 +310,7 @@ namespace QuantConnect.Research
                     data.SetItem(day.Key.ToPython(), row);
                 }
 
-                return _pandas.DataFrame.from_dict(data, orient:"index");
+                return _pandas.DataFrame.from_dict(data, orient: "index");
             }
         }
 
@@ -342,7 +444,7 @@ namespace QuantConnect.Research
                     .SelectMany(x =>
                     {
                         // the option chain symbols wont change so we can set 'exchangeDateChange' to false always
-                        optionFilterUniverse.Refresh(distinctSymbols, x, exchangeDateChange:false);
+                        optionFilterUniverse.Refresh(distinctSymbols, x, exchangeDateChange: false);
                         return option.ContractFilter.Filter(optionFilterUniverse);
                     })
                     .Distinct().Concat(new[] { symbol.Underlying });
@@ -350,7 +452,7 @@ namespace QuantConnect.Research
             else
             {
                 // the symbol is a contract
-                symbols = new List<Symbol>{ symbol };
+                symbols = new List<Symbol> { symbol };
             }
 
             return new OptionHistory(History(symbols, start, end.Value, resolution));
