@@ -30,6 +30,8 @@ using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Configuration;
 using System.Threading.Tasks;
 using Apache.Arrow.Types;
+using Fasterflect;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -44,6 +46,9 @@ namespace QuantConnect.Python
     {
         private static dynamic _pandas;
         private static dynamic _pa;
+        private static dynamic _np;
+        private static PyObject _filter;
+        private static PyList _defaultIndexes;
         private static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
 
         private PandasArrowMemoryAllocator allocator = new PandasArrowMemoryAllocator();
@@ -106,13 +111,12 @@ namespace QuantConnect.Python
         private DoubleArray.Builder openInterestValue = new DoubleArray.Builder();
 
         private Dictionary<Type, List<MemberInfo>> _customDataMembers = new Dictionary<Type, List<MemberInfo>>();
-        private Dictionary<string, IArrowArrayBuilder> _customDataBuilders = new Dictionary<string, IArrowArrayBuilder>();
+        private Dictionary<string, KeyValuePair<Type, IArrowArrayBuilder>> _customDataBuilders = new Dictionary<string, KeyValuePair<Type, IArrowArrayBuilder>>();
 
         private List<string> _customDataSymbols = new List<string>();
         private List<DateTimeOffset> _customDataTimes = new List<DateTimeOffset>();
-        private Dictionary<string, List<PyObject>> _customDataObjects = new Dictionary<string, List<PyObject>>();
+        private Dictionary<string, List<object>> _customDataObjects = new Dictionary<string, List<object>>();
 
-        private bool hasExchange;
         private bool hasSuspicious;
         private bool hasExpiry;
         private bool hasStrike;
@@ -129,9 +133,18 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
+                    // Cache the indexes to skip calling python as much as we can
+                    _defaultIndexes = new PyList(new []{ new PyString("symbol"), new PyString("time") });
+
                     // pyarrow is used to create a DataFrame without having to serialize the data.
                     // It also allows us to construct a DataFrame as a zero-copy operation.
                     _pa = PythonEngine.ImportModule("pyarrow");
+
+                    // Import numpy for access to np.NaN
+                    _np = PythonEngine.ImportModule("numpy");
+
+                    // Used to filter out any column that has only values matching one of the following
+                    _filter = new [] { _np.NaN, 0, "", false }.ToPython();
 
                     // this python Remapper class will work as a proxy and adjust the
                     // input to its methods using the provided 'mapper' callable object
@@ -393,17 +406,21 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
         {
             ClearBuilders();
 
+            var hasTrades = false;
+            var hasQuotes = false;
+
             foreach (var slice in data)
             {
                 foreach (var symbol in slice.Keys)
                 {
-                    var tradeBar = slice.Bars.ContainsKey(symbol) ? slice.Bars[symbol] : null;
-                    var quoteBar = slice.QuoteBars.ContainsKey(symbol) ? slice.QuoteBars[symbol] : null;
-                    var ticks = slice.Ticks.ContainsKey(symbol) ? slice.Ticks[symbol] : null;
+                    var tradeBar = slice.Bars.ContainsKey(symbol) && slice.Bars[symbol].GetType() == typeof(TradeBar) ? slice.Bars[symbol] : null;
+                    var quoteBar = slice.QuoteBars.ContainsKey(symbol) && slice.QuoteBars[symbol].GetType() == typeof(QuoteBar) ? slice.QuoteBars[symbol] : null;
+                    var ticks = slice.Ticks.ContainsKey(symbol) && slice.Ticks[symbol].GetType() == typeof(List<Tick>) ? slice.Ticks[symbol] : null;
                     var sid = symbol.ID.ToString();
 
                     if (tradeBar != null)
                     {
+                        hasTrades = true;
                         tradeBarOpen.Append((double) tradeBar.Open);
                         tradeBarHigh.Append((double) tradeBar.High);
                         tradeBarLow.Append((double) tradeBar.Low);
@@ -507,6 +524,8 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             quoteBarAskVolume.AppendNull();
                         }
 
+                        hasQuotes = true;
+
                         quoteBarSymbols.Append(quoteBar.Symbol.ID.ToString());
                         quoteBarTimes.Append(new DateTimeOffset(quoteBar.EndTime.Ticks, TimeSpan.Zero));
 
@@ -541,6 +560,8 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             {
                                 tickSymbols.Append(sid);
                                 tickTimes.Append(new DateTimeOffset(tick.EndTime.Ticks, TimeSpan.Zero));
+                                tickValue.Append((double) tick.Value);
+
                                 if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
                                 {
                                     hasExpiry = true;
@@ -568,16 +589,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             {
                                 tickHasTrades = true;
 
-                                tickValue.Append((double) tick.Value);
                                 tickQuantity.Append((double) tick.Quantity);
 
                                 if (tick.Suspicious && !hasSuspicious)
                                 {
                                     hasSuspicious = true;
-                                }
-                                if (!string.IsNullOrWhiteSpace(tick.Exchange) && !hasExchange)
-                                {
-                                    hasExchange = true;
                                 }
 
                                 tickSuspicious.Append(tick.Suspicious);
@@ -592,7 +608,6 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             {
                                 tickHasQuotes = true;
 
-                                tickValue.AppendNull();
                                 tickQuantity.AppendNull();
 
                                 tickSuspicious.Append(tick.Suspicious);
@@ -640,8 +655,13 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         var baseData = (BaseData)slice[symbol];
                         var baseDataType = baseData.GetType();
 
-                        var dynamicData = (baseData as DynamicData)?.GetStorageDictionary();
-                        var dynamicColumns = dynamicData?.Select(kvp => kvp.Key)
+                        var dynamicData = (baseData as DynamicData);
+                        var dynamicDataStorage = dynamicData?.GetStorageDictionary();
+                        if (dynamicDataStorage != null)
+                        {
+                            dynamicDataStorage["value"] = dynamicData.Value;
+                        }
+                        var dynamicColumns = dynamicDataStorage?.Select(kvp => kvp.Key)
                             ?.ToHashSet();
 
                         List<MemberInfo> customMembers;
@@ -662,73 +682,72 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             }
 
                             // If the custom data derives from market data (i.e. Tick, TradeBar, QuoteBar), exclude its keys
-                            var columns = members.Select(x => x.Name.ToLowerInvariant()).ToHashSet().ToArray();
-                            var columnsFiltered = columns.Except(_baseDataProperties)
+                            var columns = members.Select(x => x.Name.ToLowerInvariant()).ToHashSet();
+                            columns = columns.Except(_baseDataProperties)
                                 .Except(GetPropertiesNames(typeof(QuoteBar), baseDataType))
                                 .Except(GetPropertiesNames(typeof(TradeBar), baseDataType))
                                 .Except(GetPropertiesNames(typeof(Tick), baseDataType))
-                                .ToList();
+                                .ToHashSet();
 
-                            columnsFiltered.Add("value");
-                            columns = columnsFiltered.ToArray();
+                            columns.Add("value");
+
                             _customDataMembers[baseDataType] = members.Where(x => columns.Contains(x.Name.ToLowerInvariant())).ToList();
                         }
-                        else
+
+                        if (dynamicColumns == null)
                         {
-                            _customDataMembers[baseDataType] = new List<MemberInfo>();
-                        }
-
-                        foreach (var member in _customDataMembers[baseDataType])
-                        {
-                            var columnName = member.Name;
-                            var property = member as PropertyInfo;
-                            var field = member as FieldInfo;
-                            var memberType = property?.PropertyType ?? field.FieldType;
-
-                            IArrowArrayBuilder builder;
-                            if (!_customDataBuilders.TryGetValue(columnName, out builder))
+                            foreach (var member in _customDataMembers[baseDataType])
                             {
-                                builder = CreateBuilder(memberType);
-                                _customDataBuilders[columnName] = builder;
-                            }
+                                var columnName = member.Name.ToLowerInvariant();
+                                var property = member as PropertyInfo;
+                                var field = member as FieldInfo;
+                                var memberType = property != null ? property.PropertyType : field.FieldType;
 
-                            if (!AppendToBuilder(builder, baseData, memberType, property, field))
-                            {
-                                List<PyObject> customObjects;
-                                if (!_customDataObjects.TryGetValue(columnName, out customObjects))
-                                {
-                                    customObjects = new List<PyObject>();
-                                    _customDataObjects[columnName] = customObjects;
-                                }
-
-                                customObjects.Add((property?.GetValue(baseData) ?? field.GetValue(baseData)).ToPython());
-                            }
-                        }
-
-                        if (dynamicColumns != null)
-                        {
-                            foreach (var columnName in dynamicColumns)
-                            {
-                                var columnEntry = dynamicData[columnName];
-                                var entryType = columnEntry.GetType();
-
-                                IArrowArrayBuilder builder;
+                                KeyValuePair<Type, IArrowArrayBuilder> builder;
                                 if (!_customDataBuilders.TryGetValue(columnName, out builder))
                                 {
-                                    builder = CreateBuilder(entryType);
+                                    builder = new KeyValuePair<Type, IArrowArrayBuilder>(memberType, CreateBuilder(memberType));
                                     _customDataBuilders[columnName] = builder;
                                 }
 
-                                if (!AppendToBuilder(builder, entryType, columnEntry))
+                                if (!AppendToBuilder(builder.Value, baseData, memberType, property, field))
                                 {
-                                    List<PyObject> customObjects;
+                                    List<object> customObjects;
                                     if (!_customDataObjects.TryGetValue(columnName, out customObjects))
                                     {
-                                        customObjects = new List<PyObject>();
+                                        customObjects = new List<object>();
                                         _customDataObjects[columnName] = customObjects;
                                     }
 
-                                    customObjects.Add(columnEntry.ToPython());
+                                    customObjects.Add(property != null ? property.GetValue(baseData) : field.GetValue(baseData));
+                                }
+                            }
+                        }
+                        else
+                        {
+
+                            foreach (var columnName in dynamicColumns)
+                            {
+                                var columnEntry = dynamicDataStorage[columnName];
+                                var entryType = columnEntry.GetType();
+
+                                KeyValuePair<Type, IArrowArrayBuilder> builder;
+                                if (!_customDataBuilders.TryGetValue(columnName, out builder))
+                                {
+                                    builder = new KeyValuePair<Type, IArrowArrayBuilder>(entryType, CreateBuilder(entryType));
+                                    _customDataBuilders[columnName] = builder;
+                                }
+
+                                if (!AppendToBuilder(builder.Value, entryType, columnEntry))
+                                {
+                                    List<object> customObjects;
+                                    if (!_customDataObjects.TryGetValue(columnName, out customObjects))
+                                    {
+                                        customObjects = new List<object>();
+                                        _customDataObjects[columnName] = customObjects;
+                                    }
+
+                                    customObjects.Add(columnEntry);
                                 }
                             }
                         }
@@ -802,18 +821,15 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
                 tickRecordBatchBuilder.Append("time", false, tickTimes.Build(allocator));
                 tickRecordBatchBuilder.Append("symbol", false, tickSymbols.Build(allocator));
+                tickRecordBatchBuilder.Append("lastprice", false, tickValue.Build(allocator));
+                tickRecordBatchBuilder.Append("exchange", true, tickExchange.Build(allocator));
 
                 if (hasSuspicious)
                 {
                     tickRecordBatchBuilder.Append("suspicious", true, tickSuspicious.Build(allocator));
                 }
-                if (hasExchange)
-                {
-                    tickRecordBatchBuilder.Append("exchange", true, tickExchange.Build(allocator));
-                }
                 if (tickHasTrades)
                 {
-                    tickRecordBatchBuilder.Append("lastprice", tickHasQuotes, tickValue.Build(allocator));
                     tickRecordBatchBuilder.Append("quantity", tickHasQuotes, tickQuantity.Build(allocator));
                 }
                 if (tickHasQuotes)
@@ -858,28 +874,23 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 recordBatches.Add(openInterestBatchBuilder.Build());
             }
 
+            var hasCustom = false;
             if (_customDataSymbols.Count != 0)
             {
                 var customDataRecordBatchBuilder = new RecordBatch.Builder(allocator);
 
-                foreach (var kvp in _customDataMembers)
+                foreach (var kvp in _customDataBuilders)
                 {
-                    var baseDataType = kvp.Key;
-                    foreach (var member in kvp.Value)
-                    {
-                        var columnName = member.Name.ToLowerInvariant();
-                        var property = member as PropertyInfo;
-                        var field = member as FieldInfo;
-                        var memberType = property?.PropertyType ?? field.FieldType;
-                        var builder = _customDataBuilders[columnName];
+                    var columnName = kvp.Key;
+                    var memberType = kvp.Value.Key;
 
-                        AppendToRecordBatch(customDataRecordBatchBuilder, memberType, columnName, builder, allocator);
-                    }
+                    AppendToRecordBatch(customDataRecordBatchBuilder, memberType, columnName, kvp.Value.Value, allocator);
                 }
 
                 customDataRecordBatchBuilder.Append("time", false, action => action.Timestamp(builder => builder.AppendRange(_customDataTimes).Build(allocator)));
                 customDataRecordBatchBuilder.Append("symbol", false, action => action.String(builder => builder.AppendRange(_customDataSymbols).Build(allocator)));
 
+                hasCustom = true;
                 recordBatches.Add(customDataRecordBatchBuilder.Build());
             }
 
@@ -891,6 +902,10 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 }
 
                 var dataFrames = new List<dynamic>();
+                var addExpiry = hasExpiry && (hasTrades || hasQuotes || tickHasTrades || tickHasQuotes);
+                var addStrike = hasStrike && (hasTrades || hasQuotes || tickHasTrades || tickHasQuotes);
+                var i = 0;
+
                 foreach (var recordBatch in recordBatches)
                 {
                     using (var ms = new MemoryStream())
@@ -913,40 +928,52 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                 );
 
                                 var timeIdx = 1;
-                                if (hasExpiry)
+
+                                // If open interest appears by itself, we want to get rid of the
+                                // expiry column to maintain backwards compatibility.
+                                if (addExpiry)
                                 {
                                     df.set_index("expiry", inplace: true);
                                     df = df.tz_localize(null, copy: false);
                                     timeIdx++;
                                 }
-                                if (hasStrike)
+                                else if (hasExpiry)
                                 {
-                                    df["strike"] = df["strike"].fillna("");
-                                    df.set_index("strike", append: hasExpiry, inplace: true);
-                                    timeIdx++;
-                                }
-                                if (hasOptionRight)
-                                {
-                                    df["type"] = df["type"].fillna("");
-                                    df.set_index("type", append: hasExpiry || hasStrike, inplace: true);
-                                    timeIdx++;
+                                    df.drop(columns: new[] { "expiry" }, inplace: true);
                                 }
 
-                                df.set_index(new PyList(new []{ new PyString("symbol"), new PyString("time") }), append: hasExpiry || hasStrike || hasOptionRight, inplace: true);
-                                if (_customDataSymbols.Count != 0)
+                                if (addStrike)
                                 {
-                                    var series = new List<dynamic>();
+                                    df["strike"] = df["strike"].fillna("");
+                                    df["type"] = df["type"].fillna("");
+                                    df.set_index(new PyList(new[] { new PyString("strike"), new PyString("type") }), append: hasExpiry, inplace: true);
+                                    timeIdx += 2;
+                                }
+                                else if (hasStrike)
+                                {
+                                    df.drop(columns: new PyList(new[] { new PyString("strike"), new PyString("type") }), inplace: true);
+                                }
+
+                                // Let's include the objects that were left out before
+                                // as part of the custom data DataFrame using the existing index.
+                                // Custom data is added last, so we match the last entry to detect custom data
+                                // instead of adding it all to all DataFrames we create.
+                                if (hasCustom && ++i == recordBatches.Count)
+                                {
+                                    var dict = new PyDict();
                                     foreach (var kvp in _customDataObjects)
                                     {
                                         var columnName = kvp.Key;
                                         var values = kvp.Value;
+                                        var list = new PyList(values.Select(x => x.ToPython()).ToArray());
 
-                                        series.Add(_pandas.Series(values.ToArray(), name: columnName));
+                                        dict.SetItem(columnName, list);
                                     }
 
-                                    df = df.join(series.ToArray(), how: "outer");
+                                    df = df.join(_pandas.DataFrame(dict, index: df.index), how: "outer");
                                 }
 
+                                df.set_index(_defaultIndexes, append: addExpiry || addStrike, inplace: true);
                                 dataFrames.Add(df.tz_localize(null, level: timeIdx, copy: false));
                             }
                         }
@@ -959,8 +986,17 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                     final_df = final_df.join(dataFrames.Skip(1).ToArray(), how: "outer");
                 }
 
+                // Filters all columns only containing "NaN, "", or 0 values.
+                dynamic cols = final_df.columns[final_df.isin(_filter).all()];
+                if (cols.__len__() != 0)
+                {
+                    final_df[cols] = _np.NaN;
+                    final_df.dropna(how: "all", axis: 1, inplace: true);
+                }
+
                 final_df.sort_index(inplace: true);
-                if (hasStrike)
+
+                if (addStrike)
                 {
                     // Current version of pandas doesn't like whenever we join or append an index
                     // with no null time values (NaT). It resets any empty string to NaT and
@@ -987,7 +1023,6 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
         private void ClearBuilders()
         {
-            hasExchange = false;
             hasSuspicious = false;
             hasExpiry = false;
             hasStrike = false;
@@ -1052,17 +1087,20 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
             openInterestValue.Clear();
 
-            foreach (var kvp in _customDataMembers)
+            foreach (var kvp in _customDataBuilders)
             {
-                var memberType = kvp.Key;
-                foreach (var member in kvp.Value)
+                var columnName = kvp.Key;
+                // There can exist columns with no custom objects if all data was
+                // added to an Arrow buffer, so we must check the key to ensure
+                // that the column can be cleared.
+                if (_customDataObjects.ContainsKey(columnName))
                 {
-                    var objects = _customDataObjects[member.Name];
-                    var builder = _customDataBuilders[member.Name];
-
-                    ClearBuilder(builder, memberType);
-                    objects.Clear();
+                    _customDataObjects.Clear();
                 }
+                var builderType = kvp.Value.Key;
+                var builder = kvp.Value.Value;
+
+                ClearBuilder(builder, builderType);
             }
 
             _customDataSymbols.Clear();
@@ -1071,6 +1109,12 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
         private IArrowArrayBuilder CreateBuilder(Type memberType)
         {
+            var underlyingType = Nullable.GetUnderlyingType(memberType);
+            if (underlyingType != null)
+            {
+                memberType = underlyingType;
+            }
+
             if (memberType == typeof(byte))
             {
                 return new UInt8Array.Builder();
@@ -1134,6 +1178,16 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
         private bool AppendToBuilder(IArrowArrayBuilder builder, Type memberType, object value)
         {
+            var underlyingType = Nullable.GetUnderlyingType(memberType);
+            if (underlyingType != null)
+            {
+                memberType = underlyingType;
+                if (value == null)
+                {
+                    return AppendNullToBuilder(builder, memberType, value);
+                }
+            }
+
             if (memberType == typeof(byte))
             {
                 ((UInt8Array.Builder)builder).Append((byte)value);
@@ -1203,8 +1257,85 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             return false;
         }
 
+        private bool AppendNullToBuilder(IArrowArrayBuilder builder, Type memberType, object value)
+        {
+            if (memberType == typeof(byte))
+            {
+                ((UInt8Array.Builder)builder).AppendNull();
+                return true;
+            }
+            if (memberType == typeof(sbyte))
+            {
+                ((Int8Array.Builder)builder).AppendNull();
+                return true;
+            }
+            if (memberType == typeof(ushort))
+            {
+                ((UInt16Array.Builder)builder).AppendNull();
+                return true;
+            }
+            if (memberType == typeof(short))
+            {
+                ((Int16Array.Builder)builder).AppendNull();
+                return true;
+            }
+            if (memberType == typeof(int))
+            {
+                ((Int32Array.Builder)builder).AppendNull();
+                return true;
+            }
+            if (memberType == typeof(uint))
+            {
+                ((UInt32Array.Builder)builder).AppendNull();
+                return true;
+            }
+            if (memberType == typeof(long))
+            {
+                ((Int64Array.Builder)builder).AppendNull();
+                return true;
+            }
+            if (memberType == typeof(ulong))
+            {
+                ((UInt64Array.Builder)builder).AppendNull();
+                return true;
+            }
+            if (memberType == typeof(float))
+            {
+                ((FloatArray.Builder)builder).AppendNull();
+                return true;
+            }
+            if (memberType == typeof(double))
+            {
+                ((DoubleArray.Builder)builder).AppendNull();
+                return true;
+            }
+            if (memberType == typeof(decimal))
+            {
+                ((DoubleArray.Builder)builder).AppendNull();
+                return true;
+            }
+            if (memberType == typeof(DateTime))
+            {
+                ((TimestampArray.Builder)builder).AppendNull();
+                return true;
+            }
+            if (memberType == typeof(string))
+            {
+                ((StringArray.Builder)builder).AppendNull();
+                return true;
+            }
+
+            return false;
+        }
+
         private bool AppendToRecordBatch(RecordBatch.Builder customDataRecordBatchBuilder, Type memberType, string columnName, IArrowArrayBuilder builder, MemoryAllocator allocator = null)
         {
+            var underlyingType = Nullable.GetUnderlyingType(memberType);
+            if (underlyingType != null)
+            {
+                memberType = underlyingType;
+            }
+
             if (memberType == typeof(byte))
             {
                 customDataRecordBatchBuilder.Append(columnName, true, ((UInt8Array.Builder)builder).Build(allocator));
@@ -1271,6 +1402,12 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
         private void ClearBuilder(IArrowArrayBuilder builder, Type memberType)
         {
+            var underlyingType = Nullable.GetUnderlyingType(memberType);
+            if (underlyingType != null)
+            {
+                memberType = underlyingType;
+            }
+
             if (memberType == typeof(byte))
             {
                 ((UInt8Array.Builder)builder).Clear();
@@ -1338,36 +1475,36 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             }
         }
 
-        /// <summary>
-        /// Converts an enumerable of <see cref="IBaseData"/> in a pandas.DataFrame
-        /// </summary>
-        /// <param name="data">Enumerable of <see cref="Slice"/></param>
-        /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
-        public PyObject GetDataFrame<T>(IEnumerable<T> data)
-            where T : IBaseData
-        {
-            PandasData sliceData = null;
-            foreach (var datum in data)
-            {
-                if (sliceData == null)
-                {
-                    sliceData = new PandasData(datum);
-                }
+        ///// <summary>
+        ///// Converts an enumerable of <see cref="IBaseData"/> in a pandas.DataFrame
+        ///// </summary>
+        ///// <param name="data">Enumerable of <see cref="Slice"/></param>
+        ///// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
+        //public PyObject GetDataFrame<T>(IEnumerable<T> data)
+        //    where T : IBaseData
+        //{
+        //    PandasData sliceData = null;
+        //    foreach (var datum in data)
+        //    {
+        //        if (sliceData == null)
+        //        {
+        //            sliceData = new PandasData(datum);
+        //        }
 
-                sliceData.Add(datum);
-            }
+        //        sliceData.Add(datum);
+        //    }
 
-            using (Py.GIL())
-            {
-                // If sliceData is still null, data is an empty enumerable
-                // returns an empty pandas.DataFrame
-                if (sliceData == null)
-                {
-                    return _pandas.DataFrame();
-                }
-                return sliceData.ToPandasDataFrame();
-            }
-        }
+        //    using (Py.GIL())
+        //    {
+        //        // If sliceData is still null, data is an empty enumerable
+        //        // returns an empty pandas.DataFrame
+        //        if (sliceData == null)
+        //        {
+        //            return _pandas.DataFrame();
+        //        }
+        //        return sliceData.ToPandasDataFrame();
+        //    }
+        //}
 
         /// <summary>
         /// Converts a dictionary with a list of <see cref="IndicatorDataPoint"/> in a pandas.DataFrame
