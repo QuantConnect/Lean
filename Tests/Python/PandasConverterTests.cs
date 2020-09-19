@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Python
             var rawBars = Enumerable.Empty<TradeBar>().ToArray();
 
             // GetDataFrame with argument of type IEnumerable<TradeBar>
-            dynamic dataFrame = converter.GetDataFrame(rawBars);
+            dynamic dataFrame = converter.GetDataFrame(new[] { new Slice(default(DateTime), rawBars) });
 
             using (Py.GIL())
             {
@@ -85,7 +85,7 @@ namespace QuantConnect.Tests.Python
                 .ToArray();
 
             // GetDataFrame with argument of type IEnumerable<TradeBar>
-            dynamic dataFrame = converter.GetDataFrame(rawBars);
+            dynamic dataFrame = converter.GetDataFrame(rawBars.Select(x => new Slice(x.EndTime, new[] { x })));
 
             using (Py.GIL())
             {
@@ -140,7 +140,7 @@ namespace QuantConnect.Tests.Python
                 .ToArray();
 
             // GetDataFrame with argument of type IEnumerable<QuoteBar>
-            dynamic dataFrame = converter.GetDataFrame(rawBars);
+            dynamic dataFrame = converter.GetDataFrame(rawBars.Select(x => new Slice(x.EndTime, new[] { x })));
 
             using (Py.GIL())
             {
@@ -198,11 +198,12 @@ namespace QuantConnect.Tests.Python
                 })
                 .ToArray();
 
-            rawBars[0].NullableInt = 0;
+            // Set to 1, otherwise the entire column will be dropped because all values were NaN and/or 0
+            rawBars[0].NullableInt = 1;
             rawBars[1].NullableTime = new DateTime(2020, 1, 2);
 
             // GetDataFrame with argument of type IEnumerable<QuoteBar>
-            dynamic dataFrame = converter.GetDataFrame(rawBars);
+            dynamic dataFrame = converter.GetDataFrame(rawBars.Select(x => new Slice(x.EndTime, new[] { x })));
 
             using (Py.GIL())
             {
@@ -1405,7 +1406,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    data = dataFrame.lastprice.unstack(0) 
+    data = dataFrame.lastprice.unstack(0)
     data = data.resample('2S').sum()
     data = data[{index}]
     if data is 0:
@@ -1943,7 +1944,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    series = dataFrame.lastprice.droplevel(0) 
+    series = dataFrame.lastprice.droplevel(0)
     data = series.asfreq(freq='30S')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
@@ -2004,7 +2005,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    series = dataFrame.lastprice.droplevel(0) 
+    series = dataFrame.lastprice.droplevel(0)
     data = series.at_time('04:00')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
@@ -2042,7 +2043,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    series = dataFrame.lastprice.droplevel(0) 
+    series = dataFrame.lastprice.droplevel(0)
     data = series.between_time('02:00', '06:00')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
@@ -2217,7 +2218,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    series = dataFrame.lastprice.droplevel(0) 
+    series = dataFrame.lastprice.droplevel(0)
     data = series.first('2S')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
@@ -2302,7 +2303,7 @@ def Test(df, other, symbol):
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    series = dataFrame.lastprice.droplevel(0) 
+    series = dataFrame.lastprice.droplevel(0)
     data = series.last('2S')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
@@ -2868,7 +2869,7 @@ def Test(dataFrame, symbol):
                 .ToArray();
 
             // GetDataFrame with argument of type IEnumerable<QuoteBar>
-            dynamic dataFrame = converter.GetDataFrame(rawBars);
+            dynamic dataFrame = converter.GetDataFrame(rawBars.Select(x => new Slice(x.EndTime, new[] { x })));
 
             using (Py.GIL())
             {
@@ -2929,7 +2930,7 @@ def Test(dataFrame, symbol):
                 .ToArray();
 
             // GetDataFrame with argument of type IEnumerable<QuoteBar>
-            dynamic dataFrame = converter.GetDataFrame(rawBars);
+            dynamic dataFrame = converter.GetDataFrame(rawBars.Select(x => new Slice(x.EndTime, new[] { x })));
 
             using (Py.GIL())
             {
@@ -3002,7 +3003,7 @@ def Test(dataFrame, symbol):
             }
 
             // Act
-            dynamic dataFrame = converter.GetDataFrame(openinterest);
+            dynamic dataFrame = converter.GetDataFrame(openinterest.Select(x => new Slice(x.EndTime, new[] { x })));
 
             //Assert
             using (Py.GIL())
@@ -3049,7 +3050,7 @@ def Test(dataFrame, symbol):
                 .ToArray();
 
             // GetDataFrame with argument of type IEnumerable<BaseData>
-            dynamic dataFrame = converter.GetDataFrame(rawBars);
+            dynamic dataFrame = converter.GetDataFrame(rawBars.Select(x => new Slice(x.EndTime, new[] { x })));
 
             using (Py.GIL())
             {
@@ -3122,7 +3123,7 @@ def Test(dataFrame, symbol):
                 .ToArray();
 
             // GetDataFrame with argument of type IEnumerable<BaseData>
-            dynamic dataFrame = converter.GetDataFrame(rawBars);
+            dynamic dataFrame = converter.GetDataFrame(rawBars.Select(x => new Slice(x.EndTime, new[] { x })));
 
             using (Py.GIL())
             {
@@ -3184,7 +3185,7 @@ def Test(dataFrame, symbol):
                 var data = leanDataReader.Parse();
                 var converter = new PandasConverter();
                 // Act
-                dynamic df = converter.GetDataFrame(data);
+                dynamic df = converter.GetDataFrame(data.Select(x => new Slice(x.EndTime, new[] { x })));
                 // Assert
                 Assert.AreEqual(rowsInfile, df.shape[0].AsManagedObject(typeof(int)));
 
@@ -3210,7 +3211,7 @@ def Test(dataFrame, symbol):
                 var data = leanDataReader.Parse();
                 var converter = new PandasConverter();
                 // Act
-                dynamic df = converter.GetDataFrame(data);
+                dynamic df = converter.GetDataFrame(data.Select(x => new Slice(x.EndTime, new[] { x })));
                 // Assert
                 Assert.AreEqual(rowsInfile, df.shape[0].AsManagedObject(typeof(int)));
 
