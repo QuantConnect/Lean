@@ -296,6 +296,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public Slice CurrentSlice => _baseAlgorithm.CurrentSlice;
 
         /// <summary>
+        /// Synchronization run hourly instead of daily when its true
+        /// </summary>
+        public bool SyncBrokerageHourly => _baseAlgorithm.SyncBrokerageHourly;
+
+        /// <summary>
         /// Algorithm start date for backtesting, set by the SetStartDate methods.
         /// </summary>
         public DateTime StartDate => _baseAlgorithm.StartDate;
@@ -930,5 +935,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         /// <param name="objectStore">The object store</param>
         public void SetObjectStore(IObjectStore objectStore) => _baseAlgorithm.SetObjectStore(objectStore);
+
+        /// <summary>
+        /// Set brokerage synchronization frequency to hourly instead of daily
+        /// </summary>
+        /// <param name="syncHourly">set true to sync brokerage hourly instead of daily</param>
+        public void SetSyncBrokerageHourly(bool syncHourly) => _baseAlgorithm.SetSyncBrokerageHourly(syncHourly);
     }
 }

@@ -2222,6 +2222,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Set brokerage synchronization frequency to hourly instead of daily
         /// </summary>
+        /// <param name="syncHourly">set true to sync brokerage hourly instead of daily</param>
         public void SetSyncBrokerageHourly(bool syncHourly = true)
         {
             if (_locked)
