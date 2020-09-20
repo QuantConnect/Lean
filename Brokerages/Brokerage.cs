@@ -366,7 +366,7 @@ namespace QuantConnect.Brokerages
                     {
                         // this will cause us to come back in and reset cash again until we
                         // haven't processed a fill for +- 10 seconds of the set cash time
-                        _syncedLiveBrokerageCash = true;
+                        _syncedLiveBrokerageCash = false;
                         //_failedCashSyncAttempts = 0;
                         Log.Trace("Brokerage.PerformCashSync(): Unverified cash sync - resync required.");
                     }
