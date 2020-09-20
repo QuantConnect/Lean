@@ -8,8 +8,9 @@ using Apache.Arrow.Memory;
 
 namespace QuantConnect.Python
 {
-    public class PandasArrowMemoryAllocator : NativeMemoryAllocator
+    public class PandasArrowMemoryAllocator : NativeMemoryAllocator, IDisposable
     {
+        private bool _disposed;
         private List<PandasMemoryOwner> _free = new List<PandasMemoryOwner>();
         private List<PandasMemoryOwner> _used = new List<PandasMemoryOwner>();
 
@@ -85,6 +86,27 @@ namespace QuantConnect.Python
             {
                 Original.Dispose();
             }
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException("PandasArrowMemoryAllocator has already been disposed");
+            }
+            foreach (var free in _free)
+            {
+                free.Dispose();
+            }
+            foreach (var used in _used)
+            {
+                used.Dispose();
+            }
+
+            _free.Clear();
+            _used.Clear();
+
+            _disposed = true;
         }
     }
 }
