@@ -549,7 +549,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             Log.Debug("BrokerageTransactionHandler.ProcessSynchronousEvents(): Enter");
 
             // check if the brokerage should perform cash sync now
-            if (_brokerage.ShouldPerformCashSync(CurrentTimeUtc))
+            if (_brokerage.ShouldPerformCashSync(CurrentTimeUtc, _algorithm.SyncBrokerageHourly))
             {
                 // only perform cash syncs if we haven't had a fill for at least 10 seconds
                 if (TimeSinceLastFill > TimeSpan.FromSeconds(10))

@@ -91,6 +91,9 @@ namespace QuantConnect.Algorithm
 
         // flips to true when the user
         private bool _userSetSecurityInitializer = false;
+        
+        // brokerage synchronization run per hour
+        private bool _syncBrokerageHourly = false;
 
         // warmup resolution variables
         private TimeSpan? _warmupTimeSpan;
@@ -502,6 +505,17 @@ namespace QuantConnect.Algorithm
         /// Gets the object store, used for persistence
         /// </summary>
         public ObjectStore ObjectStore { get; private set; }
+
+        /// <summary>
+        /// Synchronization run hourly instead of daily when its true
+        /// </summary>
+        public bool SyncBrokerageHourly
+        {
+            get
+            {
+                return _syncBrokerageHourly;
+            }
+        }
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -2203,6 +2217,19 @@ namespace QuantConnect.Algorithm
         public void SetObjectStore(IObjectStore objectStore)
         {
             ObjectStore = new ObjectStore(objectStore);
+        }
+
+        /// <summary>
+        /// Set brokerage synchronization frequency to hourly instead of daily
+        /// </summary>
+        public void SetSyncBrokerageHourly(bool syncHourly = true)
+        {
+            if (_locked)
+            {
+                throw new InvalidOperationException("Algorithm.SetSyncBrokerageHourly(): Cannot set synchronization frequency after algorithm initialized.");
+            }
+
+            _syncBrokerageHourly = syncHourly;
         }
     }
 }

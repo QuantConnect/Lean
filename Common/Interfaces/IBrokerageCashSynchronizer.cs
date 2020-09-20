@@ -31,8 +31,9 @@ namespace QuantConnect.Interfaces
         /// Returns whether the brokerage should perform the cash synchronization
         /// </summary>
         /// <param name="currentTimeUtc">The current time (UTC)</param>
+        /// <param name="syncHourly">set true to sync brokerage hourly instead of daily</param>
         /// <returns>True if the cash sync should be performed</returns>
-        bool ShouldPerformCashSync(DateTime currentTimeUtc);
+        bool ShouldPerformCashSync(DateTime currentTimeUtc, bool syncHourly);
 
         /// <summary>
         /// Synchronizes the cashbook with the brokerage account

@@ -905,7 +905,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreNotEqual(lastSyncDateAfter, lastSyncDateBefore);
 
             var count = 0;
-            while (!brokerage.ShouldPerformCashSync(transactionHandler.TestCurrentTimeUtc))
+            while (!brokerage.ShouldPerformCashSync(transactionHandler.TestCurrentTimeUtc, _algorithm.SyncBrokerageHourly))
             {
                 count++;
                 if (count > 40)
@@ -936,15 +936,15 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var lastSyncDateBefore = transactionHandler.GetLastSyncDate();
 
             // Advance current time UTC
-            transactionHandler.TestCurrentTimeUtc = transactionHandler.TestCurrentTimeUtc.AddHours(2);
+            transactionHandler.TestCurrentTimeUtc = transactionHandler.TestCurrentTimeUtc.AddDays(2);
 
             transactionHandler.ProcessSynchronousEvents();
             var lastSyncDateAfter = transactionHandler.GetLastSyncDate();
 
             // cash sync happened
-            Assert.AreNotEqual(lastSyncDateAfter, lastSyncDateBefore);
+            Assert.AreEqual(lastSyncDateAfter, lastSyncDateBefore);
 
-            Assert.AreEqual(1, brokerage.GetCashBalanceCallCount);
+            Assert.AreEqual(0, brokerage.GetCashBalanceCallCount);
         }
 
         [Test]
@@ -954,7 +954,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var ib = new Mock<IBrokerage>();
             ib.Setup(m => m.GetCashBalance()).Callback(() => { throw new Exception("Connection error in CashBalance"); });
             ib.Setup(m => m.IsConnected).Returns(false);
-            ib.Setup(m => m.ShouldPerformCashSync(It.IsAny<DateTime>())).Returns(true);
+            ib.Setup(m => m.ShouldPerformCashSync(It.IsAny<DateTime>()), false).Returns(true);
             ib.Setup(m => m.PerformCashSync(It.IsAny<IAlgorithm>(), It.IsAny<DateTime>(), It.IsAny<Func<TimeSpan>>()))
                 .Returns(
                     () =>

@@ -2974,10 +2974,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Returns whether the brokerage should perform the cash synchronization
         /// </summary>
         /// <param name="currentTimeUtc">The current time (UTC)</param>
+        /// <param name="syncHourly">set true to sync brokerage hourly instead of daily</param>
         /// <returns>True if the cash sync should be performed</returns>
-        public override bool ShouldPerformCashSync(DateTime currentTimeUtc)
+        public override bool ShouldPerformCashSync(DateTime currentTimeUtc, bool syncHourly)
         {
-            return base.ShouldPerformCashSync(currentTimeUtc) &&
+            return base.ShouldPerformCashSync(currentTimeUtc, syncHourly) &&
                    !_ibAutomater.IsWithinScheduledServerResetTimes();
         }
 

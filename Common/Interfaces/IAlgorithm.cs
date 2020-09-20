@@ -330,6 +330,11 @@ namespace QuantConnect.Interfaces
         /// Returns the current Slice object
         /// </summary>
         Slice CurrentSlice { get; }
+        
+        /// <summary>
+        /// Synchronization run hourly instead of daily when its true
+        /// </summary>
+        bool SyncBrokerageHourly { get; }
 
         /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:
@@ -696,5 +701,10 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="objectStore">The object store</param>
         void SetObjectStore(IObjectStore objectStore);
+
+        /// <summary>
+        /// Set brokerage synchronization frequency to hourly instead of daily
+        /// </summary>
+        void SetSyncBrokerageHourly(bool syncHourly);
     }
 }

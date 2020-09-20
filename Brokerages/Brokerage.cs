@@ -31,8 +31,12 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public abstract class Brokerage : IBrokerage
     {
+        // 7:45 AM (New York time zone)
+        private static readonly TimeSpan LiveBrokerageCashSyncTime = new TimeSpan(7, 45, 0);
+        
         private readonly object _performCashSyncReentranceGuard = new object();
-        private bool _syncedLiveBrokerageCash = true;
+        private bool _syncedLiveBrokerageCashToday = true;
+        private bool _syncedLiveBrokerageCashHourly = true;
         private long _lastSyncTimeTicks = DateTime.UtcNow.Ticks;
 
         /// <summary>
@@ -247,17 +251,31 @@ namespace QuantConnect.Brokerages
         /// Returns whether the brokerage should perform the cash synchronization
         /// </summary>
         /// <param name="currentTimeUtc">The current time (UTC)</param>
+        /// <param name="syncHourly">set true to sync brokerage hourly instead of daily</param>
         /// <returns>True if the cash sync should be performed</returns>
-        public virtual bool ShouldPerformCashSync(DateTime currentTimeUtc)
+        public virtual bool ShouldPerformCashSync(DateTime currentTimeUtc, bool syncHourly)
         {
-            // every hour flip this switch back
             var currentTimeNewYork = currentTimeUtc.ConvertFromUtc(TimeZones.NewYork);
-            if (_syncedLiveBrokerageCash && currentTimeNewYork.Hour != LastSyncHour)
+            if (syncHourly)
             {
-                _syncedLiveBrokerageCash = false;
-            }
+                // every hour flip this switch back
+                if (_syncedLiveBrokerageCashHourly && currentTimeNewYork.Hour != LastSyncHour)
+                {
+                    _syncedLiveBrokerageCashHourly = false;
+                }
 
-            return !_syncedLiveBrokerageCash;
+                return !_syncedLiveBrokerageCashHourly;
+            }
+            else
+            {
+                // every morning flip this switch back
+                if (_syncedLiveBrokerageCashToday && currentTimeNewYork.Date != LastSyncDate)
+                {
+                    _syncedLiveBrokerageCashToday = false;
+                }
+
+                return !_syncedLiveBrokerageCashToday && currentTimeNewYork.TimeOfDay >= LiveBrokerageCashSyncTime;
+            }
         }
 
         /// <summary>
@@ -306,7 +324,7 @@ namespace QuantConnect.Brokerages
                     }
                 }
 
-                // if we were returned our balances, update everything and flip our flag as having performed sync in this hour
+                // if we were returned our balances, update everything and flip our flag as having performed sync
                 foreach (var kvp in algorithm.Portfolio.CashBook)
                 {
                     var cash = kvp.Value;
@@ -331,7 +349,15 @@ namespace QuantConnect.Brokerages
                         algorithm.Portfolio.CashBook[cash.Symbol].SetAmount(0);
                     }
                 }
-                _syncedLiveBrokerageCash = true;
+
+                if (algorithm.SyncBrokerageHourly)
+                {
+                    _syncedLiveBrokerageCashHourly = true;
+                }
+                else
+                {
+                    _syncedLiveBrokerageCashToday = true;
+                }
                 _lastSyncTimeTicks = currentTimeUtc.Ticks;
             }
             finally
@@ -348,7 +374,14 @@ namespace QuantConnect.Brokerages
                     {
                         // this will cause us to come back in and reset cash again until we
                         // haven't processed a fill for +- 10 seconds of the set cash time
-                        _syncedLiveBrokerageCash = false;
+                        if (algorithm.SyncBrokerageHourly)
+                        {
+                            _syncedLiveBrokerageCashHourly = true;
+                        }
+                        else
+                        {
+                            _syncedLiveBrokerageCashToday = true;
+                        }
                         //_failedCashSyncAttempts = 0;
                         Log.Trace("Brokerage.PerformCashSync(): Unverified cash sync - resync required.");
                     }
