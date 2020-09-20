@@ -905,7 +905,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreNotEqual(lastSyncDateAfter, lastSyncDateBefore);
 
             var count = 0;
-            while (!brokerage.ShouldPerformCashSync(transactionHandler.TestCurrentTimeUtc, _algorithm.SyncBrokerageHourly))
+            while (!brokerage.ShouldPerformCashSync(transactionHandler.TestCurrentTimeUtc, false))
             {
                 count++;
                 if (count > 40)
