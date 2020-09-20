@@ -20,29 +20,19 @@ using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using System;
-using System.CodeDom;
 using System.Collections.Generic;
-using System.IdentityModel.Protocols.WSTrust;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Runtime.Serialization.Configuration;
-using System.Threading.Tasks;
-using Apache.Arrow.Types;
-using Fasterflect;
-using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
-using QuantConnect.Securities;
 using QuantConnect.Util;
-using Array = System.Array;
 
 namespace QuantConnect.Python
 {
     /// <summary>
     /// Collection of methods that converts lists of objects in pandas.DataFrame
     /// </summary>
-    public class PandasConverter
+    public class PandasConverter : IDisposable
     {
         private static dynamic _pandas;
         private static dynamic _pa;
@@ -51,6 +41,8 @@ namespace QuantConnect.Python
         private static PyList _defaultIndexes;
         private static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
 
+        // Re-use MemoryStream to avoid having to reallocate every time per new DataFrame we create
+        private MemoryStream _ms = new MemoryStream();
         private PandasArrowMemoryAllocator allocator = new PandasArrowMemoryAllocator();
 
         private StringArray.Builder tradeBarSymbols = new StringArray.Builder();
@@ -411,7 +403,22 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
             foreach (var slice in data)
             {
+                // Add Quote symbols separately since they could potentially be dropped
+                // from the Slice.Keys call if only quotes were provided to the Slice.
+                // Related issues:
+                // https://github.com/QuantConnect/Lean/issues/4205
+                // https://github.com/QuantConnect/Lean/issues/4196
+                var symbols = new HashSet<Symbol>();
                 foreach (var symbol in slice.Keys)
+                {
+                    symbols.Add(symbol);
+                }
+                foreach (var symbol in slice.QuoteBars.Keys)
+                {
+                    symbols.Add(symbol);
+                }
+
+                foreach (var symbol in symbols)
                 {
                     var tradeBar = slice.Bars.ContainsKey(symbol) && slice.Bars[symbol].GetType() == typeof(TradeBar) ? slice.Bars[symbol] : null;
                     var quoteBar = slice.QuoteBars.ContainsKey(symbol) && slice.QuoteBars[symbol].GetType() == typeof(QuoteBar) ? slice.QuoteBars[symbol] : null;
@@ -908,11 +915,12 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
                 foreach (var recordBatch in recordBatches)
                 {
-                    using (var ms = new MemoryStream())
-                    using (var writer = new ArrowStreamWriter(ms, recordBatch.Schema))
+                    _ms.SetLength(0);
+                    using (var writer = new ArrowStreamWriter(_ms, recordBatch.Schema, true))
                     {
                         writer.WriteRecordBatchAsync(recordBatch).SynchronouslyAwaitTask();
-                        using (var arrowBuffer = new ArrowBuffer(ms.GetBuffer()))
+                        var memory = new Memory<byte>(_ms.GetBuffer());
+                        using (var arrowBuffer = new ArrowBuffer(memory.Slice(0, (int)_ms.Length)))
                         {
                             unsafe
                             {
@@ -1556,6 +1564,12 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             return _pandas == null
                 ? "pandas module was not imported."
                 : _pandas.Repr();
+        }
+
+        public void Dispose()
+        {
+            _ms.Dispose();
+            allocator.Dispose();
         }
     }
 }
