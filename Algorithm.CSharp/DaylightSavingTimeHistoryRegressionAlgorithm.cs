@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression test algorithm simply fetch history on boarder of Daylight Saving Time shift
     /// </summary>
-    public class DaylightSavingTimeHistoryRegressionTest : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class DaylightSavingTimeHistoryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol[] _symbols = new[]
         {

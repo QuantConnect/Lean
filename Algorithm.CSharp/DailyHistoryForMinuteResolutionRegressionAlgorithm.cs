@@ -25,7 +25,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Algorithm simply fetch one-day history prior current time.
     /// </summary>
-    public class DailyHistoryForMinuteResolutionRegressionTest : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class DailyHistoryForMinuteResolutionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _symbol;
         private int _day = -1;

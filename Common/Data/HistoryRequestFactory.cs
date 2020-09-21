@@ -13,12 +13,11 @@
  * limitations under the License.
 */
 
-using System;
-using System.Linq;
 using NodaTime;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using System;
 
 namespace QuantConnect.Data
 {
@@ -80,6 +79,7 @@ namespace QuantConnect.Data
         /// <param name="periods">The number of bars requested</param>
         /// <param name="resolution">The length of each bar</param>
         /// <param name="exchange">The exchange hours used for market open hours</param>
+        /// <param name="dataTimeZone">The time zone in which data are stored</param>
         /// <returns>The start time that would provide the specified number of bars ending at the algorithm's current time</returns>
         public DateTime GetStartTimeAlgoTz(
             Symbol symbol,

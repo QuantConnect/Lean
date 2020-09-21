@@ -81,19 +81,6 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(expectedStart, start);
         }
 
-        public static IEnumerable<TestCaseData> ForexHistoryDates => new List<TestCaseData>
-        {
-            new TestCaseData(new DateTime(2018, 04, 02, 1, 0, 0), new DateTime(2018, 04, 01, 01, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(-5))),
-            new TestCaseData(new DateTime(2018, 04, 02, 0, 0, 0), new DateTime(2018, 03, 29, 01, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(-5))),
-            new TestCaseData(new DateTime(2018, 04, 04, 0, 0, 0), new DateTime(2018, 04, 02, 01, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(-5))),
-            new TestCaseData(new DateTime(2018, 04, 02, 1, 0, 0), new DateTime(2018, 03, 29, 15, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(5))),
-            new TestCaseData(new DateTime(2018, 04, 02, 0, 0, 0), new DateTime(2018, 03, 29, 15, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(5))),
-            new TestCaseData(new DateTime(2018, 04, 04, 0, 0, 0), new DateTime(2018, 04, 02, 15, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(5))),
-            new TestCaseData(new DateTime(2018, 04, 02, 1, 0, 0), new DateTime(2018, 03, 31, 20, 0, 0), DateTimeZone.Utc),
-            new TestCaseData(new DateTime(2018, 04, 02, 0, 0, 0), new DateTime(2018, 03, 31, 20, 0, 0), DateTimeZone.Utc),
-            new TestCaseData(new DateTime(2018, 04, 04, 0, 0, 0), new DateTime(2018, 04, 02, 20, 0, 0), DateTimeZone.Utc)
-        };
-
         [Test, TestCaseSource(nameof(ForexHistoryDates))]
         public void GetStartTimeForForexTradeBars(DateTime end, DateTime expectedStart, DateTimeZone dataTimeZone)
         {
@@ -102,12 +89,6 @@ namespace QuantConnect.Tests.Common
             var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 1, false, dataTimeZone);
             Assert.AreEqual(expectedStart, start);
         }
-
-        public static IEnumerable<TestCaseData> EquityHistoryDates => new List<TestCaseData>
-        {
-            new TestCaseData(new DateTime(2013, 10, 08, 17, 0, 0), new DateTime(2013, 10, 08, 15, 50, 0), DateTimeZone.Utc),
-            new TestCaseData(new DateTime(2013, 10, 08, 13, 0, 0), new DateTime(2013, 10, 08, 12, 50, 0), DateTimeZone.Utc),
-        };
 
         [Test, TestCaseSource(nameof(EquityHistoryDates))]
         public void GetStartTimeForEquityTradeBars(DateTime end, DateTime expectedStart, DateTimeZone dataTimeZone)
@@ -252,5 +233,24 @@ namespace QuantConnect.Tests.Common
         {
             Assert.AreEqual(new DateTime(year, month, day, hour, minute, 0), Time.ParseDate(parseDate));
         }
+
+        private static IEnumerable<TestCaseData> ForexHistoryDates => new List<TestCaseData>
+        {
+            new TestCaseData(new DateTime(2018, 04, 02, 1, 0, 0), new DateTime(2018, 04, 01, 01, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(-5))),
+            new TestCaseData(new DateTime(2018, 04, 02, 0, 0, 0), new DateTime(2018, 03, 29, 01, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(-5))),
+            new TestCaseData(new DateTime(2018, 04, 04, 0, 0, 0), new DateTime(2018, 04, 02, 01, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(-5))),
+            new TestCaseData(new DateTime(2018, 04, 02, 1, 0, 0), new DateTime(2018, 03, 29, 15, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(5))),
+            new TestCaseData(new DateTime(2018, 04, 02, 0, 0, 0), new DateTime(2018, 03, 29, 15, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(5))),
+            new TestCaseData(new DateTime(2018, 04, 04, 0, 0, 0), new DateTime(2018, 04, 02, 15, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(5))),
+            new TestCaseData(new DateTime(2018, 04, 02, 1, 0, 0), new DateTime(2018, 03, 31, 20, 0, 0), DateTimeZone.Utc),
+            new TestCaseData(new DateTime(2018, 04, 02, 0, 0, 0), new DateTime(2018, 03, 31, 20, 0, 0), DateTimeZone.Utc),
+            new TestCaseData(new DateTime(2018, 04, 04, 0, 0, 0), new DateTime(2018, 04, 02, 20, 0, 0), DateTimeZone.Utc)
+        };
+
+        private static IEnumerable<TestCaseData> EquityHistoryDates => new List<TestCaseData>
+        {
+            new TestCaseData(new DateTime(2013, 10, 08, 17, 0, 0), new DateTime(2013, 10, 08, 15, 50, 0), DateTimeZone.Utc),
+            new TestCaseData(new DateTime(2013, 10, 08, 13, 0, 0), new DateTime(2013, 10, 08, 12, 50, 0), DateTimeZone.Utc),
+        };
     }
 }
