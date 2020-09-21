@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
         private static readonly Symbol March = Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, new DateTime(2020, 03, 01));
         private static readonly Symbol April = Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, new DateTime(2020, 04, 01));
         private static readonly DateTime TestDate = new DateTime(2020, 05, 11, 0, 0, 0, DateTimeKind.Utc);
-        private static readonly DateTime ExpectedPreviousDate = new DateTime(2020, 05, 08, 0, 0, 0, DateTimeKind.Utc);
+        private static readonly DateTime ExpectedPreviousDate = new DateTime(2020, 05, 09, 20, 0, 0, DateTimeKind.Utc);
         private static readonly IReadOnlyDictionary<Symbol, decimal> OpenInterestData = new Dictionary<Symbol, decimal>
         {
             [Jan] = 3,
