@@ -39,8 +39,6 @@ using QuantConnect.Util;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Volatility;
 using QuantConnect.Util.RateLimit;
-using DateTime = System.DateTime;
-using OrderType = QuantConnect.Orders.OrderType;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -95,8 +93,7 @@ namespace QuantConnect.Lean.Engine
         public AlgorithmTimeLimitManager TimeLimit { get; }
 
         /// <summary>
-        /// Quit state flag for the running algorithm. When true the user has requested the backtest stops through a Quit()
-        /// method.
+        /// Quit state flag for the running algorithm. When true the user has requested the backtest stops through a Quit() method.
         /// </summary>
         /// <seealso cref="QCAlgorithm.Quit(String)"/>
         public bool QuitState => State == AlgorithmStatus.Deleted;
@@ -107,14 +104,12 @@ namespace QuantConnect.Lean.Engine
         public long DataPoints { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AlgorithmManager" /> class
+        /// Initializes a new instance of the <see cref="AlgorithmManager"/> class
         /// </summary>
         /// <param name="liveMode">True if we're running in live mode, false for backtest mode</param>
-        /// <param name="job">
-        /// Provided by LEAN when creating a new algo manager. This is the job
+        /// <param name="job">Provided by LEAN when creating a new algo manager. This is the job
         /// that the algo manager is about to execute. Research and other consumers can provide the
-        /// default value of null
-        /// </param>
+        /// default value of null</param>
         public AlgorithmManager(bool liveMode, AlgorithmNodePacket job = null)
         {
             AlgorithmId = "";
@@ -149,7 +144,6 @@ namespace QuantConnect.Lean.Engine
 
             // Process all data steps in the stream
             Log.Trace("AlgorithmManager.Run(): Begin DataStream - Start: " + algorithm.StartDate + " Stop: " + algorithm.EndDate);
-
             while (_stream.MoveNext())
             {
                 // reset our timer on each loop
@@ -891,7 +885,7 @@ namespace QuantConnect.Lean.Engine
                             // send some status to the user letting them know we're done history, but still warming up,
                             // catching up to real time data
                             nextStatusTime = DateTime.UtcNow.AddSeconds(1);
-                            var percent = (int) (100 * (timeSlice.Time.Ticks - warmUpStartTicks) / (double) (DateTime.UtcNow.Ticks - warmUpStartTicks));
+                            var percent = (int)(100 * (timeSlice.Time.Ticks - warmUpStartTicks) / (double)(DateTime.UtcNow.Ticks - warmUpStartTicks));
                             results.SendStatusUpdate(AlgorithmStatus.History, $"Catching up to realtime {percent}%...");
                         }
                         yield return timeSlice;
@@ -915,7 +909,10 @@ namespace QuantConnect.Lean.Engine
             {
                 if (algorithm.LiveMode && algorithm.IsWarmingUp)
                 {
-                    if (timeSlice.IsTimePulse) continue;
+                    if (timeSlice.IsTimePulse)
+                    {
+                        continue;
+                    }
 
                     // this is hand-over logic, we spin up the data feed first and then request
                     // the history for warmup, so there will be some overlap between the data
@@ -954,7 +951,7 @@ namespace QuantConnect.Lean.Engine
                         // send some status to the user letting them know we're done history, but still warming up,
                         // catching up to real time data
                         nextStatusTime = DateTime.UtcNow.AddSeconds(1);
-                        var percent = (int) (100 * (timeSlice.Time.Ticks - warmUpStartTicks) / (double) (DateTime.UtcNow.Ticks - warmUpStartTicks));
+                        var percent = (int) (100*(timeSlice.Time.Ticks - warmUpStartTicks)/(double) (DateTime.UtcNow.Ticks - warmUpStartTicks));
                         results.SendStatusUpdate(AlgorithmStatus.History, $"Catching up to realtime {percent}%...");
                     }
                 }
@@ -1025,7 +1022,7 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
-        /// Performs delisting logic for the securities specified in <paramref name="newDelistings" /> that are marked as <see cref="DelistingType.Delisted"/>.
+        /// Performs delisting logic for the securities specified in <paramref name="newDelistings"/> that are marked as <see cref="DelistingType.Delisted"/>.
         /// </summary>
         private static void HandleDelistedSymbols(IAlgorithm algorithm, Delistings newDelistings, List<Delisting> delistings)
         {
@@ -1181,8 +1178,7 @@ namespace QuantConnect.Lean.Engine
                     throw new Exception(
                         $"AlgorithmManager.ProcessSplitSymbols(): {_algorithm.Time} - No subscriptions found for {security.Symbol}" +
                         $", IsTradable: {security.IsTradable}" +
-                        $", Active: {algorithm.UniverseManager.ActiveSecurities.Keys.Contains(split.Symbol)}"
-                    );
+                        $", Active: {algorithm.UniverseManager.ActiveSecurities.Keys.Contains(split.Symbol)}");
                 }
 
                 var latestMarketOnCloseTimeRoundedDownByResolution = nextMarketClose.Subtract(MarketOnCloseOrder.DefaultSubmissionTimeBuffer)
@@ -1219,8 +1215,7 @@ namespace QuantConnect.Lean.Engine
                     optionContractSecurity.IsTradable = false;
 
                     algorithm.Debug($"MarktetOnClose order submitted for option contract '{optionContractSymbol}' due to impending {split.Symbol.Value} split event. "
-                        + "Option splits are not currently supported."
-                    );
+                        + "Option splits are not currently supported.");
                 }
 
                 // remove the warning from out list
@@ -1249,7 +1244,7 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
-        /// Constructs the correct <see cref="ITokenBucket" /> instance per the provided controls.
+        /// Constructs the correct <see cref="ITokenBucket"/> instance per the provided controls.
         /// The provided controls will be null when
         /// </summary>
         private static ITokenBucket CreateTokenBucket(LeakyBucketControlParameters controls)
@@ -1262,7 +1257,7 @@ namespace QuantConnect.Lean.Engine
                 return TokenBucket.Null;
             }
 
-            Log.Trace("AlgorithmManager.CreateTokenBucket(): Initializing LeakyBucket: " + 
+            Log.Trace("AlgorithmManager.CreateTokenBucket(): Initializing LeakyBucket: " +
                 $"Capacity: {controls.Capacity} " +
                 $"RefillAmount: {controls.RefillAmount} " +
                 $"TimeInterval: {controls.TimeIntervalMinutes}"
