@@ -26,8 +26,6 @@ using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using QuantConnect.Data.Fundamental;
-using QuantConnect.Securities.Future;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -318,12 +316,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     security = _securityService.CreateSecurity(symbol, configs, universe.UniverseSettings.Leverage, symbol.ID.SecurityType == SecurityType.Option);
 
                     pendingAdditions.Add(symbol, security);
-
-                    SetUnderlyingSecurity(universe, security);
                 }
 
                 var addedSubscription = false;
-
+                var dataFeedAdded = false;
                 foreach (var request in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc,
                                                                          _algorithm.SubscriptionManager.SubscriptionDataConfigService))
                 {
@@ -341,7 +337,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         _dataManager.RemoveSubscription(toRemove);
                     }
 
-                    _dataManager.AddSubscription(request);
+                    // 'dataFeedAdded' will help us notify the user for security changes only once per non internal subscription
+                    // for example two universes adding the sample configuration, we don't want two notifications
+                    dataFeedAdded = _dataManager.AddSubscription(request);
 
                     // only update our security changes if we actually added data
                     if (!request.IsUniverseSubscription)
@@ -356,7 +354,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     var addedMember = universe.AddMember(dateTimeUtc, security);
 
-                    if (addedMember)
+                    if (addedMember && dataFeedAdded)
                     {
                         additions.Add(security);
                     }
@@ -493,37 +491,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 // remove symbol mappings for symbols removed from universes // TODO : THIS IS BAD!
                 SymbolCache.TryRemove(member.Symbol);
-            }
-        }
-
-        /// <summary>
-        /// This method sets the underlying security for <see cref="OptionChainUniverse"/> and <see cref="FuturesChainUniverse"/>
-        /// </summary>
-        private void SetUnderlyingSecurity(Universe universe, Security security)
-        {
-            var optionChainUniverse = universe as OptionChainUniverse;
-            var futureChainUniverse = universe as FuturesChainUniverse;
-            if (optionChainUniverse != null)
-            {
-                if (!security.Symbol.HasUnderlying)
-                {
-                    // create the underlying w/ raw mode
-                    security.SetDataNormalizationMode(DataNormalizationMode.Raw);
-                    optionChainUniverse.Option.Underlying = security;
-                }
-                else
-                {
-                    // set the underlying security and pricing model from the canonical security
-                    var option = (Option)security;
-                    option.Underlying = optionChainUniverse.Option.Underlying;
-                    option.PriceModel = optionChainUniverse.Option.PriceModel;
-                }
-            }
-            else if (futureChainUniverse != null)
-            {
-                // set the underlying security and pricing model from the canonical security
-                var future = (Future)security;
-                future.Underlying = futureChainUniverse.Future.Underlying;
             }
         }
     }

@@ -179,6 +179,8 @@
     <Compile Include="Selection\ManualUniverse.cs" />
     <Compile Include="Selection\ManualUniverseSelectionModel.cs" />
     <Compile Include="Selection\NullUniverseSelectionModel.cs" />
+    <Compile Include="Selection\OptionChainedUniverseSelectionModel.cs" />
+    <Compile Include="Selection\OptionContractUniverse.cs" />
     <Compile Include="Selection\UniverseSelectionModel.cs" />
     <Compile Include="Selection\UniverseSelectionModelPythonWrapper.cs" />
     <Compile Include="UniverseDefinitions.cs" />

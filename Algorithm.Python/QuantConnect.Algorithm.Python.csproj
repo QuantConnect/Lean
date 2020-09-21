@@ -83,6 +83,7 @@
     <None Include="BasicTemplateOptionsPriceModel.py" />
     <Content Include="Benchmarks\SECReportBenchmarkAlgorithm.py" />
     <Content Include="Benchmarks\SmartInsiderEventBenchmarkAlgorithm.py" />
+    <Content Include="CoarseFineOptionUniverseChainRegressionAlgorithm.py" />
     <Content Include="CoarseTiingoNewsUniverseSelectionAlgorithm.py" />
     <Content Include="ConsolidateRegressionAlgorithm.py" />
     <Content Include="CustomConsolidatorRegressionAlgorithm.py" />

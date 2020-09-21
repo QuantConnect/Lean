@@ -239,7 +239,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Returns the symbols defined by the user for this universe
         /// </summary>
-        /// <param name="utcTime">The curren utc time</param>
+        /// <param name="utcTime">The current utc time</param>
         /// <param name="data">The symbols to remain in the universe</param>
         /// <returns>The data that passes the filter</returns>
         public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
@@ -278,8 +278,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="e">The notify collection changed event arguments</param>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            var handler = CollectionChanged;
-            if (handler != null) handler(this, e);
+            CollectionChanged?.Invoke(this, e);
         }
 
         /// <summary>
