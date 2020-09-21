@@ -250,7 +250,7 @@ namespace QuantConnect.Algorithm
 
                 var exchange = GetExchangeHours(x);
                 var res = GetResolution(x, resolution);
-                var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, GetDataTimeZone(x));
+                var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, config.DataTimeZone);
                 return _historyRequestFactory.CreateHistoryRequest(config, start, Time, exchange, res);
             });
 
@@ -307,7 +307,8 @@ namespace QuantConnect.Algorithm
             if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
 
             resolution = GetResolution(symbol, resolution);
-            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, GetExchangeHours(symbol), GetDataTimeZone(symbol));
+            var marketHours = GetMarketHours(symbol);
+            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours, marketHours.DataTimeZone);
 
             return History(symbol, start, Time, resolution);
         }
@@ -337,7 +338,7 @@ namespace QuantConnect.Algorithm
             }
 
             resolution = GetResolution(symbol, resolution);
-            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, GetExchangeHours(symbol), GetDataTimeZone(symbol));
+            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, GetExchangeHours(symbol), config.DataTimeZone);
             return History<T>(symbol, start, Time, resolution).Memoize();
         }
 
@@ -524,7 +525,7 @@ namespace QuantConnect.Algorithm
             Func<int, BaseData> getLastKnownPriceForPeriods = backwardsPeriods =>
             {
                 var startTimeUtc = _historyRequestFactory
-                    .GetStartTimeAlgoTz(security.Symbol, backwardsPeriods, resolution, security.Exchange.Hours, GetDataTimeZone(security.Symbol))
+                    .GetStartTimeAlgoTz(security.Symbol, backwardsPeriods, resolution, security.Exchange.Hours, dataTimeZone)
                     .ConvertToUtc(_localTimeKeeper.TimeZone);
 
                 var request = new HistoryRequest(
@@ -610,7 +611,7 @@ namespace QuantConnect.Algorithm
 
                     // apply overrides
                     var res = GetResolution(x, resolution);
-                    if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? res : (Resolution?) null;
+                    if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? res : (Resolution?)null;
                     if (extendedMarket.HasValue) request.IncludeExtendedMarketHours = extendedMarket.Value;
 
                     requests.Add(request);
@@ -629,11 +630,16 @@ namespace QuantConnect.Algorithm
             {
                 var res = GetResolution(x, resolution);
                 var exchange = GetExchangeHours(x);
-                var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, GetDataTimeZone(x));
+                var configs = GetMatchingSubscriptions(x, typeof(BaseData), resolution).ToList();
+                if (!configs.Any())
+                {
+                    return Enumerable.Empty<HistoryRequest>();
+                }
+
+                var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, configs.First().DataTimeZone);
                 var end = Time;
 
-                return GetMatchingSubscriptions(x, typeof(BaseData), resolution)
-                    .Select(config => _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res));
+                return configs.Select(config => _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res));
             });
         }
 
@@ -696,12 +702,12 @@ namespace QuantConnect.Algorithm
                 return security.Exchange.Hours;
             }
 
-            return MarketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType).ExchangeHours;
+            return GetMarketHours(symbol).ExchangeHours;
         }
 
-        private DateTimeZone GetDataTimeZone(Symbol symbol)
+        private MarketHoursDatabase.Entry GetMarketHours(Symbol symbol)
         {
-            return MarketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType).DataTimeZone;
+            return MarketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
         }
 
         private Resolution GetResolution(Symbol symbol, Resolution? resolution)
