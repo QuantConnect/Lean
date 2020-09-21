@@ -28,10 +28,10 @@ namespace QuantConnect.Brokerages
         private readonly string _market;
 
         // map Lean symbols to symbol properties
-        private readonly Dictionary<SecurityDatabaseKey, SymbolProperties> _symbolPropertiesMap;
+        private readonly Dictionary<Symbol, SymbolProperties> _symbolPropertiesMap;
 
         // map brokerage symbols to Lean symbols
-        private readonly Dictionary<string, SecurityDatabaseKey> _symbolMap;
+        private readonly Dictionary<string, Symbol> _symbolMap;
 
         /// <summary>
         /// Creates a new instance of the <see cref="SymbolPropertiesDatabaseSymbolMapper"/> class.
@@ -50,11 +50,15 @@ namespace QuantConnect.Brokerages
 
             _symbolPropertiesMap = 
                 symbolPropertiesList
-                    .ToDictionary(x => x.Key, x => x.Value);
+                    .ToDictionary(
+                        x => Symbol.Create(x.Key.Symbol, x.Key.SecurityType, x.Key.Market), 
+                        x => x.Value);
 
             _symbolMap =
-                symbolPropertiesList
-                    .ToDictionary(x => x.Value.BrokerageSymbol, x => x.Key);
+                _symbolPropertiesMap
+                    .ToDictionary(
+                        x => x.Value.BrokerageSymbol,
+                        x => x.Key);
         }
 
         /// <summary>
@@ -74,10 +78,8 @@ namespace QuantConnect.Brokerages
                 throw new ArgumentException($"Invalid market: {symbol.ID.Market}");
             }
 
-            var key = new SecurityDatabaseKey(symbol.ID.Market, symbol.Value, symbol.SecurityType);
-
             SymbolProperties symbolProperties;
-            if (!_symbolPropertiesMap.TryGetValue(key, out symbolProperties) )
+            if (!_symbolPropertiesMap.TryGetValue(symbol, out symbolProperties) )
             {
                 throw new ArgumentException($"Unknown symbol: {symbol.Value}/{symbol.SecurityType}/{symbol.ID.Market}");
             }
@@ -112,18 +114,18 @@ namespace QuantConnect.Brokerages
                 throw new ArgumentException($"Invalid market: {market}");
             }
 
-            SecurityDatabaseKey key;
-            if (!_symbolMap.TryGetValue(brokerageSymbol, out key))
+            Symbol symbol;
+            if (!_symbolMap.TryGetValue(brokerageSymbol, out symbol))
             {
                 throw new ArgumentException($"Unknown brokerage symbol: {brokerageSymbol}");
             }
 
-            if (key.SecurityType != securityType)
+            if (symbol.SecurityType != securityType)
             {
-                throw new ArgumentException($"Invalid security type: {key.SecurityType}");
+                throw new ArgumentException($"Invalid security type: {symbol.SecurityType}");
             }
 
-            return Symbol.Create(key.Symbol, securityType, _market);
+            return symbol;
         }
 
         /// <summary>
@@ -133,14 +135,7 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage supports the symbol</returns>
         public bool IsKnownLeanSymbol(Symbol symbol)
         {
-            if (string.IsNullOrWhiteSpace(symbol?.Value))
-            {
-                return false;
-            }
-
-            var key = new SecurityDatabaseKey(symbol.ID.Market, symbol.Value, symbol.SecurityType);
-
-            return _symbolPropertiesMap.ContainsKey(key);
+            return !string.IsNullOrWhiteSpace(symbol?.Value) && _symbolPropertiesMap.ContainsKey(symbol);
         }
 
         /// <summary>
@@ -155,13 +150,13 @@ namespace QuantConnect.Brokerages
                 throw new ArgumentException($"Invalid brokerage symbol: {brokerageSymbol}");
             }
 
-            SecurityDatabaseKey key;
-            if (!_symbolMap.TryGetValue(brokerageSymbol, out key))
+            Symbol symbol;
+            if (!_symbolMap.TryGetValue(brokerageSymbol, out symbol))
             {
                 throw new ArgumentException($"Unknown brokerage symbol: {brokerageSymbol}");
             }
 
-            return key.SecurityType;
+            return symbol.SecurityType;
         }
 
         /// <summary>
