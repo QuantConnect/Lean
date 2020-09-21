@@ -41,66 +41,66 @@ namespace QuantConnect.Python
         private static PyList _defaultIndexes;
         private static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
 
-        // Re-use MemoryStream to avoid having to reallocate every time per new DataFrame we create
-        private MemoryStream _ms = new MemoryStream();
-        private PandasArrowMemoryAllocator allocator = new PandasArrowMemoryAllocator();
+        // Re-use MemoryStream to avoid having to reallocate every time for every new DataFrame we create
+        //private PandasArrowMemoryAllocator _allocator = new PandasArrowMemoryAllocator();
+        private PandasArrowMemoryAllocator _allocator = new PandasArrowMemoryAllocator();
 
-        private StringArray.Builder tradeBarSymbols = new StringArray.Builder();
-        private TimestampArray.Builder tradeBarTimes = new TimestampArray.Builder();
+        private StringArray.Builder _tradeBarSymbols = new StringArray.Builder();
+        private TimestampArray.Builder _tradeBarTimes = new TimestampArray.Builder();
 
-        private TimestampArray.Builder tradeBarExpiry = new TimestampArray.Builder();
-        private DoubleArray.Builder tradeBarStrike = new DoubleArray.Builder();
-        private StringArray.Builder tradeBarRight = new StringArray.Builder();
+        private TimestampArray.Builder _tradeBarExpiry = new TimestampArray.Builder();
+        private DoubleArray.Builder _tradeBarStrike = new DoubleArray.Builder();
+        private StringArray.Builder _tradeBarRight = new StringArray.Builder();
 
-        private DoubleArray.Builder tradeBarOpen = new DoubleArray.Builder();
-        private DoubleArray.Builder tradeBarHigh = new DoubleArray.Builder();
-        private DoubleArray.Builder tradeBarLow = new DoubleArray.Builder();
-        private DoubleArray.Builder tradeBarClose = new DoubleArray.Builder();
-        private DoubleArray.Builder tradeBarVolume = new DoubleArray.Builder();
+        private DoubleArray.Builder _tradeBarOpen = new DoubleArray.Builder();
+        private DoubleArray.Builder _tradeBarHigh = new DoubleArray.Builder();
+        private DoubleArray.Builder _tradeBarLow = new DoubleArray.Builder();
+        private DoubleArray.Builder _tradeBarClose = new DoubleArray.Builder();
+        private DoubleArray.Builder _tradeBarVolume = new DoubleArray.Builder();
 
-        private StringArray.Builder quoteBarSymbols = new StringArray.Builder();
-        private TimestampArray.Builder quoteBarTimes = new TimestampArray.Builder();
+        private StringArray.Builder _quoteBarSymbols = new StringArray.Builder();
+        private TimestampArray.Builder _quoteBarTimes = new TimestampArray.Builder();
 
-        private TimestampArray.Builder quoteBarExpiry = new TimestampArray.Builder();
-        private DoubleArray.Builder quoteBarStrike = new DoubleArray.Builder();
-        private StringArray.Builder quoteBarRight = new StringArray.Builder();
+        private TimestampArray.Builder _quoteBarExpiry = new TimestampArray.Builder();
+        private DoubleArray.Builder _quoteBarStrike = new DoubleArray.Builder();
+        private StringArray.Builder _quoteBarRight = new StringArray.Builder();
 
-        private DoubleArray.Builder quoteBarBidOpen = new DoubleArray.Builder();
-        private DoubleArray.Builder quoteBarBidHigh = new DoubleArray.Builder();
-        private DoubleArray.Builder quoteBarBidLow = new DoubleArray.Builder();
-        private DoubleArray.Builder quoteBarBidClose = new DoubleArray.Builder();
-        private DoubleArray.Builder quoteBarBidVolume = new DoubleArray.Builder();
-        private DoubleArray.Builder quoteBarAskOpen = new DoubleArray.Builder();
-        private DoubleArray.Builder quoteBarAskHigh = new DoubleArray.Builder();
-        private DoubleArray.Builder quoteBarAskLow = new DoubleArray.Builder();
-        private DoubleArray.Builder quoteBarAskClose = new DoubleArray.Builder();
-        private DoubleArray.Builder quoteBarAskVolume = new DoubleArray.Builder();
+        private DoubleArray.Builder _quoteBarBidOpen = new DoubleArray.Builder();
+        private DoubleArray.Builder _quoteBarBidHigh = new DoubleArray.Builder();
+        private DoubleArray.Builder _quoteBarBidLow = new DoubleArray.Builder();
+        private DoubleArray.Builder _quoteBarBidClose = new DoubleArray.Builder();
+        private DoubleArray.Builder _quoteBarBidVolume = new DoubleArray.Builder();
+        private DoubleArray.Builder _quoteBarAskOpen = new DoubleArray.Builder();
+        private DoubleArray.Builder _quoteBarAskHigh = new DoubleArray.Builder();
+        private DoubleArray.Builder _quoteBarAskLow = new DoubleArray.Builder();
+        private DoubleArray.Builder _quoteBarAskClose = new DoubleArray.Builder();
+        private DoubleArray.Builder _quoteBarAskVolume = new DoubleArray.Builder();
 
-        private StringArray.Builder tickSymbols = new StringArray.Builder();
-        private TimestampArray.Builder tickTimes = new TimestampArray.Builder();
+        private StringArray.Builder _tickSymbols = new StringArray.Builder();
+        private TimestampArray.Builder _tickTimes = new TimestampArray.Builder();
 
-        private TimestampArray.Builder tickExpiry = new TimestampArray.Builder();
-        private DoubleArray.Builder tickStrike = new DoubleArray.Builder();
-        private StringArray.Builder tickRight = new StringArray.Builder();
+        private TimestampArray.Builder _tickExpiry = new TimestampArray.Builder();
+        private DoubleArray.Builder _tickStrike = new DoubleArray.Builder();
+        private StringArray.Builder _tickRight = new StringArray.Builder();
 
-        private StringArray.Builder tickExchange = new StringArray.Builder();
-        private BooleanArray.Builder tickSuspicious = new BooleanArray.Builder();
+        private StringArray.Builder _tickExchange = new StringArray.Builder();
+        private BooleanArray.Builder _tickSuspicious = new BooleanArray.Builder();
 
-        private DoubleArray.Builder tickValue = new DoubleArray.Builder();
-        private DoubleArray.Builder tickQuantity = new DoubleArray.Builder();
-        private DoubleArray.Builder tickBidPrice = new DoubleArray.Builder();
-        private DoubleArray.Builder tickBidSize = new DoubleArray.Builder();
-        private DoubleArray.Builder tickAskPrice = new DoubleArray.Builder();
-        private DoubleArray.Builder tickAskSize = new DoubleArray.Builder();
+        private DoubleArray.Builder _tickValue = new DoubleArray.Builder();
+        private DoubleArray.Builder _tickQuantity = new DoubleArray.Builder();
+        private DoubleArray.Builder _tickBidPrice = new DoubleArray.Builder();
+        private DoubleArray.Builder _tickBidSize = new DoubleArray.Builder();
+        private DoubleArray.Builder _tickAskPrice = new DoubleArray.Builder();
+        private DoubleArray.Builder _tickAskSize = new DoubleArray.Builder();
 
-        private TimestampArray.Builder openInterestTimes = new TimestampArray.Builder();
-        private StringArray.Builder openInterestSymbols = new StringArray.Builder();
+        private TimestampArray.Builder _openInterestTimes = new TimestampArray.Builder();
+        private StringArray.Builder _openInterestSymbols = new StringArray.Builder();
 
-        private TimestampArray.Builder openInterestExpiry = new TimestampArray.Builder();
-        private DoubleArray.Builder openInterestStrike = new DoubleArray.Builder();
-        private StringArray.Builder openInterestRight = new StringArray.Builder();
+        private TimestampArray.Builder _openInterestExpiry = new TimestampArray.Builder();
+        private DoubleArray.Builder _openInterestStrike = new DoubleArray.Builder();
+        private StringArray.Builder _openInterestRight = new StringArray.Builder();
 
-        private DoubleArray.Builder openInterestValue = new DoubleArray.Builder();
+        private DoubleArray.Builder _openInterestValue = new DoubleArray.Builder();
 
         private Dictionary<Type, List<MemberInfo>> _customDataMembers = new Dictionary<Type, List<MemberInfo>>();
         private Dictionary<string, KeyValuePair<Type, IArrowArrayBuilder>> _customDataBuilders = new Dictionary<string, KeyValuePair<Type, IArrowArrayBuilder>>();
@@ -108,13 +108,6 @@ namespace QuantConnect.Python
         private List<string> _customDataSymbols = new List<string>();
         private List<DateTimeOffset> _customDataTimes = new List<DateTimeOffset>();
         private Dictionary<string, List<object>> _customDataObjects = new Dictionary<string, List<object>>();
-
-        private bool hasSuspicious;
-        private bool hasExpiry;
-        private bool hasStrike;
-        private bool hasOptionRight;
-        private bool tickHasTrades;
-        private bool tickHasQuotes;
 
         /// <summary>
         /// Creates an instance of <see cref="PandasConverter"/>.
@@ -396,10 +389,18 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
         public PyObject GetDataFrame(IEnumerable<Slice> data)
         {
+            // Cleans up any resources we've used to allow for the next generation of DataFrames
+            // to be created with potentially zero allocations.
             ClearBuilders();
+            _allocator.Free();
 
             var hasTrades = false;
             var hasQuotes = false;
+            var hasSuspicious = false;
+            var hasExpiry = false;
+            var hasOption = false;
+            var tickHasTrades = false;
+            var tickHasQuotes = false;
 
             foreach (var slice in data)
             {
@@ -428,35 +429,34 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                     if (tradeBar != null)
                     {
                         hasTrades = true;
-                        tradeBarOpen.Append((double) tradeBar.Open);
-                        tradeBarHigh.Append((double) tradeBar.High);
-                        tradeBarLow.Append((double) tradeBar.Low);
-                        tradeBarClose.Append((double) tradeBar.Close);
-                        tradeBarVolume.Append((double) tradeBar.Volume);
+                        _tradeBarOpen.Append((double) tradeBar.Open);
+                        _tradeBarHigh.Append((double) tradeBar.High);
+                        _tradeBarLow.Append((double) tradeBar.Low);
+                        _tradeBarClose.Append((double) tradeBar.Close);
+                        _tradeBarVolume.Append((double) tradeBar.Volume);
 
-                        tradeBarSymbols.Append(sid);
-                        tradeBarTimes.Append(new DateTimeOffset(tradeBar.EndTime.Ticks, TimeSpan.Zero));
+                        _tradeBarSymbols.Append(sid);
+                        _tradeBarTimes.Append(new DateTimeOffset(tradeBar.EndTime.Ticks, TimeSpan.Zero));
 
                         if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
                         {
                             hasExpiry = true;
-                            tradeBarExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
+                            _tradeBarExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
                         }
                         else
                         {
-                            tradeBarExpiry.AppendNull();
+                            _tradeBarExpiry.AppendNull();
                         }
                         if (symbol.SecurityType == SecurityType.Option)
                         {
-                            hasStrike = true;
-                            hasOptionRight = true;
-                            tradeBarStrike.Append((double) symbol.ID.StrikePrice);
-                            tradeBarRight.Append(symbol.ID.OptionRight.ToString());
+                            hasOption = true;
+                            _tradeBarStrike.Append((double) symbol.ID.StrikePrice);
+                            _tradeBarRight.Append(symbol.ID.OptionRight.ToString());
                         }
                         else
                         {
-                            tradeBarStrike.AppendNull();
-                            tradeBarRight.AppendNull();
+                            _tradeBarStrike.AppendNull();
+                            _tradeBarRight.AppendNull();
                         }
                     }
 
@@ -466,96 +466,94 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         // when no TradeBar exists in this timestep.
                         if (tradeBar == null)
                         {
-                            tradeBarOpen.Append((double) quoteBar.Open);
-                            tradeBarHigh.Append((double) quoteBar.High);
-                            tradeBarLow.Append((double) quoteBar.Low);
-                            tradeBarClose.Append((double) quoteBar.Close);
-                            tradeBarVolume.AppendNull();
+                            _tradeBarOpen.Append((double) quoteBar.Open);
+                            _tradeBarHigh.Append((double) quoteBar.High);
+                            _tradeBarLow.Append((double) quoteBar.Low);
+                            _tradeBarClose.Append((double) quoteBar.Close);
+                            _tradeBarVolume.AppendNull();
 
-                            tradeBarSymbols.Append(sid);
-                            tradeBarTimes.Append(new DateTimeOffset(quoteBar.EndTime.Ticks, TimeSpan.Zero));
+                            _tradeBarSymbols.Append(sid);
+                            _tradeBarTimes.Append(new DateTimeOffset(quoteBar.EndTime.Ticks, TimeSpan.Zero));
 
                             if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
                             {
                                 hasExpiry = true;
-                                tradeBarExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
+                                _tradeBarExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
                             }
                             else
                             {
-                                tradeBarExpiry.AppendNull();
+                                _tradeBarExpiry.AppendNull();
                             }
                             if (symbol.SecurityType == SecurityType.Option)
                             {
-                                hasStrike = true;
-                                hasOptionRight = true;
-                                tradeBarStrike.Append((double) symbol.ID.StrikePrice);
-                                tradeBarRight.Append(symbol.ID.OptionRight.ToString());
+                                hasOption = true;
+                                _tradeBarStrike.Append((double) symbol.ID.StrikePrice);
+                                _tradeBarRight.Append(symbol.ID.OptionRight.ToString());
                             }
                             else
                             {
-                                tradeBarStrike.AppendNull();
-                                tradeBarRight.AppendNull();
+                                _tradeBarStrike.AppendNull();
+                                _tradeBarRight.AppendNull();
                             }
                         }
                         if (quoteBar.Bid != null)
                         {
-                            quoteBarBidOpen.Append((double) quoteBar.Bid.Open);
-                            quoteBarBidHigh.Append((double) quoteBar.Bid.High);
-                            quoteBarBidLow.Append((double) quoteBar.Bid.Low);
-                            quoteBarBidClose.Append((double) quoteBar.Bid.Close);
-                            quoteBarBidVolume.Append((double) quoteBar.LastBidSize);
+                            _quoteBarBidOpen.Append((double) quoteBar.Bid.Open);
+                            _quoteBarBidHigh.Append((double) quoteBar.Bid.High);
+                            _quoteBarBidLow.Append((double) quoteBar.Bid.Low);
+                            _quoteBarBidClose.Append((double) quoteBar.Bid.Close);
+                            _quoteBarBidVolume.Append((double) quoteBar.LastBidSize);
                         }
                         else
                         {
-                            quoteBarBidOpen.AppendNull();
-                            quoteBarBidHigh.AppendNull();
-                            quoteBarBidLow.AppendNull();
-                            quoteBarBidClose.AppendNull();
-                            quoteBarBidVolume.AppendNull();
+                            _quoteBarBidOpen.AppendNull();
+                            _quoteBarBidHigh.AppendNull();
+                            _quoteBarBidLow.AppendNull();
+                            _quoteBarBidClose.AppendNull();
+                            _quoteBarBidVolume.AppendNull();
                         }
 
                         if (quoteBar.Ask != null)
                         {
-                            quoteBarAskOpen.Append((double) quoteBar.Ask.Open);
-                            quoteBarAskHigh.Append((double) quoteBar.Ask.High);
-                            quoteBarAskLow.Append((double) quoteBar.Ask.Low);
-                            quoteBarAskClose.Append((double) quoteBar.Ask.Close);
-                            quoteBarAskVolume.Append((double) quoteBar.LastAskSize);
+                            _quoteBarAskOpen.Append((double) quoteBar.Ask.Open);
+                            _quoteBarAskHigh.Append((double) quoteBar.Ask.High);
+                            _quoteBarAskLow.Append((double) quoteBar.Ask.Low);
+                            _quoteBarAskClose.Append((double) quoteBar.Ask.Close);
+                            _quoteBarAskVolume.Append((double) quoteBar.LastAskSize);
                         }
                         else
                         {
-                            quoteBarAskOpen.AppendNull();
-                            quoteBarAskHigh.AppendNull();
-                            quoteBarAskLow.AppendNull();
-                            quoteBarAskClose.AppendNull();
-                            quoteBarAskVolume.AppendNull();
+                            _quoteBarAskOpen.AppendNull();
+                            _quoteBarAskHigh.AppendNull();
+                            _quoteBarAskLow.AppendNull();
+                            _quoteBarAskClose.AppendNull();
+                            _quoteBarAskVolume.AppendNull();
                         }
 
                         hasQuotes = true;
 
-                        quoteBarSymbols.Append(quoteBar.Symbol.ID.ToString());
-                        quoteBarTimes.Append(new DateTimeOffset(quoteBar.EndTime.Ticks, TimeSpan.Zero));
+                        _quoteBarSymbols.Append(quoteBar.Symbol.ID.ToString());
+                        _quoteBarTimes.Append(new DateTimeOffset(quoteBar.EndTime.Ticks, TimeSpan.Zero));
 
                         if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
                         {
                             hasExpiry = true;
-                            quoteBarExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
+                            _quoteBarExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
                         }
                         else
                         {
-                            quoteBarExpiry.AppendNull();
+                            _quoteBarExpiry.AppendNull();
                         }
                         if (symbol.SecurityType == SecurityType.Option)
                         {
-                            hasStrike = true;
-                            hasOptionRight = true;
-                            quoteBarStrike.Append((double) symbol.ID.StrikePrice);
-                            quoteBarRight.Append(symbol.ID.OptionRight.ToString());
+                            hasOption = true;
+                            _quoteBarStrike.Append((double) symbol.ID.StrikePrice);
+                            _quoteBarRight.Append(symbol.ID.OptionRight.ToString());
                         }
                         else
                         {
-                            quoteBarStrike.AppendNull();
-                            quoteBarRight.AppendNull();
+                            _quoteBarStrike.AppendNull();
+                            _quoteBarRight.AppendNull();
                         }
                     }
 
@@ -565,30 +563,29 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         {
                             if (tick.TickType == TickType.Trade || tick.TickType == TickType.Quote)
                             {
-                                tickSymbols.Append(sid);
-                                tickTimes.Append(new DateTimeOffset(tick.EndTime.Ticks, TimeSpan.Zero));
-                                tickValue.Append((double) tick.Value);
+                                _tickSymbols.Append(sid);
+                                _tickTimes.Append(new DateTimeOffset(tick.EndTime.Ticks, TimeSpan.Zero));
+                                _tickValue.Append((double) tick.Value);
 
                                 if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
                                 {
                                     hasExpiry = true;
-                                    tickExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
+                                    _tickExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
                                 }
                                 else
                                 {
-                                    tickExpiry.AppendNull();
+                                    _tickExpiry.AppendNull();
                                 }
                                 if (symbol.SecurityType == SecurityType.Option)
                                 {
-                                    hasStrike = true;
-                                    hasOptionRight = true;
-                                    tickStrike.Append((double) symbol.ID.StrikePrice);
-                                    tickRight.Append(symbol.ID.OptionRight.ToString());
+                                    hasOption = true;
+                                    _tickStrike.Append((double) symbol.ID.StrikePrice);
+                                    _tickRight.Append(symbol.ID.OptionRight.ToString());
                                 }
                                 else
                                 {
-                                    tickStrike.AppendNull();
-                                    tickRight.AppendNull();
+                                    _tickStrike.AppendNull();
+                                    _tickRight.AppendNull();
                                 }
                             }
 
@@ -596,61 +593,60 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             {
                                 tickHasTrades = true;
 
-                                tickQuantity.Append((double) tick.Quantity);
+                                _tickQuantity.Append((double) tick.Quantity);
 
                                 if (tick.Suspicious && !hasSuspicious)
                                 {
                                     hasSuspicious = true;
                                 }
 
-                                tickSuspicious.Append(tick.Suspicious);
-                                tickExchange.Append(tick.Exchange);
+                                _tickSuspicious.Append(tick.Suspicious);
+                                _tickExchange.Append(tick.Exchange);
 
-                                tickBidPrice.AppendNull();
-                                tickBidSize.AppendNull();
-                                tickAskPrice.AppendNull();
-                                tickAskSize.AppendNull();
+                                _tickBidPrice.AppendNull();
+                                _tickBidSize.AppendNull();
+                                _tickAskPrice.AppendNull();
+                                _tickAskSize.AppendNull();
                             }
                             else if (tick.TickType == TickType.Quote)
                             {
                                 tickHasQuotes = true;
 
-                                tickQuantity.AppendNull();
+                                _tickQuantity.AppendNull();
 
-                                tickSuspicious.Append(tick.Suspicious);
-                                tickExchange.Append(tick.Exchange);
+                                _tickSuspicious.Append(tick.Suspicious);
+                                _tickExchange.Append(tick.Exchange);
 
-                                tickBidPrice.Append((double) tick.BidPrice);
-                                tickBidSize.Append((double) tick.BidSize);
-                                tickAskPrice.Append((double) tick.AskPrice);
-                                tickAskSize.Append((double) tick.AskSize);
+                                _tickBidPrice.Append((double) tick.BidPrice);
+                                _tickBidSize.Append((double) tick.BidSize);
+                                _tickAskPrice.Append((double) tick.AskPrice);
+                                _tickAskSize.Append((double) tick.AskSize);
                             }
                             else
                             {
-                                openInterestTimes.Append(new DateTimeOffset(tick.EndTime.Ticks, TimeSpan.Zero));
-                                openInterestSymbols.Append(sid);
-                                openInterestValue.Append((double)tick.Value);
+                                _openInterestTimes.Append(new DateTimeOffset(tick.EndTime.Ticks, TimeSpan.Zero));
+                                _openInterestSymbols.Append(sid);
+                                _openInterestValue.Append((double)tick.Value);
 
                                 if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
                                 {
                                     hasExpiry = true;
-                                    openInterestExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
+                                    _openInterestExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
                                 }
                                 else
                                 {
-                                    openInterestExpiry.AppendNull();
+                                    _openInterestExpiry.AppendNull();
                                 }
                                 if (symbol.SecurityType == SecurityType.Option)
                                 {
-                                    hasStrike = true;
-                                    hasOptionRight = true;
-                                    openInterestStrike.Append((double) symbol.ID.StrikePrice);
-                                    openInterestRight.Append(symbol.ID.OptionRight.ToString());
+                                    hasOption = true;
+                                    _openInterestStrike.Append((double) symbol.ID.StrikePrice);
+                                    _openInterestRight.Append(symbol.ID.OptionRight.ToString());
                                 }
                                 else
                                 {
-                                    openInterestStrike.AppendNull();
-                                    openInterestRight.AppendNull();
+                                    _openInterestStrike.AppendNull();
+                                    _openInterestRight.AppendNull();
                                 }
                             }
                         }
@@ -767,115 +763,115 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
             var recordBatches = new List<RecordBatch>();
 
-            if (tradeBarTimes.Length != 0)
+            if (_tradeBarTimes.Length != 0)
             {
-                var tradeBarRecordBatchBuilder = new RecordBatch.Builder(allocator);
+                var tradeBarRecordBatchBuilder = new RecordBatch.Builder(_allocator);
 
-                tradeBarRecordBatchBuilder.Append("time", false, tradeBarTimes.Build(allocator));
-                tradeBarRecordBatchBuilder.Append("symbol", false, tradeBarSymbols.Build(allocator));
-                tradeBarRecordBatchBuilder.Append("open", false, tradeBarOpen.Build(allocator));
-                tradeBarRecordBatchBuilder.Append("high", false, tradeBarHigh.Build(allocator));
-                tradeBarRecordBatchBuilder.Append("low", false, tradeBarLow.Build(allocator));
-                tradeBarRecordBatchBuilder.Append("close", false, tradeBarClose.Build(allocator));
-                tradeBarRecordBatchBuilder.Append("volume", true, tradeBarVolume.Build(allocator));
+                tradeBarRecordBatchBuilder.Append("time", false, _tradeBarTimes.Build(_allocator));
+                tradeBarRecordBatchBuilder.Append("symbol", false, _tradeBarSymbols.Build(_allocator));
+                tradeBarRecordBatchBuilder.Append("open", false, _tradeBarOpen.Build(_allocator));
+                tradeBarRecordBatchBuilder.Append("high", false, _tradeBarHigh.Build(_allocator));
+                tradeBarRecordBatchBuilder.Append("low", false, _tradeBarLow.Build(_allocator));
+                tradeBarRecordBatchBuilder.Append("close", false, _tradeBarClose.Build(_allocator));
+                tradeBarRecordBatchBuilder.Append("volume", true, _tradeBarVolume.Build(_allocator));
                 if (hasExpiry)
                 {
-                    tradeBarRecordBatchBuilder.Append("expiry", true, tradeBarExpiry.Build(allocator));
+                    tradeBarRecordBatchBuilder.Append("expiry", true, _tradeBarExpiry.Build(_allocator));
                     hasExpiry = true;
                 }
-                if (hasStrike)
+                if (hasOption)
                 {
-                    tradeBarRecordBatchBuilder.Append("strike", true, tradeBarStrike.Build(allocator));
-                    tradeBarRecordBatchBuilder.Append("type", true, tradeBarRight.Build(allocator));
+                    tradeBarRecordBatchBuilder.Append("strike", true, _tradeBarStrike.Build(_allocator));
+                    tradeBarRecordBatchBuilder.Append("type", true, _tradeBarRight.Build(_allocator));
                 }
 
                 recordBatches.Add(tradeBarRecordBatchBuilder.Build());
             }
 
-            if (quoteBarTimes.Length != 0)
+            if (_quoteBarTimes.Length != 0)
             {
-                var quoteBarRecordBatchBuilder = new RecordBatch.Builder(allocator);
+                var quoteBarRecordBatchBuilder = new RecordBatch.Builder(_allocator);
 
-                quoteBarRecordBatchBuilder.Append("time", false, quoteBarTimes.Build(allocator));
-                quoteBarRecordBatchBuilder.Append("symbol", false, quoteBarSymbols.Build(allocator));
-                quoteBarRecordBatchBuilder.Append("bidopen", true, quoteBarBidOpen.Build(allocator));
-                quoteBarRecordBatchBuilder.Append("bidhigh", true, quoteBarBidHigh.Build(allocator));
-                quoteBarRecordBatchBuilder.Append("bidlow", true, quoteBarBidLow.Build(allocator));
-                quoteBarRecordBatchBuilder.Append("bidclose", true, quoteBarBidClose.Build(allocator));
-                quoteBarRecordBatchBuilder.Append("bidsize", true, quoteBarBidVolume.Build(allocator));
-                quoteBarRecordBatchBuilder.Append("askopen", true, quoteBarAskOpen.Build(allocator));
-                quoteBarRecordBatchBuilder.Append("askhigh", true, quoteBarAskHigh.Build(allocator));
-                quoteBarRecordBatchBuilder.Append("asklow", true, quoteBarAskLow.Build(allocator));
-                quoteBarRecordBatchBuilder.Append("askclose", true, quoteBarAskClose.Build(allocator));
-                quoteBarRecordBatchBuilder.Append("asksize", true, quoteBarAskVolume.Build(allocator));
+                quoteBarRecordBatchBuilder.Append("time", false, _quoteBarTimes.Build(_allocator));
+                quoteBarRecordBatchBuilder.Append("symbol", false, _quoteBarSymbols.Build(_allocator));
+                quoteBarRecordBatchBuilder.Append("bidopen", true, _quoteBarBidOpen.Build(_allocator));
+                quoteBarRecordBatchBuilder.Append("bidhigh", true, _quoteBarBidHigh.Build(_allocator));
+                quoteBarRecordBatchBuilder.Append("bidlow", true, _quoteBarBidLow.Build(_allocator));
+                quoteBarRecordBatchBuilder.Append("bidclose", true, _quoteBarBidClose.Build(_allocator));
+                quoteBarRecordBatchBuilder.Append("bidsize", true, _quoteBarBidVolume.Build(_allocator));
+                quoteBarRecordBatchBuilder.Append("askopen", true, _quoteBarAskOpen.Build(_allocator));
+                quoteBarRecordBatchBuilder.Append("askhigh", true, _quoteBarAskHigh.Build(_allocator));
+                quoteBarRecordBatchBuilder.Append("asklow", true, _quoteBarAskLow.Build(_allocator));
+                quoteBarRecordBatchBuilder.Append("askclose", true, _quoteBarAskClose.Build(_allocator));
+                quoteBarRecordBatchBuilder.Append("asksize", true, _quoteBarAskVolume.Build(_allocator));
                 if (hasExpiry)
                 {
-                    quoteBarRecordBatchBuilder.Append("expiry", true, quoteBarExpiry.Build(allocator));
+                    quoteBarRecordBatchBuilder.Append("expiry", true, _quoteBarExpiry.Build(_allocator));
                     hasExpiry = true;
                 }
-                if (hasStrike)
+                if (hasOption)
                 {
-                    quoteBarRecordBatchBuilder.Append("strike", true, quoteBarStrike.Build(allocator));
-                    quoteBarRecordBatchBuilder.Append("type", true, quoteBarRight.Build(allocator));
+                    quoteBarRecordBatchBuilder.Append("strike", true, _quoteBarStrike.Build(_allocator));
+                    quoteBarRecordBatchBuilder.Append("type", true, _quoteBarRight.Build(_allocator));
                 }
 
                 recordBatches.Add(quoteBarRecordBatchBuilder.Build());
             }
 
-            if (tickTimes.Length != 0)
+            if (_tickTimes.Length != 0)
             {
-                var tickRecordBatchBuilder = new RecordBatch.Builder(allocator);
+                var tickRecordBatchBuilder = new RecordBatch.Builder(_allocator);
 
-                tickRecordBatchBuilder.Append("time", false, tickTimes.Build(allocator));
-                tickRecordBatchBuilder.Append("symbol", false, tickSymbols.Build(allocator));
-                tickRecordBatchBuilder.Append("lastprice", false, tickValue.Build(allocator));
-                tickRecordBatchBuilder.Append("exchange", true, tickExchange.Build(allocator));
+                tickRecordBatchBuilder.Append("time", false, _tickTimes.Build(_allocator));
+                tickRecordBatchBuilder.Append("symbol", false, _tickSymbols.Build(_allocator));
+                tickRecordBatchBuilder.Append("lastprice", false, _tickValue.Build(_allocator));
+                tickRecordBatchBuilder.Append("exchange", true, _tickExchange.Build(_allocator));
 
                 if (hasSuspicious)
                 {
-                    tickRecordBatchBuilder.Append("suspicious", true, tickSuspicious.Build(allocator));
+                    tickRecordBatchBuilder.Append("suspicious", true, _tickSuspicious.Build(_allocator));
                 }
                 if (tickHasTrades)
                 {
-                    tickRecordBatchBuilder.Append("quantity", tickHasQuotes, tickQuantity.Build(allocator));
+                    tickRecordBatchBuilder.Append("quantity", tickHasQuotes, _tickQuantity.Build(_allocator));
                 }
                 if (tickHasQuotes)
                 {
-                    tickRecordBatchBuilder.Append("bidprice", tickHasTrades, tickBidPrice.Build(allocator));
-                    tickRecordBatchBuilder.Append("bidsize", tickHasTrades, tickBidSize.Build(allocator));
-                    tickRecordBatchBuilder.Append("askprice", tickHasTrades, tickAskPrice.Build(allocator));
-                    tickRecordBatchBuilder.Append("asksize", tickHasTrades, tickAskSize.Build(allocator));
+                    tickRecordBatchBuilder.Append("bidprice", tickHasTrades, _tickBidPrice.Build(_allocator));
+                    tickRecordBatchBuilder.Append("bidsize", tickHasTrades, _tickBidSize.Build(_allocator));
+                    tickRecordBatchBuilder.Append("askprice", tickHasTrades, _tickAskPrice.Build(_allocator));
+                    tickRecordBatchBuilder.Append("asksize", tickHasTrades, _tickAskSize.Build(_allocator));
                 }
 
                 if (hasExpiry)
                 {
-                    tickRecordBatchBuilder.Append("expiry", true, tickExpiry.Build(allocator));
+                    tickRecordBatchBuilder.Append("expiry", true, _tickExpiry.Build(_allocator));
                     hasExpiry = true;
                 }
-                if (hasStrike)
+                if (hasOption)
                 {
-                    tickRecordBatchBuilder.Append("strike", true, tickStrike.Build(allocator));
-                    tickRecordBatchBuilder.Append("type", true, tickRight.Build(allocator));
+                    tickRecordBatchBuilder.Append("strike", true, _tickStrike.Build(_allocator));
+                    tickRecordBatchBuilder.Append("type", true, _tickRight.Build(_allocator));
                 }
 
                 recordBatches.Add(tickRecordBatchBuilder.Build());
             }
 
-            if (openInterestTimes.Length != 0)
+            if (_openInterestTimes.Length != 0)
             {
-                var openInterestBatchBuilder = new RecordBatch.Builder(allocator);
+                var openInterestBatchBuilder = new RecordBatch.Builder(_allocator);
 
-                openInterestBatchBuilder.Append("time", false, openInterestTimes.Build(allocator));
-                openInterestBatchBuilder.Append("symbol", false, openInterestSymbols.Build(allocator));
-                openInterestBatchBuilder.Append("openinterest", false, openInterestValue.Build(allocator));
+                openInterestBatchBuilder.Append("time", false, _openInterestTimes.Build(_allocator));
+                openInterestBatchBuilder.Append("symbol", false, _openInterestSymbols.Build(_allocator));
+                openInterestBatchBuilder.Append("openinterest", false, _openInterestValue.Build(_allocator));
                 if (hasExpiry)
                 {
-                    openInterestBatchBuilder.Append("expiry", true, openInterestExpiry.Build(allocator));
+                    openInterestBatchBuilder.Append("expiry", true, _openInterestExpiry.Build(_allocator));
                 }
-                if (hasStrike)
+                if (hasOption)
                 {
-                    openInterestBatchBuilder.Append("strike", true, openInterestStrike.Build(allocator));
-                    openInterestBatchBuilder.Append("type", true, openInterestRight.Build(allocator));
+                    openInterestBatchBuilder.Append("strike", true, _openInterestStrike.Build(_allocator));
+                    openInterestBatchBuilder.Append("type", true, _openInterestRight.Build(_allocator));
                 }
 
                 recordBatches.Add(openInterestBatchBuilder.Build());
@@ -884,216 +880,231 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             var hasCustom = false;
             if (_customDataSymbols.Count != 0)
             {
-                var customDataRecordBatchBuilder = new RecordBatch.Builder(allocator);
+                var customDataRecordBatchBuilder = new RecordBatch.Builder(_allocator);
 
                 foreach (var kvp in _customDataBuilders)
                 {
                     var columnName = kvp.Key;
                     var memberType = kvp.Value.Key;
 
-                    AppendToRecordBatch(customDataRecordBatchBuilder, memberType, columnName, kvp.Value.Value, allocator);
+                    AppendToRecordBatch(customDataRecordBatchBuilder, memberType, columnName, kvp.Value.Value, _allocator);
                 }
 
-                customDataRecordBatchBuilder.Append("time", false, action => action.Timestamp(builder => builder.AppendRange(_customDataTimes).Build(allocator)));
-                customDataRecordBatchBuilder.Append("symbol", false, action => action.String(builder => builder.AppendRange(_customDataSymbols).Build(allocator)));
+                customDataRecordBatchBuilder.Append("time", false, action => action.Timestamp(builder => builder.AppendRange(_customDataTimes).Build(_allocator)));
+                customDataRecordBatchBuilder.Append("symbol", false, action => action.String(builder => builder.AppendRange(_customDataSymbols).Build(_allocator)));
 
                 hasCustom = true;
                 recordBatches.Add(customDataRecordBatchBuilder.Build());
             }
 
-            using (Py.GIL())
+            if (recordBatches.Count == 0)
             {
-                if (recordBatches.Count == 0)
+                using (Py.GIL())
                 {
                     return _pandas.DataFrame();
                 }
+            }
 
-                var dataFrames = new List<dynamic>();
-                var addExpiry = hasExpiry && (hasTrades || hasQuotes || tickHasTrades || tickHasQuotes);
-                var addStrike = hasStrike && (hasTrades || hasQuotes || tickHasTrades || tickHasQuotes);
-                var i = 0;
+            var memoryStreams = new List<MemoryStream>();
+            var arrowBuffers = new List<ArrowBuffer>();
+            var addExpiry = hasExpiry && (hasTrades || hasQuotes || tickHasTrades || tickHasQuotes);
+            var addOption = hasOption && (hasTrades || hasQuotes || tickHasTrades || tickHasQuotes);
+            var i = 0;
 
-                foreach (var recordBatch in recordBatches)
+            foreach (var recordBatch in recordBatches)
+            {
+                var ms = new MemoryStream();
+                using (var writer = new ArrowStreamWriter(ms, recordBatch.Schema))
                 {
-                    _ms.SetLength(0);
-                    using (var writer = new ArrowStreamWriter(_ms, recordBatch.Schema, true))
+                    writer.WriteRecordBatchAsync(recordBatch).SynchronouslyAwaitTask();
+                    var memory = new Memory<byte>(ms.GetBuffer());
+                    var buffer = new ArrowBuffer(memory);
+                    arrowBuffers.Add(buffer);
+                    memoryStreams.Add(ms);
+                    recordBatch.Dispose();
+                }
+            }
+
+            unsafe
+            {
+                using (Py.GIL())
+                {
+                    var dataFrames = new List<dynamic>();
+                    foreach (var arrowBuffer in arrowBuffers)
                     {
-                        writer.WriteRecordBatchAsync(recordBatch).SynchronouslyAwaitTask();
-                        var memory = new Memory<byte>(_ms.GetBuffer());
-                        using (var arrowBuffer = new ArrowBuffer(memory.Slice(0, (int)_ms.Length)))
+                        var pinned = arrowBuffer.Memory.Pin();
+
+                        dynamic buf = _pa.foreign_buffer(
+                            (long) new IntPtr(pinned.Pointer),
+                            arrowBuffer.Length
+                        );
+                        dynamic df = _pa.ipc.open_stream(buf).read_pandas(self_destruct: true, ignore_metadata: true);
+
+                        var timeIdx = 1;
+
+                        // If open interest appears by itself, we want to get rid of the
+                        // expiry column to maintain backwards compatibility.
+                        if (addExpiry)
                         {
-                            unsafe
-                            {
-                                var pinned = arrowBuffer.Memory.Pin();
-
-                                dynamic buf = _pa.foreign_buffer(
-                                    (long) new IntPtr(pinned.Pointer),
-                                    arrowBuffer.Length
-                                );
-                                dynamic df = _pa.ipc.open_stream(buf).read_pandas(
-                                    split_blocks: true,
-                                    self_destruct: true
-                                );
-
-                                var timeIdx = 1;
-
-                                // If open interest appears by itself, we want to get rid of the
-                                // expiry column to maintain backwards compatibility.
-                                if (addExpiry)
-                                {
-                                    df.set_index("expiry", inplace: true);
-                                    df = df.tz_localize(null, copy: false);
-                                    timeIdx++;
-                                }
-                                else if (hasExpiry)
-                                {
-                                    df.drop(columns: new[] { "expiry" }, inplace: true);
-                                }
-
-                                if (addStrike)
-                                {
-                                    df["strike"] = df["strike"].fillna("");
-                                    df["type"] = df["type"].fillna("");
-                                    df.set_index(new PyList(new[] { new PyString("strike"), new PyString("type") }), append: hasExpiry, inplace: true);
-                                    timeIdx += 2;
-                                }
-                                else if (hasStrike)
-                                {
-                                    df.drop(columns: new PyList(new[] { new PyString("strike"), new PyString("type") }), inplace: true);
-                                }
-
-                                // Let's include the objects that were left out before
-                                // as part of the custom data DataFrame using the existing index.
-                                // Custom data is added last, so we match the last entry to detect custom data
-                                // instead of adding it all to all DataFrames we create.
-                                if (hasCustom && ++i == recordBatches.Count)
-                                {
-                                    var dict = new PyDict();
-                                    foreach (var kvp in _customDataObjects)
-                                    {
-                                        var columnName = kvp.Key;
-                                        var values = kvp.Value;
-                                        var list = new PyList(values.Select(x => x.ToPython()).ToArray());
-
-                                        dict.SetItem(columnName, list);
-                                    }
-
-                                    df = df.join(_pandas.DataFrame(dict, index: df.index), how: "outer");
-                                }
-
-                                df.set_index(_defaultIndexes, append: addExpiry || addStrike, inplace: true);
-                                dataFrames.Add(df.tz_localize(null, level: timeIdx, copy: false));
-                            }
+                            df.set_index("expiry", inplace: true);
+                            df = df.tz_localize(null, copy: false);
+                            timeIdx++;
                         }
+                        else if (hasExpiry)
+                        {
+                            df.drop(columns: new[] { "expiry" }, inplace: true);
+                        }
+
+                        if (addOption)
+                        {
+                            df["strike"] = df["strike"].fillna("");
+                            df["type"] = df["type"].fillna("");
+                            df.set_index(new PyList(new[] { new PyString("strike"), new PyString("type") }), append: hasExpiry, inplace: true);
+                            timeIdx += 2;
+                        }
+                        else if (hasOption)
+                        {
+                            df.drop(columns: new PyList(new[] { new PyString("strike"), new PyString("type") }), inplace: true);
+                        }
+
+                        // Let's include the objects that were left out before
+                        // as part of the custom data DataFrame using the existing index.
+                        // Custom data is added last, so we match the last entry to detect custom data
+                        // instead of adding it all to all DataFrames we create.
+                        if (hasCustom && ++i == recordBatches.Count)
+                        {
+                            var dict = new PyDict();
+                            foreach (var kvp in _customDataObjects)
+                            {
+                                var columnName = kvp.Key;
+                                var values = kvp.Value;
+                                var list = new PyList(values.Select(x => x.ToPython()).ToArray());
+
+                                dict.SetItem(columnName, list);
+                            }
+
+                            df = df.join(_pandas.DataFrame(dict, index: df.index), how: "outer");
+                        }
+
+                        df.set_index(_defaultIndexes, append: addExpiry || addOption, inplace: true);
+                        dataFrames.Add(df.tz_localize(null, level: timeIdx, copy: false));
+
+                        // Cleans up the memory left behind, otherwise we leak memory from Python
+                        df.drop(df.index, inplace: true);
+
+                        buf = null;
+                        df = null;
+
+                        arrowBuffer.Dispose();
                     }
-                }
-
-                dynamic final_df = dataFrames[0];
-                if (dataFrames.Count > 1)
-                {
-                    final_df = final_df.join(dataFrames.Skip(1).ToArray(), how: "outer");
-                }
-
-                // Filters all columns only containing "NaN, "", or 0 values.
-                dynamic cols = final_df.columns[final_df.isin(_filter).all()];
-                if (cols.__len__() != 0)
-                {
-                    final_df[cols] = _np.NaN;
-                    final_df.dropna(how: "all", axis: 1, inplace: true);
-                }
-
-                final_df.sort_index(inplace: true);
-
-                if (addStrike)
-                {
-                    // Current version of pandas doesn't like whenever we join or append an index
-                    // with no null time values (NaT). It resets any empty string to NaT and
-                    // doesn't allow for indexing with '', which is required for backwards compatibility.
-                    final_df.reset_index(inplace: true);
-                    final_df["expiry"] = final_df["expiry"].fillna("");
-                    final_df.set_index("expiry", inplace: true);
-                    final_df.set_index(new PyList(new[]
+                    foreach (var ms in memoryStreams)
                     {
-                        new PyString("strike"),
-                        new PyString("type"),
-                        new PyString("symbol"),
-                        new PyString("time")
-                    }), append: true, inplace: true);
+                        ms.Dispose();
+                    }
+
+                    dynamic final_df = dataFrames[0];
+                    if (dataFrames.Count > 1)
+                    {
+                        dynamic joined_df = final_df.join(dataFrames.Skip(1).ToArray(), how: "outer");
+                        final_df.drop(final_df.index, inplace: true);
+                        final_df = joined_df;
+                    }
+
+                    // Filters all columns only containing "NaN, "", or 0 values.
+                    dynamic cols = final_df.columns[final_df.isin(_filter).all()];
+                    if (cols.__len__() != 0)
+                    {
+                        final_df[cols] = _np.NaN;
+                        final_df.dropna(how: "all", axis: 1, inplace: true);
+                    }
+
+                    if (!final_df.index.is_monotonic_increasing || !final_df.index.is_lexsorted())
+                    {
+                        final_df.sort_index(inplace: true);
+                    }
+
+                    if (addOption)
+                    {
+                        // Current version of pandas doesn't like whenever we join or append an index
+                        // with no null time values (NaT). It resets any empty string to NaT and
+                        // doesn't allow for indexing with '', which is required for backwards compatibility.
+                        final_df.reset_index(inplace: true);
+                        final_df["expiry"] = final_df["expiry"].fillna("");
+                        final_df.set_index("expiry", inplace: true);
+                        final_df.set_index(new PyList(new[]
+                        {
+                            new PyString("strike"),
+                            new PyString("type"),
+                            new PyString("symbol"),
+                            new PyString("time")
+                        }), append: true, inplace: true);
+                    }
+
+                    // Wrap the existing DataFrame with the wrapt version to enable .loc[Symbol] operations
+                    // on the index, since the existing DataFrame was created with Arrow.
+                    return _pandas.DataFrame(final_df);
                 }
-
-                // Cleans up any resources we've used to allow for the next generation of DataFrames
-                // to be created with potentially zero allocations.
-                allocator.Free();
-
-                return _pandas.DataFrame(final_df);
             }
         }
 
         private void ClearBuilders()
         {
-            hasSuspicious = false;
-            hasExpiry = false;
-            hasStrike = false;
-            hasOptionRight = false;
-            tickHasTrades = false;
-            tickHasQuotes = false;
+            _tradeBarSymbols.Clear();
+            _tradeBarTimes.Clear();
 
-            tradeBarSymbols.Clear();
-            tradeBarTimes.Clear();
+            _tradeBarExpiry.Clear();
+            _tradeBarStrike.Clear();
+            _tradeBarRight.Clear();
 
-            tradeBarExpiry.Clear();
-            tradeBarStrike.Clear();
-            tradeBarRight.Clear();
+            _tradeBarOpen.Clear();
+            _tradeBarHigh.Clear();
+            _tradeBarLow.Clear();
+            _tradeBarClose.Clear();
+            _tradeBarVolume.Clear();
 
-            tradeBarOpen.Clear();
-            tradeBarHigh.Clear();
-            tradeBarLow.Clear();
-            tradeBarClose.Clear();
-            tradeBarVolume.Clear();
+            _quoteBarSymbols.Clear();
+            _quoteBarTimes.Clear();
 
-            quoteBarSymbols.Clear();
-            quoteBarTimes.Clear();
+            _quoteBarExpiry.Clear();
+            _quoteBarStrike.Clear();
+            _quoteBarRight.Clear();
 
-            quoteBarExpiry.Clear();
-            quoteBarStrike.Clear();
-            quoteBarRight.Clear();
+            _quoteBarBidOpen.Clear();
+            _quoteBarBidHigh.Clear();
+            _quoteBarBidLow.Clear();
+            _quoteBarBidClose.Clear();
+            _quoteBarBidVolume.Clear();
+            _quoteBarAskOpen.Clear();
+            _quoteBarAskHigh.Clear();
+            _quoteBarAskLow.Clear();
+            _quoteBarAskClose.Clear();
+            _quoteBarAskVolume.Clear();
 
-            quoteBarBidOpen.Clear();
-            quoteBarBidHigh.Clear();
-            quoteBarBidLow.Clear();
-            quoteBarBidClose.Clear();
-            quoteBarBidVolume.Clear();
-            quoteBarAskOpen.Clear();
-            quoteBarAskHigh.Clear();
-            quoteBarAskLow.Clear();
-            quoteBarAskClose.Clear();
-            quoteBarAskVolume.Clear();
+            _tickSymbols.Clear();
+            _tickTimes.Clear();
 
-            tickSymbols.Clear();
-            tickTimes.Clear();
+            _tickExpiry.Clear();
+            _tickStrike.Clear();
+            _tickRight.Clear();
 
-            tickExpiry.Clear();
-            tickStrike.Clear();
-            tickRight.Clear();
+            _tickExchange.Clear();
+            _tickSuspicious.Clear();
 
-            tickExchange.Clear();
-            tickSuspicious.Clear();
+            _tickValue.Clear();
+            _tickQuantity.Clear();
+            _tickBidPrice.Clear();
+            _tickBidSize.Clear();
+            _tickAskPrice.Clear();
+            _tickAskSize.Clear();
 
-            tickValue.Clear();
-            tickQuantity.Clear();
-            tickBidPrice.Clear();
-            tickBidSize.Clear();
-            tickAskPrice.Clear();
-            tickAskSize.Clear();
+            _openInterestTimes.Clear();
+            _openInterestSymbols.Clear();
 
-            openInterestTimes.Clear();
-            openInterestSymbols.Clear();
+            _openInterestExpiry.Clear();
+            _openInterestStrike.Clear();
+            _openInterestRight.Clear();
 
-            openInterestExpiry.Clear();
-            openInterestStrike.Clear();
-            openInterestRight.Clear();
-
-            openInterestValue.Clear();
+            _openInterestValue.Clear();
 
             foreach (var kvp in _customDataBuilders)
             {
@@ -1568,8 +1579,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
         public void Dispose()
         {
-            _ms.Dispose();
-            allocator.Dispose();
+            _allocator.Dispose();
         }
     }
 }
