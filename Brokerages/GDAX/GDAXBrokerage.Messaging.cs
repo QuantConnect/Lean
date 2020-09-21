@@ -50,7 +50,7 @@ namespace QuantConnect.Brokerages.GDAX
         private readonly bool _isDataQueueHandler;
         protected readonly IDataAggregator _aggregator;
 
-        private readonly GDAXSymbolMapper _symbolMapper = new GDAXSymbolMapper();
+        private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.GDAX);
 
         // GDAX has different rate limits for public and private endpoints
         // https://docs.gdax.com/#rate-limits

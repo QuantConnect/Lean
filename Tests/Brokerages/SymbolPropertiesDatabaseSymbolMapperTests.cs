@@ -13,16 +13,95 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
-using QuantConnect.Brokerages.GDAX;
 using System;
+using NUnit.Framework;
+using QuantConnect.Brokerages;
 
-namespace QuantConnect.Tests.Brokerages.GDAX
+namespace QuantConnect.Tests.Brokerages
 {
     [TestFixture]
-    public class GDAXSymbolMapperTests
+    public class SymbolPropertiesDatabaseSymbolMapperTests
     {
-        #region Data
+        [TestCaseSource(nameof(BrokerageSymbols))]
+        public void ReturnsCryptoSecurityType(string brokerageSymbol, string leanSymbol)
+        {
+            var mapper = new SymbolPropertiesDatabaseSymbolMapper(Market.GDAX);
+
+            var symbol = mapper.GetLeanSymbol(brokerageSymbol, SecurityType.Crypto, Market.GDAX);
+            Assert.AreEqual(leanSymbol, symbol.Value);
+            Assert.AreEqual(Market.GDAX, symbol.ID.Market);
+        }
+
+        [TestCaseSource(nameof(BrokerageSymbols))]
+        public void ReturnsCorrectLeanSymbol(string brokerageSymbol, string leanSymbol)
+        {
+            var mapper = new SymbolPropertiesDatabaseSymbolMapper(Market.GDAX);
+
+            var symbol = mapper.GetLeanSymbol(brokerageSymbol, SecurityType.Crypto, Market.GDAX);
+            Assert.AreEqual(leanSymbol, symbol.Value);
+            Assert.AreEqual(SecurityType.Crypto, symbol.ID.SecurityType);
+            Assert.AreEqual(Market.GDAX, symbol.ID.Market);
+        }
+
+        [TestCaseSource(nameof(CryptoSymbols))]
+        public void ReturnsCorrectBrokerageSymbol(Symbol symbol, string brokerageSymbol)
+        {
+            var mapper = new SymbolPropertiesDatabaseSymbolMapper(Market.GDAX);
+
+            Assert.AreEqual(brokerageSymbol, mapper.GetBrokerageSymbol(symbol));
+        }
+
+        [TestCaseSource(nameof(CurrencyPairs))]
+        public void ThrowsOnCurrencyPairs(string brokerageSymbol)
+        {
+            var mapper = new SymbolPropertiesDatabaseSymbolMapper(Market.GDAX);
+
+            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSecurityType(brokerageSymbol));
+        }
+
+        [Test]
+        public void ThrowsOnNullOrEmptySymbols()
+        {
+            var mapper = new SymbolPropertiesDatabaseSymbolMapper(Market.GDAX);
+
+            string ticker = null;
+            Assert.IsFalse(mapper.IsKnownBrokerageSymbol(ticker));
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(ticker, SecurityType.Crypto, Market.GDAX));
+            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSecurityType(ticker));
+
+            ticker = "";
+            Assert.IsFalse(mapper.IsKnownBrokerageSymbol(ticker));
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(ticker, SecurityType.Crypto, Market.GDAX));
+            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSecurityType(ticker));
+            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(Symbol.Create(ticker, SecurityType.Crypto, Market.GDAX)));
+        }
+
+        [TestCaseSource(nameof(UnknownSymbols))]
+        public void ThrowsOnUnknownSymbols(string brokerageSymbol, SecurityType type, string market)
+        {
+            var mapper = new SymbolPropertiesDatabaseSymbolMapper(Market.GDAX);
+
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(brokerageSymbol, type, market));
+            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(Symbol.Create(brokerageSymbol.Replace("-", ""), type, market)));
+        }
+
+        [TestCaseSource(nameof(UnknownSecurityType))]
+        public void ThrowsOnUnknownSecurityType(string brokerageSymbol, SecurityType type, string market)
+        {
+            var mapper = new SymbolPropertiesDatabaseSymbolMapper(market);
+
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(brokerageSymbol, type, market));
+            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(Symbol.Create(brokerageSymbol.Replace("-", ""), type, market)));
+        }
+
+        [TestCaseSource(nameof(UnknownMarket))]
+        public void ThrowsOnUnknownMarket(string brokerageSymbol, SecurityType type, string market)
+        {
+            var mapper = new SymbolPropertiesDatabaseSymbolMapper(market);
+
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(brokerageSymbol, type, market));
+            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(Symbol.Create(brokerageSymbol.Replace("-", ""), type, market)));
+        }
 
         private static TestCaseData[] BrokerageSymbols => new[]
         {
@@ -70,93 +149,5 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         {
             new TestCaseData("ETH-USD", SecurityType.Crypto, Market.Bitfinex)
         };
-
-        #endregion
-
-        [TestCaseSource(nameof(BrokerageSymbols))]
-        public void ReturnsCryptoSecurityType(string brokerageSymbol, string leanSymbol)
-        {
-            var mapper = new GDAXSymbolMapper();
-
-            Assert.AreEqual(SecurityType.Crypto, mapper.GetBrokerageSecurityType(brokerageSymbol));
-            var symbol = mapper.GetLeanSymbol(brokerageSymbol);
-            Assert.AreEqual(leanSymbol, symbol.Value);
-            Assert.AreEqual(SecurityType.Crypto, mapper.GetLeanSecurityType(symbol.Value));
-            Assert.AreEqual(Market.GDAX, symbol.ID.Market);
-        }
-
-        [TestCaseSource(nameof(BrokerageSymbols))]
-        public void ReturnsCorrectLeanSymbol(string brokerageSymbol, string leanSymbol)
-        {
-            var mapper = new GDAXSymbolMapper();
-
-            var symbol = mapper.GetLeanSymbol(brokerageSymbol);
-            Assert.AreEqual(leanSymbol, symbol.Value);
-            Assert.AreEqual(SecurityType.Crypto, symbol.ID.SecurityType);
-            Assert.AreEqual(Market.GDAX, symbol.ID.Market);
-        }
-
-        [TestCaseSource(nameof(CryptoSymbols))]
-        public void ReturnsCorrectBrokerageSymbol(Symbol symbol, string brokerageSymbol)
-        {
-            var mapper = new GDAXSymbolMapper();
-
-            Assert.AreEqual(brokerageSymbol, mapper.GetBrokerageSymbol(symbol));
-        }
-
-        [TestCaseSource(nameof(CurrencyPairs))]
-        public void ThrowsOnCurrencyPairs(string brokerageSymbol)
-        {
-            var mapper = new GDAXSymbolMapper();
-
-            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSecurityType(brokerageSymbol));
-        }
-
-        [Test]
-        public void ThrowsOnNullOrEmptySymbols()
-        {
-            var mapper = new GDAXSymbolMapper();
-
-            string ticker = null;
-            Assert.IsFalse(mapper.IsKnownBrokerageSymbol(ticker));
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(ticker, SecurityType.Crypto, Market.GDAX));
-            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSecurityType(ticker));
-
-            ticker = "";
-            Assert.IsFalse(mapper.IsKnownBrokerageSymbol(ticker));
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(ticker, SecurityType.Crypto, Market.GDAX));
-            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSecurityType(ticker));
-            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(Symbol.Create(ticker, SecurityType.Crypto, Market.GDAX)));
-        }
-
-        [TestCaseSource(nameof(UnknownSymbols))]
-        public void ThrowsOnUnknownSymbols(string brokerageSymbol, SecurityType type, string market)
-        {
-            var mapper = new GDAXSymbolMapper();
-
-            Assert.IsFalse(mapper.IsKnownBrokerageSymbol(brokerageSymbol));
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(brokerageSymbol, type, market));
-            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(Symbol.Create(brokerageSymbol.Replace("-", ""), type, market)));
-        }
-
-        [TestCaseSource(nameof(UnknownSecurityType))]
-        public void ThrowsOnUnknownSecurityType(string brokerageSymbol, SecurityType type, string market)
-        {
-            var mapper = new GDAXSymbolMapper();
-
-            Assert.IsTrue(mapper.IsKnownBrokerageSymbol(brokerageSymbol));
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(brokerageSymbol, type, market));
-            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(Symbol.Create(brokerageSymbol.Replace("-", ""), type, market)));
-        }
-
-        [TestCaseSource(nameof(UnknownMarket))]
-        public void ThrowsOnUnknownMarket(string brokerageSymbol, SecurityType type, string market)
-        {
-            var mapper = new GDAXSymbolMapper();
-
-            Assert.IsTrue(mapper.IsKnownBrokerageSymbol(brokerageSymbol));
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(brokerageSymbol, type, market));
-            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(Symbol.Create(brokerageSymbol.Replace("-", ""), type, market)));
-        }
     }
 }
