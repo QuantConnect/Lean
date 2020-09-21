@@ -110,7 +110,11 @@ namespace QuantConnect.Research
                 // Sets PandasConverter
                 SetPandasConverter();
 
+                //Create job node packet for this notebook
                 _job = new BacktestNodePacket();
+
+                //Manager for the Algorithm 
+                _algorithmManager = new AlgorithmManager(false, _job);
 
                 // Get our handlers
                 var composer = new Composer();
@@ -119,7 +123,7 @@ namespace QuantConnect.Research
 
                 // Initialize the system handlers
                 _systemHandlers.Initialize();
-                _systemHandlers.LeanManager.Initialize(_systemHandlers, _algorithmHandlers, _job, new AlgorithmManager(false));
+                _systemHandlers.LeanManager.Initialize(_systemHandlers, _algorithmHandlers, _job,_algorithmManager);
                 _systemHandlers.LeanManager.SetAlgorithm(this);
 
                 // Store our data providers
@@ -136,7 +140,7 @@ namespace QuantConnect.Research
                         PersistenceIntervalSeconds = -1,
                         StorageLimitMB = Config.GetInt("storage-limit-mb", 5),
                         StorageFileCount = Config.GetInt("storage-file-count", 100),
-                        StoragePermissions = (FileAccess)Config.GetInt("storage-permissions", (int)FileAccess.ReadWrite)
+                        StoragePermissions = (FileAccess) Config.GetInt("storage-permissions", (int)FileAccess.ReadWrite)
                     });
 
                 // Security service
@@ -180,9 +184,6 @@ namespace QuantConnect.Research
                     )
                 );
 
-                //Manager for the Algorithm 
-                _algorithmManager = new AlgorithmManager(false, _job);
-
                 // Set our algorithm internals
                 SetObjectStore(_algorithmHandlers.ObjectStore);
                 Securities.SetSecurityService(securityService);
@@ -220,12 +221,11 @@ namespace QuantConnect.Research
             }
         }
 
+        /// <summary>
+        /// Initialize all the engine parts necessary to run the Algorithm
+        /// </summary>
         private void InitializeAlgorithmManager()
         {
-            // Maybe not important??? Fetch job information from config
-            //string assemblyPath;
-            //var job = _systemHandlers.JobQueue.NextJob(out assemblyPath);
-
             //Setup synchronizer
             _synchronizer = new Synchronizer();
             _synchronizer.Initialize(this, _dataManager);
@@ -318,7 +318,7 @@ namespace QuantConnect.Research
                     data.SetItem(day.Key.ToPython(), row);
                 }
 
-                return _pandas.DataFrame.from_dict(data, orient: "index");
+                return _pandas.DataFrame.from_dict(data, orient:"index");
             }
         }
 
@@ -452,7 +452,7 @@ namespace QuantConnect.Research
                     .SelectMany(x =>
                     {
                         // the option chain symbols wont change so we can set 'exchangeDateChange' to false always
-                        optionFilterUniverse.Refresh(distinctSymbols, x, exchangeDateChange: false);
+                        optionFilterUniverse.Refresh(distinctSymbols, x, exchangeDateChange:false);
                         return option.ContractFilter.Filter(optionFilterUniverse);
                     })
                     .Distinct().Concat(new[] { symbol.Underlying });
@@ -460,7 +460,7 @@ namespace QuantConnect.Research
             else
             {
                 // the symbol is a contract
-                symbols = new List<Symbol> { symbol };
+                symbols = new List<Symbol>{ symbol };
             }
 
             return new OptionHistory(History(symbols, start, end.Value, resolution));
