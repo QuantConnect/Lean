@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Fasterflect;
-using Oanda.RestV20.Model;
 using QuantConnect.Algorithm;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -50,20 +49,19 @@ namespace QuantConnect.Lean.Engine
     /// </summary>
     public class AlgorithmManager
     {
+        public bool Initialized { get; private set; }
         private readonly bool _liveMode;
         private readonly object _lock;
-        private IAlgorithm _algorithm;
-
-        private bool _backtestMode;
-        private List<Delisting> _delistings;
-        private bool _hasOnDataTradeBars;
-        private TimeSpan _marginCallFrequency;
-        private Dictionary<Type, MethodInvoker> _methodInvokers;
         private DateTime _nextMarginCallTime;
         private DateTime _nextSettlementScanTime;
-        private TimeSpan _settlementScanFrequency;
-        private List<Split> _splitWarnings;
         private DateTime _time;
+        private TimeSpan _settlementScanFrequency;
+        private TimeSpan _marginCallFrequency;
+        private List<Split> _splitWarnings;
+        private List<Delisting> _delistings;
+        private Dictionary<Type, MethodInvoker> _methodInvokers;
+        private bool _backtestMode;
+        private bool _hasOnDataTradeBars;
         private bool _hasOnDataDelistings;
         private bool _hasOnDataDividends;
         private bool _hasOnDataOptionChains;
@@ -71,6 +69,14 @@ namespace QuantConnect.Lean.Engine
         private bool _hasOnDataSplits;
         private bool _hasOnDataSymbolChangedEvents;
         private bool _hasOnDataTicks;
+        private bool _exitFlag;
+        private IAlgorithm _algorithm;
+        private ILeanManager _leanManager;
+        private IResultHandler _results;
+        private IRealTimeHandler _realtime;
+        private ITransactionHandler _transactions;
+        private IAlphaHandler _alphas;
+        private IEnumerator<TimeSlice> _stream;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="AlgorithmManager" /> class
@@ -86,6 +92,7 @@ namespace QuantConnect.Lean.Engine
             AlgorithmId = "";
             _liveMode = liveMode;
             _lock = new object();
+            Initialized = false;
 
             // initialize the time limit manager
             TimeLimit = new AlgorithmTimeLimitManager(
@@ -122,8 +129,6 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public long DataPoints { get; private set; }
 
-        private bool _exitFlag;
-
         /// <summary>
         ///     Launch the algorithm manager to run this strategy
         /// </summary>
@@ -141,13 +146,13 @@ namespace QuantConnect.Lean.Engine
             ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime,
             ILeanManager leanManager, IAlphaHandler alphas, CancellationToken token)
         {
-            //Initialize every class variable we need
-            Init(job, algorithm, transactions, results, realtime, leanManager, alphas);
+            //Initialize everything we need to start streaming data through the algorithm
+            Init(job, algorithm, synchronizer, transactions, results, realtime, leanManager, alphas, token);
 
-            //Loop over the queues: get a data collection, then pass them all into relevant methods in the algorithm.
+            // Process all data steps in the stream
             Log.Trace("AlgorithmManager.Run(): Begin DataStream - Start: " + algorithm.StartDate + " Stop: " + algorithm.EndDate);
 
-            foreach (var timeSlice in Stream(algorithm, synchronizer, results, token))
+            while (_stream.MoveNext())
             {
                 // reset our timer on each loop
                 TimeLimit.StartNewTimeStep();
@@ -156,7 +161,7 @@ namespace QuantConnect.Lean.Engine
                 if (_algorithm.Status != AlgorithmStatus.Running)
                 {
                     Log.Error(
-                        $"AlgorithmManager.Run(): Algorithm state changed to {_algorithm.Status} at {timeSlice.Time.ToStringInvariant()}"
+                        $"AlgorithmManager.Run(): Algorithm state changed to {_algorithm.Status} at {_stream.Current.Time.ToStringInvariant()}"
                     );
                     break;
                 }
@@ -165,15 +170,16 @@ namespace QuantConnect.Lean.Engine
                 if (token.IsCancellationRequested)
                 {
                     Log.Error(
-                        $"AlgorithmManager.Run(): CancellationRequestion at {timeSlice.Time.ToStringInvariant()}"
+                        $"AlgorithmManager.Run(): CancellationRequestion at {_stream.Current.Time.ToStringInvariant()}"
                     );
                     return;
                 }
 
-                //Take a step with this TimeSlice
-                Step(timeSlice);
+                //Process a step with this timeslice
+                ProcessStep(_stream.Current);
 
                 //Check to see if we set our exit flag in the last step
+                //TODO: See if we need this, maybe use Algorithm Status in step
                 if (_exitFlag)
                 {
                     break;
@@ -185,6 +191,7 @@ namespace QuantConnect.Lean.Engine
             TimeLimit.StopEnforcingTimeLimit();
 
             //FINISHING ALGORITHM:
+            //TODO: Move to Finish function? So that step can call if it finishes as well
             //Stream over:: Send the final packet and fire final events:
             Log.Trace("AlgorithmManager.Run(): Firing On End Of Algorithm...");
             try
@@ -258,29 +265,25 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        private ILeanManager _leanManager;
-        private IResultHandler _results;
-        private IRealTimeHandler _realtime;
-        private ITransactionHandler _transactions;
-        private IAlphaHandler _alphas;
-
         /// <summary>
         ///     Initialize all the variables we need to run data through
         /// </summary>
-        private void Init(AlgorithmNodePacket job, IAlgorithm algorithm, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, IAlphaHandler alphas)
+        public void Init(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, IAlphaHandler alphas, CancellationToken token)
         {
 
             DataPoints = 0;
+            // Store passed in variables
+            _algorithm = algorithm;
             _leanManager = leanManager;
             _transactions = transactions;
             _results = results;
             _realtime = realtime;
             _alphas = alphas;
 
-            //Flag used by step to determine if we need to stop
+            //Flag used by step to determine if we need to stop; maybe just switch algorithm status??
             _exitFlag = false;
 
-            _algorithm = algorithm;
+            // Setup our variables
             _backtestMode = job.Type == PacketType.BacktestNode;
             _methodInvokers = new Dictionary<Type, MethodInvoker>();
             _marginCallFrequency = TimeSpan.FromMinutes(5);
@@ -288,9 +291,11 @@ namespace QuantConnect.Lean.Engine
             _settlementScanFrequency = TimeSpan.FromMinutes(30);
             _nextSettlementScanTime = DateTime.MinValue;
             _time = algorithm.StartDate.Date;
-
             _delistings = new List<Delisting>();
             _splitWarnings = new List<Split>();
+
+            //Initialize the stream enumerable and get the enumerator
+            _stream = Stream(algorithm, synchronizer, results, token).GetEnumerator();
 
             //Initialize Properties:
             AlgorithmId = job.AlgorithmId;
@@ -325,12 +330,28 @@ namespace QuantConnect.Lean.Engine
                     if (genericMethod != null) _methodInvokers.Add(config.Type, genericMethod.DelegateForCallMethod());
                 }
             }
+
+            Initialized = true;
+        }
+
+        /// <summary>
+        /// Take one step forward in the stream
+        /// </summary>
+        public bool Step()
+        {
+            if (_stream.MoveNext())
+            {
+                ProcessStep(_stream.Current);
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
         ///     Take a slice and apply it to the algorithm state
         /// </summary>
-        private void Step(TimeSlice timeSlice)
+        private void ProcessStep(TimeSlice timeSlice)
         {
             // Update the ILeanManager
             _leanManager.Update();

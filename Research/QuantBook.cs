@@ -48,12 +48,15 @@ namespace QuantConnect.Research
     public class QuantBook : QCAlgorithm
     {
         private dynamic _pandas;
+        private IBrokerage _brokerage;
         private IDataCacheProvider _dataCacheProvider;
         private IDataProvider _dataProvider;
         private LeanEngineSystemHandlers _systemHandlers;
         private LeanEngineAlgorithmHandlers _algorithmHandlers;
         private AlgorithmManager _algorithmManager;
         private DataManager _dataManager;
+        private Synchronizer _synchronizer;
+        private AlgorithmNodePacket _job;
         private static bool _isPythonNotebook;
 
         static QuantBook()
@@ -107,6 +110,8 @@ namespace QuantConnect.Research
                 // Sets PandasConverter
                 SetPandasConverter();
 
+                _job = new BacktestNodePacket();
+
                 // Get our handlers
                 var composer = new Composer();
                 _algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer);
@@ -114,7 +119,7 @@ namespace QuantConnect.Research
 
                 // Initialize the system handlers
                 _systemHandlers.Initialize();
-                _systemHandlers.LeanManager.Initialize(_systemHandlers, _algorithmHandlers, new BacktestNodePacket(), new AlgorithmManager(false));
+                _systemHandlers.LeanManager.Initialize(_systemHandlers, _algorithmHandlers, _job, new AlgorithmManager(false));
                 _systemHandlers.LeanManager.SetAlgorithm(this);
 
                 // Store our data providers
@@ -163,7 +168,7 @@ namespace QuantConnect.Research
                 HistoryProvider = composer.GetExportedValueByTypeName<IHistoryProvider>(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider"));
                 HistoryProvider.Initialize(
                     new HistoryProviderInitializeParameters(
-                        null,
+                        _job,
                         _systemHandlers.Api,
                         _algorithmHandlers.DataProvider,
                         _dataCacheProvider,
@@ -174,6 +179,9 @@ namespace QuantConnect.Research
                         _algorithmHandlers.DataPermissionsManager
                     )
                 );
+
+                //Manager for the Algorithm 
+                _algorithmManager = new AlgorithmManager(false, _job);
 
                 // Set our algorithm internals
                 SetObjectStore(_algorithmHandlers.ObjectStore);
@@ -192,76 +200,76 @@ namespace QuantConnect.Research
         }
 
         /// <summary>
-        /// Run this as an algorithm for the given time
-        /// This function seeks to emulate a mini engine to run an Algorithm through
+        /// Take x steps forward in the algorithm
         /// </summary>
-        /// <param name="start"></param>
-        /// <param name="end"></param>
-        public void Run(DateTime start, DateTime end)
+        public void Step(int steps = 1)
         {
-            // Backtest start time
-            var startTime = DateTime.UtcNow;
+            if (!_algorithmManager.Initialized)
+            {
+                InitializeAlgorithmManager();
+            }
 
-            // Change our dates according to requested range
-            SetStartDate(start);
-            SetEndDate(end);
+            //Take the amount of steps given
+            for (var i=0; i < steps; i++)
+            {
+                //Take a step, if its fails, we are at the end of the stream and need to cleanup
+                if (!_algorithmManager.Step())
+                {
+                    OnStreamEnd();
+                }
+            }
+        }
 
+        private void InitializeAlgorithmManager()
+        {
             // Maybe not important??? Fetch job information from config
-            string assemblyPath;
-            var job = _systemHandlers.JobQueue.NextJob(out assemblyPath);
+            //string assemblyPath;
+            //var job = _systemHandlers.JobQueue.NextJob(out assemblyPath);
 
             //Setup synchronizer
-            var synchronizer = new Synchronizer();
-            synchronizer.Initialize(this, _dataManager);
+            _synchronizer = new Synchronizer();
+            _synchronizer.Initialize(this, _dataManager);
 
             // Initialize the brokerage
             IBrokerageFactory factory;
-            IBrokerage brokerage = _algorithmHandlers.Setup.CreateBrokerage(job, this, out factory);
+            _brokerage = _algorithmHandlers.Setup.CreateBrokerage(_job, this, out factory);
 
             // initialize the default brokerage message handler
-            BrokerageMessageHandler = factory.CreateBrokerageMessageHandler(this, job, _systemHandlers.Api);
+            BrokerageMessageHandler = factory.CreateBrokerageMessageHandler(this, _job, _systemHandlers.Api);
 
             //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
-            _algorithmHandlers.Setup.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, this, brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime, _algorithmHandlers.ObjectStore));
+            _algorithmHandlers.Setup.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, this, _brokerage, _job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime, _algorithmHandlers.ObjectStore));
             _algorithmHandlers.Results.SetAlgorithm(this, _algorithmHandlers.Setup.StartingPortfolioValue);
 
             //-> Initialize messaging system
-            _systemHandlers.Notify.SetAuthentication(job);
-
-            //Manager for the Algorithm 
-            var algorithmManager = new AlgorithmManager(false, job);
+            _systemHandlers.Notify.SetAuthentication(_job);
 
             // Initialize all our handlers
-            _algorithmHandlers.DataFeed.Initialize(this, job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider,
-                _algorithmHandlers.DataProvider, _dataManager, (IDataFeedTimeProvider)synchronizer, _algorithmHandlers.DataPermissionsManager.DataChannelProvider);
-            _algorithmHandlers.Results.Initialize(job, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.Transactions);
-            _algorithmHandlers.Transactions.Initialize(this, brokerage, _algorithmHandlers.Results);
-            _algorithmHandlers.RealTime.Setup(this, job, _algorithmHandlers.Results, _systemHandlers.Api, algorithmManager.TimeLimit);
-            _algorithmHandlers.Alphas.Initialize(job, this, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.Transactions);
-
+            _algorithmHandlers.DataFeed.Initialize(this, _job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider,
+                _algorithmHandlers.DataProvider, _dataManager, _synchronizer, _algorithmHandlers.DataPermissionsManager.DataChannelProvider);
+            _algorithmHandlers.Results.Initialize(_job, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.Transactions);
+            _algorithmHandlers.Transactions.Initialize(this, _brokerage, _algorithmHandlers.Results);
+            _algorithmHandlers.RealTime.Setup(this, _job, _algorithmHandlers.Results, _systemHandlers.Api, _algorithmManager.TimeLimit);
+            _algorithmHandlers.Alphas.Initialize(_job, this, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.Transactions);
             _algorithmHandlers.Alphas.OnAfterAlgorithmInitialized(this);
 
-            //Run the Algorithm
-            algorithmManager.Run(
-                job,
-                this,
-                synchronizer,
+            _algorithmManager.Init(_job, this, 
+                _synchronizer,
                 _algorithmHandlers.Transactions,
-                _algorithmHandlers.Results, 
+                _algorithmHandlers.Results,
                 _algorithmHandlers.RealTime,
                 _systemHandlers.LeanManager,
                 _algorithmHandlers.Alphas,
-                CancellationToken.None
-            );
+                CancellationToken.None);
+        }
 
-            // Diagnostics Completed, Send Result Packet:
-            var totalSeconds = (DateTime.UtcNow - startTime).TotalSeconds;
-            var dataPoints = algorithmManager.DataPoints + HistoryProvider.DataPointCount;
-            var kps = dataPoints / (double)1000 / totalSeconds;
-            _algorithmHandlers.Results.DebugMessage($"Algorithm Id:({job.AlgorithmId}) completed in {totalSeconds:F2} seconds at {kps:F0}k data points per second. Processing total of {dataPoints:N0} data points.");
-
+        /// <summary>
+        /// Clean up handlers on stream end
+        /// </summary>
+        private void OnStreamEnd()
+        {
             // Shut everything we don't need down
-            synchronizer.DisposeSafely();
+            _synchronizer.DisposeSafely();
 
             _algorithmHandlers.Results.Exit();
             _algorithmHandlers.DataFeed.Exit();
@@ -269,8 +277,8 @@ namespace QuantConnect.Research
             _algorithmHandlers.Transactions.Exit();
             _algorithmHandlers.RealTime.Exit();
 
-            brokerage.Disconnect();
-            brokerage.Dispose();
+            _brokerage.Disconnect();
+            _brokerage.Dispose();
 
             // Tell the Lean Manager we have finished
             _systemHandlers.LeanManager.OnAlgorithmEnd();
