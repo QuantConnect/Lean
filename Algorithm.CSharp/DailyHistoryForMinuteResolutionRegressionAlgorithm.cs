@@ -19,6 +19,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -27,25 +28,65 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class DailyHistoryForMinuteResolutionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _symbol;
-        private int _day = -1;
+        private Symbol[] _symbols = {
+            QuantConnect.Symbol.Create("GBPUSD", SecurityType.Forex, market: Market.FXCM),
+            QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, market: Market.Oanda),
+            QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, market: Market.USA),
+            QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, market: Market.CME),
+            QuantConnect.Symbol.Create("BTCUSD", SecurityType.Crypto, market: Market.GDAX),
+            QuantConnect.Symbol.Create("XAUUSD", SecurityType.Cfd, market: Market.Oanda)
+        };
+
+        private Dictionary<Symbol, int> _received;
 
         public override void Initialize()
         {
-            SetStartDate(2018, 1, 1);
-            SetEndDate(2018, 7, 1);
-            _symbol = AddForex("EURUSD", Resolution.Minute, market: Market.FXCM).Symbol;
+            SetStartDate(2018, 3, 26);
+            SetEndDate(2018, 4, 10);
+            foreach (var symbol in _symbols)
+            {
+                AddSecurity(symbol, Resolution.Minute);
+            }
+
+            _received = _symbols.ToDictionary(s => s, s => -1);
         }
 
         public override void OnData(Slice data)
         {
+            using (var enumerator = data.GetEnumerator())
+            {
+                while (enumerator.MoveNext())
+                {
+                    var current = enumerator.Current;
+                    var symbol = current.Key;
 
-            if (Time.Day == _day) return;
+                    if (Time.Day == _received[symbol]) continue;
 
-            _day = Time.Day;
-            var history = History(1, Resolution.Daily).Get<QuoteBar>(_symbol).ToList();
+                    _received[symbol] = Time.Day;
 
-            if (!history.Any()) throw new Exception($"No data on the eve of {Time} {Time.DayOfWeek}");
+                    List<BaseData> history;
+
+                    if (current.Value.DataType == MarketDataType.QuoteBar)
+                    {
+                        history = History(1, Resolution.Daily).Get<QuoteBar>(symbol).Cast<BaseData>().ToList();
+                    }
+                    else
+                    {
+                        history = History(1, Resolution.Daily).Get<TradeBar>(symbol).Cast<BaseData>().ToList();
+                    }
+
+                    if (!history.Any()) throw new Exception($"No {symbol} data on the eve of {Time} {Time.DayOfWeek}");
+                }
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (_received.Count != _symbols.Length)
+            {
+                var symbols = _received.Where(kvp => kvp.Value != -1).Select(kvp => kvp.Key);
+                throw new Exception($"Data for symbols {string.Join(",", _symbols.Except(symbols))} were not received");
+            }
         }
 
 
@@ -80,8 +121,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-0.317"},
-            {"Tracking Error", "0.156"},
+            {"Information Ratio", "-0.096"},
+            {"Tracking Error", "0.212"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Fitness Score", "0"},
