@@ -125,9 +125,8 @@ namespace QuantConnect.Brokerages
                 return;
 
             Log.Trace("BaseWebSocketsBrokerage.Connect(): Connecting...");
-            WebSocket.Connect();
 
-            WaitOpen();
+            ConnectSync();
             _connectionHandler.EnableMonitoring(true);
         }
 
@@ -176,13 +175,11 @@ namespace QuantConnect.Brokerages
                 //try to clean up state
                 if (IsConnected)
                 {
-                    WebSocket.Close();
-                    WaitClosed();
+                    CloseSync();
                 }
                 if (!IsConnected)
                 {
-                    WebSocket.Connect();
-                    WaitOpen();
+                    ConnectSync();
                 }
             }
             finally
@@ -194,11 +191,14 @@ namespace QuantConnect.Brokerages
             }
         }
 
-        private void WaitOpen()
+        private void ConnectSync()
         {
             var resetEvent = new ManualResetEvent(false);
             EventHandler triggerEvent = (o, args) => resetEvent.Set();
             WebSocket.Open += triggerEvent;
+
+            WebSocket.Connect();
+
             if (!resetEvent.WaitOne(ConnectionTimeout))
             {
                 throw new TimeoutException("Websockets connection timeout.");
@@ -206,11 +206,14 @@ namespace QuantConnect.Brokerages
             WebSocket.Open -= triggerEvent;
         }
 
-        private void WaitClosed()
+        private void CloseSync()
         {
             var resetEvent = new ManualResetEvent(false);
             EventHandler<WebSocketCloseData> triggerEvent = (o, args) => resetEvent.Set();
             WebSocket.Closed += triggerEvent;
+
+            WebSocket.Close();
+
             if (!resetEvent.WaitOne(ConnectionTimeout))
             {
                 throw new TimeoutException("Websocket close timeout.");

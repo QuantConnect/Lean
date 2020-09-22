@@ -44,8 +44,8 @@ namespace QuantConnect.Brokerages.Bitfinex
 
         private const int ConnectionTimeout = 30000;
 
-        private int _subscribeErrorCode;
         private readonly string _wssUrl;
+        private volatile int _subscribeErrorCode;
         private readonly object _locker = new object();
         private readonly BitfinexBrokerage _brokerage;
         private readonly BitfinexSymbolMapper _symbolMapper;
