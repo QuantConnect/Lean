@@ -45,19 +45,19 @@ namespace QuantConnect.Brokerages
                 SymbolPropertiesDatabase
                     .FromDataFolder()
                     .GetSymbolPropertiesList(_market)
-                    .Where(x => !string.IsNullOrWhiteSpace(x.Value.BrokerageSymbol))
+                    .Where(x => !string.IsNullOrWhiteSpace(x.Value.MarketTicker))
                     .ToList();
 
-            _symbolPropertiesMap = 
+            _symbolPropertiesMap =
                 symbolPropertiesList
                     .ToDictionary(
-                        x => Symbol.Create(x.Key.Symbol, x.Key.SecurityType, x.Key.Market), 
+                        x => Symbol.Create(x.Key.Symbol, x.Key.SecurityType, x.Key.Market),
                         x => x.Value);
 
             _symbolMap =
                 _symbolPropertiesMap
                     .ToDictionary(
-                        x => x.Value.BrokerageSymbol,
+                        x => x.Value.MarketTicker,
                         x => x.Key);
         }
 
@@ -84,12 +84,12 @@ namespace QuantConnect.Brokerages
                 throw new ArgumentException($"Unknown symbol: {symbol.Value}/{symbol.SecurityType}/{symbol.ID.Market}");
             }
 
-            if (string.IsNullOrWhiteSpace(symbolProperties.BrokerageSymbol))
+            if (string.IsNullOrWhiteSpace(symbolProperties.MarketTicker))
             {
-                throw new ArgumentException($"Brokerage symbol not found in database for symbol: {symbol.Value}");
+                throw new ArgumentException($"MarketTicker not found in database for symbol: {symbol.Value}");
             }
 
-            return symbolProperties.BrokerageSymbol;
+            return symbolProperties.MarketTicker;
         }
 
         /// <summary>
