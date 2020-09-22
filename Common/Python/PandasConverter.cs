@@ -17,6 +17,7 @@ using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Memory;
 using Python.Runtime;
+using Python;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using System;
@@ -32,7 +33,7 @@ namespace QuantConnect.Python
     /// <summary>
     /// Collection of methods that converts lists of objects in pandas.DataFrame
     /// </summary>
-    public class PandasConverter : IDisposable
+    public class PandasConverter
     {
         private static dynamic _pandas;
         private static dynamic _pa;
@@ -41,9 +42,9 @@ namespace QuantConnect.Python
         private static PyList _defaultIndexes;
         private static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
 
+        private MemoryAllocator _allocator = new NativeMemoryAllocator();
         // Re-use MemoryStream to avoid having to reallocate every time for every new DataFrame we create
-        //private PandasArrowMemoryAllocator _allocator = new PandasArrowMemoryAllocator();
-        private PandasArrowMemoryAllocator _allocator = new PandasArrowMemoryAllocator();
+        private MemoryStream _ms = new MemoryStream();
 
         private StringArray.Builder _tradeBarSymbols = new StringArray.Builder();
         private TimestampArray.Builder _tradeBarTimes = new TimestampArray.Builder();
@@ -392,7 +393,6 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             // Cleans up any resources we've used to allow for the next generation of DataFrames
             // to be created with potentially zero allocations.
             ClearBuilders();
-            _allocator.Free();
 
             var hasTrades = false;
             var hasQuotes = false;
@@ -905,118 +905,116 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 }
             }
 
-            var memoryStreams = new List<MemoryStream>();
-            var arrowBuffers = new List<ArrowBuffer>();
             var addExpiry = hasExpiry && (hasTrades || hasQuotes || tickHasTrades || tickHasQuotes);
             var addOption = hasOption && (hasTrades || hasQuotes || tickHasTrades || tickHasQuotes);
             var i = 0;
-
-            foreach (var recordBatch in recordBatches)
-            {
-                var ms = new MemoryStream();
-                using (var writer = new ArrowStreamWriter(ms, recordBatch.Schema))
-                {
-                    writer.WriteRecordBatchAsync(recordBatch).SynchronouslyAwaitTask();
-                    var memory = new Memory<byte>(ms.GetBuffer());
-                    var buffer = new ArrowBuffer(memory);
-                    arrowBuffers.Add(buffer);
-                    memoryStreams.Add(ms);
-                    recordBatch.Dispose();
-                }
-            }
 
             unsafe
             {
                 using (Py.GIL())
                 {
                     var dataFrames = new List<dynamic>();
-                    foreach (var arrowBuffer in arrowBuffers)
+                    foreach (var recordBatch in recordBatches)
                     {
-                        var pinned = arrowBuffer.Memory.Pin();
-
-                        dynamic buf = _pa.foreign_buffer(
-                            (long) new IntPtr(pinned.Pointer),
-                            arrowBuffer.Length
-                        );
-                        dynamic df = _pa.ipc.open_stream(buf).read_pandas(self_destruct: true, ignore_metadata: true);
-
-                        var timeIdx = 1;
-
-                        // If open interest appears by itself, we want to get rid of the
-                        // expiry column to maintain backwards compatibility.
-                        if (addExpiry)
+                        _ms.SetLength(0);
+                        using (var writer = new ArrowStreamWriter(_ms, recordBatch.Schema, true))
                         {
-                            df.set_index("expiry", inplace: true);
-                            df = df.tz_localize(null, copy: false);
-                            timeIdx++;
-                        }
-                        else if (hasExpiry)
-                        {
-                            df.drop(columns: new[] { "expiry" }, inplace: true);
-                        }
+                            writer.WriteRecordBatchAsync(recordBatch).SynchronouslyAwaitTask();
+                            recordBatch.Dispose();
 
-                        if (addOption)
-                        {
-                            df["strike"] = df["strike"].fillna("");
-                            df["type"] = df["type"].fillna("");
-                            df.set_index(new PyList(new[] { new PyString("strike"), new PyString("type") }), append: hasExpiry, inplace: true);
-                            timeIdx += 2;
-                        }
-                        else if (hasOption)
-                        {
-                            df.drop(columns: new PyList(new[] { new PyString("strike"), new PyString("type") }), inplace: true);
-                        }
+                            var memory = new Memory<byte>(_ms.GetBuffer()).Slice(0, (int)_ms.Length);
+                            var timeIdx = 1;
 
-                        // Let's include the objects that were left out before
-                        // as part of the custom data DataFrame using the existing index.
-                        // Custom data is added last, so we match the last entry to detect custom data
-                        // instead of adding it all to all DataFrames we create.
-                        if (hasCustom && ++i == recordBatches.Count)
-                        {
-                            var dict = new PyDict();
-                            foreach (var kvp in _customDataObjects)
+                            using (var arrowBuffer = new ArrowBuffer(memory))
+                            using (var pinned = arrowBuffer.Memory.Pin())
                             {
-                                var columnName = kvp.Key;
-                                var values = kvp.Value;
-                                var list = new PyList(values.Select(x => x.ToPython()).ToArray());
+                                dynamic buf = _pa.foreign_buffer(
+                                    (long) new IntPtr(pinned.Pointer),
+                                    arrowBuffer.Length
+                                );
+                                dynamic stream = _pa.ipc.open_stream(buf);
+                                dynamic df = stream.read_pandas(self_destruct: true, ignore_metadata: true);
 
-                                dict.SetItem(columnName, list);
+                                // If open interest appears by itself, we want to get rid of the
+                                // expiry column to maintain backwards compatibility.
+                                if (addExpiry)
+                                {
+                                    df.set_index("expiry", inplace: true);
+                                    df = df.tz_localize(null, copy: false);
+                                    timeIdx++;
+                                }
+                                else if (hasExpiry)
+                                {
+                                    df.drop(columns: new[] { "expiry" }, inplace: true);
+                                }
+
+                                if (addOption)
+                                {
+                                    df["strike"] = df["strike"].fillna("");
+                                    df["type"] = df["type"].fillna("");
+                                    df.set_index(new PyList(new[] { new PyString("strike"), new PyString("type") }), append: hasExpiry, inplace: true);
+                                    timeIdx += 2;
+                                }
+                                else if (hasOption)
+                                {
+                                    df.drop(columns: new PyList(new[] { new PyString("strike"), new PyString("type") }), inplace: true);
+                                }
+
+                                // Let's include the objects that were left out before
+                                // as part of the custom data DataFrame using the existing index.
+                                // Custom data is added last, so we match the last entry to detect custom data
+                                // instead of adding it all to all DataFrames we create.
+                                if (hasCustom && ++i == recordBatches.Count)
+                                {
+                                    var dict = new PyDict();
+                                    foreach (var kvp in _customDataObjects)
+                                    {
+                                        var columnName = kvp.Key;
+                                        var values = kvp.Value;
+                                        var list = new PyList(values.Select(x => x.ToPython()).ToArray());
+
+                                        dict.SetItem(columnName, list);
+                                    }
+
+                                    df = df.join(_pandas.DataFrame(dict, index: df.index), how: "outer");
+                                }
+
+                                df.set_index(_defaultIndexes, append: addExpiry || addOption, inplace: true);
+                                dataFrames.Add(df.tz_localize(null, level: timeIdx));
+
+                                // Cleans up the memory left behind, otherwise we leak memory from Python
+                                arrowBuffer.Dispose();
+                                stream.Dispose();
+                                buf.Dispose();
+                                df.Dispose();
                             }
-
-                            df = df.join(_pandas.DataFrame(dict, index: df.index), how: "outer");
                         }
-
-                        df.set_index(_defaultIndexes, append: addExpiry || addOption, inplace: true);
-                        dataFrames.Add(df.tz_localize(null, level: timeIdx, copy: false));
-
-                        // Cleans up the memory left behind, otherwise we leak memory from Python
-                        df.drop(df.index, inplace: true);
-
-                        buf = null;
-                        df = null;
-
-                        arrowBuffer.Dispose();
-                    }
-                    foreach (var ms in memoryStreams)
-                    {
-                        ms.Dispose();
                     }
 
                     dynamic final_df = dataFrames[0];
                     if (dataFrames.Count > 1)
                     {
-                        dynamic joined_df = final_df.join(dataFrames.Skip(1).ToArray(), how: "outer");
-                        final_df.drop(final_df.index, inplace: true);
-                        final_df = joined_df;
+                        final_df = final_df.join(dataFrames.Skip(1).ToArray(), how: "outer");
+                        foreach (dynamic df in dataFrames)
+                        {
+                            df.Dispose();
+                        }
                     }
 
+                    dataFrames.Clear();
+
                     // Filters all columns only containing "NaN, "", or 0 values.
-                    dynamic cols = final_df.columns[final_df.isin(_filter).all()];
+                    dynamic mask = final_df.isin(_filter).all();
+                    dynamic cols = final_df.columns[mask];
+
                     if (cols.__len__() != 0)
                     {
                         final_df[cols] = _np.NaN;
                         final_df.dropna(how: "all", axis: 1, inplace: true);
                     }
+
+                    mask.Dispose();
+                    cols.Dispose();
 
                     if (!final_df.index.is_monotonic_increasing || !final_df.index.is_lexsorted())
                     {
@@ -1042,7 +1040,10 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
                     // Wrap the existing DataFrame with the wrapt version to enable .loc[Symbol] operations
                     // on the index, since the existing DataFrame was created with Arrow.
-                    return _pandas.DataFrame(final_df);
+                    dynamic wrapped_df = _pandas.DataFrame(final_df);
+                    final_df.Dispose();
+
+                    return wrapped_df;
                 }
             }
         }
@@ -1575,11 +1576,6 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             return _pandas == null
                 ? "pandas module was not imported."
                 : _pandas.Repr();
-        }
-
-        public void Dispose()
-        {
-            _allocator.Dispose();
         }
     }
 }
