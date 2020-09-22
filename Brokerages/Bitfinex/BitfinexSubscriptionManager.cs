@@ -633,7 +633,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 var orderBook = _orderBooks[symbol];
 
                 var price = decimal.Parse(entries[0], NumberStyles.Float, CultureInfo.InvariantCulture);
-                var count = Parse.Int(entries[1]);
+                var count = Parse.Long(entries[1]);
                 var amount = decimal.Parse(entries[2], NumberStyles.Float, CultureInfo.InvariantCulture);
 
                 if (count == 0)
@@ -654,7 +654,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
             catch (Exception e)
             {
-                Log.Error(e);
+                Log.Error(e, $"Entries: [{string.Join(",", entries)}]");
                 throw;
             }
         }
