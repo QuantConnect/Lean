@@ -152,7 +152,7 @@ namespace QuantConnect.Tests.Common.Securities
             Console.WriteLine(sb.ToString());
         }
 
-        public class GdaxCurrency
+        private class GdaxCurrency
         {
             [JsonProperty("id")]
             public string Id { get; set; }
@@ -164,7 +164,7 @@ namespace QuantConnect.Tests.Common.Securities
             public decimal MinSize { get; set; }
         }
 
-        public class GdaxProduct
+        private class GdaxProduct
         {
             [JsonProperty("id")]
             public string Id { get; set; }
@@ -318,14 +318,15 @@ namespace QuantConnect.Tests.Common.Securities
                                   $"{quoteCurrency}," +
                                   "1," +
                                   $"{minimumPriceIncrement.NormalizeToStr()}," +
-                                  $"{lotSize.NormalizeToStr()}");
+                                  $"{lotSize.NormalizeToStr()}," +
+                                  $"t{pair}");
                 }
             }
 
             Console.WriteLine(sb.ToString());
         }
 
-        public class BitfinexSymbolDetails
+        private class BitfinexSymbolDetails
         {
             [JsonProperty("pair")]
             public string Pair { get; set; }
