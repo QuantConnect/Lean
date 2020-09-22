@@ -125,6 +125,7 @@
     <Compile Include="NullResultValueTypeJsonConverter.cs" />
     <Compile Include="PortfolioLooper\MockDataFeed.cs" />
     <Compile Include="PortfolioLooper\PortfolioLooperAlgorithm.cs" />
+    <Compile Include="ReportElements\DaysLiveReportElement.cs" />
     <Compile Include="ResultsUtil.cs" />
     <Compile Include="Metrics.cs" />
     <Compile Include="Rolling.cs" />
