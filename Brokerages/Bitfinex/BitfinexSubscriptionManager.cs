@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using QuantConnect.Brokerages.Bitfinex.Messages;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -44,6 +45,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         private const int ConnectionTimeout = 30000;
 
         private readonly string _wssUrl;
+        private volatile int _subscribeErrorCode;
         private readonly object _locker = new object();
         private readonly BitfinexBrokerage _brokerage;
         private readonly BitfinexSymbolMapper _symbolMapper;
@@ -82,6 +84,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 foreach (var symbol in symbols)
                 {
                     _onSubscribeEvent.Reset();
+                    _subscribeErrorCode = 0;
                     var subscription = SubscribeChannel(
                         ChannelNameFromTickType(tickType),
                         symbol);
@@ -100,7 +103,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
                     Log.Trace($"BitfinexBrokerage.Subscribe(): Sent subscribe for {symbol.Value}.");
 
-                    if (_onSubscribeEvent.WaitOne(TimeSpan.FromSeconds(30)))
+                    if (_onSubscribeEvent.WaitOne(TimeSpan.FromSeconds(10)) && _subscribeErrorCode == 0)
                     {
                         states.Add(true);
                     }
@@ -247,12 +250,9 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             webSocket.Initialize(_wssUrl);
             webSocket.Message += OnMessage;
-            webSocket.Error += OnError;
 
             Connect(webSocket);
 
-            webSocket.ConnectionHandler.ConnectionLost += OnConnectionLost;
-            webSocket.ConnectionHandler.ConnectionRestored += OnConnectionRestored;
             webSocket.ConnectionHandler.ReconnectRequested += OnReconnectRequested;
             webSocket.ConnectionHandler.Initialize(webSocket.ConnectionId);
 
@@ -294,16 +294,6 @@ namespace QuantConnect.Brokerages.Bitfinex
 
                 connectedEvent.DisposeSafely();
             }
-        }
-
-        private void OnConnectionLost(object sender, EventArgs e)
-        {
-            Log.Error("BitfinexSubscriptionManager.OnConnectionLost(): WebSocket connection lost.");
-        }
-
-        private void OnConnectionRestored(object sender, EventArgs e)
-        {
-            Log.Trace("BitfinexSubscriptionManager.OnConnectionRestored(): WebSocket connection restored.");
         }
 
         private void OnReconnectRequested(object sender, EventArgs e)
@@ -362,11 +352,6 @@ namespace QuantConnect.Brokerages.Bitfinex
                     pair = _symbolMapper.GetBrokerageSymbol(channel.Symbol)
                 }));
             }
-        }
-
-        private void OnError(object sender, WebSocketError e)
-        {
-            Log.Error($"BitfinexSubscriptionManager.OnError(): Message: {e.Message} Exception: {e.Exception}");
         }
 
         private void OnMessage(object sender, WebSocketMessage e)
@@ -435,11 +420,11 @@ namespace QuantConnect.Brokerages.Bitfinex
                     switch (raw.Event.ToLowerInvariant())
                     {
                         case "subscribed":
-                            OnSubscribe(webSocket, token.ToObject<Messages.ChannelSubscription>());
+                            OnSubscribe(webSocket, token.ToObject<ChannelSubscription>());
                             return;
 
                         case "unsubscribed":
-                            OnUnsubscribe(webSocket, token.ToObject<Messages.ChannelUnsubscribing>());
+                            OnUnsubscribe(webSocket, token.ToObject<ChannelUnsubscribing>());
                             return;
 
                         case "auth":
@@ -448,6 +433,14 @@ namespace QuantConnect.Brokerages.Bitfinex
                             return;
 
                         case "error":
+                            var error = token.ToObject<ErrorMessage>();
+                            // 10300 Subscription failed (generic) | 10301 : Already subscribed | 10302 : Unknown channel
+                            // see https://docs.bitfinex.com/docs/ws-general
+                            if (error.Code == 10300 || error.Code == 10301 || error.Code == 10302)
+                            {
+                                _subscribeErrorCode = error.Code;
+                                _onSubscribeEvent.Set();
+                            }
                             Log.Error($"BitfinexSubscriptionManager.OnMessage(): {e.Message}");
                             return;
 
@@ -640,7 +633,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 var orderBook = _orderBooks[symbol];
 
                 var price = decimal.Parse(entries[0], NumberStyles.Float, CultureInfo.InvariantCulture);
-                var count = Parse.Int(entries[1]);
+                var count = Parse.Long(entries[1]);
                 var amount = decimal.Parse(entries[2], NumberStyles.Float, CultureInfo.InvariantCulture);
 
                 if (count == 0)
@@ -661,7 +654,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
             catch (Exception e)
             {
-                Log.Error(e);
+                Log.Error(e, $"Entries: [{string.Join(",", entries)}]");
                 throw;
             }
         }
