@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -154,10 +154,10 @@ namespace QuantConnect.Tests.Common.Securities
 
         public class GdaxCurrency
         {
-            [JsonProperty("id")] 
+            [JsonProperty("id")]
             public string Id { get; set; }
 
-            [JsonProperty("name")] 
+            [JsonProperty("name")]
             public string Name { get; set; }
 
             [JsonProperty("min_size")]
@@ -216,6 +216,137 @@ namespace QuantConnect.Tests.Common.Securities
 
             [JsonProperty("status_message")]
             public string StatusMessage { get; set; }
+        }
+
+        #endregion
+
+        #region Bitfinex brokerage
+
+        [Test, Explicit]
+        public void FetchSymbolPropertiesFromBitfinex()
+        {
+            const string urlExchangePairs = "https://api-pub.bitfinex.com/v2/conf/pub:list:pair:exchange";
+            const string urlMarginPairs = "https://api-pub.bitfinex.com/v2/conf/pub:list:pair:margin";
+            const string urlCurrencyMap = "https://api-pub.bitfinex.com/v2/conf/pub:map:currency:sym";
+            const string urlCurrencyLabels = "https://api-pub.bitfinex.com/v2/conf/pub:map:currency:label";
+            const string urlSymbolDetails = "https://api.bitfinex.com/v1/symbols_details";
+
+            var sb = new StringBuilder();
+
+            using (var wc = new WebClient())
+            {
+                var jsonExchangePairs = wc.DownloadString(urlExchangePairs);
+                var exchangePairs = JsonConvert.DeserializeObject<List<List<string>>>(jsonExchangePairs)[0];
+
+                var jsonMarginPairs = wc.DownloadString(urlMarginPairs);
+                var marginPairs = JsonConvert.DeserializeObject<List<List<string>>>(jsonMarginPairs)[0];
+
+                var jsonCurrencyMap = wc.DownloadString(urlCurrencyMap);
+                var rowsCurrencyMap = JsonConvert.DeserializeObject<List<List<List<string>>>>(jsonCurrencyMap)[0];
+                var currencyMap = rowsCurrencyMap
+                    .ToDictionary(row => row[0], row => row[1].ToUpperInvariant());
+
+                var jsonCurrencyLabels = wc.DownloadString(urlCurrencyLabels);
+                var rowsCurrencyLabels = JsonConvert.DeserializeObject<List<List<List<string>>>>(jsonCurrencyLabels)[0];
+                var currencyLabels = rowsCurrencyLabels
+                    .ToDictionary(row => row[0], row => row[1]);
+
+                var jsonSymbolDetails = wc.DownloadString(urlSymbolDetails);
+                var symbolDetails = JsonConvert.DeserializeObject<List<BitfinexSymbolDetails>>(jsonSymbolDetails);
+                var minimumPriceIncrements = symbolDetails
+                    .ToDictionary(x => x.Pair.ToUpperInvariant(), x => (decimal)Math.Pow(10, -x.PricePrecision));
+
+                foreach (var pair in exchangePairs.Union(marginPairs).OrderBy(x => x))
+                {
+                    string baseCurrency, quoteCurrency;
+                    if (pair.Contains(":"))
+                    {
+                        var parts = pair.Split(':');
+                        baseCurrency = parts[0];
+                        quoteCurrency = parts[1];
+                    }
+                    else if (pair.Length == 6)
+                    {
+                        baseCurrency = pair.Substring(0, 3);
+                        quoteCurrency = pair.Substring(3);
+                    }
+                    else
+                    {
+                        // should never happen
+                        Console.WriteLine($"Skipping pair with unknown format: {pair}");
+                        continue;
+                    }
+
+                    string baseDescription, quoteDescription;
+                    if (!currencyLabels.TryGetValue(baseCurrency, out baseDescription))
+                    {
+                        Console.WriteLine($"Base currency description not found: {baseCurrency}");
+                        baseDescription = baseCurrency;
+                    }
+                    if (!currencyLabels.TryGetValue(quoteCurrency, out quoteDescription))
+                    {
+                        Console.WriteLine($"Quote currency description not found: {quoteCurrency}");
+                        quoteDescription = quoteCurrency;
+                    }
+
+                    var description = baseDescription + "-" + quoteDescription;
+
+                    string newBaseCurrency, newQuoteCurrency;
+                    if (currencyMap.TryGetValue(baseCurrency, out newBaseCurrency))
+                    {
+                        baseCurrency = newBaseCurrency;
+                    }
+                    if (currencyMap.TryGetValue(quoteCurrency, out newQuoteCurrency))
+                    {
+                        quoteCurrency = newQuoteCurrency;
+                    }
+
+                    var leanTicker = $"{baseCurrency}{quoteCurrency}";
+
+                    decimal minimumPriceIncrement;
+                    if (!minimumPriceIncrements.TryGetValue(pair, out minimumPriceIncrement))
+                    {
+                        minimumPriceIncrement = 0.00001m;
+                    }
+
+                    const decimal lotSize = 0.00000001m;
+
+                    sb.AppendLine("bitfinex," +
+                                  $"{leanTicker}," +
+                                  "crypto," +
+                                  $"{description}," +
+                                  $"{quoteCurrency}," +
+                                  "1," +
+                                  $"{minimumPriceIncrement.NormalizeToStr()}," +
+                                  $"{lotSize.NormalizeToStr()}");
+                }
+            }
+
+            Console.WriteLine(sb.ToString());
+        }
+
+        public class BitfinexSymbolDetails
+        {
+            [JsonProperty("pair")]
+            public string Pair { get; set; }
+
+            [JsonProperty("price_precision")]
+            public int PricePrecision { get; set; }
+
+            [JsonProperty("initial_margin")]
+            public decimal InitialMargin { get; set; }
+
+            [JsonProperty("minimum_margin")]
+            public decimal MinimumMargin { get; set; }
+
+            [JsonProperty("maximum_order_size")]
+            public decimal MaximumOrderSize { get; set; }
+
+            [JsonProperty("minimum_order_size")]
+            public decimal MinimumOrderSize { get; set; }
+
+            [JsonProperty("expiration")]
+            public string Expiration { get; set; }
         }
 
         #endregion
