@@ -88,7 +88,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="aggregator">consolidate ticks</param>
         public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
             IPriceProvider priceProvider, IDataAggregator aggregator)
-            : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.GDAX, "GDAX")
+            : base(wssUrl, websocket, restClient, apiKey, apiSecret, TimeSpan.FromSeconds(30), "GDAX")
         {
             FillSplit = new ConcurrentDictionary<long, GDAXFill>();
             _passPhrase = passPhrase;

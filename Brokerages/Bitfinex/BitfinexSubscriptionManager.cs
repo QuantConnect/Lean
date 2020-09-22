@@ -247,12 +247,9 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             webSocket.Initialize(_wssUrl);
             webSocket.Message += OnMessage;
-            webSocket.Error += OnError;
 
             Connect(webSocket);
 
-            webSocket.ConnectionHandler.ConnectionLost += OnConnectionLost;
-            webSocket.ConnectionHandler.ConnectionRestored += OnConnectionRestored;
             webSocket.ConnectionHandler.ReconnectRequested += OnReconnectRequested;
             webSocket.ConnectionHandler.Initialize(webSocket.ConnectionId);
 
@@ -294,16 +291,6 @@ namespace QuantConnect.Brokerages.Bitfinex
 
                 connectedEvent.DisposeSafely();
             }
-        }
-
-        private void OnConnectionLost(object sender, EventArgs e)
-        {
-            Log.Error("BitfinexSubscriptionManager.OnConnectionLost(): WebSocket connection lost.");
-        }
-
-        private void OnConnectionRestored(object sender, EventArgs e)
-        {
-            Log.Trace("BitfinexSubscriptionManager.OnConnectionRestored(): WebSocket connection restored.");
         }
 
         private void OnReconnectRequested(object sender, EventArgs e)
@@ -362,11 +349,6 @@ namespace QuantConnect.Brokerages.Bitfinex
                     pair = _symbolMapper.GetBrokerageSymbol(channel.Symbol)
                 }));
             }
-        }
-
-        private void OnError(object sender, WebSocketError e)
-        {
-            Log.Error($"BitfinexSubscriptionManager.OnError(): Message: {e.Message} Exception: {e.Exception}");
         }
 
         private void OnMessage(object sender, WebSocketMessage e)
