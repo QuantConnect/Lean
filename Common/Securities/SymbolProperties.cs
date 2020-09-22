@@ -64,9 +64,9 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// The brokerage symbol
+        /// The market ticker
         /// </summary>
-        public string BrokerageSymbol
+        public string MarketTicker
         {
             get;
         }
@@ -74,7 +74,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Creates an instance of the <see cref="SymbolProperties"/> class
         /// </summary>
-        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize, string brokerageSymbol)
+        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize, string marketTicker)
         {
             Description = description;
             QuoteCurrency = quoteCurrency;
@@ -87,7 +87,7 @@ namespace QuantConnect.Securities
                 throw new ArgumentException("SymbolProperties LotSize can not be less than or equal to 0");
             }
 
-            BrokerageSymbol = brokerageSymbol;
+            MarketTicker = marketTicker;
         }
 
         /// <summary>
