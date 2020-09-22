@@ -379,7 +379,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     }
                 }
 
-                var symbol = _symbolMapper.GetLeanSymbol(update.Symbol);
+                var symbol = _symbolMapper.GetLeanSymbol(update.Symbol, SecurityType.Crypto, Market.Bitfinex);
                 var fillPrice = update.ExecPrice;
                 var fillQuantity = update.ExecAmount;
                 var direction = fillQuantity < 0 ? OrderDirection.Sell : OrderDirection.Buy;

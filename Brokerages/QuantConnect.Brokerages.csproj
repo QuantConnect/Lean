@@ -351,7 +351,6 @@
     <Compile Include="Bitfinex\BitfinexBrokerage.Utility.cs" />
     <Compile Include="Bitfinex\BitfinexSubscriptionManager.cs" />
     <Compile Include="Bitfinex\BitfinexWebSocketWrapper.cs" />
-    <Compile Include="Bitfinex\BitfinexSymbolMapper.cs" />
     <Compile Include="Bitfinex\Messages\Messages.cs" />
     <Compile Include="Bitfinex\Messages\Order.cs" />
     <Compile Include="Bitfinex\Messages\Position.cs" />
