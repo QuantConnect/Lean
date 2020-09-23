@@ -50,7 +50,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Gets the path used for logging all portfolio changing events, such as orders, TPV, daily holdings values
         /// </summary>
-        public string LogFilePath => $"./regression/{Algorithm.AlgorithmId}.{Language.ToLower()}.details.log";
+        public string LogFilePath => $"./regression/{AlgorithmId}.{Language.ToLower()}.details.log";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RegressionResultHandler"/> class
