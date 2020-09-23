@@ -21,7 +21,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -30,29 +29,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// </summary>
     public class OptionChainUniverseSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
-        private readonly Func<SubscriptionRequest, IEnumerator<BaseData>, IEnumerator<BaseData>> _enumeratorConfigurator;
+        private readonly Func<SubscriptionRequest, IEnumerator<BaseData>> _enumeratorConfigurator;
         private readonly bool _isLiveMode;
 
         private readonly IDataQueueUniverseProvider _symbolUniverse;
         private readonly ITimeProvider _timeProvider;
 
-        private readonly MapFileResolver _mapFileResolver;
-        private readonly IFactorFileProvider _factorFileProvider;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionChainUniverseSubscriptionEnumeratorFactory"/> class
         /// </summary>
         /// <param name="enumeratorConfigurator">Function used to configure the sub-enumerators before sync (fill-forward/filter/ect...)</param>
-        /// <param name="mapFileResolver">Map file resolver</param>
-        /// <param name="factorFileProvider">Factor file provider</param>
-        public OptionChainUniverseSubscriptionEnumeratorFactory(Func<SubscriptionRequest, IEnumerator<BaseData>, IEnumerator<BaseData>> enumeratorConfigurator,
-                    MapFileResolver mapFileResolver,
-                    IFactorFileProvider factorFileProvider)
+        public OptionChainUniverseSubscriptionEnumeratorFactory(Func<SubscriptionRequest, IEnumerator<BaseData>> enumeratorConfigurator)
         {
             _isLiveMode = false;
             _enumeratorConfigurator = enumeratorConfigurator;
-            _mapFileResolver = mapFileResolver;
-            _factorFileProvider = factorFileProvider;
 
         }
 
@@ -62,7 +52,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="enumeratorConfigurator">Function used to configure the sub-enumerators before sync (fill-forward/filter/ect...)</param>
         /// <param name="symbolUniverse">Symbol universe provider of the data queue</param>
         /// <param name="timeProvider">The time provider instance used to determine when bars are completed and can be emitted</param>
-        public OptionChainUniverseSubscriptionEnumeratorFactory(Func<SubscriptionRequest, IEnumerator<BaseData>, IEnumerator<BaseData>> enumeratorConfigurator,
+        public OptionChainUniverseSubscriptionEnumeratorFactory(Func<SubscriptionRequest, IEnumerator<BaseData>> enumeratorConfigurator,
                                                                 IDataQueueUniverseProvider symbolUniverse, ITimeProvider timeProvider)
         {
             _isLiveMode = true;
@@ -81,23 +71,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         {
             if (_isLiveMode)
             {
-                // creating trade bar builder enumerator to model underlying price change
-                var underlyingEnumerator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider, _isLiveMode);
-
                 // configuring the enumerator
                 var subscriptionConfiguration = GetSubscriptionConfigurations(request).First();
                 var subscriptionRequest = new SubscriptionRequest(request, configuration: subscriptionConfiguration);
-                var configuredEnumerator = _enumeratorConfigurator(subscriptionRequest, underlyingEnumerator);
+                var configuredEnumerator = _enumeratorConfigurator(subscriptionRequest);
 
                 return new DataQueueOptionChainUniverseDataCollectionEnumerator(subscriptionRequest, configuredEnumerator, _symbolUniverse, _timeProvider);
             }
             else
             {
-                var factory = new BaseDataSubscriptionEnumeratorFactory(_isLiveMode, _mapFileResolver, _factorFileProvider);
-
                 var enumerators = GetSubscriptionConfigurations(request)
                     .Select(c => new SubscriptionRequest(request, configuration: c))
-                    .Select(sr => _enumeratorConfigurator(request, factory.CreateEnumerator(sr, dataProvider)));
+                    .Select(sr => _enumeratorConfigurator(sr));
 
                 var sync = new SynchronizingEnumerator(enumerators);
                 return new OptionChainUniverseDataCollectionEnumerator(sync, request.Security.Symbol);

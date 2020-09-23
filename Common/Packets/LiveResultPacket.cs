@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Logging;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Packets
@@ -123,6 +124,20 @@ namespace QuantConnect.Packets
             catch (Exception err) {
                 Log.Error(err);
             }
+        }
+
+        /// <summary>
+        /// Creates an empty result packet, useful when the algorithm fails to initialize
+        /// </summary>
+        /// <param name="job">The associated job packet</param>
+        /// <returns>An empty result packet</returns>
+        public static LiveResultPacket CreateEmpty(LiveNodePacket job)
+        {
+            return new LiveResultPacket(job, new LiveResult(new LiveResultParameters(
+                new Dictionary<string, Chart>(), new Dictionary<int, Order>(), new Dictionary<DateTime, decimal>(),
+                new Dictionary<string, Holding>(), new CashBook(), new Dictionary<string, string>(),
+                new Dictionary<string, string>(), new List<OrderEvent>(), new Dictionary<string, string>(),
+                new AlphaRuntimeStatistics())));
         }
     } // End Queue Packet:
 

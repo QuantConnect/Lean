@@ -156,7 +156,7 @@
       <HintPath>Fxcm\QuantConnect.Fxcm.dll</HintPath>
     </Reference>
     <Reference Include="QuantConnect.IBAutomater, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\QuantConnect.IBAutomater.1.0.23\lib\net45\QuantConnect.IBAutomater.exe</HintPath>
+      <HintPath>..\packages\QuantConnect.IBAutomater.1.0.29\lib\net45\QuantConnect.IBAutomater.exe</HintPath>
     </Reference>
     <Reference Include="RestSharp, Version=106.6.10.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
       <HintPath>..\packages\RestSharp.106.6.10\lib\net452\RestSharp.dll</HintPath>
@@ -187,16 +187,12 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="websocket-sharp, Version=1.0.4.0, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
-      <HintPath>..\packages\WebSocketSharpFork.1.0.4.0\lib\net35\websocket-sharp.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Alpaca\AlpacaBrokerage.cs" />
-    <Compile Include="Alpaca\AlpacaBrokerage.DataQueueHandler.cs" />
     <Compile Include="Alpaca\AlpacaBrokerage.Utility.cs" />
     <Compile Include="Alpaca\AlpacaBrokerageFactory.cs" />
     <Compile Include="Alpaca\Markets\AlpacaTradingClient.cs" />
@@ -231,7 +227,6 @@
     <Compile Include="Alpaca\Markets\Enums\TimeInForce.cs" />
     <Compile Include="Alpaca\Markets\Enums\TradeConfirmEmail.cs" />
     <Compile Include="Alpaca\Markets\Enums\TradeEvent.cs" />
-    <Compile Include="Alpaca\Markets\Environment\EnvironmentExtensions.cs" />
     <Compile Include="Alpaca\Markets\Environment\Environments.cs" />
     <Compile Include="Alpaca\Markets\Environment\IEnvironment.cs" />
     <Compile Include="Alpaca\Markets\Environment\LiveEnvironment.cs" />
@@ -332,19 +327,11 @@
     <Compile Include="Alpaca\Markets\Parameters\ListOrdersRequest.cs" />
     <Compile Include="Alpaca\Markets\Parameters\NewOrderRequest.cs" />
     <Compile Include="Alpaca\Markets\Parameters\PolygonDataClientConfiguration.cs" />
-    <Compile Include="Alpaca\Markets\Parameters\PolygonStreamingClientConfiguration.cs" />
     <Compile Include="Alpaca\Markets\Parameters\PortfolioHistoryRequest.cs" />
-    <Compile Include="Alpaca\Markets\Parameters\StreamingClientConfiguration.cs" />
     <Compile Include="Alpaca\Markets\PolygonDataClient.cs" />
-    <Compile Include="Alpaca\Markets\PolygonStreamingClient.cs" />
     <Compile Include="Alpaca\Markets\RateThrottler.cs" />
     <Compile Include="Alpaca\Markets\SockClient.cs" />
     <Compile Include="Alpaca\Markets\ThrottleParameters.cs" />
-    <Compile Include="Alpaca\Markets\WebSocket\IWebSocket.cs" />
-    <Compile Include="Alpaca\Markets\WebSocket\IWebSocketFactory.cs" />
-    <Compile Include="Alpaca\Markets\WebSocket\StreamingClientBase.cs" />
-    <Compile Include="Alpaca\Markets\WebSocket\SynchronizationQueue.cs" />
-    <Compile Include="Alpaca\Markets\WebSocket\WebSocketSharpFactory.cs" />
     <Compile Include="Backtesting\BacktestingBrokerage.cs" />
     <Compile Include="Backtesting\BacktestingBrokerageFactory.cs" />
     <Compile Include="Backtesting\BasicOptionAssignmentSimulation.cs" />
@@ -356,8 +343,19 @@
     <Compile Include="Bitfinex\BitfinexBrokerage.Utility.cs" />
     <Compile Include="Bitfinex\BitfinexSubscriptionManager.cs" />
     <Compile Include="Bitfinex\BitfinexWebSocketWrapper.cs" />
-    <Compile Include="Bitfinex\Messages.cs" />
     <Compile Include="Bitfinex\BitfinexSymbolMapper.cs" />
+    <Compile Include="Bitfinex\Messages\Messages.cs" />
+    <Compile Include="Bitfinex\Messages\Order.cs" />
+    <Compile Include="Bitfinex\Messages\Position.cs" />
+    <Compile Include="Bitfinex\Messages\Ticker.cs" />
+    <Compile Include="Bitfinex\Messages\TradeExecutionUpdate.cs" />
+    <Compile Include="Bitfinex\Messages\Wallet.cs" />
+    <Compile Include="Bitfinex\Converters\TradeExecutionUpdateConverter.cs" />
+    <Compile Include="Bitfinex\Converters\OrderConverter.cs" />
+    <Compile Include="Bitfinex\Messages\OrderFlags.cs" />
+    <Compile Include="Bitfinex\Converters\TickerConverter.cs" />
+    <Compile Include="Bitfinex\Converters\PositionConverter.cs" />
+    <Compile Include="Bitfinex\Converters\WalletConverter.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersStateManager.cs" />
     <Compile Include="IOrderBookUpdater.cs" />
     <Compile Include="DefaultOrderBook.cs" />
@@ -738,9 +736,9 @@
     <Error Condition="!Exists('..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props'))" />
-    <Error Condition="!Exists('..\packages\QuantConnect.IBAutomater.1.0.23\build\QuantConnect.IBAutomater.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.IBAutomater.1.0.23\build\QuantConnect.IBAutomater.targets'))" />
+    <Error Condition="!Exists('..\packages\QuantConnect.IBAutomater.1.0.29\build\QuantConnect.IBAutomater.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.IBAutomater.1.0.29\build\QuantConnect.IBAutomater.targets'))" />
   </Target>
-  <Import Project="..\packages\QuantConnect.IBAutomater.1.0.23\build\QuantConnect.IBAutomater.targets" Condition="Exists('..\packages\QuantConnect.IBAutomater.1.0.23\build\QuantConnect.IBAutomater.targets')" />
+  <Import Project="..\packages\QuantConnect.IBAutomater.1.0.29\build\QuantConnect.IBAutomater.targets" Condition="Exists('..\packages\QuantConnect.IBAutomater.1.0.29\build\QuantConnect.IBAutomater.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

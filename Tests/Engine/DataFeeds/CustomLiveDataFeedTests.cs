@@ -45,6 +45,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private LiveSynchronizer _synchronizer;
         private IDataFeed _feed;
 
+        [TearDown]
+        public void TearDown()
+        {
+            _feed.Exit();
+            _synchronizer.DisposeSafely();
+        }
+
         [Test]
         public void EmitsDailyQuandlFutureDataOverWeekends()
         {
@@ -217,7 +224,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     TickType = TickType.Trade
                 };
                 return new[] { tick, tick2 };
-            });
+            }, timeProvider);
             CreateDataFeed(dataQueueHandler);
             var dataManager = new DataManagerStub(algorithm, _feed);
 
@@ -285,6 +292,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             timer.Value.Dispose();
             dataManager.RemoveAllSubscriptions();
+            dataQueueHandler.DisposeSafely();
             Assert.AreEqual(14, slicesEmitted);
             Assert.AreEqual(14 * symbols.Count, dataPointsEmitted);
         }
@@ -292,7 +300,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private void CreateDataFeed(
             FuncDataQueueHandler funcDataQueueHandler = null)
         {
-            _feed = new TestableLiveTradingDataFeed(funcDataQueueHandler ?? new FuncDataQueueHandler(x => Enumerable.Empty<BaseData>()));
+            _feed = new TestableLiveTradingDataFeed(funcDataQueueHandler ?? new FuncDataQueueHandler(x => Enumerable.Empty<BaseData>(), new RealTimeProvider()));
         }
 
         private void RunLiveDataFeed(

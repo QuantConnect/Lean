@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using NodaTime;
+using ProtoBuf;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Custom.Estimize
@@ -24,29 +25,34 @@ namespace QuantConnect.Data.Custom.Estimize
     /// <summary>
     /// Financial releases for the specified company
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class EstimizeRelease : BaseData
     {
         /// <summary>
         /// The unique identifier for the release
         /// </summary>
+        [ProtoMember(10)]
         [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }
 
         /// <summary>
         /// The fiscal year for the release
         /// </summary>
+        [ProtoMember(11)]
         [JsonProperty(PropertyName = "fiscal_year")]
         public int FiscalYear { get; set; }
 
         /// <summary>
         /// The fiscal quarter for the release
         /// </summary>
+        [ProtoMember(12)]
         [JsonProperty(PropertyName = "fiscal_quarter")]
         public int FiscalQuarter { get; set; }
 
         /// <summary>
         /// The date of the release
         /// </summary>
+        [ProtoMember(13)]
         [JsonProperty(PropertyName = "release_date")]
         public DateTime ReleaseDate
         {
@@ -62,6 +68,7 @@ namespace QuantConnect.Data.Custom.Estimize
         /// <summary>
         /// The earnings per share for the specified fiscal quarter
         /// </summary>
+        [ProtoMember(14)]
         [JsonProperty(PropertyName = "eps")]
         public decimal? Eps { get; set; }
 
@@ -73,42 +80,49 @@ namespace QuantConnect.Data.Custom.Estimize
         /// <summary>
         /// The revenue for the specified fiscal quarter
         /// </summary>
+        [ProtoMember(15)]
         [JsonProperty(PropertyName = "revenue")]
         public decimal? Revenue { get; set; }
 
         /// <summary>
         /// The estimated EPS from Wall Street
         /// </summary>
+        [ProtoMember(16)]
         [JsonProperty(PropertyName = "wallstreet_eps_estimate")]
         public decimal? WallStreetEpsEstimate { get; set; }
 
         /// <summary>
         /// The estimated revenue from Wall Street
         /// </summary>
+        [ProtoMember(17)]
         [JsonProperty(PropertyName = "wallstreet_revenue_estimate")]
         public decimal? WallStreetRevenueEstimate { get; set; }
 
         /// <summary>
         /// The mean EPS consensus by the Estimize community
         /// </summary>
+        [ProtoMember(18)]
         [JsonProperty(PropertyName = "consensus_eps_estimate")]
         public decimal? ConsensusEpsEstimate { get; set; }
 
         /// <summary>
         /// The mean revenue consensus by the Estimize community
         /// </summary>
+        [ProtoMember(19)]
         [JsonProperty(PropertyName = "consensus_revenue_estimate")]
         public decimal? ConsensusRevenueEstimate { get; set; }
 
         /// <summary>
         /// The weighted EPS consensus by the Estimize community
         /// </summary>
+        [ProtoMember(20)]
         [JsonProperty(PropertyName = "consensus_weighted_eps_estimate")]
         public decimal? ConsensusWeightedEpsEstimate { get; set; }
 
         /// <summary>
         /// The weighted revenue consensus by the Estimize community
         /// </summary>
+        [ProtoMember(21)]
         [JsonProperty(PropertyName = "consensus_weighted_revenue_estimate")]
         public decimal? ConsensusWeightedRevenueEstimate { get; set; }
 

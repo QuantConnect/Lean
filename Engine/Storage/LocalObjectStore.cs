@@ -33,8 +33,6 @@ namespace QuantConnect.Lean.Engine.Storage
     /// </summary>
     public class LocalObjectStore : IObjectStore
     {
-        private static string StorageRoot => Path.GetFullPath(Config.Get("object-store-root", "./storage"));
-
         /// <summary>
         /// No read permissions error message
         /// </summary>
@@ -59,6 +57,7 @@ namespace QuantConnect.Lean.Engine.Storage
 
         private Timer _persistenceTimer;
         private TimeSpan _persistenceInterval;
+        private readonly string _storageRoot = Path.GetFullPath(Config.Get("object-store-root", "./storage"));
         private readonly ConcurrentDictionary<string, byte[]> _storage = new ConcurrentDictionary<string, byte[]>();
 
         /// <summary>
@@ -82,7 +81,7 @@ namespace QuantConnect.Lean.Engine.Storage
         public virtual void Initialize(string algorithmName, int userId, int projectId, string userToken, Controls controls)
         {
             // absolute path including algorithm name
-            AlgorithmStorageRoot = Path.Combine(StorageRoot, algorithmName);
+            AlgorithmStorageRoot = Path.Combine(_storageRoot, algorithmName);
 
             // create the root path if it does not exist
             Directory.CreateDirectory(AlgorithmStorageRoot);
@@ -298,8 +297,9 @@ namespace QuantConnect.Lean.Engine.Storage
                     _persistenceTimer.DisposeSafely();
                 }
 
-                // if the object store was not used, delete the empty storage directory created in Initialize
-                if (!Directory.EnumerateFileSystemEntries(AlgorithmStorageRoot).Any())
+                // if the object store was not used, delete the empty storage directory created in Initialize.
+                // can be null if not initialized
+                if (AlgorithmStorageRoot != null && !Directory.EnumerateFileSystemEntries(AlgorithmStorageRoot).Any())
                 {
                     Directory.Delete(AlgorithmStorageRoot);
                 }

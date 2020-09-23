@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Tradier;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
@@ -51,7 +52,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
             var accountID = TradierBrokerageFactory.Configuration.AccountID;
-            var tradier = new TradierBrokerage(orderProvider, securityProvider, accountID);
+            var tradier = new TradierBrokerage(orderProvider, securityProvider, new AggregationManager(), accountID);
 
             var qcUserID = TradierBrokerageFactory.Configuration.QuantConnectUserID;
             var tokens = TradierBrokerageFactory.GetTokens();

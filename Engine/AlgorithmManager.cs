@@ -260,6 +260,7 @@ namespace QuantConnect.Lean.Engine
                     }
 
                     realtime.OnSecuritiesChanged(timeSlice.SecurityChanges);
+                    results.OnSecuritiesChanged(timeSlice.SecurityChanges);
                 }
 
                 //Update the securities properties: first before calling user code to avoid issues with data
@@ -713,9 +714,10 @@ namespace QuantConnect.Lean.Engine
         {
             lock (_lock)
             {
-                //We don't want anyone elseto set our internal state to "Running".
+                //We don't want anyone else to set our internal state to "Running".
                 //This is controlled by the algorithm private variable only.
-                if (state != AlgorithmStatus.Running)
+                //Algorithm could be null after it's initialized and they call Run on us
+                if (state != AlgorithmStatus.Running && _algorithm != null)
                 {
                     _algorithm.Status = state;
                 }
@@ -955,6 +957,8 @@ namespace QuantConnect.Lean.Engine
                     }
                 }
             }
+
+            Log.Trace("ProcessVolatilityHistoryRequirements(): finished.");
         }
 
         /// <summary>

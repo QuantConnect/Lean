@@ -175,6 +175,27 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Create a C# DateTime from a UnixTimestamp
+        /// </summary>
+        /// <param name="unixTimeStamp">Int64 unix timestamp (Time since Midnight Jan 1 1970) in nanoseconds</param>
+        /// <returns>C# date timeobject</returns>
+        public static DateTime UnixNanosecondTimeStampToDateTime(long unixTimeStamp)
+        {
+            DateTime time;
+            try
+            {
+                var ticks = unixTimeStamp / 100;
+                time = EpochTime.AddTicks(ticks);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err, Invariant($"UnixTimeStamp: {unixTimeStamp}"));
+                time = DateTime.Now;
+            }
+            return time;
+        }
+
+        /// <summary>
         /// Convert a Datetime to Unix Timestamp
         /// </summary>
         /// <param name="time">C# datetime object</param>
@@ -185,6 +206,44 @@ namespace QuantConnect
             try
             {
                 timestamp = (time - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalSeconds;
+            }
+            catch (Exception err)
+            {
+                Log.Error(err, Invariant($"{time:o}"));
+            }
+            return timestamp;
+        }
+
+        /// <summary>
+        /// Convert a Datetime to Unix Timestamp
+        /// </summary>
+        /// <param name="time">C# datetime object</param>
+        /// <returns>Double unix timestamp</returns>
+        public static double DateTimeToUnixTimeStampMilliseconds(DateTime time)
+        {
+            double timestamp = 0;
+            try
+            {
+                timestamp = (time - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalMilliseconds;
+            }
+            catch (Exception err)
+            {
+                Log.Error(err, Invariant($"{time:o}"));
+            }
+            return timestamp;
+        }
+
+        /// <summary>
+        /// Convert a Datetime to Unix Timestamp
+        /// </summary>
+        /// <param name="time">C# datetime object</param>
+        /// <returns>Int64 unix timestamp</returns>
+        public static long DateTimeToUnixTimeStampNanoseconds(DateTime time)
+        {
+            long timestamp = 0;
+            try
+            {
+                timestamp = (time - new DateTime(1970, 1, 1, 0, 0, 0, 0)).Ticks * 100;
             }
             catch (Exception err)
             {
@@ -264,11 +323,27 @@ namespace QuantConnect
                 {
                     return date;
                 }
-                if (DateTime.TryParseExact(dateToParse.Substring(0, 19), DateFormat.JsonFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                if (DateTime.TryParseExact(dateToParse, DateFormat.TwelveCharacter, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                {
+                    return date;
+                }
+                if (DateTime.TryParseExact(dateToParse.SafeSubstring(0, 19), DateFormat.JsonFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                {
+                    return date;
+                }
+                if (DateTime.TryParseExact(dateToParse, DateFormat.USShort, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                {
+                    return date;
+                }
+                if (DateTime.TryParseExact(dateToParse, DateFormat.USShortDateOnly, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
                 {
                     return date;
                 }
                 if (DateTime.TryParseExact(dateToParse, DateFormat.US, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                {
+                    return date;
+                }
+                if (DateTime.TryParseExact(dateToParse, DateFormat.USDateOnly, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
                 {
                     return date;
                 }

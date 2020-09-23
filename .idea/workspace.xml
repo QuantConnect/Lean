@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RunManager" selected="Python Debug Server.Debug in Container">
+    <configuration name="Debug Local" type="PyRemoteDebugConfigurationType" factoryName="Python Remote Debug">
+      <module name="LEAN" />
+      <option name="PORT" value="5678" />
+      <option name="HOST" value="localhost" />
+      <PathMappingSettings>
+        <option name="pathMappings">
+          <list />
+        </option>
+      </PathMappingSettings>
+      <option name="REDIRECT_OUTPUT" value="true" />
+      <option name="SUSPEND_AFTER_CONNECT" value="true" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Debug in Container" type="PyRemoteDebugConfigurationType" factoryName="Python Remote Debug">
+      <module name="LEAN" />
+      <option name="PORT" value="5678" />
+      <option name="HOST" value="localhost" />
+      <PathMappingSettings>
+        <option name="pathMappings">
+          <list>
+            <mapping local-root="$PROJECT_DIR$" remote-root="/Lean" />
+          </list>
+        </option>
+      </PathMappingSettings>
+      <option name="REDIRECT_OUTPUT" value="true" />
+      <option name="SUSPEND_AFTER_CONNECT" value="true" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python Debug Server.Debug Local" />
+      <item itemvalue="Python Debug Server.Debug in Container" />
+    </list>
+  </component>
+</project>

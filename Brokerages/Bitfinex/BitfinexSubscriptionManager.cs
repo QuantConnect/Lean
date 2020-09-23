@@ -13,24 +13,26 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using QuantConnect.Data.Market;
-using QuantConnect.Logging;
-using QuantConnect.Util;
+using QuantConnect.Brokerages.Bitfinex.Messages;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
     /// <summary>
     /// Handles Bitfinex data subscriptions with multiple websocket connections
     /// </summary>
-    public class BitfinexSubscriptionManager
+    public class BitfinexSubscriptionManager : DataQueueHandlerSubscriptionManager
     {
         /// <summary>
         /// Maximum number of subscribed channels per websocket connection
@@ -43,13 +45,21 @@ namespace QuantConnect.Brokerages.Bitfinex
         private const int ConnectionTimeout = 30000;
 
         private readonly string _wssUrl;
+        private volatile int _subscribeErrorCode;
         private readonly object _locker = new object();
         private readonly BitfinexBrokerage _brokerage;
         private readonly BitfinexSymbolMapper _symbolMapper;
         private readonly RateGate _connectionRateLimiter = new RateGate(5, TimeSpan.FromMinutes(1));
         private readonly ConcurrentDictionary<Symbol, List<BitfinexWebSocketWrapper>> _subscriptionsBySymbol = new ConcurrentDictionary<Symbol, List<BitfinexWebSocketWrapper>>();
-        private readonly ConcurrentDictionary<BitfinexWebSocketWrapper, List<BitfinexChannel>> _channelsByWebSocket = new ConcurrentDictionary<BitfinexWebSocketWrapper, List<BitfinexChannel>>();
+        private readonly ConcurrentDictionary<BitfinexWebSocketWrapper, List<Channel>> _channelsByWebSocket = new ConcurrentDictionary<BitfinexWebSocketWrapper, List<Channel>>();
+        private readonly ConcurrentDictionary<int, Channel> _channels = new ConcurrentDictionary<int, Channel>();
         private readonly ConcurrentDictionary<Symbol, DefaultOrderBook> _orderBooks = new ConcurrentDictionary<Symbol, DefaultOrderBook>();
+        private readonly IReadOnlyDictionary<TickType, string> _tickType2ChannelName = new Dictionary<TickType, string>() {
+            { TickType.Trade, "trades"},
+            { TickType.Quote, "book"}
+        };
+        private readonly ManualResetEvent _onSubscribeEvent = new ManualResetEvent(false);
+        private readonly ManualResetEvent _onUnsubscribeEvent = new ManualResetEvent(false);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BitfinexSubscriptionManager"/> class.
@@ -62,27 +72,49 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <summary>
-        /// Returns true if there is an active subscription for the requested symbol
+        /// Subscribes to the requested subscription (using an individual streaming channel)
         /// </summary>
-        /// <param name="symbol"></param>
-        /// <returns></returns>
-        public bool IsSubscribed(Symbol symbol)
-        {
-            return _subscriptionsBySymbol.ContainsKey(symbol);
-        }
-
-        /// <summary>
-        /// Adds a subscription for the requested symbol
-        /// </summary>
-        /// <param name="symbol">The symbol</param>
-        public void Subscribe(Symbol symbol)
+        /// <param name="symbols">symbol list</param>
+        /// <param name="tickType">Type of tick data</param>
+        protected override bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
             try
             {
-                var bookSubscription = SubscribeChannel("book", symbol);
-                var tradesSubscription = SubscribeChannel("trades", symbol);
+                var states = new List<bool>(symbols.Count());
+                foreach (var symbol in symbols)
+                {
+                    _onSubscribeEvent.Reset();
+                    _subscribeErrorCode = 0;
+                    var subscription = SubscribeChannel(
+                        ChannelNameFromTickType(tickType),
+                        symbol);
 
-                _subscriptionsBySymbol.TryAdd(symbol, new List<BitfinexWebSocketWrapper> { bookSubscription, tradesSubscription });
+                    _subscriptionsBySymbol.AddOrUpdate(
+                        symbol,
+                        new List<BitfinexWebSocketWrapper> { subscription },
+                        (k, v) =>
+                        {
+                            if (!v.Contains(subscription))
+                            {
+                                v.Add(subscription);
+                            }
+                            return v;
+                        });
+
+                    Log.Trace($"BitfinexBrokerage.Subscribe(): Sent subscribe for {symbol.Value}.");
+
+                    if (_onSubscribeEvent.WaitOne(TimeSpan.FromSeconds(10)) && _subscribeErrorCode == 0)
+                    {
+                        states.Add(true);
+                    }
+                    else
+                    {
+                        Log.Trace($"BitfinexBrokerage.Subscribe(): Could not subscribe to {symbol.Value}.");
+                        states.Add(false);
+                    }
+                }
+
+                return states.All(s => s);
             }
             catch (Exception exception)
             {
@@ -94,64 +126,90 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <summary>
         /// Removes the subscription for the requested symbol
         /// </summary>
-        /// <param name="symbol">The symbol</param>
-        public void Unsubscribe(Symbol symbol)
+        /// <param name="symbols">symbol list</param>
+        /// <param name="tickType">Type of tick data</param>
+        protected override bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
-            List<BitfinexWebSocketWrapper> subscriptions;
-            if (_subscriptionsBySymbol.TryGetValue(symbol, out subscriptions))
+            string channelName = ChannelNameFromTickType(tickType);
+            var states = new List<bool>(symbols.Count());
+            foreach (var symbol in symbols)
             {
-                foreach (var webSocket in subscriptions)
+                List<BitfinexWebSocketWrapper> subscriptions;
+                if (_subscriptionsBySymbol.TryGetValue(symbol, out subscriptions))
                 {
-                    try
+                    for (int i = subscriptions.Count - 1; i >= 0; i--)
                     {
-                        lock (_locker)
+                        var webSocket = subscriptions[i];
+                        _onUnsubscribeEvent.Reset();
+                        try
                         {
-                            List<BitfinexChannel> channels;
-                            if (_channelsByWebSocket.TryGetValue(webSocket, out channels))
+                            Channel channel = new Channel(channelName, symbol);
+                            List<Channel> channels;
+                            if (_channelsByWebSocket.TryGetValue(webSocket, out channels) && channels.Contains(channel))
                             {
-                                foreach (var channel in channels)
+                                UnsubscribeChannel(webSocket, channel);
+
+                                if (_onUnsubscribeEvent.WaitOne(TimeSpan.FromSeconds(30)))
                                 {
-                                    UnsubscribeChannel(webSocket, channel.ChannelId);
+                                    states.Add(true);
+                                }
+                                else
+                                {
+                                    Log.Trace($"BitfinexBrokerage.Unsubscribe(): Could not unsubscribe from {symbol.Value}.");
+                                    states.Add(false);
                                 }
                             }
                         }
-                    }
-                    catch (Exception exception)
-                    {
-                        Log.Error(exception);
+                        catch (Exception exception)
+                        {
+                            Log.Error(exception);
+                        }
                     }
                 }
+            }
+            return states.All(s => s);
+        }
 
-                _subscriptionsBySymbol.TryRemove(symbol, out subscriptions);
+        protected override string ChannelNameFromTickType(TickType tickType)
+        {
+            string channelName;
+            if (_tickType2ChannelName.TryGetValue(tickType, out channelName))
+            {
+                return channelName;
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException("TickType", $"BitfinexSubscriptionManager.Subscribe(): Tick type {tickType} is not allowed for this brokerage.");
             }
         }
 
         private BitfinexWebSocketWrapper SubscribeChannel(string channelName, Symbol symbol)
         {
-            var ticker = _symbolMapper.GetBrokerageSymbol(symbol);
-            var channel = new BitfinexChannel { Name = channelName, Symbol = ticker, ChannelId = string.Empty };
+            var channel = new Channel(channelName, symbol);
+
             var webSocket = GetFreeWebSocket(channel);
 
             webSocket.Send(JsonConvert.SerializeObject(new
             {
                 @event = "subscribe",
                 channel = channelName,
-                pair = ticker
+                pair = _symbolMapper.GetBrokerageSymbol(symbol)
             }));
 
             return webSocket;
         }
 
-        private void UnsubscribeChannel(IWebSocket webSocket, string channelId)
+        private void UnsubscribeChannel(IWebSocket webSocket, Channel channel)
         {
+            int channelId = _channels.First(c => c.Value.Equals(channel)).Key;
             webSocket.Send(JsonConvert.SerializeObject(new
             {
                 @event = "unsubscribe",
-                channelId
+                chanId = channelId.ToStringInvariant()
             }));
         }
 
-        private BitfinexWebSocketWrapper GetFreeWebSocket(BitfinexChannel channel)
+        private BitfinexWebSocketWrapper GetFreeWebSocket(Channel channel)
         {
             int count;
 
@@ -184,7 +242,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             lock (_locker)
             {
-                _channelsByWebSocket.TryAdd(webSocket, new List<BitfinexChannel> { channel });
+                _channelsByWebSocket.TryAdd(webSocket, new List<Channel> { channel });
 
                 count = _channelsByWebSocket.Sum(x => x.Value.Count);
                 Log.Trace($"BitfinexSubscriptionManager.GetFreeWebSocket(): Channel added: Total channels:{count}");
@@ -192,18 +250,21 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             webSocket.Initialize(_wssUrl);
             webSocket.Message += OnMessage;
-            webSocket.Error += OnError;
 
             Connect(webSocket);
 
-            webSocket.ConnectionHandler.ConnectionLost += OnConnectionLost;
-            webSocket.ConnectionHandler.ConnectionRestored += OnConnectionRestored;
             webSocket.ConnectionHandler.ReconnectRequested += OnReconnectRequested;
             webSocket.ConnectionHandler.Initialize(webSocket.ConnectionId);
 
+            int connections;
+            lock (_locker)
+            {
+                connections = _channelsByWebSocket.Count;
+            }
+
             Log.Trace("BitfinexSubscriptionManager.GetFreeWebSocket(): New websocket added: " +
                       $"Hashcode: {webSocket.GetHashCode()}, " +
-                      $"WebSocket connections: {_channelsByWebSocket.Count}");
+                      $"WebSocket connections: {connections}");
 
             return webSocket;
         }
@@ -235,16 +296,6 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
-        private void OnConnectionLost(object sender, EventArgs e)
-        {
-            Log.Error("BitfinexSubscriptionManager.OnConnectionLost(): WebSocket connection lost.");
-        }
-
-        private void OnConnectionRestored(object sender, EventArgs e)
-        {
-            Log.Trace("BitfinexSubscriptionManager.OnConnectionRestored(): WebSocket connection restored.");
-        }
-
         private void OnReconnectRequested(object sender, EventArgs e)
         {
             var connectionHandler = (DefaultConnectionHandler)sender;
@@ -255,13 +306,8 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             lock (_locker)
             {
-                foreach (var connection in _channelsByWebSocket.Keys)
-                {
-                    if (connection.ConnectionId == connectionHandler.ConnectionId)
-                    {
-                        webSocket = connection;
-                    }
-                }
+                webSocket = _channelsByWebSocket.Keys
+                    .FirstOrDefault(connection => connection.ConnectionId == connectionHandler.ConnectionId);
             }
 
             if (webSocket == null)
@@ -286,11 +332,13 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             Log.Trace($"BitfinexSubscriptionManager.OnReconnectRequested(): Reconnected: IsOpen:{webSocket.IsOpen} [Id: {connectionHandler.ConnectionId}]");
 
-            List<BitfinexChannel> channels;
+            List<Channel> channels;
             lock (_locker)
             {
                 if (!_channelsByWebSocket.TryGetValue(webSocket, out channels))
-                return;
+                {
+                    return;
+                }
             }
 
             Log.Trace($"BitfinexSubscriptionManager.OnReconnectRequested(): Resubscribing channels. [Id: {connectionHandler.ConnectionId}]");
@@ -301,44 +349,58 @@ namespace QuantConnect.Brokerages.Bitfinex
                 {
                     @event = "subscribe",
                     channel = channel.Name,
-                    pair = channel.Symbol
+                    pair = _symbolMapper.GetBrokerageSymbol(channel.Symbol)
                 }));
             }
         }
 
-        private void OnError(object sender, WebSocketError e)
-        {
-            Log.Error($"BitfinexSubscriptionManager.OnError(): Message: {e.Message} Exception: {e.Exception}");
-        }
-
         private void OnMessage(object sender, WebSocketMessage e)
         {
-            var webSocket = (BitfinexWebSocketWrapper) sender;
+            var webSocket = (BitfinexWebSocketWrapper)sender;
 
             try
             {
                 var token = JToken.Parse(e.Message);
 
+                webSocket.ConnectionHandler.KeepAlive(DateTime.UtcNow);
+
                 if (token is JArray)
                 {
                     var channel = token[0].ToObject<int>();
-                    // heartbeat
-                    if (token[1].Type == JTokenType.String && token[1].Value<string>() == "hb")
+
+                    if (token[1].Type == JTokenType.String)
                     {
-                        webSocket.ConnectionHandler.KeepAlive(DateTime.UtcNow);
-                        return;
+                        var type = token[1].Value<string>();
+
+                        switch (type)
+                        {
+                            // heartbeat
+                            case "hb":
+                                return;
+
+                            // trade execution
+                            case "te":
+                                OnUpdate(channel, token[2].ToObject<string[]>());
+                                break;
+
+                            // ignored -- trades already handled in "te" message
+                            // https://github.com/bitfinexcom/bitfinex-api-node#te-vs-tu-messages
+                            case "tu":
+                                break;
+
+                            default:
+                                Log.Trace($"BitfinexSubscriptionManager.OnMessage(): Unexpected message type: {type}");
+                                return;
+                        }
                     }
 
                     // public channels
-                    if (channel != 0)
+                    else if (channel != 0 && token[1].Type == JTokenType.Array)
                     {
-                        webSocket.ConnectionHandler.KeepAlive(DateTime.UtcNow);
-
-                        if (token.Count() == 2)
+                        if (token[1][0].Type == JTokenType.Array)
                         {
                             OnSnapshot(
-                                webSocket,
-                                token[0].ToObject<string>(),
+                                channel,
                                 token[1].ToObject<string[][]>()
                             );
                         }
@@ -346,9 +408,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                         {
                             // pass channel id as separate arg
                             OnUpdate(
-                                webSocket,
-                                token[0].ToObject<string>(),
-                                token.ToObject<string[]>().Skip(1).ToArray()
+                                channel,
+                                token[1].ToObject<string[]>()
                             );
                         }
                     }
@@ -359,18 +420,30 @@ namespace QuantConnect.Brokerages.Bitfinex
                     switch (raw.Event.ToLowerInvariant())
                     {
                         case "subscribed":
-                            OnSubscribe(webSocket, token.ToObject<Messages.ChannelSubscription>());
+                            OnSubscribe(webSocket, token.ToObject<ChannelSubscription>());
                             return;
+
                         case "unsubscribed":
-                            OnUnsubscribe(webSocket, token.ToObject<Messages.ChannelUnsubscribing>());
+                            OnUnsubscribe(webSocket, token.ToObject<ChannelUnsubscribing>());
                             return;
+
                         case "auth":
                         case "info":
                         case "ping":
                             return;
+
                         case "error":
+                            var error = token.ToObject<ErrorMessage>();
+                            // 10300 Subscription failed (generic) | 10301 : Already subscribed | 10302 : Unknown channel
+                            // see https://docs.bitfinex.com/docs/ws-general
+                            if (error.Code == 10300 || error.Code == 10301 || error.Code == 10302)
+                            {
+                                _subscribeErrorCode = error.Code;
+                                _onSubscribeEvent.Set();
+                            }
                             Log.Error($"BitfinexSubscriptionManager.OnMessage(): {e.Message}");
                             return;
+
                         default:
                             Log.Trace($"BitfinexSubscriptionManager.OnMessage(): Unexpected message format: {e.Message}");
                             break;
@@ -390,15 +463,12 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 lock (_locker)
                 {
-                    List<BitfinexChannel> channels;
-                    if (_channelsByWebSocket.TryGetValue(webSocket, out channels))
-                    {
-                        var channel = channels.First(x => x.Name == data.Channel && x.Symbol == data.Symbol);
+                    var channel = new Channel(data.Channel, _symbolMapper.GetLeanSymbol(data.Symbol));
 
-                        channel.ChannelId = data.ChannelId;
+                    _channels.AddOrUpdate(data.ChannelId, channel);
+                    _onSubscribeEvent.Set();
 
-                        webSocket.ConnectionHandler.EnableMonitoring(true);
-                    }
+                    webSocket.ConnectionHandler.EnableMonitoring(true);
                 }
             }
             catch (Exception e)
@@ -414,10 +484,29 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 lock (_locker)
                 {
-                    List<BitfinexChannel> channels;
+                    Channel channel;
+                    if (!_channels.TryRemove(data.ChannelId, out channel)) return;
+
+                    _onUnsubscribeEvent.Set();
+
+                    List<Channel> channels;
                     if (!_channelsByWebSocket.TryGetValue(webSocket, out channels)) return;
 
-                    channels.Remove(channels.First(x => x.ChannelId == data.ChannelId));
+                    channels.Remove(channel);
+
+                    if (channels.Count(c => c.Symbol.Equals(channel.Symbol)) == 0)
+                    {
+                        List<BitfinexWebSocketWrapper> subscriptions;
+                        if (_subscriptionsBySymbol.TryGetValue(channel.Symbol, out subscriptions))
+                        {
+                            subscriptions.Remove(webSocket);
+
+                            if (subscriptions.Count == 0)
+                            {
+                                _subscriptionsBySymbol.TryRemove(channel.Symbol, out subscriptions);
+                            }
+                        }
+                    }
 
                     if (channels.Count != 0) return;
 
@@ -434,23 +523,15 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
-        private void OnSnapshot(BitfinexWebSocketWrapper webSocket, string channelId, string[][] entries)
+        private void OnSnapshot(int channelId, string[][] entries)
         {
             try
             {
-                BitfinexChannel channel;
+                Channel channel;
 
                 lock (_locker)
                 {
-                    List<BitfinexChannel> channels;
-                    if (!_channelsByWebSocket.TryGetValue(webSocket, out channels))
-                    {
-                        _brokerage.OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, $"Message received from unknown channel Id {channelId}"));
-                        return;
-                    }
-
-                    channel = channels.FirstOrDefault(x => x.ChannelId == channelId);
-                    if (channel == null)
+                    if (!_channels.TryGetValue(channelId, out channel))
                     {
                         _brokerage.OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, $"Message received from unknown channel Id {channelId}"));
                         return;
@@ -462,9 +543,6 @@ namespace QuantConnect.Brokerages.Bitfinex
                     case "book":
                         ProcessOrderBookSnapshot(channel, entries);
                         return;
-                    case "trades":
-                        ProcessTradesSnapshot(channel, entries);
-                        return;
                 }
             }
             catch (Exception e)
@@ -474,11 +552,11 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
-        private void ProcessOrderBookSnapshot(BitfinexChannel channel, string[][] entries)
+        private void ProcessOrderBookSnapshot(Channel channel, string[][] entries)
         {
             try
             {
-                var symbol = _symbolMapper.GetLeanSymbol(channel.Symbol);
+                var symbol = channel.Symbol;
 
                 DefaultOrderBook orderBook;
                 if (!_orderBooks.TryGetValue(symbol, out orderBook))
@@ -514,41 +592,15 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
-        private void ProcessTradesSnapshot(BitfinexChannel channel, string[][] entries)
+        private void OnUpdate(int channelId, string[] entries)
         {
             try
             {
-                var symbol = _symbolMapper.GetLeanSymbol(channel.Symbol);
-                foreach (var entry in entries)
-                {
-                    // pass time, price, amount
-                    EmitTradeTick(symbol, entry.Skip(1).ToArray());
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-                throw;
-            }
-        }
-
-        private void OnUpdate(BitfinexWebSocketWrapper webSocket, string channelId, string[] entries)
-        {
-            try
-            {
-                BitfinexChannel channel;
+                Channel channel;
 
                 lock (_locker)
                 {
-                    List<BitfinexChannel> channels;
-                    if (!_channelsByWebSocket.TryGetValue(webSocket, out channels))
-                    {
-                        _brokerage.OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, $"Message received from unknown channel Id {channelId}"));
-                        return;
-                    }
-
-                    channel = channels.FirstOrDefault(x => x.ChannelId == channelId);
-                    if (channel == null)
+                    if (!_channels.TryGetValue(channelId, out channel))
                     {
                         _brokerage.OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, $"Message received from unknown channel Id {channelId}"));
                         return;
@@ -560,6 +612,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     case "book":
                         ProcessOrderBookUpdate(channel, entries);
                         return;
+
                     case "trades":
                         ProcessTradeUpdate(channel, entries);
                         return;
@@ -572,15 +625,15 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
-        private void ProcessOrderBookUpdate(BitfinexChannel channel, string[] entries)
+        private void ProcessOrderBookUpdate(Channel channel, string[] entries)
         {
             try
             {
-                var symbol = _symbolMapper.GetLeanSymbol(channel.Symbol);
+                var symbol = channel.Symbol;
                 var orderBook = _orderBooks[symbol];
 
                 var price = decimal.Parse(entries[0], NumberStyles.Float, CultureInfo.InvariantCulture);
-                var count = Parse.Int(entries[1]);
+                var count = Parse.Long(entries[1]);
                 var amount = decimal.Parse(entries[2], NumberStyles.Float, CultureInfo.InvariantCulture);
 
                 if (count == 0)
@@ -601,22 +654,20 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
             catch (Exception e)
             {
-                Log.Error(e);
+                Log.Error(e, $"Entries: [{string.Join(",", entries)}]");
                 throw;
             }
         }
 
-        private void ProcessTradeUpdate(BitfinexChannel channel, string[] entries)
+        private void ProcessTradeUpdate(Channel channel, string[] entries)
         {
             try
             {
-                string eventType = entries[0];
-                if (eventType == "tu")
-                {
-                    var symbol = _symbolMapper.GetLeanSymbol(channel.Symbol);
-                    // pass time, price, amount
-                    EmitTradeTick(symbol, new[] { entries[3], entries[4], entries[5] });
-                }
+                var time = Time.UnixMillisecondTimeStampToDateTime(double.Parse(entries[1], NumberStyles.Float, CultureInfo.InvariantCulture));
+                var amount = decimal.Parse(entries[2], NumberStyles.Float, CultureInfo.InvariantCulture);
+                var price = decimal.Parse(entries[3], NumberStyles.Float, CultureInfo.InvariantCulture);
+
+                EmitTradeTick(channel.Symbol, time, price, amount);
             }
             catch (Exception e)
             {
@@ -625,17 +676,13 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
-        private void EmitTradeTick(Symbol symbol, string[] entries)
+        private void EmitTradeTick(Symbol symbol, DateTime time, decimal price, decimal amount)
         {
             try
             {
-                var time = Time.UnixTimeStampToDateTime(double.Parse(entries[0], NumberStyles.Float, CultureInfo.InvariantCulture));
-                var price = decimal.Parse(entries[1], NumberStyles.Float, CultureInfo.InvariantCulture);
-                var amount = decimal.Parse(entries[2], NumberStyles.Float, CultureInfo.InvariantCulture);
-
                 lock (_brokerage.TickLocker)
                 {
-                    _brokerage.Ticks.Add(new Tick
+                    _brokerage.EmitTick(new Tick
                     {
                         Value = price,
                         Time = time,
@@ -656,7 +703,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             lock (_brokerage.TickLocker)
             {
-                _brokerage.Ticks.Add(new Tick
+                _brokerage.EmitTick(new Tick
                 {
                     AskPrice = askPrice,
                     BidPrice = bidPrice,

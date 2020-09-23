@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using Python.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,7 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
+using QuantConnect.Python;
 
 namespace QuantConnect.Data
 {
@@ -169,6 +171,17 @@ namespace QuantConnect.Data
             throw new ArgumentException("Type mismatch found between consolidator and symbol. " +
                 $"Symbol: {symbol.Value} does not support input type: {consolidator.InputType.Name}. " +
                 $"Supported types: {string.Join(",", subscriptions.Select(x => x.Type.Name))}.");
+        }
+
+        /// <summary>
+        /// Add a custom python consolidator for the symbol
+        /// </summary>
+        /// <param name="symbol">Symbol of the asset to consolidate</param>
+        /// <param name="pyConsolidator">The custom python consolidator</param>
+        public void AddConsolidator(Symbol symbol, PyObject pyConsolidator)
+        {
+            IDataConsolidator consolidator = new DataConsolidatorPythonWrapper(pyConsolidator);
+            AddConsolidator(symbol, consolidator);
         }
 
         /// <summary>

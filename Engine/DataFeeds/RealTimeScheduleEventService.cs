@@ -15,7 +15,6 @@
 
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -52,7 +51,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // has past, if we got called earlier lets wait until time is right
                     while (diff.Ticks > 0)
                     {
-                        await Task.Delay(diff);
+                        if (diff.Milliseconds >= 1)
+                        {
+                            Thread.Sleep(diff);
+                        }
+                        else
+                        {
+                            Thread.SpinWait(1000);
+                        }
                         // testing has shown that it sometimes requires more than one loop
                         diff = nextUtcScheduledEvent - timeProvider.GetUtcNow();
                     }
@@ -75,6 +81,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void ScheduleEvent(TimeSpan dueTime, DateTime utcNow)
         {
             _nextUtcScheduledEvent.Value = new ReferenceWrapper<DateTime>(utcNow + dueTime);
+            // the timer will wake up a little earlier to improve accuracy
             _timer.Change(dueTime, Timeout.InfiniteTimeSpan);
         }
 

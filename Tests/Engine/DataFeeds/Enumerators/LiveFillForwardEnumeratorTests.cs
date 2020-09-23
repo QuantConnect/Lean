@@ -16,7 +16,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -158,6 +160,71 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(0, ((TradeBar)fillForward.Current).Volume);
 
             fillForward.Dispose();
+        }
+
+        [Test]
+        public void LiveFillForwardEnumeratorDoesNotStall()
+        {
+            var now = DateTime.UtcNow;
+            var timeProvider = new ManualTimeProvider(new DateTime(2020, 5, 21, 9, 40, 0, 100), TimeZones.NewYork);
+
+            var enqueueableEnumerator = new EnqueueableEnumerator<BaseData>();
+            var fillForwardEnumerator = new LiveFillForwardEnumerator(
+                timeProvider,
+                enqueueableEnumerator,
+                new SecurityExchange(MarketHoursDatabase.FromDataFolder()
+                    .ExchangeHoursListing
+                    .First(kvp => kvp.Key.Market == Market.USA && kvp.Key.SecurityType == SecurityType.Equity)
+                    .Value
+                    .ExchangeHours),
+                Ref.CreateReadOnly(() => Resolution.Minute.ToTimeSpan()),
+                false,
+                now,
+                Resolution.Minute.ToTimeSpan(),
+                TimeZones.NewYork,
+                new DateTime(2020, 5, 21)
+            );
+            var openingBar = new TradeBar
+            {
+                Open = 0.01m,
+                High = 0.01m,
+                Low = 0.01m,
+                Close = 0.01m,
+                Volume = 1,
+                EndTime = new DateTime(2020, 5, 21, 9, 40, 0),
+                Symbol = Symbols.AAPL
+            };
+            var secondBar = new TradeBar
+            {
+                Open = 1m,
+                High = 2m,
+                Low = 1m,
+                Close = 2m,
+                Volume = 100,
+                EndTime = new DateTime(2020, 5, 21, 9, 42, 0),
+                Symbol = Symbols.AAPL
+            };
+
+
+            // Enqueue the first point, which will be emitted ASAP.
+            enqueueableEnumerator.Enqueue(openingBar);
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.NotNull(fillForwardEnumerator.Current);
+            Assert.AreEqual(openingBar.Open, ((TradeBar)fillForwardEnumerator.Current).Open);
+            Assert.AreEqual(openingBar.EndTime, fillForwardEnumerator.Current.EndTime);
+
+            // Advance the time, we expect a fill-forward bar.
+            timeProvider.SetCurrentTime(new DateTime(2020, 5, 21, 9, 41, 0, 100));
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(openingBar.Open, ((TradeBar)fillForwardEnumerator.Current).Open);
+            Assert.AreEqual(openingBar.EndTime.AddMinutes(1), fillForwardEnumerator.Current.EndTime);
+
+            // Now we expect data. The secondBar should be fill-forwarded from here on out after the MoveNext
+            timeProvider.SetCurrentTime(new DateTime(2020, 5, 21, 9, 42, 0, 100));
+            enqueueableEnumerator.Enqueue(secondBar);
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
         }
     }
 }

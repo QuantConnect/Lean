@@ -74,7 +74,7 @@ namespace QuantConnect.Brokerages.Fxcm
             }
             if (!autoResetEvent.WaitOne(ResponseTimeout))
                 throw new TimeoutException("FxcmBrokerage.LoadInstruments(): Operation took longer than " +
-                    $"{((decimal) ResponseTimeout / 1000).ToStringInvariant()} seconds."
+                    $"{((decimal)ResponseTimeout / 1000).ToStringInvariant()} seconds."
                 );
         }
 
@@ -89,7 +89,7 @@ namespace QuantConnect.Brokerages.Fxcm
             }
             if (!autoResetEvent.WaitOne(ResponseTimeout))
                 throw new TimeoutException("FxcmBrokerage.LoadAccounts(): Operation took longer than " +
-                    $"{((decimal) ResponseTimeout / 1000).ToStringInvariant()} seconds."
+                    $"{((decimal)ResponseTimeout / 1000).ToStringInvariant()} seconds."
                 );
 
             if (!_accounts.ContainsKey(_accountId))
@@ -115,7 +115,7 @@ namespace QuantConnect.Brokerages.Fxcm
             }
             if (!autoResetEvent.WaitOne(ResponseTimeout))
                 throw new TimeoutException("FxcmBrokerage.LoadOpenOrders(): Operation took longer than " +
-                    $"{((decimal) ResponseTimeout / 1000).ToStringInvariant()} seconds."
+                    $"{((decimal)ResponseTimeout / 1000).ToStringInvariant()} seconds."
                 );
         }
 
@@ -132,7 +132,7 @@ namespace QuantConnect.Brokerages.Fxcm
             }
             if (!autoResetEvent.WaitOne(ResponseTimeout))
                 throw new TimeoutException("FxcmBrokerage.LoadOpenPositions(): Operation took longer than " +
-                    $"{((decimal) ResponseTimeout / 1000).ToStringInvariant()} seconds."
+                    $"{((decimal)ResponseTimeout / 1000).ToStringInvariant()} seconds."
                 );
         }
 
@@ -148,8 +148,8 @@ namespace QuantConnect.Brokerages.Fxcm
                     x.getInstrument().getSymbol(),
                     _symbolMapper.GetBrokerageSecurityType(x.getInstrument().getSymbol()),
                     Market.FXCM),
-                BidPrice = (decimal) x.getBidClose(),
-                AskPrice = (decimal) x.getAskClose()
+                BidPrice = (decimal)x.getBidClose(),
+                AskPrice = (decimal)x.getAskClose()
             }).ToList();
         }
 
@@ -176,7 +176,7 @@ namespace QuantConnect.Brokerages.Fxcm
             }
             if (!autoResetEvent.WaitOne(ResponseTimeout))
                 throw new TimeoutException("FxcmBrokerage.GetQuotes(): Operation took longer than " +
-                    $"{((decimal) ResponseTimeout / 1000).ToStringInvariant()} seconds."
+                    $"{((decimal)ResponseTimeout / 1000).ToStringInvariant()} seconds."
                 );
 
             return _rates.Where(x => fxcmSymbols.Contains(x.Key)).Select(x => x.Value).ToList();
@@ -331,7 +331,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 _rates[instrument.getSymbol()] = message;
 
                 // if instrument is subscribed, add ticks to list
-                if (_subscribedSymbols.Contains(symbol))
+                if (_subscriptionManager.IsSubscribed(symbol, TickType.Quote))
                 {
                     // For some unknown reason, messages returned by SubscriptionRequestTypeFactory.SUBSCRIBE
                     // have message.getDate() rounded to the second, so we use message.getMakingTime() instead
@@ -348,10 +348,7 @@ namespace QuantConnect.Brokerages.Fxcm
                     var askPrice = Convert.ToDecimal(message.getAskClose());
                     var tick = new Tick(time, symbol, bidPrice, askPrice);
 
-                    lock (_ticks)
-                    {
-                        _ticks.Add(tick);
-                    }
+                    _aggregator.Update(tick);
                 }
             }
 

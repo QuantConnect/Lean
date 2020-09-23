@@ -17,6 +17,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Threading;
+using ProtoBuf;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
@@ -27,6 +28,7 @@ namespace QuantConnect.Data.Market
     /// TradeBar class for second and minute resolution data:
     /// An OHLC implementation of the QuantConnect BaseData class with parameters for candles.
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class TradeBar : BaseData, IBaseDataBar
     {
         // scale factor used in QC equity/forex data files
@@ -40,11 +42,13 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Volume:
         /// </summary>
+        [ProtoMember(101)]
         public virtual decimal Volume { get; set; }
 
         /// <summary>
         /// Opening price of the bar: Defined as the price at the start of the time period.
         /// </summary>
+        [ProtoMember(102)]
         public virtual decimal Open
         {
             get { return _open; }
@@ -58,6 +62,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// High price of the TradeBar during the time period.
         /// </summary>
+        [ProtoMember(103)]
         public virtual decimal High
         {
             get { return _high; }
@@ -71,6 +76,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Low price of the TradeBar during the time period.
         /// </summary>
+        [ProtoMember(104)]
         public virtual decimal Low
         {
             get { return _low; }
@@ -84,6 +90,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Closing price of the TradeBar. Defined as the price at Start Time + TimeSpan.
         /// </summary>
+        [ProtoMember(105)]
         public virtual decimal Close
         {
             get { return Value; }
@@ -106,6 +113,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// The period of this trade bar, (second, minute, daily, ect...)
         /// </summary>
+        [ProtoMember(106)]
         public virtual TimeSpan Period { get; set; }
 
         //In Base Class: Alias of Closing:

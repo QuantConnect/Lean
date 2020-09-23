@@ -69,10 +69,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 new SecurityCache()
             );
 
+            var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory(false, MapFileResolver.Create(Globals.DataFolder, Market.USA), new LocalDiskFactorFileProvider(new LocalDiskMapFileProvider()));
             var fillForwardResolution = Ref.CreateReadOnly(() => Resolution.Minute.ToTimeSpan());
-            Func<SubscriptionRequest, IEnumerator<BaseData>, IEnumerator<BaseData>> underlyingEnumeratorFunc =
-                (req, input) =>
+            Func<SubscriptionRequest, IEnumerator<BaseData>> underlyingEnumeratorFunc = (req) =>
                 {
+                    var input = enumeratorFactory.CreateEnumerator(req, new DefaultDataProvider());
+
                     input = new BaseDataCollectionAggregatorEnumerator(input, req.Configuration.Symbol);
                     return new FillForwardEnumerator(
                         input,
@@ -84,9 +86,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                         TimeZones.Utc,
                         startTime);
                 };
-            var factory = new OptionChainUniverseSubscriptionEnumeratorFactory(underlyingEnumeratorFunc,
-                MapFileResolver.Create(Globals.DataFolder, Market.USA),
-                new LocalDiskFactorFileProvider(new LocalDiskMapFileProvider()));
+            var factory = new OptionChainUniverseSubscriptionEnumeratorFactory(underlyingEnumeratorFunc);
 
             var request = new SubscriptionRequest(true, null, option, config, startTime, endTime);
             var enumerator = factory.CreateEnumerator(request, new DefaultDataProvider());
@@ -143,14 +143,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 
             var fillForwardResolution = Ref.CreateReadOnly(() => Resolution.Minute.ToTimeSpan());
             var symbolUniverse = new TestDataQueueUniverseProvider(timeProvider);
-            TradeBarBuilderEnumerator underlyingEnumerator = null;
-            Func<SubscriptionRequest, IEnumerator<BaseData>, IEnumerator<BaseData>> underlyingEnumeratorFunc =
-                (req, input) =>
+            EnqueueableEnumerator<BaseData> underlyingEnumerator = null;
+            Func<SubscriptionRequest, IEnumerator<BaseData>> underlyingEnumeratorFunc =
+                (req) =>
                 {
-                    underlyingEnumerator = (TradeBarBuilderEnumerator)input;
+                    underlyingEnumerator = new EnqueueableEnumerator<BaseData>();
                     return new LiveFillForwardEnumerator(
                         timeProvider,
-                        input,
+                        underlyingEnumerator,
                         option.Exchange,
                         fillForwardResolution,
                         false,
@@ -167,17 +167,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var enumerator = (DataQueueOptionChainUniverseDataCollectionEnumerator) factory.CreateEnumerator(request, new DefaultDataProvider());
 
             // 2018-10-19 10:00 AM UTC
-            underlyingEnumerator.ProcessData(new Tick { Symbol = Symbols.SPY, Value = 280m });
-
-            Assert.IsTrue(enumerator.MoveNext());
-            // no underlying data available yet
-            Assert.IsNull(enumerator.Current);
-            Assert.AreEqual(0, symbolUniverse.TotalLookupCalls);
+            underlyingEnumerator.Enqueue(new Tick { Symbol = Symbols.SPY, Value = 280m });
 
             // 2018-10-19 10:01 AM UTC
             timeProvider.Advance(Time.OneMinute);
 
-            underlyingEnumerator.ProcessData(new Tick { Symbol = Symbols.SPY, Value = 280m });
+            underlyingEnumerator.Enqueue(new Tick { Symbol = Symbols.SPY, Value = 280m });
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
@@ -190,7 +185,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             // 2018-10-19 10:02 AM UTC
             timeProvider.Advance(Time.OneMinute);
 
-            underlyingEnumerator.ProcessData(new Tick { Symbol = Symbols.SPY, Value = 280m });
+            underlyingEnumerator.Enqueue(new Tick { Symbol = Symbols.SPY, Value = 280m });
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
@@ -203,7 +198,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             // 2018-10-19 10:03 AM UTC
             timeProvider.Advance(Time.OneMinute);
 
-            underlyingEnumerator.ProcessData(new Tick { Symbol = Symbols.SPY, Value = 280m });
+            underlyingEnumerator.Enqueue(new Tick { Symbol = Symbols.SPY, Value = 280m });
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
@@ -216,7 +211,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             // 2018-10-20 10:03 AM UTC
             timeProvider.Advance(Time.OneDay);
 
-            underlyingEnumerator.ProcessData(new Tick { Symbol = Symbols.SPY, Value = 280m });
+            underlyingEnumerator.Enqueue(new Tick { Symbol = Symbols.SPY, Value = 280m });
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
@@ -229,7 +224,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             // 2018-10-20 10:04 AM UTC
             timeProvider.Advance(Time.OneMinute);
 
-            underlyingEnumerator.ProcessData(new Tick { Symbol = Symbols.SPY, Value = 280m });
+            underlyingEnumerator.Enqueue(new Tick { Symbol = Symbols.SPY, Value = 280m });
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);

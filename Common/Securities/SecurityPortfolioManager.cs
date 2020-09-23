@@ -827,7 +827,7 @@ namespace QuantConnect.Securities
                 );
 
                 Log.Trace("Order request margin information: " +
-                    Invariant($"MarginUsed: {marginUsed.AbsoluteUsedBuyingPower:F2}") +
+                    Invariant($"MarginUsed: {marginUsed.AbsoluteUsedBuyingPower:F2}, ") +
                     Invariant($"MarginRemaining: {marginRemaining.Value:F2}")
                 );
             }

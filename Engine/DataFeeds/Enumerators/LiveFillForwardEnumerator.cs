@@ -64,6 +64,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             // convert times to UTC for accurate comparisons and differences across DST changes
             fillForward = null;
+            // Add a delay to the time we expect a data point if we've configured a delay for batching
             var nextExpectedDataPointTimeUtc = previous.EndTime.ConvertToUtc(Exchange.TimeZone) + fillForwardResolution;
             if (next != null)
             {

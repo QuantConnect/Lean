@@ -15,12 +15,17 @@
 */
 
 using System;
+using System.Net;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.IEX;
@@ -31,27 +36,28 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [Explicit("Tests are dependent on network and are long")]
     public class IEXDataQueueHandlerTests
     {
-        private void ProcessFeed(IEXDataQueueHandler iex, Action<BaseData> callback = null)
+        private void ProcessFeed(IEnumerator<BaseData> enumerator, Action<BaseData> callback = null)
         {
             Task.Run(() =>
             {
-                foreach (var tick in iex.GetNextTicks())
+                try
                 {
-                    try
+                    while (enumerator.MoveNext())
                     {
+                        BaseData tick = enumerator.Current;
                         if (callback != null)
                         {
                             callback.Invoke(tick);
                         }
                     }
-                    catch (AssertionException)
-                    {
-                        throw;
-                    }
-                    catch (Exception err)
-                    {
-                        Console.WriteLine(err.Message);
-                    }
+                }
+                catch (AssertionException)
+                {
+                    throw;
+                }
+                catch (Exception err)
+                {
+                    Console.WriteLine(err.Message);
                 }
             });
         }
@@ -76,12 +82,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var iex = new IEXDataQueueHandler();
 
-            ProcessFeed(iex, tick => Console.WriteLine(tick.ToString()));
-
-            iex.Subscribe(null, new[]
-            {
-                Symbol.Create("firehose", SecurityType.Equity, Market.USA)
-            });
+            ProcessFeed(
+                iex.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbol.Create("firehose", SecurityType.Equity, Market.USA), Resolution.Second), (s, e) => { }),
+                tick =>
+                {
+                    if (tick != null)
+                    {
+                        Console.WriteLine(tick.ToString());
+                    }
+                });
 
             Thread.Sleep(30000);
             iex.Dispose();
@@ -95,15 +104,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var iex = new IEXDataQueueHandler();
 
-            ProcessFeed(iex, tick => Console.WriteLine(tick.ToString()));
-
-            iex.Subscribe(null, new[]
+            Array.ForEach(new[] { "FB", "AAPL", "XIV", "PTN", "USO" }, (ticker) =>
             {
-                Symbol.Create("FB", SecurityType.Equity, Market.USA),
-                Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
-                Symbol.Create("XIV", SecurityType.Equity, Market.USA),
-                Symbol.Create("PTN", SecurityType.Equity, Market.USA),
-                Symbol.Create("USO", SecurityType.Equity, Market.USA),
+                ProcessFeed(
+                    iex.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbol.Create(ticker, SecurityType.Equity, Market.USA), Resolution.Second), (sender, e) => { }),
+                    tick =>
+                    {
+                        if (tick != null)
+                        {
+                            Console.WriteLine(tick.ToString());
+                        }
+                    });
             });
 
             Thread.Sleep(10000);
@@ -118,45 +129,36 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var iex = new IEXDataQueueHandler();
 
-            ProcessFeed(iex, tick => Console.WriteLine(tick.ToString()));
+            var configs = new[] {
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("MBLY", SecurityType.Equity, Market.USA), Resolution.Second),
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("FB", SecurityType.Equity, Market.USA), Resolution.Second),
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), Resolution.Second),
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("USO", SecurityType.Equity, Market.USA), Resolution.Second)
+            };
 
-            iex.Subscribe(null, new[]
+            Array.ForEach(configs, (c) =>
             {
-                Symbol.Create("MBLY", SecurityType.Equity, Market.USA),
-            });
-
-            iex.Subscribe(null, new[]
-            {
-                Symbol.Create("FB", SecurityType.Equity, Market.USA),
-            });
-
-            iex.Subscribe(null, new[]
-            {
-                Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
-            });
-
-            iex.Subscribe(null, new[]
-            {
-                Symbol.Create("USO", SecurityType.Equity, Market.USA),
+                ProcessFeed(
+                    iex.Subscribe(c, (s, e) => { }),
+                    tick =>
+                    {
+                        if (tick != null)
+                        {
+                            Console.WriteLine(tick.ToString());
+                        }
+                    });
             });
 
             Thread.Sleep(10000);
 
             Console.WriteLine("Unsubscribing from all except MBLY");
 
-            iex.Unsubscribe(null, new[]
+            Array.ForEach(configs, (c) =>
             {
-                Symbol.Create("FB", SecurityType.Equity, Market.USA),
-            });
-
-            iex.Unsubscribe(null, new[]
-            {
-                Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
-            });
-
-            iex.Unsubscribe(null, new[]
-            {
-                Symbol.Create("USO", SecurityType.Equity, Market.USA),
+                if (!string.Equals(c.Symbol.Value, "MBLY"))
+                {
+                    iex.Unsubscribe(c);
+                }
             });
 
             Thread.Sleep(10000);
@@ -170,26 +172,34 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // MBLY is the most liquid IEX instrument
             var iex = new IEXDataQueueHandler();
             var unsubscribed = false;
-            ProcessFeed(iex, tick =>
+            Action<BaseData> callback = (tick) =>
             {
+                if (tick == null)
+                    return;
+
                 Console.WriteLine(tick.ToString());
                 if (unsubscribed && tick.Symbol.Value == "MBLY")
                 {
                     Assert.Fail("Should not receive data for unsubscribed symbol");
                 }
-            });
+            };
 
-            iex.Subscribe(null, new[] {
-                Symbol.Create("MBLY", SecurityType.Equity, Market.USA),
-                Symbol.Create("USO", SecurityType.Equity, Market.USA)
+            var configs = new[] {
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("MBLY", SecurityType.Equity, Market.USA), Resolution.Second),
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("USO", SecurityType.Equity, Market.USA), Resolution.Second)
+            };
+
+            Array.ForEach(configs, (c) =>
+            {
+                ProcessFeed(
+                    iex.Subscribe(c, (s, e) => { }),
+                    callback);
             });
 
             Thread.Sleep(20000);
 
-            iex.Unsubscribe(null, new[]
-            {
-                Symbol.Create("MBLY", SecurityType.Equity, Market.USA)
-            });
+            iex.Unsubscribe(configs.First(c => string.Equals(c.Symbol.Value, "MBLY")));
+
             Console.WriteLine("Unsubscribing");
             Thread.Sleep(2000);
             // some messages could be inflight, but after a pause all MBLY messages must have beed consumed by ProcessFeed
@@ -226,81 +236,111 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 return new[]
                 {
                     // valid parameters
-                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(15), true),
-                    new TestCaseData(Symbols.SPY, Resolution.Minute, TimeSpan.FromDays(3), true),
+                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(15), true, false),
+                    new TestCaseData(Symbols.SPY, Resolution.Minute, TimeSpan.FromDays(3), true, false),
 
                     // invalid resolution == empty result.
-                    new TestCaseData(Symbols.SPY, Resolution.Tick, TimeSpan.FromSeconds(15), false),
-                    new TestCaseData(Symbols.SPY, Resolution.Second, Time.OneMinute, false),
-                    new TestCaseData(Symbols.SPY, Resolution.Hour, Time.OneDay, false),
+                    new TestCaseData(Symbols.SPY, Resolution.Tick, TimeSpan.FromSeconds(15), false, false),
+                    new TestCaseData(Symbols.SPY, Resolution.Second, Time.OneMinute, false, false),
+                    new TestCaseData(Symbols.SPY, Resolution.Hour, Time.OneDay, false, false),
 
                     // invalid period == empty result
-                    new TestCaseData(Symbols.SPY, Resolution.Minute, TimeSpan.FromDays(45), false), // beyond 30 days
-                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(-15), false), // date in future
-                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(365*5.5), false), // beyond 5 years
+                    new TestCaseData(Symbols.SPY, Resolution.Minute, TimeSpan.FromDays(45), false, false), // beyond 30 days
+                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(-15), false, false), // date in future
+                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(365*5.5), false, false), // beyond 5 years
 
-                    // invalid symbol: XYZ
+                    // invalid symbol: XYZ -> not found WebException
                     new TestCaseData(Symbol.Create("XYZ", SecurityType.Equity, Market.FXCM), Resolution.Daily, TimeSpan.FromDays(15), false, true),
 
-                    // invalid security type, throws "System.ArgumentException : Invalid security type: Forex"
-                    new TestCaseData(Symbols.EURUSD, Resolution.Daily, TimeSpan.FromDays(15), false, true)
+                    // invalid security type, no exception, empty result
+                    new TestCaseData(Symbols.EURUSD, Resolution.Daily, TimeSpan.FromDays(15), false, false)
                 };
             }
         }
 
         [Test, TestCaseSource(nameof(TestParameters))]
-        public void IEXCouldGetHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool received, bool throwsException = false)
+        public void IEXCouldGetHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool received, bool throwsException)
         {
-            var historyProvider = new IEXDataQueueHandler();
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, null));
-
-            var now = DateTime.UtcNow;
-
-            var requests = new[]
+            TestDelegate test = () =>
             {
-                new HistoryRequest(now.Add(-period),
-                                   now,
-                                   typeof(QuoteBar),
-                                   symbol,
-                                   resolution,
-                                   SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                                   DateTimeZone.Utc,
-                                   Resolution.Minute,
-                                   false,
-                                   false,
-                                   DataNormalizationMode.Adjusted,
-                                   TickType.Quote)
+                var historyProvider = new IEXDataQueueHandler();
+                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, new DataPermissionManager()));
+
+                var now = DateTime.UtcNow;
+
+                var requests = new[]
+                {
+                    new HistoryRequest(now.Add(-period),
+                                       now,
+                                       typeof(QuoteBar),
+                                       symbol,
+                                       resolution,
+                                       SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                                       DateTimeZone.Utc,
+                                       Resolution.Minute,
+                                       false,
+                                       false,
+                                       DataNormalizationMode.Adjusted,
+                                       TickType.Quote)
+                };
+
+                var history = historyProvider.GetHistory(requests, TimeZones.Utc);
+
+                foreach (var slice in history)
+                {
+                    if (resolution == Resolution.Tick || resolution == Resolution.Second || resolution == Resolution.Hour)
+                    {
+                        Assert.IsNull(slice);
+                    }
+                    else if (resolution == Resolution.Daily || resolution == Resolution.Minute)
+                    {
+                        Assert.IsNotNull(slice);
+
+                        var bar = slice.Bars[symbol];
+
+                        Log.Trace("{0}: {1} - O={2}, H={3}, L={4}, C={5}: {6}, {7}", bar.Time, bar.Symbol, bar.Open, bar.High, bar.Low, bar.Close, resolution, period);
+                    }
+                }
+
+                Log.Trace("Data points retrieved: " + historyProvider.DataPointCount);
+                if (received)
+                {
+                    Assert.IsTrue(historyProvider.DataPointCount > 0);
+                }
+                else
+                {
+                    Assert.IsTrue(historyProvider.DataPointCount == 0);
+                }
             };
 
-            var history = historyProvider.GetHistory(requests, TimeZones.Utc);
-
-            foreach (var slice in history)
+            if (throwsException)
             {
-                if (resolution == Resolution.Tick || resolution == Resolution.Second || resolution == Resolution.Hour)
-                {
-                    Assert.IsNull(slice);
-                }
-                else if (resolution == Resolution.Daily || resolution == Resolution.Minute)
-                {
-                    Assert.IsNotNull(slice);
-
-                    var bar = slice.Bars[symbol];
-
-                    Log.Trace("{0}: {1} - O={2}, H={3}, L={4}, C={5}: {6}, {7}", bar.Time, bar.Symbol, bar.Open, bar.High, bar.Low, bar.Close, resolution, period);
-                }
-            }
-
-            Log.Trace("Data points retrieved: " + historyProvider.DataPointCount);
-            if (received)
-            {
-                Assert.IsTrue(historyProvider.DataPointCount > 0);
+                Assert.Throws<WebException>(test);
             }
             else
             {
-                Assert.IsTrue(historyProvider.DataPointCount == 0);
+                Assert.DoesNotThrow(test);
             }
         }
 
         #endregion
+
+        #region helper
+
+        protected SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
+        {
+            return new SubscriptionDataConfig(
+                typeof(T),
+                symbol,
+                resolution,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                true,
+                true,
+                false);
+        }
+
+        #endregion
+
     }
 }

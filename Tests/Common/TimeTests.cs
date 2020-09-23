@@ -191,5 +191,29 @@ namespace QuantConnect.Tests.Common
                 sunday, monday, tuesday, wednesday, thursday, friday, saturday
             }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
         }
+
+        [Test]
+        [TestCase("190120", 2019, 1, 20)]
+        [TestCase("20190120", 2019, 1, 20)]
+        [TestCase("20190120 00:00", 2019, 1, 20)]
+        [TestCase("2019-01-20T00:00:00.000Z", 2019, 1, 20)]
+        [TestCase("1/20/2019 00:00:00 AM", 2019, 1, 20)]
+        [TestCase("1/20/19 00:00 AM", 2019, 1, 20)]
+        [TestCase("1/20/19", 2019, 1, 20)]
+        public void ParseDate(string parseDate, int year, int month, int day)
+        {
+            Assert.AreEqual(new DateTime(year, month, day), Time.ParseDate(parseDate));
+        }
+
+        [Test]
+        [TestCase("20190120 02:30", 2019, 1, 20, 2, 30)]
+        [TestCase("1/20/2019 2:30:00 AM", 2019, 1, 20, 2, 30)]
+        [TestCase("1/20/2019 2:30:00 PM", 2019, 1, 20, 14, 30)]
+        [TestCase("1/20/19 2:30 PM", 2019, 1, 20, 14, 30)]
+        [TestCase("2019-01-20T02:30:00.000Z", 2019, 1, 20, 2, 30)]
+        public void ParseDateAndTime(string parseDate, int year, int month, int day, int hour, int minute)
+        {
+            Assert.AreEqual(new DateTime(year, month, day, hour, minute, 0), Time.ParseDate(parseDate));
+        }
     }
 }

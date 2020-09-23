@@ -88,6 +88,24 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
+
+        private static TestCaseData[] IndicatorNameParameters => new[]
+        {
+            new TestCaseData(Symbols.SPY, "TEST", Resolution.Tick, "TEST(SPY_tick)"),
+            new TestCaseData(Symbols.SPY, "TEST", Resolution.Second, "TEST(SPY_sec)"),
+            new TestCaseData(Symbols.SPY, "TEST", Resolution.Minute, "TEST(SPY_min)"),
+            new TestCaseData(Symbols.SPY, "TEST", Resolution.Hour, "TEST(SPY_hr)"),
+            new TestCaseData(Symbols.SPY, "TEST", Resolution.Daily, "TEST(SPY_day)"),
+            new TestCaseData(Symbol.Empty, "TEST", Resolution.Minute, "TEST(min)"),
+            new TestCaseData(Symbol.None, "TEST", Resolution.Minute, "TEST(min)")
+        };
+
+        [Test, TestCaseSource(nameof(IndicatorNameParameters))]
+        public void CreateIndicatorName(Symbol symbol, string baseName, Resolution resolution, string expectation)
+        {
+            Assert.AreEqual(expectation, _algorithm.CreateIndicatorName(symbol, baseName, resolution));
+        }
+
         [Test]
         public void PlotAndRegistersIndicatorProperlyPython()
         {
@@ -185,7 +203,7 @@ symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder()
 securityService =  SecurityService(algo.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDatabase, algo, RegisteredSecurityDataTypesProvider.Null, SecurityCacheProvider(algo.Portfolio))
 algo.Securities.SetSecurityService(securityService)
 dataPermissionManager = DataPermissionManager()
-dataManager = DataManager(None, UniverseSelection(algo, securityService, dataPermissionManager), algo, algo.TimeKeeper, marketHoursDatabase, False, RegisteredSecurityDataTypesProvider.Null, dataPermissionManager)
+dataManager = DataManager(None, UniverseSelection(algo, securityService, dataPermissionManager, None), algo, algo.TimeKeeper, marketHoursDatabase, False, RegisteredSecurityDataTypesProvider.Null, dataPermissionManager)
 algo.SubscriptionManager.SetDataManager(dataManager)
 
 

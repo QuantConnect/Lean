@@ -34,14 +34,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         /// <summary>
         /// This is the size of each work sprint
         /// </summary>
-        internal const int WorkBatchSize = 50;
+        public const int WorkBatchSize = 50;
 
         /// <summary>
         /// This is the maximum size a work item can weigh,
         /// if reached, it will be ignored and not executed until its less
         /// </summary>
         /// <remarks>This is useful to limit RAM and CPU usage</remarks>
-        internal static int MaxWorkWeight;
+        public static int MaxWorkWeight;
 
         private readonly ConcurrentQueue<WorkItem> _newWork;
         private readonly AutoResetEvent _newWorkEvent;
@@ -56,21 +56,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
             _newWork = new ConcurrentQueue<WorkItem>();
             _newWorkEvent = new AutoResetEvent(false);
 
-            var work = new List<WorkQueue>();
+            var work = new List<IWorkQueue>();
             var queueManager = new Thread(() =>
             {
                 var workersCount = Configuration.Config.GetInt("data-feed-workers-count", Environment.ProcessorCount);
                 MaxWorkWeight = Configuration.Config.GetInt("data-feed-max-work-weight", 400);
-                Logging.Log.Trace($"WeightedWorkScheduler(): will use {workersCount} workers and MaxWorkWeight is {MaxWorkWeight}");
+                var queueName = Configuration.Config.Get("data-feed-queue-type",
+                    "QuantConnect.Lean.Engine.DataFeeds.WorkScheduling.WorkQueue, QuantConnect.Lean.Engine");
+                var queue = Type.GetType(queueName);
+                if (queue == null)
+                {
+                    throw new InvalidOperationException($"WeightedWorkScheduler(): Queue type {queueName} not found");
+                }
+                Logging.Log.Trace($"WeightedWorkScheduler(): will use {workersCount} workers and MaxWorkWeight is {MaxWorkWeight}. Queue type: {queue.Name}");
 
                 for (var i = 0; i < workersCount; i++)
                 {
-                    var workQueue = new WorkQueue();
+                    var workQueue = (IWorkQueue)Activator.CreateInstance(queue);
                     work.Add(workQueue);
-                    var thread = new Thread(() => WorkerThread(workQueue, _newWork, _newWorkEvent))
+                    var thread = new Thread(() => workQueue.WorkerThread(_newWork, _newWorkEvent))
                     {
                         IsBackground = true,
-                        Priority = ThreadPriority.Lowest,
+                        Priority = workQueue.ThreadPriority,
                         Name = $"WeightedWorkThread{i}"
                     };
                     thread.Start();
@@ -80,9 +87,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
                 while (true)
                 {
                     Thread.Sleep(TimeSpan.FromMilliseconds(1));
-                    foreach (var queue in work)
+                    for (var i = 0; i < work.Count; i++)
                     {
-                        queue.Sort();
+                        work[i].Sort();
                     }
                 }
             })
@@ -103,46 +110,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         {
             _newWork.Enqueue(new WorkItem(workFunc, weightFunc));
             _newWorkEvent.Set();
-        }
-
-        /// <summary>
-        /// This is the worker thread loop.
-        /// It will first try to take a work item from the new work queue else will check his own queue.
-        /// </summary>
-        private static void WorkerThread(WorkQueue workQueue, ConcurrentQueue<WorkItem> newWork, AutoResetEvent newWorkEvent)
-        {
-            var waitHandles = new WaitHandle[] {workQueue.WorkAvailableEvent, newWorkEvent};
-            while (true)
-            {
-                WorkItem workItem;
-                if (!newWork.TryDequeue(out workItem))
-                {
-                    workItem = workQueue.Get();
-                    if (workItem == null)
-                    {
-                        // no work to do, lets sleep and try again
-                        WaitHandle.WaitAny(waitHandles, 100);
-                        continue;
-                    }
-                }
-                else
-                {
-                    workQueue.Add(workItem);
-                }
-
-                try
-                {
-                    if (!workItem.Work(WorkBatchSize))
-                    {
-                        workQueue.Remove(workItem);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    workQueue.Remove(workItem);
-                    Logging.Log.Error(exception);
-                }
-            }
         }
     }
 }

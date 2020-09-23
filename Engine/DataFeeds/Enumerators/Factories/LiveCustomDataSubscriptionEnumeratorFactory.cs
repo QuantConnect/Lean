@@ -30,14 +30,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     public class LiveCustomDataSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
         private readonly ITimeProvider _timeProvider;
+        private readonly Func<DateTime, DateTime> _dateAdjustment;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LiveCustomDataSubscriptionEnumeratorFactory"/> class
         /// </summary>
         /// <param name="timeProvider">Time provider from data feed</param>
-        public LiveCustomDataSubscriptionEnumeratorFactory(ITimeProvider timeProvider)
+        /// <param name="dateAdjustment">Func that allows adjusting the datetime to use</param>
+        public LiveCustomDataSubscriptionEnumeratorFactory(ITimeProvider timeProvider, Func<DateTime, DateTime> dateAdjustment = null)
         {
             _timeProvider = timeProvider;
+            _dateAdjustment = dateAdjustment;
         }
 
         /// <summary>
@@ -52,7 +55,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 
             // frontier value used to prevent emitting duplicate time stamps between refreshed enumerators
             // also provides some immediate fast-forward to handle spooling through remote files quickly
-            var frontier = Ref.Create(request.StartTimeLocal);
+            var frontier = Ref.Create(_dateAdjustment?.Invoke(request.StartTimeLocal) ?? request.StartTimeLocal);
             var lastSourceRefreshTime = DateTime.MinValue;
             var sourceFactory = config.GetBaseDataInstance();
 
@@ -68,7 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 }
 
                 lastSourceRefreshTime = utcNow;
-                var localDate = utcNow.ConvertFromUtc(config.ExchangeTimeZone).Date;
+                var localDate = _dateAdjustment?.Invoke(utcNow.ConvertFromUtc(config.ExchangeTimeZone).Date) ?? utcNow.ConvertFromUtc(config.ExchangeTimeZone).Date;
                 var source = sourceFactory.GetSource(config, localDate, true);
 
                 // fetch the new source and enumerate the data source reader

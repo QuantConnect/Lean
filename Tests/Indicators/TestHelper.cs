@@ -70,49 +70,27 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="customAssertion">Sets custom assertion logic, parameter is the indicator, expected value from the file</param>
         public static void TestIndicator(IndicatorBase<IndicatorDataPoint> indicator, string externalDataFilename, string targetColumn, Action<IndicatorBase<IndicatorDataPoint>, double> customAssertion)
         {
-            // assumes the Date is in the first index
-
-            bool first = true;
-            int closeIndex = -1;
-            int targetIndex = -1;
-            foreach (var line in File.ReadLines(Path.Combine("TestData", externalDataFilename)))
+            foreach (var parts in GetCsvFileStream(externalDataFilename))
             {
-                string[] parts = line.Split(new[] {','}, StringSplitOptions.None);
-
-                if (first)
+                if (!(parts.ContainsKey("Close") && parts.ContainsKey(targetColumn)))
                 {
-                    first = false;
-                    for (int i = 0; i < parts.Length; i++)
-                    {
-                        if (parts[i].Trim() == "Close")
-                        {
-                            closeIndex = i;
-                        }
-                        if (parts[i].Trim() == targetColumn)
-                        {
-                            targetIndex = i;
-                        }
-                    }
-                    if (closeIndex*targetIndex < 0)
-                    {
-                        Assert.Fail("Didn't find one of 'Close' or '{0}' in the header: " + line, targetColumn);
-                    }
-
-                    continue;
+                    Assert.Fail("Didn't find one of 'Close' or '{0}' in the header.", targetColumn);
+                    
+                    break;
                 }
 
-                decimal close = Parse.Decimal(parts[closeIndex]);
-                DateTime date = Time.ParseDate(parts[0]);
+                decimal close = parts.GetCsvValue("close").ToDecimal();
+                DateTime date = Time.ParseDate(parts.GetCsvValue("date", "time"));
 
                 var data = new IndicatorDataPoint(date, close);
                 indicator.Update(data);
 
-                if (!indicator.IsReady || parts[targetIndex].Trim() == string.Empty)
+                if (!indicator.IsReady || parts.GetCsvValue(targetColumn).Trim() == string.Empty)
                 {
                     continue;
                 }
 
-                double expected = Parse.Double(parts[targetIndex]);
+                double expected = Parse.Double(parts.GetCsvValue(targetColumn));
                 customAssertion.Invoke(indicator, expected);
             }
         }
@@ -181,45 +159,18 @@ namespace QuantConnect.Tests.Indicators
         {
             // TODO : Collapse duplicate implementations -- type constraint shenanigans and after 4am
 
-            bool first = true;
-            int targetIndex = -1;
-            bool fileHasVolume = false;
-            foreach (var line in File.ReadLines(Path.Combine("TestData", externalDataFilename)))
+            foreach (var parts in GetCsvFileStream(externalDataFilename))
             {
-                var parts = line.Split(',');
-                if (first)
-                {
-                    fileHasVolume = parts[5].Trim() == "Volume";
-                    first = false;
-                    for (int i = 0; i < parts.Length; i++)
-                    {
-                        if (parts[i].Trim() == targetColumn)
-                        {
-                            targetIndex = i;
-                            break;
-                        }
-                    }
-                    continue;
-                }
-
-                var tradebar = new TradeBar
-                {
-                    Time = Time.ParseDate(parts[0]),
-                    Open = parts[1].ToDecimal(),
-                    High = parts[2].ToDecimal(),
-                    Low = parts[3].ToDecimal(),
-                    Close = parts[4].ToDecimal(),
-                    Volume = fileHasVolume ? Parse.Long(parts[5], NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
-                };
+                var tradebar = parts.GetTradeBar();
 
                 indicator.Update(tradebar);
 
-                if (!indicator.IsReady || parts[targetIndex].Trim() == string.Empty)
+                if (!indicator.IsReady || parts.GetCsvValue(targetColumn).Trim() == string.Empty)
                 {
                     continue;
                 }
 
-                double expected = Parse.Double(parts[targetIndex]);
+                double expected = Parse.Double(parts.GetCsvValue(targetColumn));
                 customAssertion.Invoke(indicator, expected);
             }
         }
@@ -234,45 +185,18 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="customAssertion">Sets custom assertion logic, parameter is the indicator, expected value from the file</param>
         public static void TestIndicator(IndicatorBase<TradeBar> indicator, string externalDataFilename, string targetColumn, Action<IndicatorBase<TradeBar>, double> customAssertion)
         {
-            bool first = true;
-            int targetIndex = -1;
-            bool fileHasVolume = false;
-            foreach (var line in File.ReadLines(Path.Combine("TestData", externalDataFilename)))
+            foreach (var parts in GetCsvFileStream(externalDataFilename))
             {
-                var parts = line.Split(',');
-                if (first)
-                {
-                    fileHasVolume = parts[5].Trim() == "Volume";
-                    first = false;
-                    for (int i = 0; i < parts.Length; i++)
-                    {
-                        if (parts[i].Trim() == targetColumn)
-                        {
-                            targetIndex = i;
-                            break;
-                        }
-                    }
-                    continue;
-                }
-
-                var tradebar = new TradeBar
-                {
-                    Time = Time.ParseDate(parts[0]),
-                    Open = parts[1].ToDecimal(),
-                    High = parts[2].ToDecimal(),
-                    Low = parts[3].ToDecimal(),
-                    Close = parts[4].ToDecimal(),
-                    Volume = fileHasVolume ? Parse.Long(parts[5], NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
-                };
+                var tradebar = parts.GetTradeBar();
 
                 indicator.Update(tradebar);
 
-                if (!indicator.IsReady || parts[targetIndex].Trim() == string.Empty)
+                if (!indicator.IsReady || parts.GetCsvValue(targetColumn).Trim() == string.Empty)
                 {
                     continue;
                 }
 
-                double expected = Parse.Double(parts[targetIndex]);
+                double expected = Parse.Double(parts.GetCsvValue(targetColumn));
                 customAssertion.Invoke(indicator, expected);
             }
         }
@@ -339,6 +263,10 @@ namespace QuantConnect.Tests.Indicators
             AssertIndicatorIsInDefaultState(indicator);
         }
 
+        /// <summary>
+        /// Gets a stream of lines from the specified file
+        /// </summary>
+        /// <param name="externalDataFilename">The external CSV file name</param>
         public static IEnumerable<IReadOnlyDictionary<string, string>> GetCsvFileStream(string externalDataFilename)
         {
             var enumerator = File.ReadLines(Path.Combine("TestData", externalDataFilename)).GetEnumerator();
@@ -362,15 +290,7 @@ namespace QuantConnect.Tests.Indicators
         /// </summary>
         public static IEnumerable<TradeBar> GetTradeBarStream(string externalDataFilename, bool fileHasVolume = true)
         {
-            return GetCsvFileStream(externalDataFilename).Select(values => new TradeBar
-            {
-                Time = Time.ParseDate(values.GetCsvValue("date", "time")),
-                Open = values.GetCsvValue("open").ToDecimal(),
-                High = values.GetCsvValue("high").ToDecimal(),
-                Low = values.GetCsvValue("low").ToDecimal(),
-                Close = values.GetCsvValue("close").ToDecimal(),
-                Volume = fileHasVolume ? Parse.Long(values.GetCsvValue("volume"), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
-            });
+            return GetCsvFileStream(externalDataFilename).Select(values => GetTradeBar(values, fileHasVolume));
         }
 
         /// <summary>
@@ -449,6 +369,29 @@ namespace QuantConnect.Tests.Indicators
             }
 
             throw new ArgumentException("Unable to find column: " + string.Join(", ", keys));
+        }
+
+        /// <summary>
+        /// Grabs the TradeBar values from the set of keys
+        /// </summary>
+        private static TradeBar GetTradeBar(this IReadOnlyDictionary<string, string> dictionary, bool forceVolumeColumn = false)
+        {
+            var sid = (dictionary.ContainsKey("symbol") || dictionary.ContainsKey("ticker"))
+                ? SecurityIdentifier.GenerateEquity(dictionary.GetCsvValue("symbol", "ticker"), Market.USA)
+                : SecurityIdentifier.Empty;
+
+            return new TradeBar
+            {
+                Symbol = sid != SecurityIdentifier.Empty
+                    ? new Symbol(sid, dictionary.GetCsvValue("symbol", "ticker"))
+                    : Symbol.Empty,
+                Time = Time.ParseDate(dictionary.GetCsvValue("date", "time")),
+                Open = dictionary.GetCsvValue("open").ToDecimal(),
+                High = dictionary.GetCsvValue("high").ToDecimal(),
+                Low = dictionary.GetCsvValue("low").ToDecimal(),
+                Close = dictionary.GetCsvValue("close").ToDecimal(),
+                Volume = forceVolumeColumn || dictionary.ContainsKey("volume") ? Parse.Long(dictionary.GetCsvValue("volume"), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
+            };
         }
     }
 }

@@ -784,12 +784,10 @@ namespace QuantConnect.Api
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>
-
         public virtual void Dispose()
         {
             // NOP
         }
-
 
         /// <summary>
         /// Generate a secure hash for the authorization headers.
@@ -801,6 +799,101 @@ namespace QuantConnect.Api
             // Hash must be generated fresh each time.
             var data = $"{token}:{timestamp.ToStringInvariant()}";
             return data.ToSHA256();
+        }
+
+        /// <summary>
+        /// Create a new node in the organization, node configuration is defined by the
+        /// <see cref="SKU"/>
+        /// </summary>
+        /// <param name="name">The name of the new node</param>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <param name="sku"><see cref="SKU"/> Object representing configuration</param>
+        /// <returns>Returns <see cref="CreatedNode"/> which contains API response and 
+        /// <see cref="Node"/></returns>
+        public CreatedNode CreateNode(string name, string organizationId, SKU sku)
+        {
+            var request = new RestRequest("nodes/create", Method.POST);
+            request.AddParameter("name", name);
+            request.AddParameter("organizationId", organizationId);
+            request.AddParameter("sku", sku.ToString());
+
+            CreatedNode result;
+            ApiConnection.TryRequest(request, out result);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Reads the nodes associated with the organization, creating a 
+        /// <see cref="NodeList"/> for the response
+        /// </summary>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <returns><see cref="NodeList"/> containing Backtest, Research, and Live Nodes</returns>
+        public NodeList ReadNodes(string organizationId)
+        {
+            var request = new RestRequest("nodes/read", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("organizationId", organizationId);
+
+            NodeList result;
+            ApiConnection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Update an organizations node with a new name
+        /// </summary>
+        /// <param name="nodeId">The node ID of the node you want to update</param>
+        /// <param name="newName">The new name for that node</param>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
+        public RestResponse UpdateNode(string nodeId, string newName, string organizationId)
+        {
+            var request = new RestRequest("nodes/update", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("nodeId", nodeId);
+            request.AddParameter("name", newName);
+            request.AddParameter("organizationId", organizationId);
+
+            RestResponse result;
+            ApiConnection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Delete a node from an organization, requires node ID.
+        /// </summary>
+        /// <param name="nodeId">The node ID of the node you want to delete</param>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
+        public RestResponse DeleteNode(string nodeId, string organizationId)
+        {
+            var request = new RestRequest("nodes/delete", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("nodeId", nodeId);
+            request.AddParameter("organizationId", organizationId);
+
+            RestResponse result;
+            ApiConnection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Stop a running node in a organization
+        /// </summary>
+        /// <param name="nodeId">The node ID of the node you want to stop</param>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
+        public RestResponse StopNode(string nodeId, string organizationId)
+        {
+            var request = new RestRequest("nodes/stop", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("nodeId", nodeId);
+            request.AddParameter("organizationId", organizationId);
+
+            RestResponse result;
+            ApiConnection.TryRequest(request, out result);
+            return result;
         }
     }
 }

@@ -31,6 +31,16 @@ ENV PYTHONPATH=${WORK}:${PYTHONPATH}
 
 RUN find ${WORK} -type f -not -name '*.py*' -not -name '*.xml' -not -name '*.exe.config' -not -name '*.exe' -not -name '*.so' -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -not -name 'decimal.py' -delete
 
+#Create initialize script
+RUN echo "if [ ! -d \"${WORK}Notebooks\" ]; then mkdir ${WORK}Notebooks; fi && \
+    if [ ! -f \"${WORK}Notebooks/config.json\" ]; then echo '{ \"data-folder\": \"/home/Data/\", \
+    \"composer-dll-directory\": \"$WORK\", \"algorithm-language\": \"Python\", \
+    \"messaging-handler\": \"QuantConnect.Messaging.Messaging\", \"job-queue-handler\": \"QuantConnect.Queues.JobQueue\", \
+    \"api-handler\": \"QuantConnect.Api.Api\" }' > ${WORK}Notebooks/config.json; fi && \
+    echo \"Starting Jupter lab, access in your browser at localhost:8888\" && \
+    jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --notebook-dir=\"Notebooks\" --LabApp.token='' " \
+    > start.sh
+
 # We keep this pythonnet used for C# -> Py (C# kernels)
 # We copy the pythonnet used for the Py kernels
 RUN mkdir ${WORK}pythonnet && \
@@ -38,14 +48,8 @@ RUN mkdir ${WORK}pythonnet && \
     mv -f ${WORK}jupyter/* ${WORK} && \
     chmod -R 777 ${WORK}
 
-# Setup config file
-RUN echo "{ \"data-folder\": \"/home/Data/\", \"composer-dll-directory\": \"$WORK\", \"algorithm-language\": \"Python\", \"messaging-handler\": \"QuantConnect.Messaging.Messaging\", \"job-queue-handler\": \"QuantConnect.Queues.JobQueue\", \"api-handler\": \"QuantConnect.Api.Api\" }" > ${WORK}config.json
-
 EXPOSE 8888
 WORKDIR $WORK
 
 ENTRYPOINT [ "/usr/local/bin/tini", "--" ]
-CMD jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root
-
-# List packages
-RUN conda list
+CMD ./start.sh

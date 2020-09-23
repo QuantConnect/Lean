@@ -22,3 +22,5 @@ install:
 script:
   - msbuild /p:Configuration=Release /p:VbcToolExe=vbnc.exe QuantConnect.Lean.sln
   - mono ./testrunner/NUnit.ConsoleRunner.3.11.1/tools/nunit3-console.exe ./Tests/bin/Release/QuantConnect.Tests.dll --where "cat != TravisExclude" --labels=Off
+  - chmod +x ci_build_stubs.sh
+  - sudo -E ./ci_build_stubs.sh -ipy -g -p

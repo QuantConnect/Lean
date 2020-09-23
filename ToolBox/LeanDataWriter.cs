@@ -35,6 +35,7 @@ namespace QuantConnect.ToolBox
         private readonly Symbol _symbol;
         private readonly string _dataDirectory;
         private readonly TickType _tickType;
+        private readonly bool _appendToZips;
         private readonly Resolution _resolution;
         private readonly SecurityType _securityType;
 
@@ -45,13 +46,14 @@ namespace QuantConnect.ToolBox
         /// <param name="dataDirectory">Base data directory</param>
         /// <param name="resolution">Resolution of the desired output data</param>
         /// <param name="tickType">The tick type</param>
-        public LeanDataWriter(Resolution resolution, Symbol symbol, string dataDirectory, TickType tickType = TickType.Trade)
+        public LeanDataWriter(Resolution resolution, Symbol symbol, string dataDirectory, TickType tickType = TickType.Trade) : this(
+            dataDirectory,
+            resolution,
+            symbol.ID.SecurityType,
+            tickType
+        )
         {
-            _securityType = symbol.ID.SecurityType;
-            _dataDirectory = dataDirectory;
-            _resolution = resolution;
             _symbol = symbol;
-            _tickType = tickType;
             // All fx data is quote data.
             if (_securityType == SecurityType.Forex || _securityType == SecurityType.Cfd)
             {
@@ -77,6 +79,7 @@ namespace QuantConnect.ToolBox
             _resolution = resolution;
             _securityType = securityType;
             _tickType = tickType;
+            _appendToZips = securityType == SecurityType.Future;
         }
 
         /// <summary>
@@ -203,7 +206,7 @@ namespace QuantConnect.ToolBox
             IReadOnlyDictionary<Symbol, List<BaseData>> historyBySymbol)
         {
             var zipFileName = Path.Combine(
-                Globals.DataFolder,
+                _dataDirectory,
                 LeanData.GenerateRelativeZipFilePath(canonicalSymbol, DateTime.MinValue, _resolution, _tickType));
 
             var folder = Path.GetDirectoryName(zipFileName);
@@ -292,7 +295,7 @@ namespace QuantConnect.ToolBox
             while (date <= endTimeUtc)
             {
                 var zipFileName = Path.Combine(
-                    Globals.DataFolder,
+                    _dataDirectory,
                     LeanData.GenerateRelativeZipFilePath(canonicalSymbol, date, _resolution, _tickType));
 
                 var folder = Path.GetDirectoryName(zipFileName);
@@ -301,7 +304,7 @@ namespace QuantConnect.ToolBox
                     Directory.CreateDirectory(folder);
                 }
 
-                if (File.Exists(zipFileName))
+                if (File.Exists(zipFileName) && !_appendToZips)
                 {
                     File.Delete(zipFileName);
                 }
@@ -314,7 +317,7 @@ namespace QuantConnect.ToolBox
 
                         foreach (var group in historyBySymbol[symbol])
                         {
-                            if (group.Key == date)
+                            if (group.Key == date.Date)
                             {
                                 var sb = new StringBuilder();
                                 foreach (var row in group)
@@ -322,6 +325,12 @@ namespace QuantConnect.ToolBox
                                     var line = LeanData.GenerateLine(row, _securityType, _resolution);
                                     sb.AppendLine(line);
                                 }
+
+                                if (_appendToZips && zip.ContainsEntry(zipEntryName))
+                                {
+                                    zip.RemoveEntry(zipEntryName);
+                                }
+
                                 zip.AddEntry(zipEntryName, sb.ToString());
                                 break;
                             }
@@ -463,7 +472,7 @@ namespace QuantConnect.ToolBox
             var tempFilePath = filePath + ".tmp";
 
             data = data.TrimEnd();
-            if (File.Exists(filePath))
+            if (File.Exists(filePath) && !_appendToZips)
             {
                 File.Delete(filePath);
                 Log.Trace("LeanDataWriter.Write(): Existing deleted: " + filePath);
@@ -472,13 +481,21 @@ namespace QuantConnect.ToolBox
             // Create the directory if it doesnt exist
             Directory.CreateDirectory(Path.GetDirectoryName(filePath));
 
-            // Write out this data string to a zip file
-            Compression.Zip(data, tempFilePath, LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType));
+            if (_appendToZips)
+            {
+                var entryName = LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType);
+                Compression.ZipCreateAppendData(filePath, entryName, data, true);
+                Log.Trace("LeanDataWriter.Write(): Appended: " + filePath);
+            }
+            else
+            {
+                // Write out this data string to a zip file
+                Compression.Zip(data, tempFilePath, LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType));
 
-            // Move temp file to the final destination with the appropriate name
-            File.Move(tempFilePath, filePath);
-
-            Log.Trace("LeanDataWriter.Write(): Created: " + filePath);
+                // Move temp file to the final destination with the appropriate name
+                File.Move(tempFilePath, filePath);
+                Log.Trace("LeanDataWriter.Write(): Created: " + filePath);
+            }
         }
 
         /// <summary>

@@ -100,8 +100,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 throw new AlgorithmSetupException("Failed to initialize debugging");
             }
 
-            // limit load times to 60 seconds and force the assembly to have exactly one derived type
-            var loader = new Loader(debugging, algorithmNodePacket.Language, TimeSpan.FromSeconds(60), names => names.SingleOrAlgorithmTypeName(Config.Get("algorithm-type-name")), WorkerThread);
+            // Limit load times to 90 seconds and force the assembly to have exactly one derived type
+            var loader = new Loader(debugging, algorithmNodePacket.Language, TimeSpan.FromSeconds(90), names => names.SingleOrAlgorithmTypeName(Config.Get("algorithm-type-name")), WorkerThread);
             var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, algorithmNodePacket.RamAllocation, out algorithm, out error);
             if (!complete) throw new AlgorithmSetupException($"During the algorithm initialization, the following exception has occurred: {error}");
 

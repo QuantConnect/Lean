@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
@@ -13,24 +12,28 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
     /// </summary>
     public class IQFeedDataDownloader : IDataDownloader
     {
-        private readonly IQConnect _iqConnect;
-        private readonly HistoryPort _historyPort;
+        private readonly IQFeedFileHistoryProvider _fileHistoryProvider;
+        private readonly TickType _tickType;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IQFeedDataDownloader"/> class
         /// </summary>
-        /// <param name="username">IQFeed user name</param>
-        /// <param name="password">IQFeed password</param>
-        /// <param name="productName">IQFeed product name</param>
-        /// <param name="productVersion">IQFeed product version</param>
-        public IQFeedDataDownloader(string userName, string password, string productName, string productVersion)
+        /// <param name="fileHistoryProvider"></param>
+        public IQFeedDataDownloader(IQFeedFileHistoryProvider fileHistoryProvider)
         {
-            _iqConnect = new IQConnect(productName, productVersion);
-            _iqConnect.Launch(new IQCredentials(userName, password, true, true));
+            _fileHistoryProvider = fileHistoryProvider;
+            _tickType = TickType.Trade;
+        }
 
-            _historyPort = new HistoryPort(new IQFeedDataQueueUniverseProvider(), 0, 0);
-            _historyPort.Connect();
-            _historyPort.SetClientName("History");
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IQFeedDataDownloader"/> class
+        /// </summary>
+        /// <param name="fileHistoryProvider"></param>
+        /// <param name="tickType"></param>
+        public IQFeedDataDownloader(IQFeedFileHistoryProvider fileHistoryProvider, TickType tickType)
+        {
+            _fileHistoryProvider = fileHistoryProvider;
+            _tickType = tickType;
         }
 
         /// <summary>
@@ -50,9 +53,8 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
                 throw new ArgumentException("The end date must be greater or equal than the start date.");
 
             var dataType = resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar);
-            var tickType = resolution == Resolution.Tick ? TickType.Quote : TickType.Trade;
 
-            var slices = _historyPort.ProcessHistoryRequests(
+            return _fileHistoryProvider.ProcessHistoryRequests(
                 new HistoryRequest(
                     startUtc,
                     endUtc,
@@ -65,55 +67,7 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
                     true,
                     false,
                     DataNormalizationMode.Adjusted,
-                    tickType)).ToList();
-
-            switch (resolution)
-            {
-                case Resolution.Tick:
-                    var ticks = new List<Tick>();
-                    foreach (var slice in slices)
-                    {
-                        ticks.AddRange(slice.Ticks[symbol]);
-                    }
-                    return ticks;
-
-                case Resolution.Second:
-                case Resolution.Minute:
-                case Resolution.Hour:
-                case Resolution.Daily:
-                    var tradeBars = new List<TradeBar>();
-                    foreach (var slice in slices)
-                    {
-                        tradeBars.Add(slice.Bars[symbol]);
-                    }
-                    return tradeBars;
-
-                default:
-                    throw new NotSupportedException("Resolution not available: " + resolution);
-            }
-        }
-
-        /// <summary>
-        /// Aggregates a list of ticks at the requested resolution
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <param name="ticks"></param>
-        /// <param name="resolution"></param>
-        /// <returns></returns>
-        internal static IEnumerable<TradeBar> AggregateTicks(Symbol symbol, IEnumerable<Tick> ticks, TimeSpan resolution)
-        {
-            return (from t in ticks
-                    group t by t.Time.RoundDown(resolution) into g
-                    select new TradeBar
-                    {
-                        Symbol = symbol,
-                        Time = g.Key,
-                        Open = g.First().LastPrice,
-                        High = g.Max(t => t.LastPrice),
-                        Low = g.Min(t => t.LastPrice),
-                        Close = g.Last().LastPrice,
-                        Volume = g.Sum(t => t.Quantity)
-                    });
+                    _tickType));
         }
     }
 }

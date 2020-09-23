@@ -14,20 +14,27 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Indicators;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// DTO for storing data and the time at which it should be synchronized
+    /// Store data (either raw or adjusted) and the time at which it should be synchronized
     /// </summary>
     public class SubscriptionData
     {
         /// <summary>
+        /// Data
+        /// </summary>
+        protected BaseData _data;
+
+        /// <summary>
         /// Gets the data
         /// </summary>
-        public BaseData Data { get; }
+        public virtual BaseData Data => _data;
 
         /// <summary>
         /// Gets the UTC emit time for this data
@@ -41,7 +48,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="emitTimeUtc">The emit time for the data</param>
         public SubscriptionData(BaseData data, DateTime emitTimeUtc)
         {
-            Data = data;
+            _data = data;
             EmitTimeUtc = emitTimeUtc;
         }
 
@@ -52,8 +59,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="exchangeHours">The exchange hours of the security</param>
         /// <param name="offsetProvider">The subscription's offset provider</param>
         /// <param name="data">The data being emitted</param>
+        /// <param name="normalizationMode">Specifies how data is normalized</param>
+        /// <param name="factor">price scale factor</param>
         /// <returns>A new <see cref="SubscriptionData"/> containing the specified data</returns>
-        public static SubscriptionData Create(SubscriptionDataConfig configuration, SecurityExchangeHours exchangeHours, TimeZoneOffsetProvider offsetProvider, BaseData data)
+        public static SubscriptionData Create(SubscriptionDataConfig configuration, SecurityExchangeHours exchangeHours, TimeZoneOffsetProvider offsetProvider, BaseData data, DataNormalizationMode normalizationMode, decimal? factor = null)
         {
             if (data == null)
             {
@@ -70,6 +79,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (data.Time != data.EndTime)
             {
                 data.Time = data.Time.ExchangeRoundDownInTimeZone(configuration.Increment, exchangeHours, configuration.DataTimeZone, configuration.ExtendedMarketHours);
+            }
+
+            if (factor.HasValue && (factor.Value != 1 || configuration.SumOfDividends != 0))
+            {
+                var sumOfDividends = configuration.SumOfDividends;
+
+                BaseData normalizedData = data.Clone();
+
+                if (normalizationMode == DataNormalizationMode.Adjusted || normalizationMode == DataNormalizationMode.SplitAdjusted)
+                {
+                    normalizedData.Adjust(factor.Value);
+                }
+                else if (normalizationMode == DataNormalizationMode.TotalReturn)
+                {
+                    normalizedData.Scale(p => p * factor.Value + sumOfDividends);
+                }
+
+                return new PrecalculatedSubscriptionData(configuration, data, normalizedData, normalizationMode, emitTimeUtc);
             }
 
             return new SubscriptionData(data, emitTimeUtc);

@@ -77,6 +77,17 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// Announcement by a company that a plan of repurchase has been suspended. Further details of the suspension are included in the note.
         /// </summary>
         [EnumMember(Value = "Plan Suspension")]
-        PlanSuspension
+        PlanSuspension,
+        
+        /// <summary>
+        /// Announcement by a company that a suspended plan has been re-started. Further details of the suspension are included in the note.
+        /// </summary>
+        [EnumMember(Value = "Plan Re-started")]
+        PlanReStarted,
+        
+        /// <summary>
+        /// Announcement by a company not specified and/or not documented in the other categories. Further details are included in the note.
+        /// </summary>
+        NotSpecified
     }
 }

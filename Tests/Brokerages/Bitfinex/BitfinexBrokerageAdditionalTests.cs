@@ -20,6 +20,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Bitfinex;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using RestSharp;
 
@@ -38,15 +39,16 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         {
             var priceProvider = new Mock<IPriceProvider>();
             priceProvider.Setup(x => x.GetLastPrice(It.IsAny<Symbol>())).Returns(1.234m);
+            var aggregator = new Mock<IDataAggregator>();
 
             _brokerage = new BitfinexBrokerage(
-                "wss://localhost",
                 _webSocket.Object,
                 _restClient.Object,
                 "apikey",
                 "apisecret",
                 _algorithm,
-                priceProvider.Object);
+                priceProvider.Object,
+                aggregator.Object);
 
             _algorithm.SetBrokerageModel(new BitfinexBrokerageModel());
         }
@@ -61,29 +63,29 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         [Test]
         public void ReturnsCorrectCashBalancesWithMarginPositions()
         {
-            _restClient.Setup(m => m.Execute(It.Is<IRestRequest>(r => r.Resource == "/v1/balances")))
+            _restClient.Setup(m => m.Execute(It.Is<IRestRequest>(r => r.Resource == "/v2/auth/r/wallets")))
                 .Returns(new RestResponse
                 {
                     Content = @"
 [
-  { 'type':'trading', 'currency':'btc', 'amount':'0.0', 'available':'0.0' },
-  { 'type':'trading', 'currency':'eth', 'amount':'1.0', 'available':'0.5' },
-  { 'type':'trading', 'currency':'usd', 'amount':'0.0', 'available':'0.0' }
+    [""margin"", ""BTC"", 0, 0, null, null, null],
+    [""margin"", ""ETH"", 1, 0, null, null, null],
+    [""margin"", ""USD"", 0, 0, null, null, null]
 ]",
                     StatusCode = HttpStatusCode.OK
                 });
 
-            _restClient.Setup(m => m.Execute(It.Is<IRestRequest>(r => r.Resource == "/v1/positions")))
+            _restClient.Setup(m => m.Execute(It.Is<IRestRequest>(r => r.Resource == "/v2/auth/r/positions")))
                 .Returns(new RestResponse
                 {
-                    Content = "[{'id':142974855,'symbol':'btcusd','status':'ACTIVE','base':'7995.0','amount':'0.05','timestamp':'1583871936.0','swap':'-0.00648185','pl':'-2.48113'}]",
+                    Content = @"[[""tBTCUSD"",""ACTIVE"",0.004,9782.71142321,0,0,-2.400852892839999,-5.947343206195589,5114.619993419812,1.0413992183285932,null,143625635,1591796461000,1591796461000,null,0,null,0,0,{""reason"":""TRADE"",""order_id"":46295906640,""liq_stage"":null,""trade_price"":""9782.71142321"",""trade_amount"":""0.004"",""order_id_oppo"":46295895839}]]",
                     StatusCode = HttpStatusCode.OK
                 });
 
-            _restClient.Setup(m => m.Execute(It.Is<IRestRequest>(r => r.Resource == "/v1/pubticker/BTCUSD")))
+            _restClient.Setup(m => m.Execute(It.Is<IRestRequest>(r => r.Resource == "/v2/ticker/tBTCUSD")))
                 .Returns(new RestResponse
                 {
-                    Content = "{'mid':'7964.5','bid':'7963.2','ask':'7965.8','last_price':'7957.4','low':'7776.6','high':'8180.0','volume':'9934.81070662000002805','timestamp':'1583887538.695179'}",
+                    Content = "[9236,21.86775367,9236.1,17.27753753,-76,-0.0082,9236.1,2480.56819599,9339.03025493,9107]",
                     StatusCode = HttpStatusCode.OK
                 });
 
@@ -96,9 +98,9 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             var usd = balances.Single(a => a.Currency == "USD");
 
             Assert.AreEqual(1.0, eth.Amount);
-            Assert.AreEqual(0.05, btc.Amount);
-            // 7995 * 0.05
-            Assert.AreEqual(-399.75, usd.Amount);
+            Assert.AreEqual(0.004, btc.Amount);
+            // 9236.1 * 0.004
+            Assert.AreEqual(-39.13084569284m, usd.Amount);
         }
     }
 }

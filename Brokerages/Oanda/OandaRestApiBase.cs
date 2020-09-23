@@ -28,6 +28,7 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using Timer = System.Timers.Timer;
 
 namespace QuantConnect.Brokerages.Oanda
 {
@@ -37,8 +38,8 @@ namespace QuantConnect.Brokerages.Oanda
     public abstract class OandaRestApiBase : Brokerage, IDataQueueHandler
     {
         private static readonly TimeSpan SubscribeDelay = TimeSpan.FromMilliseconds(250);
-        private DateTime _lastSubscribeRequestUtcTime = DateTime.MinValue;
-        private bool _subscriptionsPending;
+        private ManualResetEvent _refreshEvent = new ManualResetEvent(false);
+        private CancellationTokenSource _streamingCancellationTokenSource = new CancellationTokenSource();
 
         private bool _isConnected;
 
@@ -62,14 +63,9 @@ namespace QuantConnect.Brokerages.Oanda
         protected readonly IConnectionHandler TransactionsConnectionHandler;
 
         /// <summary>
-        /// The list of ticks received
-        /// </summary>
-        protected readonly List<Tick> Ticks = new List<Tick>();
-
-        /// <summary>
         /// The list of currently subscribed symbols
         /// </summary>
-        protected HashSet<Symbol> SubscribedSymbols = new HashSet<Symbol>();
+        protected IEnumerable<Symbol> SubscribedSymbols => _subscriptionManager.GetSubscribedSymbols();
 
         /// <summary>
         /// A lock object used to synchronize access to subscribed symbols
@@ -90,6 +86,16 @@ namespace QuantConnect.Brokerages.Oanda
         /// The security provider
         /// </summary>
         protected ISecurityProvider SecurityProvider;
+
+        /// <summary>
+        /// The data aggregator
+        /// </summary>
+        protected IDataAggregator Aggregator;
+
+        /// <summary>
+        /// Data Queue Handler subscription manager
+        /// </summary>
+        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         /// <summary>
         /// The Oanda enviroment
@@ -127,11 +133,12 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="symbolMapper">The symbol mapper.</param>
         /// <param name="orderProvider">The order provider.</param>
         /// <param name="securityProvider">The holdings provider.</param>
+        /// <param name="aggregator">Consolidate ticks</param>
         /// <param name="environment">The Oanda environment (Trade or Practice)</param>
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
         /// <param name="agent">The Oanda agent string</param>
-        protected OandaRestApiBase(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent)
+        protected OandaRestApiBase(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, Environment environment, string accessToken, string accountId, string agent)
             : base("Oanda Brokerage")
         {
             SymbolMapper = symbolMapper;
@@ -141,6 +148,10 @@ namespace QuantConnect.Brokerages.Oanda
             AccessToken = accessToken;
             AccountId = accountId;
             Agent = agent;
+            Aggregator = aggregator;
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager.SubscribeImpl += (s, t) => Refresh();
+            _subscriptionManager.UnsubscribeImpl += (s, t) => Refresh(); ;
 
             PricingConnectionHandler = new DefaultConnectionHandler { MaximumIdleTimeSpan = TimeSpan.FromSeconds(20) };
             PricingConnectionHandler.ConnectionLost += OnPricingConnectionLost;
@@ -153,6 +164,30 @@ namespace QuantConnect.Brokerages.Oanda
             TransactionsConnectionHandler.ConnectionRestored += OnTransactionsConnectionRestored;
             TransactionsConnectionHandler.ReconnectRequested += OnTransactionsReconnectRequested;
             TransactionsConnectionHandler.Initialize(null);
+
+            Task.Factory.StartNew(
+                () =>
+                {
+                    do
+                    {
+                        _refreshEvent.WaitOne();
+                        Thread.Sleep(SubscribeDelay);
+
+                        if (!_isConnected)
+                        {
+                            continue;
+                        }
+
+                        _refreshEvent.Reset();
+
+                        var symbolsToSubscribe = SubscribedSymbols;
+                        // restart streaming session
+                        SubscribeSymbols(symbolsToSubscribe);
+                        
+                    } while (!_streamingCancellationTokenSource.IsCancellationRequested);
+                },
+                TaskCreationOptions.LongRunning
+            );
         }
 
         private void OnPricingConnectionLost(object sender, EventArgs e)
@@ -178,12 +213,7 @@ namespace QuantConnect.Brokerages.Oanda
             GetInstrumentList();
 
             // restore rates session
-            List<Symbol> symbolsToSubscribe;
-            lock (LockerSubscriptions)
-            {
-                symbolsToSubscribe = SubscribedSymbols.ToList();
-            }
-            SubscribeSymbols(symbolsToSubscribe);
+            SubscribeSymbols(SubscribedSymbols);
 
             Log.Trace("OnPricingReconnectRequested(): symbols resubscribed.");
         }
@@ -222,6 +252,11 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override void Dispose()
         {
+            Aggregator.DisposeSafely();
+            _refreshEvent.DisposeSafely();
+
+            _streamingCancellationTokenSource.Cancel();
+
             PricingConnectionHandler.ConnectionLost -= OnPricingConnectionLost;
             PricingConnectionHandler.ConnectionRestored -= OnPricingConnectionRestored;
             PricingConnectionHandler.ReconnectRequested -= OnPricingReconnectRequested;
@@ -322,121 +357,46 @@ namespace QuantConnect.Brokerages.Oanda
         public abstract IEnumerable<QuoteBar> DownloadQuoteBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone);
 
         /// <summary>
-        /// Get the next ticks from the live trading data queue
+        /// Subscribe to the specified configuration
         /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            lock (Ticks)
+            if (!CanSubscribe(dataConfig.Symbol))
             {
-                var copy = Ticks.ToArray();
-                Ticks.Clear();
-                return copy;
+                return Enumerable.Empty<BaseData>().GetEnumerator();
             }
+
+            var enumerator = Aggregator.Add(dataConfig, newDataAvailableHandler);
+            _subscriptionManager.Subscribe(dataConfig);
+
+            return enumerator;
         }
 
         /// <summary>
-        /// Adds the specified symbols to the subscription
+        /// Sets the job we're subscribing for
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
         {
-            lock (LockerSubscriptions)
-            {
-                var symbolsToSubscribe = (from symbol in symbols
-                                          where !SubscribedSymbols.Contains(symbol) && CanSubscribe(symbol)
-                                          select symbol).ToList();
-                if (symbolsToSubscribe.Count == 0)
-                    return;
-
-                Log.Trace("OandaBrokerage.Subscribe(): {0}", string.Join(",", symbolsToSubscribe.Select(x => x.Value)));
-
-                // Oanda does not allow more than a few rate streaming sessions,
-                // so we only use a single session for all currently subscribed symbols
-                symbolsToSubscribe = symbolsToSubscribe.Union(SubscribedSymbols.ToList()).ToList();
-
-                SubscribedSymbols = symbolsToSubscribe.ToHashSet();
-
-                ProcessSubscriptionRequest();
-            }
         }
 
         /// <summary>
-        /// Removes the specified symbols from the subscription
+        /// Removes the specified configuration
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            lock (LockerSubscriptions)
-            {
-                var symbolsToUnsubscribe = (from symbol in symbols
-                                            where SubscribedSymbols.Contains(symbol)
-                                            select symbol).ToList();
-                if (symbolsToUnsubscribe.Count == 0)
-                    return;
-
-                Log.Trace("OandaBrokerage.Unsubscribe(): {0}", string.Join(",", symbolsToUnsubscribe.Select(x => x.Value)));
-
-                // Oanda does not allow more than a few rate streaming sessions,
-                // so we only use a single session for all currently subscribed symbols
-                var symbolsToSubscribe = SubscribedSymbols.ToList().Where(x => !symbolsToUnsubscribe.Contains(x)).ToList();
-
-                SubscribedSymbols = symbolsToSubscribe.ToHashSet();
-
-                ProcessSubscriptionRequest();
-            }
-        }
-
-        /// <summary>
-        /// Groups multiple subscribe/unsubscribe calls to avoid closing and reopening the streaming session on each call
-        /// </summary>
-        private void ProcessSubscriptionRequest()
-        {
-            if (_subscriptionsPending) return;
-
-            _lastSubscribeRequestUtcTime = DateTime.UtcNow;
-            _subscriptionsPending = true;
-
-            Task.Run(() =>
-            {
-                while (true)
-                {
-                    DateTime requestTime;
-                    List<Symbol> symbolsToSubscribe;
-                    lock (LockerSubscriptions)
-                    {
-                        requestTime = _lastSubscribeRequestUtcTime.Add(SubscribeDelay);
-                        symbolsToSubscribe = SubscribedSymbols.ToList();
-                    }
-
-                    if (DateTime.UtcNow > requestTime)
-                    {
-                        // restart streaming session
-                        SubscribeSymbols(symbolsToSubscribe);
-
-                        lock (LockerSubscriptions)
-                        {
-                            _lastSubscribeRequestUtcTime = DateTime.UtcNow;
-                            if (SubscribedSymbols.Count == symbolsToSubscribe.Count)
-                            {
-                                // no more subscriptions pending, task finished
-                                _subscriptionsPending = false;
-                                break;
-                            }
-                        }
-                    }
-
-                    Thread.Sleep(200);
-                }
-            });
+            _subscriptionManager.Unsubscribe(dataConfig);
+            Aggregator.Remove(dataConfig);
         }
 
         /// <summary>
         /// Returns true if this brokerage supports the specified symbol
         /// </summary>
-        private static bool CanSubscribe(Symbol symbol)
+        private bool CanSubscribe(Symbol symbol)
         {
             // ignore unsupported security types
             if (symbol.ID.SecurityType != SecurityType.Forex && symbol.ID.SecurityType != SecurityType.Cfd)
@@ -446,11 +406,17 @@ namespace QuantConnect.Brokerages.Oanda
             return !symbol.Value.Contains("-UNIVERSE-");
         }
 
+        private bool Refresh()
+        {
+            _refreshEvent.Set();
+            return true;
+        }
+
         /// <summary>
         /// Subscribes to the requested symbols (using a single streaming session)
         /// </summary>
         /// <param name="symbolsToSubscribe">The list of symbols to subscribe</param>
-        protected void SubscribeSymbols(List<Symbol> symbolsToSubscribe)
+        protected void SubscribeSymbols(IEnumerable<Symbol> symbolsToSubscribe)
         {
             var instruments = symbolsToSubscribe
                 .Select(symbol => SymbolMapper.GetBrokerageSymbol(symbol))
@@ -466,6 +432,15 @@ namespace QuantConnect.Brokerages.Oanda
 
                 PricingConnectionHandler.EnableMonitoring(true);
             }
+        }
+
+        /// <summary>
+        /// Emit ticks
+        /// </summary>
+        /// <param name="tick">The new tick to emit</param>
+        protected void EmitTick(Tick tick)
+        {
+            Aggregator.Update(tick);
         }
     }
 }

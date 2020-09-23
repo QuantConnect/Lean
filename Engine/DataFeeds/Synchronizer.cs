@@ -27,7 +27,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// Implementation of the <see cref="ISynchronizer"/> interface which provides the mechanism to stream data to the algorithm
     /// </summary>
-    public class Synchronizer : ISynchronizer, IDataFeedTimeProvider
+    public class Synchronizer : ISynchronizer, IDataFeedTimeProvider, IDisposable
     {
         private DateTimeZone _dateTimeZone;
 
@@ -211,6 +211,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 frontier = Algorithm.StartDate.ConvertToUtc(_dateTimeZone);
             }
             return frontier;
+        }
+
+        /// <summary>
+        /// Free resources
+        /// </summary>
+        public virtual void Dispose()
+        {
         }
     }
 }

@@ -29,8 +29,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// <summary>
         /// Desktop/Local doesn't support live data from this handler
         /// </summary>
-        /// <returns>Tick</returns>
-        public virtual IEnumerable<BaseData> GetNextTicks()
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
             throw new NotImplementedException("QuantConnect.Queues.LiveDataQueue has not implemented live data.");
         }
@@ -38,17 +37,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// <summary>
         /// Desktop/Local doesn't support live data from this handler
         /// </summary>
-        public virtual void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public virtual void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
             throw new NotImplementedException("QuantConnect.Queues.LiveDataQueue has not implemented live data.");
         }
 
         /// <summary>
-        /// Desktop/Local doesn't support live data from this handler
+        /// Sets the job we're subscribing for
         /// </summary>
-        public virtual void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
         {
-            throw new NotImplementedException("QuantConnect.Queues.LiveDataQueue has not implemented live data.");
         }
 
         /// <summary>

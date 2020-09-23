@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -78,13 +79,14 @@ namespace QuantConnect.Brokerages.GDAX
             var restClient = new RestClient("https://api.pro.coinbase.com");
             var webSocketClient = new WebSocketClientWrapper();
             var priceProvider = new ApiPriceProvider(job.UserId, job.UserToken);
+            var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
 
             IBrokerage brokerage;
             if (job.DataQueueHandler.EndsWith("GDAXDataQueueHandler"))
             {
                 var dataQueueHandler = new GDAXDataQueueHandler(job.BrokerageData["gdax-url"], webSocketClient,
                     restClient, job.BrokerageData["gdax-api-key"], job.BrokerageData["gdax-api-secret"],
-                    job.BrokerageData["gdax-passphrase"], algorithm, priceProvider);
+                    job.BrokerageData["gdax-passphrase"], algorithm, priceProvider, aggregator);
 
                 Composer.Instance.AddPart<IDataQueueHandler>(dataQueueHandler);
 
@@ -94,7 +96,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 brokerage = new GDAXBrokerage(job.BrokerageData["gdax-url"], webSocketClient,
                     restClient, job.BrokerageData["gdax-api-key"], job.BrokerageData["gdax-api-secret"],
-                    job.BrokerageData["gdax-passphrase"], algorithm, priceProvider);
+                    job.BrokerageData["gdax-passphrase"], algorithm, priceProvider, aggregator);
             }
 
             return brokerage;

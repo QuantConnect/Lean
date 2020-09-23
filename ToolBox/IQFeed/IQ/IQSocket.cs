@@ -18,10 +18,10 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Globalization;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.ToolBox.IQFeed
 {
-
     public enum LookupSequence
     {
         MessageStart,
@@ -62,12 +62,6 @@ namespace QuantConnect.ToolBox.IQFeed
         #endregion
     }
 
-
-
-
-
-
-
     public enum PortType { Level1 = 1, Lookup = 3, Level2 = 2, Admin = 0 }
     public static class IQSocket
     {
@@ -91,14 +85,22 @@ namespace QuantConnect.ToolBox.IQFeed
             }
             return port;
         }
-        public static IPAddress GetIp()
+        public static IPAddress GetIp(string host)
         {
-            return IPAddress.Parse("127.0.0.1");
+            var ipAddresses = Dns.GetHostAddresses(host);
+            if (ipAddresses.Length == 0)
+            {
+                throw new ArgumentException("Unable to retrieve address from specified host name.", host);
+            }
+
+            return ipAddresses[0];
         }
+
         public static IPEndPoint GetEndPoint(PortType portType)
         {
-            return new IPEndPoint(GetIp(), GetPort(portType));
+            return new IPEndPoint(GetIp(Config.Get("iqfeed-host", "127.0.0.1")), GetPort(portType));
         }
+
         public static Socket GetSocket()
         {
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -188,8 +190,5 @@ namespace QuantConnect.ToolBox.IQFeed
         private CultureInfo _enUS = new CultureInfo("en-US");
         #endregion
     }
- 
-
-
 }
  

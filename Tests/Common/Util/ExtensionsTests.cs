@@ -666,6 +666,28 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(decimal.MinValue, output);
         }
 
+        [TestCase(Language.CSharp, double.NaN)]
+        [TestCase(Language.Python, double.NaN)]
+        [TestCase(Language.CSharp, double.NegativeInfinity)]
+        [TestCase(Language.Python, double.NegativeInfinity)]
+        [TestCase(Language.CSharp, double.PositiveInfinity)]
+        [TestCase(Language.Python, double.PositiveInfinity)]
+        public void SafeDecimalCastThrowsArgumentException(Language language, double number)
+        {
+            if (language == Language.CSharp)
+            {
+                Assert.Throws<ArgumentException>(() => number.SafeDecimalCast());
+                return;
+            }
+
+            using (Py.GIL())
+            {
+                var pyNumber = number.ToPython();
+                var csNumber = pyNumber.As<double>();
+                Assert.Throws<ArgumentException>(() => csNumber.SafeDecimalCast());
+            }
+        }
+
         [Test]
         [TestCase(1.200, "1.2")]
         [TestCase(1200, "1200")]

@@ -101,6 +101,10 @@
     <Compile Include="AccelerationBands.cs" />
     <Compile Include="AccumulationDistribution.cs" />
     <Compile Include="AccumulationDistributionOscillator.cs" />
+    <Compile Include="AdvanceDeclineIndicator.cs" />
+    <Compile Include="AdvanceDeclineVolumeRatio.cs" />
+    <Compile Include="AdvanceDeclineRatio.cs" />
+    <Compile Include="ArmsIndex.cs" />
     <Compile Include="ArnaudLegouxMovingAverage.cs" />
     <Compile Include="AverageDirectionalIndex.cs" />
     <Compile Include="AverageDirectionalMovementIndexRating.cs" />
@@ -176,8 +180,10 @@
     <Compile Include="DoubleExponentialMovingAverage.cs" />
     <Compile Include="PythonIndicator.cs" />
     <Compile Include="IntradayVwap.cs" />
+    <Compile Include="SchaffTrendCycle.cs" />
     <Compile Include="WilderMovingAverage.cs" />
     <Compile Include="FractalAdaptiveMovingAverage.cs" />
+    <Compile Include="EaseOfMovementValue.cs"/>
     <Compile Include="FilteredIdentity.cs" />
     <Compile Include="HullMovingAverage.cs" />
     <Compile Include="MassIndex.cs" />

@@ -915,7 +915,7 @@ namespace QuantConnect.Algorithm
         /// Update the internal algorithm time frontier.
         /// </summary>
         /// <remarks>For internal use only to advance time.</remarks>
-        /// <param name="frontier">Current datetime.</param>
+        /// <param name="frontier">Current utc datetime.</param>
         public void SetDateTime(DateTime frontier)
         {
             _timeKeeper.SetUtcDateTime(frontier);

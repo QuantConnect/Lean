@@ -63,7 +63,8 @@ namespace QuantConnect.Tests.Engine
                         algorithm,
                         RegisteredSecurityDataTypesProvider.Null,
                         new SecurityCacheProvider(algorithm.Portfolio)),
-                    dataPermissionManager),
+                    dataPermissionManager,
+                    new DefaultDataProvider()),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
@@ -158,6 +159,10 @@ namespace QuantConnect.Tests.Engine
         {
             public ConcurrentQueue<Packet> Messages { get; set; }
             public bool IsActive { get; }
+
+            public void OnSecuritiesChanged(SecurityChanges changes)
+            {
+            }
 
             public void Initialize(AlgorithmNodePacket job,
                 IMessagingHandler messagingHandler,

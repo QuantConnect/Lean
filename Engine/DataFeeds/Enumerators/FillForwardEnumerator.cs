@@ -35,6 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     {
         private DateTime? _delistedTime;
         private BaseData _previous;
+        private bool _ended;
         private bool _isFillingForward;
 
         private readonly TimeSpan _dataResolution;
@@ -145,6 +146,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // if we're filling forward we don't need to move next since we haven't emitted _enumerator.Current yet
                 if (!_enumerator.MoveNext())
                 {
+                    _ended = true;
                     if (_delistedTime.HasValue)
                     {
                         // don't fill forward delisted data
@@ -179,6 +181,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     Current = endOfSubscription;
                     return true;
                 }
+            }
+            // If we are filling forward and the underlying is null, let's MoveNext() as long as it didn't end.
+            // This only applies for live trading, so that the LiveFillForwardEnumerator does not stall whenever
+            // we generate a fill-forward bar. The underlying enumerator is advanced so that we don't get stuck
+            // in a cycle of generating infinite fill-forward bars.
+            else if (_enumerator.Current == null && !_ended)
+            {
+                _ended = _enumerator.MoveNext();
             }
 
             var underlyingCurrent = _enumerator.Current;
@@ -254,12 +264,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
 
             // check to see if the gap between previous and next warrants fill forward behavior
-            var nextPreviousTimeDelta = nextTimeUtc - previousTimeUtc;
-            if (nextPreviousTimeDelta <= fillForwardResolution && nextPreviousTimeDelta <= _dataResolution)
+            var nextPreviousTimeUtcDelta = nextTimeUtc - previousTimeUtc;
+            if (nextPreviousTimeUtcDelta <= fillForwardResolution && nextPreviousTimeUtcDelta <= _dataResolution)
             {
                 fillForward = null;
                 return false;
             }
+
+            // define real delta, can be bigger than data resolution, for example during weekend
+            var nextPreviousTimeDelta = next.Time - previous.Time;
+
+            // 1. Utc => allows us to define did we swallow hour when calculated EndTime (Time+Period) or not,
+            // for example, with data resolution 1 day and dataTimeZone = UTC we have next.Time 20111105 20:00, next.EndTime = 20111106 20:00
+            // but converting these values to UTC we have next.Time 20111106 00:00 (recognized as EDT), next.EndTime = 20111107 01:00 (recognized as EST)
+            // 2. previous.Time - next.Time => gives us real delta time in local time zone - not necessary equals data resolution(for weekend)
+            // 3. dataResolution => we use EndTime
+            var daylightMovement = nextEndTimeUtc - (previousTimeUtc + nextPreviousTimeDelta + _dataResolution);
 
             // every bar emitted MUST be of the data resolution.
 
@@ -267,7 +287,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             // 1. the next fill forward bar. 09:00-10:00 followed by 10:00-11:00 where 01:00 is the fill forward resolution
             // 2. the next data resolution bar, same as above but with the data resolution instead
             // 3. the next fill forward bar following the next market open, 15:00-16:00 followed by 09:00-10:00 the following open market day
-            // 4. the next data resolution bar following thenext market open, same as above but with the data resolution instead
+            // 4. the next data resolution bar following the next market open, same as above but with the data resolution instead
 
             // the precedence for validation is based on the order of the end times, obviously if a potential match
             // is before a later match, the earliest match should win.
@@ -278,7 +298,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var potentialUtc = _offsetProvider.ConvertToUtc(item.ReferenceDateTime) + item.Interval;
                 var potentialInTimeZone = _offsetProvider.ConvertFromUtc(potentialUtc);
                 var potentialBarEndTime = RoundDown(potentialInTimeZone, item.Interval);
-                if (potentialBarEndTime < next.EndTime)
+                // apply the same timezone to next and potential bars because incoming next.EndTime can swallow one hour
+                var nextEndTime = next.EndTime - daylightMovement;
+                if (potentialBarEndTime < nextEndTime)
                 {
                     var nextFillForwardBarStartTime = potentialBarEndTime - item.Interval;
                     if (Exchange.IsOpenDuringBar(nextFillForwardBarStartTime, potentialBarEndTime, _isExtendedMarketHours))

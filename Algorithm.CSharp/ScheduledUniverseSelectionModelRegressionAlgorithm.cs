@@ -67,16 +67,16 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (dateTime.DayOfWeek == DayOfWeek.Tuesday || dateTime.DayOfWeek == DayOfWeek.Thursday)
             {
-                yield return QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM);
+                yield return QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda);
             }
             else if (dateTime.DayOfWeek == DayOfWeek.Friday)
             {
                 // given the date/time rules specified in Initialize, this symbol will never be selected (every 6 hours never lands on hour==1)
-                yield return QuantConnect.Symbol.Create("EURGBP", SecurityType.Forex, Market.FXCM);
+                yield return QuantConnect.Symbol.Create("EURGBP", SecurityType.Forex, Market.Oanda);
             }
             else
             {
-                yield return QuantConnect.Symbol.Create("NZDUSD", SecurityType.Forex, Market.FXCM);
+                yield return QuantConnect.Symbol.Create("NZDUSD", SecurityType.Forex, Market.Oanda);
             }
         }
 
@@ -192,46 +192,46 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "52"},
-            {"Average Win", "0.27%"},
-            {"Average Loss", "-0.22%"},
-            {"Compounding Annual Return", "41.076%"},
-            {"Drawdown", "1.000%"},
-            {"Expectancy", "0.618"},
-            {"Net Profit", "3.112%"},
-            {"Sharpe Ratio", "5.311"},
-            {"Probabilistic Sharpe Ratio", "90.919%"},
-            {"Loss Rate", "29%"},
-            {"Win Rate", "71%"},
-            {"Profit-Loss Ratio", "1.26"},
-            {"Alpha", "0.31"},
-            {"Beta", "0.054"},
-            {"Annual Standard Deviation", "0.06"},
-            {"Annual Variance", "0.004"},
-            {"Information Ratio", "1.79"},
-            {"Tracking Error", "0.079"},
-            {"Treynor Ratio", "5.952"},
-            {"Total Fees", "$36.83"},
-            {"Fitness Score", "0.67"},
-            {"Kelly Criterion Estimate", "25.099"},
-            {"Kelly Criterion Probability Value", "0.068"},
-            {"Sortino Ratio", "13.102"},
-            {"Return Over Maximum Drawdown", "55.759"},
-            {"Portfolio Turnover", "0.675"},
-            {"Total Insights Generated", "54"},
-            {"Total Insights Closed", "52"},
-            {"Total Insights Analysis Completed", "52"},
-            {"Long Insight Count", "54"},
+            {"Total Trades", "86"},
+            {"Average Win", "0.16%"},
+            {"Average Loss", "-0.10%"},
+            {"Compounding Annual Return", "51.162%"},
+            {"Drawdown", "1.100%"},
+            {"Expectancy", "0.793"},
+            {"Net Profit", "3.748%"},
+            {"Sharpe Ratio", "7.195"},
+            {"Probabilistic Sharpe Ratio", "99.177%"},
+            {"Loss Rate", "31%"},
+            {"Win Rate", "69%"},
+            {"Profit-Loss Ratio", "1.60"},
+            {"Alpha", "0.366"},
+            {"Beta", "0.161"},
+            {"Annual Standard Deviation", "0.055"},
+            {"Annual Variance", "0.003"},
+            {"Information Ratio", "3.061"},
+            {"Tracking Error", "0.07"},
+            {"Treynor Ratio", "2.443"},
+            {"Total Fees", "$33.96"},
+            {"Fitness Score", "0.75"},
+            {"Kelly Criterion Estimate", "23.91"},
+            {"Kelly Criterion Probability Value", "0.076"},
+            {"Sortino Ratio", "42.076"},
+            {"Return Over Maximum Drawdown", "129.046"},
+            {"Portfolio Turnover", "0.751"},
+            {"Total Insights Generated", "55"},
+            {"Total Insights Closed", "53"},
+            {"Total Insights Analysis Completed", "53"},
+            {"Long Insight Count", "55"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
             {"Estimated Monthly Alpha Value", "$814596.0814"},
             {"Total Accumulated Estimated Alpha Value", "$888136.0054"},
-            {"Mean Population Estimated Insight Value", "$17079.5386"},
-            {"Mean Population Direction", "59.6154%"},
+            {"Mean Population Estimated Insight Value", "$16757.2831"},
+            {"Mean Population Direction", "58.4906%"},
             {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "64.1791%"},
+            {"Rolling Averaged Population Direction", "55.0223%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "-1450725184"}
+            {"OrderListHash", "941404943"}
         };
     }
 }

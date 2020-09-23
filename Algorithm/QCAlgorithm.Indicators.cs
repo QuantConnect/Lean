@@ -498,6 +498,30 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates an EaseOfMovementValue indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose EMV we want</param>
+        /// <param name="period">The period of the EMV</param>
+        /// <param name="scale">The length of the outputed value</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The EaseOfMovementValue indicator for the given parameters</returns>
+        public EaseOfMovementValue EMV(Symbol symbol, int period = 1, int scale = 10000, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"EMV({period}, {scale})", resolution);
+            var easeOfMovementValue = new EaseOfMovementValue(name, period, scale);
+            RegisterIndicator(symbol, easeOfMovementValue, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, easeOfMovementValue, resolution);
+            }
+
+            return easeOfMovementValue;
+        }
+
+        /// <summary>
         /// Creates a new FilteredIdentity indicator for the symbol The indicator will be automatically
         /// updated on the symbol's subscription resolution
         /// </summary>
@@ -1351,6 +1375,31 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Schaff Trend Cycle indicator
+        /// </summary>
+        /// <param name="symbol">The symbol for the indicator to track</param>
+        /// <param name="fastPeriod">The fast moving average period</param>
+        /// <param name="slowPeriod">The slow moving average period</param>
+        /// <param name="cyclePeriod">The signal period</param>
+        /// <param name="movingAverageType">The type of moving average to use</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The SchaffTrendCycle indicator for the requested symbol over the specified period</returns>
+        public SchaffTrendCycle STC(Symbol symbol, int cyclePeriod, int fastPeriod, int slowPeriod, MovingAverageType movingAverageType = MovingAverageType.Exponential, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"STC({cyclePeriod},{fastPeriod},{slowPeriod})", resolution);
+            var schaffTrendCycle = new SchaffTrendCycle(name, cyclePeriod, fastPeriod, slowPeriod, movingAverageType);
+            RegisterIndicator(symbol, schaffTrendCycle, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, schaffTrendCycle, resolution);
+            }
+
+            return schaffTrendCycle;
+        }
+
+        /// <summary>
         /// Creates a new StandardDeviation indicator. This will return the population standard deviation of samples over the specified period.
         /// </summary>
         /// <param name="symbol">The symbol whose STD we want</param>
@@ -1695,6 +1744,78 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Arms Index indicator
+        /// </summary>
+        /// <param name="symbols">The symbols whose Arms Index we want</param>
+        /// <param name="resolution">The resolution</param>
+        /// <returns>The Arms Index indicator for the requested symbol over the specified period</returns>
+        public ArmsIndex TRIN(IEnumerable<Symbol> symbols, Resolution? resolution = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, "TRIN", resolution ?? GetSubscription(symbols.First()).Resolution);
+            var trin = new ArmsIndex(name);
+            foreach (var symbol in symbols)
+            {
+                trin.AddStock(symbol);
+                RegisterIndicator(symbol, trin, resolution);
+
+                if (EnableAutomaticIndicatorWarmUp)
+                {
+                    WarmUpIndicator(symbol, trin, resolution);
+                }
+            }
+
+            return trin;
+        }
+
+        /// <summary>
+        /// Creates a new Advance/Decline Ratio indicator
+        /// </summary>
+        /// <param name="symbols">The symbols whose A/D Ratio we want</param>
+        /// <param name="resolution">The resolution</param>
+        /// <returns>The Advance/Decline Ratio indicator for the requested symbol over the specified period</returns>
+        public AdvanceDeclineRatio ADR(IEnumerable<Symbol> symbols, Resolution? resolution = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, "A/D Ratio", resolution ?? GetSubscription(symbols.First()).Resolution);
+            var adr = new AdvanceDeclineRatio(name);
+            foreach (var symbol in symbols)
+            {
+                adr.AddStock(symbol);
+                RegisterIndicator(symbol, adr, resolution);
+
+                if (EnableAutomaticIndicatorWarmUp)
+                {
+                    WarmUpIndicator(symbol, adr, resolution);
+                }
+            }
+
+            return adr;
+        }
+
+        /// <summary>
+        /// Creates a new Advance/Decline Volume Ratio indicator
+        /// </summary>
+        /// <param name="symbols">The symbol whose A/D Volume Rate we want</param>
+        /// <param name="resolution">The resolution</param>
+        /// <returns>The Advance/Decline Volume Ratio indicator for the requested symbol over the specified period</returns>
+        public AdvanceDeclineVolumeRatio ADVR(IEnumerable<Symbol> symbols, Resolution? resolution = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, "A/D Volume Rate", resolution ?? GetSubscription(symbols.First()).Resolution);
+            var advr = new AdvanceDeclineVolumeRatio(name);
+            foreach (var symbol in symbols)
+            {
+                advr.AddStock(symbol);
+                RegisterIndicator(symbol, advr, resolution);
+
+                if (EnableAutomaticIndicatorWarmUp)
+                {
+                    WarmUpIndicator(symbol, advr, resolution);
+                }
+            }
+
+            return advr;
+        }
+
+        /// <summary>
         /// Creates a new name for an indicator created with the convenience functions (SMA, EMA, ect...)
         /// </summary>
         /// <param name="symbol">The symbol this indicator is registered to</param>
@@ -1716,23 +1837,23 @@ namespace QuantConnect.Algorithm
             switch (resolution)
             {
                 case Resolution.Tick:
-                    res = "_tick";
+                    res = "tick";
                     break;
 
                 case Resolution.Second:
-                    res = "_sec";
+                    res = "sec";
                     break;
 
                 case Resolution.Minute:
-                    res = "_min";
+                    res = "min";
                     break;
 
                 case Resolution.Hour:
-                    res = "_hr";
+                    res = "hr";
                     break;
 
                 case Resolution.Daily:
-                    res = "_day";
+                    res = "day";
                     break;
 
                 case null:
@@ -1742,7 +1863,15 @@ namespace QuantConnect.Algorithm
                     throw new ArgumentOutOfRangeException(nameof(resolution), resolution, "resolution parameter is out of range.");
             }
 
-            return Invariant($"{type}({symbol}{res})").Replace(")(",",");
+            var parts = new List<string>();
+
+            if (symbol != QuantConnect.Symbol.None && symbol != QuantConnect.Symbol.Empty)
+            {
+                parts.Add(symbol.ToString());
+            }
+            parts.Add(res);
+            
+            return Invariant($"{type}({string.Join("_", parts)})").Replace(")(", ",");
         }
 
         /// <summary>

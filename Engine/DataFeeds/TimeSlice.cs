@@ -33,7 +33,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public int DataPointCount { get; }
 
         /// <summary>
-        /// Gets the time this data was emitted
+        /// Gets the UTC time this data was emitted
         /// </summary>
         public DateTime Time { get; }
 

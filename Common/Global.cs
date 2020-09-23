@@ -40,8 +40,14 @@ namespace QuantConnect
         public const string DB = "yyyy-MM-dd HH:mm:ss";
         /// QuantConnect UX Date Representation
         public const string UI = "yyyy-MM-dd HH:mm:ss";
+        /// en-US Short Date and Time Pattern
+        public const string USShort = "M/d/yy h:mm tt";
+        /// en-US Short Date Pattern
+        public const string USShortDateOnly = "M/d/yy";
         /// en-US format
         public const string US = "M/d/yyyy h:mm:ss tt";
+        /// en-US Date format
+        public const string USDateOnly = "M/d/yyyy";
         /// Date format of QC forex data
         public const string Forex = "yyyyMMdd HH:mm:ss.ffff";
         /// YYYYMM Year and Month Character Date Representation (used for futures)

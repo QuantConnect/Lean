@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using System;
 using System.Globalization;
 using System.IO;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Data.Custom.SmartInsider
 {
@@ -130,7 +131,20 @@ namespace QuantConnect.Data.Custom.SmartInsider
             var tsv = line.Split('\t');
 
             TransactionID = string.IsNullOrWhiteSpace(tsv[0]) ? null : tsv[0];
-            EventType = string.IsNullOrWhiteSpace(tsv[1]) ? (SmartInsiderEventType?)null : JsonConvert.DeserializeObject<SmartInsiderEventType>($"\"{tsv[1]}\"");
+
+            EventType = SmartInsiderEventType.NotSpecified;
+            if (!string.IsNullOrWhiteSpace(tsv[1]))
+            {
+                try
+                {
+                    EventType = JsonConvert.DeserializeObject<SmartInsiderEventType>($"\"{tsv[1]}\"");
+                }
+                catch (JsonSerializationException)
+                {
+                    Log.Error($"SmartInsiderIntention.FromRawData: New unexpected entry found {tsv[1]}. Parsed as NotSpecified.");
+                }
+            }
+
             LastUpdate = DateTime.ParseExact(tsv[2], "yyyy-MM-dd", CultureInfo.InvariantCulture);
             LastIDsUpdate = string.IsNullOrWhiteSpace(tsv[3]) ? (DateTime?)null : DateTime.ParseExact(tsv[3], "yyyy-MM-dd", CultureInfo.InvariantCulture);
             ISIN = string.IsNullOrWhiteSpace(tsv[4]) ? null : tsv[4];

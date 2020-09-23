@@ -16,6 +16,7 @@
 using NUnit.Framework;
 using QuantConnect.Data.Custom.SmartInsider;
 using System;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Tests.Common.Data.Custom
@@ -132,6 +133,37 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual(time, deserialized.LastUpdate);
             Assert.AreEqual(time, deserialized.Time);
             Assert.AreEqual(time, deserialized.EndTime);
+        }
+
+        [Test]
+        public void ParseFromRawDataUnexpectedEventType()
+        {
+            var realRawIntentionLine = "\"BI12345\"\t\"Some new event\"\t2020-07-27\t2009-11-11\t\"US1234567890\"\t\"\"\t12345\t\"https://smartinsidercompanypage.com\"\t\"Consumer Staples\"\t" +
+                                       "\"Personal Care, Drug and Grocery Stores\"\t\"Personal Care, Drug and Grocery Stores\"\t\"Personal Products\"\t12345678\t\"Some Company Corp\"\t\"Some-Comapny C\"\t" +
+                                       "\"\"\t\"\"\t\"\"\t\"\"\t\"Com\"\t\"US\"\t\"SCC\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\t\t-999\t\"Some unexpected event.\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"" +
+                                       "\"\t2020-07-27\t\"\"\t\"\"\t\"\"\t2020-07-27  13:57:37\t\"US\"\t\"https://smartinsiderdatapage.com\"\t\"On Market\"\t\"Issuer\"\t\"Not Reported\"\t\"\"\t\"\"\t\t" +
+                                       "\"\"\t\t\t\"\"\t\t\t\"\""; 
+
+            var tsv = realRawIntentionLine.Split('\t')
+                .Take(60)
+                .Select(x => x.Replace("\"", ""))
+                .ToList();
+
+            // Remove in descending order to maintain index order
+            // while we delete lower indexed values
+            tsv.RemoveAt(46); // ShowOriginal
+            tsv.RemoveAt(36); // PreviousClosePrice
+            tsv.RemoveAt(14); // ShortCompanyName
+            tsv.RemoveAt(7);  // CompanyPageURL
+
+            var filteredRawIntentionLine = string.Join("\t", tsv);
+
+            var intention = new SmartInsiderIntention();
+            intention.FromRawData(filteredRawIntentionLine);
+            Assert.DoesNotThrow(() =>intention.FromRawData(filteredRawIntentionLine));
+
+            Assert.IsTrue(intention.EventType.HasValue);
+            Assert.AreEqual(intention.EventType, SmartInsiderEventType.NotSpecified);
         }
     }
 }

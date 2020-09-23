@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Runtime.CompilerServices;
 using QuantConnect.Data.Market;
 using Python.Runtime;
 
@@ -30,8 +31,9 @@ namespace QuantConnect.Data.Consolidators
         where T : IBaseData
         where TConsolidated : BaseData
     {
-        // The symbol that we are consolidating for.
-        private Symbol _symbol;
+        // The SecurityIdentifier that we are consolidating for.
+        private SecurityIdentifier _securityIdentifier;
+        private bool _securityIdentifierIsSet;
         //The number of data updates between creating new bars.
         private readonly int? _maxCount;
         //
@@ -48,6 +50,7 @@ namespace QuantConnect.Data.Consolidators
         private PeriodCountConsolidatorBase(IPeriodSpecification periodSpecification)
         {
             _periodSpecification = periodSpecification;
+            _period = _periodSpecification.Period;
         }
 
         /// <summary>
@@ -128,13 +131,14 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="data">The new data for the consolidator</param>
         public override void Update(T data)
         {
-            if (_symbol == null)
+            if (!_securityIdentifierIsSet)
             {
-                _symbol = data.Symbol;
+                _securityIdentifierIsSet = true;
+                _securityIdentifier = data.Symbol.ID;
             }
-            else if (_symbol != data.Symbol)
+            else if (!data.Symbol.ID.Equals(_securityIdentifier))
             {
-                throw new InvalidOperationException($"Consolidators can only be used with a single symbol. The previous consolidated symbol ({_symbol}) is not the same as in the current data ({data.Symbol}).");
+                throw new InvalidOperationException($"Consolidators can only be used with a single symbol. The previous consolidated SecurityIdentifier ({_securityIdentifier}) is not the same as in the current data ({data.Symbol.ID}).");
             }
 
             if (!ShouldProcess(data))
@@ -229,15 +233,11 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
         public override void Scan(DateTime currentLocalTime)
         {
-            if (_period.HasValue && _workingBar != null)
+            if (_workingBar != null && _period.HasValue && _period.Value != TimeSpan.Zero
+                && currentLocalTime - _workingBar.Time >= _period.Value && GetRoundedBarTime(currentLocalTime) > _lastEmit)
             {
-                currentLocalTime = GetRoundedBarTime(currentLocalTime);
-
-                if (_period.Value != TimeSpan.Zero && currentLocalTime - _workingBar.Time >= _period.Value && currentLocalTime > _lastEmit)
-                {
-                    OnDataConsolidated(_workingBar);
-                    _lastEmit = currentLocalTime;
-                }
+                OnDataConsolidated(_workingBar);
+                _lastEmit = currentLocalTime;
             }
         }
 
@@ -271,6 +271,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="time">The bar time to be rounded down</param>
         /// <returns>The rounded bar time</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected DateTime GetRoundedBarTime(DateTime time)
         {
             var barTime = _periodSpecification.GetRoundedBarTime(time);

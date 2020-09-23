@@ -30,11 +30,13 @@ using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Research
 {
@@ -45,11 +47,39 @@ namespace QuantConnect.Research
     {
         private dynamic _pandas;
         private IDataCacheProvider _dataCacheProvider;
+        private IDataProvider _dataProvider;
+        private static bool _isPythonNotebook;
 
         static QuantBook()
         {
             Logging.Log.LogHandler =
                 Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+
+            //Determine if we are in a Python Notebook
+            try
+            {
+                using (Py.GIL())
+                {
+                    var isPython = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                        "try:\n" +
+                        "   import IPython\n" +
+                        "   def IsPythonNotebook():\n" +
+                        "       return (IPython.get_ipython() != None)\n" +
+                        "except:\n" +
+                        "   print('No IPython installed')\n" +
+                        "   def IsPythonNotebook():\n" +
+                        "       return false\n").GetAttr("IsPythonNotebook").Invoke();
+                    isPython.TryConvert(out _isPythonNotebook);
+                }
+            }
+            catch
+            {
+                //Default to false
+                _isPythonNotebook = false;
+                Logging.Log.Error("QuantBook failed to determine Notebook kernel language");
+            }
+
+            Logging.Log.Trace($"QuantBook started; Is Python: {_isPythonNotebook}");
         }
 
         /// <summary>
@@ -98,6 +128,7 @@ namespace QuantConnect.Research
                 SetObjectStore(algorithmHandlers.ObjectStore);
 
                 _dataCacheProvider = new ZipDataCacheProvider(algorithmHandlers.DataProvider);
+                _dataProvider = algorithmHandlers.DataProvider;
 
                 var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
                 var registeredTypes = new RegisteredSecurityDataTypesProvider();
@@ -110,7 +141,7 @@ namespace QuantConnect.Research
                 Securities.SetSecurityService(securityService);
                 SubscriptionManager.SetDataManager(
                     new DataManager(new NullDataFeed(),
-                        new UniverseSelection(this, securityService, algorithmHandlers.DataPermissionsManager),
+                        new UniverseSelection(this, securityService, algorithmHandlers.DataPermissionsManager, algorithmHandlers.DataProvider),
                         this,
                         TimeKeeper,
                         MarketHoursDatabase,
@@ -144,62 +175,122 @@ namespace QuantConnect.Research
         }
 
         /// <summary>
-        /// Get fundamental data from given symbols
+        /// Python implementation of GetFundamental, get fundamental data for input symbols or tickers
         /// </summary>
-        /// <param name="pyObject">The symbols to retrieve fundamental data for</param>
+        /// <param name="input">The symbols or tickers to retrieve fundamental data for</param>
         /// <param name="selector">Selects a value from the Fundamental data to filter the request output</param>
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
-        /// <returns></returns>
-        public PyObject GetFundamental(PyObject tickers, string selector, DateTime? start = null, DateTime? end = null)
+        /// <returns>pandas DataFrame</returns>
+        public PyObject GetFundamental(PyObject input, string selector, DateTime? start = null, DateTime? end = null)
         {
+            //Null selector is not allowed for Python DataFrame
             if (string.IsNullOrWhiteSpace(selector))
             {
-                return "Invalid selector. Cannot be None, empty or consist only of white-space characters".ToPython();
+                throw new ArgumentException("Invalid selector. Cannot be None, empty or consist only of white-space characters");
             }
+
+            //Covert to symbols
+            var symbols = PythonUtil.ConvertToSymbols(input);
+            
+            //Fetch the data
+            var fundamentalData = GetAllFundamental(symbols, selector, start, end);
 
             using (Py.GIL())
             {
-                // If tickers are not a PyList, we create one
-                if (!PyList.IsListType(tickers))
-                {
-                    var tmp = new PyList();
-                    tmp.Append(tickers);
-                    tickers = tmp;
-                }
-
-                var list = new List<Tuple<Symbol, DateTime, object>>();
-
-                foreach (var ticker in tickers)
-                {
-                    var symbol = QuantConnect.Symbol.Create(ticker.ToString(), SecurityType.Equity, Market.USA);
-                    var dir = new DirectoryInfo(Path.Combine(Globals.DataFolder, "equity", symbol.ID.Market, "fundamental", "fine", symbol.Value.ToLowerInvariant()));
-                    if (!dir.Exists) continue;
-
-                    var config = new SubscriptionDataConfig(typeof(FineFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-
-                    foreach (var fileName in dir.EnumerateFiles())
-                    {
-                        var date = DateTime.ParseExact(fileName.Name.Substring(0, 8), DateFormat.EightCharacter, CultureInfo.InvariantCulture);
-                        if (date < start || date > end) continue;
-
-                        var factory = new TextSubscriptionDataSourceReader(_dataCacheProvider, config, date, false);
-                        var source = new SubscriptionDataSource(fileName.FullName, SubscriptionTransportMedium.LocalFile);
-                        var value = factory.Read(source).Select(x => GetPropertyValue(x, selector)).First();
-
-                        list.Add(Tuple.Create(symbol, date, value));
-                    }
-                }
-
                 var data = new PyDict();
-                foreach (var item in list.GroupBy(x => x.Item1))
+                foreach (var day in fundamentalData.OrderBy(x => x.Key))
                 {
-                    var index = item.Select(x => x.Item2);
-                    data.SetItem(item.Key, _pandas.Series(item.Select(x => x.Item3).ToList(), index));
+                    var orderedValues = day.Value.OrderBy(x => x.Key.ID.ToString()).ToList();
+                    var columns = orderedValues.Select(x => x.Key.ID.ToString());
+                    var values = orderedValues.Select(x => x.Value);
+                    var row = _pandas.Series(values, columns);
+                    data.SetItem(day.Key.ToPython(), row);
                 }
 
-                return _pandas.DataFrame(data);
+                return _pandas.DataFrame.from_dict(data, orient:"index");
             }
+        }
+
+        /// <summary>
+        /// Get fundamental data from given symbols
+        /// </summary>
+        /// <param name="symbols">The symbols to retrieve fundamental data for</param>
+        /// <param name="selector">Selects a value from the Fundamental data to filter the request output</param>
+        /// <param name="start">The start date of selected data</param>
+        /// <param name="end">The end date of selected data</param>
+        /// <returns>Enumerable collection of DataDictionaries, one dictionary for each day there is data</returns>
+        public IEnumerable<DataDictionary<dynamic>> GetFundamental(IEnumerable<Symbol> symbols, string selector, DateTime? start = null, DateTime? end = null)
+        {
+            var data = GetAllFundamental(symbols, selector, start, end);
+
+            foreach (var kvp in data.OrderBy(kvp => kvp.Key))
+            {
+                yield return kvp.Value;
+            }
+        }
+
+        /// <summary>
+        /// Get fundamental data for a given symbol
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve fundamental data for</param>
+        /// <param name="selector">Selects a value from the Fundamental data to filter the request output</param>
+        /// <param name="start">The start date of selected data</param>
+        /// <param name="end">The end date of selected data</param>
+        /// <returns>Enumerable collection of DataDictionaries, one Dictionary for each day there is data.</returns>
+        public IEnumerable<DataDictionary<dynamic>> GetFundamental(Symbol symbol, string selector, DateTime? start = null, DateTime? end = null)
+        {
+            var list = new List<Symbol>
+            {
+                symbol
+            };
+
+            return GetFundamental(list, selector, start, end);
+        }
+
+        /// <summary>
+        /// Get fundamental data for a given set of tickers
+        /// </summary>
+        /// <param name="tickers">The tickers to retrieve fundamental data for</param>
+        /// <param name="selector">Selects a value from the Fundamental data to filter the request output</param>
+        /// <param name="start">The start date of selected data</param>
+        /// <param name="end">The end date of selected data</param>
+        /// <returns>Enumerable collection of DataDictionaries, one dictionary for each day there is data.</returns>
+        public IEnumerable<DataDictionary<dynamic>> GetFundamental(IEnumerable<string> tickers, string selector, DateTime? start = null, DateTime? end = null)
+        {
+            var list = new List<Symbol>();
+            foreach (var ticker in tickers)
+            {
+                list.Add(QuantConnect.Symbol.Create(ticker, SecurityType.Equity, Market.USA));
+            }
+
+            return GetFundamental(list, selector, start, end);
+        }
+
+        /// <summary>
+        /// Get fundamental data for a given ticker
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve fundamental data for</param>
+        /// <param name="selector">Selects a value from the Fundamental data to filter the request output</param>
+        /// <param name="start">The start date of selected data</param>
+        /// <param name="end">The end date of selected data</param>
+        /// <returns>Enumerable collection of DataDictionaries, one Dictionary for each day there is data.</returns>
+        public dynamic GetFundamental(string ticker, string selector, DateTime? start = null, DateTime? end = null)
+        {
+            //Check if its Python; PythonNet likes to convert the strings, but for python we want the DataFrame as the return object
+            //So we must route the function call to the Python version.
+            if (_isPythonNotebook)
+            {
+                return GetFundamental(ticker.ToPython(), selector, start, end);
+            }
+
+            var symbol = QuantConnect.Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+            var list = new List<Symbol>
+            {
+                symbol
+            };
+
+            return GetFundamental(list, selector, start, end);
         }
 
         /// <summary>
@@ -215,6 +306,12 @@ namespace QuantConnect.Research
             if (!end.HasValue || end.Value == start)
             {
                 end = start.AddDays(1);
+            }
+
+            // Load a canonical option Symbol if the user provides us with an underlying Symbol
+            if (symbol.SecurityType != SecurityType.Option)
+            {
+                symbol = AddOption(symbol.Value, resolution, symbol.ID.Market).Symbol;
             }
 
             IEnumerable<Symbol> symbols;
@@ -655,6 +752,63 @@ namespace QuantConnect.Research
             }
 
             return baseData;
+        }
+
+        /// <summary>
+        /// Get all fundamental data for given symbols
+        /// </summary>
+        /// <param name="symbols">The symbols to retrieve fundamental data for</param>
+        /// <param name="start">The start date of selected data</param>
+        /// <param name="end">The end date of selected data</param>
+        /// <returns>DataDictionary of Enumerable IBaseData</returns>
+        private Dictionary<DateTime, DataDictionary<dynamic>> GetAllFundamental(IEnumerable<Symbol> symbols, string selector, DateTime? start = null, DateTime? end = null)
+        {
+            //SubscriptionRequest does not except nullable DateTimes, so set a startTime and endTime
+            var startTime = start.HasValue ? (DateTime)start : QuantConnect.Time.BeginningOfTime;
+            var endTime = end.HasValue ? (DateTime)end : QuantConnect.Time.EndOfTime;
+
+            //Collection to store our results
+            var data = new Dictionary<DateTime, DataDictionary<dynamic>>();
+
+            //Build factory
+            var factory = new FineFundamentalSubscriptionEnumeratorFactory(false);
+
+            //Get all data for each symbol and fill our dictionary
+            var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
+            Parallel.ForEach(symbols, options, symbol =>
+            {
+                var config = new SubscriptionDataConfig(
+                        typeof(FineFundamental),
+                        symbol,
+                        Resolution.Daily,
+                        TimeZones.NewYork,
+                        TimeZones.NewYork,
+                        false,
+                        false,
+                        false
+                    );
+                var security = Securities.CreateSecurity(symbol, config);
+                var request = new SubscriptionRequest(false, null, security, config, startTime.ConvertToUtc(TimeZones.NewYork), endTime.ConvertToUtc(TimeZones.NewYork));
+                using (var enumerator = factory.CreateEnumerator(request, _dataProvider))
+                {
+                    while (enumerator.MoveNext())
+                    {
+                        var dataPoint = string.IsNullOrWhiteSpace(selector)
+                            ? enumerator.Current
+                            : GetPropertyValue(enumerator.Current, selector);
+
+                        lock (data)
+                        {
+                            if (!data.ContainsKey(enumerator.Current.Time))
+                            {
+                                data[enumerator.Current.Time] = new DataDictionary<dynamic>(enumerator.Current.Time);
+                            }
+                            data[enumerator.Current.Time].Add(enumerator.Current.Symbol, dataPoint);
+                        }
+                    }
+                }
+            });
+            return data;
         }
     }
 }

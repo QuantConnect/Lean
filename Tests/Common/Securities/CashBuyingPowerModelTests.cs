@@ -22,6 +22,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
@@ -45,6 +46,7 @@ namespace QuantConnect.Tests.Common.Securities
         private CashBuyingPowerModel _buyingPowerModel;
         private QCAlgorithm _algorithm;
         private LocalTimeKeeper _timeKeeper;
+        private IResultHandler _resultHandler;
 
         [SetUp]
         public void Initialize()
@@ -60,7 +62,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             _transactionHandler = new BacktestingTransactionHandler();
             _brokerage = new BacktestingBrokerage(_algorithm);
-            _transactionHandler.Initialize(_algorithm, _brokerage, new TestResultHandler());
+            _resultHandler = new TestResultHandler();
+            _transactionHandler.Initialize(_algorithm, _brokerage, _resultHandler);
 
             _algorithm.Transactions.SetOrderProcessor(_transactionHandler);
 
@@ -114,6 +117,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void TearDown()
         {
             _transactionHandler.Exit();
+            _resultHandler.Exit();
         }
 
         [Test]
@@ -858,7 +862,10 @@ namespace QuantConnect.Tests.Common.Securities
 
                 _algorithm.LimitOrder(symbol, quantity, limitPrice);
 
-                resetEvent.WaitOne();
+                if (!resetEvent.WaitOne(5000))
+                {
+                    throw new TimeoutException("SubmitLimitOrder");
+                }
 
                 _brokerage.OrderStatusChanged -= handler;
             }
@@ -874,7 +881,10 @@ namespace QuantConnect.Tests.Common.Securities
 
                 _algorithm.StopMarketOrder(symbol, quantity, stopPrice);
 
-                resetEvent.WaitOne();
+                if (!resetEvent.WaitOne(5000))
+                {
+                    throw new TimeoutException("SubmitStopMarketOrder");
+                }
 
                 _brokerage.OrderStatusChanged -= handler;
             }

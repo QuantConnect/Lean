@@ -29,24 +29,24 @@ namespace QuantConnect.Interfaces
     public interface IDataQueueHandler : IDisposable
     {
         /// <summary>
-        /// Get the next ticks from the live trading data queue
+        /// Subscribe to the specified configuration
         /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        IEnumerable<BaseData> GetNextTicks();
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler);
 
         /// <summary>
-        /// Adds the specified symbols to the subscription
+        /// Removes the specified configuration
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols);
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        void Unsubscribe(SubscriptionDataConfig dataConfig);
 
         /// <summary>
-        /// Removes the specified symbols to the subscription
+        /// Sets the job we're subscribing for
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols);
+        /// <param name="job">Job we're subscribing for</param>
+        void SetJob(LiveNodePacket job);
 
         /// <summary>
         /// Returns whether the data provider is connected

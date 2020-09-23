@@ -26,7 +26,7 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Tests.Algorithm
 {
-    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
+    [TestFixture]
     public class AlgorithmWarmupTests
     {
         private TestWarmupAlgorithm _algorithm;
@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.Algorithm
             switch (resolution)
             {
                 case Resolution.Tick:
-                    estimateExpectedDataCount = 2 * (securityType == SecurityType.Forex ? 19 : 4) * 60 * 60;
+                    estimateExpectedDataCount = 2 * (securityType == SecurityType.Forex ? 19 : 4) * 60;
                     break;
                 case Resolution.Second:
                     estimateExpectedDataCount = 2 * (securityType == SecurityType.Forex ? 19 : 6) * 60 * 60;

@@ -21,7 +21,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading;
 using Newtonsoft.Json;
 using NodaTime;
 using QuantConnect.Data;
@@ -44,86 +43,51 @@ namespace QuantConnect.Brokerages.Tradier
         private bool _disconnect;
         private volatile bool _refresh = true;
         private Timer _refreshDelay = new Timer();
-        private readonly ConcurrentDictionary<Symbol, string> _subscriptions = new ConcurrentDictionary<Symbol, string>();
         private Stream _tradierStream;
 
+        private IEnumerable<Symbol> Subscriptions => _subscriptionManager.GetSubscribedSymbols();
+
         /// <summary>
-        /// Get a stream of ticks from the brokerage
+        /// Sets the job we're subscribing for
         /// </summary>
-        /// <returns>IEnumerable of BaseData</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
         {
-            IEnumerator<TradierStreamData> pipe = null;
-            do
-            {
-                if (_subscriptions.IsEmpty)
-                {
-                    Thread.Sleep(10);
-                    continue;
-                }
-
-                //If there's been an update to the subscriptions list; recreate the stream.
-                if (_refresh)
-                {
-                    var stream = Stream(GetTickers());
-                    pipe = stream.GetEnumerator();
-                    pipe.MoveNext();
-                    _refresh = false;
-                }
-
-                if (pipe != null && pipe.Current != null)
-                {
-                    var tsd = pipe.Current;
-                    if (tsd.Type == "trade")
-                    {
-                        var tick = CreateTick(tsd);
-                        if (tick != null)
-                        {
-                            yield return tick;
-                        }
-                    }
-                    pipe.MoveNext();
-                }
-
-            } while (!_disconnect);
         }
 
         /// <summary>
-        /// Subscribe to a specific list of symbols
+        /// Subscribe to the specified configuration
         /// </summary>
-        /// <param name="job">Live job to subscribe with</param>
-        /// <param name="symbols">List of symbols to subscribe to</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            //Add the symbols to the list if they aren't there already.
-            foreach (var symbol in symbols.Where(x => !x.Value.Contains("-UNIVERSE-")))
+            if (!CanSubscribe(dataConfig.Symbol))
             {
-                if (symbol.ID.SecurityType == SecurityType.Equity || symbol.ID.SecurityType == SecurityType.Option)
-                {
-                    if (_subscriptions.TryAdd(symbol, symbol.Value))
-                    {
-                        Refresh();
-                    }
-                }
+                return Enumerable.Empty<BaseData>().GetEnumerator();
             }
+
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
+            _subscriptionManager.Subscribe(dataConfig);
+
+            return enumerator;
+        }
+
+        private static bool CanSubscribe(Symbol symbol)
+        {
+            return (symbol.ID.SecurityType == SecurityType.Equity || symbol.ID.SecurityType == SecurityType.Option)
+                && !symbol.Value.Contains("-UNIVERSE-");
         }
 
         /// <summary>
-        /// Remove the symbol from the subscription list.
+        /// Removes the specified configuration
         /// </summary>
-        /// <param name="job">Live Job to subscribe with</param>
-        /// <param name="symbols">List of symbols to unsubscribe from</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            //Remove the symbols from the subscription list if there.
-            foreach (var symbol in symbols)
-            {
-                string value;
-                if (_subscriptions.TryRemove(symbol, out value))
-                {
-                    Refresh();
-                }
-            }
+            _subscriptionManager.Unsubscribe(dataConfig);
+            _aggregator.Remove(dataConfig);
         }
 
         /// <summary>
@@ -137,7 +101,7 @@ namespace QuantConnect.Brokerages.Tradier
             _refreshDelay.Elapsed += (sender, args) =>
             {
                 _refresh = true;
-                Log.Trace("TradierBrokerage.DataQueueHandler.Refresh(): Updating tickers..." + string.Join(",", _subscriptions.Select(x => x.Value)));
+                Log.Trace("TradierBrokerage.DataQueueHandler.Refresh(): Updating tickers..." + string.Join(",", Subscriptions.Select(x => x.Value)));
                 CloseStream();
                 _refreshDelay.Stop();
             };
@@ -150,7 +114,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <returns>List of string tickers</returns>
         private List<string> GetTickers()
         {
-            var values = _subscriptions.Select(x => x.Value).ToList();
+            var values = Subscriptions.Select(x => x.Value).ToList();
             Log.Trace("TradierBrokerage.DataQueueHandler.GetTickers(): " + string.Join(",", values));
             return values;
         }
@@ -162,7 +126,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <returns>LEAN Tick object</returns>
         private Tick CreateTick(TradierStreamData tsd)
         {
-            var symbol = _subscriptions.FirstOrDefault(x => x.Value == tsd.Symbol).Key;
+            var symbol = Subscriptions.FirstOrDefault(x => x.Value == tsd.Symbol);
 
             // Not subscribed to this symbol.
             if (symbol == null) return null;
@@ -184,7 +148,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 Exchange = tsd.TradeExchange,
                 TickType = TickType.Trade,
-                Quantity = (int) tsd.TradeSize,
+                Quantity = (int)tsd.TradeSize,
                 Time = time,
                 EndTime = time,
                 Symbol = symbol,

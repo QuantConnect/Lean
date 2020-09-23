@@ -16,15 +16,12 @@
 
 using NodaTime;
 using QuantConnect.Brokerages.Bitfinex;
-using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.BitfinexDownloader
 {
@@ -35,15 +32,13 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
     {
         private readonly BitfinexBrokerage _brokerage;
         private readonly BitfinexSymbolMapper _symbolMapper = new BitfinexSymbolMapper();
-        private const string _wss = "wss://api.bitfinex.com/ws";
-        private const string _rest = "https://api.bitfinex.com";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BitfinexDataDownloader"/> class
         /// </summary>
         public BitfinexDataDownloader()
         {
-            _brokerage = new BitfinexBrokerage(_wss, _rest, null, null, null, null);
+            _brokerage = new BitfinexBrokerage(null, null, null, null, null);
             _brokerage.Connect();
         }
 

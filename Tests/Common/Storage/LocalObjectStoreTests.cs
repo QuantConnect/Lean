@@ -55,6 +55,7 @@ namespace QuantConnect.Tests.Common.Storage
             catch
             {
             }
+            Config.Reset();
         }
 
         [TestCase(FileAccess.Read, false)]

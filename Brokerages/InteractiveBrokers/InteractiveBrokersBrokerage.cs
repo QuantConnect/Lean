@@ -40,6 +40,7 @@ using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities.Option;
 using Bar = QuantConnect.Data.Market.Bar;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -65,16 +66,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly int _port;
         private readonly string _account;
         private readonly string _host;
-        private readonly string _ibDirectory;
         private readonly IAlgorithm _algorithm;
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;
+        private readonly IDataAggregator _aggregator;
         private readonly IB.InteractiveBrokersClient _client;
         private readonly string _agentDescription;
+        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         private Thread _messageProcessingThread;
-        private readonly AutoResetEvent _resetEventRestartGateway = new AutoResetEvent(false);
-        private readonly CancellationTokenSource _ctsRestartGateway = new CancellationTokenSource();
 
         // Notifies the thread reading information from Gateway/TWS whenever there are messages ready to be consumed
         private readonly EReaderSignal _signal = new EReaderMonitorSignal();
@@ -103,7 +103,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly InteractiveBrokersSymbolMapper _symbolMapper = new InteractiveBrokersSymbolMapper();
 
         // Prioritized list of exchanges used to find right futures contract
-        private readonly Dictionary<string, string> _futuresExchanges = new Dictionary< string, string>
+        private readonly Dictionary<string, string> _futuresExchanges = new Dictionary<string, string>
         {
             { Market.CME, "GLOBEX" },
             { Market.NYMEX, "NYMEX" },
@@ -161,11 +161,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="orderProvider">An instance of IOrderProvider used to fetch Order objects by brokerage ID</param>
         /// <param name="securityProvider">The security provider used to give access to algorithm securities</param>
-        public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider)
+        /// <param name="aggregator">consolidate ticks</param>
+        public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator)
             : this(
                 algorithm,
                 orderProvider,
                 securityProvider,
+                aggregator,
                 Config.Get("ib-account"),
                 Config.Get("ib-host", "LOCALHOST"),
                 Config.GetInt("ib-port", 4001),
@@ -186,11 +188,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="orderProvider">An instance of IOrderProvider used to fetch Order objects by brokerage ID</param>
         /// <param name="securityProvider">The security provider used to give access to algorithm securities</param>
         /// <param name="account">The account used to connect to IB</param>
-        public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider, string account)
+        public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, string account)
             : this(
                 algorithm,
                 orderProvider,
                 securityProvider,
+                aggregator,
                 account,
                 Config.Get("ib-host", "LOCALHOST"),
                 Config.GetInt("ib-port", 4001),
@@ -210,6 +213,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="orderProvider">An instance of IOrderProvider used to fetch Order objects by brokerage ID</param>
         /// <param name="securityProvider">The security provider used to give access to algorithm securities</param>
+        /// <param name="aggregator">consolidate ticks</param>
         /// <param name="account">The Interactive Brokers account name</param>
         /// <param name="host">host name or IP address of the machine where TWS is running. Leave blank to connect to the local host.</param>
         /// <param name="port">must match the port specified in TWS on the Configure&gt;API&gt;Socket Port field.</param>
@@ -223,6 +227,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             IAlgorithm algorithm,
             IOrderProvider orderProvider,
             ISecurityProvider securityProvider,
+            IDataAggregator aggregator,
             string account,
             string host,
             int port,
@@ -237,11 +242,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _algorithm = algorithm;
             _orderProvider = orderProvider;
             _securityProvider = securityProvider;
+            _aggregator = aggregator;
             _account = account;
             _host = host;
             _port = port;
-            _ibDirectory = ibDirectory;
             _agentDescription = agentDescription;
+
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager.SubscribeImpl += (s, t) => Subscribe(s);
+            _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
 
             Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Starting IB Automater...");
 
@@ -282,40 +291,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
             };
 
-            // handle requests to restart the IB gateway
-            new Thread(() =>
+            _client.ConnectAck += (sender, e) =>
             {
-                try
-                {
-                    Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): thread started.");
+                Log.Trace("InteractiveBrokersBrokerage.HandleConnectAck(): API client connected.");
+            };
 
-                    while (!_ctsRestartGateway.IsCancellationRequested)
-                    {
-                        if (_resetEventRestartGateway.WaitOne(1000, _ctsRestartGateway.Token))
-                        {
-                            Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): Reset sequence start.");
-
-                            try
-                            {
-                                ResetGatewayConnection();
-                            }
-                            catch (Exception exception)
-                            {
-                                Log.Error("InteractiveBrokersBrokerage.ResetHandler(): Error in ResetGatewayConnection: " + exception);
-                            }
-
-                            Log.Trace($"InteractiveBrokersBrokerage.ResetHandler(): Reset sequence end. Current IsConnected state: {IsConnected}");
-                        }
-                    }
-
-                    Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): thread ended.");
-                }
-                catch (Exception exception)
-                {
-                    Log.Error("InteractiveBrokersBrokerage.ResetHandler(): Error in reset handler thread: " + exception);
-                }
-            })
-            { IsBackground = true }.Start();
+            _client.ConnectionClosed += (sender, e) =>
+            {
+                Log.Trace("InteractiveBrokersBrokerage.HandleConnectionClosed(): API client disconnected.");
+            };
         }
 
         /// <summary>
@@ -333,6 +317,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             try
             {
                 Log.Trace("InteractiveBrokersBrokerage.PlaceOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
+
+                if (!IsConnected)
+                {
+                    OnMessage(
+                        new BrokerageMessageEvent(
+                            BrokerageMessageType.Warning,
+                            "PlaceOrderWhenDisconnected",
+                            "Orders cannot be submitted when disconnected."));
+                    return false;
+                }
 
                 IBPlaceOrder(order, true);
                 return true;
@@ -354,6 +348,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             try
             {
                 Log.Trace("InteractiveBrokersBrokerage.UpdateOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity + " Status: " + order.Status);
+
+                if (!IsConnected)
+                {
+                    OnMessage(
+                        new BrokerageMessageEvent(
+                            BrokerageMessageType.Warning,
+                            "UpdateOrderWhenDisconnected",
+                            "Orders cannot be updated when disconnected."));
+                    return false;
+                }
+
                 _orderUpdates[order.Id] = order.Id;
                 IBPlaceOrder(order, false);
             }
@@ -377,6 +382,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             try
             {
                 Log.Trace("InteractiveBrokersBrokerage.CancelOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
+
+                if (!IsConnected)
+                {
+                    OnMessage(
+                        new BrokerageMessageEvent(
+                            BrokerageMessageType.Warning,
+                            "CancelOrderWhenDisconnected",
+                            "Orders cannot be cancelled when disconnected."));
+                    return false;
+                }
 
                 // this could be better
                 foreach (var id in order.BrokerId)
@@ -685,7 +700,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         }
 
                         Log.Trace("InteractiveBrokersBrokerage.Connect(): IB message processing thread ended: #" + Thread.CurrentThread.ManagedThreadId);
-                    }) { IsBackground = true };
+                    })
+                    { IsBackground = true };
 
                     _messageProcessingThread.Start();
 
@@ -897,11 +913,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 _client.Dispose();
             }
 
+            _aggregator.DisposeSafely();
             _ibAutomater?.Stop();
 
             _messagingRateLimiter.Dispose();
-
-            _ctsRestartGateway.Cancel(false);
         }
 
         /// <summary>
@@ -912,14 +927,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="exchange">The exchange to send the order to, defaults to "Smart" to use IB's smart routing</param>
         private void IBPlaceOrder(Order order, bool needsNewId, string exchange = null)
         {
-            // connect will throw if it fails
-            Connect();
-
-            if (!IsConnected)
-            {
-                throw new InvalidOperationException("InteractiveBrokersBrokerage.IBPlaceOrder(): Unable to place order while not connected.");
-            }
-
             // MOO/MOC require directed option orders
             if (exchange == null &&
                 order.Symbol.SecurityType == SecurityType.Option &&
@@ -1009,7 +1016,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             ContractDetails details;
             if (_contractDetails.TryGetValue(GetUniqueKey(contract), out details))
             {
-                return (decimal) details.MinTick;
+                return (decimal)details.MinTick;
             }
 
             details = GetContractDetails(contract, symbol);
@@ -1019,7 +1026,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return 0;
             }
 
-            return (decimal) details.MinTick;
+            return (decimal)details.MinTick;
         }
 
         private ContractDetails GetContractDetails(Contract contract, Symbol symbol)
@@ -1203,18 +1210,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return;
                 }
             }
-            else if (errorCode == 1102 || errorCode == 1101)
+            else if (errorCode == 1102)
             {
-                // we've reconnected
-                OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
+                // Connectivity between IB and TWS has been restored - data maintained.
+                OnMessage(BrokerageMessageEvent.Reconnected(errorMsg));
 
-                // With IB Gateway v960.2a in the cloud, we are not receiving order fill events after the nightly reset,
-                // so we execute the following sequence:
-                // disconnect, kill IB Gateway, restart IB Gateway, reconnect, restore data subscriptions
-                Log.Trace("InteractiveBrokersBrokerage.HandleError(): Reconnect message received. Restarting...");
+                _stateManager.Disconnected1100Fired = false;
+                return;
+            }
+            else if (errorCode == 1101)
+            {
+                // Connectivity between IB and TWS has been restored - data lost.
+                OnMessage(BrokerageMessageEvent.Reconnected(errorMsg));
 
-                _resetEventRestartGateway.Set();
+                _stateManager.Disconnected1100Fired = false;
 
+                RestoreDataSubscriptions();
                 return;
             }
             else if (errorCode == 506)
@@ -1248,31 +1259,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Restarts the IB Gateway and restores the connection
-        /// </summary>
-        public void ResetGatewayConnection()
-        {
-            // clear all error/status flags
-            _stateManager.Reset();
-
-            // notify the BrokerageMessageHandler before the restart, so it can stop polling
-            OnMessage(BrokerageMessageEvent.Reconnected(string.Empty));
-
-            Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Disconnecting...");
-            Disconnect();
-
-            Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Restarting IB Gateway...");
-            CheckIbAutomaterError(_ibAutomater.Restart());
-
-            Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Reconnecting...");
-            Connect();
-
-            // notify the BrokerageMessageHandler after the restart, because
-            // it could have received a disconnect event during the steps above
-            OnMessage(BrokerageMessageEvent.Reconnected(string.Empty));
-        }
-
-        /// <summary>
         /// Restores data subscriptions existing before the IB Gateway restart
         /// </summary>
         private void RestoreDataSubscriptions()
@@ -1287,7 +1273,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 _underlyings.Clear();
             }
 
-            Subscribe(null, subscribedSymbols);
+            Subscribe(subscribedSymbols);
         }
 
         /// <summary>
@@ -1307,14 +1293,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (!isResetTime)
             {
-                if (_stateManager.PreviouslyInResetTime)
-                {
-                    // reset time finished and we're still disconnected, restart IB client
-                    Log.Trace("InteractiveBrokersBrokerage.TryWaitForReconnect(): Reset time finished and still disconnected. Restarting...");
-
-                    _resetEventRestartGateway.Set();
-                }
-                else
+                if (!_stateManager.PreviouslyInResetTime)
                 {
                     // if we were disconnected and we're not within the reset times, send the error event
                     OnMessage(BrokerageMessageEvent.Disconnected("Connection with Interactive Brokers lost. " +
@@ -1794,7 +1773,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     break;
 
                 default:
-                    throw new InvalidEnumArgumentException("orderType", (int) orderType, typeof (OrderType));
+                    throw new InvalidEnumArgumentException("orderType", (int)orderType, typeof(OrderType));
             }
 
             order.BrokerId.Add(ibOrder.OrderId.ToStringInvariant());
@@ -1890,7 +1869,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case OrderDirection.Sell: return IB.ActionSide.Sell;
                 case OrderDirection.Hold: return IB.ActionSide.Undefined;
                 default:
-                    throw new InvalidEnumArgumentException("direction", (int) direction, typeof (OrderDirection));
+                    throw new InvalidEnumArgumentException("direction", (int)direction, typeof(OrderDirection));
             }
         }
 
@@ -2124,7 +2103,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns></returns>
         private string ConvertResolution(Resolution resolution)
         {
-            switch(resolution)
+            switch (resolution)
             {
                 case Resolution.Tick:
                 case Resolution.Second:
@@ -2176,8 +2155,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private Holding CreateHolding(IB.UpdatePortfolioEventArgs e)
         {
-            var currencySymbol = Currencies.GetCurrencySymbol(e.Contract.Currency);
             var symbol = MapSymbol(e.Contract);
+
+            var currencySymbol = Currencies.GetCurrencySymbol(
+                e.Contract.Currency ??
+                _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, Currencies.USD).QuoteCurrency);
 
             var multiplier = e.Contract.Multiplier.ConvertInvariant<decimal>();
             if (multiplier == 0m) multiplier = 1m;
@@ -2231,7 +2213,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private static decimal RoundPrice(decimal input, decimal minTick)
         {
             if (minTick == 0) return minTick;
-            return Math.Round(input/minTick)*minTick;
+            return Math.Round(input / minTick) * minTick;
         }
 
         /// <summary>
@@ -2265,97 +2247,90 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private TimeSpan _brokerTimeDiff = new TimeSpan(0);
 
+        /// <summary>
+        /// Sets the job we're subscribing for
+        /// </summary>
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
+        {
+        }
 
         /// <summary>
-        /// IDataQueueHandler interface implementation
+        /// Subscribe to the specified configuration
         /// </summary>
-        ///
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            Tick[] ticks;
-
-            lock (_ticks)
+            if (!CanSubscribe(dataConfig.Symbol))
             {
-                ticks = _ticks.ToArray();
-                _ticks.Clear();
+                return Enumerable.Empty<BaseData>().GetEnumerator();
             }
 
-            foreach (var tick in ticks)
-            {
-                yield return tick;
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
+            _subscriptionManager.Subscribe(dataConfig);
 
-                lock (_sync)
-                {
-                    if (_underlyings.ContainsKey(tick.Symbol))
-                    {
-                        var underlyingTick = tick.Clone();
-                        underlyingTick.Symbol = _underlyings[tick.Symbol];
-                        yield return underlyingTick;
-                    }
-                }
-            }
+            return enumerator;
         }
 
         /// <summary>
         /// Adds the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        private bool Subscribe(IEnumerable<Symbol> symbols)
         {
             try
             {
                 foreach (var symbol in symbols)
                 {
-                    if (CanSubscribe(symbol))
+                    lock (_sync)
                     {
-                        lock (_sync)
+                        Log.Trace("InteractiveBrokersBrokerage.Subscribe(): Subscribe Request: " + symbol.Value);
+
+                        if (!_subscribedSymbols.ContainsKey(symbol))
                         {
-                            Log.Trace("InteractiveBrokersBrokerage.Subscribe(): Subscribe Request: " + symbol.Value);
+                            // processing canonical option and futures symbols
+                            var subscribeSymbol = symbol;
 
-                            if (!_subscribedSymbols.ContainsKey(symbol))
+                            // we subscribe to the underlying
+                            if (symbol.ID.SecurityType == SecurityType.Option && symbol.IsCanonical())
                             {
-                                // processing canonical option and futures symbols
-                                var subscribeSymbol = symbol;
-
-                                // we subscribe to the underlying
-                                if (symbol.ID.SecurityType == SecurityType.Option && symbol.IsCanonical())
-                                {
-                                    subscribeSymbol = symbol.Underlying;
-                                    _underlyings.Add(subscribeSymbol, symbol);
-                                }
-
-                                // we ignore futures canonical symbol
-                                if (symbol.ID.SecurityType == SecurityType.Future && symbol.IsCanonical())
-                                {
-                                    return;
-                                }
-
-                                var id = GetNextTickerId();
-                                var contract = CreateContract(subscribeSymbol, false);
-
-                                _requestInformation[id] = $"Subscribe: {symbol.Value} ({contract})";
-
-                                CheckRateLimiting();
-
-                                // track subscription time for minimum delay in unsubscribe
-                                _subscriptionTimes[id] = DateTime.UtcNow;
-
-                                if (_enableDelayedStreamingData)
-                                {
-                                    // Switch to delayed market data if the user does not have the necessary real time data subscription.
-                                    // If live data is available, it will always be returned instead of delayed data.
-                                    Client.ClientSocket.reqMarketDataType(3);
-                                }
-
-                                // we would like to receive OI (101)
-                                Client.ClientSocket.reqMktData(id, contract, "101", false, false, new List<TagValue>());
-
-                                _subscribedSymbols[symbol] = id;
-                                _subscribedTickers[id] = new SubscriptionEntry { Symbol = subscribeSymbol };
-
-                                Log.Trace($"InteractiveBrokersBrokerage.Subscribe(): Subscribe Processed: {symbol.Value} ({contract}) # {id}");
+                                subscribeSymbol = symbol.Underlying;
+                                _underlyings.Add(subscribeSymbol, symbol);
                             }
+
+                            // we ignore futures canonical symbol
+                            if (symbol.ID.SecurityType == SecurityType.Future && symbol.IsCanonical())
+                            {
+                                return false;
+                            }
+
+                            var id = GetNextTickerId();
+                            var contract = CreateContract(subscribeSymbol, false);
+
+                            _requestInformation[id] = $"Subscribe: {symbol.Value} ({contract})";
+
+                            CheckRateLimiting();
+
+                            // track subscription time for minimum delay in unsubscribe
+                            _subscriptionTimes[id] = DateTime.UtcNow;
+
+                            if (_enableDelayedStreamingData)
+                            {
+                                // Switch to delayed market data if the user does not have the necessary real time data subscription.
+                                // If live data is available, it will always be returned instead of delayed data.
+                                Client.ClientSocket.reqMarketDataType(3);
+                            }
+
+                            // we would like to receive OI (101)
+                            Client.ClientSocket.reqMktData(id, contract, "101", false, false, new List<TagValue>());
+
+                            _subscribedSymbols[symbol] = id;
+                            _subscribedTickers[id] = new SubscriptionEntry { Symbol = subscribeSymbol };
+
+                            Log.Trace($"InteractiveBrokersBrokerage.Subscribe(): Subscribe Processed: {symbol.Value} ({contract}) # {id}");
+                            return true;
                         }
                     }
                 }
@@ -2364,14 +2339,24 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Error("InteractiveBrokersBrokerage.Subscribe(): " + err.Message);
             }
+            return false;
+        }
+
+        /// <summary>
+        /// Removes the specified configuration
+        /// </summary>
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            _subscriptionManager.Unsubscribe(dataConfig);
+            _aggregator.Remove(dataConfig);
         }
 
         /// <summary>
         /// Removes the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        private bool Unsubscribe(IEnumerable<Symbol> symbols)
         {
             try
             {
@@ -2410,7 +2395,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                                 Client.ClientSocket.cancelMktData(id);
 
                                 SubscriptionEntry entry;
-                                _subscribedTickers.TryRemove(id, out entry);
+                                return _subscribedTickers.TryRemove(id, out entry);
                             }
                         }
                     }
@@ -2420,6 +2405,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Error("InteractiveBrokersBrokerage.Unsubscribe(): " + err.Message);
             }
+            return false;
         }
 
         /// <summary>
@@ -2427,7 +2413,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         /// <param name="symbol">The symbol to be handled</param>
         /// <returns>True if this data provider can get data for the symbol, false otherwise</returns>
-        private bool CanSubscribe(Symbol symbol)
+        private static bool CanSubscribe(Symbol symbol)
         {
             var market = symbol.ID.Market;
             var securityType = symbol.ID.SecurityType;
@@ -2680,16 +2666,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return;
             }
 
-            lock (_ticks)
+            if (tick.IsValid())
             {
-                if (tick.IsValid())
+                tick = new Tick(tick)
                 {
-                    tick = new Tick(tick)
-                    {
-                        Time = GetRealTimeTickTime(symbol)
-                    };
+                    Time = GetRealTimeTickTime(symbol)
+                };
 
-                    _ticks.Add(tick);
+                _aggregator.Update(tick);
+
+                if (_underlyings.ContainsKey(tick.Symbol))
+                {
+                    var underlyingTick = tick.Clone() as Tick;
+                    underlyingTick.Symbol = _underlyings[tick.Symbol];
+                    _aggregator.Update(underlyingTick);
                 }
             }
         }
@@ -2953,7 +2943,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var waitResult = 0;
                 while (waitResult == 0)
                 {
-                    waitResult = WaitHandle.WaitAny(new WaitHandle[] {dataDownloading, dataDownloaded}, timeOut*1000);
+                    waitResult = WaitHandle.WaitAny(new WaitHandle[] { dataDownloading, dataDownloaded }, timeOut * 1000);
                 }
 
                 Client.Error -= clientOnError;
@@ -3030,7 +3020,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             Log.Trace($"InteractiveBrokersBrokerage.OnIbAutomaterExited(): Exit code: {e.ExitCode}");
 
             // check if IBGateway was closed because of an IBAutomater error
-            CheckIbAutomaterError(_ibAutomater.GetLastStartResult(), false);
+            var result = _ibAutomater.GetLastStartResult();
+            CheckIbAutomaterError(result, false);
+
+            if (!result.HasError)
+            {
+                // IBGateway was closed by the v978+ automatic logoff or it was closed manually (less likely)
+                Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): IBGateway close detected, restarting IBAutomater and reconnecting...");
+
+                Disconnect();
+                CheckIbAutomaterError(_ibAutomater.Start(false));
+                Connect();
+            }
         }
 
         private void CheckIbAutomaterError(StartResult result, bool throwException = true)
@@ -3049,8 +3050,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ConcurrentDictionary<Symbol, int> _subscribedSymbols = new ConcurrentDictionary<Symbol, int>();
         private readonly ConcurrentDictionary<int, SubscriptionEntry> _subscribedTickers = new ConcurrentDictionary<int, SubscriptionEntry>();
         private readonly Dictionary<Symbol, Symbol> _underlyings = new Dictionary<Symbol, Symbol>();
-
-        private readonly List<Tick> _ticks = new List<Tick>();
 
         private class SubscriptionEntry
         {
