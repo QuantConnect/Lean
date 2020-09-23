@@ -180,7 +180,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             catch (ArgumentException exception)
             {
-                OnInvalidConfigurationDetected(new InvalidConfigurationDetectedEventArgs(exception.Message));
+                OnInvalidConfigurationDetected(new InvalidConfigurationDetectedEventArgs(_config.Symbol, exception.Message));
                 _endOfStream = true;
                 return;
             }
@@ -255,7 +255,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     _periodStart = _factorFile.FactorFileMinimumDate.Value;
 
                                     OnNumericalPrecisionLimited(
-                                        new NumericalPrecisionLimitedEventArgs(
+                                        new NumericalPrecisionLimitedEventArgs(_config.Symbol,
                                             $"Data for symbol {_config.Symbol.Value} has been limited due to numerical precision issues in the factor file. " +
                                             $"The starting date has been set to {_factorFile.FactorFileMinimumDate.Value.ToShortDateString()}."));
                                 }
@@ -268,7 +268,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             _periodStart = mapFile.FirstDate;
 
                             OnStartDateLimited(
-                                new StartDateLimitedEventArgs(
+                                new StartDateLimitedEventArgs(_config.Symbol,
                                     $"The starting date for symbol {_config.Symbol.Value}," +
                                     $" {originalStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}, has been adjusted to match map file first date" +
                                     $" {mapFile.FirstDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}."));
@@ -512,7 +512,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     case SubscriptionTransportMedium.RemoteFile:
                         OnDownloadFailed(
-                            new DownloadFailedEventArgs(
+                            new DownloadFailedEventArgs(_config.Symbol,
                                 $"Error downloading custom data source file, skipped: {source} " +
                                 $"Error: {args.Exception.Message}", args.Exception.StackTrace));
                         break;
@@ -534,7 +534,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (_config.IsCustomData && !_config.Type.GetBaseDataInstance().IsSparseData())
                     {
                         OnDownloadFailed(
-                            new DownloadFailedEventArgs(
+                            new DownloadFailedEventArgs(_config.Symbol,
                                 "We could not fetch the requested data. " +
                                 "This may not be valid data, or a failed download of custom data. " +
                                 $"Skipping source ({args.Source.Source})."));
@@ -545,7 +545,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 textSubscriptionFactory.ReaderError += (sender, args) =>
                 {
                     OnReaderErrorDetected(
-                        new ReaderErrorDetectedEventArgs(
+                        new ReaderErrorDetectedEventArgs(_config.Symbol,
                             $"Error invoking {_config.Symbol} data reader. " +
                             $"Line: {args.Line} Error: {args.Exception.Message}",
                             args.Exception.StackTrace));
