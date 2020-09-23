@@ -22,10 +22,8 @@ using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Packets;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Results
