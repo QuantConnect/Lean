@@ -78,7 +78,7 @@ namespace QuantConnect.Brokerages.Binance
             _apiClient.Message += (s, e) => OnMessage(e);
 
             WebSocket = new WebSocketClientWrapper();
-            
+
             WebSocket.Message += OnMessage;
             WebSocket.Error += OnError;
             WebSocket.Open += (s, e) =>
@@ -277,6 +277,13 @@ namespace QuantConnect.Brokerages.Binance
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidResolution",
                     $"{request.Resolution} resolution is not supported, no history returned"));
+                yield break;
+            }
+
+            if (request.TickType != TickType.Trade)
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidTickType",
+                    $"{request.TickType} tick type not supported, no history returned"));
                 yield break;
             }
 

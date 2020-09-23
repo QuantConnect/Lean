@@ -114,7 +114,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                BinanceFeeModel.MakerTear1Fee * price * Math.Abs(Quantity),
+                BinanceFeeModel.MakerTier1Fee * price * Math.Abs(Quantity),
                 fee.Value.Amount);
             Assert.AreEqual("USDT", fee.Value.Currency);
         }
@@ -130,7 +130,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                BinanceFeeModel.TakerTear1Fee * price * Math.Abs(Quantity),
+                BinanceFeeModel.TakerTier1Fee * price * Math.Abs(Quantity),
                 fee.Value.Amount);
             Assert.AreEqual("USDT", fee.Value.Currency);
         }
@@ -146,7 +146,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                BinanceFeeModel.MakerTear1Fee * price * Math.Abs(Quantity),
+                BinanceFeeModel.MakerTier1Fee * price * Math.Abs(Quantity),
                 fee.Value.Amount);
             Assert.AreEqual("USDT", fee.Value.Currency);
         }
@@ -162,7 +162,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                BinanceFeeModel.TakerTear1Fee * price * Math.Abs(Quantity),
+                BinanceFeeModel.TakerTier1Fee * price * Math.Abs(Quantity),
                 fee.Value.Amount);
             Assert.AreEqual("USDT", fee.Value.Currency);
         }

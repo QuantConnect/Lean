@@ -46,7 +46,7 @@ namespace QuantConnect.ToolBox.BinanceDownloader
             {
                 var exchangeInfo = JsonConvert.DeserializeObject<ExchangeInfo>(reader.ReadToEnd());
 
-                foreach (var symbol in exchangeInfo.Symbols)
+                foreach (var symbol in exchangeInfo.Symbols.OrderBy(x => x.Name))
                 {
                     if (!symbol.IsSpotTradingAllowed && !symbol.IsMarginTradingAllowed)
                     {

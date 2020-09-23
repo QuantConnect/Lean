@@ -542,7 +542,7 @@ namespace QuantConnect
         /// <returns>The lower string</returns>
         public static string LazyToLower(this string data)
         {
-            // for performance only call to upper if required
+            // for performance only call to lower if required
             var alreadyLower = true;
             for (int i = 0; i < data.Length && alreadyLower; i++)
             {
@@ -2091,7 +2091,7 @@ namespace QuantConnect
         {
             return string.Join("&", pairs.Select(pair => $"{pair.Key}={pair.Value}"));
         }
-        
+
         /// <summary>
         /// Returns a new string in which specified ending in the current instance is removed.
         /// </summary>
@@ -2250,7 +2250,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="source">the byte array to be represented as string</param>
         /// <returns>A new string containing the items in the enumerable</returns>
-        public static string ToHexString(this byte[] source) 
+        public static string ToHexString(this byte[] source)
         {
             if (source == null || source.Length == 0)
             {

@@ -21,6 +21,7 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.BinanceDownloader
 {
@@ -53,13 +54,19 @@ namespace QuantConnect.ToolBox.BinanceDownloader
         public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
             if (resolution == Resolution.Tick || resolution == Resolution.Second)
+            {
                 throw new ArgumentException($"Resolution not available: {resolution}");
+            }
 
             if (!_symbolMapper.IsKnownLeanSymbol(symbol))
+            {
                 throw new ArgumentException($"The ticker {symbol.Value} is not available.");
+            }
 
             if (endUtc < startUtc)
+            {
                 throw new ArgumentException("The end date must be greater or equal than the start date.");
+            }
 
             var historyRequest = new HistoryRequest(
                 startUtc,
@@ -67,18 +74,15 @@ namespace QuantConnect.ToolBox.BinanceDownloader
                 typeof(TradeBar),
                 symbol,
                 resolution,
-                SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard),
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 DateTimeZone.Utc,
                 resolution,
                 false,
                 false,
                 DataNormalizationMode.Adjusted,
-                TickType.Quote);
+                TickType.Trade);
 
-            var data = _brokerage.GetHistory(historyRequest);
-
-            return data;
-
+            return _brokerage.GetHistory(historyRequest);
         }
 
         /// <summary>
@@ -90,7 +94,7 @@ namespace QuantConnect.ToolBox.BinanceDownloader
         {
             return _symbolMapper.GetLeanSymbol(ticker);
         }
-        
+
         /// <summary>
         /// Aggregates a list of minute bars at the requested resolution
         /// </summary>
@@ -123,6 +127,7 @@ namespace QuantConnect.ToolBox.BinanceDownloader
         public void Dispose()
         {
             _brokerage.Disconnect();
+            _brokerage.DisposeSafely();
         }
     }
 }

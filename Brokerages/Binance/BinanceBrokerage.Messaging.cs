@@ -43,7 +43,6 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         private void LockStream()
         {
-            Log.Trace("BinanceBrokerage.Messaging.LockStream(): Locking Stream");
             _streamLocked = true;
         }
 
@@ -52,7 +51,6 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         private void UnlockStream()
         {
-            Log.Trace("BinanceBrokerage.Messaging.UnlockStream(): Processing Backlog...");
             while (_messageBuffer.Any())
             {
                 WebSocketMessage e;
@@ -73,7 +71,7 @@ namespace QuantConnect.Brokerages.Binance
                     }
                 });
             }
-            Log.Trace("BinanceBrokerage.Messaging.UnlockStream(): Stream Unlocked.");
+
             // Once dequeued in order; unlock stream.
             _streamLocked = false;
         }
@@ -119,6 +117,7 @@ namespace QuantConnect.Brokerages.Binance
                         OnFillOrder(upd);
                     }
                     break;
+
                 default:
                     return;
             }
@@ -132,6 +131,7 @@ namespace QuantConnect.Brokerages.Binance
                     var updates = message.ToObject<OrderBookUpdateMessage>();
                     OnOrderBookUpdate(updates);
                     break;
+
                 case EventType.Trade:
                     var trade = message.ToObject<Trade>();
                     EmitTradeTick(
@@ -141,6 +141,7 @@ namespace QuantConnect.Brokerages.Binance
                         trade.Quantity
                     );
                     break;
+
                 default:
                     return;
             }
@@ -151,12 +152,9 @@ namespace QuantConnect.Brokerages.Binance
             try
             {
                 var symbol = _symbolMapper.GetLeanSymbol(ticker.Symbol);
+
                 BinanceOrderBook orderBook;
-                if (_orderBooks.ContainsKey(symbol))
-                {
-                    orderBook = _orderBooks[symbol];
-                }
-                else
+                if (!_orderBooks.TryGetValue(symbol, out orderBook))
                 {
                     orderBook = new BinanceOrderBook(symbol);
                     _orderBooks.AddOrUpdate(symbol, orderBook);
@@ -246,7 +244,6 @@ namespace QuantConnect.Brokerages.Binance
                     return;
                 }
 
-                var symbol = _symbolMapper.GetLeanSymbol(data.Symbol);
                 var fillPrice = data.LastExecutedPrice;
                 var fillQuantity = data.Direction == OrderDirection.Sell ? -data.LastExecutedQuantity : data.LastExecutedQuantity;
                 var updTime = Time.UnixMillisecondTimeStampToDateTime(data.TransactionTime);
@@ -254,7 +251,7 @@ namespace QuantConnect.Brokerages.Binance
                 var status = ConvertOrderStatus(data.OrderStatus);
                 var orderEvent = new OrderEvent
                 (
-                    order.Id, symbol, updTime, status,
+                    order.Id, order.Symbol, updTime, status,
                     data.Direction, fillPrice, fillQuantity,
                     orderFee, $"Binance Order Event {data.Direction}"
                 );
@@ -307,26 +304,36 @@ namespace QuantConnect.Brokerages.Binance
             });
         }
 
-        private void ProcessOrderBookEvents(DefaultOrderBook orderBook, object[][] bids, object[][] asks)
+        private void ProcessOrderBookEvents(DefaultOrderBook orderBook, decimal[][] bids, decimal[][] asks)
         {
             foreach (var item in bids)
             {
-                var price = (item[0] as string).ToDecimal();
-                var quantity = (item[1] as string).ToDecimal();
+                var price = item[0];
+                var quantity = item[1];
+
                 if (quantity == 0)
+                {
                     orderBook.RemoveBidRow(price);
+                }
                 else
+                {
                     orderBook.UpdateBidRow(price, quantity);
+                }
             }
 
             foreach (var item in asks)
             {
-                var price = (item[0] as string).ToDecimal();
-                var quantity = (item[1] as string).ToDecimal();
+                var price = item[0];
+                var quantity = item[1];
+
                 if (quantity == 0)
+                {
                     orderBook.RemoveAskRow(price);
+                }
                 else
+                {
                     orderBook.UpdateAskRow(price, quantity);
+                }
             }
         }
     }

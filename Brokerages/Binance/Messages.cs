@@ -99,11 +99,11 @@ namespace QuantConnect.Brokerages.Binance.Messages
             switch (eventType)
             {
                 case "executionReport":
-                    return wrapped.GetValue("data").ToObject<Messages.Execution>();
+                    return wrapped.GetValue("data").ToObject<Execution>();
                 case "depthUpdate":
-                    return wrapped.GetValue("data").ToObject<Messages.OrderBookUpdateMessage>();
+                    return wrapped.GetValue("data").ToObject<OrderBookUpdateMessage>();
                 case "trade":
-                    return wrapped.GetValue("data").ToObject<Messages.Trade>();
+                    return wrapped.GetValue("data").ToObject<Trade>();
                 default:
                     return null;
             }
@@ -126,9 +126,9 @@ namespace QuantConnect.Brokerages.Binance.Messages
     {
         public long LastUpdateId { get; set; }
 
-        public object[][] Bids { get; set; }
+        public decimal[][] Bids { get; set; }
 
-        public object[][] Asks { get; set; }
+        public decimal[][] Asks { get; set; }
     }
 
     public class OrderBookUpdateMessage : BaseMessage
@@ -142,10 +142,10 @@ namespace QuantConnect.Brokerages.Binance.Messages
         public long FinalUpdate { get; set; }
 
         [JsonProperty("b")]
-        public object[][] Bids { get; set; }
+        public decimal[][] Bids { get; set; }
 
         [JsonProperty("a")]
-        public object[][] Asks { get; set; }
+        public decimal[][] Asks { get; set; }
     }
 
     public class Trade : BaseMessage

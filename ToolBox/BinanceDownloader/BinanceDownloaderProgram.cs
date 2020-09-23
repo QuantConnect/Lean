@@ -34,7 +34,7 @@ namespace QuantConnect.ToolBox.BinanceDownloader
             {
                 Console.WriteLine("BinanceDownloader ERROR: '--tickers=' or '--resolution=' parameter is missing");
                 Console.WriteLine("--tickers=eg BTCUSD");
-                Console.WriteLine("--resolution=Second/Minute/Hour/Daily/All");
+                Console.WriteLine("--resolution=Minute/Hour/Daily/All");
                 Environment.Exit(1);
             }
             try

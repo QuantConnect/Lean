@@ -42,7 +42,7 @@ namespace QuantConnect.Brokerages.Binance
         private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
         private readonly object _listenKeyLocker = new object();
         private readonly string userDataStreamEndpoint = "/api/v1/userDataStream";
-        
+
         /// <summary>
         /// Event that fires each time an order is filled
         /// </summary>
@@ -240,16 +240,6 @@ namespace QuantConnect.Brokerages.Binance
         }
 
         /// <summary>
-        /// Updates the order with the same id
-        /// </summary>
-        /// <param name="order">The new order information</param>
-        /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
-        public bool UpdateOrder(Order order)
-        {
-            throw new NotSupportedException("BinanceBrokerage.UpdateOrder: Order update not supported. Please cancel and re-create.");
-        }
-
-        /// <summary>
         /// Cancels the order with the specified ID
         /// </summary>
         /// <param name="order">The order to cancel</param>
@@ -415,7 +405,7 @@ namespace QuantConnect.Brokerages.Binance
         }
 
         /// <summary>
-        /// Start user data stream 
+        /// Start user data stream
         /// </summary>
         public void CreateListenKey()
         {
@@ -470,8 +460,9 @@ namespace QuantConnect.Brokerages.Binance
             var tickerPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
             if (tickerPrice == 0)
             {
+                var brokerageSymbol = _symbolMapper.GetBrokerageSymbol(order.Symbol);
                 var tickers = GetTickers();
-                var ticker = tickers.FirstOrDefault(t => t.Symbol == _symbolMapper.GetBrokerageSymbol(order.Symbol));
+                var ticker = tickers.FirstOrDefault(t => t.Symbol == brokerageSymbol);
                 if (ticker == null)
                 {
                     throw new KeyNotFoundException($"BinanceBrokerage: Unable to resolve currency conversion pair: {order.Symbol}");
@@ -543,7 +534,7 @@ namespace QuantConnect.Brokerages.Binance
             try
             {
                 OrderSubmit?.Invoke(
-                    this, 
+                    this,
                     new BinanceOrderSubmitEventArgs(newOrder.Id, order));
 
                 // Generate submitted event

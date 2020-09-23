@@ -26,25 +26,26 @@ namespace QuantConnect.Orders.Fees
         /// Tier 1 maker fees
         /// https://www.binance.com/en/fee/schedule
         /// </summary>
-        public const decimal MakerTear1Fee = 0.001m;
+        public const decimal MakerTier1Fee = 0.001m;
+
         /// <summary>
         /// Tier 1 taker fees
         /// https://www.binance.com/en/fee/schedule
         /// </summary>
-        public const decimal TakerTear1Fee = 0.001m;
+        public const decimal TakerTier1Fee = 0.001m;
 
-        private readonly decimal makerFee;
-        private readonly decimal takerFee;
+        private readonly decimal _makerFee;
+        private readonly decimal _takerFee;
 
         /// <summary>
         /// Creates Binance fee model setting fees values
         /// </summary>
         /// <param name="mFee">Maker fee value</param>
         /// <param name="tFee">Taker fee value</param>
-        public BinanceFeeModel(decimal mFee = MakerTear1Fee, decimal tFee = TakerTear1Fee)
+        public BinanceFeeModel(decimal mFee = MakerTier1Fee, decimal tFee = TakerTier1Fee)
         {
-            makerFee = mFee;
-            takerFee = tFee;
+            _makerFee = mFee;
+            _takerFee = tFee;
         }
 
         /// <summary>
@@ -57,14 +58,14 @@ namespace QuantConnect.Orders.Fees
             var security = parameters.Security;
             var order = parameters.Order;
 
-            decimal fee = takerFee;
+            decimal fee = _takerFee;
             var props = order.Properties as BinanceOrderProperties;
 
             if (order.Type == OrderType.Limit &&
                 (props?.PostOnly == true || !order.IsMarketable))
             {
                 // limit order posted to the order book
-                fee = makerFee;
+                fee = _makerFee;
             }
 
             // get order value in quote currency

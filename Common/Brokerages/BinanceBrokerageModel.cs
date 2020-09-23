@@ -39,7 +39,7 @@ namespace QuantConnect.Brokerages
         {
             if (accountType == AccountType.Margin)
             {
-                throw new Exception("The Binance brokerage does not currently support Margin trading.");
+                throw new ArgumentException("The Binance brokerage does not currently support Margin trading.");
             }
         }
 
