@@ -32,7 +32,8 @@ namespace QuantConnect.Algorithm.CSharp
             QuantConnect.Symbol.Create("GBPUSD", SecurityType.Forex, market: Market.FXCM),
             QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, market: Market.Oanda),
             QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, market: Market.USA),
-            QuantConnect.Symbol.Create("BTCUSD", SecurityType.Crypto, market: Market.GDAX)
+            QuantConnect.Symbol.Create("BTCUSD", SecurityType.Crypto, market: Market.GDAX),
+            QuantConnect.Symbol.Create("XAUUSD", SecurityType.Cfd, market: Market.Oanda)
         };
 
         private HashSet<Symbol> _received = new HashSet<Symbol>();
