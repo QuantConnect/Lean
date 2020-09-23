@@ -32,12 +32,10 @@ namespace QuantConnect.Algorithm.CSharp
             QuantConnect.Symbol.Create("GBPUSD", SecurityType.Forex, market: Market.FXCM),
             QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, market: Market.Oanda),
             QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, market: Market.USA),
-            QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, market: Market.CME),
-            QuantConnect.Symbol.Create("BTCUSD", SecurityType.Crypto, market: Market.GDAX),
-            QuantConnect.Symbol.Create("XAUUSD", SecurityType.Cfd, market: Market.Oanda)
+            QuantConnect.Symbol.Create("BTCUSD", SecurityType.Crypto, market: Market.GDAX)
         };
 
-        private Dictionary<Symbol, int> _received;
+        private HashSet<Symbol> _received = new HashSet<Symbol>();
 
         public override void Initialize()
         {
@@ -48,35 +46,30 @@ namespace QuantConnect.Algorithm.CSharp
                 AddSecurity(symbol, Resolution.Minute);
             }
 
-            _received = _symbols.ToDictionary(s => s, s => -1);
+            Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromHours(1)), MakeHistoryCall);
         }
 
-        public override void OnData(Slice data)
+        private void MakeHistoryCall()
         {
-            using (var enumerator = data.GetEnumerator())
+            foreach (var symbol in _symbols)
             {
-                while (enumerator.MoveNext())
+                _received.Add(symbol);
+
+                bool hasHistory = false;
+
+                foreach (var dataType in SubscriptionManager.AvailableDataTypes[symbol.SecurityType])
                 {
-                    var current = enumerator.Current;
-                    var symbol = current.Key;
-
-                    if (Time.Day == _received[symbol]) continue;
-
-                    _received[symbol] = Time.Day;
-
-                    List<BaseData> history;
-
-                    if (current.Value.DataType == MarketDataType.QuoteBar)
+                    if (dataType == TickType.Quote)
                     {
-                        history = History(1, Resolution.Daily).Get<QuoteBar>(symbol).Cast<BaseData>().ToList();
+                        hasHistory |= History(1, Resolution.Daily).Get<QuoteBar>(symbol).Any();
                     }
                     else
                     {
-                        history = History(1, Resolution.Daily).Get<TradeBar>(symbol).Cast<BaseData>().ToList();
+                        hasHistory |= History(1, Resolution.Daily).Get<TradeBar>(symbol).Any();
                     }
-
-                    if (!history.Any()) throw new Exception($"No {symbol} data on the eve of {Time} {Time.DayOfWeek}");
                 }
+
+                if (!hasHistory) throw new Exception($"No {symbol} data on the eve of {Time} {Time.DayOfWeek}");
             }
         }
 
@@ -84,8 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_received.Count != _symbols.Length)
             {
-                var symbols = _received.Where(kvp => kvp.Value != -1).Select(kvp => kvp.Key);
-                throw new Exception($"Data for symbols {string.Join(",", _symbols.Except(symbols))} were not received");
+                throw new Exception($"Data for symbols {string.Join(",", _symbols.Except(_received))} were not received");
             }
         }
 
