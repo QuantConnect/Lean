@@ -22,6 +22,7 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Data;
 
 namespace QuantConnect.Brokerages.Binance
@@ -30,7 +31,6 @@ namespace QuantConnect.Brokerages.Binance
     {
         private readonly ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
         private volatile bool _streamLocked;
-        private readonly ConcurrentDictionary<Symbol, BinanceOrderBook> _orderBooks = new ConcurrentDictionary<Symbol, BinanceOrderBook>();
         private readonly IDataAggregator _aggregator;
 
         /// <summary>
@@ -55,21 +55,8 @@ namespace QuantConnect.Brokerages.Binance
             {
                 WebSocketMessage e;
                 _messageBuffer.TryDequeue(out e);
-                OnMessageImpl(
-                    e, (msg) =>
-                {
-                    switch (msg.Event)
-                    {
-                        case EventType.Execution:
-                            OnUserMessageImpl(msg);
-                            break;
 
-                        case EventType.Trade:
-                        case EventType.OrderBook:
-                            OnStreamMessageImpl(msg);
-                            break;
-                    }
-                });
+                OnMessageImpl(e);
             }
 
             // Once dequeued in order; unlock stream.
@@ -89,14 +76,56 @@ namespace QuantConnect.Brokerages.Binance
             }
         }
 
-        private void OnMessageImpl(WebSocketMessage e, Action<BaseMessage> handler)
+        private void OnMessageImpl(WebSocketMessage e)
         {
             try
             {
-                var msg = BaseMessage.Parse(e.Message);
-                if (msg != null)
+                var obj = JObject.Parse(e.Message);
+
+                var objError = obj["error"];
+                if (objError != null)
                 {
-                    handler(msg);
+                    var error = objError.ToObject<ErrorMessage>();
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, error.Code, error.Message));
+                    return;
+                }
+
+                var objData = obj;
+
+                var objEventType = objData["e"];
+                if (objEventType != null)
+                {
+                    var eventType = objEventType.ToObject<string>();
+
+                    switch (eventType)
+                    {
+                        case "executionReport":
+                            var upd = objData.ToObject<Execution>();
+                            if (upd.ExecutionType.Equals("TRADE", StringComparison.OrdinalIgnoreCase))
+                            {
+                                OnFillOrder(upd);
+                            }
+                            break;
+
+                        case "trade":
+                            var trade = objData.ToObject<Trade>();
+                            EmitTradeTick(
+                                _symbolMapper.GetLeanSymbol(trade.Symbol),
+                                Time.UnixMillisecondTimeStampToDateTime(trade.Time),
+                                trade.Price,
+                                trade.Quantity);
+                            break;
+                    }
+                }
+                else if (objData["u"] != null)
+                {
+                    var quote = objData.ToObject<BestBidAskQuote>();
+                    EmitQuoteTick(
+                        _symbolMapper.GetLeanSymbol(quote.Symbol),
+                        quote.BestBidPrice,
+                        quote.BestBidSize,
+                        quote.BestAskPrice,
+                        quote.BestAskSize);
                 }
             }
             catch (Exception exception)
@@ -104,96 +133,6 @@ namespace QuantConnect.Brokerages.Binance
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Message} Exception: {exception}"));
                 throw;
             }
-        }
-
-        private void OnUserMessageImpl(BaseMessage message)
-        {
-            switch (message.Event)
-            {
-                case EventType.Execution:
-                    var upd = message.ToObject<Execution>();
-                    if (upd.ExecutionType.Equals("TRADE", StringComparison.OrdinalIgnoreCase))
-                    {
-                        OnFillOrder(upd);
-                    }
-                    break;
-
-                default:
-                    return;
-            }
-        }
-
-        private void OnStreamMessageImpl(BaseMessage message)
-        {
-            switch (message.Event)
-            {
-                case EventType.OrderBook:
-                    var updates = message.ToObject<OrderBookUpdateMessage>();
-                    OnOrderBookUpdate(updates);
-                    break;
-
-                case EventType.Trade:
-                    var trade = message.ToObject<Trade>();
-                    EmitTradeTick(
-                        _symbolMapper.GetLeanSymbol(trade.Symbol),
-                        Time.UnixMillisecondTimeStampToDateTime(trade.Time),
-                        trade.Price,
-                        trade.Quantity
-                    );
-                    break;
-
-                default:
-                    return;
-            }
-        }
-
-        private void OnOrderBookUpdate(OrderBookUpdateMessage ticker)
-        {
-            try
-            {
-                var symbol = _symbolMapper.GetLeanSymbol(ticker.Symbol);
-
-                BinanceOrderBook orderBook;
-                if (!_orderBooks.TryGetValue(symbol, out orderBook))
-                {
-                    orderBook = new BinanceOrderBook(symbol);
-                    _orderBooks.AddOrUpdate(symbol, orderBook);
-                }
-
-                //take snapshot
-                if (orderBook.LastUpdateId == 0)
-                {
-                    FetchOrderBookSnapshot(symbol, orderBook);
-                }
-
-                // check incoming events order
-                // new event should start from (last_final + 1)
-                if (ticker.FirstUpdate - orderBook.LastUpdateId > 1)
-                {
-                    orderBook.Reset();
-                    return;
-                }
-
-                // ignore event from the past
-                if (ticker.FinalUpdate < orderBook.LastUpdateId)
-                {
-                    return;
-                }
-
-                ProcessOrderBookEvents(orderBook, ticker.Bids, ticker.Asks);
-
-                orderBook.LastUpdateId = ticker.FinalUpdate;
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-                throw;
-            }
-        }
-
-        private void OnBestBidAskUpdated(object sender, BestBidAskUpdatedEventArgs e)
-        {
-            EmitQuoteTick(e.Symbol, e.BestBidPrice, e.BestBidSize, e.BestAskPrice, e.BestAskSize);
         }
 
         private void EmitQuoteTick(Symbol symbol, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
@@ -282,59 +221,6 @@ namespace QuantConnect.Brokerages.Binance
             }
 
             return order;
-        }
-
-        private void FetchOrderBookSnapshot(Symbol symbol, BinanceOrderBook orderBook)
-        {
-            WithLockedStream(() =>
-            {
-                var snapshot = _apiClient.FetchOrderBookSnapshot(symbol);
-
-                orderBook.BestBidAskUpdated -= OnBestBidAskUpdated;
-                orderBook.LastUpdateId = snapshot.LastUpdateId;
-                ProcessOrderBookEvents(orderBook, snapshot.Bids, snapshot.Asks);
-
-                EmitQuoteTick(
-                    symbol,
-                    orderBook.BestBidPrice,
-                    orderBook.BestBidSize,
-                    orderBook.BestAskPrice,
-                    orderBook.BestAskSize);
-                orderBook.BestBidAskUpdated += OnBestBidAskUpdated;
-            });
-        }
-
-        private void ProcessOrderBookEvents(DefaultOrderBook orderBook, decimal[][] bids, decimal[][] asks)
-        {
-            foreach (var item in bids)
-            {
-                var price = item[0];
-                var quantity = item[1];
-
-                if (quantity == 0)
-                {
-                    orderBook.RemoveBidRow(price);
-                }
-                else
-                {
-                    orderBook.UpdateBidRow(price, quantity);
-                }
-            }
-
-            foreach (var item in asks)
-            {
-                var price = item[0];
-                var quantity = item[1];
-
-                if (quantity == 0)
-                {
-                    orderBook.RemoveAskRow(price);
-                }
-                else
-                {
-                    orderBook.UpdateAskRow(price, quantity);
-                }
-            }
         }
     }
 }

@@ -47,8 +47,6 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
-            { "binance-rest" , Config.Get("binance-rest", "https://api.binance.com")},
-            { "binance-wss" , Config.Get("binance-wss", "wss://stream.binance.com:9443")},
             { "binance-api-key", Config.Get("binance-api-key")},
             { "binance-api-secret", Config.Get("binance-api-secret")}
         };
@@ -67,17 +65,17 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public override IBrokerage CreateBrokerage(Packets.LiveNodePacket job, IAlgorithm algorithm)
         {
-            var required = new[] { "binance-rest", "binance-wss", "binance-api-secret", "binance-api-key" };
+            var required = new[] { "binance-api-secret", "binance-api-key" };
 
             foreach (var item in required)
             {
                 if (string.IsNullOrEmpty(job.BrokerageData[item]))
+                {
                     throw new Exception($"BinanceBrokerageFactory.CreateBrokerage: Missing {item} in config.json");
+                }
             }
 
             var brokerage = new BinanceBrokerage(
-                job.BrokerageData["binance-wss"],
-                job.BrokerageData["binance-rest"],
                 job.BrokerageData["binance-api-key"],
                 job.BrokerageData["binance-api-secret"],
                 algorithm,

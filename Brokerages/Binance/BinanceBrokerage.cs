@@ -20,13 +20,13 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Util;
-using RestSharp;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
+using Newtonsoft.Json;
+using QuantConnect.Util;
+using Timer = System.Timers.Timer;
 
 namespace QuantConnect.Brokerages.Binance
 {
@@ -36,40 +36,44 @@ namespace QuantConnect.Brokerages.Binance
     [BrokerageFactory(typeof(BinanceBrokerageFactory))]
     public partial class BinanceBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
-        private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
-        private readonly string _wssUrl;
+        private const string WebSocketBaseUrl = "wss://stream.binance.com:9443/ws";
+
         private readonly IAlgorithm _algorithm;
         private readonly BinanceSymbolMapper _symbolMapper = new BinanceSymbolMapper();
-        private readonly IWebSocket TickerWebSocket;
-        private readonly TimeSpan _subscribeDelay = TimeSpan.FromMilliseconds(250);
-        private HashSet<Symbol> SubscribedSymbols = new HashSet<Symbol>();
-        private RealTimeSynchronizedTimer _keepAliveTimer;
-        private RealTimeSynchronizedTimer _reconnectTimer;
-        private readonly object _lockerSubscriptions = new object();
-        private DateTime _lastSubscribeRequestUtcTime = DateTime.MinValue;
-        private bool _subscriptionsPending;
+
+        private readonly RateGate _webSocketRateLimiter = new RateGate(5, TimeSpan.FromSeconds(1));
+        private long _lastRequestId;
+
+        private readonly Timer _keepAliveTimer;
+        private readonly Timer _reconnectTimer;
         private readonly BinanceRestApiClient _apiClient;
 
         /// <summary>
         /// Constructor for brokerage
         /// </summary>
-        /// <param name="wssUrl">websockets url</param>
-        /// <param name="restUrl">rest api url</param>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
-        public BinanceBrokerage(string wssUrl, string restUrl, string apiKey, string apiSecret, IAlgorithm algorithm, IDataAggregator aggregator)
-            : base(new RestClient(restUrl), apiKey, apiSecret, Market.Binance, "Binance")
+        public BinanceBrokerage(string apiKey, string apiSecret, IAlgorithm algorithm, IDataAggregator aggregator)
+            : base(WebSocketBaseUrl, new WebSocketClientWrapper(), null, apiKey, apiSecret, TimeSpan.MaxValue, "Binance")
         {
             _algorithm = algorithm;
             _aggregator = aggregator;
 
-            _wssUrl = wssUrl;
+            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            subscriptionManager.SubscribeImpl += (s, t) =>
+            {
+                Subscribe(s);
+                return true;
+            };
+            subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
+
+            SubscriptionManager = subscriptionManager;
+
             _apiClient = new BinanceRestApiClient(
                 _symbolMapper,
                 algorithm?.Portfolio,
-                restUrl,
                 apiKey,
                 apiSecret);
 
@@ -77,36 +81,40 @@ namespace QuantConnect.Brokerages.Binance
             _apiClient.OrderStatusChanged += (s, e) => OnOrderEvent(e);
             _apiClient.Message += (s, e) => OnMessage(e);
 
-            WebSocket = new WebSocketClientWrapper();
-
-            WebSocket.Message += OnMessage;
-            WebSocket.Error += OnError;
-            WebSocket.Open += (s, e) =>
+            // User data streams will close after 60 minutes. It's recommended to send a ping about every 30 minutes.
+            // Source: https://github.com/binance-exchange/binance-official-api-docs/blob/master/user-data-stream.md#pingkeep-alive-a-listenkey
+            _keepAliveTimer = new Timer
             {
-                _keepAliveTimer = new RealTimeSynchronizedTimer(TimeSpan.FromMinutes(30), (d) => _apiClient.SessionKeepAlive());
-                _keepAliveTimer.Start();
+                // 30 minutes
+                Interval = 30 * 60 * 1000
             };
+            _keepAliveTimer.Elapsed += (s, e) => _apiClient.SessionKeepAlive();
+
+            WebSocket.Open += (s, e) => { _keepAliveTimer.Start(); };
             WebSocket.Closed += (s, e) => { _keepAliveTimer.Stop(); };
-            WebSocket.Message += (s, e) => OnSocketMessage(s, e, OnUserMessageImpl);
 
-            var tickerConnectionHandler = new DefaultConnectionHandler();
-            tickerConnectionHandler.ReconnectRequested += (s, e) => { ProcessSubscriptionRequest(); };
-            TickerWebSocket = new BinanceWebSocketWrapper(
-                tickerConnectionHandler
-            );
-
-            TickerWebSocket.Message += (s, e) => OnSocketMessage(s, e, OnStreamMessageImpl);
-            TickerWebSocket.Message += (s, e) => (s as BinanceWebSocketWrapper)?.ConnectionHandler.KeepAlive(DateTime.UtcNow);
-            TickerWebSocket.Error += OnError;
-
-            _reconnectTimer = new RealTimeSynchronizedTimer(TimeSpan.FromHours(12), (d) =>
+            // A single connection to stream.binance.com is only valid for 24 hours; expect to be disconnected at the 24 hour mark
+            // Source: https://github.com/binance-exchange/binance-official-api-docs/blob/master/web-socket-streams.md#general-wss-information
+            _reconnectTimer = new Timer
             {
-                Reconnect();
-                ProcessSubscriptionRequest();
-            });
+                // 23.5 hours
+                Interval = 23.5 * 60 * 60 * 1000
+            };
+            _reconnectTimer.Elapsed += (s, e) =>
+            {
+                Log.Trace("Daily websocket restart: disconnect");
+                Disconnect();
+
+                Log.Trace("Daily websocket restart: connect");
+                Connect();
+
+                Log.Trace("Daily websocket restart: resubscribe");
+                Subscribe(subscriptionManager.GetSubscribedSymbols());
+            };
         }
 
         #region IBrokerage
+
         /// <summary>
         /// Checks if the websocket connection is connected or in the process of connecting
         /// </summary>
@@ -119,10 +127,11 @@ namespace QuantConnect.Brokerages.Binance
         {
             if (IsConnected)
                 return;
+
             _apiClient.CreateListenKey();
             _reconnectTimer.Start();
 
-            WebSocket.Initialize($"{_wssUrl}/stream?streams={_apiClient.SessionId}");
+            WebSocket.Initialize($"{WebSocketBaseUrl}/{_apiClient.SessionId}");
 
             base.Connect();
         }
@@ -133,16 +142,11 @@ namespace QuantConnect.Brokerages.Binance
         public override void Disconnect()
         {
             base.Disconnect();
+
             _reconnectTimer.Stop();
 
             WebSocket?.Close();
             _apiClient.StopSession();
-
-            (TickerWebSocket as BinanceWebSocketWrapper)?.ConnectionHandler.DisposeSafely();
-            if (TickerWebSocket.IsOpen)
-            {
-                TickerWebSocket.Close();
-            }
         }
 
         /// <summary>
@@ -161,7 +165,7 @@ namespace QuantConnect.Brokerages.Binance
         public override List<CashAmount> GetCashBalance()
         {
             var account = _apiClient.GetCashBalance();
-            var balances = account.Balances?.Where(balance => balance.Amount > 0);
+            var balances = account.Balances?.Where(balance => balance.Amount > 0).ToList();
             if (balances == null || !balances.Any())
                 return new List<CashAmount>();
 
@@ -213,7 +217,7 @@ namespace QuantConnect.Brokerages.Binance
 
                 if (order.Status.IsOpen())
                 {
-                    var cached = CachedOrderIDs.Where(c => c.Value.BrokerId.Contains(order.BrokerId.First()));
+                    var cached = CachedOrderIDs.Where(c => c.Value.BrokerId.Contains(order.BrokerId.First())).ToList();
                     if (cached.Any())
                     {
                         CachedOrderIDs[cached.First().Key] = order;
@@ -233,11 +237,13 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            bool submitted = false;
+            var submitted = false;
+
             WithLockedStream(() =>
             {
                 submitted = _apiClient.PlaceOrder(order);
             });
+
             return submitted;
         }
 
@@ -258,11 +264,13 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns>True if the request was submitted for cancellation, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
-            bool submitted = false;
+            var submitted = false;
+
             WithLockedStream(() =>
             {
                 submitted = _apiClient.CancelOrder(order);
             });
+
             return submitted;
         }
 
@@ -336,10 +344,7 @@ namespace QuantConnect.Brokerages.Binance
         public override void OnMessage(object sender, WebSocketMessage e)
         {
             LastHeartbeatUtcTime = DateTime.UtcNow;
-        }
 
-        private void OnSocketMessage(object sender, WebSocketMessage e, Action<Messages.BaseMessage> handler)
-        {
             try
             {
                 if (_streamLocked)
@@ -353,101 +358,7 @@ namespace QuantConnect.Brokerages.Binance
                 Log.Error(err);
             }
 
-            OnMessageImpl(e, handler);
-        }
-
-        /// <summary>
-        /// Force reconnect
-        /// </summary>
-        protected override void Reconnect()
-        {
-            if (WebSocket.IsOpen)
-            {
-                WebSocket?.Close();
-            }
-            base.Reconnect();
-        }
-
-        private void ProcessSubscriptionRequest()
-        {
-            if (_subscriptionsPending) return;
-
-            _lastSubscribeRequestUtcTime = DateTime.UtcNow;
-            _subscriptionsPending = true;
-
-            Task.Run(async () =>
-            {
-                while (true)
-                {
-                    DateTime requestTime;
-                    List<Symbol> symbolsToSubscribe;
-                    lock (_lockerSubscriptions)
-                    {
-                        requestTime = _lastSubscribeRequestUtcTime.Add(_subscribeDelay);
-                        symbolsToSubscribe = SubscribedSymbols.ToList();
-                    }
-
-                    if (DateTime.UtcNow > requestTime)
-                    {
-                        // restart streaming session
-                        SubscribeSymbols(symbolsToSubscribe);
-
-                        lock (_lockerSubscriptions)
-                        {
-                            _lastSubscribeRequestUtcTime = DateTime.UtcNow;
-                            if (SubscribedSymbols.Count == symbolsToSubscribe.Count)
-                            {
-                                // no more subscriptions pending, task finished
-                                _subscriptionsPending = false;
-                                break;
-                            }
-                        }
-                    }
-
-                    await Task.Delay(200).ConfigureAwait(false);
-                }
-            });
-        }
-
-        private void SubscribeSymbols(List<Symbol> symbolsToSubscribe)
-        {
-            if (symbolsToSubscribe.Count == 0)
-                return;
-
-            //close current connection
-            if (TickerWebSocket.IsOpen)
-            {
-                TickerWebSocket.Close();
-            }
-            Wait(() => !TickerWebSocket.IsOpen);
-
-            var streams = symbolsToSubscribe.Select((s) => string.Format(CultureInfo.InvariantCulture, "{0}@depth/{0}@trade", s.Value.ToLowerInvariant()));
-            TickerWebSocket.Initialize($"{_wssUrl}/stream?streams={string.Join("/", streams)}");
-
-            Log.Trace($"BaseWebsocketsBrokerage(): Reconnecting... IsConnected: {IsConnected}");
-
-            TickerWebSocket.Error -= this.OnError;
-            try
-            {
-                //try to clean up state
-                if (TickerWebSocket.IsOpen)
-                {
-                    TickerWebSocket.Close();
-                    Wait(() => !TickerWebSocket.IsOpen);
-                }
-                if (!TickerWebSocket.IsOpen)
-                {
-                    TickerWebSocket.Connect();
-                    Wait(() => TickerWebSocket.IsOpen);
-                }
-            }
-            finally
-            {
-                TickerWebSocket.Error += this.OnError;
-                this.Subscribe(symbolsToSubscribe);
-            }
-
-            Log.Trace("BinanceBrokerage.Subscribe: Sent subscribe.");
+            OnMessageImpl(e);
         }
 
         #endregion
@@ -470,8 +381,13 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            if (!CanSubscribe(dataConfig.Symbol))
+            {
+                return Enumerable.Empty<BaseData>().GetEnumerator();
+            }
+
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
-            Subscribe(new[] { dataConfig.Symbol });
+            SubscriptionManager.Subscribe(dataConfig);
 
             return enumerator;
         }
@@ -482,8 +398,19 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            Unsubscribe(new[] { dataConfig.Symbol });
+            SubscriptionManager.Unsubscribe(dataConfig);
             _aggregator.Remove(dataConfig);
+        }
+
+        /// <summary>
+        /// Checks if this brokerage supports the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <returns>returns true if brokerage supports the specified symbol; otherwise false</returns>
+        private static bool CanSubscribe(Symbol symbol)
+        {
+            return !symbol.Value.Contains("UNIVERSE") &&
+                   symbol.SecurityType == SecurityType.Crypto;
         }
 
         #endregion
@@ -493,7 +420,10 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         public override void Dispose()
         {
-            _restRateLimiter.Dispose();
+            _keepAliveTimer.DisposeSafely();
+            _reconnectTimer.DisposeSafely();
+            _apiClient.DisposeSafely();
+            _webSocketRateLimiter.DisposeSafely();
         }
 
         /// <summary>
@@ -502,61 +432,67 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="symbols">The list of symbols to subscribe</param>
         public override void Subscribe(IEnumerable<Symbol> symbols)
         {
-            lock (_lockerSubscriptions)
+            foreach (var symbol in symbols)
             {
-                List<Symbol> symbolsToSubscribe = new List<Symbol>();
-                foreach (var symbol in symbols)
-                {
-                    if (symbol.Value.Contains("UNIVERSE") ||
-                        string.IsNullOrEmpty(_symbolMapper.GetBrokerageSymbol(symbol)) ||
-                        symbol.SecurityType != _symbolMapper.GetLeanSecurityType(symbol.Value) ||
-                        SubscribedSymbols.Contains(symbol))
+                Send(WebSocket,
+                    new
                     {
-                        continue;
+                        method = "SUBSCRIBE",
+                        @params = new[]
+                        {
+                            $"{symbol.Value.ToLowerInvariant()}@trade",
+                            $"{symbol.Value.ToLowerInvariant()}@bookTicker"
+                        },
+                        id = GetNextRequestId()
                     }
-
-                    symbolsToSubscribe.Add(symbol);
-                }
-
-                if (symbolsToSubscribe.Count == 0)
-                    return;
-
-                Log.Trace("BinanceBrokerage.Subscribe(): {0}", string.Join(",", symbolsToSubscribe.Select(x => x.Value)));
-
-                SubscribedSymbols = symbolsToSubscribe
-                    .Union(SubscribedSymbols.ToList())
-                    .ToList()
-                    .ToHashSet();
-
-                ProcessSubscriptionRequest();
+                );
             }
         }
 
         /// <summary>
         /// Ends current subscriptions
         /// </summary>
-        private void Unsubscribe(IEnumerable<Symbol> symbols)
+        private bool Unsubscribe(IEnumerable<Symbol> symbols)
         {
-            lock (_lockerSubscriptions)
+            if (WebSocket.IsOpen)
             {
-                if (WebSocket.IsOpen)
+                foreach (var symbol in symbols)
                 {
-                    var symbolsToUnsubscribe = (from symbol in symbols
-                                                where SubscribedSymbols.Contains(symbol)
-                                                select symbol).ToList();
-                    if (symbolsToUnsubscribe.Count == 0)
-                        return;
-
-                    Log.Trace("BinanceBrokerage.Unsubscribe(): {0}", string.Join(",", symbolsToUnsubscribe.Select(x => x.Value)));
-
-                    SubscribedSymbols = SubscribedSymbols
-                        .ToList()
-                        .Where(x => !symbolsToUnsubscribe.Contains(x))
-                        .ToHashSet();
-
-                    ProcessSubscriptionRequest();
+                    Send(WebSocket,
+                        new
+                        {
+                            method = "UNSUBSCRIBE",
+                            @params = new[]
+                            {
+                                $"{symbol.Value.ToLowerInvariant()}@trade",
+                                $"{symbol.Value.ToLowerInvariant()}@bookTicker"
+                            },
+                            id = GetNextRequestId()
+                        }
+                    );
                 }
             }
+
+            return true;
+        }
+
+        private void Send(IWebSocket webSocket, object obj)
+        {
+            var json = JsonConvert.SerializeObject(obj);
+
+            if (!_webSocketRateLimiter.WaitToProceed(TimeSpan.Zero))
+            {
+                _webSocketRateLimiter.WaitToProceed();
+            }
+
+            Log.Trace("Send: " + json);
+
+            webSocket.Send(json);
+        }
+
+        private long GetNextRequestId()
+        {
+            return Interlocked.Increment(ref _lastRequestId);
         }
     }
 }

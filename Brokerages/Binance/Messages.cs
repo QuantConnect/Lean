@@ -14,7 +14,6 @@
 */
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using QuantConnect.Orders;
 using System;
 using System.Globalization;
@@ -79,6 +78,36 @@ namespace QuantConnect.Brokerages.Binance.Messages
         Execution
     }
 
+    public class ErrorMessage
+    {
+        [JsonProperty("code")]
+        public int Code { get; set; }
+
+        [JsonProperty("msg")]
+        public string Message { get; set; }
+    }
+
+    public class BestBidAskQuote
+    {
+        [JsonProperty("u")]
+        public long OrderBookUpdateId { get; set; }
+
+        [JsonProperty("s")]
+        public string Symbol { get; set; }
+
+        [JsonProperty("b")]
+        public decimal BestBidPrice { get; set; }
+
+        [JsonProperty("B")]
+        public decimal BestBidSize { get; set; }
+
+        [JsonProperty("a")]
+        public decimal BestAskPrice { get; set; }
+
+        [JsonProperty("A")]
+        public decimal BestAskSize { get; set; }
+    }
+
     public class BaseMessage
     {
         public virtual EventType @Event { get; } = EventType.None;
@@ -91,61 +120,6 @@ namespace QuantConnect.Brokerages.Binance.Messages
 
         [JsonProperty("s")]
         public string Symbol { get; set; }
-
-        public static BaseMessage Parse(string data)
-        {
-            var wrapped = JObject.Parse(data);
-            var eventType = wrapped["data"]["e"].ToObject<string>();
-            switch (eventType)
-            {
-                case "executionReport":
-                    return wrapped.GetValue("data").ToObject<Execution>();
-                case "depthUpdate":
-                    return wrapped.GetValue("data").ToObject<OrderBookUpdateMessage>();
-                case "trade":
-                    return wrapped.GetValue("data").ToObject<Trade>();
-                default:
-                    return null;
-            }
-        }
-
-        public T ToObject<T>() where T : BaseMessage
-        {
-            try
-            {
-                return (T)Convert.ChangeType(this, typeof(T), CultureInfo.InvariantCulture);
-            }
-            catch
-            {
-                return default(T);
-            }
-        }
-    }
-
-    public class OrderBookSnapshotMessage
-    {
-        public long LastUpdateId { get; set; }
-
-        public decimal[][] Bids { get; set; }
-
-        public decimal[][] Asks { get; set; }
-    }
-
-    public class OrderBookUpdateMessage : BaseMessage
-    {
-        public override EventType @Event => EventType.OrderBook;
-
-        [JsonProperty("U")]
-        public long FirstUpdate { get; set; }
-
-        [JsonProperty("u")]
-        public long FinalUpdate { get; set; }
-
-        [JsonProperty("b")]
-        public decimal[][] Bids { get; set; }
-
-        [JsonProperty("a")]
-        public decimal[][] Asks { get; set; }
     }
 
     public class Trade : BaseMessage
@@ -224,9 +198,9 @@ namespace QuantConnect.Brokerages.Binance.Messages
         {
             OpenTime = Convert.ToInt64(entries[0], CultureInfo.InvariantCulture);
             Open = ((string)entries[1]).ToDecimal();
-            Close = ((string)entries[4]).ToDecimal();
             High = ((string)entries[2]).ToDecimal();
             Low = ((string)entries[3]).ToDecimal();
+            Close = ((string)entries[4]).ToDecimal();
             Volume = ((string)entries[5]).ToDecimal();
         }
     }

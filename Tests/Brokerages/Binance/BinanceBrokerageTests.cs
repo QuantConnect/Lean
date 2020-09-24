@@ -56,21 +56,16 @@ namespace QuantConnect.Tests.Brokerages.Binance
             algorithm.Setup(a => a.BrokerageModel).Returns(new BinanceBrokerageModel());
             algorithm.Setup(a => a.Portfolio).Returns(new SecurityPortfolioManager(securities, transactions));
 
-            var wssUrl = Config.Get("binance-wss", "wss://stream.binance.com:9443");
-            var restUrl = Config.Get("binance-rest", "https://api.binance.com");
             var apiKey = Config.Get("binance-api-key");
             var apiSecret = Config.Get("binance-api-secret");
 
             _binanceApi = new BinanceRestApiClient(
                 new BinanceSymbolMapper(),
                 algorithm.Object?.Portfolio,
-                restUrl,
                 apiKey,
                 apiSecret);
 
             return new BinanceBrokerage(
-                    wssUrl,
-                    restUrl,
                     apiKey,
                     apiSecret,
                     algorithm.Object,

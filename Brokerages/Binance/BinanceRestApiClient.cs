@@ -34,14 +34,16 @@ namespace QuantConnect.Brokerages.Binance
     /// <summary>
     /// Binance REST API implementation
     /// </summary>
-    public class BinanceRestApiClient
+    public class BinanceRestApiClient : IDisposable
     {
+        private const string RestApiUrl = "https://api.binance.com";
+        private const string UserDataStreamEndpoint = "/api/v3/userDataStream";
+
         private readonly BinanceSymbolMapper _symbolMapper;
         private readonly ISecurityProvider _securityProvider;
         private readonly IRestClient _restClient;
         private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
         private readonly object _listenKeyLocker = new object();
-        private readonly string userDataStreamEndpoint = "/api/v1/userDataStream";
 
         /// <summary>
         /// Event that fires each time an order is filled
@@ -83,14 +85,13 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         /// <param name="symbolMapper">The symbol mapper.</param>
         /// <param name="securityProvider">The holdings provider.</param>
-        /// <param name="restUrl">The Binance API endpoint url</param>
         /// <param name="apiKey">The Binance API key</param>
         /// <param name="apiSecret">The The Binance API secret</param>
-        public BinanceRestApiClient(BinanceSymbolMapper symbolMapper, ISecurityProvider securityProvider, string restUrl, string apiKey, string apiSecret)
+        public BinanceRestApiClient(BinanceSymbolMapper symbolMapper, ISecurityProvider securityProvider, string apiKey, string apiSecret)
         {
             _symbolMapper = symbolMapper;
             _securityProvider = securityProvider;
-            _restClient = new RestClient(restUrl);
+            _restClient = new RestClient(RestApiUrl);
             ApiKey = apiKey;
             ApiSecret = apiSecret;
         }
@@ -299,7 +300,7 @@ namespace QuantConnect.Brokerages.Binance
             var symbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
             var startMs = (long)Time.DateTimeToUnixTimeStamp(request.StartTimeUtc) * 1000;
             var endMs = (long)Time.DateTimeToUnixTimeStamp(request.EndTimeUtc) * 1000;
-            var endpoint = $"/api/v1/klines?symbol={symbol}&interval={resolution}&limit=1000";
+            var endpoint = $"/api/v3/klines?symbol={symbol}&interval={resolution}&limit=1000";
 
             while (endMs - startMs >= resolutionInMs)
             {
@@ -337,7 +338,7 @@ namespace QuantConnect.Brokerages.Binance
                 throw new Exception("BinanceBrokerage:UserStream. listenKey wasn't allocated or has been refused.");
             }
 
-            var ping = new RestRequest(userDataStreamEndpoint, Method.PUT);
+            var ping = new RestRequest(UserDataStreamEndpoint, Method.PUT);
             ping.AddHeader(KeyHeader, ApiKey);
             ping.AddParameter(
                 "application/x-www-form-urlencoded",
@@ -359,7 +360,7 @@ namespace QuantConnect.Brokerages.Binance
                 throw new Exception("BinanceBrokerage:UserStream. listenKey wasn't allocated or has been refused.");
             }
 
-            var request = new RestRequest(userDataStreamEndpoint, Method.DELETE);
+            var request = new RestRequest(UserDataStreamEndpoint, Method.DELETE);
             request.AddHeader(KeyHeader, ApiKey);
             request.AddParameter(
                 "application/x-www-form-urlencoded",
@@ -387,29 +388,11 @@ namespace QuantConnect.Brokerages.Binance
         }
 
         /// <summary>
-        /// Fetch orderbook snapshot
-        /// </summary>
-        /// <param name="symbol"></param>
-        public Messages.OrderBookSnapshotMessage FetchOrderBookSnapshot(Symbol symbol)
-        {
-            var endpoint = $"/api/v1/depth?symbol={_symbolMapper.GetBrokerageSymbol(symbol)}&limit=1000";
-            var request = new RestRequest(endpoint, Method.GET);
-            var response = ExecuteRestRequest(request);
-
-            if (response.StatusCode != HttpStatusCode.OK)
-            {
-                throw new Exception($"BinanceBrokerage.FetchOrderBookSnapshot: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
-            }
-
-            return JsonConvert.DeserializeObject<Messages.OrderBookSnapshotMessage>(response.Content);
-        }
-
-        /// <summary>
         /// Start user data stream
         /// </summary>
         public void CreateListenKey()
         {
-            var request = new RestRequest(userDataStreamEndpoint, Method.POST);
+            var request = new RestRequest(UserDataStreamEndpoint, Method.POST);
             request.AddHeader(KeyHeader, ApiKey);
 
             var response = ExecuteRestRequest(request);
@@ -423,6 +406,14 @@ namespace QuantConnect.Brokerages.Binance
             {
                 SessionId = content.Value<string>("listenKey");
             }
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            _restRateLimiter.DisposeSafely();
         }
 
         /// <summary>
@@ -595,6 +586,5 @@ namespace QuantConnect.Brokerages.Binance
                 Log.Error(err);
             }
         }
-
     }
 }
