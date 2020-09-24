@@ -62,20 +62,21 @@ namespace QuantConnect.Lean.Engine.Setup
                     .SubscriptionManager
                     .SubscriptionDataConfigService
                     .GetSubscriptionDataConfigs(cash.ConversionRateSecurity.Symbol,
-                        includeInternalConfigs:true);
-
-                var resolution = configs.GetHighestResolution();
-
-                var startTime = historyRequestFactory.GetStartTimeAlgoTz(
-                    cash.ConversionRateSecurity.Symbol,
-                    1,
-                    resolution,
-                    cash.ConversionRateSecurity.Exchange.Hours);
-                var endTime = algorithm.Time.RoundDown(resolution.ToTimeSpan());
+                        includeInternalConfigs: true);
 
                 // we need to order and select a specific configuration type
                 // so the conversion rate is deterministic
                 var configToUse = configs.OrderBy(x => x.TickType).First();
+                var hours = cash.ConversionRateSecurity.Exchange.Hours;
+
+                var resolution = configs.GetHighestResolution();
+                var startTime = historyRequestFactory.GetStartTimeAlgoTz(
+                    cash.ConversionRateSecurity.Symbol,
+                    1,
+                    resolution,
+                    hours,
+                    configToUse.DataTimeZone);
+                var endTime = algorithm.Time;
 
                 historyRequests.Add(historyRequestFactory.CreateHistoryRequest(
                     configToUse,

@@ -13,10 +13,11 @@
  * limitations under the License.
 */
 
-using System;
+using NodaTime;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using System;
 
 namespace QuantConnect.Data
 {
@@ -78,17 +79,19 @@ namespace QuantConnect.Data
         /// <param name="periods">The number of bars requested</param>
         /// <param name="resolution">The length of each bar</param>
         /// <param name="exchange">The exchange hours used for market open hours</param>
+        /// <param name="dataTimeZone">The time zone in which data are stored</param>
         /// <returns>The start time that would provide the specified number of bars ending at the algorithm's current time</returns>
         public DateTime GetStartTimeAlgoTz(
             Symbol symbol,
             int periods,
             Resolution resolution,
-            SecurityExchangeHours exchange)
+            SecurityExchangeHours exchange,
+            DateTimeZone dataTimeZone)
         {
-            var isExtendedMarketHours = _algorithm.SubscriptionManager
+            var configs = _algorithm.SubscriptionManager
                 .SubscriptionDataConfigService
-                .GetSubscriptionDataConfigs(symbol)
-                .IsExtendedMarketHours();
+                .GetSubscriptionDataConfigs(symbol);
+            var isExtendedMarketHours = configs.IsExtendedMarketHours();
 
             var timeSpan = resolution.ToTimeSpan();
             // make this a minimum of one second
@@ -99,7 +102,8 @@ namespace QuantConnect.Data
                 _algorithm.UtcTime.ConvertFromUtc(exchange.TimeZone),
                 timeSpan,
                 periods,
-                isExtendedMarketHours);
+                isExtendedMarketHours,
+                dataTimeZone);
             return localStartTime.ConvertTo(exchange.TimeZone, _algorithm.TimeZone);
         }
     }

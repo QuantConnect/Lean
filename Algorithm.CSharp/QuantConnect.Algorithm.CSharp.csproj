@@ -142,6 +142,8 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="AddAlphaModelAlgorithm.cs" />
+    <Compile Include="DailyHistoryForDailyResolutionRegressionAlgorithm.cs" />
+    <Compile Include="DailyHistoryForMinuteResolutionRegressionAlgorithm.cs" />
     <Compile Include="SwitchDataModeRegressionAlgorithm.cs" />
     <Compile Include="AddRemoveOptionUniverseRegressionAlgorithm.cs" />
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
@@ -431,7 +433,7 @@
     <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetFramework.CSharp.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DaylightSavingTimeHistoryRegressionTest.cs" />
+    <Compile Include="DaylightSavingTimeHistoryRegressionAlgorithm.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

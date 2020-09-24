@@ -399,6 +399,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var securityBenchmark = _algorithm.Benchmark as SecurityBenchmark;
                 if (securityBenchmark != null)
                 {
+                    var dataConfig = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(
+                        securityBenchmark.Security.Symbol,
+                        _dataPermissionManager.GetResolution(_algorithm.LiveMode ? Resolution.Minute : Resolution.Hour),
+                        isInternalFeed: true,
+                        fillForward: false).First();
+
                     // we want to start from the previous tradable bar so the benchmark security
                     // never has 0 price
                     var previousTradableBar = Time.GetStartTimeForTradeBars(
@@ -406,13 +412,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         utcStart.ConvertFromUtc(securityBenchmark.Security.Exchange.TimeZone),
                         _algorithm.LiveMode ? Time.OneMinute : Time.OneDay,
                         1,
-                        false).ConvertToUtc(securityBenchmark.Security.Exchange.TimeZone);
-
-                    var dataConfig = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(
-                        securityBenchmark.Security.Symbol,
-                        _dataPermissionManager.GetResolution(_algorithm.LiveMode ? Resolution.Minute : Resolution.Hour),
-                        isInternalFeed: true,
-                        fillForward: false).First();
+                        false,
+                        dataConfig.DataTimeZone).ConvertToUtc(securityBenchmark.Security.Exchange.TimeZone);
 
                     if (dataConfig != null)
                     {

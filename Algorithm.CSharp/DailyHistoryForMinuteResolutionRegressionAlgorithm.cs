@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,47 +16,72 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression test algorithm simply fetch history on boarder of Daylight Saving Time shift
+    /// Algorithm simply fetch one-day history prior current time.
     /// </summary>
-    public class DaylightSavingTimeHistoryRegressionTest : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class DailyHistoryForMinuteResolutionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol[] _symbols = new[]
-        {
-            QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM),
-            QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)
+        private Symbol[] _symbols = {
+            QuantConnect.Symbol.Create("GBPUSD", SecurityType.Forex, market: Market.FXCM),
+            QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, market: Market.Oanda),
+            QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, market: Market.USA),
+            QuantConnect.Symbol.Create("BTCUSD", SecurityType.Crypto, market: Market.GDAX),
+            QuantConnect.Symbol.Create("XAUUSD", SecurityType.Cfd, market: Market.Oanda)
         };
-        /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        /// </summary>
+
+        private HashSet<Symbol> _received = new HashSet<Symbol>();
+
         public override void Initialize()
         {
-            SetStartDate(2011, 11, 10);  //Set Start Date
-            SetEndDate(2011, 11, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
-
-            for (int i = 0; i < _symbols.Length; i++)
+            SetStartDate(2018, 3, 26);
+            SetEndDate(2018, 4, 10);
+            foreach (var symbol in _symbols)
             {
-                var symbol = _symbols[i];
-                var history = History<QuoteBar>(symbol, 10, Resolution.Daily);
+                AddSecurity(symbol, Resolution.Minute);
+            }
 
-                var duplications = history
-                    .GroupBy(k => k.Time)
-                    .Where(g => g.Count() > 1);
-                if (duplications.Any())
+            Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromHours(1)), MakeHistoryCall);
+        }
+
+        private void MakeHistoryCall()
+        {
+            foreach (var symbol in _symbols)
+            {
+                _received.Add(symbol);
+
+                bool hasHistory = false;
+
+                foreach (var dataType in SubscriptionManager.AvailableDataTypes[symbol.SecurityType])
                 {
-                    var time = duplications.First().Key;
-                    throw new Exception($"Duplicated bars were issued for time {time}");
+                    if (dataType == TickType.Quote)
+                    {
+                        hasHistory |= History(1, Resolution.Daily).Get<QuoteBar>(symbol).Any();
+                    }
+                    else
+                    {
+                        hasHistory |= History(1, Resolution.Daily).Get<TradeBar>(symbol).Any();
+                    }
                 }
+
+                if (!hasHistory) throw new Exception($"No {symbol} data on the eve of {Time} {Time.DayOfWeek}");
             }
         }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (_received.Count != _symbols.Length)
+            {
+                throw new Exception($"Data for symbols {string.Join(",", _symbols.Except(_received))} were not received");
+            }
+        }
+
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
@@ -89,8 +114,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
+            {"Information Ratio", "-0.096"},
+            {"Tracking Error", "0.212"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Fitness Score", "0"},
