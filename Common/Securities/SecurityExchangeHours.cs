@@ -240,6 +240,17 @@ namespace QuantConnect.Securities
                         continue;
                     }
 
+                    TimeSpan earlyCloseTime;
+                    if (_earlyCloses.TryGetValue(time.Date, out earlyCloseTime))
+                    {
+                        var earlyCloseDateTime = time.Date.Add(earlyCloseTime);
+                        if (time > earlyCloseDateTime)
+                        {
+                            time = time.Date + Time.OneDay;
+                            continue;
+                        }
+                    }
+
                     var marketOpenTimeOfDay = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket);
                     if (marketOpenTimeOfDay.HasValue)
                     {
@@ -282,6 +293,17 @@ namespace QuantConnect.Securities
 
                         time = time.Date + Time.OneDay;
                         continue;
+                    }
+
+                    TimeSpan lateOpenTime;
+                    if (_lateOpens.TryGetValue(time.Date, out lateOpenTime))
+                    {
+                        var lateOpenDateTime = time.Date.Add(lateOpenTime);
+                        if (time < lateOpenDateTime)
+                        {
+                            time = lateOpenDateTime;
+                            continue;
+                        }
                     }
 
                     var marketCloseTimeOfDay = marketHours.GetMarketClose(time.TimeOfDay, extendedMarket);
