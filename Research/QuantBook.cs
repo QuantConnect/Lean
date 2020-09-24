@@ -240,7 +240,7 @@ namespace QuantConnect.Research
             //If we algorithm manager isn't ready we need to get it setup.
             if (!_algorithmManager.Initialized)
             {
-                InitializeAlgorithmManager();
+                StartEngine();
             }
 
             //Take the amount of steps given
@@ -249,7 +249,7 @@ namespace QuantConnect.Research
                 //Take a step, if its fails, we are at the end of the stream and need to cleanup
                 if (!_algorithmManager.Step())
                 {
-                    OnStreamEnd();
+                    Shutdown();
                     Logging.Log.Trace("QuantBook: Data stream has ended");
                 }
             }
@@ -258,7 +258,7 @@ namespace QuantConnect.Research
         /// <summary>
         /// Initialize all the engine parts necessary to run the Algorithm
         /// </summary>
-        private void InitializeAlgorithmManager()
+        private void StartEngine()
         {
             //Setup synchronizer
             _synchronizer = new Synchronizer();
@@ -304,7 +304,7 @@ namespace QuantConnect.Research
         /// <summary>
         /// Clean up handlers on stream end
         /// </summary>
-        private void OnStreamEnd()
+        public void Shutdown()
         {
             // Shut everything we don't need down
             _synchronizer.DisposeSafely();

@@ -33,6 +33,7 @@ namespace QuantConnect.Tests.Research
             qb.Step(input[1]);
 
             Assert.AreEqual(input[2], qb.Time);
+            qb.Shutdown();
         }
 
         [Test]
@@ -46,6 +47,7 @@ namespace QuantConnect.Tests.Research
             qb.Step(10);
             Assert.IsTrue(consolidator.Consolidated != null);
             Assert.AreEqual(153.0223, (double)consolidator.Consolidated.Value, 0.005);
+            qb.Shutdown();
         }
 
         [Test]
@@ -57,15 +59,20 @@ namespace QuantConnect.Tests.Research
             Assert.AreEqual(0, indicator.Current.Value);
             qb.Step(10);
             Assert.AreEqual(153.0310, (double)indicator.Current.Value, 0.005);
+            qb.Shutdown();
         }
 
         [Test]
         public void UniverseTest()
         {
+            //Have to adjust the dates for this test
+            qb.SetStartDate(new DateTime(2014, 3, 24));
+            qb.SetEndDate(new DateTime(2014, 4, 1));
+
             Assert.IsTrue(qb.UniverseManager.Count == 0);
 
             // subscriptions added via universe selection will have this resolution
-            qb.UniverseSettings.Resolution = Resolution.Hour;
+            qb.UniverseSettings.Resolution = Resolution.Daily;
 
             //Go select spy
             qb.AddUniverse(coarse =>
@@ -76,11 +83,11 @@ namespace QuantConnect.Tests.Research
                     select c.Symbol;
             });
 
-            // Take one step to see the changes reflected
-            qb.Step();
+            // Step to the 28th
+            qb.Step(new DateTime(2014, 3, 28));
             Assert.IsTrue(qb.UniverseManager.Count == 1);
-
-            //TODO: Test subscription? Values?
+            Assert.IsNotNull(qb.SubscriptionManager.Subscriptions.Select(x => x.Symbol).Where(x => x.Value == "SPY"));
+            qb.Shutdown();
         }
 
         // Time test cases: resolution, steps, and expected end time
