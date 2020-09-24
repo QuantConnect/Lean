@@ -33,9 +33,9 @@ namespace QuantConnect.Tests.Brokerages.Binance
         #region data
         public static TestCaseData[] CryptoPairs => new[]
         {
-            new TestCaseData("ethusdt"),
-            new TestCaseData("btcusdt"),
-            new TestCaseData("ethbtc")
+            new TestCaseData("ETHUSDT"),
+            new TestCaseData("BTCUSDT"),
+            new TestCaseData("ETHBTC")
         };
 
         public static TestCaseData[] RawCryptoSymbols => new[]
@@ -55,9 +55,9 @@ namespace QuantConnect.Tests.Brokerages.Binance
         public static TestCaseData[] CurrencyPairs => new[]
         {
             new TestCaseData(""),
-            new TestCaseData("eurusd"),
-            new TestCaseData("gbpusd"),
-            new TestCaseData("usdjpy")
+            new TestCaseData("EURUSD"),
+            new TestCaseData("GBPUSD"),
+            new TestCaseData("USDJPY")
         };
 
         public static TestCaseData[] UnknownSymbols => new[]
@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
 
         public static TestCaseData[] UnknownMarket => new[]
         {
-            new TestCaseData("ethusdt", SecurityType.Crypto, Market.GDAX)
+            new TestCaseData("ETHUSDT", SecurityType.Crypto, Market.GDAX)
         };
 
         #endregion
