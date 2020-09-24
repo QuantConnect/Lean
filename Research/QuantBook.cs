@@ -19,10 +19,15 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
+using QuantConnect.Lean.Engine.Setup;
+using QuantConnect.Logging;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
@@ -33,12 +38,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Logging;
-using QuantConnect.Packets;
-using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using System.Threading.Tasks;
-using QuantConnect.Lean.Engine.Setup;
 
 namespace QuantConnect.Research
 {
@@ -200,11 +200,44 @@ namespace QuantConnect.Research
             }
         }
 
+        public override void Initialize()
+        {
+            //NOP: Maybe a delegate function?
+        }
+
+        public override void OnData(Slice slice)
+        {
+            //NOP: Maybe a delegate function?
+        }
+
+        /// <summary>
+        /// Step the engine at least the period length forward
+        /// </summary>
+        /// <param name="period"></param>
+        public void Step(TimeSpan period)
+        {
+            var endTime = Time + period;
+            Step(endTime);
+        }
+
+        /// <summary>
+        /// Steps the engine until a given time is reached
+        /// </summary>
+        /// <param name="endTime"></param>
+        public void Step(DateTime endTime)
+        {
+            while (Time < endTime)
+            {
+                Step();
+            }
+        }
+
         /// <summary>
         /// Take x steps forward in the algorithm
         /// </summary>
         public void Step(int steps = 1)
         {
+            //If we algorithm manager isn't ready we need to get it setup.
             if (!_algorithmManager.Initialized)
             {
                 InitializeAlgorithmManager();
@@ -217,6 +250,7 @@ namespace QuantConnect.Research
                 if (!_algorithmManager.Step())
                 {
                     OnStreamEnd();
+                    Logging.Log.Trace("QuantBook: Data stream has ended");
                 }
             }
         }
@@ -237,10 +271,6 @@ namespace QuantConnect.Research
             // initialize the default brokerage message handler
             BrokerageMessageHandler = factory.CreateBrokerageMessageHandler(this, _job, _systemHandlers.Api);
 
-            //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
-            _algorithmHandlers.Setup.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, this, _brokerage, _job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime, _algorithmHandlers.ObjectStore));
-            _algorithmHandlers.Results.SetAlgorithm(this, _algorithmHandlers.Setup.StartingPortfolioValue);
-
             //-> Initialize messaging system
             _systemHandlers.Notify.SetAuthentication(_job);
 
@@ -253,7 +283,11 @@ namespace QuantConnect.Research
             _algorithmHandlers.Alphas.Initialize(_job, this, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.Transactions);
             _algorithmHandlers.Alphas.OnAfterAlgorithmInitialized(this);
 
-            _algorithmManager.Init(_job, this, 
+            //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
+            _algorithmHandlers.Setup.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, this, _brokerage, _job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime, _algorithmHandlers.ObjectStore));
+            _algorithmHandlers.Results.SetAlgorithm(this, _algorithmHandlers.Setup.StartingPortfolioValue);
+
+            _algorithmManager.Initialize(_job, this, 
                 _synchronizer,
                 _algorithmHandlers.Transactions,
                 _algorithmHandlers.Results,
@@ -261,6 +295,10 @@ namespace QuantConnect.Research
                 _systemHandlers.LeanManager,
                 _algorithmHandlers.Alphas,
                 CancellationToken.None);
+
+            // Take an initial step to get the day started; and universe up to date
+            // Puts qb.Time at first moment of the day (ex 9:30)
+            _algorithmManager.Step();
         }
 
         /// <summary>

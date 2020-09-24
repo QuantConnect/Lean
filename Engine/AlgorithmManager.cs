@@ -47,7 +47,6 @@ namespace QuantConnect.Lean.Engine
     /// </summary>
     public class AlgorithmManager
     {
-        public bool Initialized { get; private set; }
         private readonly bool _liveMode;
         private readonly object _lock;
         private DateTime _nextMarginCallTime;
@@ -67,7 +66,6 @@ namespace QuantConnect.Lean.Engine
         private bool _hasOnDataSplits;
         private bool _hasOnDataSymbolChangedEvents;
         private bool _hasOnDataTicks;
-        private bool _exitFlag;
         private IAlgorithm _algorithm;
         private ILeanManager _leanManager;
         private IResultHandler _results;
@@ -75,6 +73,11 @@ namespace QuantConnect.Lean.Engine
         private ITransactionHandler _transactions;
         private IAlphaHandler _alphas;
         private IEnumerator<TimeSlice> _stream;
+
+        /// <summary>
+        /// Publicly accessible manager initialized status
+        /// </summary>
+        public bool Initialized { get; private set; }
 
         /// <summary>
         /// Publicly accessible algorithm status
@@ -140,46 +143,17 @@ namespace QuantConnect.Lean.Engine
         public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, IAlphaHandler alphas, CancellationToken token)
         {
             //Initialize everything we need to start streaming data through the algorithm
-            Init(job, algorithm, synchronizer, transactions, results, realtime, leanManager, alphas, token);
+            Initialize(job, algorithm, synchronizer, transactions, results, realtime, leanManager, alphas, token);
 
             // Process all data steps in the stream
             Log.Trace("AlgorithmManager.Run(): Begin DataStream - Start: " + algorithm.StartDate + " Stop: " + algorithm.EndDate);
-            while (_stream.MoveNext())
-            {
-                // reset our timer on each loop
-                TimeLimit.StartNewTimeStep();
-
-                //Check this backtest is still running:
-                if (_algorithm.Status != AlgorithmStatus.Running)
-                {
-                    Log.Error($"AlgorithmManager.Run(): Algorithm state changed to {_algorithm.Status} at {_stream.Current.Time.ToStringInvariant()}");
-                    break;
-                }
-
-                //Execute with TimeLimit Monitor:
-                if (token.IsCancellationRequested)
-                {
-                    Log.Error($"AlgorithmManager.Run(): CancellationRequestion at {_stream.Current.Time.ToStringInvariant()}");
-                    return;
-                }
-
-                //Process a step with this timeslice
-                ProcessStep(_stream.Current);
-
-                //Check to see if we set our exit flag in the last step
-                //TODO: See if we need this, maybe use Algorithm Status in step
-                if (_exitFlag)
-                {
-                    break;
-                }
-
-            } // End of ForEach feed.Bridge.GetConsumingEnumerable
+            while (Step()){}
 
             // stop timing the loops
             TimeLimit.StopEnforcingTimeLimit();
 
             //FINISHING ALGORITHM:
-            //TODO: Move to Finish function? So that step can call if it finishes as well
+            //TODO: Move to Finish function? Have step call it on when stream is done?
             //Stream over:: Send the final packet and fire final events:
             Log.Trace("AlgorithmManager.Run(): Firing On End Of Algorithm...");
             try
@@ -253,13 +227,16 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
+        private CancellationToken _cancellationToken;
+
         /// <summary>
         /// Initialize all the variables we need to run data through
         /// </summary>
-        public void Init(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, IAlphaHandler alphas, CancellationToken token)
+        public void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, IAlphaHandler alphas, CancellationToken token)
         {
-
+            // Set our count
             DataPoints = 0;
+
             // Store passed in variables
             _algorithm = algorithm;
             _leanManager = leanManager;
@@ -267,9 +244,7 @@ namespace QuantConnect.Lean.Engine
             _results = results;
             _realtime = realtime;
             _alphas = alphas;
-
-            // Flag used by step to determine if we need to stop; maybe just switch algorithm status??
-            _exitFlag = false;
+            _cancellationToken = token;
 
             // Setup our variables
             _backtestMode = job.Type == PacketType.BacktestNode;
@@ -327,10 +302,63 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public bool Step()
         {
+            // reset our timer on each loop
+            TimeLimit.StartNewTimeStep();
+
+            //Check this backtest is still running:
+            if (_algorithm.Status != AlgorithmStatus.Running)
+            {
+                Log.Error($"AlgorithmManager.Run(): Algorithm state changed to {_algorithm.Status} at {_stream.Current.Time.ToStringInvariant()}");
+                return false;
+            }
+
+            //Execute with TimeLimit Monitor:
+            if (_cancellationToken.IsCancellationRequested)
+            {
+                Log.Error($"AlgorithmManager.Run(): CancellationRequestion at {_stream.Current.Time.ToStringInvariant()}");
+                return false;
+            }
+
             if (_stream.MoveNext())
             {
-                ProcessStep(_stream.Current);
-                return true;
+                var timeSlice = _stream.Current;
+
+                // Update the ILeanManager
+                _leanManager.Update();
+
+                _time = timeSlice.Time;
+                DataPoints += timeSlice.DataPointCount;
+
+                // We need to sample at the top of the step in case we have a strategy
+                // with no data added. Time pulses would be emitted between days, and
+                // would cause us to skip sampling of the portfolio in those dead days.
+                _results.Sample(_time);
+
+                if (_backtestMode)
+                {
+                    if (_algorithm.Portfolio.TotalPortfolioValue <= 0)
+                    {
+                        var logMessage =
+                            "AlgorithmManager.Run(): Portfolio value is less than or equal to zero, stopping algorithm.";
+                        Log.Error(logMessage);
+                        _results.SystemDebugMessage(logMessage);
+                        return false;
+                    }
+
+                    // If backtesting, we need to check if there are realtime events in the past
+                    // which didn't fire because at the scheduled times there was no data (i.e. markets closed)
+                    // and fire them with the correct date/time.
+                    _realtime.ScanPastEvents(_time);
+                }
+
+                //Set the algorithm and real time handler's time
+                _algorithm.SetDateTime(_time);
+
+                // the time pulse are just to advance algorithm time, lets take another step
+                if (timeSlice.IsTimePulse) return Step();
+
+                //Update algorithm
+                return ProcessStep(_stream.Current);
             }
 
             return false;
@@ -339,44 +367,8 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Take a slice and apply it to the algorithm state
         /// </summary>
-        private void ProcessStep(TimeSlice timeSlice)
+        private bool ProcessStep(TimeSlice timeSlice)
         {
-            // Update the ILeanManager
-            _leanManager.Update();
-
-            _time = timeSlice.Time;
-            DataPoints += timeSlice.DataPointCount;
-
-            // We need to sample at the top of the step in case we have a strategy
-            // with no data added. Time pulses would be emitted between days, and
-            // would cause us to skip sampling of the portfolio in those dead days.
-            _results.Sample(_time);
-
-            if (_backtestMode)
-            {
-                if (_algorithm.Portfolio.TotalPortfolioValue <= 0)
-                {
-                    var logMessage =
-                        "AlgorithmManager.Run(): Portfolio value is less than or equal to zero, stopping algorithm.";
-                    Log.Error(logMessage);
-                    _results.SystemDebugMessage(logMessage);
-                    _exitFlag = true;
-                    return;
-                }
-
-                // If backtesting, we need to check if there are realtime events in the past
-                // which didn't fire because at the scheduled times there was no data (i.e. markets closed)
-                // and fire them with the correct date/time.
-                _realtime.ScanPastEvents(_time);
-            }
-
-            //Set the algorithm and real time handler's time
-            _algorithm.SetDateTime(_time);
-
-            // the time pulse are just to advance algorithm time, lets shortcut the loop here
-            //TODO: What do we want to do with notebooks here??
-            if (timeSlice.IsTimePulse) return;
-
             // Update the current slice before firing scheduled events or any other task
             _algorithm.SetCurrentSlice(timeSlice.Slice);
 
@@ -386,8 +378,8 @@ namespace QuantConnect.Lean.Engine
                     _methodInvokers[typeof(SymbolChangedEvents)](_algorithm, timeSlice.Slice.SymbolChangedEvents);
                 foreach (var symbol in timeSlice.Slice.SymbolChangedEvents.Keys)
                     // cancel all orders for the old symbol
-                foreach (var ticket in _transactions.GetOpenOrderTickets(x => x.Symbol == symbol))
-                    ticket.Cancel("Open order cancelled on symbol changed event");
+                    foreach (var ticket in _transactions.GetOpenOrderTickets(x => x.Symbol == symbol))
+                        ticket.Cancel("Open order cancelled on symbol changed event");
             }
 
             if (timeSlice.SecurityChanges != SecurityChanges.None)
@@ -423,12 +415,12 @@ namespace QuantConnect.Lean.Engine
             //Update the securities properties with any universe data
             if (timeSlice.UniverseData.Count > 0)
                 foreach (var kvp in timeSlice.UniverseData)
-                foreach (var data in kvp.Value.Data)
-                {
-                    Security security;
-                    if (_algorithm.Securities.TryGetValue(data.Symbol, out security))
-                        security.Cache.StoreData(new[] {data}, data.GetType());
-                }
+                    foreach (var data in kvp.Value.Data)
+                    {
+                        Security security;
+                        if (_algorithm.Securities.TryGetValue(data.Symbol, out security))
+                            security.Cache.StoreData(new[] { data }, data.GetType());
+                    }
 
             // poke each cash object to update from the recent security data
             foreach (var kvp in _algorithm.Portfolio.CashBook)
@@ -453,22 +445,18 @@ namespace QuantConnect.Lean.Engine
             // process split warnings for options
             ProcessSplitSymbols(_algorithm, _splitWarnings);
 
-            //Check if the user's signalled Quit: loop over data until day changes.
+            //Check if the user's signaled Quit: loop over data until day changes.
             if (_algorithm.Status == AlgorithmStatus.Stopped)
             {
                 Log.Trace("AlgorithmManager.Run(): Algorithm quit requested.");
-                _exitFlag = true;
-                return;
+                return false;
             }
 
             if (_algorithm.RunTimeError != null)
             {
                 _algorithm.Status = AlgorithmStatus.RuntimeError;
-                Log.Trace(
-                    $"AlgorithmManager.Run(): Algorithm encountered a runtime error at {timeSlice.Time.ToStringInvariant()}. Error: {_algorithm.RunTimeError}"
-                );
-                _exitFlag = true;
-                return;
+                Log.Trace($"AlgorithmManager.Run(): Algorithm encountered a runtime error at {timeSlice.Time.ToStringInvariant()}. Error: {_algorithm.RunTimeError}");
+                return false;
             }
 
             // perform margin calls, in live mode we can also use realtime to emit these
@@ -504,7 +492,7 @@ namespace QuantConnect.Lean.Engine
                             ? "Portfolio.MarginCallModel.ExecuteMarginCall"
                             : "OnMarginCall";
                         Log.Error($"AlgorithmManager.Run(): RuntimeError: {locator}: {err}");
-                        return;
+                        return false;
                     }
                 }
                 // we didn't perform a margin call, but got the warning flag back, so issue the warning to the algorithm
@@ -519,7 +507,7 @@ namespace QuantConnect.Lean.Engine
                         _algorithm.RunTimeError = err;
                         _algorithm.Status = AlgorithmStatus.RuntimeError;
                         Log.Error("AlgorithmManager.Run(): RuntimeError: OnMarginCallWarning: " + err);
-                        return;
+                        return false;
                     }
                 }
 
@@ -553,7 +541,7 @@ namespace QuantConnect.Lean.Engine
                     _algorithm.RunTimeError = err;
                     _algorithm.Status = AlgorithmStatus.RuntimeError;
                     Log.Error("AlgorithmManager.Run(): RuntimeError: OnSecuritiesChanged event: " + err);
-                    return;
+                    return false;
                 }
             }
 
@@ -625,7 +613,7 @@ namespace QuantConnect.Lean.Engine
                     _algorithm.RunTimeError = err;
                     _algorithm.Status = AlgorithmStatus.RuntimeError;
                     Log.Error("AlgorithmManager.Run(): RuntimeError: Split event: " + err);
-                    return;
+                    return false;
                 }
 
             //Update registered consolidators for this symbol index
@@ -655,7 +643,7 @@ namespace QuantConnect.Lean.Engine
                 _algorithm.RunTimeError = err;
                 _algorithm.Status = AlgorithmStatus.RuntimeError;
                 Log.Error("AlgorithmManager.Run(): RuntimeError: Consolidators update: " + err);
-                return;
+                return false;
             }
 
             // fire custom event handlers
@@ -675,7 +663,7 @@ namespace QuantConnect.Lean.Engine
                     _algorithm.RunTimeError = err;
                     _algorithm.Status = AlgorithmStatus.RuntimeError;
                     Log.Error("AlgorithmManager.Run(): RuntimeError: Custom Data: " + err);
-                    return;
+                    return false;
                 }
             }
 
@@ -694,7 +682,7 @@ namespace QuantConnect.Lean.Engine
                 _algorithm.RunTimeError = err;
                 _algorithm.Status = AlgorithmStatus.RuntimeError;
                 Log.Error("AlgorithmManager.Run(): RuntimeError: Dividends/Splits/Delistings: " + err);
-                return;
+                return false;
             }
 
             // run the delisting logic after firing delisting events
@@ -727,7 +715,7 @@ namespace QuantConnect.Lean.Engine
                 _algorithm.RunTimeError = err;
                 _algorithm.Status = AlgorithmStatus.RuntimeError;
                 Log.Error("AlgorithmManager.Run(): RuntimeError: New Style Mode: " + err);
-                return;
+                return false;
             }
 
             try
@@ -744,7 +732,7 @@ namespace QuantConnect.Lean.Engine
                 _algorithm.RunTimeError = err;
                 _algorithm.Status = AlgorithmStatus.RuntimeError;
                 Log.Error("AlgorithmManager.Run(): RuntimeError: Slice: " + err);
-                return;
+                return false;
             }
 
             //If its the historical/paper trading models, wait until market orders have been "filled"
@@ -763,6 +751,9 @@ namespace QuantConnect.Lean.Engine
 
             // poke the algorithm at the end of each time step
             _algorithm.OnEndOfTimeStep();
+
+            // We made it, return true
+            return true;
         }
 
         private IEnumerable<TimeSlice> Stream(IAlgorithm algorithm, ISynchronizer synchronizer, IResultHandler results, CancellationToken cancellationToken)
@@ -804,7 +795,7 @@ namespace QuantConnect.Lean.Engine
                         if (request.Resolution < minResolution)
                         {
                             request.Resolution = minResolution;
-                            request.FillForwardResolution = request.FillForwardResolution.HasValue ? minResolution : (Resolution?) null;
+                            request.FillForwardResolution = request.FillForwardResolution.HasValue ? minResolution : (Resolution?)null;
                         }
                     }
                 }
@@ -951,7 +942,7 @@ namespace QuantConnect.Lean.Engine
                         // send some status to the user letting them know we're done history, but still warming up,
                         // catching up to real time data
                         nextStatusTime = DateTime.UtcNow.AddSeconds(1);
-                        var percent = (int) (100*(timeSlice.Time.Ticks - warmUpStartTicks)/(double) (DateTime.UtcNow.Ticks - warmUpStartTicks));
+                        var percent = (int)(100 * (timeSlice.Time.Ticks - warmUpStartTicks) / (double)(DateTime.UtcNow.Ticks - warmUpStartTicks));
                         results.SendStatusUpdate(AlgorithmStatus.History, $"Catching up to realtime {percent}%...");
                     }
                 }
@@ -1012,7 +1003,7 @@ namespace QuantConnect.Lean.Engine
         /// <returns>True if the method existed and was added to the collection</returns>
         private bool AddMethodInvoker<T>(IAlgorithm algorithm, Dictionary<Type, MethodInvoker> methodInvokers, string methodName = "OnData")
         {
-            var newSplitMethodInfo = algorithm.GetType().GetMethod(methodName, new[] {typeof (T)});
+            var newSplitMethodInfo = algorithm.GetType().GetMethod(methodName, new[] { typeof(T) });
             if (newSplitMethodInfo != null)
             {
                 methodInvokers.Add(typeof(T), newSplitMethodInfo.DelegateForCallMethod());
@@ -1198,7 +1189,7 @@ namespace QuantConnect.Lean.Engine
                 foreach (var kvp in derivatives)
                 {
                     var optionContractSymbol = kvp.Key;
-                    var optionContractSecurity = (Option) kvp.Value;
+                    var optionContractSecurity = (Option)kvp.Value;
 
                     // close any open orders
                     algorithm.Transactions.CancelOpenOrders(optionContractSymbol, "Canceled due to impending split. Separate MarketOnClose order submitted to liquidate position.");
@@ -1232,7 +1223,7 @@ namespace QuantConnect.Lean.Engine
                 ||
                 // time zones don't change seconds or milliseconds so we can
                 // shortcut timezone conversions
-                (config.Resolution == Resolution.Second 
+                (config.Resolution == Resolution.Second
                  || config.Resolution == Resolution.Minute)
                 && dataPointEndTime.Ticks % config.Increment.Ticks == 0)
             {
