@@ -219,6 +219,18 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void GetNextMarketCloseWorksAfterLateOpen()
+        {
+            var exchangeHours = CreateSecurityExchangeHoursWithMultipleOpeningHours();
+
+            var startTime = new DateTime(2018, 12, 10, 2, 0, 1);
+            // From 2:00am, the next close would normally be 3:00am.
+            // Because there is a late open at 4am, the next close is the close of the session after that open.
+            var nextMarketOpen = exchangeHours.GetNextMarketClose(startTime, false);
+            Assert.AreEqual(new DateTime(2018, 12, 10, 17, 30, 0), nextMarketOpen);
+        }
+
+        [Test]
         public void MarketIsNotOpenBeforeLateOpen()
         {
             var exchangeHours = CreateForexSecurityExchangeHours();
@@ -264,6 +276,18 @@ namespace QuantConnect.Tests.Common.Securities
             var startTime = new DateTime(2019, 1, 1, 17, 0, 1);
             var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, false);
             Assert.AreEqual(new DateTime(2019, 1, 2, 0, 0, 0), nextMarketOpen);
+        }
+
+        [Test]
+        public void GetNextMarketOpenWorksAfterEarlyClose()
+        {
+            var exchangeHours = CreateSecurityExchangeHoursWithMultipleOpeningHours();
+
+            var startTime = new DateTime(2018, 12, 31, 17, 0, 1);
+            // From 5:00pm, the next open would normally be 6:00pm.
+            // Because there is an early close at 5pm, the next open is the open of the session on the following day (+ a late open).
+            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, false);
+            Assert.AreEqual(new DateTime(2019, 1, 1, 02, 0, 0), nextMarketOpen);
         }
 
         [Test]
@@ -321,6 +345,33 @@ namespace QuantConnect.Tests.Common.Securities
 
             var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2018, 12, 31), new TimeSpan(17, 0, 0) } };
             var lateOpens = new Dictionary<DateTime, TimeSpan> { { new DateTime(2019, 1, 1), new TimeSpan(17, 0, 0) } };
+            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
+            {
+                sunday, monday, tuesday, wednesday, thursday, friday//, saturday
+            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
+            return exchangeHours;
+        }
+
+        public static SecurityExchangeHours CreateSecurityExchangeHoursWithMultipleOpeningHours()
+        {
+            var sunday = LocalMarketHours.OpenAllDay(DayOfWeek.Sunday);
+            var monday = new LocalMarketHours(
+                DayOfWeek.Monday,
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(3, 0, 0), new TimeSpan(3, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(17, 0, 0), new TimeSpan(17, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(18, 0, 0), new TimeSpan(18, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(19, 0, 0), TimeSpan.FromTicks(Time.OneDay.Ticks - 1))
+            );
+            var tuesday = LocalMarketHours.OpenAllDay(DayOfWeek.Tuesday);
+            var wednesday = LocalMarketHours.OpenAllDay(DayOfWeek.Wednesday);
+            var thursday = LocalMarketHours.OpenAllDay(DayOfWeek.Thursday);
+            var friday = LocalMarketHours.OpenAllDay(DayOfWeek.Friday);
+            var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
+
+            var holidays = new List<DateTime>();
+            var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2018, 12, 31), new TimeSpan(17, 0, 0) } };
+            var lateOpens = new Dictionary<DateTime, TimeSpan> { {new DateTime(2019, 01, 01), new TimeSpan(2, 0, 0)},
+                { new DateTime(2018, 12, 10), new TimeSpan(4, 0, 0) } };
             var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
             {
                 sunday, monday, tuesday, wednesday, thursday, friday//, saturday
