@@ -141,13 +141,13 @@ namespace QuantConnect.Brokerages.Binance
             {
                 AskPrice = askPrice,
                 BidPrice = bidPrice,
-                Value = (askPrice + bidPrice) / 2m,
                 Time = DateTime.UtcNow,
                 Symbol = symbol,
                 TickType = TickType.Quote,
                 AskSize = askSize,
                 BidSize = bidSize
             };
+            tick.SetValue();
 
             lock (TickLocker)
             {

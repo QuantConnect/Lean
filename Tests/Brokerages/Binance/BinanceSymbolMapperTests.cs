@@ -30,58 +30,6 @@ namespace QuantConnect.Tests.Brokerages.Binance
             _mapper = new BinanceSymbolMapper();
         }
 
-        #region data
-        public static TestCaseData[] CryptoPairs => new[]
-        {
-            new TestCaseData("ETHUSDT"),
-            new TestCaseData("BTCUSDT"),
-            new TestCaseData("ETHBTC")
-        };
-
-        public static TestCaseData[] RawCryptoSymbols => new[]
-        {
-            new TestCaseData("ETHUSDT", SecurityType.Crypto, Market.Binance),
-            new TestCaseData("ETHBTC", SecurityType.Crypto, Market.Binance),
-            new TestCaseData("BTCUSDT", SecurityType.Crypto, Market.Binance),
-        };
-
-        public static TestCaseData[] CryptoSymbols => new[]
-        {
-            new TestCaseData(Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance)),
-            new TestCaseData(Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Binance)),
-            new TestCaseData(Symbol.Create("ETHBTC", SecurityType.Crypto, Market.Binance))
-        };
-
-        public static TestCaseData[] CurrencyPairs => new[]
-        {
-            new TestCaseData(""),
-            new TestCaseData("EURUSD"),
-            new TestCaseData("GBPUSD"),
-            new TestCaseData("USDJPY")
-        };
-
-        public static TestCaseData[] UnknownSymbols => new[]
-        {
-            new TestCaseData("eth-usd", SecurityType.Crypto, Market.Binance),
-            new TestCaseData("BTC/USD", SecurityType.Crypto, Market.Binance),
-            new TestCaseData("eurusd", SecurityType.Crypto, Market.GDAX),
-            new TestCaseData("gbpusd", SecurityType.Forex, Market.Binance),
-            new TestCaseData("usdjpy", SecurityType.Forex, Market.FXCM),
-            new TestCaseData("btceth", SecurityType.Crypto, Market.Binance)
-        };
-
-        public static TestCaseData[] UnknownSecurityType => new[]
-        {
-            new TestCaseData("BTCUSDT", SecurityType.Forex, Market.Binance),
-        };
-
-        public static TestCaseData[] UnknownMarket => new[]
-        {
-            new TestCaseData("ETHUSDT", SecurityType.Crypto, Market.GDAX)
-        };
-
-        #endregion
-
         [Test]
         [TestCaseSource(nameof(CryptoPairs))]
         public void ReturnsCryptoSecurityType(string pair)
@@ -166,5 +114,58 @@ namespace QuantConnect.Tests.Brokerages.Binance
             Assert.Throws<ArgumentException>(() => _mapper.GetLeanSymbol(pair, type, market));
             Assert.AreEqual(pair.LazyToUpper(), _mapper.GetBrokerageSymbol(Symbol.Create(pair, type, market)));
         }
+
+        #region Data
+
+        private static TestCaseData[] CryptoPairs => new[]
+        {
+            new TestCaseData("ETHUSDT"),
+            new TestCaseData("BTCUSDT"),
+            new TestCaseData("ETHBTC")
+        };
+
+        private static TestCaseData[] RawCryptoSymbols => new[]
+        {
+            new TestCaseData("ETHUSDT", SecurityType.Crypto, Market.Binance),
+            new TestCaseData("ETHBTC", SecurityType.Crypto, Market.Binance),
+            new TestCaseData("BTCUSDT", SecurityType.Crypto, Market.Binance),
+        };
+
+        private static TestCaseData[] CryptoSymbols => new[]
+        {
+            new TestCaseData(Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance)),
+            new TestCaseData(Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Binance)),
+            new TestCaseData(Symbol.Create("ETHBTC", SecurityType.Crypto, Market.Binance))
+        };
+
+        private static TestCaseData[] CurrencyPairs => new[]
+        {
+            new TestCaseData(""),
+            new TestCaseData("EURUSD"),
+            new TestCaseData("GBPUSD"),
+            new TestCaseData("USDJPY")
+        };
+
+        private static TestCaseData[] UnknownSymbols => new[]
+        {
+            new TestCaseData("eth-usd", SecurityType.Crypto, Market.Binance),
+            new TestCaseData("BTC/USD", SecurityType.Crypto, Market.Binance),
+            new TestCaseData("eurusd", SecurityType.Crypto, Market.GDAX),
+            new TestCaseData("gbpusd", SecurityType.Forex, Market.Binance),
+            new TestCaseData("usdjpy", SecurityType.Forex, Market.FXCM),
+            new TestCaseData("btceth", SecurityType.Crypto, Market.Binance)
+        };
+
+        private static TestCaseData[] UnknownSecurityType => new[]
+        {
+            new TestCaseData("BTCUSDT", SecurityType.Forex, Market.Binance),
+        };
+
+        private static TestCaseData[] UnknownMarket => new[]
+        {
+            new TestCaseData("ETHUSDT", SecurityType.Crypto, Market.GDAX)
+        };
+
+        #endregion
     }
 }

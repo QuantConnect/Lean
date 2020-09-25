@@ -27,75 +27,6 @@ namespace QuantConnect.Tests.Brokerages.Binance
     [TestFixture]
     public class BinanceFeeModelTests
     {
-        private static Symbol Symbol => Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance);
-
-        private static Security Security
-        {
-            get
-            {
-                var security = new Security(
-                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                    new SubscriptionDataConfig(
-                        typeof(TradeBar),
-                        Symbol,
-                        Resolution.Minute,
-                        TimeZones.NewYork,
-                        TimeZones.NewYork,
-                        false,
-                        false,
-                        false
-                    ),
-                    new Cash("USDT", 0, 1m),
-                    SymbolProperties.GetDefault("USDT"),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCache()
-                );
-                security.SetMarketPrice(new Tick(DateTime.UtcNow, Symbol, LowPrice, HighPrice));
-
-                return security;
-            }
-        }
-
-        private static OrderSubmissionData OrderSubmissionData => new OrderSubmissionData(Security.BidPrice, Security.AskPrice, (Security.BidPrice + Security.AskPrice) / 2);
-
-        private static decimal HighPrice => 1000m;
-        private static decimal LowPrice => 100m;
-
-        private static decimal Quantity => 1m;
-
-        public static TestCaseData[] MakerOrders => new[]
-        {
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice) { OrderSubmissionData = OrderSubmissionData}),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties())),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, new BinanceOrderProperties() { PostOnly = true }){ OrderSubmissionData = OrderSubmissionData}),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties() { PostOnly = true }))
-        };
-
-        public static TestCaseData[] TakerOrders => new[]
-        {
-            new TestCaseData(new MarketOrderTestParameters(Symbol)),
-            new TestCaseData(new MarketOrderTestParameters(Symbol, new BinanceOrderProperties() { PostOnly = true })),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, LowPrice, HighPrice) { OrderSubmissionData = OrderSubmissionData})
-        };
-
-        public static TestCaseData[] CustomMakerOrders => new[]
-        {
-            new TestCaseData(0.001m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
-            new TestCaseData(0.0009m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice) { OrderSubmissionData = OrderSubmissionData}),
-            new TestCaseData(0.0008m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties())),
-            new TestCaseData(0.0007m, 0.0009m, new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, new BinanceOrderProperties() { PostOnly = true }){ OrderSubmissionData = OrderSubmissionData}),
-            new TestCaseData(0.0006m, 0.0008m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties() { PostOnly = true }))
-        };
-
-        public static TestCaseData[] CustomTakerOrders => new[]
-        {
-            new TestCaseData(0.0007m, 0.0009m, new MarketOrderTestParameters(Symbol)),
-            new TestCaseData(0.0006m, 0.0008m, new MarketOrderTestParameters(Symbol, new BinanceOrderProperties { PostOnly = true })),
-            new TestCaseData(0.0005m, 0.0006m, new LimitOrderTestParameters(Symbol, LowPrice, HighPrice) { OrderSubmissionData = OrderSubmissionData})
-        };
-
         [Test]
         public static void GetFeeModelTest()
         {
@@ -230,5 +161,74 @@ namespace QuantConnect.Tests.Brokerages.Binance
                 fee.Value.Amount);
             Assert.AreEqual("USDT", fee.Value.Currency);
         }
+
+        private static Symbol Symbol => Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance);
+
+        private static Security Security
+        {
+            get
+            {
+                var security = new Security(
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                    new SubscriptionDataConfig(
+                        typeof(TradeBar),
+                        Symbol,
+                        Resolution.Minute,
+                        TimeZones.NewYork,
+                        TimeZones.NewYork,
+                        false,
+                        false,
+                        false
+                    ),
+                    new Cash("USDT", 0, 1m),
+                    SymbolProperties.GetDefault("USDT"),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
+                );
+                security.SetMarketPrice(new Tick(DateTime.UtcNow, Symbol, LowPrice, HighPrice));
+
+                return security;
+            }
+        }
+
+        private static OrderSubmissionData OrderSubmissionData => new OrderSubmissionData(Security.BidPrice, Security.AskPrice, (Security.BidPrice + Security.AskPrice) / 2);
+
+        private static decimal HighPrice => 1000m;
+        private static decimal LowPrice => 100m;
+
+        private static decimal Quantity => 1m;
+
+        private static TestCaseData[] MakerOrders => new[]
+        {
+            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
+            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice) { OrderSubmissionData = OrderSubmissionData}),
+            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties())),
+            new TestCaseData(new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, new BinanceOrderProperties() { PostOnly = true }){ OrderSubmissionData = OrderSubmissionData}),
+            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties() { PostOnly = true }))
+        };
+
+        private static TestCaseData[] TakerOrders => new[]
+        {
+            new TestCaseData(new MarketOrderTestParameters(Symbol)),
+            new TestCaseData(new MarketOrderTestParameters(Symbol, new BinanceOrderProperties() { PostOnly = true })),
+            new TestCaseData(new LimitOrderTestParameters(Symbol, LowPrice, HighPrice) { OrderSubmissionData = OrderSubmissionData})
+        };
+
+        private static TestCaseData[] CustomMakerOrders => new[]
+        {
+            new TestCaseData(0.001m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
+            new TestCaseData(0.0009m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice) { OrderSubmissionData = OrderSubmissionData}),
+            new TestCaseData(0.0008m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties())),
+            new TestCaseData(0.0007m, 0.0009m, new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, new BinanceOrderProperties() { PostOnly = true }){ OrderSubmissionData = OrderSubmissionData}),
+            new TestCaseData(0.0006m, 0.0008m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties() { PostOnly = true }))
+        };
+
+        private static TestCaseData[] CustomTakerOrders => new[]
+        {
+            new TestCaseData(0.0007m, 0.0009m, new MarketOrderTestParameters(Symbol)),
+            new TestCaseData(0.0006m, 0.0008m, new MarketOrderTestParameters(Symbol, new BinanceOrderProperties { PostOnly = true })),
+            new TestCaseData(0.0005m, 0.0006m, new LimitOrderTestParameters(Symbol, LowPrice, HighPrice) { OrderSubmissionData = OrderSubmissionData})
+        };
     }
 }

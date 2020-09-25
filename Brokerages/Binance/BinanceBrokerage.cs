@@ -90,7 +90,13 @@ namespace QuantConnect.Brokerages.Binance
             };
             _keepAliveTimer.Elapsed += (s, e) => _apiClient.SessionKeepAlive();
 
-            WebSocket.Open += (s, e) => { _keepAliveTimer.Start(); };
+            WebSocket.Open += (s, e) =>
+            {
+                _keepAliveTimer.Start();
+
+                // resubscribe after a reconnect
+                Subscribe(subscriptionManager.GetSubscribedSymbols());
+            };
             WebSocket.Closed += (s, e) => { _keepAliveTimer.Stop(); };
 
             // A single connection to stream.binance.com is only valid for 24 hours; expect to be disconnected at the 24 hour mark
@@ -317,26 +323,6 @@ namespace QuantConnect.Brokerages.Binance
         }
 
         /// <summary>
-        /// Event invocator for the OrderFilled event
-        /// </summary>
-        /// <param name="e">The OrderEvent</param>
-        protected void OnOrderSubmit(BinanceOrderSubmitEventArgs e)
-        {
-            var brokerId = e.BrokerId;
-            var order = e.Order;
-            if (CachedOrderIDs.ContainsKey(order.Id))
-            {
-                CachedOrderIDs[order.Id].BrokerId.Clear();
-                CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
-            }
-            else
-            {
-                order.BrokerId.Add(brokerId);
-                CachedOrderIDs.TryAdd(order.Id, order);
-            }
-        }
-
-        /// <summary>
         /// Wss message handler
         /// </summary>
         /// <param name="sender"></param>
@@ -493,6 +479,26 @@ namespace QuantConnect.Brokerages.Binance
         private long GetNextRequestId()
         {
             return Interlocked.Increment(ref _lastRequestId);
+        }
+
+        /// <summary>
+        /// Event invocator for the OrderFilled event
+        /// </summary>
+        /// <param name="e">The OrderEvent</param>
+        private void OnOrderSubmit(BinanceOrderSubmitEventArgs e)
+        {
+            var brokerId = e.BrokerId;
+            var order = e.Order;
+            if (CachedOrderIDs.ContainsKey(order.Id))
+            {
+                CachedOrderIDs[order.Id].BrokerId.Clear();
+                CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
+            }
+            else
+            {
+                order.BrokerId.Add(brokerId);
+                CachedOrderIDs.TryAdd(order.Id, order);
+            }
         }
     }
 }

@@ -30,50 +30,6 @@ namespace QuantConnect.Tests.Brokerages.Binance
     [TestFixture]
     public partial class BinanceBrokerageTests
     {
-        public static TestCaseData[] ValidHistory
-        {
-            get
-            {
-                return new[]
-                {
-                    // valid 
-                    new TestCaseData(Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance), Resolution.Minute, Time.OneHour, false),
-                    new TestCaseData(Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance), Resolution.Hour, Time.OneDay, false),
-                    new TestCaseData(Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance), Resolution.Daily, TimeSpan.FromDays(15), false),
-                };
-            }
-        }
-
-        public static TestCaseData[] NoHistory
-        {
-            get
-            {
-                return new[]
-                {
-                    new TestCaseData(Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance), Resolution.Tick, TimeSpan.FromSeconds(15)),
-                    new TestCaseData(Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance), Resolution.Second, Time.OneMinute),
-                };
-            }
-        }
-
-        public static TestCaseData[] InvalidHistory
-        {
-            get
-            {
-                return new[]
-                {
-                    // invalid period, no error, empty result
-                    new TestCaseData(Symbols.EURUSD, Resolution.Daily, TimeSpan.FromDays(-15), true),
-
-                    // invalid symbol, throws "System.ArgumentException : Unknown symbol: XYZ"
-                    new TestCaseData(Symbol.Create("XYZ", SecurityType.Crypto, Market.Binance), Resolution.Daily, TimeSpan.FromDays(15), true),
-
-                    // invalid security type, throws "System.ArgumentException : Invalid security type: Equity"
-                    new TestCaseData(Symbols.AAPL, Resolution.Daily, TimeSpan.FromDays(15), true),
-                };
-            }
-        }
-
         [Test]
         [TestCaseSource(nameof(ValidHistory))]
         [TestCaseSource(nameof(InvalidHistory))]
@@ -174,6 +130,50 @@ namespace QuantConnect.Tests.Brokerages.Binance
             };
 
             Assert.DoesNotThrow(test);
+        }
+
+        private static TestCaseData[] ValidHistory
+        {
+            get
+            {
+                return new[]
+                {
+                    // valid
+                    new TestCaseData(Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance), Resolution.Minute, Time.OneHour, false),
+                    new TestCaseData(Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance), Resolution.Hour, Time.OneDay, false),
+                    new TestCaseData(Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance), Resolution.Daily, TimeSpan.FromDays(15), false),
+                };
+            }
+        }
+
+        private static TestCaseData[] NoHistory
+        {
+            get
+            {
+                return new[]
+                {
+                    new TestCaseData(Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance), Resolution.Tick, TimeSpan.FromSeconds(15)),
+                    new TestCaseData(Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance), Resolution.Second, Time.OneMinute),
+                };
+            }
+        }
+
+        private static TestCaseData[] InvalidHistory
+        {
+            get
+            {
+                return new[]
+                {
+                    // invalid period, no error, empty result
+                    new TestCaseData(Symbols.EURUSD, Resolution.Daily, TimeSpan.FromDays(-15), true),
+
+                    // invalid symbol, throws "System.ArgumentException : Unknown symbol: XYZ"
+                    new TestCaseData(Symbol.Create("XYZ", SecurityType.Crypto, Market.Binance), Resolution.Daily, TimeSpan.FromDays(15), true),
+
+                    // invalid security type, throws "System.ArgumentException : Invalid security type: Equity"
+                    new TestCaseData(Symbols.AAPL, Resolution.Daily, TimeSpan.FromDays(15), true),
+                };
+            }
         }
     }
 }

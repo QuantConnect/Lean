@@ -534,24 +534,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Lazy string to lower implementation.
-        /// Will first verify the string is not already lower and avoid
-        /// the call to <see cref="string.ToLowerInvariant()"/> if possible.
-        /// </summary>
-        /// <param name="data">The string to lower</param>
-        /// <returns>The lower string</returns>
-        public static string LazyToLower(this string data)
-        {
-            // for performance only call to lower if required
-            var alreadyLower = true;
-            for (int i = 0; i < data.Length && alreadyLower; i++)
-            {
-                alreadyLower = char.IsLower(data[i]);
-            }
-            return alreadyLower ? data : data.ToLowerInvariant();
-        }
-
-        /// <summary>
         /// Extension method to automatically set the update value to same as "add" value for TryAddUpdate.
         /// This makes the API similar for traditional and concurrent dictionaries.
         /// </summary>

@@ -520,7 +520,7 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         /// <param name="newOrder">The brokerage order submit result</param>
         /// <param name="order">The lean order</param>
-        protected void OnOrderSubmit(Messages.NewOrder newOrder, Order order)
+        private void OnOrderSubmit(Messages.NewOrder newOrder, Order order)
         {
             try
             {
@@ -548,7 +548,7 @@ namespace QuantConnect.Brokerages.Binance
         /// Event invocator for the OrderFilled event
         /// </summary>
         /// <param name="e">The OrderEvent</param>
-        protected void OnOrderEvent(OrderEvent e)
+        private void OnOrderEvent(OrderEvent e)
         {
             try
             {
