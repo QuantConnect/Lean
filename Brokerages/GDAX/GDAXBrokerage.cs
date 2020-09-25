@@ -191,8 +191,6 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         public override void Disconnect()
         {
-            base.Disconnect();
-
             if (!_canceller.IsCancellationRequested)
             {
                 _canceller.Cancel();

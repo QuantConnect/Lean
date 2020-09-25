@@ -369,8 +369,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 if (algorithm.Portfolio.TotalPortfolioValue == 0)
                 {
-                    AddInitializationError("No cash balances or holdings were found in the brokerage account.");
-                    return false;
+                    algorithm.Debug("Warning: No cash balances or holdings were found in the brokerage account.");
                 }
 
                 //Set the starting portfolio value for the strategy to calculate performance:

@@ -149,8 +149,6 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         public override void Disconnect()
         {
-            base.Disconnect();
-
             WebSocket.Close();
         }
 

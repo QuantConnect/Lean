@@ -20,8 +20,8 @@ using RestSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
-using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
@@ -32,7 +32,6 @@ namespace QuantConnect.Brokerages
     public abstract class BaseWebsocketsBrokerage : Brokerage
     {
         private const int ConnectionTimeout = 30000;
-        private readonly IConnectionHandler _connectionHandler;
 
         /// <summary>
         /// The websockets client instance
@@ -65,11 +64,6 @@ namespace QuantConnect.Brokerages
         protected readonly string ApiKey;
 
         /// <summary>
-        /// Timestamp of most recent heartbeat message
-        /// </summary>
-        protected DateTime LastHeartbeatUtcTime;
-
-        /// <summary>
         /// Count subscribers for each (symbol, tickType) combination
         /// </summary>
         protected DataQueueHandlerSubscriptionManager SubscriptionManager;
@@ -82,26 +76,20 @@ namespace QuantConnect.Brokerages
         /// <param name="restClient">Rest client instance</param>
         /// <param name="apiKey">Brokerage api auth key</param>
         /// <param name="apiSecret">Brokerage api auth secret</param>
-        /// <param name="websocketMaximumIdle">The maximum amount of time the socket can go idle before triggering a reconnect</param>
         /// <param name="name">Name of brokerage</param>
-        protected BaseWebsocketsBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, TimeSpan websocketMaximumIdle, string name) : base(name)
+        protected BaseWebsocketsBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string name) : base(name)
         {
             JsonSettings = new JsonSerializerSettings { FloatParseHandling = FloatParseHandling.Decimal };
             CachedOrderIDs = new ConcurrentDictionary<int, Orders.Order>();
-            _connectionHandler = new DefaultConnectionHandler { MaximumIdleTimeSpan = websocketMaximumIdle };
 
             WebSocket = websocket;
             WebSocket.Initialize(wssUrl);
-            WebSocket.Message += (sender, message) =>
-            {
-                OnMessage(sender, message);
-                _connectionHandler.KeepAlive(LastHeartbeatUtcTime);
-            };
+            WebSocket.Message += OnMessage;
 
-            _connectionHandler.Initialize(Guid.NewGuid().ToString());
-            _connectionHandler.ReconnectRequested += (sender, args) =>
+            WebSocket.Open += (sender, args) =>
             {
-                Reconnect();
+                Log.Trace($"BaseWebsocketsBrokerage(): WebSocket.Open. Subscribing");
+                Subscribe(GetSubscribed());
             };
 
             RestClient = restClient;
@@ -127,15 +115,6 @@ namespace QuantConnect.Brokerages
             Log.Trace("BaseWebSocketsBrokerage.Connect(): Connecting...");
 
             ConnectSync();
-            _connectionHandler.EnableMonitoring(true);
-        }
-
-        /// <summary>
-        /// Disconnects the client from the broker's remote servers
-        /// </summary>
-        public override void Disconnect()
-        {
-            _connectionHandler?.EnableMonitoring(false);
         }
 
         /// <summary>
@@ -145,50 +124,12 @@ namespace QuantConnect.Brokerages
         public abstract void Subscribe(IEnumerable<Symbol> symbols);
 
         /// <summary>
-        /// Dispose of the connection handler
-        /// </summary>
-        public override void Dispose()
-        {
-            base.Dispose();
-            _connectionHandler?.DisposeSafely();
-        }
-
-        /// <summary>
         /// Gets a list of current subscriptions
         /// </summary>
         /// <returns></returns>
         protected virtual IEnumerable<Symbol> GetSubscribed()
         {
-            return SubscriptionManager.GetSubscribedSymbols();
-        }
-
-        /// <summary>
-        /// Handles reconnections in the event of connection loss
-        /// </summary>
-        private void Reconnect()
-        {
-            Log.Trace($"BaseWebsocketsBrokerage(): Reconnecting... IsConnected: {IsConnected}");
-            var subscribed = GetSubscribed();
-
-            try
-            {
-                //try to clean up state
-                if (IsConnected)
-                {
-                    CloseSync();
-                }
-                if (!IsConnected)
-                {
-                    ConnectSync();
-                }
-            }
-            finally
-            {
-                if (IsConnected)
-                {
-                    Subscribe(subscribed);
-                }
-            }
+            return SubscriptionManager?.GetSubscribedSymbols() ?? Enumerable.Empty<Symbol>();
         }
 
         private void ConnectSync()
@@ -204,21 +145,6 @@ namespace QuantConnect.Brokerages
                 throw new TimeoutException("Websockets connection timeout.");
             }
             WebSocket.Open -= triggerEvent;
-        }
-
-        private void CloseSync()
-        {
-            var resetEvent = new ManualResetEvent(false);
-            EventHandler<WebSocketCloseData> triggerEvent = (o, args) => resetEvent.Set();
-            WebSocket.Closed += triggerEvent;
-
-            WebSocket.Close();
-
-            if (!resetEvent.WaitOne(ConnectionTimeout))
-            {
-                throw new TimeoutException("Websocket close timeout.");
-            }
-            WebSocket.Closed -= triggerEvent;
         }
     }
 }
