@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Optimizer;
 using System;
 using System.Diagnostics;
 
@@ -30,12 +31,14 @@ namespace QuantConnect.Optimizer.Launcher
 
                 string path = System.IO.Path.Combine(myDir, _workingDirectory, "QuantConnect.Lean.Launcher.exe");
 
+                var optimizer = new LeanOptimizer(new GridSearch());
 
                 // Use ProcessStartInfo class
                 ProcessStartInfo startInfo = new ProcessStartInfo
                 {
                     FileName = path,
-                    WorkingDirectory =  _workingDirectory
+                    WorkingDirectory =  _workingDirectory,
+                    Arguments = $"--results-destination-folder \"{myDir}\" --parameters \"ema-fast\":1"
                 };
 
                 // Start the process with the info we specified.
