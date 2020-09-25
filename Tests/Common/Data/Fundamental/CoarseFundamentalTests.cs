@@ -24,11 +24,11 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
     [TestFixture]
     public class CoarseFundamentalTests
     {
-        [TestCase("AAWW TJ2ZLXWLWA5H,AAWW,33.78,126629,4277527,True,1.0000000,1")]
+        [TestCase("AAWW TJ2ZLXWLWA5H,AAWW,33.78,126629,4277527,True,1,1")]
         [TestCase("AAXJ U55LDE3TN4O5,AAXJ,57.36,224926,12901755,False,0.9186624,1")]
-        [TestCase("ABB S3MVQ2U3Z59H,ABB,24.91,894520,22282493,True,0.8371950,1")]
-        [TestCase("ABB S3MVQ2U3Z59H,ABB,24.91,894520,22282493,True,10.8371950,1")]
-        [TestCase("ABB S3MVQ2U3Z59H,ABB,24.91,894520,22282493,True,0.8371950,1")]
+        [TestCase("ABB S3MVQ2U3Z59H,ABB,24.91,894520,22282493,True,0.837195,1")]
+        [TestCase("ABB S3MVQ2U3Z59H,ABB,24.91,894520,22282493,True,10.837195,1")]
+        [TestCase("ABB S3MVQ2U3Z59H,ABB,24.91,894520,22282493,True,0.837195,1")]
         public void ToRow(string coarseLine)
         {
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental),

@@ -182,7 +182,7 @@ namespace QuantConnect.Data.UniverseSelection
         public static string ToRow(CoarseFundamental coarse)
         {
             // sid,symbol,close,volume,dollar volume,has fundamental data,price factor,split factor
-            return $"{coarse.Symbol.ID},{coarse.Symbol.Value},{coarse.Value},{coarse.Volume},{coarse.DollarVolume},{coarse.HasFundamentalData},{coarse.PriceFactor:0.0000000#},{coarse.SplitFactor}";
+            return $"{coarse.Symbol.ID},{coarse.Symbol.Value},{coarse.Value},{coarse.Volume},{coarse.DollarVolume},{coarse.HasFundamentalData},{coarse.PriceFactor},{coarse.SplitFactor}";
         }
     }
 }
