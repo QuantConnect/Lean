@@ -235,8 +235,9 @@ namespace QuantConnect.Securities
                 .Concat(cryptoEntries)
                 .ToList();
 
-            if (potentialEntries.All(x => Symbol != x.Key.Symbol.Substring(0, x.Key.Symbol.Length - x.Value.QuoteCurrency.Length) &&
-                potentialEntries.All(y => Symbol != y.Value.QuoteCurrency)))
+            if (!potentialEntries.Any(x =>
+                    Symbol == x.Key.Symbol.Substring(0, x.Key.Symbol.Length - x.Value.QuoteCurrency.Length) ||
+                    Symbol == x.Value.QuoteCurrency))
             {
                 // currency not found in any tradeable pair
                 Log.Error($"No tradeable pair was found for currency {Symbol}, conversion rate to account currency ({accountCurrency}) will be set to zero.");
