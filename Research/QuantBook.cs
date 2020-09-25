@@ -226,16 +226,13 @@ namespace QuantConnect.Research
         /// <param name="endTime"></param>
         public void Step(DateTime endTime)
         {
-            while (Time < endTime)
-            {
-                Step();
-            }
+            while (Time < endTime && Step()) {};
         }
 
         /// <summary>
         /// Take x steps forward in the algorithm
         /// </summary>
-        public void Step(int steps = 1)
+        public bool Step(int steps = 1)
         {
             //If we algorithm manager isn't ready we need to get it setup.
             if (!_algorithmManager.Initialized)
@@ -243,16 +240,28 @@ namespace QuantConnect.Research
                 StartEngine();
             }
 
-            //Take the amount of steps given
-            for (var i=0; i < steps; i++)
+            var count = 0;
+            while (count < steps)
             {
-                //Take a step, if its fails, we are at the end of the stream and need to cleanup
-                if (!_algorithmManager.Step())
+                // Attempt to take a step
+                var stepped = _algorithmManager.Step();
+
+                // We are at the end of the stream and need to cleanup
+                if (!stepped)
                 {
-                    Shutdown();
+                    TearDown();
                     Logging.Log.Trace("QuantBook: Data stream has ended");
+                    return false;
+                }
+
+                //Only consider it a step if the timeslice has data
+                if (CurrentSlice.HasData)
+                {
+                    count++;
                 }
             }
+
+            return true;
         }
 
         /// <summary>
@@ -304,7 +313,7 @@ namespace QuantConnect.Research
         /// <summary>
         /// Clean up handlers on stream end
         /// </summary>
-        public void Shutdown()
+        public void TearDown()
         {
             // Shut everything we don't need down
             _synchronizer.DisposeSafely();

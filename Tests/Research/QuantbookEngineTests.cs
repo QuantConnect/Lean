@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Research
             qb.Step(input[1]);
 
             Assert.AreEqual(input[2], qb.Time);
-            qb.Shutdown();
+            qb.TearDown();
         }
 
         [Test]
@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Research
             qb.Step(10);
             Assert.IsTrue(consolidator.Consolidated != null);
             Assert.AreEqual(153.0223, (double)consolidator.Consolidated.Value, 0.005);
-            qb.Shutdown();
+            qb.TearDown();
         }
 
         [Test]
@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Research
             Assert.AreEqual(0, indicator.Current.Value);
             qb.Step(10);
             Assert.AreEqual(153.0310, (double)indicator.Current.Value, 0.005);
-            qb.Shutdown();
+            qb.TearDown();
         }
 
         [Test]
@@ -87,7 +87,8 @@ namespace QuantConnect.Tests.Research
             qb.Step(new DateTime(2014, 3, 28));
             Assert.IsTrue(qb.UniverseManager.Count == 1);
             Assert.IsNotNull(qb.SubscriptionManager.Subscriptions.Select(x => x.Symbol).Where(x => x.Value == "SPY"));
-            qb.Shutdown();
+            Assert.IsTrue(qb.CurrentSlice.HasData && qb.CurrentSlice.ContainsKey("SPY"));
+            qb.TearDown();
         }
 
         // Time test cases: resolution, steps, and expected end time
