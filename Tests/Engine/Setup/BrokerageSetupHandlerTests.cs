@@ -346,22 +346,20 @@ namespace QuantConnect.Tests.Engine.Setup
             IBrokerageFactory factory;
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
-            var isSuccess = hasCashBalance || hasHoldings;
-
             var dataManager = new DataManagerStub(algorithm, new MockDataFeed(), true);
 
-            Assert.AreEqual(isSuccess, setupHandler.Setup(new SetupHandlerParameters(dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+            Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
                 transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
 
-            if (isSuccess)
+            if (hasCashBalance || hasHoldings)
             {
-                Assert.AreEqual(0, setupHandler.Errors.Count);
+                Assert.AreEqual(0, algorithm.DebugMessages.Count);
             }
             else
             {
-                Assert.AreEqual(1, setupHandler.Errors.Count);
+                Assert.AreEqual(1, algorithm.DebugMessages.Count);
 
-                Assert.That(setupHandler.Errors[0].Message.Contains("No cash balances or holdings were found in the brokerage account."));
+                Assert.That(algorithm.DebugMessages.First().Contains("No cash balances or holdings were found in the brokerage account."));
             }
         }
 
