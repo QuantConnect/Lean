@@ -56,7 +56,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
         public BinanceBrokerage(string apiKey, string apiSecret, IAlgorithm algorithm, IDataAggregator aggregator)
-            : base(WebSocketBaseUrl, new WebSocketClientWrapper(), null, apiKey, apiSecret, TimeSpan.MaxValue, "Binance")
+            : base(WebSocketBaseUrl, new WebSocketClientWrapper(), null, apiKey, apiSecret, "Binance")
         {
             _algorithm = algorithm;
             _aggregator = aggregator;
@@ -90,13 +90,7 @@ namespace QuantConnect.Brokerages.Binance
             };
             _keepAliveTimer.Elapsed += (s, e) => _apiClient.SessionKeepAlive();
 
-            WebSocket.Open += (s, e) =>
-            {
-                _keepAliveTimer.Start();
-
-                // resubscribe after a reconnect
-                Subscribe(subscriptionManager.GetSubscribedSymbols());
-            };
+            WebSocket.Open += (s, e) => { _keepAliveTimer.Start(); };
             WebSocket.Closed += (s, e) => { _keepAliveTimer.Stop(); };
 
             // A single connection to stream.binance.com is only valid for 24 hours; expect to be disconnected at the 24 hour mark
@@ -113,9 +107,6 @@ namespace QuantConnect.Brokerages.Binance
 
                 Log.Trace("Daily websocket restart: connect");
                 Connect();
-
-                Log.Trace("Daily websocket restart: resubscribe");
-                Subscribe(subscriptionManager.GetSubscribedSymbols());
             };
         }
 
@@ -147,8 +138,6 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         public override void Disconnect()
         {
-            base.Disconnect();
-
             _reconnectTimer.Stop();
 
             WebSocket?.Close();
@@ -329,8 +318,6 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="e"></param>
         public override void OnMessage(object sender, WebSocketMessage e)
         {
-            LastHeartbeatUtcTime = DateTime.UtcNow;
-
             try
             {
                 if (_streamLocked)
