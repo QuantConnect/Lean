@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Remoting.Activation;
 using QuantConnect.Data.Market;
 using QuantConnect.Util;
 
@@ -37,8 +38,8 @@ namespace QuantConnect.Python
     {
         private static dynamic _pandas;
         private static dynamic _pa;
-        private static dynamic _np;
-        private static PyObject _filter;
+        private static dynamic _optionIndexes;
+        private static dynamic _optionFinalIndexes;
         private static PyList _defaultIndexes;
         private static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
 
@@ -126,11 +127,14 @@ namespace QuantConnect.Python
                     // It also allows us to construct a DataFrame as a zero-copy operation.
                     _pa = PythonEngine.ImportModule("pyarrow");
 
-                    // Import numpy for access to np.NaN
-                    _np = PythonEngine.ImportModule("numpy");
-
-                    // Used to filter out any column that has only values matching one of the following
-                    _filter = new [] { _np.NaN, 0, "", false }.ToPython();
+                    _optionIndexes = new PyList(new[] { new PyString("strike"), new PyString("type") });
+                    _optionFinalIndexes = new PyList(new[]
+                    {
+                        new PyString("strike"),
+                        new PyString("type"),
+                        new PyString("symbol"),
+                        new PyString("time")
+                    });
 
                     // this python Remapper class will work as a proxy and adjust the
                     // input to its methods using the provided 'mapper' callable object
@@ -940,7 +944,6 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                 if (addExpiry)
                                 {
                                     df.set_index("expiry", inplace: true);
-                                    df = df.tz_localize(null, copy: false);
                                     timeIdx++;
                                 }
                                 else if (hasExpiry)
@@ -950,14 +953,19 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
                                 if (addOption)
                                 {
-                                    df["strike"] = df["strike"].fillna("");
-                                    df["type"] = df["type"].fillna("");
-                                    df.set_index(new PyList(new[] { new PyString("strike"), new PyString("type") }), append: hasExpiry, inplace: true);
+                                    var dict = new PyDict();
+                                    dict.SetItem(new PyString("strike"), new PyString(string.Empty));
+                                    dict.SetItem(new PyString("type"), new PyString(string.Empty));
+
+                                    df.fillna(dict, inplace: true);
+                                    df.set_index(_optionIndexes, append: hasExpiry, inplace: true);
                                     timeIdx += 2;
+
+                                    dict.Dispose();
                                 }
                                 else if (hasOption)
                                 {
-                                    df.drop(columns: new PyList(new[] { new PyString("strike"), new PyString("type") }), inplace: true);
+                                    df.drop(columns: _optionIndexes, inplace: true);
                                 }
 
                                 // Let's include the objects that were left out before
@@ -977,10 +985,22 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                     }
 
                                     df = df.join(_pandas.DataFrame(dict, index: df.index), how: "outer");
+                                    dict.Dispose();
                                 }
 
                                 df.set_index(_defaultIndexes, append: addExpiry || addOption, inplace: true);
-                                dataFrames.Add(df.tz_localize(null, level: timeIdx));
+                                if (addExpiry)
+                                {
+                                    dynamic firstLocalize = df.tz_localize(null, level: 0);
+                                    dynamic secondLocalize = firstLocalize.tz_localize(null, level: timeIdx);
+                                    dataFrames.Add(secondLocalize);
+
+                                    firstLocalize.Dispose();
+                                }
+                                else
+                                {
+                                    dataFrames.Add(df.tz_localize(null, level: timeIdx));
+                                }
 
                                 // Cleans up the memory left behind, otherwise we leak memory from Python
                                 arrowBuffer.Dispose();
@@ -1003,18 +1023,9 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
                     dataFrames.Clear();
 
-                    // Filters all columns only containing "NaN, "", or 0 values.
-                    dynamic mask = final_df.isin(_filter).all();
-                    dynamic cols = final_df.columns[mask];
-
-                    if (cols.__len__() != 0)
-                    {
-                        final_df[cols] = _np.NaN;
-                        final_df.dropna(how: "all", axis: 1, inplace: true);
-                    }
-
-                    mask.Dispose();
-                    cols.Dispose();
+                    // Filters all columns only containing values: NaN, "", false, 0
+                    //final_df = final_df[final_df.columns[final_df.replace(_filter, _np.NaN).isnull().all()]];
+                    final_df.drop(columns: final_df.columns[final_df.__eq__("").__or__(final_df.__eq__(0)).__or__(final_df.__eq__(false)).__or__(final_df.isnull()).all()], inplace: true);
 
                     if (!final_df.index.is_monotonic_increasing || !final_df.index.is_lexsorted())
                     {
@@ -1027,15 +1038,15 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         // with no null time values (NaT). It resets any empty string to NaT and
                         // doesn't allow for indexing with '', which is required for backwards compatibility.
                         final_df.reset_index(inplace: true);
-                        final_df["expiry"] = final_df["expiry"].fillna("");
+
+                        var dict = new PyDict();
+                        dict.SetItem(new PyString("expiry"), new PyString(string.Empty));
+
+                        final_df.fillna(dict, inplace: true);
                         final_df.set_index("expiry", inplace: true);
-                        final_df.set_index(new PyList(new[]
-                        {
-                            new PyString("strike"),
-                            new PyString("type"),
-                            new PyString("symbol"),
-                            new PyString("time")
-                        }), append: true, inplace: true);
+                        final_df.set_index(_optionFinalIndexes, append: true, inplace: true);
+
+                        dict.Dispose();
                     }
 
                     // Wrap the existing DataFrame with the wrapt version to enable .loc[Symbol] operations
