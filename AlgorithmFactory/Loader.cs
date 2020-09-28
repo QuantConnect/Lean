@@ -289,7 +289,7 @@ logging.captureWarnings(True)"
             {
                 errorMessage = "Algorithm type name not found, or unable to resolve multiple algorithm types to a single type. Please verify algorithm type name matches the algorithm name in the configuration file and that there is one and only one class derived from QCAlgorithm.";
                 errorMessage += err.InnerException == null ? err.Message : err.InnerException.Message;
-                Log.Error($"Loader.TryCreateILAlgorithm(): {errorMessage}");
+                Log.Error($"Loader.TryCreateILAlgorithm(): {errorMessage}\n{err}");
                 return false;
             }
 
