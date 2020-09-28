@@ -780,7 +780,7 @@ namespace QuantConnect.Algorithm
                 var res = GetResolution(x, resolution);
                 var exchange = GetExchangeHours(x);
                 var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, config.DataTimeZone);
-                return _historyRequestFactory.CreateHistoryRequest(config, start, Time.RoundDown(res.ToTimeSpan()), exchange, res);
+                return _historyRequestFactory.CreateHistoryRequest(config, start, Time, exchange, res);
             });
 
             return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
@@ -843,8 +843,7 @@ namespace QuantConnect.Algorithm
             var res = GetResolution(symbol, resolution);
             var marketHours = GetMarketHours(symbol);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, marketHours.ExchangeHours, marketHours.DataTimeZone);
-            var end = Time.RoundDown(res.ToTimeSpan());
-            return History(type, symbol, start, end, resolution);
+            return History(type, symbol, start, Time, resolution);
         }
 
         /// <summary>
