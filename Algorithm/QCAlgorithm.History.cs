@@ -696,18 +696,21 @@ namespace QuantConnect.Algorithm
 
         private SecurityExchangeHours GetExchangeHours(Symbol symbol)
         {
-            Security security;
-            if (Securities.TryGetValue(symbol, out security))
-            {
-                return security.Exchange.Hours;
-            }
-
             return GetMarketHours(symbol).ExchangeHours;
         }
 
         private MarketHoursDatabase.Entry GetMarketHours(Symbol symbol)
         {
-            return MarketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+            var hoursEntry = MarketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+
+            // user can override the exchange hours in algorithm, i.e. HistoryAlgorithm
+            Security security;
+            if (Securities.TryGetValue(symbol, out security))
+            {
+                return new MarketHoursDatabase.Entry(hoursEntry.DataTimeZone, security.Exchange.Hours);
+            }
+
+            return hoursEntry;
         }
 
         private Resolution GetResolution(Symbol symbol, Resolution? resolution)
