@@ -91,20 +91,14 @@ namespace QuantConnect.Data.Consolidators
         {
             if (workingBar == null)
             {
-                workingBar = new TradeBar
-                {
-                    Symbol = data.Symbol,
-                    Time = GetRoundedBarTime(data.Time),
-                    Close = data.Value,
-                    High = data.Value,
-                    Low = data.Value,
-                    Open = data.Value,
-                    DataType = data.DataType,
-                    Value = data.Value,
-                    Volume = data.Quantity
-                };
-
-                if (Period.HasValue) workingBar.Period = Period.Value;
+                workingBar = new TradeBar(GetRoundedBarTime(data.Time),
+                    data.Symbol,
+                    data.Value,
+                    data.Value,
+                    data.Value,
+                    data.Value,
+                    data.Quantity,
+                    Period);
             }
             else
             {

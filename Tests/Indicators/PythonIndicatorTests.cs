@@ -38,9 +38,11 @@ namespace QuantConnect.Tests.Indicators
                     Guid.NewGuid().ToString(),
                     @"
 from clr import AddReference
+AddReference('QuantConnect.Common')
 AddReference('QuantConnect.Indicators')
 
-from QuantConnect.Indicators import PythonIndicator
+from QuantConnect import *
+from QuantConnect.Indicators import *
 from collections import deque
 from datetime import datetime, timedelta
 from numpy import sum
@@ -180,8 +182,11 @@ class CustomSimpleMovingAverage(PythonIndicator):
                     Guid.NewGuid().ToString(),
                     @"
 from clr import AddReference
+AddReference('QuantConnect.Common')
 AddReference('QuantConnect.Indicators')
-from QuantConnect.Indicators import PythonIndicator
+
+from QuantConnect import *
+from QuantConnect.Indicators import *
 class GoodCustomIndicator(PythonIndicator):
     def __init__(self):
         self.Value = 0
@@ -206,6 +211,63 @@ class BadCustomIndicator(PythonIndicator):
 
                 var badIndicator = module.GetAttr("BadCustomIndicator").Invoke();
                 Assert.Throws<NotImplementedException>(() => algorithm.RegisterIndicator(spy, badIndicator, Resolution.Minute));
+            }
+        }
+
+        [Test]
+        public void AllPythonRegisterIndicatorCases()
+        {
+            //This test covers all three cases of registering a indicator through Python 
+
+            //Setup algorithm and Equity
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            var spy = algorithm.AddEquity("SPY").Symbol;
+
+            //Setup Python Indicator and Consolidator
+            using (Py.GIL())
+            {
+                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                    "from clr import AddReference\n" +
+                    "AddReference(\"QuantConnect.Common\")\n" +
+                    "AddReference(\"QuantConnect.Indicators\")\n" +
+                    "from QuantConnect import *\n" +
+                    "from QuantConnect.Data.Market import *\n" +
+                    "from QuantConnect.Data.Consolidators import *\n" +
+                    "from QuantConnect.Indicators import *\n" +
+                    "from QuantConnect.Python import *\n" +
+                    "from datetime import *\n" +
+                    "consolidator = QuoteBarConsolidator(timedelta(days = 5)) \n" +
+                    "timeDelta = timedelta(days=2)\n" +
+                    "class CustomIndicator(PythonIndicator):\n" +
+                    "   def __init__(self):\n" +
+                    "       self.Value = 0\n" +
+                    "   def Update(self, input):\n" +
+                    "       self.Value = input.Value\n" +
+                    "       return True\n" +
+                    "class CustomConsolidator(PythonConsolidator):\n" +
+                    "   def __init__(self):\n" +
+                    "       self.InputType = QuoteBar\n" +
+                    "       self.OutputType = QuoteBar\n" +
+                    "       self.Consolidated = None\n" +
+                    "       self.WorkingData = None\n"
+                );
+
+                //Get our variables from Python
+                var PyIndicator = module.GetAttr("CustomIndicator").Invoke();
+                var PyConsolidator = module.GetAttr("CustomConsolidator").Invoke();
+                var Consolidator = module.GetAttr("consolidator");
+                algorithm.SubscriptionManager.AddConsolidator(spy, Consolidator);
+                var TimeDelta = module.GetAttr("timeDelta");
+
+                //Test 1: Using a C# Consolidator; Should convert consolidator into IDataConsolidator
+                Assert.DoesNotThrow(() => algorithm.RegisterIndicator(spy, PyIndicator, Consolidator));
+
+                //Test 2: Using a Python Consolidator; Should wrap consolidator
+                Assert.DoesNotThrow(() => algorithm.RegisterIndicator(spy, PyIndicator, PyConsolidator));
+
+                //Test 3: Using a timedelta object; Should convert timedelta to timespan
+                Assert.DoesNotThrow(() => algorithm.RegisterIndicator(spy, PyIndicator, TimeDelta));
             }
         }
     }

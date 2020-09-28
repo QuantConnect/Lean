@@ -27,6 +27,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.GDAX
 {
@@ -47,8 +48,6 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns></returns>
         public override bool PlaceOrder(Order order)
         {
-            LockStream();
-
             var req = new RestRequest("/orders", Method.POST);
 
             dynamic payload = new ExpandoObject();
@@ -104,7 +103,6 @@ namespace QuantConnect.Brokerages.GDAX
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
 
-                    UnlockStream();
                     return true;
                 }
 
@@ -114,7 +112,6 @@ namespace QuantConnect.Brokerages.GDAX
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
 
-                    UnlockStream();
                     return true;
                 }
 
@@ -136,7 +133,9 @@ namespace QuantConnect.Brokerages.GDAX
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "GDAX Order Event") { Status = OrderStatus.Submitted });
                 Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
 
-                UnlockStream();
+                _pendingOrders.TryAdd(brokerId, order);
+                _fillMonitorResetEvent.Set();
+
                 return true;
             }
 
@@ -144,7 +143,6 @@ namespace QuantConnect.Brokerages.GDAX
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "GDAX Order Event") { Status = OrderStatus.Invalid });
             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
-            UnlockStream();
             return true;
         }
 
@@ -179,6 +177,9 @@ namespace QuantConnect.Brokerages.GDAX
                         DateTime.UtcNow,
                         OrderFee.Zero,
                         "GDAX Order Event") { Status = OrderStatus.Canceled });
+
+                    Order orderRemoved;
+                    _pendingOrders.TryRemove(id, out orderRemoved);
                 }
             }
 
@@ -190,8 +191,10 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         public override void Disconnect()
         {
-            base.Disconnect();
-
+            if (!_canceller.IsCancellationRequested)
+            {
+                _canceller.Cancel();
+            }
             WebSocket.Close();
         }
 
@@ -435,6 +438,12 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         public override void Dispose()
         {
+            _ctsFillMonitor.Cancel();
+            _fillMonitorTask.Wait(TimeSpan.FromSeconds(5));
+
+            _canceller.DisposeSafely();
+            _aggregator.DisposeSafely();
+
             _publicEndpointRateLimiter.Dispose();
             _privateEndpointRateLimiter.Dispose();
         }

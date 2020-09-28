@@ -283,6 +283,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     foreach (var cash in cashBalance)
                     {
                         Log.Trace("BrokerageSetupHandler.Setup(): Setting " + cash.Currency + " cash to " + cash.Amount);
+
                         algorithm.Portfolio.SetCash(cash.Currency, cash.Amount, 0);
                     }
                 }
@@ -365,6 +366,12 @@ namespace QuantConnect.Lean.Engine.Setup
                 algorithm.PostInitialize();
 
                 BaseSetupHandler.SetupCurrencyConversions(algorithm, parameters.UniverseSelection);
+
+                if (algorithm.Portfolio.TotalPortfolioValue == 0)
+                {
+                    algorithm.Debug("Warning: No cash balances or holdings were found in the brokerage account.");
+                }
+
                 //Set the starting portfolio value for the strategy to calculate performance:
                 StartingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
                 StartingDate = DateTime.Now;
@@ -495,6 +502,19 @@ namespace QuantConnect.Lean.Engine.Setup
                     _dataQueueHandlerBrokerage.Disconnect();
                 }
                 _dataQueueHandlerBrokerage.DisposeSafely();
+            }
+            else
+            {
+                var dataQueueHandler = Composer.Instance.GetPart<IDataQueueHandler>();
+                if (dataQueueHandler != null)
+                {
+                    Log.Trace($"BrokerageSetupHandler.Setup(): Found data queue handler to dispose: {dataQueueHandler.GetType()}");
+                    dataQueueHandler.DisposeSafely();
+                }
+                else
+                {
+                    Log.Trace("BrokerageSetupHandler.Setup(): did not find any data queue handler to dispose");
+                }
             }
         }
 

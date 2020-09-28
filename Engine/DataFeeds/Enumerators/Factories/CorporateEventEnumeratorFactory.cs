@@ -42,6 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="mapFileResolver">Used for resolving the correct map files</param>
         /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
         /// <param name="startTime">Start date for the data request</param>
+        /// <param name="enablePriceScaling">Applies price factor</param>
         /// <returns>The new auxiliary data enumerator</returns>
         public static IEnumerator<BaseData> CreateEnumerators(
             IEnumerator<BaseData> rawDataEnumerator,
@@ -50,10 +51,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             ITradableDatesNotifier tradableDayNotifier,
             MapFileResolver mapFileResolver,
             bool includeAuxiliaryData,
-            DateTime startTime)
+            DateTime startTime,
+            bool enablePriceScaling = true)
         {
             var lazyFactorFile =
-                new Lazy<FactorFile>(() => GetFactorFileToUse(config, factorFileProvider));
+                new Lazy<FactorFile>(() => SubscriptionUtils.GetFactorFileToUse(config, factorFileProvider));
 
             var enumerator = new AuxiliaryDataEnumerator(
                 config,
@@ -70,12 +72,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 includeAuxiliaryData,
                 startTime);
 
-            var priceScaleFactorEnumerator = new PriceScaleFactorEnumerator(
-                rawDataEnumerator,
-                config,
-                lazyFactorFile);
+            // avoid price scaling for backtesting; calculate it directly in worker 
+            // and allow subscription to extract the the data depending on config data mode
+            var dataEnumerator = rawDataEnumerator;
+            if (enablePriceScaling)
+            {
+                dataEnumerator = new PriceScaleFactorEnumerator(
+                    rawDataEnumerator,
+                    config,
+                    lazyFactorFile);
+            }
 
-            return new SynchronizingEnumerator(priceScaleFactorEnumerator, enumerator);
+            return new SynchronizingEnumerator(dataEnumerator, enumerator);
         }
 
         private static MapFile GetMapFileToUse(
@@ -105,33 +113,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             }
 
             return mapFileToUse;
-        }
-
-        private static FactorFile GetFactorFileToUse(
-            SubscriptionDataConfig config,
-            IFactorFileProvider factorFileProvider)
-        {
-            var factorFileToUse = new FactorFile(config.Symbol.Value, new List<FactorFileRow>());
-
-            if (!config.IsCustomData
-                && config.SecurityType == SecurityType.Equity)
-            {
-                try
-                {
-                    var factorFile = factorFileProvider.Get(config.Symbol);
-                    if (factorFile != null)
-                    {
-                        factorFileToUse = factorFile;
-                    }
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err, "CorporateEventEnumeratorFactory.GetFactorFileToUse(): Factors File: "
-                        + config.Symbol.ID + ": ");
-                }
-            }
-
-            return factorFileToUse;
         }
     }
 }

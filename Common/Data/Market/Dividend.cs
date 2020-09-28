@@ -15,6 +15,7 @@
 */
 
 using System;
+using ProtoBuf;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Market
@@ -22,11 +23,13 @@ namespace QuantConnect.Data.Market
     /// <summary>
     /// Dividend event from a security
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class Dividend : BaseData
     {
         /// <summary>
         /// Gets the dividend payment
         /// </summary>
+        [ProtoMember(10)]
         public decimal Distribution
         {
             get { return Value; }
@@ -37,6 +40,7 @@ namespace QuantConnect.Data.Market
         /// Gets the price at which the dividend occurred.
         /// This is typically the previous day's closing price
         /// </summary>
+        [ProtoMember(11)]
         public decimal ReferencePrice
         {
             get;

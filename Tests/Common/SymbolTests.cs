@@ -467,7 +467,7 @@ namespace QuantConnect.Tests.Common
             SymbolCache.Set("EURUSD", Symbols.EURUSD);
             var expected = SymbolCache.GetSymbol("EURUSD");
             string stringValue = expected;
-            string notFound = "EURGBP 5O";
+            string notFound = "EURGBP 8G";
             var expectedNotFoundSymbol = Symbols.EURGBP;
             string sid = expected.ID.ToString();
             Symbol actual = sid;

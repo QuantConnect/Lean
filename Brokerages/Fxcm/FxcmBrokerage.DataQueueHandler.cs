@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using com.fxcm.fix;
 using com.fxcm.fix.pretrade;
 using NodaTime;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
@@ -31,42 +31,43 @@ namespace QuantConnect.Brokerages.Fxcm
     /// </summary>
     public partial class FxcmBrokerage
     {
-        private readonly List<Tick> _ticks = new List<Tick>();
-        private readonly HashSet<Symbol> _subscribedSymbols = new HashSet<Symbol>(); 
-        
         #region IDataQueueHandler implementation
 
         /// <summary>
-        /// Get the next ticks from the live trading data queue
+        /// Sets the job we're subscribing for
         /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
         {
-            lock (_ticks)
+        }
+
+        /// <summary>
+        /// Subscribe to the specified configuration
+        /// </summary>
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
+        {
+            if (!CanSubscribe(dataConfig.Symbol))
             {
-                var copy = _ticks.ToArray();
-                _ticks.Clear();
-                return copy;
+                return Enumerable.Empty<BaseData>().GetEnumerator();
             }
+
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
+            _subscriptionManager.Subscribe(dataConfig);
+
+            return enumerator;
         }
 
         /// <summary>
         /// Adds the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        private bool Subscribe(IEnumerable<Symbol> symbols)
         {
-            var symbolsToSubscribe = (from symbol in symbols 
-                                      where !_subscribedSymbols.Contains(symbol) && CanSubscribe(symbol)
-                                      select symbol).ToList();
-            if (symbolsToSubscribe.Count == 0)
-                return;
-
-            Log.Trace("FxcmBrokerage.Subscribe(): {0}", string.Join(",", symbolsToSubscribe));
-
             var request = new MarketDataRequest();
-            foreach (var symbol in symbolsToSubscribe)
+            foreach (var symbol in symbols)
             {
                 TradingSecurity fxcmSecurity;
                 if (_fxcmInstruments.TryGetValue(_symbolMapper.GetBrokerageSymbol(symbol), out fxcmSecurity))
@@ -91,29 +92,29 @@ namespace QuantConnect.Brokerages.Fxcm
                 _gateway.sendMessage(request);
             }
 
-            foreach (var symbol in symbolsToSubscribe)
-            {
-                _subscribedSymbols.Add(symbol);
-            }
+            return true;
+        }
+
+        /// <summary>
+        /// Removes the specified configuration
+        /// </summary>
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            _subscriptionManager.Unsubscribe(dataConfig);
+            _aggregator.Remove(dataConfig);
         }
 
         /// <summary>
         /// Removes the specified symbols to the subscription
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        private bool Unsubscribe(IEnumerable<Symbol> symbols)
         {
-            var symbolsToUnsubscribe = (from symbol in symbols 
-                                        where _subscribedSymbols.Contains(symbol) 
-                                        select symbol).ToList();
-            if (symbolsToUnsubscribe.Count == 0)
-                return;
-
-            Log.Trace("FxcmBrokerage.Unsubscribe(): {0}", string.Join(",", symbolsToUnsubscribe));
+            Log.Trace("FxcmBrokerage.Unsubscribe(): {0}", string.Join(",", symbols));
 
             var request = new MarketDataRequest();
-            foreach (var symbol in symbolsToUnsubscribe)
+            foreach (var symbol in symbols)
             {
                 request.addRelatedSymbol(_fxcmInstruments[_symbolMapper.GetBrokerageSymbol(symbol)]);
             }
@@ -125,10 +126,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 _gateway.sendMessage(request);
             }
 
-            foreach (var symbol in symbolsToUnsubscribe)
-            {
-                _subscribedSymbols.Remove(symbol);
-            }
+            return true;
         }
 
         /// <summary>

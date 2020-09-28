@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Util;
 
@@ -49,7 +50,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Gets the path used for logging all portfolio changing events, such as orders, TPV, daily holdings values
         /// </summary>
-        public string LogFilePath => $"./regression/{Algorithm.AlgorithmId}.{Language.ToLower()}.details.log";
+        public string LogFilePath => $"./regression/{AlgorithmId}.{Language.ToLower()}.details.log";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RegressionResultHandler"/> class
@@ -137,26 +138,33 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public override void SetAlphaRuntimeStatistics(AlphaRuntimeStatistics statistics)
         {
-            if (HighFidelityLogging || _lastAlphaRuntimeStatisticsDate != Algorithm.Time.Date)
+            try
             {
-                lock (_sync)
+                if (HighFidelityLogging || _lastAlphaRuntimeStatisticsDate != Algorithm.Time.Date)
                 {
-                    _lastAlphaRuntimeStatisticsDate = Algorithm.Time.Date;
-
-                    foreach (var kvp in statistics.ToDictionary())
+                    lock (_sync)
                     {
-                        string value;
-                        if (!_currentAlphaRuntimeStatistics.TryGetValue(kvp.Key, out value) || value != kvp.Value)
+                        _lastAlphaRuntimeStatisticsDate = Algorithm.Time.Date;
+
+                        foreach (var kvp in statistics.ToDictionary())
                         {
-                            // only log new or updated values
-                            _currentAlphaRuntimeStatistics[kvp.Key] = kvp.Value;
-                            _writer.WriteLine($"{Algorithm.Time}: AlphaRuntimeStatistics: {kvp.Key}: {kvp.Value}");
+                            string value;
+                            if (!_currentAlphaRuntimeStatistics.TryGetValue(kvp.Key, out value) || value != kvp.Value)
+                            {
+                                // only log new or updated values
+                                _currentAlphaRuntimeStatistics[kvp.Key] = kvp.Value;
+                                _writer.WriteLine($"{Algorithm.Time}: AlphaRuntimeStatistics: {kvp.Key}: {kvp.Value}");
+                            }
                         }
                     }
                 }
-            }
 
-            base.SetAlphaRuntimeStatistics(statistics);
+                base.SetAlphaRuntimeStatistics(statistics);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception);
+            }
         }
 
         /// <summary>

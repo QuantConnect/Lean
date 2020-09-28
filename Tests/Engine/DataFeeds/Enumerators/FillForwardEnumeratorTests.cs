@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
@@ -1161,6 +1162,80 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.AreEqual(expected.Length, FillForwardTestAlgorithm.FillForwardBars.Count);
             Assert.IsTrue(expected.SequenceEqual(FillForwardTestAlgorithm.FillForwardBars));
+        }
+
+        private static TestCaseData[] SubscriptionStarts => new[] {
+            new TestCaseData(new DateTime(2011, 7, 7, 20, 0, 0)), // no move
+            new TestCaseData(new DateTime(2011, 11, 3, 20, 0, 0)), // move to EST
+            new TestCaseData(new DateTime(2012, 3, 8, 19, 0, 0))   // move to EDT
+        };
+
+        [Test, TestCaseSource(nameof(SubscriptionStarts))]
+        public void FillsForwardDaylightSavingTime(DateTime reference)
+        {
+            var dataResolution = Time.OneDay;
+            var data = new[]
+            {
+                new TradeBar
+                {
+                    Time = reference,
+                    Value = 0,
+                    Period = dataResolution,
+                    Volume = 100
+                },
+                new TradeBar
+                {
+                    Time = reference.AddDays(2),
+                    Value = 1,
+                    Period = dataResolution,
+                    Volume = 100
+                },
+                new TradeBar
+                {
+                    Time = reference.AddDays(3),
+                    Value = 2,
+                    Period = dataResolution,
+                    Volume = 100
+                },
+                new TradeBar
+                {
+                    Time = reference.AddDays(3),
+                    Value = 3,
+                    Period = dataResolution,
+                    Volume = 100
+                },
+                new TradeBar
+                {
+                    Time = reference.AddDays(4),
+                    Value = 4,
+                    Period = dataResolution,
+                    Volume = 200
+                }
+            }.ToList();
+            var enumerator = data.GetEnumerator();
+
+            var exchange = new ForexExchange();
+            var isExtendedMarketHours = false;
+            var fillForwardEnumerator = new FillForwardEnumerator(
+                enumerator, 
+                exchange, 
+                Ref.Create(TimeSpan.FromDays(1)), 
+                isExtendedMarketHours, 
+                data.Last().EndTime, 
+                dataResolution, 
+                DateTimeZone.Utc, 
+                data.First().EndTime);
+
+            for (int i = 0; i < data.Count; i++)
+            {
+                Assert.IsTrue(fillForwardEnumerator.MoveNext());
+                Assert.AreEqual(data[i].Time.AddDays(1), fillForwardEnumerator.Current.EndTime);
+                Assert.AreEqual(i, fillForwardEnumerator.Current.Value);
+                Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+                Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            }
+
+            fillForwardEnumerator.Dispose();
         }
 
         internal class FillForwardTestAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition

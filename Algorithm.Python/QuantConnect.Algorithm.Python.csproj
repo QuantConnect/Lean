@@ -61,7 +61,6 @@
     <Content Include="Alphas\ShareClassMeanReversionAlpha.py" />
     <Content Include="Alphas\TripleLeverageETFPairVolatilityDecayAlpha.py" />
     <Content Include="Alphas\VIXDualThrustAlpha.py" />
-    <Content Include="AltData\RobintrackHoldingsAlgorithm.py" />
     <Content Include="AltData\CachedAlternativeDataAlgorithm.py" />
     <Content Include="AltData\BenzingaNewsAlgorithm.py" />
     <Content Include="AltData\SECReport8KAlgorithm.py" />
@@ -86,11 +85,13 @@
     <Content Include="Benchmarks\SmartInsiderEventBenchmarkAlgorithm.py" />
     <Content Include="CoarseTiingoNewsUniverseSelectionAlgorithm.py" />
     <Content Include="ConsolidateRegressionAlgorithm.py" />
+    <Content Include="CustomConsolidatorRegressionAlgorithm.py" />
     <Content Include="CustomDataAddDataOnSecuritiesChangedRegressionAlgorithm.py" />
     <Content Include="CustomDataAddDataCoarseSelectionRegressionAlgorithm.py" />
     <Content Include="DynamicSecurityDataAlgorithm.py" />
     <Content Include="ConfidenceWeightedFrameworkAlgorithm.py" />
     <Content Include="ExtendedMarketTradingRegressionAlgorithm.py" />
+    <Content Include="FilterUniverseRegressionAlgorithm.py" />
     <Content Include="FineFundamentalFilteredUniverseRegressionAlgorithm.py" />
     <Content Include="KerasNeuralNetworkAlgorithm.py" />
     <Content Include="CustomDataUsingMapFileRegressionAlgorithm.py" />
@@ -226,6 +227,7 @@
     <None Include="RenkoConsolidatorAlgorithm.py" />
     <None Include="RollingWindowAlgorithm.py" />
     <None Include="ScheduledEventsAlgorithm.py" />
+    <None Include="ScheduledQueuingAlgorithm.py" />
     <None Include="ScheduledUniverseSelectionModelRegressionAlgorithm.py" />
     <None Include="SectorExposureRiskFrameworkAlgorithm.py" />
     <None Include="StandardDeviationExecutionModelRegressionAlgorithm.py" />

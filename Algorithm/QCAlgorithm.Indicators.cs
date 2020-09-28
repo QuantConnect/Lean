@@ -498,6 +498,30 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates an EaseOfMovementValue indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose EMV we want</param>
+        /// <param name="period">The period of the EMV</param>
+        /// <param name="scale">The length of the outputed value</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The EaseOfMovementValue indicator for the given parameters</returns>
+        public EaseOfMovementValue EMV(Symbol symbol, int period = 1, int scale = 10000, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"EMV({period}, {scale})", resolution);
+            var easeOfMovementValue = new EaseOfMovementValue(name, period, scale);
+            RegisterIndicator(symbol, easeOfMovementValue, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, easeOfMovementValue, resolution);
+            }
+
+            return easeOfMovementValue;
+        }
+
+        /// <summary>
         /// Creates a new FilteredIdentity indicator for the symbol The indicator will be automatically
         /// updated on the symbol's subscription resolution
         /// </summary>
@@ -1348,6 +1372,31 @@ namespace QuantConnect.Algorithm
             }
 
             return simpleMovingAverage;
+        }
+
+        /// <summary>
+        /// Creates a new Schaff Trend Cycle indicator
+        /// </summary>
+        /// <param name="symbol">The symbol for the indicator to track</param>
+        /// <param name="fastPeriod">The fast moving average period</param>
+        /// <param name="slowPeriod">The slow moving average period</param>
+        /// <param name="cyclePeriod">The signal period</param>
+        /// <param name="movingAverageType">The type of moving average to use</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The SchaffTrendCycle indicator for the requested symbol over the specified period</returns>
+        public SchaffTrendCycle STC(Symbol symbol, int cyclePeriod, int fastPeriod, int slowPeriod, MovingAverageType movingAverageType = MovingAverageType.Exponential, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"STC({cyclePeriod},{fastPeriod},{slowPeriod})", resolution);
+            var schaffTrendCycle = new SchaffTrendCycle(name, cyclePeriod, fastPeriod, slowPeriod, movingAverageType);
+            RegisterIndicator(symbol, schaffTrendCycle, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, schaffTrendCycle, resolution);
+            }
+
+            return schaffTrendCycle;
         }
 
         /// <summary>

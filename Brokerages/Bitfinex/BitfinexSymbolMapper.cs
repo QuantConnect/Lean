@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -25,174 +26,14 @@ namespace QuantConnect.Brokerages.Bitfinex
     public class BitfinexSymbolMapper : ISymbolMapper
     {
         /// <summary>
-        /// Symbols that are both active and delisted
-        /// </summary>
-        public static List<Symbol> KnownSymbols
-        {
-            get
-            {
-                var symbols = new List<Symbol>();
-                var mapper = new BitfinexSymbolMapper();
-                foreach (var tp in KnownSymbolStrings)
-                {
-                    symbols.Add(mapper.GetLeanSymbol(tp, mapper.GetBrokerageSecurityType(tp), Market.Bitfinex));
-                }
-                return symbols;
-            }
-        }
-
-        /// <summary>
         /// The list of known Bitfinex symbols.
         /// https://api.bitfinex.com/v1/symbols
         /// </summary>
-        public static readonly HashSet<string> KnownSymbolStrings = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "BTCUSD","LTCUSD","LTCBTC","ETHUSD","ETHBTC","ETCBTC","ETCUSD","RRTUSD","RRTBTC","ZECUSD",
-            "ZECBTC","XMRUSD","XMRBTC","DSHUSD","DSHBTC","BTCEUR","BTCJPY","XRPUSD","XRPBTC","IOTUSD",
-            "IOTBTC","IOTETH","EOSUSD","EOSBTC","EOSETH","SANUSD","SANBTC","SANETH","OMGUSD","OMGBTC",
-            "OMGETH","BCHUSD","BCHBTC","BCHETH","NEOUSD","NEOBTC","NEOETH","ETPUSD","ETPBTC","ETPETH",
-            "QTMUSD","QTMBTC","QTMETH","AVTUSD","AVTBTC","AVTETH","EDOUSD","EDOBTC","EDOETH","BTGUSD",
-            "BTGBTC","DATUSD","DATBTC","DATETH","QSHUSD","QSHBTC","QSHETH","YYWUSD","YYWBTC","YYWETH",
-            "GNTUSD","GNTBTC","GNTETH","SNTUSD","SNTBTC","SNTETH","IOTEUR","BATUSD","BATBTC","BATETH",
-            "MNAUSD","MNABTC","MNAETH","FUNUSD","FUNBTC","FUNETH","ZRXUSD","ZRXBTC","ZRXETH","TNBUSD",
-            "TNBBTC","TNBETH","SPKUSD","SPKBTC","SPKETH","TRXUSD","TRXBTC","TRXETH","RCNUSD","RCNBTC",
-            "RCNETH","RLCUSD","RLCBTC","RLCETH","AIDUSD","AIDBTC","AIDETH","SNGUSD","SNGBTC","SNGETH",
-            "REPUSD","REPBTC","REPETH","ELFUSD","ELFBTC","ELFETH","BTCGBP","ETHEUR","ETHJPY","ETHGBP",
-            "NEOEUR","NEOJPY","NEOGBP","EOSEUR","EOSJPY","EOSGBP","IOTJPY","IOTGBP","IOSUSD","IOSBTC",
-            "IOSETH","AIOUSD","AIOBTC","AIOETH","REQUSD","REQBTC","REQETH","RDNUSD","RDNBTC","RDNETH",
-            "LRCUSD","LRCBTC","LRCETH","WAXUSD","WAXBTC","WAXETH","DAIUSD","DAIBTC","DAIETH","CFIUSD",
-            "CFIBTC","CFIETH","AGIUSD","AGIBTC","AGIETH","BFTUSD","BFTBTC","BFTETH","MTNUSD","MTNBTC",
-            "MTNETH","ODEUSD","ODEBTC","ODEETH","ANTUSD","ANTBTC","ANTETH","DTHUSD","DTHBTC","DTHETH",
-            "MITUSD","MITBTC","MITETH","STJUSD","STJBTC","STJETH","XLMUSD","XLMEUR","XLMJPY","XLMGBP",
-            "XLMBTC","XLMETH","XVGUSD","XVGEUR","XVGJPY","XVGGBP","XVGBTC","XVGETH","BCIUSD","BCIBTC",
-            "MKRUSD","MKRBTC","MKRETH","VENUSD","VENBTC","VENETH","KNCUSD","KNCBTC","KNCETH","POAUSD",
-            "POABTC","POAETH","LYMUSD","LYMBTC","LYMETH","UTKUSD","UTKBTC","UTKETH","VEEUSD","VEEBTC",
-            "VEEETH","DADUSD","DADBTC","DADETH","ORSUSD","ORSBTC","ORSETH","AUCUSD","AUCBTC","AUCETH",
-            "POYUSD","POYBTC","POYETH","FSNUSD","FSNBTC","FSNETH","CBTUSD","CBTBTC","CBTETH","ZCNUSD",
-            "ZCNBTC","ZCNETH","SENUSD","SENBTC","SENETH","NCAUSD","NCABTC","NCAETH","CNDUSD","CNDBTC",
-            "CNDETH","CTXUSD","CTXBTC","CTXETH","PAIUSD","PAIBTC","SEEUSD","SEEBTC","SEEETH","ESSUSD",
-            "ESSBTC","ESSETH","ATMUSD","ATMBTC","ATMETH","HOTUSD","HOTBTC","HOTETH","DTAUSD","DTABTC",
-            "DTAETH","IQXUSD","IQXBTC","IQXEOS","WPRUSD","WPRBTC","WPRETH","ZILUSD","ZILBTC","ZILETH",
-            "BNTUSD","BNTBTC","BNTETH","ABSUSD","ABSETH","XRAUSD","XRAETH","MANUSD","MANETH","BBNUSD",
-            "BBNETH","NIOUSD","NIOETH","DGXUSD","DGXETH","VETUSD","VETBTC","VETETH","UTNUSD","UTNETH",
-            "TKNUSD","TKNETH","GOTUSD","GOTEUR","GOTETH","XTZUSD","XTZBTC","CNNUSD","CNNETH","BOXUSD",
-            "BOXETH","TRXEUR","TRXGBP","TRXJPY","MGOUSD","MGOETH","RTEUSD","RTEETH","YGGUSD","YGGETH",
-            "MLNUSD","MLNETH","WTCUSD","WTCETH","CSXUSD","CSXETH","OMNUSD","OMNBTC","INTUSD","INTETH",
-            "DRNUSD","DRNETH","PNKUSD","PNKETH","DGBUSD","DGBBTC","BSVUSD","BSVBTC","BABUSD","BABBTC",
-            "WLOUSD","WLOXLM","VLDUSD","VLDETH","ENJUSD","ENJETH","ONLUSD","ONLETH","RBTUSD","RBTBTC",
-            "USTUSD","EUTEUR","EUTUSD","GSDUSD","UDCUSD","TSDUSD","PAXUSD","RIFUSD","RIFBTC","PASUSD",
-            "PASETH","VSYUSD","VSYBTC","ZRXDAI","MKRDAI","OMGDAI","BTTUSD","BTTBTC","BTCUST","ETHUST",
-            "CLOUSD","CLOBTC","IMPUSD","LTCUST","EOSUST","BABUST","SCRUSD","GNOUSD","GENUSD","ATOUSD",
-            "ATOBTC","ATOETH","WBTUSD","XCHUSD","EUSUSD","WBTETH","XCHETH","LEOUSD","LEOBTC","LEOUST",
-            "LEOEOS","LEOETH","ASTUSD","FOAUSD","UFRUSD","ZBTUSD","OKBUSD","USKUSD","GTXUSD","KANUSD",
-            "OKBUST","OKBBTC","USKUST","USKETH","USKBTC","USKEOS","GTXUST","KANUST","AMPUSD","ALGUSD",
-            "ALGBTC","ALGUST","BTCXCH","SWMUSD","TRIUSD","LOOUSD","AMPUST","UOSUSD","UOSBTC","RRBUSD",
-            "RRBUST","DTXUSD","AMPBTC","FTTUSD","FTTUST","PAXUST","UDCUST","TSDUST","CHZUSD","CHZUST",
-        };
-
-        /// <summary>
-        /// The list of delisted/invalid Bitfinex symbols.
-        /// </summary>
-        public static HashSet<string> DelistedSymbolStrings = new HashSet<string>
-        {
-            "BCHUSD","BCHBTC","BCHETH",
-            "CFIUSD","CFIBTC","CFIETH",
-            "VENUSD","VENBTC","VENETH",
-            "RRTBTC",
-            "QTMETH",
-            "AVTBTC","AVTETH",
-            "QSHBTC","QSHETH",
-            "YYWBTC","YYWETH",
-            "MNAETH",
-            "FUNBTC",
-            "SPKBTC","SPKETH",
-            "RCNBTC","RCNETH",
-            "RLCETH",
-            "AIDBTC","AIDETH",
-            "SNGBTC","SNGETH",
-            "ELFBTC","ELFETH",
-            "AIOETH",
-            "REQBTC","REQETH",
-            "RDNBTC","RDNETH",
-            "LRCETH",
-            "WAXETH",
-            "AGIBTC","AGIETH",
-            "BFTETH",
-            "MTNBTC","MTNETH",
-            "DTHBTC","DTHETH",
-            "MITBTC","MITETH",
-            "STJBTC","STJETH",
-            "XLMJPY",
-            "XVGEUR","XVGJPY","XVGGBP","XVGETH",
-            "BCIUSD","BCIBTC",
-            "KNCETH",
-            "POABTC","POAETH",
-            "LYMBTC","LYMETH",
-            "UTKBTC","UTKETH",
-            "VEEBTC","VEEETH",
-            "DADUSD","DADBTC","DADETH",
-            "ORSBTC","ORSETH",
-            "AUCBTC","AUCETH",
-            "POYBTC","POYETH",
-            "FSNBTC","FSNETH",
-            "CBTBTC","CBTETH",
-            "ZCNBTC","ZCNETH",
-            "SENUSD","SENBTC","SENETH",
-            "NCABTC","NCAETH",
-            "CNDBTC",
-            "CTXBTC","CTXETH",
-            "PAIBTC",
-            "SEEBTC","SEEETH",
-            "ESSBTC","ESSETH",
-            "ATMBTC","ATMETH",
-            "HOTBTC","HOTETH",
-            "DTABTC","DTAETH",
-            "IQXBTC",
-            "WPRBTC","WPRETH",
-            "ZILBTC","ZILETH",
-            "BNTBTC","BNTETH",
-            "ABSETH",
-            "XRAETH",
-            "MANETH",
-            "BBNUSD","BBNETH",
-            "NIOUSD","NIOETH",
-            "VETETH",
-            "UTNETH",
-            "TKNETH",
-            "CNNETH",
-            "BOXETH",
-            "MGOETH",
-            "RTEETH",
-            "YGGETH",
-            "MLNETH",
-            "WTCETH",
-            "CSXETH",
-            "INTETH",
-            "DRNETH",
-            "WLOXLM",
-            "VLDETH",
-            "ENJETH",
-            "ONLETH",
-            "PASETH",
-            "ZRXDAI",
-            "OMGDAI",
-        };
-
-        /// <summary>
-        /// The list of active Bitfinex symbols.
-        /// </summary>
-        public static List<string> ActiveSymbolStrings =
-            KnownSymbolStrings
-                .Where(x => !DelistedSymbolStrings.Contains(x))
-                .ToList();
-
-        /// <summary>
-        /// The list of known Bitfinex currencies.
-        /// </summary>
-        private static readonly HashSet<string> KnownCurrencies = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "EUR", "GBP", "JPY", "USD"
-        };
+        public static readonly HashSet<string> KnownTickers =
+            new HashSet<string>(SymbolPropertiesDatabase
+                .FromDataFolder()
+                .GetSymbolPropertiesList(Market.Bitfinex, SecurityType.Crypto)
+                .Select(x => x.Key.Symbol));
 
         /// <summary>
         /// Converts a Lean symbol instance to an Bitfinex symbol
@@ -289,19 +130,8 @@ namespace QuantConnect.Brokerages.Bitfinex
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 return false;
 
-            return KnownSymbolStrings.Contains(brokerageSymbol);
-        }
-
-        /// <summary>
-        /// Checks if the currency is supported by Bitfinex
-        /// </summary>
-        /// <returns>True if Bitfinex supports the currency</returns>
-        public bool IsKnownFiatCurrency(string currency)
-        {
-            if (string.IsNullOrWhiteSpace(currency))
-                return false;
-
-            return KnownCurrencies.Contains(currency);
+            // Strip leading 't' char
+            return KnownTickers.Contains(brokerageSymbol.Substring(1));
         }
 
         /// <summary>
@@ -324,11 +154,11 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         private static string ConvertBitfinexSymbolToLeanSymbol(string bitfinexSymbol)
         {
-            if (string.IsNullOrWhiteSpace(bitfinexSymbol))
+            if (string.IsNullOrWhiteSpace(bitfinexSymbol) || !bitfinexSymbol.StartsWith("t"))
                 throw new ArgumentException($"Invalid Bitfinex symbol: {bitfinexSymbol}");
 
-            // return as it is due to Bitfinex has similar Symbol format
-            return bitfinexSymbol.ToUpperInvariant();
+            // Strip leading 't' char
+            return bitfinexSymbol.Substring(1).ToUpperInvariant();
         }
 
         /// <summary>
@@ -339,8 +169,8 @@ namespace QuantConnect.Brokerages.Bitfinex
             if (string.IsNullOrWhiteSpace(leanSymbol))
                 throw new ArgumentException($"Invalid Lean symbol: {leanSymbol}");
 
-            // return as it is due to Bitfinex has similar Symbol format
-            return leanSymbol.ToUpperInvariant();
+            // Prepend 't' for Trading pairs
+            return "t" + leanSymbol.ToUpperInvariant();
         }
     }
 }

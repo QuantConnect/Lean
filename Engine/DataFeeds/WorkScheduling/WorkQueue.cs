@@ -14,19 +14,26 @@
  *
 */
 
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
 {
-    internal class WorkQueue
+    internal class WorkQueue : IWorkQueue
     {
         private readonly List<WorkItem> _workQueue;
 
         /// <summary>
         /// Event used to notify there is work ready to execute in this queue
         /// </summary>
-        public AutoResetEvent WorkAvailableEvent { get; }
+        private AutoResetEvent _workAvailableEvent;
+
+        /// <summary>
+        /// Returns the thread priority to use for this work queue
+        /// </summary>
+        public ThreadPriority ThreadPriority => ThreadPriority.Lowest;
 
         /// <summary>
         /// Creates a new instance
@@ -34,19 +41,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         public WorkQueue()
         {
             _workQueue = new List<WorkItem>();
-            WorkAvailableEvent = new AutoResetEvent(false);
-        }
-
-        /// <summary>
-        /// Adds a new item to this work queue
-        /// </summary>
-        /// <param name="work">The work to add</param>
-        public void Add(WorkItem work)
-        {
-            lock (_workQueue)
-            {
-                _workQueue.Add(work);
-            }
+            _workAvailableEvent = new AutoResetEvent(false);
         }
 
         /// <summary>
@@ -57,10 +52,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
             var notifyWork = false;
             lock (_workQueue)
             {
-                foreach (var item in _workQueue)
+                for (var i = 0; i < _workQueue.Count; i++)
                 {
-                    item.UpdateWeight();
-                    if (item.Weight < WeightedWorkScheduler.MaxWorkWeight)
+                    _workQueue[i].UpdateWeight();
+                    if (_workQueue[i].Weight < WeightedWorkScheduler.MaxWorkWeight)
                     {
                         notifyWork = true;
                     }
@@ -69,7 +64,59 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
             }
             if (notifyWork)
             {
-                WorkAvailableEvent.Set();
+                _workAvailableEvent.Set();
+            }
+        }
+
+        /// <summary>
+        /// This is the worker thread loop.
+        /// It will first try to take a work item from the new work queue else will check his own queue.
+        /// </summary>
+        public void WorkerThread(ConcurrentQueue<WorkItem> newWork, AutoResetEvent newWorkEvent)
+        {
+            var waitHandles = new WaitHandle[] { _workAvailableEvent, newWorkEvent };
+            while (true)
+            {
+                WorkItem workItem;
+                if (!newWork.TryDequeue(out workItem))
+                {
+                    workItem = Get();
+                    if (workItem == null)
+                    {
+                        // no work to do, lets sleep and try again
+                        WaitHandle.WaitAny(waitHandles, 100);
+                        continue;
+                    }
+                }
+                else
+                {
+                    Add(workItem);
+                }
+
+                try
+                {
+                    if (!workItem.Work(WeightedWorkScheduler.WorkBatchSize))
+                    {
+                        Remove(workItem);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Remove(workItem);
+                    Logging.Log.Error(exception);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds a new item to this work queue
+        /// </summary>
+        /// <param name="work">The work to add</param>
+        private void Add(WorkItem work)
+        {
+            lock (_workQueue)
+            {
+                _workQueue.Add(work);
             }
         }
 
@@ -77,7 +124,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         /// Removes an item from the work queue
         /// </summary>
         /// <param name="workItem">The work item to remove</param>
-        public void Remove(WorkItem workItem)
+        private void Remove(WorkItem workItem)
         {
             lock (_workQueue)
             {
@@ -88,7 +135,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         /// <summary>
         /// Gets the next work item to execute, null if none is available
         /// </summary>
-        public WorkItem Get()
+        private WorkItem Get()
         {
             WorkItem potentialWorkItem = null;
             lock (_workQueue)

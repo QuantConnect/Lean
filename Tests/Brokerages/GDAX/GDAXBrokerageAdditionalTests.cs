@@ -20,12 +20,13 @@ using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.GDAX;
 using QuantConnect.Configuration;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using RestSharp;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
-    [TestFixture, Ignore("These tests requires a configured and active GDAX account.")]
+    [TestFixture, Explicit("These tests requires a configured and active GDAX account.")]
     public class GDAXBrokerageAdditionalTests
     {
         [Test]
@@ -133,8 +134,9 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             var userId = Config.GetInt("job-user-id");
             var userToken = Config.Get("api-access-token");
             var priceProvider = new ApiPriceProvider(userId, userToken);
+            var aggregator = new AggregationManager();
 
-            return new GDAXDataQueueHandler(wssUrl, webSocketClient, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider);
+            return new GDAXDataQueueHandler(wssUrl, webSocketClient, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator);
         }
 
         private static GDAXBrokerage GetBrokerage()
@@ -149,8 +151,9 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             var userId = Config.GetInt("job-user-id");
             var userToken = Config.Get("api-access-token");
             var priceProvider = new ApiPriceProvider(userId, userToken);
+            var aggregator = new AggregationManager();
 
-            return new GDAXBrokerage(wssUrl, webSocketClient, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider);
+            return new GDAXBrokerage(wssUrl, webSocketClient, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator);
         }
     }
 }

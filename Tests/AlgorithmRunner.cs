@@ -94,6 +94,7 @@ namespace QuantConnect.Tests
                 using (Log.LogHandler = new CompositeLogHandler(logHandlers))
                 using (var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance))
                 using (var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance))
+                using (var workerThread  = new TestWorkerThread())
                 {
                     Log.DebuggingEnabled = true;
 
@@ -121,7 +122,7 @@ namespace QuantConnect.Tests
 
                             systemHandlers.LeanManager.Initialize(systemHandlers, algorithmHandlers, job, algorithmManager);
 
-                            engine.Run(job, algorithmManager, algorithmPath, new TestWorkerThread());
+                            engine.Run(job, algorithmManager, algorithmPath, workerThread);
                             ordersLogFile = ((RegressionResultHandler)algorithmHandlers.Results).LogFilePath;
                         }
                         catch (Exception e)

@@ -166,7 +166,7 @@ namespace QuantConnect.Configuration
         /// </summary>
         /// <param name="key">The key to be set</param>
         /// <param name="value">The new value</param>
-        public static void Set(string key, string value)
+        public static void Set(string key, dynamic value)
         {
             JToken environment = Settings.Value;
             while (key.Contains("."))

@@ -17,7 +17,9 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Lean.Engine.DataFeeds.WorkScheduling;
 using QuantConnect.Logging;
@@ -58,15 +60,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="request">The subscription data request</param>
         /// <param name="enumerator">The data enumerator stack</param>
+        /// <param name="factorFileProvider">The factor file provider</param>
+        /// <param name="enablePriceScale">Enables price factoring</param>
         /// <returns>A new subscription instance ready to consume</returns>
         public static Subscription CreateAndScheduleWorker(
             SubscriptionRequest request,
-            IEnumerator<BaseData> enumerator)
+            IEnumerator<BaseData> enumerator,
+            IFactorFileProvider factorFileProvider,
+            bool enablePriceScale)
         {
+            var factorFile = GetFactorFileToUse(request.Configuration, factorFileProvider);
             var exchangeHours = request.Security.Exchange.Hours;
             var enqueueable = new EnqueueableEnumerator<SubscriptionData>(true);
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
             var subscription = new Subscription(request, enqueueable, timeZoneOffsetProvider);
+            var config = subscription.Configuration;
+            var lastTradableDate = DateTime.MinValue;
+            decimal? currentScale = null;
 
             Func<int, bool> produce = (workBatchSize) =>
             {
@@ -82,8 +92,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             return false;
                         }
 
-                        var subscriptionData = SubscriptionData.Create(subscription.Configuration, exchangeHours,
-                            subscription.OffsetProvider, enumerator.Current);
+                        var data = enumerator.Current;
+                        var requestMode = config.DataNormalizationMode;
+                        var mode = requestMode != DataNormalizationMode.Raw
+                            ? requestMode
+                            : DataNormalizationMode.Adjusted;
+                        if (enablePriceScale && data?.Time.Date > lastTradableDate)
+                        {
+                            lastTradableDate = data.Time.Date;
+                            currentScale = GetScaleFactor(factorFile, mode, data.Time.Date);
+                        }
+
+                        SubscriptionData subscriptionData = SubscriptionData.Create(
+                            config,
+                            exchangeHours,
+                            subscription.OffsetProvider,
+                            data,
+                            mode,
+                            enablePriceScale ? currentScale : null);
 
                         // drop the data into the back of the enqueueable
                         enqueueable.Enqueue(subscriptionData);
@@ -110,9 +136,71 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             WeightedWorkScheduler.Instance.QueueWork(produce,
                 // if the subscription finished we return 0, so the work is prioritized and gets removed
-                () => enqueueable.HasFinished ? 0 : enqueueable.Count);
+                () =>
+                {
+                    if (enqueueable.HasFinished)
+                    {
+                        return 0;
+                    }
+                    var count = enqueueable.Count;
+                    return count > WeightedWorkScheduler.MaxWorkWeight ? WeightedWorkScheduler.MaxWorkWeight : count;
+                }
+            );
 
             return subscription;
         }
+
+        /// <summary>
+        /// Gets <see cref="FactorFile"/> for configuration
+        /// </summary>
+        /// <param name="config">Subscription configuration</param>
+        /// <param name="factorFileProvider">The factor file provider</param>
+        /// <returns></returns>
+        public static FactorFile GetFactorFileToUse(
+            SubscriptionDataConfig config,
+            IFactorFileProvider factorFileProvider)
+        {
+            var factorFileToUse = new FactorFile(config.Symbol.Value, new List<FactorFileRow>());
+
+            if (!config.IsCustomData
+                && config.SecurityType == SecurityType.Equity)
+            {
+                try
+                {
+                    var factorFile = factorFileProvider.Get(config.Symbol);
+                    if (factorFile != null)
+                    {
+                        factorFileToUse = factorFile;
+                    }
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err, "SubscriptionUtils.GetFactorFileToUse(): Factors File: "
+                        + config.Symbol.ID + ": ");
+                }
+            }
+
+            return factorFileToUse;
+        }
+
+        private static decimal GetScaleFactor(FactorFile factorFile, DataNormalizationMode mode, DateTime date)
+        {
+            switch (mode)
+            {
+                case DataNormalizationMode.Raw:
+                    return 1;
+
+                case DataNormalizationMode.TotalReturn:
+                case DataNormalizationMode.SplitAdjusted:
+                    return factorFile.GetSplitFactor(date);
+
+                case DataNormalizationMode.Adjusted:
+                    return factorFile.GetPriceScaleFactor(date);
+
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
     }
 }

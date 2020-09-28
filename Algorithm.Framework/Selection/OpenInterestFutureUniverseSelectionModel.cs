@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         protected override FutureFilterUniverse Filter(FutureFilterUniverse filter)
         {
-            return filter.Contracts(FilterByOpenInterest(filter.ToDictionary(x => x, x => _marketHoursDatabase.GetEntry(x.ID.Market, x, x.ID.SecurityType).ExchangeHours)));
+            return filter.Contracts(FilterByOpenInterest(filter.ToDictionary(x => x, x => _marketHoursDatabase.GetEntry(x.ID.Market, x, x.ID.SecurityType))));
         }
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="contracts">Contracts to filter</param>
         /// <returns>Filtered set</returns>
-        public IEnumerable<Symbol> FilterByOpenInterest(IReadOnlyDictionary<Symbol, SecurityExchangeHours> contracts)
+        public IEnumerable<Symbol> FilterByOpenInterest(IReadOnlyDictionary<Symbol, MarketHoursDatabase.Entry> contracts)
         {
             var symbols = new List<Symbol>(_chainContractsLookupLimit.HasValue ? contracts.Keys.OrderBy(x => x.ID.Date).Take(_chainContractsLookupLimit.Value) : contracts.Keys);
             var openInterest = symbols.GroupBy(x => contracts[x]).SelectMany(g => GetOpenInterest(g.Key, g.Select(i => i))).ToDictionary(x => x.Key, x => x.Value);
@@ -91,11 +91,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
             return filtered;
         }
 
-        private Dictionary<Symbol, decimal> GetOpenInterest(SecurityExchangeHours exchangeHours, IEnumerable<Symbol> symbols)
+        private Dictionary<Symbol, decimal> GetOpenInterest(MarketHoursDatabase.Entry marketHours, IEnumerable<Symbol> symbols)
         {
             var current = _algorithm.UtcTime;
+            var exchangeHours = marketHours.ExchangeHours;
             var endTime = Instant.FromDateTimeUtc(_algorithm.UtcTime).InZone(exchangeHours.TimeZone).ToDateTimeUnspecified();
-            var previousDay = Time.GetStartTimeForTradeBars(exchangeHours, endTime, Time.OneDay, 1, true);
+            var previousDay = Time.GetStartTimeForTradeBars(exchangeHours, endTime, Time.OneDay, 1, true, marketHours.DataTimeZone);
             var requests = symbols.Select(
                     symbol => new HistoryRequest(
                         previousDay,

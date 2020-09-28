@@ -15,14 +15,14 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 using Timer = System.Timers.Timer;
 
@@ -33,21 +33,41 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
     /// </summary>
     public class FakeDataQueue : IDataQueueHandler
     {
-        private int count;
+        private int _count;
         private readonly Random _random = new Random();
 
         private readonly Timer _timer;
-        private readonly ConcurrentQueue<BaseData> _ticks;
-        private readonly HashSet<Symbol> _symbols;
+        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
         private readonly object _sync = new object();
+        private readonly IDataAggregator _aggregator;
+        private readonly MarketHoursDatabase _marketHoursDatabase;
+        private readonly Dictionary<Symbol, TimeZoneOffsetProvider> _symbolExchangeTimeZones;
+
+        /// <summary>
+        /// Continuous UTC time provider
+        /// </summary>
+        protected virtual ITimeProvider TimeProvider { get; } = RealTimeProvider.Instance;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FakeDataQueue"/> class to randomly emit data for each symbol
         /// </summary>
         public FakeDataQueue()
+            : this(new AggregationManager())
         {
-            _ticks = new ConcurrentQueue<BaseData>();
-            _symbols = new HashSet<Symbol>();
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FakeDataQueue"/> class to randomly emit data for each symbol
+        /// </summary>
+        public FakeDataQueue(IDataAggregator dataAggregator)
+        {
+            _aggregator = dataAggregator;
+            _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            _symbolExchangeTimeZones = new Dictionary<Symbol, TimeZoneOffsetProvider>();
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager.SubscribeImpl += (s, t) => true;
+            _subscriptionManager.UnsubscribeImpl += (s, t) => true;
 
             // load it up to start
             PopulateQueue();
@@ -57,68 +77,62 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
 
             _timer = new Timer
             {
-                AutoReset = true,
+                AutoReset = false,
                 Enabled = true,
                 Interval = 1000,
             };
 
             var lastCount = 0;
-            var lastTime = DateTime.Now;
+            var lastTime = DateTime.UtcNow;
             _timer.Elapsed += (sender, args) =>
             {
-                var elapsed = (DateTime.Now - lastTime);
-                var ticksPerSecond = (count - lastCount)/elapsed.TotalSeconds;
-                Console.WriteLine("TICKS PER SECOND:: " + ticksPerSecond.ToStringInvariant("000000.0") + " ITEMS IN QUEUE:: " + _ticks.Count);
-                lastCount = count;
-                lastTime = DateTime.Now;
+                var elapsed = (DateTime.UtcNow - lastTime);
+                var ticksPerSecond = (_count - lastCount)/elapsed.TotalSeconds;
+                Log.Trace("TICKS PER SECOND:: " + ticksPerSecond.ToStringInvariant("000000.0") + " ITEMS IN QUEUE:: " + 0);
+                lastCount = _count;
+                lastTime = DateTime.UtcNow;
                 PopulateQueue();
+                try
+                {
+                    _timer.Reset();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // pass
+                }
             };
         }
 
         /// <summary>
-        /// Get the next ticks from the live trading data queue
+        /// Subscribe to the specified configuration
         /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            BaseData tick;
-            while (_ticks.TryDequeue(out tick))
-            {
-                yield return tick;
-                Interlocked.Increment(ref count);
-            }
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
+            _subscriptionManager.Subscribe(dataConfig);
+
+            return enumerator;
         }
 
         /// <summary>
-        /// Adds the specified symbols to the subscription
+        /// Sets the job we're subscribing for
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
         {
-            foreach (var symbol in symbols)
-            {
-                lock (_sync)
-                {
-                    _symbols.Add(symbol);
-                }
-            }
         }
 
         /// <summary>
-        /// Removes the specified symbols to the subscription
+        /// Removes the specified configuration
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            foreach (var symbol in symbols)
-            {
-                lock (_sync)
-                {
-                    _symbols.Remove(symbol);
-                }
-            }
+            _subscriptionManager.Unsubscribe(dataConfig);
+            _aggregator.Remove(dataConfig);
         }
 
         /// <summary>
@@ -141,27 +155,55 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// </summary>
         private void PopulateQueue()
         {
-            List<Symbol> symbols;
-            lock (_sync)
-            {
-                symbols = _symbols.ToList();
-            }
+            var symbols = _subscriptionManager.GetSubscribedSymbols();
+            
 
             foreach (var symbol in symbols)
             {
+                var offsetProvider = GetTimeZoneOffsetProvider(symbol);
+                var trades = SubscriptionManager.DefaultDataTypes()[symbol.SecurityType].Contains(TickType.Trade);
+                var quotes = SubscriptionManager.DefaultDataTypes()[symbol.SecurityType].Contains(TickType.Quote);
+
                 // emits 500k per second
-                for (int i = 0; i < 500000; i++)
+                for (var i = 0; i < 500000; i++)
                 {
-                    _ticks.Enqueue(new Tick
+                    var now = TimeProvider.GetUtcNow();
+                    if (trades)
                     {
-                        Time = DateTime.Now,
-                        Symbol = symbol,
-                        Value = 10 + (decimal)Math.Abs(Math.Sin(DateTime.Now.TimeOfDay.TotalMinutes)),
-                        TickType = TickType.Trade,
-                        Quantity = _random.Next(10, (int)_timer.Interval)
-                    });
+                        _count++;
+                        _aggregator.Update(new Tick
+                        {
+                            Time = offsetProvider.ConvertFromUtc(now),
+                            Symbol = symbol,
+                            Value = 10 + (decimal)Math.Abs(Math.Sin(now.TimeOfDay.TotalMinutes)),
+                            TickType = TickType.Trade,
+                            Quantity = _random.Next(10, (int)_timer.Interval)
+                        });
+                    }
+
+                    if (quotes)
+                    {
+                        _count++;
+                        var bid = 10 + (decimal) Math.Abs(Math.Sin(now.TimeOfDay.TotalMinutes));
+                        var bidSize = _random.Next(10, (int) _timer.Interval);
+                        var askSize = _random.Next(10, (int)_timer.Interval);
+                        var time = offsetProvider.ConvertFromUtc(now);
+                        _aggregator.Update(new Tick(time, symbol, "", "",bid, bidSize, bid * 1.01m, askSize));
+                    }
                 }
             }
+        }
+
+        private TimeZoneOffsetProvider GetTimeZoneOffsetProvider(Symbol symbol)
+        {
+            TimeZoneOffsetProvider offsetProvider;
+            if (!_symbolExchangeTimeZones.TryGetValue(symbol, out offsetProvider))
+            {
+                // read the exchange time zone from market-hours-database
+                var exchangeTimeZone = _marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType).TimeZone;
+                _symbolExchangeTimeZones[symbol] = offsetProvider = new TimeZoneOffsetProvider(exchangeTimeZone, TimeProvider.GetUtcNow(), Time.EndOfTime);
+            }
+            return offsetProvider;
         }
     }
 }

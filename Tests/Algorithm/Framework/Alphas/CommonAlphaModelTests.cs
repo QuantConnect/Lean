@@ -163,11 +163,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 _algorithm.OnFrameworkData(slice);
             }
 
-            foreach (var insight in actualInsights)
-            {
-                Console.WriteLine(insight);
-            }
-
             Assert.AreEqual(expectedInsights.Count, actualInsights.Count);
 
             for (var i = 0; i < actualInsights.Count; i++)

@@ -269,30 +269,6 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Normalizes the specified price based on the DataNormalizationMode
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public decimal GetNormalizedPrice(decimal price)
-        {
-            switch (DataNormalizationMode)
-            {
-                case DataNormalizationMode.Raw:
-                    return price;
-
-                // the price scale factor will be set accordingly based on the mode in update scale factors
-                case DataNormalizationMode.Adjusted:
-                case DataNormalizationMode.SplitAdjusted:
-                    return price*PriceScaleFactor;
-
-                case DataNormalizationMode.TotalReturn:
-                    return (price*PriceScaleFactor) + SumOfDividends;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        /// <summary>
         /// Indicates whether the current object is equal to another object of the same type.
         /// </summary>
         /// <returns>
@@ -380,7 +356,7 @@ namespace QuantConnect.Data
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Invariant($"{Symbol.Value},{MappedSymbol},{Resolution},{Type.Name},{TickType},{DataNormalizationMode}");
+            return Invariant($"{Symbol.Value},{MappedSymbol},{Resolution},{Type.Name},{TickType},{DataNormalizationMode}{(IsInternalFeed ? ",Internal" : string.Empty)}");
         }
     }
 }

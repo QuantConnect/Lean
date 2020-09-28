@@ -203,7 +203,7 @@ symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder()
 securityService =  SecurityService(algo.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDatabase, algo, RegisteredSecurityDataTypesProvider.Null, SecurityCacheProvider(algo.Portfolio))
 algo.Securities.SetSecurityService(securityService)
 dataPermissionManager = DataPermissionManager()
-dataManager = DataManager(None, UniverseSelection(algo, securityService, dataPermissionManager), algo, algo.TimeKeeper, marketHoursDatabase, False, RegisteredSecurityDataTypesProvider.Null, dataPermissionManager)
+dataManager = DataManager(None, UniverseSelection(algo, securityService, dataPermissionManager, None), algo, algo.TimeKeeper, marketHoursDatabase, False, RegisteredSecurityDataTypesProvider.Null, dataPermissionManager)
 algo.SubscriptionManager.SetDataManager(dataManager)
 
 

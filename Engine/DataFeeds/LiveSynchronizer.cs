@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using QuantConnect.Configuration;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -30,12 +31,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class LiveSynchronizer : Synchronizer
     {
         private ITimeProvider _timeProvider;
-        private readonly AutoResetEvent _newLiveDataEmitted = new AutoResetEvent(false);
-
-        /// <summary>
-        /// Maximum time to wait for new live data before synchronizing the data feed subscriptions
-        /// </summary>
-        protected virtual TimeSpan NewLiveDataTimeout { get; } = TimeSpan.FromMilliseconds(500);
+        private RealTimeScheduleEventService _realTimeScheduleEventService;
+        private readonly int _batchingDelay = Config.GetInt("consumer-batching-timeout-ms");
+        private readonly ManualResetEventSlim _newLiveDataEmitted = new ManualResetEventSlim(false);
 
         /// <summary>
         /// Continuous UTC time provider
@@ -64,6 +62,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 subscription.NewDataAvailable -= OnSubscriptionNewDataAvailable;
             };
+
+            _realTimeScheduleEventService = new RealTimeScheduleEventService(new RealTimeProvider());
+            // this schedule event will be our time pulse
+            _realTimeScheduleEventService.NewEvent += (sender, args) => _newLiveDataEmitted.Set();
         }
 
         /// <summary>
@@ -75,6 +77,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             var shouldSendExtraEmptyPacket = false;
             var nextEmit = DateTime.MinValue;
+            var lastLoopStart = DateTime.UtcNow;
 
             var enumerator = SubscriptionSynchronizer
                 .Sync(SubscriptionManager.DataFeedSubscriptions, cancellationToken)
@@ -83,10 +86,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var previousWasTimePulse = false;
             while (!cancellationToken.IsCancellationRequested)
             {
+                var now = DateTime.UtcNow;
                 if (!previousWasTimePulse)
                 {
-                    _newLiveDataEmitted.WaitOne(NewLiveDataTimeout);
+                    if (!_newLiveDataEmitted.IsSet)
+                    {
+                        // if we just crossed into the next second let's loop again, we will flush any consolidator bar
+                        // else we will wait to be notified by the subscriptions or our scheduled event service every second
+                        if (lastLoopStart.Second == now.Second)
+                        {
+                            _realTimeScheduleEventService.ScheduleEvent(TimeSpan.FromMilliseconds(GetPulseDueTime(now)), now);
+                            _newLiveDataEmitted.Wait();
+                        }
+                    }
+                    _newLiveDataEmitted.Reset();
                 }
+
+                lastLoopStart = now;
 
                 TimeSlice timeSlice;
                 try
@@ -149,6 +165,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// Free resources
+        /// </summary>
+        public override void Dispose()
+        {
+            _newLiveDataEmitted.Set();
+            _newLiveDataEmitted?.DisposeSafely();
+            _realTimeScheduleEventService?.DisposeSafely();
+        }
+
+        /// <summary>
         /// Gets the <see cref="ITimeProvider"/> to use. By default this will load the
         /// <see cref="RealTimeProvider"/> for live mode, else <see cref="SubscriptionFrontierTimeProvider"/>
         /// </summary>
@@ -158,7 +184,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return new RealTimeProvider();
         }
 
-        private void OnSubscriptionNewDataAvailable(object sender, EventArgs args)
+        /// <summary>
+        /// Will return the amount of milliseconds that are missing for the next time pulse
+        /// </summary>
+        protected virtual int GetPulseDueTime(DateTime now)
+        {
+            // let's wait until the next second starts
+            return 1000 - now.Millisecond + _batchingDelay;
+        }
+
+        protected virtual void OnSubscriptionNewDataAvailable(object sender, EventArgs args)
         {
             _newLiveDataEmitted.Set();
         }

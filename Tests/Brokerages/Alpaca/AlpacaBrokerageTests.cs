@@ -30,7 +30,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Alpaca
 {
-    [TestFixture, Ignore("This test requires a configured and testable Alpaca practice account")]
+    [TestFixture, Explicit("This test requires a configured and testable Alpaca practice account")]
     public class AlpacaBrokerageTests : BrokerageTests
     {
         /// <summary>
@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             var secretKey = Config.Get("alpaca-secret-key");
             var tradingMode = Config.Get("alpaca-trading-mode");
 
-            return new AlpacaBrokerage(orderProvider, securityProvider, keyId, secretKey, tradingMode, false);
+            return new AlpacaBrokerage(orderProvider, securityProvider, keyId, secretKey, tradingMode);
         }
 
         /// <summary>

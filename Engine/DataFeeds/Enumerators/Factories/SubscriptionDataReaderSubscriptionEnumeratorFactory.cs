@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
@@ -36,8 +37,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly IResultHandler _resultHandler;
         private readonly IFactorFileProvider _factorFileProvider;
         private readonly ZipDataCacheProvider _zipDataCacheProvider;
+        private readonly ConcurrentSet<Symbol> _numericalPrecisionMessageSent;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private readonly IMapFileProvider _mapFileProvider;
+        private readonly bool _enablePriceScaling;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionDataReaderSubscriptionEnumeratorFactory"/> class
@@ -49,21 +52,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="includeAuxiliaryData">True to check for auxiliary data, false otherwise</param>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
         /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
+        /// <param name="enablePriceScaling">Applies price factor</param>
         public SubscriptionDataReaderSubscriptionEnumeratorFactory(IResultHandler resultHandler,
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
             IDataProvider dataProvider,
             bool includeAuxiliaryData,
-            Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null
+            Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null,
+            bool enablePriceScaling = true
             )
         {
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
+            _numericalPrecisionMessageSent = new ConcurrentSet<Symbol>();
             _zipDataCacheProvider = new ZipDataCacheProvider(dataProvider, isDataEphemeral: false);
             _isLiveMode = false;
             _includeAuxiliaryData = includeAuxiliaryData;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
+            _enablePriceScaling = enablePriceScaling;
         }
 
         /// <summary>
@@ -89,10 +96,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 );
 
             dataReader.InvalidConfigurationDetected += (sender, args) => { _resultHandler.ErrorMessage(args.Message); };
-            dataReader.NumericalPrecisionLimited += (sender, args) => { _resultHandler.DebugMessage(args.Message); };
             dataReader.StartDateLimited += (sender, args) => { _resultHandler.DebugMessage(args.Message); };
             dataReader.DownloadFailed += (sender, args) => { _resultHandler.ErrorMessage(args.Message, args.StackTrace); };
             dataReader.ReaderErrorDetected += (sender, args) => { _resultHandler.RuntimeError(args.Message, args.StackTrace); };
+            dataReader.NumericalPrecisionLimited += (sender, args) =>
+            {
+                if (_numericalPrecisionMessageSent.Add(args.Symbol))
+                {
+                    _resultHandler.DebugMessage(args.Message);
+                }
+            };
 
             var result = CorporateEventEnumeratorFactory.CreateEnumerators(
                 dataReader,
@@ -101,7 +114,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 dataReader,
                 mapFileResolver,
                 _includeAuxiliaryData,
-                request.StartTimeLocal);
+                request.StartTimeLocal,
+                _enablePriceScaling);
 
             return result;
         }

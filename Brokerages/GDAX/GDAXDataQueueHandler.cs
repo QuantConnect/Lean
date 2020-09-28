@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
@@ -31,9 +33,18 @@ namespace QuantConnect.Brokerages.GDAX
         /// Initializes a new instance of the <see cref="GDAXDataQueueHandler"/> class
         /// </summary>
         public GDAXDataQueueHandler(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
-            IPriceProvider priceProvider)
-            : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider)
+            IPriceProvider priceProvider, IDataAggregator aggregator)
+            : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider, aggregator)
         {
+            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            subscriptionManager.SubscribeImpl += (s,t) =>
+            {
+                Subscribe(s);
+                return true;
+            };
+            subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
+
+            SubscriptionManager = subscriptionManager;
         }
 
         /// <summary>
@@ -42,37 +53,56 @@ namespace QuantConnect.Brokerages.GDAX
         protected override string[] ChannelNames { get; } = { "heartbeat", "level2", "matches" };
 
         /// <summary>
-        /// Get the next ticks from the live trading data queue
+        /// Subscribe to the specified configuration
         /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            lock (TickLocker)
+            if (!CanSubscribe(dataConfig.Symbol))
             {
-                var copy = Ticks.ToArray();
-                Ticks.Clear();
-                return copy;
+                return Enumerable.Empty<BaseData>().GetEnumerator();
             }
+
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
+            SubscriptionManager.Subscribe(dataConfig);
+
+            return enumerator;
         }
 
         /// <summary>
-        /// Adds the specified symbols to the subscription
+        /// Sets the job we're subscribing for
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
         {
-            Subscribe(symbols);
         }
 
         /// <summary>
-        /// Removes the specified symbols to the subscription
+        /// Removes the specified configuration
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            Unsubscribe(symbols);
+            SubscriptionManager.Unsubscribe(dataConfig);
+            _aggregator.Remove(dataConfig);
+        }
+
+        /// <summary>
+        /// Checks if this brokerage supports the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <returns>returns true if brokerage supports the specified symbol; otherwise false</returns>
+        private static bool CanSubscribe(Symbol symbol)
+        {
+            if (symbol.Value.Contains("UNIVERSE") ||
+                symbol.SecurityType != SecurityType.Forex && symbol.SecurityType != SecurityType.Crypto)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

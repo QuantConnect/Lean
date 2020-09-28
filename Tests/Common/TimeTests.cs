@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Common
             var end = new DateTime(2015, 09, 01, 12, 0, 1);
             var barSize = TimeSpan.FromMinutes(1);
             var hours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
-            var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 1, false);
+            var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 1, false, TimeZones.NewYork);
             // round down and back up a single bar
             Assert.AreEqual(end.RoundDown(barSize).Subtract(barSize), start);
         }
@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Common
             var end = new DateTime(2015, 09, 01, 12, 0, 0);
             var barSize = TimeSpan.FromHours(1);
             var hours = SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours();
-            var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 7, false);
+            var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 7, false, hours.TimeZone);
             // from noon, back up to 9am (3 hours) then skip night, so from 4pm, back up to noon, 4 more hours
             Assert.AreEqual(end.AddDays(-1), start);
         }
@@ -76,8 +76,26 @@ namespace QuantConnect.Tests.Common
             var expectedStart = new DateTime(2015, 08, 21);
             var barSize = TimeSpan.FromDays(1);
             var hours = SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours();
-            var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 7, false);
+            var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 7, false, hours.TimeZone);
             // from noon, back up to 9am (3 hours) then skip night, so from 4pm, back up to noon, 4 more hours
+            Assert.AreEqual(expectedStart, start);
+        }
+
+        [Test, TestCaseSource(nameof(ForexHistoryDates))]
+        public void GetStartTimeForForexTradeBars(DateTime end, DateTime expectedStart, DateTimeZone dataTimeZone)
+        {
+            var barSize = TimeSpan.FromDays(1);
+            var hours = SecurityExchangeHoursTests.CreateForexSecurityExchangeHours();
+            var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 1, false, dataTimeZone);
+            Assert.AreEqual(expectedStart, start);
+        }
+
+        [Test, TestCaseSource(nameof(EquityHistoryDates))]
+        public void GetStartTimeForEquityTradeBars(DateTime end, DateTime expectedStart, DateTimeZone dataTimeZone)
+        {
+            var barSize = TimeSpan.FromMinutes(1);
+            var hours = SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours();
+            var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 10, false, dataTimeZone);
             Assert.AreEqual(expectedStart, start);
         }
 
@@ -101,7 +119,7 @@ namespace QuantConnect.Tests.Common
             var dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(7));
 
             // given this arrangement we should still start on the same date and end a day late
-            var expected = new[] {start, end, end.AddDays(1)};
+            var expected = new[] { start, end, end.AddDays(1) };
             var actual = Time.EachTradeableDayInTimeZone(equityExchange, start, end, dataTimeZone, true);
             CollectionAssert.AreEqual(expected, actual);
         }
@@ -115,7 +133,7 @@ namespace QuantConnect.Tests.Common
             var dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-7));
 
             // given this arrangement we should still start a day early but still end on the same date
-            var expected = new[] {start.AddDays(-1), start, end};
+            var expected = new[] { start.AddDays(-1), start, end };
             var actual = Time.EachTradeableDayInTimeZone(exchange, start, end, dataTimeZone, true);
             CollectionAssert.AreEqual(expected, actual);
         }
@@ -129,7 +147,7 @@ namespace QuantConnect.Tests.Common
             var dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-13));
 
             // given this arrangement we should still start a day early but still end on the same date
-            var expected = new[] {start.AddDays(-2), start.AddDays(-1), start};
+            var expected = new[] { start.AddDays(-2), start.AddDays(-1), start };
             var actual = Time.EachTradeableDayInTimeZone(exchange, start, end, dataTimeZone, true);
             CollectionAssert.AreEqual(expected, actual);
         }
@@ -215,5 +233,24 @@ namespace QuantConnect.Tests.Common
         {
             Assert.AreEqual(new DateTime(year, month, day, hour, minute, 0), Time.ParseDate(parseDate));
         }
+
+        private static IEnumerable<TestCaseData> ForexHistoryDates => new List<TestCaseData>
+        {
+            new TestCaseData(new DateTime(2018, 04, 02, 1, 0, 0), new DateTime(2018, 04, 01, 01, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(-5))),
+            new TestCaseData(new DateTime(2018, 04, 02, 0, 0, 0), new DateTime(2018, 03, 29, 01, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(-5))),
+            new TestCaseData(new DateTime(2018, 04, 04, 0, 0, 0), new DateTime(2018, 04, 02, 01, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(-5))),
+            new TestCaseData(new DateTime(2018, 04, 02, 1, 0, 0), new DateTime(2018, 03, 29, 15, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(5))),
+            new TestCaseData(new DateTime(2018, 04, 02, 0, 0, 0), new DateTime(2018, 03, 29, 15, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(5))),
+            new TestCaseData(new DateTime(2018, 04, 04, 0, 0, 0), new DateTime(2018, 04, 02, 15, 0, 0), DateTimeZone.ForOffset(Offset.FromHours(5))),
+            new TestCaseData(new DateTime(2018, 04, 02, 1, 0, 0), new DateTime(2018, 03, 31, 20, 0, 0), DateTimeZone.Utc),
+            new TestCaseData(new DateTime(2018, 04, 02, 0, 0, 0), new DateTime(2018, 03, 31, 20, 0, 0), DateTimeZone.Utc),
+            new TestCaseData(new DateTime(2018, 04, 04, 0, 0, 0), new DateTime(2018, 04, 02, 20, 0, 0), DateTimeZone.Utc)
+        };
+
+        private static IEnumerable<TestCaseData> EquityHistoryDates => new List<TestCaseData>
+        {
+            new TestCaseData(new DateTime(2013, 10, 08, 17, 0, 0), new DateTime(2013, 10, 08, 15, 50, 0), DateTimeZone.Utc),
+            new TestCaseData(new DateTime(2013, 10, 08, 13, 0, 0), new DateTime(2013, 10, 08, 12, 50, 0), DateTimeZone.Utc),
+        };
     }
 }

@@ -124,9 +124,13 @@ namespace QuantConnect.Brokerages
         {
             try
             {
-                Log.Debug("Brokerage.OnOrderEvent(): " + e);
-
                 OrderStatusChanged?.Invoke(this, e);
+
+                if (Log.DebuggingEnabled)
+                {
+                    // log after calling the OrderStatusChanged event, the BrokerageTransactionHandler will set the order quantity
+                    Log.Debug("Brokerage.OnOrderEvent(): " + e);
+                }
             }
             catch (Exception err)
             {

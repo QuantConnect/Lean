@@ -15,6 +15,8 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -25,8 +27,9 @@ using RestSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
+using QuantConnect.Brokerages.Bitfinex.Messages;
+using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -35,14 +38,20 @@ namespace QuantConnect.Brokerages.Bitfinex
     /// </summary>
     public partial class BitfinexBrokerage
     {
-        private const string ApiVersion = "v1";
+        private const string ApiVersion = "v2";
+        private const string RestApiUrl = "https://api.bitfinex.com";
+        private const string WebSocketUrl = "wss://api.bitfinex.com/ws/2";
+
         private readonly IAlgorithm _algorithm;
-        private readonly ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
-        private volatile bool _streamLocked;
-        private readonly RateGate _restRateLimiter = new RateGate(8, TimeSpan.FromMinutes(1));
+        private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromMinutes(1));
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
-        private readonly BitfinexSubscriptionManager _subscriptionManager;
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
+        private readonly IDataAggregator _aggregator;
+
+        // map Bitfinex ClientOrderId -> LEAN order (only used for orders submitted in PlaceOrder, not for existing orders)
+        private readonly ConcurrentDictionary<long, Order> _orderMap = new ConcurrentDictionary<long, Order>();
+        private readonly object _clientOrderIdLocker = new object();
+        private long _nextClientOrderId;
 
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
@@ -52,33 +61,33 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <summary>
         /// Constructor for brokerage
         /// </summary>
-        /// <param name="wssUrl">websockets url</param>
-        /// <param name="restUrl">rest api url</param>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
-        public BitfinexBrokerage(string wssUrl, string restUrl, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider)
-            : this(wssUrl, new WebSocketClientWrapper(), new RestClient(restUrl), apiKey, apiSecret, algorithm, priceProvider)
+        /// <param name="aggregator">consolidate ticks</param>
+        public BitfinexBrokerage(string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator)
+            : this(new WebSocketClientWrapper(), new RestClient(RestApiUrl), apiKey, apiSecret, algorithm, priceProvider, aggregator)
         {
         }
 
         /// <summary>
         /// Constructor for brokerage
         /// </summary>
-        /// <param name="wssUrl">websockets url</param>
         /// <param name="websocket">instance of websockets client</param>
         /// <param name="restClient">instance of rest client</param>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
-        public BitfinexBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider)
-            : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.Bitfinex, "Bitfinex")
+        /// <param name="aggregator">consolidate ticks</param>
+        public BitfinexBrokerage(IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider, IDataAggregator aggregator)
+            : base(WebSocketUrl, websocket, restClient, apiKey, apiSecret, "Bitfinex")
         {
-            _subscriptionManager = new BitfinexSubscriptionManager(this, wssUrl, _symbolMapper);
+            SubscriptionManager = new BitfinexSubscriptionManager(this, WebSocketUrl, _symbolMapper);
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _algorithm = algorithm;
+            _aggregator = aggregator;
 
             WebSocket.Open += (sender, args) =>
             {
@@ -93,23 +102,6 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="e"></param>
         public override void OnMessage(object sender, WebSocketMessage e)
         {
-            LastHeartbeatUtcTime = DateTime.UtcNow;
-
-            // Verify if we're allowed to handle the streaming packet yet; while we're placing an order we delay the
-            // stream processing a touch.
-            try
-            {
-                if (_streamLocked)
-                {
-                    _messageBuffer.Enqueue(e);
-                    return;
-                }
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-
             OnMessageImpl(e);
         }
 
@@ -137,38 +129,30 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <summary>
-        /// Subscribes to the requested symbols (using an individual streaming channel)
+        /// Should be empty, Bitfinex brokerage manages his public channels including subscribe/unsubscribe/reconnect methods using <see cref="BitfinexSubscriptionManager"/>
+        /// Not used in master
         /// </summary>
-        /// <param name="symbols">The list of symbols to subscribe</param>
-        public override void Subscribe(IEnumerable<Symbol> symbols)
+        /// <param name="symbols"></param>
+        public override void Subscribe(IEnumerable<Symbol> symbols) { }
+
+        private long GetNextClientOrderId()
         {
-            foreach (var symbol in symbols)
+            lock (_clientOrderIdLocker)
             {
-                if (_subscriptionManager.IsSubscribed(symbol) ||
-                    symbol.Value.Contains("UNIVERSE") ||
-                    !_symbolMapper.IsKnownBrokerageSymbol(symbol.Value) ||
-                    symbol.SecurityType != _symbolMapper.GetLeanSecurityType(symbol.Value))
+                // ensure unique id
+                var id = Convert.ToInt64(Time.DateTimeToUnixTimeStampMilliseconds(DateTime.UtcNow));
+
+                if (id > _nextClientOrderId)
                 {
-                    continue;
+                    _nextClientOrderId = id;
                 }
-
-                _subscriptionManager.Subscribe(symbol);
-
-                Log.Trace($"BitfinexBrokerage.Subscribe(): Sent subscribe for {symbol.Value}.");
+                else
+                {
+                    _nextClientOrderId++;
+                }
             }
-        }
 
-        /// <summary>
-        /// Ends current subscriptions
-        /// </summary>
-        public void Unsubscribe(IEnumerable<Symbol> symbols)
-        {
-            foreach (var symbol in symbols)
-            {
-                _subscriptionManager.Unsubscribe(symbol);
-
-                Log.Trace($"BitfinexBrokerage.Unsubscribe(): Sent unsubscribe for {symbol.Value}.");
-            }
+            return _nextClientOrderId;
         }
 
         /// <summary>
@@ -184,23 +168,56 @@ namespace QuantConnect.Brokerages.Bitfinex
                 if (token is JArray)
                 {
                     var channel = token[0].ToObject<int>();
+
                     // heartbeat
                     if (token[1].Type == JTokenType.String && token[1].Value<string>() == "hb")
                     {
                         return;
                     }
-                    //public channels
+
+                    // account information channel
                     if (channel == 0)
                     {
                         var term = token[1].ToObject<string>();
                         switch (term.ToLowerInvariant())
                         {
+                            // order closed
                             case "oc":
-                                OnOrderClose(token[2].ToObject<string[]>());
+                                OnOrderClose(token[2].ToObject<Messages.Order>());
                                 return;
+
+                            // trade execution update
                             case "tu":
-                                EmitFillOrder(token[2].ToObject<string[]>());
+                                EmitFillOrder(token[2].ToObject<TradeExecutionUpdate>());
                                 return;
+
+                            // notification
+                            case "n":
+                                var notification = token[2];
+                                var status = notification[6].ToString();
+
+                                if (status == "ERROR")
+                                {
+                                    var errorMessage = notification[7].ToString();
+                                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, $"Error: {errorMessage}"));
+
+                                    OnOrderError(notification[4].ToObject<Messages.Order>());
+                                }
+                                else if (status == "SUCCESS")
+                                {
+                                    var type = notification[1].ToString();
+
+                                    if (type == "on-req")
+                                    {
+                                        OnOrderNew(notification[4].ToObject<Messages.Order>());
+                                    }
+                                    else if (type == "ou-req")
+                                    {
+                                        OnOrderUpdate(notification[4].ToObject<Messages.Order>());
+                                    }
+                                }
+                                return;
+
                             default:
                                 return;
                         }
@@ -208,21 +225,24 @@ namespace QuantConnect.Brokerages.Bitfinex
                 }
                 else if (token is JObject)
                 {
-                    var raw = token.ToObject<Messages.BaseMessage>();
+                    var raw = token.ToObject<BaseMessage>();
                     switch (raw.Event.ToLowerInvariant())
                     {
                         case "auth":
-                            var auth = token.ToObject<Messages.AuthResponseMessage>();
+                            var auth = token.ToObject<AuthResponseMessage>();
                             var result = string.Equals(auth.Status, "OK", StringComparison.OrdinalIgnoreCase) ? "succeed" : "failed";
                             Log.Trace($"BitfinexWebsocketsBrokerage.OnMessage: Subscribing to authenticated channels {result}");
                             return;
+
                         case "info":
                         case "ping":
                             return;
+
                         case "error":
-                            var error = token.ToObject<Messages.ErrorMessage>();
-                            Log.Trace($"BitfinexWebsocketsBrokerage.OnMessage: {error.Level}: {error.Message}");
+                            var error = token.ToObject<ErrorMessage>();
+                            Log.Error($"BitfinexWebsocketsBrokerage.OnMessage: {error.Level}: {error.Message}");
                             return;
+
                         default:
                             Log.Trace($"BitfinexWebsocketsBrokerage.OnMessage: Unexpected message format: {e.Message}");
                             break;
@@ -236,39 +256,52 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
-        private void OnOrderClose(string[] entries)
+        private void OnOrderError(Messages.Order bitfinexOrder)
         {
-            var brokerId = entries[0];
-            if (entries[5].IndexOf("canceled", StringComparison.OrdinalIgnoreCase) >= 0)
+            Order order;
+            if (_orderMap.TryGetValue(bitfinexOrder.ClientOrderId, out order))
             {
-                var order = CachedOrderIDs
-                    .FirstOrDefault(o => o.Value.BrokerId.Contains(brokerId))
-                    .Value;
-                if (order == null)
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Bitfinex Order Event")
                 {
-                    order = _algorithm.Transactions.GetOrderByBrokerageId(brokerId);
-                    if (order == null)
+                    Status = OrderStatus.Invalid
+                });
+            }
+        }
+
+        private void OnOrderNew(Messages.Order bitfinexOrder)
+        {
+            if (bitfinexOrder.Status == "ACTIVE")
+            {
+                var brokerId = bitfinexOrder.Id.ToStringInvariant();
+
+                Order order;
+                if (_orderMap.TryGetValue(bitfinexOrder.ClientOrderId, out order))
+                {
+                    if (CachedOrderIDs.ContainsKey(order.Id))
                     {
-                        // not our order, nothing else to do here
-                        return;
+                        CachedOrderIDs[order.Id].BrokerId.Clear();
+                        CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
                     }
-                }
-                Order outOrder;
-                if (CachedOrderIDs.TryRemove(order.Id, out outOrder))
-                {
-                    OnOrderEvent(new OrderEvent(order,
-                        DateTime.UtcNow,
-                        OrderFee.Zero,
-                        "Bitfinex Order Event") { Status = OrderStatus.Canceled });
+                    else
+                    {
+                        order.BrokerId.Add(brokerId);
+                        CachedOrderIDs.TryAdd(order.Id, order);
+                    }
+
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Bitfinex Order Event")
+                    {
+                        Status = OrderStatus.Submitted
+                    });
                 }
             }
         }
 
-        private void EmitFillOrder(string[] entries)
+        private void OnOrderUpdate(Messages.Order bitfinexOrder)
         {
-            try
+            if (bitfinexOrder.Status == "ACTIVE")
             {
-                var brokerId = entries[4];
+                var brokerId = bitfinexOrder.Id.ToStringInvariant();
+
                 var order = CachedOrderIDs
                     .FirstOrDefault(o => o.Value.BrokerId.Contains(brokerId))
                     .Value;
@@ -277,20 +310,81 @@ namespace QuantConnect.Brokerages.Bitfinex
                     order = _algorithm.Transactions.GetOrderByBrokerageId(brokerId);
                     if (order == null)
                     {
-                        // not our order, nothing else to do here
+                        Log.Error($"OnOrderUpdate(): order not found: BrokerId: {brokerId}");
                         return;
                     }
                 }
 
-                var symbol = _symbolMapper.GetLeanSymbol(entries[2]);
-                var fillPrice = decimal.Parse(entries[6], NumberStyles.Float, CultureInfo.InvariantCulture);
-                var fillQuantity = decimal.Parse(entries[5], NumberStyles.Float, CultureInfo.InvariantCulture);
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Bitfinex Order Event")
+                {
+                    Status = OrderStatus.UpdateSubmitted
+                });
+            }
+        }
+
+        private void OnOrderClose(Messages.Order bitfinexOrder)
+        {
+            if (bitfinexOrder.Status.StartsWith("CANCELED"))
+            {
+                var brokerId = bitfinexOrder.Id.ToStringInvariant();
+
+                var order = CachedOrderIDs
+                    .FirstOrDefault(o => o.Value.BrokerId.Contains(brokerId))
+                    .Value;
+                if (order == null)
+                {
+                    order = _algorithm.Transactions.GetOrderByBrokerageId(brokerId);
+                    if (order == null)
+                    {
+                        Log.Error($"OnOrderClose(): order not found: BrokerId: {brokerId}");
+                        return;
+                    }
+                }
+                else
+                {
+                    Order outOrder;
+                    CachedOrderIDs.TryRemove(order.Id, out outOrder);
+                }
+
+                if (bitfinexOrder.ClientOrderId > 0)
+                {
+                    Order removed;
+                    _orderMap.TryRemove(bitfinexOrder.ClientOrderId, out removed);
+                }
+
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Bitfinex Order Event")
+                {
+                    Status = OrderStatus.Canceled
+                });
+            }
+        }
+
+        private void EmitFillOrder(TradeExecutionUpdate update)
+        {
+            try
+            {
+                var brokerId = update.OrderId.ToStringInvariant();
+
+                var order = CachedOrderIDs
+                    .FirstOrDefault(o => o.Value.BrokerId.Contains(brokerId))
+                    .Value;
+
+                if (order == null)
+                {
+                    order = _algorithm.Transactions.GetOrderByBrokerageId(brokerId);
+                    if (order == null)
+                    {
+                        Log.Error($"EmitFillOrder(): order not found: BrokerId: {brokerId}");
+                        return;
+                    }
+                }
+
+                var symbol = _symbolMapper.GetLeanSymbol(update.Symbol);
+                var fillPrice = update.ExecPrice;
+                var fillQuantity = update.ExecAmount;
                 var direction = fillQuantity < 0 ? OrderDirection.Sell : OrderDirection.Buy;
-                var updTime = Time.UnixTimeStampToDateTime(double.Parse(entries[3], NumberStyles.Float, CultureInfo.InvariantCulture));
-                var orderFee = new OrderFee(new CashAmount(
-                        Math.Abs(decimal.Parse(entries[9], NumberStyles.Float, CultureInfo.InvariantCulture)),
-                        entries[10]
-                    ));
+                var updTime = Time.UnixMillisecondTimeStampToDateTime(update.MtsCreate);
+                var orderFee = new OrderFee(new CashAmount(Math.Abs(update.Fee), update.FeeCurrency));
 
                 var status = OrderStatus.Filled;
                 if (fillQuantity != order.Quantity)
@@ -317,8 +411,15 @@ namespace QuantConnect.Brokerages.Bitfinex
                 {
                     Order outOrder;
                     CachedOrderIDs.TryRemove(order.Id, out outOrder);
+
                     decimal ignored;
                     _fills.TryRemove(order.Id, out ignored);
+
+                    var clientOrderId = _orderMap.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerId)).Key;
+                    if (clientOrderId > 0)
+                    {
+                        _orderMap.TryRemove(clientOrderId, out outOrder);
+                    }
                 }
 
                 OnOrderEvent(orderEvent);
@@ -331,57 +432,18 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <summary>
-        /// Lock the streaming processing while we're sending orders as sometimes they fill before the REST call returns.
+        /// Emit stream tick
         /// </summary>
-        public void LockStream()
+        /// <param name="tick"></param>
+        public void EmitTick(Tick tick)
         {
-            Log.Trace("BitfinexBrokerage.Messaging.LockStream(): Locking Stream");
-            _streamLocked = true;
+            _aggregator.Update(tick);
         }
 
         /// <summary>
-        /// Unlock stream and process all backed up messages.
-        /// </summary>
-        public void UnlockStream()
-        {
-            Log.Trace("BitfinexBrokerage.Messaging.UnlockStream(): Processing Backlog...");
-            while (_messageBuffer.Any())
-            {
-                WebSocketMessage e;
-                _messageBuffer.TryDequeue(out e);
-                OnMessageImpl(e);
-            }
-            Log.Trace("BitfinexBrokerage.Messaging.UnlockStream(): Stream Unlocked.");
-            // Once dequeued in order; unlock stream.
-            _streamLocked = false;
-        }
-
-        /// <summary>
-        /// Gets a list of current subscriptions
+        /// Should be empty. <see cref="BitfinexSubscriptionManager"/> manages each <see cref="BitfinexWebSocketWrapper"/> individually
         /// </summary>
         /// <returns></returns>
-        protected override IList<Symbol> GetSubscribed()
-        {
-            IList<Symbol> list = new List<Symbol>();
-            lock (ChannelList)
-            {
-                foreach (var ticker in ChannelList.Select(x => x.Value.Symbol).Distinct())
-                {
-                    list.Add(_symbolMapper.GetLeanSymbol(ticker));
-                }
-            }
-            return list;
-        }
-    }
-
-    /// <summary>
-    /// Represents Bitfinex channel information
-    /// </summary>
-    public class BitfinexChannel : BaseWebsocketsBrokerage.Channel
-    {
-        /// <summary>
-        /// Represents channel identifier for specific subscription
-        /// </summary>
-        public string ChannelId { get; set; }
+        protected override IEnumerable<Symbol> GetSubscribed() => new List<Symbol>();
     }
 }

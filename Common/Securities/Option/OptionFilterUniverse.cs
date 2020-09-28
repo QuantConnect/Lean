@@ -444,5 +444,15 @@ namespace QuantConnect.Securities
             universe._isDynamic = true;
             return universe;
         }
+
+        /// <summary>
+        /// Updates universe to only contain the symbols in the list
+        /// </summary>
+        public static OptionFilterUniverse WhereContains(this OptionFilterUniverse universe, List<Symbol> filterList)
+        {
+            universe._allSymbols = universe._allSymbols.Where(filterList.Contains).ToList();
+            universe._isDynamic = true;
+            return universe;
+        }
     }
 }

@@ -16,10 +16,14 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.InteractiveBrokers;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
@@ -30,25 +34,27 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [Test]
         public void GetsTickData()
         {
-            using (var ib = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(), new SecurityProvider()))
+            using (var ib = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(), new SecurityProvider(), new AggregationManager()))
             {
                 ib.Connect();
-
-                ib.Subscribe(null, new List<Symbol> {Symbols.USDJPY, Symbols.EURGBP});
-
-                Thread.Sleep(2000);
-
                 var gotUsdData = false;
                 var gotEurData = false;
-                for (int i = 0; i < 20; i++)
-                {
-                    foreach (var tick in ib.GetNextTicks())
-                    {
-                        Console.WriteLine("{0}: {1} - {2} @ {3}", tick.Time, tick.Symbol, tick.Price, ((Tick)tick).Quantity);
-                        gotUsdData |= tick.Symbol == Symbols.USDJPY;
-                        gotEurData |= tick.Symbol == Symbols.EURGBP;
-                    }
-                }
+
+                var cancelationToken = new CancellationTokenSource();
+
+                ProcessFeed(
+                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.AAPL, Resolution.Second), (s, e) => { gotUsdData = true; }),
+                    cancelationToken,
+                    (tick) => Log(tick));
+
+                ProcessFeed(
+                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.SPY, Resolution.Second), (s, e) => { gotEurData = true; }),
+                    cancelationToken,
+                    (tick) => Log(tick));
+
+                Thread.Sleep(2000);
+                cancelationToken.Cancel();
+                cancelationToken.Dispose();
 
                 Assert.IsTrue(gotUsdData);
                 Assert.IsTrue(gotEurData);
@@ -58,37 +64,89 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [Test]
         public void GetsTickDataAfterDisconnectionConnectionCycle()
         {
-            using (var ib = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(), new SecurityProvider()))
+            using (var ib = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(), new SecurityProvider(), new AggregationManager()))
             {
                 ib.Connect();
-                ib.Subscribe(null, new List<Symbol> {Symbols.USDJPY, Symbols.EURGBP});
-                ib.Disconnect();
+                var cancelationToken = new CancellationTokenSource();
+                var gotUsdData = false;
+                var gotEurData = false;
+
+                ProcessFeed(
+                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.AAPL, Resolution.Second), (s, e) => { gotUsdData = true; }),
+                    cancelationToken,
+                    (tick) => Log(tick));
+
+                ProcessFeed(
+                    ib.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.SPY, Resolution.Second), (s, e) => { gotEurData = true; }),
+                    cancelationToken,
+                    (tick) => Log(tick));
+
                 Thread.Sleep(2000);
 
-                for (var i = 0; i < 20; i++)
-                {
-                    foreach (var tick in ib.GetNextTicks()) // we need to make sure we consumer the already sent data, if any
-                    {
-                        Console.WriteLine("{0}: {1} - {2} @ {3}", tick.Time, tick.Symbol, tick.Price, ((Tick)tick).Quantity);
-                    }
-                }
+                Assert.IsTrue(gotUsdData);
+                Assert.IsTrue(gotEurData);
+
+                ib.Disconnect();
+                gotUsdData = false;
+                gotEurData = false;
+
+                Thread.Sleep(2000);
 
                 ib.Connect();
                 Thread.Sleep(2000);
 
-                var gotUsdData = false;
-                var gotEurData = false;
-                for (var i = 0; i < 20; i++)
-                {
-                    foreach (var tick in ib.GetNextTicks())
-                    {
-                        Console.WriteLine("{0}: {1} - {2} @ {3}", tick.Time, tick.Symbol, tick.Price, ((Tick)tick).Quantity);
-                        gotUsdData |= tick.Symbol == Symbols.USDJPY;
-                        gotEurData |= tick.Symbol == Symbols.EURGBP;
-                    }
-                }
+                cancelationToken.Cancel();
+                cancelationToken.Dispose();
+
                 Assert.IsTrue(gotUsdData);
                 Assert.IsTrue(gotEurData);
+            }
+        }
+
+        protected SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
+        {
+            return new SubscriptionDataConfig(
+                typeof(T),
+                symbol,
+                resolution,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                true,
+                true,
+                false);
+        }
+
+        private void ProcessFeed(IEnumerator<BaseData> enumerator, CancellationTokenSource cancellationToken, Action<BaseData> callback = null)
+        {
+            Task.Run(() =>
+            {
+                try
+                {
+                    while (enumerator.MoveNext() && !cancellationToken.IsCancellationRequested)
+                    {
+                        BaseData tick = enumerator.Current;
+                        if (callback != null)
+                        {
+                            callback.Invoke(tick);
+                        }
+                    }
+                }
+                catch (AssertionException)
+                {
+                    throw;
+                }
+                catch (Exception err)
+                {
+                    Console.WriteLine(err.Message);
+                }
+            });
+        }
+
+        private void Log(BaseData tick)
+        {
+            if (tick != null)
+            {
+                Console.WriteLine("{0}: {1} - {2} @ {3}", tick.Time, tick.Symbol, tick.Price, ((Tick)tick).Quantity);
             }
         }
     }

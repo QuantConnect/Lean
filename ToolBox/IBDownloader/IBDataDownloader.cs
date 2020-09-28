@@ -37,7 +37,7 @@ namespace QuantConnect.ToolBox.IBDownloader
         /// </summary>
         public IBDataDownloader()
         {
-            _brokerage = new InteractiveBrokersBrokerage(null, null, null);
+            _brokerage = new InteractiveBrokersBrokerage(null, null, null, null);
             _brokerage.Connect();
         }
 

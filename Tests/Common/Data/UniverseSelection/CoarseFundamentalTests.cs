@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.IO;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;

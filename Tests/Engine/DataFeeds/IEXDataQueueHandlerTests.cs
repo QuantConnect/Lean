@@ -16,6 +16,9 @@
 
 using System;
 using System.Net;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NodaTime;
@@ -33,27 +36,28 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [Explicit("Tests are dependent on network and are long")]
     public class IEXDataQueueHandlerTests
     {
-        private void ProcessFeed(IEXDataQueueHandler iex, Action<BaseData> callback = null)
+        private void ProcessFeed(IEnumerator<BaseData> enumerator, Action<BaseData> callback = null)
         {
             Task.Run(() =>
             {
-                foreach (var tick in iex.GetNextTicks())
+                try
                 {
-                    try
+                    while (enumerator.MoveNext())
                     {
+                        BaseData tick = enumerator.Current;
                         if (callback != null)
                         {
                             callback.Invoke(tick);
                         }
                     }
-                    catch (AssertionException)
-                    {
-                        throw;
-                    }
-                    catch (Exception err)
-                    {
-                        Console.WriteLine(err.Message);
-                    }
+                }
+                catch (AssertionException)
+                {
+                    throw;
+                }
+                catch (Exception err)
+                {
+                    Console.WriteLine(err.Message);
                 }
             });
         }
@@ -78,12 +82,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var iex = new IEXDataQueueHandler();
 
-            ProcessFeed(iex, tick => Console.WriteLine(tick.ToString()));
-
-            iex.Subscribe(null, new[]
-            {
-                Symbol.Create("firehose", SecurityType.Equity, Market.USA)
-            });
+            ProcessFeed(
+                iex.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbol.Create("firehose", SecurityType.Equity, Market.USA), Resolution.Second), (s, e) => { }),
+                tick =>
+                {
+                    if (tick != null)
+                    {
+                        Console.WriteLine(tick.ToString());
+                    }
+                });
 
             Thread.Sleep(30000);
             iex.Dispose();
@@ -97,15 +104,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var iex = new IEXDataQueueHandler();
 
-            ProcessFeed(iex, tick => Console.WriteLine(tick.ToString()));
-
-            iex.Subscribe(null, new[]
+            Array.ForEach(new[] { "FB", "AAPL", "XIV", "PTN", "USO" }, (ticker) =>
             {
-                Symbol.Create("FB", SecurityType.Equity, Market.USA),
-                Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
-                Symbol.Create("XIV", SecurityType.Equity, Market.USA),
-                Symbol.Create("PTN", SecurityType.Equity, Market.USA),
-                Symbol.Create("USO", SecurityType.Equity, Market.USA),
+                ProcessFeed(
+                    iex.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbol.Create(ticker, SecurityType.Equity, Market.USA), Resolution.Second), (sender, e) => { }),
+                    tick =>
+                    {
+                        if (tick != null)
+                        {
+                            Console.WriteLine(tick.ToString());
+                        }
+                    });
             });
 
             Thread.Sleep(10000);
@@ -120,45 +129,36 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var iex = new IEXDataQueueHandler();
 
-            ProcessFeed(iex, tick => Console.WriteLine(tick.ToString()));
+            var configs = new[] {
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("MBLY", SecurityType.Equity, Market.USA), Resolution.Second),
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("FB", SecurityType.Equity, Market.USA), Resolution.Second),
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), Resolution.Second),
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("USO", SecurityType.Equity, Market.USA), Resolution.Second)
+            };
 
-            iex.Subscribe(null, new[]
+            Array.ForEach(configs, (c) =>
             {
-                Symbol.Create("MBLY", SecurityType.Equity, Market.USA),
-            });
-
-            iex.Subscribe(null, new[]
-            {
-                Symbol.Create("FB", SecurityType.Equity, Market.USA),
-            });
-
-            iex.Subscribe(null, new[]
-            {
-                Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
-            });
-
-            iex.Subscribe(null, new[]
-            {
-                Symbol.Create("USO", SecurityType.Equity, Market.USA),
+                ProcessFeed(
+                    iex.Subscribe(c, (s, e) => { }),
+                    tick =>
+                    {
+                        if (tick != null)
+                        {
+                            Console.WriteLine(tick.ToString());
+                        }
+                    });
             });
 
             Thread.Sleep(10000);
 
             Console.WriteLine("Unsubscribing from all except MBLY");
 
-            iex.Unsubscribe(null, new[]
+            Array.ForEach(configs, (c) =>
             {
-                Symbol.Create("FB", SecurityType.Equity, Market.USA),
-            });
-
-            iex.Unsubscribe(null, new[]
-            {
-                Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
-            });
-
-            iex.Unsubscribe(null, new[]
-            {
-                Symbol.Create("USO", SecurityType.Equity, Market.USA),
+                if (!string.Equals(c.Symbol.Value, "MBLY"))
+                {
+                    iex.Unsubscribe(c);
+                }
             });
 
             Thread.Sleep(10000);
@@ -172,26 +172,34 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // MBLY is the most liquid IEX instrument
             var iex = new IEXDataQueueHandler();
             var unsubscribed = false;
-            ProcessFeed(iex, tick =>
+            Action<BaseData> callback = (tick) =>
             {
+                if (tick == null)
+                    return;
+
                 Console.WriteLine(tick.ToString());
                 if (unsubscribed && tick.Symbol.Value == "MBLY")
                 {
                     Assert.Fail("Should not receive data for unsubscribed symbol");
                 }
-            });
+            };
 
-            iex.Subscribe(null, new[] {
-                Symbol.Create("MBLY", SecurityType.Equity, Market.USA),
-                Symbol.Create("USO", SecurityType.Equity, Market.USA)
+            var configs = new[] {
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("MBLY", SecurityType.Equity, Market.USA), Resolution.Second),
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("USO", SecurityType.Equity, Market.USA), Resolution.Second)
+            };
+
+            Array.ForEach(configs, (c) =>
+            {
+                ProcessFeed(
+                    iex.Subscribe(c, (s, e) => { }),
+                    callback);
             });
 
             Thread.Sleep(20000);
 
-            iex.Unsubscribe(null, new[]
-            {
-                Symbol.Create("MBLY", SecurityType.Equity, Market.USA)
-            });
+            iex.Unsubscribe(configs.First(c => string.Equals(c.Symbol.Value, "MBLY")));
+
             Console.WriteLine("Unsubscribing");
             Thread.Sleep(2000);
             // some messages could be inflight, but after a pause all MBLY messages must have beed consumed by ProcessFeed
@@ -316,5 +324,23 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         #endregion
+
+        #region helper
+
+        protected SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
+        {
+            return new SubscriptionDataConfig(
+                typeof(T),
+                symbol,
+                resolution,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                true,
+                true,
+                false);
+        }
+
+        #endregion
+
     }
 }

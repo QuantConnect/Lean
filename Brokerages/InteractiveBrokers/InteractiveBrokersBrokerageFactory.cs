@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
@@ -95,6 +96,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 algorithm,
                 algorithm.Transactions,
                 algorithm.Portfolio,
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
                 account,
                 host,
                 port,

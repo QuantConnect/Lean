@@ -16,8 +16,8 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Packets;
 using QuantConnect.Configuration;
+using QuantConnect.Packets;
 using Quobject.SocketIoClientDotNet.Client;
 using QuantConnect.Logging;
 using Newtonsoft.Json.Linq;
@@ -32,6 +32,9 @@ using QuantConnect.Interfaces;
 using NodaTime;
 using System.Globalization;
 using static QuantConnect.StringExtensions;
+using QuantConnect.Util;
+using CoinAPI.WebSocket.V1.DataModels;
+using System.Linq;
 
 namespace QuantConnect.ToolBox.IEX
 {
@@ -54,8 +57,9 @@ namespace QuantConnect.ToolBox.IEX
         private readonly TaskCompletionSource<bool> _connected = new TaskCompletionSource<bool>();
         private bool _subscribedToAll;
         private int _dataPointCount;
-
-        private readonly BlockingCollection<BaseData> _outputCollection = new BlockingCollection<BaseData>();
+        private readonly IDataAggregator _aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
+            Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         public string Endpoint { get; internal set; }
 
@@ -67,6 +71,19 @@ namespace QuantConnect.ToolBox.IEX
 
         public IEXDataQueueHandler(bool live)
         {
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager.SubscribeImpl += (s, t) =>
+            {
+                Subscribe(s);
+                return true;
+            };
+
+            _subscriptionManager.UnsubscribeImpl += (s, t) =>
+            {
+                Unsubscribe(s);
+                return true;
+            };
+
             Endpoint = "https://ws-api.iextrading.com/1.0/tops";
 
             if (string.IsNullOrWhiteSpace(_apiKey))
@@ -156,7 +173,8 @@ namespace QuantConnect.ToolBox.IEX
                     Value = lastSalePrice,
                     Quantity = lastSaleSize
                 };
-                _outputCollection.TryAdd(tick);
+
+                _aggregator.Update(tick);
             }
             catch (Exception err)
             {
@@ -166,18 +184,36 @@ namespace QuantConnect.ToolBox.IEX
         }
 
         /// <summary>
-        /// Desktop/Local doesn't support live data from this handler
+        /// Subscribe to the specified configuration
         /// </summary>
-        /// <returns>Tick</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            return _outputCollection.GetConsumingEnumerable();
+            if (dataConfig.SecurityType != SecurityType.Equity)
+            {
+                return Enumerable.Empty<BaseData>().GetEnumerator();
+            }
+
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
+            _subscriptionManager.Subscribe(dataConfig);
+
+            return enumerator;
+        }
+
+        /// <summary>
+        /// Sets the job we're subscribing for
+        /// </summary>
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
+        {
         }
 
         /// <summary>
         /// Subscribe to symbols
         /// </summary>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public void Subscribe(IEnumerable<Symbol> symbols)
         {
             try
             {
@@ -185,7 +221,6 @@ namespace QuantConnect.ToolBox.IEX
                 foreach (var symbol in symbols)
                 {
                     // IEX only supports equities
-                    if (symbol.SecurityType != SecurityType.Equity) continue;
                     if (symbol.Value.Equals("firehose", StringComparison.InvariantCultureIgnoreCase))
                     {
                         _subscribedToAll = true;
@@ -210,9 +245,20 @@ namespace QuantConnect.ToolBox.IEX
         }
 
         /// <summary>
+        /// Removes the specified configuration
+        /// </summary>
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            _subscriptionManager.Unsubscribe(dataConfig);
+            _aggregator.Remove(dataConfig);
+        }
+
+
+        /// <summary>
         /// Unsubscribe from symbols
         /// </summary>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        public void Unsubscribe(IEnumerable<Symbol> symbols)
         {
             try
             {
@@ -298,7 +344,7 @@ namespace QuantConnect.ToolBox.IEX
 
         private void Dispose(bool disposing)
         {
-            _outputCollection.CompleteAdding();
+            _aggregator.DisposeSafely();
             _cts.Cancel();
             if (_socket != null)
             {
@@ -397,7 +443,7 @@ namespace QuantConnect.ToolBox.IEX
             {
                 suffixes.Add("1m");
             }
-            else if (span.Days < 3*30)
+            else if (span.Days < 3 * 30)
             {
                 suffixes.Add("3m");
             }

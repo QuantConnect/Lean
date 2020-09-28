@@ -105,9 +105,7 @@ namespace QuantConnect.Tests.Common.Orders
         {
             var algo = new AlgorithmStub();
             var orderProcessor = new FakeOrderProcessor();
-            var ticket = new OrderTicket(
-                algo.Transactions,
-                new SubmitOrderRequest(
+            var orderRequest = new SubmitOrderRequest(
                     OrderType.Market,
                     SecurityType.Future,
                     Symbols.Future_CLF19_Jan2019,
@@ -116,8 +114,12 @@ namespace QuantConnect.Tests.Common.Orders
                     250,
                     new DateTime(2020, 1, 1),
                     "Pepe"
-                )
-            );
+                );
+
+            var order = Order.CreateOrder(orderRequest);
+            var ticket = new OrderTicket(algo.Transactions, orderRequest);
+            ticket.SetOrder(order);
+           
             ticket.AddOrderEvent(new OrderEvent(1,
                 Symbols.Future_CLF19_Jan2019,
                 new DateTime(2020, 1, 1),

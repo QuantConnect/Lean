@@ -14,11 +14,15 @@
 */
 using System;
 using System.Collections.Generic;
-using System.Globalization;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
+using IQFeed.CSharpApiClient;
+using IQFeed.CSharpApiClient.Lookup;
 using QuantConnect.Configuration;
-using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
+using QuantConnect.ToolBox.IQFeed;
 using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.IQFeedDownloader
@@ -28,6 +32,8 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
     /// </summary>
     public static class IQFeedDownloaderProgram
     {
+        private const int NumberOfClients = 8;
+
         /// <summary>
         /// Primary entry point to the program. This program only supports EQUITY for now.
         /// </summary>
@@ -36,15 +42,15 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
             if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
                 Console.WriteLine("IQFeedDownloader ERROR: '--tickers=' or '--resolution=' parameter is missing");
-                Console.WriteLine("--tickers=eg SPY,AAPL");
+                Console.WriteLine("--tickers=SPY,AAPL");
                 Console.WriteLine("--resolution=Tick/Second/Minute/Hour/Daily/All");
                 Environment.Exit(1);
             }
             try
             {
                 // Load settings from command line
-                var allResolutions = resolution.ToLowerInvariant() == "all";
-                var castResolution = allResolutions ? Resolution.Tick : (Resolution)Enum.Parse(typeof(Resolution), resolution);
+                var allResolution = resolution.ToLowerInvariant() == "all";
+                var castResolution = allResolution ? Resolution.Tick : (Resolution)Enum.Parse(typeof(Resolution), resolution);
                 var startDate = fromDate.ConvertToUtc(TimeZones.NewYork);
                 var endDate = toDate.ConvertToUtc(TimeZones.NewYork);
                 endDate = endDate.AddDays(1).AddMilliseconds(-1);
@@ -58,38 +64,42 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
 
                 // Create an instance of the downloader
                 const string market = Market.USA;
-                var downloader = new IQFeedDataDownloader(userName, password, productName, productVersion);
 
-                foreach (var ticker in tickers)
-                {
-                    // Download the data
-                    var symbol = Symbol.Create(ticker, SecurityType.Equity, market);
-                    var data = downloader.Get(symbol, castResolution, startDate, endDate);
+                // Connect to IQFeed
+                IQFeedLauncher.Start(userName, password, productName, productVersion);
+                var lookupClient = LookupClientFactory.CreateNew(NumberOfClients);
+                lookupClient.Connect();
 
-                    if (allResolutions)
-                    {
-                        var ticks = data.Cast<Tick>().ToList();
+                // Create IQFeed downloader instance
+                var universeProvider = new IQFeedDataQueueUniverseProvider();
+                var historyProvider = new IQFeedFileHistoryProvider(lookupClient, universeProvider, MarketHoursDatabase.FromDataFolder());
+                var downloader = new IQFeedDataDownloader(historyProvider);
+                var quoteDownloader = new IQFeedDataDownloader(historyProvider, TickType.Quote);
 
-                        // Save the data (tick resolution)
-                        var writer = new LeanDataWriter(castResolution, symbol, dataDirectory);
-                        writer.Write(ticks);
+                var resolutions = allResolution ? new List<Resolution> { Resolution.Tick, Resolution.Second, Resolution.Minute, Resolution.Hour, Resolution.Daily } : new List<Resolution> { castResolution };
+                var requests = resolutions.SelectMany(r => tickers.Select(t => new { Ticker = t, Resolution = r })).ToList();
 
-                        // Save the data (other resolutions)
-                        foreach (var res in new[] { Resolution.Second, Resolution.Minute, Resolution.Hour, Resolution.Daily })
-                        {
-                            var resData = IQFeedDataDownloader.AggregateTicks(symbol, ticks, res.ToTimeSpan());
+                var sw = Stopwatch.StartNew();
+                Parallel.ForEach(requests, new ParallelOptions { MaxDegreeOfParallelism = NumberOfClients }, request =>
+                 {
+                     // Download the data
+                     var symbol = Symbol.Create(request.Ticker, SecurityType.Equity, market);
+                     var data = downloader.Get(symbol, request.Resolution, startDate, endDate);
 
-                            writer = new LeanDataWriter(res, symbol, dataDirectory);
-                            writer.Write(resData);
-                        }
-                    }
-                    else
-                    {
-                        // Save the data (single resolution)
-                        var writer = new LeanDataWriter(castResolution, symbol, dataDirectory);
-                        writer.Write(data);
-                    }
-                }
+                     // Write the data
+                     var writer = new LeanDataWriter(request.Resolution, symbol, dataDirectory);
+                     writer.Write(data);
+
+                     if (request.Resolution == Resolution.Tick)
+                     {
+                         var quotes = quoteDownloader.Get(symbol, request.Resolution, startDate, endDate);
+                         var quoteWriter = new LeanDataWriter(request.Resolution, symbol, dataDirectory, TickType.Quote);
+                         quoteWriter.Write(quotes);
+                     }
+                 });
+                sw.Stop();
+
+                Log.Trace($"IQFeedDownloader: Completed successfully in {sw.Elapsed}!");
             }
             catch (Exception err)
             {
