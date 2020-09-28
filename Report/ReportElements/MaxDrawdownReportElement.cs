@@ -53,8 +53,8 @@ namespace QuantConnect.Report.ReportElements
             var backtestEquityPoints = new Series<DateTime, double>(ResultsUtil.EquityPoints(_backtest));
             var liveEquityPoints = new Series<DateTime, double>(ResultsUtil.EquityPoints(_live));
 
-            var backtestDrawdownGroups = new DrawdownCollection(backtestEquityPoints, 5);
-            var liveDrawdownGroups = new DrawdownCollection(liveEquityPoints, 5);
+            var backtestDrawdownGroups = new DrawdownCollection(backtestEquityPoints, 1);
+            var liveDrawdownGroups = new DrawdownCollection(liveEquityPoints, 1);
 
             var separateResultsMaxDrawdown = backtestDrawdownGroups.Drawdowns
                 .Concat(liveDrawdownGroups.Drawdowns)

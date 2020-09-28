@@ -22,7 +22,6 @@ namespace QuantConnect.Report.ReportElements
     internal class DaysLiveReportElement : ReportElement
     {
         private LiveResult _live;
-        private BacktestResult _backtest;
 
         /// <summary>
         /// Create a new metric describing the number of days an algorithm has been live.
@@ -31,10 +30,9 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public DaysLiveReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        public DaysLiveReportElement(string name, string key, LiveResult live)
         {
             _live = live;
-            _backtest = backtest;
             Name = name;
             Key = key;
         }

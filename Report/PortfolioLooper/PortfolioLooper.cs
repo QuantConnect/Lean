@@ -338,7 +338,7 @@ namespace QuantConnect.Report
                 }
                 else
                 {
-                    lastFillTime = order.Time;
+                    lastFillTime = order.LastFillTime.Value;
                 }
 
                 var tick = new Tick { Quantity = order.Quantity, AskPrice = order.Price, BidPrice = order.Price, Value = order.Price, EndTime = lastFillTime };
