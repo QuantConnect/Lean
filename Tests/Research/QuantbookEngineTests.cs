@@ -5,6 +5,7 @@ using System.Linq;
 using QuantConnect.Research;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Indicators;
 
 
 namespace QuantConnect.Tests.Research
@@ -37,6 +38,15 @@ namespace QuantConnect.Tests.Research
         }
 
         [Test]
+        public void EndTimePastEndDateTest()
+        {
+            qb.AddEquity("SPY", Resolution.Hour);
+            qb.Step(new DateTime(2013, 12, 1)); // Beyond our end date of 10/11/2013
+            Assert.IsTrue(qb.Time <= qb.EndDate); // Time should stop before end date (end of stream)
+            qb.TearDown();
+        }
+
+        [Test]
         public void ConsolidatorTest()
         {
             var spy = qb.AddEquity("SPY", Resolution.Minute).Symbol;
@@ -59,6 +69,22 @@ namespace QuantConnect.Tests.Research
             Assert.AreEqual(0, indicator.Current.Value);
             qb.Step(10);
             Assert.AreEqual(153.0310, (double)indicator.Current.Value, 0.005);
+            qb.TearDown();
+        }
+
+        [Test]
+        public void IndicatorExtensionsTest()
+        {
+            var spy = qb.AddEquity("SPY", Resolution.Minute).Symbol;
+            var ema = qb.EMA(spy, 10); //Create EMA indicator
+            var roc = new RateOfChange(10).Of(ema); //Attach ROC to EMA
+
+            Assert.AreEqual(0, ema.Current.Value);
+            Assert.AreEqual(0, roc.Current.Value);
+            qb.Step(10);
+            Assert.AreEqual(1, roc.Samples); //We should have only one sample since EMA just produced its first value
+            qb.Step(9);
+            Assert.AreEqual(0.0011738588880640296659611208, roc.Current.Value);
             qb.TearDown();
         }
 
@@ -91,14 +117,26 @@ namespace QuantConnect.Tests.Research
             qb.TearDown();
         }
 
+        [Test]
+        public void AddSecuritiesAfterStartedTest()
+        {
+            //TODO: Do we want this to be possible or not?
+        }
+
+        [Test]
+        public void ScheduledEventsTest()
+        {
+            //TODO
+        }
+
         // Time test cases: resolution, steps, and expected end time
-        // QB Starts at 9:30.00
         private static readonly object[] TimeTestCases =
         {
             new object[] {Resolution.Tick, 1000, new DateTime(2013, 10, 7, 9, 30, 13).AddMilliseconds(3)},
             new object[] {Resolution.Second, 600,new DateTime(2013, 10, 7, 9, 40, 00)},
             new object[] {Resolution.Minute, 80, new DateTime(2013, 10, 7, 10, 50, 0)},
             new object[] {Resolution.Hour, 5, new DateTime(2013, 10, 7, 14, 0, 0)},
+            new object[] {Resolution.Daily, 2, new DateTime(2013, 10, 9)},
         };
     }
 }
