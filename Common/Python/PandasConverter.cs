@@ -17,7 +17,6 @@ using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Memory;
 using Python.Runtime;
-using Python;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using System;
@@ -25,7 +24,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Remoting.Activation;
 using QuantConnect.Data.Market;
 using QuantConnect.Util;
 
@@ -38,6 +36,8 @@ namespace QuantConnect.Python
     {
         private static dynamic _pandas;
         private static dynamic _pa;
+        private static dynamic _np;
+        private static dynamic _filter;
         private static dynamic _optionIndexes;
         private static dynamic _optionFinalIndexes;
         private static PyList _defaultIndexes;
@@ -126,10 +126,13 @@ namespace QuantConnect.Python
                     // pyarrow is used to create a DataFrame without having to serialize the data.
                     // It also allows us to construct a DataFrame as a zero-copy operation.
                     _pa = PythonEngine.ImportModule("pyarrow");
+                    _np = PythonEngine.ImportModule("numpy");
+
+                    _filter = new dynamic[] { 0, string.Empty, false };
 
                     _optionIndexes = new PyList(new[] { new PyString("strike"), new PyString("type") });
                     _optionFinalIndexes = new PyList(new[]
-                    {
+                                         {
                         new PyString("strike"),
                         new PyString("type"),
                         new PyString("symbol"),
@@ -1023,9 +1026,8 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
                     dataFrames.Clear();
 
-                    // Filters all columns only containing values: NaN, "", false, 0
-                    //final_df = final_df[final_df.columns[final_df.replace(_filter, _np.NaN).isnull().all()]];
-                    final_df.drop(columns: final_df.columns[final_df.__eq__("").__or__(final_df.__eq__(0)).__or__(final_df.__eq__(false)).__or__(final_df.isnull()).all()], inplace: true);
+                    // Filters all columns only containing values: NaN, 0, "", or false
+                    final_df.drop(columns: final_df.columns[final_df.replace(_filter, _np.NaN).isnull().all()], inplace: true);
 
                     if (!final_df.index.is_monotonic_increasing || !final_df.index.is_lexsorted())
                     {
