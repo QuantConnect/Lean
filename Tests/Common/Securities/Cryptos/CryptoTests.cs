@@ -16,6 +16,7 @@ namespace QuantConnect.Tests.Common.Securities.Cryptos
 
         [Test]
         [TestCase("BTCUSD", "USD")]
+        [TestCase("BTCEUR", "EUR")]
         [TestCase("ETHBTC", "BTC")]
         [TestCase("ETHUSDT", "USDT")]
         public void ConstructorParseBaseCurrencyBySymbolProps(string ticker, string quote)

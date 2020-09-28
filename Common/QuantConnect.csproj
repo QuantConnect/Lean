@@ -255,6 +255,7 @@
     <Compile Include="Benchmarks\SecurityBenchmark.cs" />
     <Compile Include="Brokerages\AlpacaBrokerageModel.cs" />
     <Compile Include="Brokerages\AlphaStreamsBrokerageModel.cs" />
+    <Compile Include="Brokerages\BinanceBrokerageModel.cs" />
     <Compile Include="Brokerages\BrokerageFactoryAttribute.cs" />
     <Compile Include="Brokerages\BrokerageName.cs" />
     <Compile Include="Brokerages\DefaultBrokerageMessageHandler.cs" />
@@ -363,6 +364,8 @@
     <Compile Include="Interfaces\ISubscriptionDataConfigService.cs" />
     <Compile Include="Interfaces\ITimeKeeper.cs" />
     <Compile Include="Interfaces\ObjectStoreErrorRaisedEventArgs.cs" />
+    <Compile Include="Orders\BinanceOrderProperties.cs" />
+    <Compile Include="Orders\Fees\BinanceFeeModel.cs" />
     <Compile Include="IsolatorLimitResult.cs" />
     <Compile Include="IsolatorLimitResultProvider.cs" />
     <Compile Include="ITimeProvider.cs" />

@@ -683,7 +683,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Sets the tick Value based on ask and bid price
         /// </summary>
-        private void SetValue()
+        public void SetValue()
         {
             Value = BidPrice + AskPrice;
             if (BidPrice * AskPrice != 0)

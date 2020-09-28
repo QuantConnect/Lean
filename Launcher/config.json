@@ -115,6 +115,10 @@
   "bitfinex-api-secret": "",
   "bitfinex-api-key": "",
 
+    // binance configuration
+  "binance-api-secret": "",
+  "binance-api-key": "",
+
   // Required to access data from Quandl
   // To get your access token go to https://www.quandl.com/account/api
   "quandl-auth-token": "",
@@ -278,6 +282,20 @@
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "BitfinexBrokerage",
       "data-queue-handler": "BitfinexBrokerage",
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": "BrokerageHistoryProvider"
+    },
+
+    "live-binance": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "BinanceBrokerage",
+      "data-queue-handler": "BinanceBrokerage",
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",

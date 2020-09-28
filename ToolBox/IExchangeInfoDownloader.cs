@@ -12,25 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using System;
+
 using System.Collections.Generic;
-using QuantConnect.Data;
 
 namespace QuantConnect.ToolBox
 {
     /// <summary>
-    /// Data Downloader Interface for pulling data from a remote source.
+    /// Exchange Info Downloader Interface for pulling data from a remote source.
     /// </summary>
-    public interface IDataDownloader
+    public interface IExchangeInfoDownloader
     {
         /// <summary>
-        /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
+        /// Market
         /// </summary>
-        /// <param name="symbol">Symbol for the data we're looking for.</param>
-        /// <param name="resolution">Resolution of the data request</param>
-        /// <param name="startUtc">Start time of the data in UTC</param>
-        /// <param name="endUtc">End time of the data in UTC</param>
-        /// <returns>Enumerable of base data for this symbol</returns>
-        IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc);
+        string Market { get; }
+
+        /// <summary>
+        /// Get exchange info coma-separated data
+        /// </summary>
+        /// <returns>Enumerable of exchange info for this market</returns>
+        IEnumerable<string> Get();
     }
 }

@@ -12,25 +12,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using System;
-using System.Collections.Generic;
-using QuantConnect.Data;
 
-namespace QuantConnect.ToolBox
+using System;
+
+namespace QuantConnect.Brokerages.Binance
 {
     /// <summary>
-    /// Data Downloader Interface for pulling data from a remote source.
+    /// Wrapper class for a Binance websocket connection
     /// </summary>
-    public interface IDataDownloader
+    public class BinanceWebSocketWrapper : WebSocketClientWrapper
     {
         /// <summary>
-        /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
+        /// The unique Id for the connection
         /// </summary>
-        /// <param name="symbol">Symbol for the data we're looking for.</param>
-        /// <param name="resolution">Resolution of the data request</param>
-        /// <param name="startUtc">Start time of the data in UTC</param>
-        /// <param name="endUtc">End time of the data in UTC</param>
-        /// <returns>Enumerable of base data for this symbol</returns>
-        IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc);
+        public string ConnectionId { get; }
+
+        /// <summary>
+        /// The handler for the connection
+        /// </summary>
+        public IConnectionHandler ConnectionHandler { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BinanceWebSocketWrapper"/> class.
+        /// </summary>
+        public BinanceWebSocketWrapper(IConnectionHandler connectionHandler)
+        {
+            ConnectionId = Guid.NewGuid().ToString();
+            ConnectionHandler = connectionHandler;
+        }
     }
 }

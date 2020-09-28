@@ -363,6 +363,11 @@
     <Compile Include="API\NodeTests.cs" />
     <Compile Include="Brokerages\BrokerageFactoryTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageAdditionalTests.cs" />
+    <Compile Include="Brokerages\Binance\BinanceBrokerageHistoryProviderTests.cs" />
+    <Compile Include="Brokerages\Binance\BinanceBrokerageTests.cs" />
+    <Compile Include="Brokerages\Binance\BinanceFeeModelTests.cs" />
+    <Compile Include="Brokerages\Binance\BinanceSymbolMapperTests.cs" />
+    <Compile Include="Brokerages\Binance\BinanceBrokerageExchangeInfoTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexFeeModelTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexSymbolMapperTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageHistoryProviderTests.cs" />

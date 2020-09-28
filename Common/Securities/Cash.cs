@@ -226,13 +226,28 @@ namespace QuantConnect.Securities
                 markets.Add(SecurityType.Cfd, markets[SecurityType.Forex]);
             }
 
-            var forexCurrencyPairs = GetAvailableSymbols(SecurityType.Forex, marketMap, markets);
-            var cfdCurrencyPairs = GetAvailableSymbols(SecurityType.Cfd, marketMap, markets);
-            var cryptoCurrencySymbols = GetAvailableSymbols(SecurityType.Crypto, marketMap, markets);
+            var forexEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Forex, marketMap, markets);
+            var cfdEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Cfd, marketMap, markets);
+            var cryptoEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Crypto, marketMap, markets);
 
-            var potentials = forexCurrencyPairs
-                .Concat(cfdCurrencyPairs)
-                .Concat(cryptoCurrencySymbols);
+            var potentialEntries = forexEntries
+                .Concat(cfdEntries)
+                .Concat(cryptoEntries)
+                .ToList();
+
+            if (!potentialEntries.Any(x =>
+                    Symbol == x.Key.Symbol.Substring(0, x.Key.Symbol.Length - x.Value.QuoteCurrency.Length) ||
+                    Symbol == x.Value.QuoteCurrency))
+            {
+                // currency not found in any tradeable pair
+                Log.Error($"No tradeable pair was found for currency {Symbol}, conversion rate to account currency ({accountCurrency}) will be set to zero.");
+                ConversionRateSecurity = null;
+                ConversionRate = 0m;
+                return null;
+            }
+
+            var potentials = potentialEntries
+                .Select(x => QuantConnect.Symbol.Create(x.Key.Symbol, x.Key.SecurityType, x.Key.Market));
 
             var minimumResolution = subscriptions.Subscriptions.Select(x => x.Resolution).DefaultIfEmpty(defaultResolution).Min();
 
@@ -285,7 +300,7 @@ namespace QuantConnect.Securities
             return Invariant($"{Symbol}: {CurrencySymbol}{Amount,15:0.00} @ {rate,10:0.00####} = ${Math.Round(ValueInAccountCurrency, 2)}");
         }
 
-        private static IEnumerable<Symbol> GetAvailableSymbols(
+        private static IEnumerable<KeyValuePair<SecurityDatabaseKey, SymbolProperties>> GetAvailableSymbolPropertiesDatabaseEntries(
             SecurityType securityType,
             IReadOnlyDictionary<SecurityType, string> marketMap,
             IReadOnlyDictionary<SecurityType, string> markets
@@ -303,10 +318,9 @@ namespace QuantConnect.Securities
                     marketJoin.Add(market);
                 }
             }
-            
+
             return marketJoin.SelectMany(market => SymbolPropertiesDatabase.FromDataFolder()
-                .GetSymbolPropertiesList(market, securityType)
-                .Select(x => QuantConnect.Symbol.Create(x.Key.Symbol, securityType, market)));
+                .GetSymbolPropertiesList(market, securityType));
         }
 
         private void OnUpdate()

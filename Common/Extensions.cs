@@ -518,7 +518,7 @@ namespace QuantConnect
         /// <summary>
         /// Lazy string to upper implementation.
         /// Will first verify the string is not already upper and avoid
-        /// the call to <see cref="string.ToUpper()"/> if possible.
+        /// the call to <see cref="string.ToUpperInvariant()"/> if possible.
         /// </summary>
         /// <param name="data">The string to upper</param>
         /// <returns>The upper string</returns>
@@ -2065,6 +2065,16 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Convert dictionary to query string
+        /// </summary>
+        /// <param name="pairs"></param>
+        /// <returns></returns>
+        public static string ToQueryString(this IDictionary<string, object> pairs)
+        {
+            return string.Join("&", pairs.Select(pair => $"{pair.Key}={pair.Value}"));
+        }
+
+        /// <summary>
         /// Returns a new string in which specified ending in the current instance is removed.
         /// </summary>
         /// <param name="s">original string value</param>
@@ -2215,6 +2225,27 @@ namespace QuantConnect
         public static BaseData Adjust(this BaseData data, decimal scale)
         {
             return data?.Scale(p => p * scale);
+        }
+
+        /// <summary>
+        /// Returns a hex string of the byte array.
+        /// </summary>
+        /// <param name="source">the byte array to be represented as string</param>
+        /// <returns>A new string containing the items in the enumerable</returns>
+        public static string ToHexString(this byte[] source)
+        {
+            if (source == null || source.Length == 0)
+            {
+                throw new ArgumentException($"Source cannot be null or empty.");
+            }
+
+            var hex = new StringBuilder(source.Length * 2);
+            foreach (var b in source)
+            {
+                hex.AppendFormat(CultureInfo.InvariantCulture, "{0:x2}", b);
+            }
+
+            return hex.ToString();
         }
 
         /// <summary>

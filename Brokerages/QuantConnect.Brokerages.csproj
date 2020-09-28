@@ -337,6 +337,14 @@
     <Compile Include="Backtesting\BasicOptionAssignmentSimulation.cs" />
     <Compile Include="Backtesting\IBacktestingMarketSimulation.cs" />
     <Compile Include="BaseWebsocketsBrokerage.cs" />
+    <Compile Include="Binance\BinanceBrokerage.Utility.cs" />
+    <Compile Include="Binance\BinanceBrokerage.cs" />
+    <Compile Include="Binance\BinanceBrokerageFactory.cs" />
+    <Compile Include="Binance\BinanceOrderSubmitEventArgs.cs" />
+    <Compile Include="Binance\BinanceRestApiClient.cs" />
+    <Compile Include="Binance\BinanceSymbolMapper.cs" />
+    <Compile Include="Binance\BinanceWebSocketWrapper.cs" />
+    <Compile Include="Binance\Messages.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerage.Messaging.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerage.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerageFactory.cs" />
@@ -681,6 +689,7 @@
     <Compile Include="Tradier\UserProfile.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Binance\BinanceBrokerage.Messaging.cs" />
     <None Include="InteractiveBrokers\IB-symbol-map.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
