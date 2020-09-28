@@ -175,5 +175,14 @@ namespace QuantConnect.Data.UniverseSelection
             var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
             return new Symbol(sid, ticker);
         }
+
+        /// <summary>
+        /// Converts a given fundamental data point into row format
+        /// </summary>
+        public static string ToRow(CoarseFundamental coarse)
+        {
+            // sid,symbol,close,volume,dollar volume,has fundamental data,price factor,split factor
+            return $"{coarse.Symbol.ID},{coarse.Symbol.Value},{coarse.Value},{coarse.Volume},{coarse.DollarVolume},{coarse.HasFundamentalData},{coarse.PriceFactor},{coarse.SplitFactor}";
+        }
     }
 }

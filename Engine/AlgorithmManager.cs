@@ -1046,22 +1046,10 @@ namespace QuantConnect.Lean.Engine
 
                 if (security.Type == SecurityType.Option)
                 {
-                    var option = (Option)security;
-
-                    if (security.Holdings.Quantity > 0)
-                    {
-                        request = new SubmitOrderRequest(OrderType.OptionExercise, security.Type, security.Symbol,
-                            security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Automatic option exercise on expiration");
-                    }
-                    else
-                    {
-                        var message = option.GetPayOff(option.Underlying.Price) > 0
-                            ? "Automatic option assignment on expiration"
-                            : "Option expiration";
-
-                        request = new SubmitOrderRequest(OrderType.OptionExercise, security.Type, security.Symbol,
-                            security.Holdings.Quantity, 0, 0, algorithm.UtcTime, message);
-                    }
+                    // notify tx handler of the expiration, this will be handled via the configured exercise model to see if
+                    // we auto-exercise or get assigned at expiration. don't be presumptuous from here and guess if exercised/assigned
+                    request = new SubmitOrderRequest(OrderType.OptionExercise, security.Type, security.Symbol,
+                        security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Option Expired");
                 }
                 else
                 {

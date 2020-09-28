@@ -1255,7 +1255,12 @@ namespace QuantConnect.Tests.Common.Securities
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(2, fills.Count);
+            Assert.IsFalse(fills[0].IsAssignment);
+            Assert.AreEqual("Automatic Exercise", fills[0].Message);
+            Assert.AreEqual("Option Exercise", fills[1].Message);
 
             foreach (var fill in fills)
             {
@@ -1318,7 +1323,10 @@ namespace QuantConnect.Tests.Common.Securities
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.AreEqual("OTM", fills[0].Message);
 
             foreach (var fill in fills)
             {
@@ -1381,7 +1389,10 @@ namespace QuantConnect.Tests.Common.Securities
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.AreEqual("OTM", fills[0].Message);
 
             foreach (var fill in fills)
             {
@@ -1442,7 +1453,12 @@ namespace QuantConnect.Tests.Common.Securities
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(2, fills.Count);
+            Assert.IsFalse(fills[0].IsAssignment);
+            Assert.AreEqual("Automatic Exercise", fills[0].Message);
+            Assert.AreEqual("Option Exercise", fills[1].Message);
 
             foreach (var fill in fills)
             {
@@ -1507,7 +1523,12 @@ namespace QuantConnect.Tests.Common.Securities
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(2, fills.Count);
+            Assert.IsFalse(fills[0].IsAssignment);
+            Assert.AreEqual("Automatic Exercise", fills[0].Message);
+            Assert.AreEqual("Option Exercise", fills[1].Message);
 
             foreach (var fill in fills)
             {
@@ -1569,7 +1590,12 @@ namespace QuantConnect.Tests.Common.Securities
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(2, fills.Count);
+            Assert.IsTrue(fills[0].IsAssignment);
+            Assert.AreEqual("Automatic Assignment", fills[0].Message);
+            Assert.AreEqual("Option Assignment", fills[1].Message);
 
             // we are simulating assignment by calling a method for this
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
@@ -1638,7 +1664,12 @@ namespace QuantConnect.Tests.Common.Securities
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(2, fills.Count);
+            Assert.IsTrue(fills[0].IsAssignment);
+            Assert.AreEqual("Automatic Assignment", fills[0].Message);
+            Assert.AreEqual("Option Assignment", fills[1].Message);
 
             // we are simulating assignment by calling a method for this
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
@@ -1704,7 +1735,12 @@ namespace QuantConnect.Tests.Common.Securities
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(2, fills.Count);
+            Assert.IsTrue(fills[0].IsAssignment);
+            Assert.AreEqual("Automatic Assignment", fills[0].Message);
+            Assert.AreEqual("Option Assignment", fills[1].Message);
 
             // we are simulating assignment by calling a method for this
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
@@ -1772,7 +1808,11 @@ namespace QuantConnect.Tests.Common.Securities
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.IsFalse(fills[0].IsAssignment);
+            Assert.AreEqual("Automatic Exercise", fills[0].Message);
 
             foreach (var fill in fills)
             {
@@ -1834,7 +1874,11 @@ namespace QuantConnect.Tests.Common.Securities
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.IsFalse(fills[0].IsAssignment);
+            Assert.AreEqual("OTM", fills[0].Message);
 
             foreach (var fill in fills)
             {
@@ -1895,7 +1939,11 @@ namespace QuantConnect.Tests.Common.Securities
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.IsFalse(fills[0].IsAssignment);
+            Assert.AreEqual("Automatic Exercise", fills[0].Message);
 
             foreach (var fill in fills)
             {
@@ -2082,7 +2130,11 @@ namespace QuantConnect.Tests.Common.Securities
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.IsFalse(fills[0].IsAssignment);
+            Assert.AreEqual("Automatic Exercise", fills[0].Message);
 
             foreach (var fill in fills)
             {
@@ -2145,7 +2197,11 @@ namespace QuantConnect.Tests.Common.Securities
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.IsTrue(fills[0].IsAssignment);
+            Assert.AreEqual("Automatic Assignment", fills[0].Message);
 
             // we are simulating assignment by calling a method for this
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
@@ -2210,7 +2266,11 @@ namespace QuantConnect.Tests.Common.Securities
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.IsFalse(fills[0].IsAssignment);
+            Assert.AreEqual("OTM", fills[0].Message);
 
             // we are simulating assignment by calling a method for this
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
@@ -2277,7 +2337,11 @@ namespace QuantConnect.Tests.Common.Securities
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.IsTrue(fills[0].IsAssignment);
+            Assert.AreEqual("Automatic Assignment", fills[0].Message);
 
             // we are simulating assignment by calling a method for this
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
@@ -2344,7 +2408,11 @@ namespace QuantConnect.Tests.Common.Securities
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.IsTrue(fills[0].IsAssignment);
+            Assert.AreEqual("Automatic Assignment", fills[0].Message);
 
             // we are simulating assignment by calling a method for this
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;

@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
-        {   
+        {
             if (!_equityBought && data.ContainsKey(_spy)) {
                 //Buy our Equity
                 var quantity = CalculateOrderQuantity(_spy, .1m);
@@ -114,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         /// <param name="orderEvent">OrderEvent object that contains all the information about the event</param>
         public override void OnOrderEvent(OrderEvent orderEvent)
-        {   
+        {
             // Get the order from our transactions
             var order = Transactions.GetOrderById(orderEvent.OrderId);
 
@@ -147,7 +147,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // All PartiallyFilled orders should have a LastFillTime
                 case OrderStatus.PartiallyFilled:
-                    if (order.LastFillTime == null) 
+                    if (order.LastFillTime == null)
                     {
                         throw new Exception("LastFillTime should not be null");
                     }
@@ -317,7 +317,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "-0.018"},
             {"Total Fees", "$2.00"},
             {"Fitness Score", "0.213"},
-            {"OrderListHash", "-1514011542"}
+            {"OrderListHash", "-2119400842"}
         };
     }
 }
