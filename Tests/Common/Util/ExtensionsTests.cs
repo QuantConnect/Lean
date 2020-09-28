@@ -1149,6 +1149,17 @@ actualDictionary.update({'IBM': 5})
             Assert.AreEqual(Time.EndOfTime, func(second));
         }
 
+        [Test]
+        [TestCase(OptionRight.Call, true, OrderDirection.Sell)]
+        [TestCase(OptionRight.Call, false, OrderDirection.Buy)]
+        [TestCase(OptionRight.Put, true, OrderDirection.Buy)]
+        [TestCase(OptionRight.Put, false, OrderDirection.Sell)]
+        public void GetsExerciseDirection(OptionRight right, bool isShort, OrderDirection expected)
+        {
+            var actual = right.GetExerciseDirection(isShort);
+            Assert.AreEqual(expected, actual);
+        }
+
         private PyObject ConvertToPyObject(object value)
         {
             using (Py.GIL())

@@ -32,52 +32,52 @@ namespace QuantConnect.Orders.OptionExercise
         /// <param name="order">Order to update</param>
         public IEnumerable<OrderEvent> OptionExercise(Option option, OptionExerciseOrder order)
         {
+            var underlying = option.Underlying;
+
+            var isShort = order.Quantity < 0;
             var utcTime = option.LocalTime.ConvertToUtc(option.Exchange.TimeZone);
 
-            var optionQuantity = order.Quantity;
-            var assignment = order.Quantity < 0;
-            var underlying = option.Underlying;
-            var exercisePrice = order.Price;
-            var fillQuantity = option.GetExerciseQuantity(order.Quantity);
-            var exerciseQuantity =
-                    option.Symbol.ID.OptionRight == OptionRight.Call ? fillQuantity : -fillQuantity;
-            var exerciseDirection = assignment?
-                    (option.Symbol.ID.OptionRight == OptionRight.Call ? OrderDirection.Sell : OrderDirection.Buy):
-                    (option.Symbol.ID.OptionRight == OptionRight.Call ? OrderDirection.Buy : OrderDirection.Sell);
+            var inTheMoney = option.IsAutoExercised(underlying.Close);
 
-            var addUnderlyingEvent = new OrderEvent(order.Id,
-                            underlying.Symbol,
-                            utcTime,
-                            OrderStatus.Filled,
-                            exerciseDirection,
-                            exercisePrice,
-                            exerciseQuantity,
-                            OrderFee.Zero,
-                            "Option Exercise/Assignment");
+            // we're assigned only if we get exercised against, meaning we wrote the option and it was exercised by the buyer
+            var isAssignment = inTheMoney && isShort;
 
-            var optionRemoveEvent = new OrderEvent(order.Id,
-                            option.Symbol,
-                            utcTime,
-                            OrderStatus.Filled,
-                            assignment ? OrderDirection.Buy : OrderDirection.Sell,
-                            0.0m,
-                            -optionQuantity,
-                            OrderFee.Zero,
-                            "Adjusting(or removing) the exercised/assigned option");
-
-            if (optionRemoveEvent.FillQuantity > 0)
+            yield return new OrderEvent(
+                order.Id,
+                option.Symbol,
+                utcTime,
+                OrderStatus.Filled,
+                isShort ? OrderDirection.Buy : OrderDirection.Sell,
+                0.0m,
+                -order.Quantity,
+                OrderFee.Zero,
+                // note whether or not we expired OTM/ITM and whether we were assigned or exercised
+                inTheMoney ? isAssignment ? "Automatic Assignment" : "Automatic Exercise" : "OTM"
+            )
             {
-                optionRemoveEvent.IsAssignment = true;
-            }
+                IsAssignment = isAssignment
+            };
 
-            if (option.ExerciseSettlement == SettlementType.PhysicalDelivery &&
-                option.IsAutoExercised(underlying.Close))
+            if (inTheMoney && option.ExerciseSettlement == SettlementType.PhysicalDelivery)
             {
-                return new[] { optionRemoveEvent, addUnderlyingEvent };
-            }
+                var right = option.Symbol.ID.OptionRight;
 
-            return new[] { optionRemoveEvent };
+                // TODO : Why doesn't this method take into account the directionality of the quantity like other quantity properties/methods
+                var fillQuantity = option.GetExerciseQuantity(order.Quantity);
+                var exerciseQuantity = right == OptionRight.Call ? fillQuantity : -fillQuantity;
+
+                yield return new OrderEvent(
+                    order.Id,
+                    underlying.Symbol,
+                    utcTime,
+                    OrderStatus.Filled,
+                    right.GetExerciseDirection(isShort),
+                    order.Price,
+                    exerciseQuantity,
+                    OrderFee.Zero,
+                    isAssignment ? "Option Assignment" : "Option Exercise"
+                );
+            }
         }
-
     }
 }
