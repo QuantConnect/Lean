@@ -15,6 +15,7 @@
 
 using Python.Runtime;
 using QuantConnect.Algorithm;
+using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
@@ -58,6 +59,7 @@ namespace QuantConnect.Research
         private Synchronizer _synchronizer;
         private AlgorithmNodePacket _job;
         private static bool _isPythonNotebook;
+        public IAlgorithm Algorithm { get; private set; }
 
         static QuantBook()
         {
@@ -94,8 +96,58 @@ namespace QuantConnect.Research
         /// <summary>
         /// <see cref = "QuantBook" /> constructor.
         /// Provides access to data for quantitative analysis
+        /// Constructor that use the QuantBook itself as the algorithm
         /// </summary>
         public QuantBook() : base()
+        {
+            // If this is a python notebook we want to wrap the algorithm functions with our python wrapper
+            if (_isPythonNotebook)
+            {
+                Algorithm = new AlgorithmPythonWrapper(GetMyself()); //TODO: WONT MAP PYTHON FUNCTIONS PROPERLY!
+            }
+            else
+            {
+                Algorithm = this;
+            }
+
+            SetupQuantBook();
+        }
+
+        /// <summary>
+        /// Version that accepts a CSharp Algorithm Instance
+        /// </summary>
+        /// <param name="cSharpAlgorithm"></param>
+        public QuantBook(QCAlgorithm cSharpAlgorithm)
+        {
+            Algorithm = cSharpAlgorithm;
+            SetupQuantBook();
+        }
+
+        /// <summary>
+        /// Version that accepts a pyAlgorithm module that has not yet been invoked
+        /// </summary>
+        /// <param name="pyAlgorithm"></param>
+        public QuantBook(PyObject pyAlgorithm)
+        {
+            Algorithm = new AlgorithmPythonWrapper(pyAlgorithm);
+            SetupQuantBook();
+        }
+
+        /// <summary>
+        /// Get a copy of thyself from the python world
+        /// </summary>
+        /// <returns></returns>
+        public PyObject GetMyself()
+        {
+            return PythonEngine.ModuleFromString("GetSelf", "def GetSelf(object):\n\treturn object")
+                .GetAttr("GetSelf")
+                .Invoke(PyObject.FromManagedObject(this));
+        }
+
+        /// <summary>
+        /// Helper method for constructor
+        /// </summary>
+        private void SetupQuantBook()
         {
             try
             {
@@ -103,12 +155,10 @@ namespace QuantConnect.Research
                 {
                     _pandas = Py.Import("pandas");
                 }
+                SetPandasConverter();
 
                 // By default, set start date to end data which is yesterday
-                SetStartDate(EndDate);
-
-                // Sets PandasConverter
-                SetPandasConverter();
+                Algorithm.SetStartDate(EndDate);
 
                 //Create job node packet for this notebook
                 _job = new BacktestNodePacket();
@@ -123,8 +173,8 @@ namespace QuantConnect.Research
 
                 // Initialize the system handlers
                 _systemHandlers.Initialize();
-                _systemHandlers.LeanManager.Initialize(_systemHandlers, _algorithmHandlers, _job,_algorithmManager);
-                _systemHandlers.LeanManager.SetAlgorithm(this);
+                _systemHandlers.LeanManager.Initialize(_systemHandlers, _algorithmHandlers, _job, _algorithmManager);
+                _systemHandlers.LeanManager.SetAlgorithm(Algorithm);
 
                 // Store our data providers
                 _dataCacheProvider = new ZipDataCacheProvider(_algorithmHandlers.DataProvider);
@@ -132,7 +182,7 @@ namespace QuantConnect.Research
 
                 // Start up the handlers we need
                 // Object store
-                _algorithmHandlers.ObjectStore.Initialize("QuantBook", Config.GetInt("job-user-id"), Config.GetInt("project-id"), 
+                _algorithmHandlers.ObjectStore.Initialize("QuantBook", Config.GetInt("job-user-id"), Config.GetInt("project-id"),
                     Config.Get("api-access-token"),
                     new Controls
                     {
@@ -140,7 +190,7 @@ namespace QuantConnect.Research
                         PersistenceIntervalSeconds = -1,
                         StorageLimitMB = Config.GetInt("storage-limit-mb", 5),
                         StorageFileCount = Config.GetInt("storage-file-count", 100),
-                        StoragePermissions = (FileAccess) Config.GetInt("storage-permissions", (int)FileAccess.ReadWrite)
+                        StoragePermissions = (FileAccess)Config.GetInt("storage-permissions", (int)FileAccess.ReadWrite)
                     });
 
                 // Security service
@@ -149,19 +199,19 @@ namespace QuantConnect.Research
                 var securityService = new SecurityService(Portfolio.CashBook,
                     MarketHoursDatabase,
                     symbolPropertiesDataBase,
-                    this,
+                    Algorithm,
                     registeredTypes,
                     new SecurityCacheProvider(Portfolio));
-                
+
 
                 // Data Manager
                 _dataManager = new DataManager(_algorithmHandlers.DataFeed,
                     new UniverseSelection(
-                        this,
+                        Algorithm,
                         securityService,
                         _algorithmHandlers.DataPermissionsManager,
                         _algorithmHandlers.DataProvider),
-                    this,
+                    Algorithm,
                     TimeKeeper,
                     MarketHoursDatabase,
                     false,
@@ -169,8 +219,8 @@ namespace QuantConnect.Research
                     _algorithmHandlers.DataPermissionsManager);
 
                 // Setup history provider
-                HistoryProvider = composer.GetExportedValueByTypeName<IHistoryProvider>(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider"));
-                HistoryProvider.Initialize(
+                Algorithm.HistoryProvider = composer.GetExportedValueByTypeName<IHistoryProvider>(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider"));
+                Algorithm.HistoryProvider.Initialize(
                     new HistoryProviderInitializeParameters(
                         _job,
                         _systemHandlers.Api,
@@ -185,14 +235,14 @@ namespace QuantConnect.Research
                 );
 
                 // Set our algorithm internals
-                SetObjectStore(_algorithmHandlers.ObjectStore);
-                Securities.SetSecurityService(securityService);
-                SubscriptionManager.SetDataManager(_dataManager);
-                Transactions.SetOrderProcessor(_algorithmHandlers.Transactions);
+                Algorithm.SetObjectStore(_algorithmHandlers.ObjectStore);
+                Algorithm.Securities.SetSecurityService(securityService);
+                Algorithm.SubscriptionManager.SetDataManager(_dataManager);
+                Algorithm.Transactions.SetOrderProcessor(_algorithmHandlers.Transactions);
 
                 // Set our options and future chain providers
-                SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider()));
-                SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider()));
+                Algorithm.SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider()));
+                Algorithm.SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider()));
             }
             catch (Exception exception)
             {
@@ -255,7 +305,7 @@ namespace QuantConnect.Research
                 }
 
                 //Only consider it a step if the timeslice has data
-                if (CurrentSlice.HasData)
+                if (Algorithm.CurrentSlice.HasData)
                 {
                     count++;
                 }
@@ -271,32 +321,32 @@ namespace QuantConnect.Research
         {
             //Setup synchronizer
             _synchronizer = new Synchronizer();
-            _synchronizer.Initialize(this, _dataManager);
+            _synchronizer.Initialize(Algorithm, _dataManager);
 
             // Initialize the brokerage
             IBrokerageFactory factory;
-            _brokerage = _algorithmHandlers.Setup.CreateBrokerage(_job, this, out factory);
+            _brokerage = _algorithmHandlers.Setup.CreateBrokerage(_job, Algorithm, out factory);
 
             // initialize the default brokerage message handler
-            BrokerageMessageHandler = factory.CreateBrokerageMessageHandler(this, _job, _systemHandlers.Api);
+            BrokerageMessageHandler = factory.CreateBrokerageMessageHandler(Algorithm, _job, _systemHandlers.Api);
 
             //-> Initialize messaging system
             _systemHandlers.Notify.SetAuthentication(_job);
 
             // Initialize all our handlers
-            _algorithmHandlers.DataFeed.Initialize(this, _job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider,
+            _algorithmHandlers.DataFeed.Initialize(Algorithm, _job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider,
                 _algorithmHandlers.DataProvider, _dataManager, _synchronizer, _algorithmHandlers.DataPermissionsManager.DataChannelProvider);
             _algorithmHandlers.Results.Initialize(_job, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.Transactions);
-            _algorithmHandlers.Transactions.Initialize(this, _brokerage, _algorithmHandlers.Results);
-            _algorithmHandlers.RealTime.Setup(this, _job, _algorithmHandlers.Results, _systemHandlers.Api, _algorithmManager.TimeLimit);
-            _algorithmHandlers.Alphas.Initialize(_job, this, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.Transactions);
-            _algorithmHandlers.Alphas.OnAfterAlgorithmInitialized(this);
+            _algorithmHandlers.Transactions.Initialize(Algorithm, _brokerage, _algorithmHandlers.Results);
+            _algorithmHandlers.RealTime.Setup(Algorithm, _job, _algorithmHandlers.Results, _systemHandlers.Api, _algorithmManager.TimeLimit);
+            _algorithmHandlers.Alphas.Initialize(_job, Algorithm, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.Transactions);
+            _algorithmHandlers.Alphas.OnAfterAlgorithmInitialized(Algorithm);
 
             //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
-            _algorithmHandlers.Setup.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, this, _brokerage, _job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime, _algorithmHandlers.ObjectStore));
-            _algorithmHandlers.Results.SetAlgorithm(this, _algorithmHandlers.Setup.StartingPortfolioValue);
+            _algorithmHandlers.Setup.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, Algorithm, _brokerage, _job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime, _algorithmHandlers.ObjectStore));
+            _algorithmHandlers.Results.SetAlgorithm(Algorithm, _algorithmHandlers.Setup.StartingPortfolioValue);
 
-            _algorithmManager.Initialize(_job, this, 
+            _algorithmManager.Initialize(_job, Algorithm, 
                 _synchronizer,
                 _algorithmHandlers.Transactions,
                 _algorithmHandlers.Results,
@@ -304,10 +354,6 @@ namespace QuantConnect.Research
                 _systemHandlers.LeanManager,
                 _algorithmHandlers.Alphas,
                 CancellationToken.None);
-
-            // Take an initial step to get the day started; and universe up to date
-            // Puts qb.Time at first moment of the day (ex 9:30)
-            _algorithmManager.Step();
         }
 
         /// <summary>
