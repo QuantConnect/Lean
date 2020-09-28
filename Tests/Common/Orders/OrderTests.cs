@@ -153,9 +153,9 @@ namespace QuantConnect.Tests.Common.Orders
                 new ValueTestParameters("OptionShortStopMarketOrder", option, new StopMarketOrder(Symbols.SPY_P_192_Feb19_2016, -quantity, pricePlusDelta, time), -quantity*pricePlusDelta),
                 new ValueTestParameters("OptionShortStopMarketOrder", option, new StopMarketOrder(Symbols.SPY_P_192_Feb19_2016, -quantity, priceMinusDelta, time), -quantity*price),
 
-                new ValueTestParameters("OptionExercisetOrderPut", option, new OptionExerciseOrder(Symbols.SPY_P_192_Feb19_2016, quantity, time), quantity*option.Symbol.ID.StrikePrice),
+                new ValueTestParameters("OptionExerciseOrderPut", option, new OptionExerciseOrder(Symbols.SPY_P_192_Feb19_2016, quantity, time), quantity*option.Symbol.ID.StrikePrice),
                 new ValueTestParameters("OptionAssignmentOrderPut", option, new OptionExerciseOrder(Symbols.SPY_P_192_Feb19_2016, -quantity, time), -quantity*option.Symbol.ID.StrikePrice),
-                new ValueTestParameters("OptionExercisetOrderCall", option, new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, quantity, time), quantity*option.Symbol.ID.StrikePrice),
+                new ValueTestParameters("OptionExerciseOrderCall", option, new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, quantity, time), quantity*option.Symbol.ID.StrikePrice),
                 new ValueTestParameters("OptionAssignmentOrderCall", option, new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, -quantity, time), -quantity*option.Symbol.ID.StrikePrice),
 
 
