@@ -88,8 +88,32 @@ namespace QuantConnect.Orders
 
             // populate common order properties
             order.Id = jObject["Id"].Value<int>();
-            order.Status = (OrderStatus) jObject["Status"].Value<int>();
-            order.Time = jObject["Time"].Value<DateTime>();
+
+            var jsonStatus = jObject["Status"];
+            var jsonTime = jObject["Time"];
+            if (jsonStatus.Type == JTokenType.Integer)
+            {
+                order.Status = (OrderStatus) jsonStatus.Value<int>();
+            }
+            else if (jsonStatus.Type == JTokenType.Null)
+            {
+                order.Status = OrderStatus.Canceled;
+            }
+            else
+            {
+                // The `Status` tag can sometimes appear as a string of the enum value in the LiveResultPacket.
+                order.Status = (OrderStatus) Enum.Parse(typeof(OrderStatus), jsonStatus.Value<string>(), true);
+            }
+            if (jsonTime != null && jsonTime.Type != JTokenType.Null)
+            {
+                order.Time = jsonTime.Value<DateTime>();
+            }
+            else
+            {
+                // `Time` can potentially be null in some LiveResultPacket instances, but
+                // `CreatedTime` will always be there if `Time` is absent.
+                order.Time = jObject["CreatedTime"].Value<DateTime>();
+            }
 
             var orderSubmissionData = jObject["OrderSubmissionData"];
             if (orderSubmissionData != null && orderSubmissionData.Type != JTokenType.Null)
@@ -127,8 +151,16 @@ namespace QuantConnect.Orders
             }
 
             order.Quantity = jObject["Quantity"].Value<decimal>();
+            var orderPrice = jObject["Price"];
+            if (orderPrice != null && orderPrice.Type != JTokenType.Null)
+            {
+                order.Price = orderPrice.Value<decimal>();
+            }
+            else
+            {
+                order.Price = default(decimal);
+            }
 
-            order.Price = jObject["Price"].Value<decimal>();
             var priceCurrency = jObject["PriceCurrency"];
             if (priceCurrency != null && priceCurrency.Type != JTokenType.Null)
             {

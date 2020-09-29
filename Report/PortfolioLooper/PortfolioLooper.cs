@@ -30,6 +30,7 @@ using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Lean.Engine.HistoricalData;
 
 namespace QuantConnect.Report
 {
@@ -68,7 +69,7 @@ namespace QuantConnect.Report
             var factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>("LocalDiskFactorFileProvider");
             var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>("LocalDiskMapFileProvider");
             var dataCacheProvider = new ZipDataCacheProvider(new DefaultDataProvider(), false);
-            var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>("SubscriptionDataReaderHistoryProvider");
+            var historyProvider = new SubscriptionDataReaderHistoryProvider();
 
             var dataPermissionManager = new DataPermissionManager();
             historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, dataCacheProvider, mapFileProvider, factorFileProvider, (_) => { }, false, dataPermissionManager));
@@ -324,13 +325,24 @@ namespace QuantConnect.Report
                 Algorithm.SetDateTime(order.Time);
 
                 var orderSecurity = Algorithm.Securities[order.Symbol];
-                if (order.LastFillTime == null)
+                DateTime lastFillTime;
+
+                if ((order.Type == OrderType.MarketOnOpen || order.Type == OrderType.MarketOnClose) &&
+                    (order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled) && order.LastFillTime == null)
+                {
+                    lastFillTime = order.Time;
+                }
+                else if (order.LastFillTime == null)
                 {
                     Log.Trace($"Order with ID: {order.Id} has been skipped because of null LastFillTime");
                     continue;
                 }
+                else
+                {
+                    lastFillTime = order.LastFillTime.Value;
+                }
 
-                var tick = new Tick { Quantity = order.Quantity, AskPrice = order.Price, BidPrice = order.Price, Value = order.Price, EndTime = order.LastFillTime.Value };
+                var tick = new Tick { Quantity = order.Quantity, AskPrice = order.Price, BidPrice = order.Price, Value = order.Price, EndTime = lastFillTime };
 
                 // Set the market price of the security
                 orderSecurity.SetMarketPrice(tick);

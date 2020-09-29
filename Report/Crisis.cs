@@ -39,7 +39,8 @@ namespace QuantConnect.Report
             {CrisisEvent.EurozoneOctober2014, new Crisis("European Debt Crisis Oct. 2014", new DateTime(2014, 10, 1), new DateTime(2014, 10, 29))},
             {CrisisEvent.MarketSellOff2015, new Crisis("Market Sell-Off 2015", new DateTime(2015, 8, 10), new DateTime(2015, 10, 10))},
             {CrisisEvent.Recovery, new Crisis("Recovery", new DateTime(2010, 1, 1), new DateTime(2012, 10, 1))},
-            {CrisisEvent.NewNormal, new Crisis("New Normal", new DateTime(2014, 1, 1), new DateTime(2019, 1, 1))}
+            {CrisisEvent.NewNormal, new Crisis("New Normal", new DateTime(2014, 1, 1), new DateTime(2019, 1, 1))},
+            {CrisisEvent.COVID19, new Crisis("COVID-19 Pandemic", new DateTime(2020, 2, 10), new DateTime(2020, 9, 20))},
         };
 
         /// <summary>
@@ -97,12 +98,7 @@ namespace QuantConnect.Report
         /// <returns></returns>
         public string ToString(DateTime start, DateTime end)
         {
-            if (Name.ToLowerInvariant().Contains("crisis"))
-            {
-                return $"{Name} {start:MMM yyyy} - {end:MMM yyyy}";
-            }
-
-            return $"Crisis {Name} {start:MMM yyyy} - {end:MMM yyyy}";
+            return $"{Name} {start:MMM yyyy} - {end:MMM yyyy}";
         }
     }
 }

@@ -15,27 +15,24 @@
 
 using System;
 using System.Linq;
-using Deedle;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Report.ReportElements
 {
-    internal sealed class MaxDrawdownReportElement : ReportElement
+    internal class DaysLiveReportElement : ReportElement
     {
         private LiveResult _live;
-        private BacktestResult _backtest;
 
         /// <summary>
-        /// Estimate the max drawdown of the strategy.
+        /// Create a new metric describing the number of days an algorithm has been live.
         /// </summary>
         /// <param name="name">Name of the widget</param>
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public MaxDrawdownReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        public DaysLiveReportElement(string name, string key, LiveResult live)
         {
             _live = live;
-            _backtest = backtest;
             Name = name;
             Key = key;
         }
@@ -47,22 +44,11 @@ namespace QuantConnect.Report.ReportElements
         {
             if (_live == null)
             {
-                return _backtest?.TotalPerformance?.PortfolioStatistics?.Drawdown.ToString("P1") ?? "-";
+                return "-";
             }
 
-            var backtestEquityPoints = new Series<DateTime, double>(ResultsUtil.EquityPoints(_backtest));
-            var liveEquityPoints = new Series<DateTime, double>(ResultsUtil.EquityPoints(_live));
-
-            var backtestDrawdownGroups = new DrawdownCollection(backtestEquityPoints, 1);
-            var liveDrawdownGroups = new DrawdownCollection(liveEquityPoints, 1);
-
-            var separateResultsMaxDrawdown = backtestDrawdownGroups.Drawdowns
-                .Concat(liveDrawdownGroups.Drawdowns)
-                .Select(x => x.PeakToTrough)
-                .OrderByDescending(x => x)
-                .FirstOrDefault();
-
-            return $"{separateResultsMaxDrawdown:P1}";
+            var equityPoints = ResultsUtil.EquityPoints(_live);
+            return (DateTime.UtcNow - equityPoints.First().Key).Days.ToStringInvariant();
         }
     }
 }

@@ -46,6 +46,10 @@ namespace QuantConnect.Report
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             var token = JToken.ReadFrom(reader);
+            if (token.Type == JTokenType.Null)
+            {
+                return null;
+            }
 
             foreach (JProperty property in token["Charts"].Children())
             {
