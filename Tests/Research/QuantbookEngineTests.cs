@@ -1,10 +1,23 @@
-﻿using NUnit.Framework;
-using Python.Runtime;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using NUnit.Framework;
 using System;
 using System.Linq;
 using QuantConnect.Research;
 using QuantConnect.Data.Consolidators;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 
 
@@ -91,7 +104,7 @@ namespace QuantConnect.Tests.Research
         [Test]
         public void UniverseTest()
         {
-            //Have to adjust the dates for this test
+            //Set dates that we have data for
             qb.SetStartDate(new DateTime(2014, 3, 24));
             qb.SetEndDate(new DateTime(2014, 4, 1));
 
@@ -120,13 +133,35 @@ namespace QuantConnect.Tests.Research
         [Test]
         public void AddSecuritiesAfterStartedTest()
         {
-            //TODO: Do we want this to be possible or not?
+            qb.AddEquity("SPY", Resolution.Minute);
+            qb.Step();
+
+            Assert.IsTrue(qb.CurrentSlice.ContainsKey("SPY"));
+            Assert.IsFalse(qb.CurrentSlice.ContainsKey("AIG"));
+
+            qb.AddEquity("AIG", Resolution.Minute);
+            qb.Step(3); //TODO: Why does it take three steps?
+
+            Assert.IsTrue(qb.CurrentSlice.ContainsKey("SPY"));
+            Assert.IsTrue(qb.CurrentSlice.ContainsKey("AIG"));
         }
 
         [Test]
         public void ScheduledEventsTest()
         {
-            //TODO
+            var eventFired = false;
+            var time = new DateTime(2013, 10, 7, 10, 0, 0);
+
+            //Set an event
+            qb.Schedule.On(qb.DateRules.On(2013, 10, 7), qb.TimeRules.At(10, 0), () =>
+            {
+                eventFired = true;
+            });
+
+            qb.Step(time);
+            
+            Assert.IsTrue(eventFired);
+            Assert.AreEqual(time, qb.Time);
         }
 
         // Time test cases: resolution, steps, and expected end time
