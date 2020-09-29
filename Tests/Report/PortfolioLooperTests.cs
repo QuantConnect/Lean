@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Report
                 orderType,
                 SecurityType.Equity,
                 Symbols.SPY,
-                1,
+                -1,
                 (decimal)stopPrice,
                 (decimal)limitPrice,
                 new DateTime(2019, 1, 4, 5, 0, 5),

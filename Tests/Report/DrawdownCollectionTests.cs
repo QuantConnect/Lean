@@ -36,10 +36,10 @@ namespace QuantConnect.Tests.Report
                 new KeyValuePair<DateTime, double>(new DateTime(2020, 1, 5), 80000)
             });
 
-            var collection = DrawdownCollection.GetDrawdownPeriods(series, 1);
+            var collection = DrawdownCollection.GetDrawdownPeriods(series, 1).ToList();
 
-            Assert.GreaterOrEqual(1.9999, collection.First().Drawdown);
-            Assert.LessOrEqual(collection.First().Drawdown, 2.0001);
+            Assert.AreEqual(1, collection.Count);
+            Assert.AreEqual(0.2, collection.First().Drawdown, 0.0001);
         }
     }
 }
