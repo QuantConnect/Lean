@@ -119,7 +119,14 @@ namespace QuantConnect.Tests.Brokerages
             new TestCaseData(Market.Bitfinex, "tETHUSD", "ETHUSD"),
             new TestCaseData(Market.Bitfinex, "tADAUST", "ADAUSDT"),
             new TestCaseData(Market.Bitfinex, "tCOMP:USD", "COMPUSD"),
-            new TestCaseData(Market.Bitfinex, "tCOMP:UST", "COMPUSDT")
+            new TestCaseData(Market.Bitfinex, "tCOMP:UST", "COMPUSDT"),
+
+            new TestCaseData(Market.Binance, "ETHUSDT", "ETHUSDT"),
+            new TestCaseData(Market.Binance, "ETHBTC", "ETHBTC"),
+            new TestCaseData(Market.Binance, "BTCUSDT", "BTCUSDT"),
+            new TestCaseData(Market.Binance, "ATOMTUSD", "ATOMTUSD"),
+            new TestCaseData(Market.Binance, "ATOMUSDC", "ATOMUSDC"),
+            new TestCaseData(Market.Binance, "ATOMUSDT", "ATOMUSDT")
         };
 
         private static TestCaseData[] CryptoSymbols => new[]
@@ -135,7 +142,14 @@ namespace QuantConnect.Tests.Brokerages
             new TestCaseData(Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex), "tETHUSD"),
             new TestCaseData(Symbol.Create("ADAUSDT", SecurityType.Crypto, Market.Bitfinex), "tADAUST"),
             new TestCaseData(Symbol.Create("COMPUSD", SecurityType.Crypto, Market.Bitfinex), "tCOMP:USD"),
-            new TestCaseData(Symbol.Create("COMPUSDT", SecurityType.Crypto, Market.Bitfinex), "tCOMP:UST")
+            new TestCaseData(Symbol.Create("COMPUSDT", SecurityType.Crypto, Market.Bitfinex), "tCOMP:UST"),
+
+            new TestCaseData(Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance), "ETHUSDT"),
+            new TestCaseData(Symbol.Create("ETHBTC", SecurityType.Crypto, Market.Binance), "ETHBTC"),
+            new TestCaseData(Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Binance), "BTCUSDT"),
+            new TestCaseData(Symbol.Create("ATOMTUSD", SecurityType.Crypto, Market.Binance), "ATOMTUSD"),
+            new TestCaseData(Symbol.Create("ATOMUSDC", SecurityType.Crypto, Market.Binance), "ATOMUSDC"),
+            new TestCaseData(Symbol.Create("ATOMUSDT", SecurityType.Crypto, Market.Binance), "ATOMUSDT")
         };
 
         private static TestCaseData[] CurrencyPairs => new[]
@@ -148,7 +162,12 @@ namespace QuantConnect.Tests.Brokerages
             new TestCaseData(Market.Bitfinex, ""),
             new TestCaseData(Market.Bitfinex, "EURUSD"),
             new TestCaseData(Market.Bitfinex, "GBP-USD"),
-            new TestCaseData(Market.Bitfinex, "USD-JPY")
+            new TestCaseData(Market.Bitfinex, "USD-JPY"),
+
+            new TestCaseData(Market.Binance, ""),
+            new TestCaseData(Market.Binance, "EURUSD"),
+            new TestCaseData(Market.Binance, "GBPUSD"),
+            new TestCaseData(Market.Binance, "USDJPY")
         };
 
         private static TestCaseData[] UnknownSymbols => new[]
@@ -167,7 +186,15 @@ namespace QuantConnect.Tests.Brokerages
             new TestCaseData("GBP-USD", SecurityType.Crypto, Market.Bitfinex),
             new TestCaseData("USD-JPY", SecurityType.Crypto, Market.Bitfinex),
             new TestCaseData("BTC-ETH", SecurityType.Crypto, Market.Bitfinex),
-            new TestCaseData("USDC-BTC", SecurityType.Crypto, Market.Bitfinex)
+            new TestCaseData("USDC-BTC", SecurityType.Crypto, Market.Bitfinex),
+
+            new TestCaseData("AAABBB", SecurityType.Crypto, Market.Binance),
+            new TestCaseData("USDBTC", SecurityType.Crypto, Market.Binance),
+            new TestCaseData("EURUSD", SecurityType.Crypto, Market.Binance),
+            new TestCaseData("GBPUSD", SecurityType.Crypto, Market.Binance),
+            new TestCaseData("USDJPY", SecurityType.Crypto, Market.Binance),
+            new TestCaseData("BTCETH", SecurityType.Crypto, Market.Binance),
+            new TestCaseData("BTCUSD", SecurityType.Crypto, Market.Binance)
         };
 
         private static TestCaseData[] UnknownSecurityType => new[]

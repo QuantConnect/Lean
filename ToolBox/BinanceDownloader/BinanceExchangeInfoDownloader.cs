@@ -63,7 +63,7 @@ namespace QuantConnect.ToolBox.BinanceDownloader
                         .GetValue("stepSize");
 
 
-                    yield return $"binance,{symbol.Name},crypto,{symbol.Name},{symbol.QuoteAsset},1,{priceFilter},{lotFilter}";
+                    yield return $"binance,{symbol.Name},crypto,{symbol.Name},{symbol.QuoteAsset},1,{priceFilter},{lotFilter},{symbol.Name}";
                 }
             }
         }

@@ -39,7 +39,7 @@ namespace QuantConnect.Brokerages.Binance
         private const string RestApiUrl = "https://api.binance.com";
         private const string UserDataStreamEndpoint = "/api/v3/userDataStream";
 
-        private readonly BinanceSymbolMapper _symbolMapper;
+        private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper;
         private readonly ISecurityProvider _securityProvider;
         private readonly IRestClient _restClient;
         private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
@@ -87,7 +87,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="securityProvider">The holdings provider.</param>
         /// <param name="apiKey">The Binance API key</param>
         /// <param name="apiSecret">The The Binance API secret</param>
-        public BinanceRestApiClient(BinanceSymbolMapper symbolMapper, ISecurityProvider securityProvider, string apiKey, string apiSecret)
+        public BinanceRestApiClient(SymbolPropertiesDatabaseSymbolMapper symbolMapper, ISecurityProvider securityProvider, string apiKey, string apiSecret)
         {
             _symbolMapper = symbolMapper;
             _securityProvider = securityProvider;
