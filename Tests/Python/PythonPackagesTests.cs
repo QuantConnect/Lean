@@ -358,7 +358,7 @@ from hmmlearn import hmm
 def RunTest():
     # Build an HMM instance and set parameters
     model = hmm.GaussianHMM(n_components=4, covariance_type='full')
-    
+
     # Instead of fitting it from the data, we directly set the estimated
     # parameters, the means and covariance of the components
     model.startprob_ = np.array([0.6, 0.3, 0.1, 0.0])
@@ -422,7 +422,7 @@ def RunTest():
     ]) + np.random.normal(0, 1, X.shape[0])
     TRUE_PROB = expit(LINEAR_TERM)
     Y = np.random.binomial(1, TRUE_PROB, size=N)
-    
+
     return {
         'X': X,
         'probability_labels': TRUE_PROB,
@@ -480,7 +480,7 @@ def RunTest():
                                  error_action='ignore',    # don't want to know if an order does not work
                                  suppress_warnings=True,   # don't want convergence warnings
                                  stepwise=True)            # set to stepwise
-    
+
     return stepwise_fit.summary()"
             );
         }
@@ -673,7 +673,7 @@ def RunTest():
     mvo = MeanVarianceOptimisation()
     mvo.allocate(asset_prices=stock_prices, solution='inverse_variance', resample_by='B')
     ivp_weights = mvo.weights.sort_values(by=0, ascending=False, axis=1)
-    
+
     return f'HRP: {hrp_weights} IVP: {ivp_weights}'"
             );
         }
@@ -820,7 +820,7 @@ def RunTest():
 
     # getting parameters
     p = cop.params
-    # cop.params = ...  # you can override parameters too, even after it's fitted!  
+    # cop.params = ...  # you can override parameters too, even after it's fitted!
 
     # get a summary of the copula. If it's fitted, fit details will be present too
     return cop.summary()"
@@ -882,6 +882,7 @@ def RunTest():
         [TestCase("cntk", "2.7", "__version__")]
         [TestCase("featuretools", "0.13.4", "__version__")]
         [TestCase("pennylane", "0.8.1", "version()")]
+        [TestCase("pyarrow", "1.0.1", "__version__")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
             AssetCode(

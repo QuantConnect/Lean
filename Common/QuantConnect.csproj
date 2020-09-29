@@ -107,9 +107,8 @@
     <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Apache.Arrow, Version=2.0.0.0, Culture=neutral, PublicKeyToken=204f54e5a45c07df">
-      <HintPath>..\packages\Apache.Arrow.2.0.0-SNAPSHOT\lib\net461\Apache.Arrow.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Apache.Arrow, Version=2.0.0.0, Culture=neutral, PublicKeyToken=204f54e5a45c07df, processorArchitecture=MSIL">
+      <HintPath>..\packages\gsalaz98.Unofficial.Apache.Arrow.2.0.1-SNAPSHOT\lib\net461\Apache.Arrow.dll</HintPath>
     </Reference>
     <Reference Include="CloneExtensions, Version=1.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\CloneExtensions.1.3.0\lib\net461\CloneExtensions.dll</HintPath>

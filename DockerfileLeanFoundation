@@ -88,6 +88,9 @@ RUN conda install -y -c conda-forge \
 # Install TensorFlow 1.15.2
 RUN pip install tensorflow==1.15.2
 
+# Install pyarrow for faster Python History DataFrame loading
+RUN pip install pyarrow==1.0.1
+
 # Install math/ML packages
 RUN conda install -y                \
     docutils=0.14                   \
