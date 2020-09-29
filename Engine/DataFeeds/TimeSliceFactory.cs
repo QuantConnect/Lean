@@ -31,7 +31,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class TimeSliceFactory
     {
         private readonly DateTimeZone _timeZone;
-        private Dictionary<Symbol, Symbol> _futureCanonicalSymbol;
 
         // performance: these collections are not always used so keep a reference to an empty
         // instance to use and avoid unnecessary constructors and allocations
@@ -499,16 +498,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var symbol = baseData.Symbol;
 
             FuturesChain chain;
-            if (_futureCanonicalSymbol == null)
-            {
-                _futureCanonicalSymbol = new Dictionary<Symbol, Symbol>();
-            }
-
-            Symbol canonical;
-            if (!_futureCanonicalSymbol.TryGetValue(symbol, out canonical))
-            {
-                canonical = Symbol.Create(symbol.ID.Symbol, SecurityType.Future, symbol.ID.Market);
-            }
+            var canonical = Symbol.Create(symbol.ID.Symbol, SecurityType.Future, symbol.ID.Market);
 
             if (!futuresChains.TryGetValue(canonical, out chain))
             {
