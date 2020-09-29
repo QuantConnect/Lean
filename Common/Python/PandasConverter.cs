@@ -128,7 +128,7 @@ namespace QuantConnect.Python
                     _pa = PythonEngine.ImportModule("pyarrow");
                     _np = PythonEngine.ImportModule("numpy");
 
-                    _filter = new dynamic[] { 0, string.Empty, false };
+                    _filter = new PyList(new[] { 0.ToPython(), string.Empty.ToPython(), false.ToPython() });
 
                     _optionIndexes = new PyList(new[] { new PyString("strike"), new PyString("type") });
                     _optionFinalIndexes = new PyList(new[]
