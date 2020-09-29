@@ -128,7 +128,8 @@ namespace QuantConnect.Securities
                 .ToList();
 
             var barCount = _window.Size + 1;
-            var extendedMarketHours = configurations.IsExtendedMarketHours();
+            // hour resolution does no have extended market hours data
+            var extendedMarketHours = _periodSpan != Time.OneHour && configurations.IsExtendedMarketHours();
             var configuration = configurations.First();
 
             var localStartTime = Time.GetStartTimeForTradeBars(
