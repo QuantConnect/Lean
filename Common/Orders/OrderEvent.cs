@@ -251,6 +251,11 @@ namespace QuantConnect.Orders
                 message += Invariant($" Message: {Message}");
             }
 
+            if (Symbol.SecurityType == SecurityType.Option)
+            {
+                message += Invariant($" IsAssignment: {IsAssignment}");
+            }
+
             return message;
         }
 
