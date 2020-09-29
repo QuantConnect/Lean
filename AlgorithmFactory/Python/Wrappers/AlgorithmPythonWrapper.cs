@@ -122,33 +122,22 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 
         /// <summary>
         /// Override that accepts a Python Algorithm directly as a PyObject
-        /// TODO: Test cases, and error catching
         /// </summary>
         /// <param name="algorithm"></param>
-        public AlgorithmPythonWrapper(PyObject algorithm)
+        public AlgorithmPythonWrapper(dynamic algorithm)
         {
             using (Py.GIL())
             {
-                //TODO: Currently takes in an already intialized algorithm, but fails to map the bound methods to the Python algo and defaults to quantbook base methods
-                // If the input is a uninitialized Python module then `GetPythonMethod()` works and will map properly, just need to change the line below to algorithm.Invoke();
                 _algorithm = algorithm;
-
-                // Set pandas
                 _algorithm.SetPandasConverter();
 
                 // IAlgorithm reference for LEAN internal C# calls (without going from C# to Python and back)
                 _baseAlgorithm = _algorithm.AsManagedObject(typeof(IAlgorithm));
 
-                //Below functions work when algorithm is a Python Module
-                _onData = algorithm.GetPythonMethod("OnData");
-                //_onData = algorithm.GetAttr("OnData");
-                //_onData = _algorithm.OnData;
-
-                _onMarginCall = algorithm.GetPythonMethod("OnMarginCall");
-
-                _onOrderEvent = algorithm.GetPythonMethod("OnOrderEvent");
-
-                IsOnEndOfDayImplemented = algorithm.GetPythonMethod("OnEndOfDay") != null;
+                _onData = algorithm.GetAttr("OnData");
+                _onMarginCall = algorithm.GetAttr("OnMarginCall");
+                _onOrderEvent = algorithm.GetAttr("OnOrderEvent");
+                IsOnEndOfDayImplemented = algorithm.GetAttr("OnEndOfDay") != null;
             }
         }
 

@@ -117,6 +117,7 @@
   <ItemGroup>
     <Compile Include="FutureHistory.cs" />
     <Compile Include="OptionHistory.cs" />
+    <Compile Include="PythonQuantBookWrapper.cs" />
     <Compile Include="QuantBook.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -170,6 +171,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="packages.config" />
+    <Content Include="PythonQuantBook.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="QuantConnect.csx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
