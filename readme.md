@@ -117,6 +117,8 @@ If you get: "Error initializing task Fsc: Not registered task Fsc." -> `sudo apt
 
 If you get: "XX not found" -> Make sure Nuget ran successfully, and re-run if neccessary.
 
+If you get: "Confirm ... '.../QuantConnect.XX.csproj.*.props' is correct, and that the file exists on disk." -> Ensure that your installation path is free of [reserved characters](https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file)
+
 If you get other errors that lead to the failure of your building, please refer to the commands in "DockerfileLeanFoundation" file for help.
 
 - Run the compiled `exe` file:
