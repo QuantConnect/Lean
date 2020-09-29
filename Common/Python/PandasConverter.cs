@@ -123,8 +123,9 @@ namespace QuantConnect.Python
                     // Cache the indexes to skip calling python as much as we can
                     _defaultIndexes = new PyList(new []{ new PyString("symbol"), new PyString("time") });
 
-                    // pyarrow is used to create a DataFrame without having to serialize the data.
-                    // It also allows us to construct a DataFrame as a zero-copy operation.
+                    // pyarrow is used to create a DataFrame without having to serialize/deserialize/box multiple times.
+                    // It also allows us to construct a DataFrame as a zero-copy operation. The DataFrame will be eventually
+                    // copied to enable mutability of underlying data, but it will be done efficiently.
                     _pa = PythonEngine.ImportModule("pyarrow");
                     _np = PythonEngine.ImportModule("numpy");
 
@@ -132,7 +133,7 @@ namespace QuantConnect.Python
 
                     _optionIndexes = new PyList(new[] { new PyString("strike"), new PyString("type") });
                     _optionFinalIndexes = new PyList(new[]
-                                         {
+                    {
                         new PyString("strike"),
                         new PyString("type"),
                         new PyString("symbol"),
@@ -539,7 +540,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
                         hasQuotes = true;
 
-                        _quoteBarSymbols.Append(quoteBar.Symbol.ID.ToString());
+                        _quoteBarSymbols.Append(sid);
                         _quoteBarTimes.Append(new DateTimeOffset(quoteBar.EndTime.Ticks, TimeSpan.Zero));
 
                         if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
@@ -665,7 +666,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         var baseData = (BaseData)slice[symbol];
                         var baseDataType = baseData.GetType();
 
-                        var dynamicData = (baseData as DynamicData);
+                        var dynamicData = baseData as DynamicData;
                         var dynamicDataStorage = dynamicData?.GetStorageDictionary();
                         if (dynamicDataStorage != null)
                         {
@@ -1026,9 +1027,13 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
                     dataFrames.Clear();
 
-                    // Filters all columns only containing values: NaN, 0, "", or false
+                    // Filters all columns only containing values: NaN, 0, "", or false.
+                    // We filter like this instead of using `isin` since some custom data types causes
+                    // `isin` to crash when filtering for duplicates, because the List[T] type in Python
+                    // has no hashcode associated with it.
                     final_df.drop(columns: final_df.columns[final_df.replace(_filter, _np.NaN).isnull().all()], inplace: true);
 
+                    // Only sort the index only when it's unsorted
                     if (!final_df.index.is_monotonic_increasing || !final_df.index.is_lexsorted())
                     {
                         final_df.sort_index(inplace: true);
@@ -1507,37 +1512,6 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 return;
             }
         }
-
-        ///// <summary>
-        ///// Converts an enumerable of <see cref="IBaseData"/> in a pandas.DataFrame
-        ///// </summary>
-        ///// <param name="data">Enumerable of <see cref="Slice"/></param>
-        ///// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
-        //public PyObject GetDataFrame<T>(IEnumerable<T> data)
-        //    where T : IBaseData
-        //{
-        //    PandasData sliceData = null;
-        //    foreach (var datum in data)
-        //    {
-        //        if (sliceData == null)
-        //        {
-        //            sliceData = new PandasData(datum);
-        //        }
-
-        //        sliceData.Add(datum);
-        //    }
-
-        //    using (Py.GIL())
-        //    {
-        //        // If sliceData is still null, data is an empty enumerable
-        //        // returns an empty pandas.DataFrame
-        //        if (sliceData == null)
-        //        {
-        //            return _pandas.DataFrame();
-        //        }
-        //        return sliceData.ToPandasDataFrame();
-        //    }
-        //}
 
         /// <summary>
         /// Converts a dictionary with a list of <see cref="IndicatorDataPoint"/> in a pandas.DataFrame
