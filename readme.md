@@ -12,15 +12,20 @@
 
 Lean Engine is an open-source algorithmic trading engine built for easy strategy research, backtesting and live trading. We integrate with common data providers and brokerages so you can quickly deploy algorithmic trading strategies.
 
-The core of the LEAN Engine is written in C#; but it operates seamlessly on Linux, Mac and Windows operating systems. It supports algorithms written in Python 3.6, C# or F#. Lean drives the web based algorithmic trading platform [QuantConnect][4].
+The core of the LEAN Engine is written in C#; but it operates seamlessly on Linux, Mac and Windows operating systems. It supports algorithms written in Python 3.6, C# or F#. Lean drives the web-based algorithmic trading platform [QuantConnect][4].
+
+
+## Proudly Sponsored By ##
+
+Want your company logo here? [Sponsor LEAN](https://github.com/sponsors/QuantConnect) to be part of radically open algorithmic-trading innovation.
 
 
 ## QuantConnect is Hiring! ##
 Join the team and solve some of the most difficult challenges in quantitative finance. If you are passionate about algorithmic trading we'd like to hear from you. The below roles are open in our Seattle, WA office. When applying, make sure to mention you came through GitHub: 
 
-- [**Senior UX Developer**](mailto:jared@quantconnect.com): Collaborate with QuantConnect to develop a world leading online experience for a community of developers from all over the world. 
+- [**Senior UX Developer**](mailto:jared@quantconnect.com): Collaborate with QuantConnect to develop a world-leading online experience for a community of developers from all over the world. 
 
-- [**Technical Writers**](mailto:jared@quantconnect.com): Help us improve the QuantConnect and LEAN documentation with hands on tutorials with how to use all the adaptors LEAN offers, and how to setup trading locally. 
+- [**Technical Writers**](mailto:jared@quantconnect.com): Help us improve the QuantConnect and LEAN documentation with hands-on tutorials with how to use all the adaptors LEAN offers, and how to set up trading locally. 
 
 - [**Quantitative Development Intern**](mailto:jared@quantconnect.com): If you are a recent or current graduate with a knack for quantitative finance, consider applying for an internship!
 
@@ -28,7 +33,7 @@ Join the team and solve some of the most difficult challenges in quantitative fi
 
 ![alt tag](Documentation/2-Overview-Detailed-New.png)
 
-The Engine is broken into many modular pieces which can be extended without touching other files. The modules are configured in config.json as set "environments". Through these environments you can control LEAN to operate in the mode required. 
+The Engine is broken into many modular pieces which can be extended without touching other files. The modules are configured in config.json as set "environments". Through these environments, you can control LEAN to operate in the mode required. 
 
 The most important plugins are:
 
@@ -36,13 +41,13 @@ The most important plugins are:
    > Handle all messages from the algorithmic trading engine. Decide what should be sent, and where the messages should go. The result processing system can send messages to a local GUI, or the web interface.
 
  - **Datafeed Sourcing** (IDataFeed)
-   > Connect and download data required for the algorithmic trading engine. For backtesting this sources files from the disk, for live trading it connects to a stream and generates the data objects.
+   > Connect and download the data required for the algorithmic trading engine. For backtesting this sources files from the disk, for live trading, it connects to a stream and generates the data objects.
 
  - **Transaction Processing** (ITransactionHandler)
-   > Process new order requests; either using the fill models provided by the algorithm, or with an actual brokerage. Send the processed orders back to the algorithm's portfolio to be filled.
+   > Process new order requests; either using the fill models provided by the algorithm or with an actual brokerage. Send the processed orders back to the algorithm's portfolio to be filled.
 
  - **Realtime Event Management** (IRealtimeHandler)
-   > Generate real time events - such as end of day events. Trigger callbacks to real time event handlers. For backtesting this is mocked-up an works on simulated time. 
+   > Generate real-time events - such as the end of day events. Trigger callbacks to real-time event handlers. For backtesting, this is mocked-up a works on simulated time. 
  
  - **Algorithm State Setup** (ISetupHandler)
    > Configure the algorithm cash, portfolio and data requested. Initialize all state parameters required.
@@ -159,13 +164,13 @@ The mailing list for the project can be found on [LEAN Forum][6]. Please use thi
 
 ## Contributors and Pull Requests ##
 
-Contributions are warmly very welcomed but we ask you read the existing code to see how it is formatted, commented and ensure contributions match the existing style. All code submissions must include accompanying tests. Please see the [contributor guide lines][7].
+Contributions are warmly very welcomed but we ask you to read the existing code to see how it is formatted, commented and ensure contributions match the existing style. All code submissions must include accompanying tests. Please see the [contributor guide lines][7].
 
 All accepted pull requests will get a 2mo free Prime subscription on QuantConnect. Once your pull-request has been merged write to us at support@quantconnect.com with a link to your PR to claim your free live trading. QC <3 Open Source.
 
 ## Acknowledgements ##
 
-The open sourcing of QuantConnect would not have been possible without the support of the Pioneers. The Pioneers formed the core 100 early adopters of QuantConnect who subscribed and allowed us to launch the project into open source. 
+The open-sourcing of QuantConnect would not have been possible without the support of the Pioneers. The Pioneers formed the core 100 early adopters of QuantConnect who subscribed and allowed us to launch the project into open source. 
 
 Ryan H, Pravin B, Jimmie B, Nick C, Sam C, Mattias S, Michael H, Mark M, Madhan, Paul R, Nik M, Scott Y, BinaryExecutor.com, Tadas T, Matt B, Binumon P, Zyron, Mike O, TC, Luigi, Lester Z, Andreas H, Eugene K, Hugo P, Robert N, Christofer O, Ramesh L, Nicholas S, Jonathan E, Marc R, Raghav N, Marcus, Hakan D, Sergey M, Peter McE, Jim M, INTJCapital.com, Richard E, Dominik, John L, H. Orlandella, Stephen L, Risto K, E.Subasi, Peter W, Hui Z, Ross F, Archibald112, MooMooForex.com, Jae S, Eric S, Marco D, Jerome B, James B. Crocker, David Lypka, Edward T, Charlie Guse, Thomas D, Jordan I, Mark S, Bengt K, Marc D, Al C, Jan W, Ero C, Eranmn, Mitchell S, Helmuth V, Michael M, Jeremy P, PVS78, Ross D, Sergey K, John Grover, Fahiz Y, George L.Z., Craig E, Sean S, Brad G, Dennis H, Camila C, Egor U, David T, Cameron W, Napoleon Hernandez, Keeshen A, Daniel E, Daniel H, M.Patterson, Asen K, Virgil J, Balazs Trader, Stan L, Con L, Will D, Scott K, Barry K, Pawel D, S Ray, Richard C, Peter L, Thomas L., Wang H, Oliver Lee, Christian L.
 
