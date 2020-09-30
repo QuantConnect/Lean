@@ -42,16 +42,16 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
     /// </summary>
     public class AlgorithmPythonWrapper : IAlgorithm
     {
-        private readonly dynamic _algorithm;
-        private readonly dynamic _onData;
-        private readonly dynamic _onOrderEvent;
-        private readonly dynamic _onMarginCall;
-        private readonly IAlgorithm _baseAlgorithm;
+        private dynamic _algorithm;
+        private dynamic _onData;
+        private dynamic _onOrderEvent;
+        private dynamic _onMarginCall;
+        private IAlgorithm _baseAlgorithm;
 
         /// <summary>
         /// True if the underlying python algorithm implements "OnEndOfDay"
         /// </summary>
-        public bool IsOnEndOfDayImplemented { get; }
+        public bool IsOnEndOfDayImplemented { get; private set; }
 
         /// <summary>
         /// <see cref = "AlgorithmPythonWrapper"/> constructor.
@@ -81,23 +81,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                             Logging.Log.Trace("AlgorithmPythonWrapper(): Creating IAlgorithm instance.");
 
                             _algorithm = attr.Invoke();
-
-                            // Set pandas
-                            _algorithm.SetPandasConverter();
-
-                            // IAlgorithm reference for LEAN internal C# calls (without going from C# to Python and back)
-                            _baseAlgorithm = _algorithm.AsManagedObject(type);
-
-                            // determines whether OnData method was defined or inherits from QCAlgorithm
-                            // If it is not, OnData from the base class will not be called
-                            var pyAlgorithm = _algorithm as PyObject;
-                            _onData = pyAlgorithm.GetPythonMethod("OnData");
-
-                            _onMarginCall = pyAlgorithm.GetPythonMethod("OnMarginCall");
-
-                            _onOrderEvent = pyAlgorithm.GetAttr("OnOrderEvent");
-
-                            IsOnEndOfDayImplemented = pyAlgorithm.GetPythonMethod("OnEndOfDay") != null;
+                            SetAlgorithmFunctions(type);
                         }
                         attr.Dispose();
                     }
@@ -129,16 +113,33 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             using (Py.GIL())
             {
                 _algorithm = algorithm;
-                _algorithm.SetPandasConverter();
-
-                // IAlgorithm reference for LEAN internal C# calls (without going from C# to Python and back)
-                _baseAlgorithm = _algorithm.AsManagedObject(typeof(IAlgorithm));
-
-                _onData = algorithm.GetAttr("OnData");
-                _onMarginCall = algorithm.GetAttr("OnMarginCall");
-                _onOrderEvent = algorithm.GetAttr("OnOrderEvent");
-                IsOnEndOfDayImplemented = algorithm.GetAttr("OnEndOfDay") != null;
+                SetAlgorithmFunctions(typeof(IAlgorithm));
             }
+        }
+
+        /// <summary>
+        /// Constructor helper function, used by the constructors to map Algorithm calls to their
+        /// appropriate destination.
+        /// </summary>
+        /// <param name="type"></param>
+        private void SetAlgorithmFunctions(Type type)
+        {
+            // Set pandas
+            _algorithm.SetPandasConverter();
+
+            // IAlgorithm reference for LEAN internal C# calls (without going from C# to Python and back)
+            _baseAlgorithm = _algorithm.AsManagedObject(type);
+
+            // determines whether OnData method was defined or inherits from QCAlgorithm
+            // If it is not, OnData from the base class will not be called
+            var pyAlgorithm = _algorithm as PyObject;
+            _onData = pyAlgorithm.GetPythonMethod("OnData");
+
+            _onMarginCall = pyAlgorithm.GetPythonMethod("OnMarginCall");
+
+            _onOrderEvent = pyAlgorithm.GetAttr("OnOrderEvent");
+
+            IsOnEndOfDayImplemented = pyAlgorithm.GetPythonMethod("OnEndOfDay") != null;
         }
 
         /// <summary>
