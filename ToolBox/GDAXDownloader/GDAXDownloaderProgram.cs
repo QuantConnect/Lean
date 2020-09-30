@@ -39,7 +39,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
                 Console.WriteLine("--resolution=Second/Minute/Hour/Daily");
                 Environment.Exit(1);
             }
-            var castResolution = (Resolution) Enum.Parse(typeof(Resolution), resolution);
+            var castResolution = (Resolution)Enum.Parse(typeof(Resolution), resolution);
             try
             {
                 // Load settings from config.json
@@ -48,11 +48,12 @@ namespace QuantConnect.ToolBox.GDAXDownloader
                 // Create an instance of the downloader
                 const string market = Market.GDAX;
                 var downloader = new GDAXDownloader();
+                var tickerMapper = new GDAXDownloaderSymbolMapper();
                 foreach (var ticker in tickers)
                 {
                     // Download the data
                     var symbolObject = Symbol.Create(ticker, SecurityType.Crypto, market);
-                    var data = downloader.Get(symbolObject, castResolution, fromDate, toDate);
+                    var data = downloader.Get(tickerMapper.GetGDAXDownloadSymbol(symbolObject), castResolution, fromDate, toDate);
 
                     // Save the data
                     var writer = new LeanDataWriter(castResolution, symbolObject, dataDirectory, TickType.Trade);
