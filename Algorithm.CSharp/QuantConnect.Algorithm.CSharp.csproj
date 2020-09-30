@@ -145,6 +145,7 @@
     <Compile Include="DailyHistoryForDailyResolutionRegressionAlgorithm.cs" />
     <Compile Include="DailyHistoryForMinuteResolutionRegressionAlgorithm.cs" />
     <Compile Include="ExtendedMarketHoursHistoryRegressionAlgorithm.cs" />
+    <Compile Include="EquityTickQuoteAdjustedModeRegressionAlgorithm.cs" />
     <Compile Include="SwitchDataModeRegressionAlgorithm.cs" />
     <Compile Include="AddRemoveOptionUniverseRegressionAlgorithm.cs" />
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
