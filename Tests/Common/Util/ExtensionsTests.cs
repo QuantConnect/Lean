@@ -1172,9 +1172,11 @@ actualDictionary.update({'IBM': 5})
             // Relevant issue: https://github.com/QuantConnect/Lean/issues/4788
 
             var algo = new QCAlgorithm();
+            var fsDataFeed = new FileSystemDataFeed();
+
             algo.SubscriptionManager = new SubscriptionManager();
             algo.SubscriptionManager.SetDataManager(new DataManager(
-                new FileSystemDataFeed(),
+                fsDataFeed,
                 new UniverseSelection(
                     algo,
                     new SecurityService(
@@ -1186,8 +1188,7 @@ actualDictionary.update({'IBM': 5})
                         null
                     ),
                     new DataPermissionManager(),
-                    new DefaultDataProvider(),
-                    Resolution.Minute
+                    new DefaultDataProvider()
                 ),
                 algo,
                 new TimeKeeper(DateTime.UtcNow),
@@ -1197,43 +1198,48 @@ actualDictionary.update({'IBM': 5})
                 new DataPermissionManager()
             ));
 
-            algo.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
-            algo.HistoryProvider.Initialize(
-                new HistoryProviderInitializeParameters(
-                    null,
-                    null,
-                    null,
-                    new ZipDataCacheProvider(new DefaultDataProvider()),
-                    new LocalDiskMapFileProvider(),
-                    new LocalDiskFactorFileProvider(),
-                    (_) => {},
-                    false,
-                    new DataPermissionManager()));
-
-            algo.SetStartDate(DateTime.UtcNow.AddDays(-1));
-
-            var history = algo.History(new[] { Symbols.IBM }, new DateTime(2013, 10, 7), new DateTime(2013, 10, 8), Resolution.Tick).ToList();
-            Console.WriteLine(history.Count);
-
-            foreach (var slice in history)
+            using (var zipDataCacheProvider = new ZipDataCacheProvider(new DefaultDataProvider()))
             {
-                if (!slice.Ticks.ContainsKey(Symbols.IBM))
-                {
-                    continue;
-                }
+                algo.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
+                algo.HistoryProvider.Initialize(
+                    new HistoryProviderInitializeParameters(
+                        null,
+                        null,
+                        null,
+                        zipDataCacheProvider,
+                        new LocalDiskMapFileProvider(),
+                        new LocalDiskFactorFileProvider(),
+                        (_) => {},
+                        false,
+                        new DataPermissionManager()));
 
-                foreach (var tick in slice.Ticks[Symbols.IBM])
+                algo.SetStartDate(DateTime.UtcNow.AddDays(-1));
+
+                var history = algo.History(new[] { Symbols.IBM }, new DateTime(2013, 10, 7), new DateTime(2013, 10, 8), Resolution.Tick).ToList();
+                Assert.AreEqual(57401, history.Count);
+
+                foreach (var slice in history)
                 {
-                    if (tick.BidPrice != 0)
+                    if (!slice.Ticks.ContainsKey(Symbols.IBM))
                     {
-                        Assert.LessOrEqual(Math.Abs(tick.Value - tick.BidPrice), 0.05);
+                        continue;
                     }
-                    if (tick.AskPrice != 0)
+
+                    foreach (var tick in slice.Ticks[Symbols.IBM])
                     {
-                        Assert.LessOrEqual(Math.Abs(tick.Value - tick.AskPrice), 0.05);
+                        if (tick.BidPrice != 0)
+                        {
+                            Assert.LessOrEqual(Math.Abs(tick.Value - tick.BidPrice), 0.05);
+                        }
+                        if (tick.AskPrice != 0)
+                        {
+                            Assert.LessOrEqual(Math.Abs(tick.Value - tick.AskPrice), 0.05);
+                        }
                     }
                 }
             }
+
+            fsDataFeed.Exit();
         }
 
         private PyObject ConvertToPyObject(object value)
