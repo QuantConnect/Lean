@@ -22,8 +22,8 @@ using QuantConnect.Orders.OptionExercise;
 using Python.Runtime;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Util;
 using System.Collections.Generic;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Securities.Option
 {
@@ -226,13 +226,45 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Returns the actual number of the underlying shares that are going to change hands on exercise. For instance, after reverse split
-        /// we may have 1 option contract with multiplier of 100 with right to buy/sell only 50 shares of underlying stock.
+        /// Returns the directional quantity of underlying shares that are going to change hands on exercise/assignment of all
+        /// contracts held by this account, taking into account the contract's <see cref="Right"/> as well as the contract's current
+        /// <see cref="ContractUnitOfTrade"/>, which may have recently changed due to a split/reverse split in the underlying security.
         /// </summary>
-        /// <returns></returns>
-        public decimal GetExerciseQuantity(decimal quantity)
+        /// <remarks>
+        /// Long option positions result in exercise while short option positions result in assignment. This function uses the term
+        /// exercise loosely to refer to both situations.
+        /// </remarks>
+        public decimal GetExerciseQuantity()
         {
-            return quantity * ContractUnitOfTrade;
+            // negate Holdings.Quantity to match an equivalent order
+            return GetExerciseQuantity(-Holdings.Quantity);
+        }
+
+        /// <summary>
+        /// Returns the directional quantity of underlying shares that are going to change hands on exercise/assignment of the
+        /// specified <paramref name="exerciseOrderQuantity"/>, taking into account the contract's <see cref="Right"/> as well
+        /// as the contract's current <see cref="ContractUnitOfTrade"/>, which may have recently changed due to a split/reverse
+        /// split in the underlying security.
+        /// </summary>
+        /// <remarks>
+        /// Long option positions result in exercise while short option positions result in assignment. This function uses the term
+        /// exercise loosely to refer to both situations.
+        /// </remarks>
+        /// <paramref name="exerciseOrderQuantity">The quantity of contracts being exercised as provided by the <see cref="OptionExerciseOrder"/>.
+        /// A negative value indicates exercise (we are long and the order quantity is negative to bring us (closer) to zero.
+        /// A positive value indicates assignment (we are short and the order quantity is positive to bring us (closer) to zero.</paramref>
+        public decimal GetExerciseQuantity(decimal exerciseOrderQuantity)
+        {
+            // when exerciseOrderQuantity > 0 [ we are short ]
+            //      && right == call => we sell to contract holder  => negative
+            //      && right == put  => we buy from contract holder => positive
+
+            // when exerciseOrderQuantity < 0 [ we are long ]
+            //      && right == call => we buy from contract holder => positive
+            //      && right == put  => we sell to contract holder  => negative
+
+            var sign = Right == OptionRight.Call ? -1 : 1;
+            return sign * exerciseOrderQuantity * ContractUnitOfTrade;
         }
 
         /// <summary>
@@ -437,7 +469,7 @@ namespace QuantConnect.Securities.Option
         public void SetFilter(PyObject universeFunc)
         {
             ContractFilter = new FuncSecurityDerivativeFilter(universe =>
-            {              
+            {
                 var optionUniverse = universe as OptionFilterUniverse;
                 using (Py.GIL())
                 {

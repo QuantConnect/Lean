@@ -2263,5 +2263,22 @@ namespace QuantConnect
                     return isShort ? OrderDirection.Buy : OrderDirection.Sell;
             }
         }
+
+        /// <summary>
+        /// Gets the <see cref="OrderDirection"/> for the specified <paramref name="quantity"/>
+        /// </summary>
+        public static OrderDirection GetOrderDirection(decimal quantity)
+        {
+            var sign = Math.Sign(quantity);
+            switch (sign)
+            {
+                case 1:  return OrderDirection.Buy;
+                case 0:  return OrderDirection.Hold;
+                case -1: return OrderDirection.Sell;
+                default: throw new ApplicationException(
+                    $"The skies are falling and the oceans are rising! Math.Sign({quantity}) returned {sign} :/"
+                );
+            }
+        }
     }
 }

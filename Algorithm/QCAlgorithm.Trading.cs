@@ -490,7 +490,9 @@ namespace QuantConnect.Algorithm
         {
             var option = (Option) Securities[optionSymbol];
 
-            var request = CreateSubmitOrderRequest(OrderType.OptionExercise, option, quantity, tag, DefaultOrderProperties?.Clone());
+            // SubmitOrderRequest.Quantity indicates the change in holdings quantity, therefore manual exercise quantities must be negative
+            // PreOrderChecksImpl confirms that we don't hold a short position, so we're lenient here and accept +/- quantity values
+            var request = CreateSubmitOrderRequest(OrderType.OptionExercise, option, -Math.Abs(quantity), tag, DefaultOrderProperties?.Clone());
 
             // If warming up, do not submit
             if (IsWarmingUp)
@@ -775,16 +777,11 @@ namespace QuantConnect.Algorithm
                     );
                 }
 
-                if (request.Quantity > security.Holdings.Quantity)
+                if (Math.Abs(request.Quantity) > security.Holdings.Quantity)
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.UnsupportedRequestType,
                         $"Cannot exercise more contracts of '{request.Symbol}' than is currently available in the portfolio. "
                     );
-                }
-
-                if (request.Quantity <= 0.0m)
-                {
-                    OrderResponse.ZeroQuantity(request);
                 }
             }
 
