@@ -2135,43 +2135,40 @@ namespace QuantConnect
                     break;
                 case MarketDataType.Tick:
                     var securityType = data.Symbol.SecurityType;
-                    var tick = data as Tick;
-                    if (tick != null)
+                    if (securityType != SecurityType.Equity &&
+                        securityType != SecurityType.Option &&
+                        securityType != SecurityType.Future)
                     {
-                        if (securityType == SecurityType.Equity)
-                        {
-                            tick.Value = factor(tick.Value);
-                        }
-                        if (securityType == SecurityType.Option
-                            || securityType == SecurityType.Future)
-                        {
-                            if (tick.TickType == TickType.Trade)
-                            {
-                                tick.Value = factor(tick.Value);
-                            }
-                            else if (tick.TickType != TickType.OpenInterest)
-                            {
-                                tick.BidPrice = tick.BidPrice != 0 ? factor(tick.BidPrice) : 0;
-                                tick.AskPrice = tick.AskPrice != 0 ? factor(tick.AskPrice) : 0;
-
-                                if (tick.BidPrice != 0)
-                                {
-                                    if (tick.AskPrice != 0)
-                                    {
-                                        tick.Value = (tick.BidPrice + tick.AskPrice) / 2m;
-                                    }
-                                    else
-                                    {
-                                        tick.Value = tick.BidPrice;
-                                    }
-                                }
-                                else
-                                {
-                                    tick.Value = tick.AskPrice;
-                                }
-                            }
-                        }
+                        break;
                     }
+
+                    var tick = data as Tick;
+                    if (tick == null || tick.TickType == TickType.OpenInterest)
+                    {
+                        break;
+                    }
+
+                    if (tick.TickType == TickType.Trade)
+                    {
+                        tick.Value = factor(tick.Value);
+                        break;
+                    }
+
+                    tick.BidPrice = tick.BidPrice != 0 ? factor(tick.BidPrice) : 0;
+                    tick.AskPrice = tick.AskPrice != 0 ? factor(tick.AskPrice) : 0;
+
+                    if (tick.BidPrice == 0)
+                    {
+                        tick.Value = tick.AskPrice;
+                        break;
+                    }
+                    if (tick.AskPrice == 0)
+                    {
+                        tick.Value = tick.BidPrice;
+                        break;
+                    }
+
+                    tick.Value = (tick.BidPrice + tick.AskPrice) / 2m;
                     break;
                 case MarketDataType.QuoteBar:
                     var quoteBar = data as QuoteBar;
