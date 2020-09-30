@@ -1172,11 +1172,11 @@ actualDictionary.update({'IBM': 5})
             // Relevant issue: https://github.com/QuantConnect/Lean/issues/4788
 
             var algo = new QCAlgorithm();
-            var fsDataFeed = new FileSystemDataFeed();
+            var dataFeed = new NullDataFeed();
 
             algo.SubscriptionManager = new SubscriptionManager();
             algo.SubscriptionManager.SetDataManager(new DataManager(
-                fsDataFeed,
+                dataFeed,
                 new UniverseSelection(
                     algo,
                     new SecurityService(
@@ -1238,8 +1238,6 @@ actualDictionary.update({'IBM': 5})
                     }
                 }
             }
-
-            fsDataFeed.Exit();
         }
 
         private PyObject ConvertToPyObject(object value)
