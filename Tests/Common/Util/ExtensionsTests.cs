@@ -20,10 +20,15 @@ using Newtonsoft.Json;
 using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
+using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Packets;
@@ -1158,6 +1163,77 @@ actualDictionary.update({'IBM': 5})
         {
             var actual = right.GetExerciseDirection(isShort);
             Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void AppliesScalingToEquityTickQuotes()
+        {
+            // This test ensures that all Ticks with TickType == TickType.Quote have adjusted BidPrice and AskPrice.
+            // Relevant issue: https://github.com/QuantConnect/Lean/issues/4788
+
+            var algo = new QCAlgorithm();
+            algo.SubscriptionManager = new SubscriptionManager();
+            algo.SubscriptionManager.SetDataManager(new DataManager(
+                new FileSystemDataFeed(),
+                new UniverseSelection(
+                    algo,
+                    new SecurityService(
+                        new CashBook(),
+                        MarketHoursDatabase.FromDataFolder(),
+                        SymbolPropertiesDatabase.FromDataFolder(),
+                        algo,
+                        null,
+                        null
+                    ),
+                    new DataPermissionManager(),
+                    new DefaultDataProvider(),
+                    Resolution.Minute
+                ),
+                algo,
+                new TimeKeeper(DateTime.UtcNow),
+                MarketHoursDatabase.FromDataFolder(),
+                false,
+                null,
+                new DataPermissionManager()
+            ));
+
+            algo.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
+            algo.HistoryProvider.Initialize(
+                new HistoryProviderInitializeParameters(
+                    null,
+                    null,
+                    null,
+                    new ZipDataCacheProvider(new DefaultDataProvider()),
+                    new LocalDiskMapFileProvider(),
+                    new LocalDiskFactorFileProvider(),
+                    (_) => {},
+                    false,
+                    new DataPermissionManager()));
+
+            algo.SetStartDate(DateTime.UtcNow.AddDays(-1));
+
+            var history = algo.History(new[] { Symbols.IBM }, new DateTime(2013, 10, 7), new DateTime(2013, 10, 8), Resolution.Tick).ToList();
+            Console.WriteLine(history.Count);
+
+            foreach (var slice in history)
+            {
+                if (!slice.Ticks.ContainsKey(Symbols.IBM))
+                {
+                    continue;
+                }
+
+                foreach (var tick in slice.Ticks[Symbols.IBM])
+                {
+                    if (tick.BidPrice != 0)
+                    {
+                        Assert.LessOrEqual(Math.Abs(tick.Value - tick.BidPrice), 0.05);
+                    }
+                    if (tick.AskPrice != 0)
+                    {
+                        Assert.LessOrEqual(Math.Abs(tick.Value - tick.AskPrice), 0.05);
+                    }
+                }
+            }
         }
 
         private PyObject ConvertToPyObject(object value)

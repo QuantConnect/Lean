@@ -2141,6 +2141,8 @@ namespace QuantConnect
                         if (securityType == SecurityType.Equity)
                         {
                             tick.Value = factor(tick.Value);
+                            tick.BidPrice = factor(tick.BidPrice);
+                            tick.AskPrice = factor(tick.AskPrice);
                         }
                         if (securityType == SecurityType.Option
                             || securityType == SecurityType.Future)
