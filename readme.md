@@ -15,6 +15,11 @@ Lean Engine is an open-source algorithmic trading engine built for easy strategy
 The core of the LEAN Engine is written in C#; but it operates seamlessly on Linux, Mac and Windows operating systems. It supports algorithms written in Python 3.6, C# or F#. Lean drives the web-based algorithmic trading platform [QuantConnect][4].
 
 
+## Proudly Sponsored By ##
+
+Want your company logo here? [Sponsor LEAN](https://github.com/sponsors/QuantConnect) to be part of radically open algorithmic-trading innovation.
+
+
 ## QuantConnect is Hiring! ##
 Join the team and solve some of the most difficult challenges in quantitative finance. If you are passionate about algorithmic trading we'd like to hear from you. The below roles are open in our Seattle, WA office. When applying, make sure to mention you came through GitHub: 
 
