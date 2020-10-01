@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -27,8 +26,6 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
-using System.IO;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.Alphas;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -38,9 +35,6 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public class BacktestingResultHandler : BaseResultsHandler, IResultHandler
     {
-        // used for resetting out/error upon completion
-        private static readonly TextWriter StandardOut = Console.Out;
-        private static readonly TextWriter StandardError = Console.Error;
         private const double Samples = 4000;
         private const double MinimumSamplePeriod = 4;
 
@@ -136,10 +130,6 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             Log.Trace("BacktestingResultHandler.Run(): Ending Thread...");
-
-            // reset standard out/error
-            Console.SetOut(StandardOut);
-            Console.SetError(StandardError);
         } // End Run();
 
         /// <summary>
@@ -639,7 +629,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Terminate the result thread and apply any required exit procedures like sending final results.
         /// </summary>
-        public virtual void Exit()
+        public override void Exit()
         {
             // Only process the logs once
             if (!ExitTriggered)
@@ -661,6 +651,8 @@ namespace QuantConnect.Lean.Engine.Results
                 StopUpdateRunner();
 
                 SendFinalResult();
+
+                base.Exit();
             }
         }
 

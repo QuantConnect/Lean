@@ -38,6 +38,10 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public abstract class BaseResultsHandler
     {
+        // used for resetting out/error upon completion
+        private static readonly TextWriter StandardOut = Console.Out;
+        private static readonly TextWriter StandardError = Console.Error;
+
         /// <summary>
         /// The main loop update interval
         /// </summary>
@@ -210,6 +214,16 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="newEvent">New event details</param>
         public virtual void OrderEvent(OrderEvent newEvent)
         {
+        }
+
+        /// <summary>
+        /// Terminate the result thread and apply any required exit procedures like sending final results
+        /// </summary>
+        public virtual void Exit()
+        {
+            // reset standard out/error
+            Console.SetOut(StandardOut);
+            Console.SetError(StandardError);
         }
 
         /// <summary>
