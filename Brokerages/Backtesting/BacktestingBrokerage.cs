@@ -430,7 +430,7 @@ namespace QuantConnect.Brokerages.Backtesting
                             OnOrderEvent(fill);
                         }
 
-                        if (order.Type == OrderType.OptionExercise)
+                        if (fill.IsAssignment)
                         {
                             fill.Message = order.Tag;
                             OnOptionPositionAssigned(fill);
