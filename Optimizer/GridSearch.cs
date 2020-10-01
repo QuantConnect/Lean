@@ -13,9 +13,47 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace QuantConnect.Optimizer
 {
     public class GridSearch : IOptimizationStrategy
     {
+        public IEnumerable<ParameterSet> Step(ParameterSet seed, IEnumerable<OptimizationParameter> args)
+        {
+            foreach (var step in Recursive(seed?.Arguments, args))
+            {
+                yield return new ParameterSet(step);
+            }
+        }
+
+        public IEnumerable<Dictionary<string, decimal>> Recursive(IEnumerable<KeyValuePair<string, decimal>> seed, IEnumerable<OptimizationParameter> args)
+        {
+            if (args.Count() == 1)
+            {
+                var d = args.First();
+                for (var value = d.MinValue; value <= d.MaxValue; value += d.Step)
+                {
+                    yield return new Dictionary<string, decimal>()
+                    {
+                        {d.Name, value}
+                    };
+                }
+                yield break;
+            }
+
+            var d2 = args.First();
+            for (var value = d2.MinValue; value <= d2.MaxValue; value += d2.Step)
+            {
+                foreach (var inner in Recursive(seed, args.Where(s => s != d2)))
+                {
+                    inner.Add(d2.Name, value);
+
+                    yield return inner;
+                }
+            }
+        }
     }
 }

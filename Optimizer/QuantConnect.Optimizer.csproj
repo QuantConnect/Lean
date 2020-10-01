@@ -48,15 +48,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="LeanOptimizer.cs" />
     <Compile Include="EulerSearch.cs" />
     <Compile Include="GridSearch.cs" />
     <Compile Include="IOptimizationStrategy.cs" />
-    <Compile Include="IOptimizer.cs" />
-    <Compile Include="LeanOptimizer.cs" />
+    <Compile Include="IOptimizationManager.cs" />
+    <Compile Include="BruteForceOptimizer.cs" />
+    <Compile Include="OptimizationEventArgs.cs" />
+    <Compile Include="OptimizationParameter.cs" />
+    <Compile Include="OptimizationResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ParameterSet.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

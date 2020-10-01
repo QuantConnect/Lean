@@ -13,15 +13,35 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
+
 namespace QuantConnect.Optimizer
 {
-    public class LeanOptimizer : IOptimizer
+    public class LeanOptimizer
     {
-        public IOptimizationStrategy SearchStrategy { get; }
+        protected IOptimizationManager Optimizer;
 
-        public LeanOptimizer(IOptimizationStrategy searchStrategy)
+        public LeanOptimizer()
         {
-            SearchStrategy = searchStrategy;
+            Optimizer = new BruteForceOptimizer(new GridSearch());
+            Optimizer.Initialize();
+            Optimizer.NewSuggestion += (s, e) =>
+            {
+                if ((e as OptimizationEventArgs)?.ParameterSet == null) return;
+
+                var result = RunLean((e as OptimizationEventArgs)?.ParameterSet);
+                Optimizer.PushNewResults(new OptimizationResult(result, (e as OptimizationEventArgs)?.ParameterSet));
+            };
+
+            Optimizer.PushNewResults(null);
         }
+
+        public virtual void Abort()
+        {
+
+        }
+
+        protected virtual decimal RunLean(ParameterSet suggestion) => suggestion.Arguments.Sum(s => s.Value);
     }
 }

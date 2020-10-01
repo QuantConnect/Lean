@@ -13,9 +13,12 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
+
 namespace QuantConnect.Optimizer
 {
     public interface IOptimizationStrategy
     {
+        IEnumerable<ParameterSet> Step(ParameterSet seed, IEnumerable<OptimizationParameter> args);
     }
 }

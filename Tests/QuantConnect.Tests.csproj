@@ -763,6 +763,7 @@
     <Compile Include="Indicators\RateOfChangeTests.cs" />
     <Compile Include="Indicators\EaseOfMovementValueTests.cs" />
     <Compile Include="Indicators\StochasticTests.cs" />
+    <Compile Include="Optimizer\Strategies\GridSearchTests.cs" />
     <Compile Include="Research\QuantBookFundamentalTests.cs" />
     <Compile Include="Python\PythonOptionTests.cs" />
     <Compile Include="Report\DrawdownCollectionTests.cs" />
@@ -1056,6 +1057,10 @@
     <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
       <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>
       <Name>QuantConnect.Indicators</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Optimizer\QuantConnect.Optimizer.csproj">
+      <Project>{4ecd7df3-a675-4e9e-aca3-2b51c88736ce}</Project>
+      <Name>QuantConnect.Optimizer</Name>
     </ProjectReference>
     <ProjectReference Include="..\Research\QuantConnect.Research.csproj">
       <Project>{9561d14a-467e-40ad-928e-ee9f758d7d98}</Project>

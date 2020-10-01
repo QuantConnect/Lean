@@ -13,15 +13,13 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
-
 namespace QuantConnect.Optimizer
 {
-    public class EulerSearch : IOptimizationStrategy
+    public class OptimizationParameter
     {
-        public IEnumerable<ParameterSet> Step(ParameterSet seed, IEnumerable<OptimizationParameter> args)
-        {
-            throw new System.NotImplementedException();
-        }
+        public string Name { get; set; }
+        public decimal MinValue { get; set; }
+        public decimal MaxValue { get; set; }
+        public decimal Step { get; set; }
     }
 }

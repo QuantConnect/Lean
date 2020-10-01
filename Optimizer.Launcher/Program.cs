@@ -31,13 +31,15 @@ namespace QuantConnect.Optimizer.Launcher
 
                 string path = System.IO.Path.Combine(myDir, _workingDirectory, "QuantConnect.Lean.Launcher.exe");
 
-                var optimizer = new LeanOptimizer(new GridSearch());
+                var chaser = new LeanOptimizer();
+
+                Console.ReadKey();
 
                 // Use ProcessStartInfo class
                 ProcessStartInfo startInfo = new ProcessStartInfo
                 {
                     FileName = path,
-                    WorkingDirectory =  _workingDirectory,
+                    WorkingDirectory = _workingDirectory,
                     Arguments = $"--results-destination-folder \"{myDir}\" --parameters \"ema-fast\":1"
                 };
 

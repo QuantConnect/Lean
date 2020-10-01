@@ -13,15 +13,17 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
+using System;
 
 namespace QuantConnect.Optimizer
 {
-    public class EulerSearch : IOptimizationStrategy
+    public class OptimizationEventArgs : EventArgs
     {
-        public IEnumerable<ParameterSet> Step(ParameterSet seed, IEnumerable<OptimizationParameter> args)
+        public ParameterSet ParameterSet { get; set; }
+
+        public OptimizationEventArgs(ParameterSet suggestion)
         {
-            throw new System.NotImplementedException();
+            ParameterSet = suggestion;
         }
     }
 }

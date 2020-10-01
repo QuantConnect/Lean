@@ -13,10 +13,23 @@
  * limitations under the License.
 */
 
+using System;
+
 namespace QuantConnect.Optimizer
 {
-    public interface IOptimizer
+    public class OptimizationResult
     {
-        IOptimizationStrategy SearchStrategy { get; }
+        public Guid Id { get; }
+
+        public decimal Profit { get; }
+
+        public ParameterSet ParameterSet { get; }
+
+        public OptimizationResult(decimal profit, ParameterSet parameterSet)
+        {
+            Id = Guid.NewGuid();
+            Profit = profit;
+            ParameterSet = parameterSet;
+        }
     }
 }

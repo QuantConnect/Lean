@@ -17,11 +17,13 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer
 {
-    public class EulerSearch : IOptimizationStrategy
+    public class ParameterSet
     {
-        public IEnumerable<ParameterSet> Step(ParameterSet seed, IEnumerable<OptimizationParameter> args)
+        public IEnumerable<KeyValuePair<string, decimal>> Arguments { get; }
+
+        public ParameterSet(IEnumerable<KeyValuePair<string, decimal>> arguments)
         {
-            throw new System.NotImplementedException();
+            Arguments = arguments;
         }
     }
 }
