@@ -183,7 +183,7 @@
     <Compile Include="SchaffTrendCycle.cs" />
     <Compile Include="WilderMovingAverage.cs" />
     <Compile Include="FractalAdaptiveMovingAverage.cs" />
-    <Compile Include="EaseOfMovementValue.cs"/>
+    <Compile Include="EaseOfMovementValue.cs" />
     <Compile Include="FilteredIdentity.cs" />
     <Compile Include="HullMovingAverage.cs" />
     <Compile Include="MassIndex.cs" />
@@ -255,10 +255,6 @@
     <Compile Include="BollingerBands.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\QuantConnect.csproj">
-      <Project>{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}</Project>
-      <Name>QuantConnect</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
       <Project>{01911409-86be-4e7d-9947-df714138610d}</Project>
       <Name>QuantConnect.Logging</Name>

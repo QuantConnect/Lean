@@ -162,10 +162,6 @@
       <Project>{3240ACA4-BDD4-4D24-AC36-BBB651C39212}</Project>
       <Name>QuantConnect.Algorithm</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Common\QuantConnect.csproj">
-      <Project>{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}</Project>
-      <Name>QuantConnect</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
       <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>
       <Name>QuantConnect.Indicators</Name>
