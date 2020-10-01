@@ -35,7 +35,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
             if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
                 Console.WriteLine("GDAXDownloader ERROR: '--tickers=' or '--resolution=' parameter is missing");
-                Console.WriteLine("--tickers=ETH-USD,ETH-BTC,BTC-USD,etc.");
+                Console.WriteLine("--tickers=ETHUSD,ETHBTC,BTCUSD,etc.");
                 Console.WriteLine("--resolution=Second/Minute/Hour/Daily");
                 Environment.Exit(1);
             }
