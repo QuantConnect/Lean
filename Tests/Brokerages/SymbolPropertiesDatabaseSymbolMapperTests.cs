@@ -59,24 +59,23 @@ namespace QuantConnect.Tests.Brokerages
             Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSecurityType(brokerageSymbol));
         }
 
-        [Test]
-        public void ThrowsOnNullOrEmptySymbols()
+        [TestCase(Market.GDAX)]
+        [TestCase(Market.Bitfinex)]
+        [TestCase(Market.Binance)]
+        public void ThrowsOnNullOrEmptySymbols(string market)
         {
-            foreach (var market in new[] { Market.GDAX, Market.Bitfinex })
-            {
-                var mapper = new SymbolPropertiesDatabaseSymbolMapper(market);
+            var mapper = new SymbolPropertiesDatabaseSymbolMapper(market);
 
-                string ticker = null;
-                Assert.IsFalse(mapper.IsKnownBrokerageSymbol(ticker));
-                Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(ticker, SecurityType.Crypto, market));
-                Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSecurityType(ticker));
+            string ticker = null;
+            Assert.IsFalse(mapper.IsKnownBrokerageSymbol(ticker));
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(ticker, SecurityType.Crypto, market));
+            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSecurityType(ticker));
 
-                ticker = "";
-                Assert.IsFalse(mapper.IsKnownBrokerageSymbol(ticker));
-                Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(ticker, SecurityType.Crypto, market));
-                Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSecurityType(ticker));
-                Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(Symbol.Create(ticker, SecurityType.Crypto, market)));
-            }
+            ticker = "";
+            Assert.IsFalse(mapper.IsKnownBrokerageSymbol(ticker));
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(ticker, SecurityType.Crypto, market));
+            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSecurityType(ticker));
+            Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(Symbol.Create(ticker, SecurityType.Crypto, market)));
         }
 
         [TestCaseSource(nameof(UnknownSymbols))]
