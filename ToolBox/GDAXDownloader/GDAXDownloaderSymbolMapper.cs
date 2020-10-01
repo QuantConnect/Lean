@@ -103,8 +103,8 @@ namespace QuantConnect.ToolBox.GDAXDownloader
         };
 
         /// <summary>
-        /// Map a ticker used in QC with the ticker to use to download history on GDAX
-        /// ex : QC use BTCUSD as ticker but we have to ask the history of BTC-USD
+        /// Map a ticker used GDAX with the ticker to use to download history
+        /// ex : GDAX use BTCUSD as ticker but we have to ask the history of BTC-USD
         /// </summary>
         /// <param name="symbol"></param>
         /// <returns></returns>
