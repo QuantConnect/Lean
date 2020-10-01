@@ -118,6 +118,11 @@ namespace QuantConnect.Brokerages.Binance
         public override bool IsConnected => WebSocket.IsOpen;
 
         /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
+        public override string AccountBaseCurrency => "USDT";
+
+        /// <summary>
         /// Creates wss connection
         /// </summary>
         public override void Connect()

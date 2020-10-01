@@ -1325,6 +1325,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandleUpdateAccountValue(object sender, IB.UpdateAccountValueEventArgs e)
         {
+            //Log.Trace($"HandleUpdateAccountValue(): Key:{e.Key} Value:{e.Value} Currency:{e.Currency} AccountName:{e.AccountName}");
+
             try
             {
                 _accountData.AccountProperties[e.Currency + ":" + e.Key] = e.Value;
@@ -1336,6 +1338,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     _accountData.CashBalances.AddOrUpdate(e.Currency, cashBalance);
 
                     OnAccountChanged(new AccountEvent(e.Currency, cashBalance));
+                }
+
+                // IB does not explicitly return the account base currency, but we can find out using exchange rates returned
+                if (e.Key == AccountValueKeys.ExchangeRate && e.Currency != "BASE" && e.Value.ToDecimal() == 1)
+                {
+                    AccountBaseCurrency = e.Currency;
                 }
             }
             catch (Exception err)
@@ -3070,8 +3078,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private static class AccountValueKeys
         {
             public const string CashBalance = "CashBalance";
-            // public const string AccruedCash = "AccruedCash";
-            // public const string NetLiquidationByCurrency = "NetLiquidationByCurrency";
+            public const string ExchangeRate = "ExchangeRate";
         }
 
         // these are fatal errors from IB

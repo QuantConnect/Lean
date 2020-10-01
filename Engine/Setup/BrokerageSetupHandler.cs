@@ -275,6 +275,8 @@ namespace QuantConnect.Lean.Engine.Setup
                     return false;
                 }
 
+                Log.Trace($"BrokerageSetupHandler.Setup(): {brokerage.Name} account base currency: {brokerage.AccountBaseCurrency}");
+
                 Log.Trace("BrokerageSetupHandler.Setup(): Fetching cash balance from brokerage...");
                 try
                 {

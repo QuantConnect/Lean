@@ -65,6 +65,15 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
+        /// Gets the account base currency
+        /// </summary>
+        public override string GetAccountBaseCurrency()
+        {
+            // The OANDA v1 REST API is deprecated
+            return Currencies.USD;
+        }
+
+        /// <summary>
         /// Gets the list of available tradable instruments/products from Oanda
         /// </summary>
         public override List<string> GetInstrumentList()

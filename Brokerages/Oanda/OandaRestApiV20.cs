@@ -83,6 +83,16 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
+        /// Gets the account base currency
+        /// </summary>
+        public override string GetAccountBaseCurrency()
+        {
+            var response = _apiRest.GetAccount(Authorization, AccountId);
+
+            return response.Account.Currency;
+        }
+
+        /// <summary>
         /// Gets the list of available tradable instruments/products from Oanda
         /// </summary>
         public override List<string> GetInstrumentList()

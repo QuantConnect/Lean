@@ -113,6 +113,11 @@ namespace QuantConnect.Interfaces
         bool AccountInstantlyUpdated { get; }
 
         /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
+        string AccountBaseCurrency { get; }
+
+        /// <summary>
         /// Gets the history for the requested security
         /// </summary>
         /// <param name="request">The historical data request</param>
