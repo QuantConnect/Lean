@@ -301,6 +301,12 @@ namespace QuantConnect.Tests.Common.Securities
                         quoteCurrency = newQuoteCurrency;
                     }
 
+                    // skip test symbols
+                    if (quoteCurrency.StartsWith("TEST"))
+                    {
+                        continue;
+                    }
+
                     var leanTicker = $"{baseCurrency}{quoteCurrency}";
 
                     decimal minimumPriceIncrement;
