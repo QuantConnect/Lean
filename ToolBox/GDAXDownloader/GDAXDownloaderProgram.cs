@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -44,19 +45,25 @@ namespace QuantConnect.ToolBox.GDAXDownloader
             {
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
+
+                // get symbol mapper for GDAX
+                var mapper = new SymbolPropertiesDatabaseSymbolMapper(Market.GDAX);
+
                 //todo: will download any exchange but always save as gdax
                 // Create an instance of the downloader
                 const string market = Market.GDAX;
                 var downloader = new GDAXDownloader();
-                var symbolMapper = new GDAXDownloaderSymbolMapper();
                 foreach (var ticker in tickers)
                 {
+                    // create symbols for lean and brokerage
+                    var leanSymbolObject = Symbol.Create(ticker, SecurityType.Crypto, market);
+                    var brokerageSymbolObject = Symbol.Create(mapper.GetBrokerageSymbol(leanSymbolObject), SecurityType.Crypto, market);
+
                     // Download the data
-                    var symbolObject = Symbol.Create(ticker, SecurityType.Crypto, market);
-                    var data = downloader.Get(symbolMapper.GetGDAXDownloadSymbol(symbolObject), castResolution, fromDate, toDate);
+                    var data = downloader.Get(brokerageSymbolObject, castResolution, fromDate, toDate);
 
                     // Save the data
-                    var writer = new LeanDataWriter(castResolution, symbolObject, dataDirectory, TickType.Trade);
+                    var writer = new LeanDataWriter(castResolution, leanSymbolObject, dataDirectory, TickType.Trade);
                     var distinctData = data.GroupBy(i => i.Time, (key, group) => group.First()).ToArray();
 
                     writer.Write(distinctData);
