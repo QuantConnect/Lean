@@ -49,6 +49,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             AddChainedEquityOptionUniverseSelectionModel(selectionUniverse, universe =>
             {
+                if (universe.Underlying == null)
+                {
+                    throw new Exception("Underlying data point is null! This shouldn't happen, each OptionChainUniverse handles and should provide this");
+                }
                 return universe.IncludeWeeklys()
                     .FrontMonth()
                     .Contracts(universe.Take(5));
