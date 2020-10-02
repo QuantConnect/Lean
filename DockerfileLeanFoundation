@@ -66,6 +66,9 @@ RUN conda install -y                \
     pandas=0.25.3                   \
     wrapt=1.12.1
 
+# Install pyarrow to improve DataFrame construction performance
+RUN pip install pyarrow==1.0.1
+
 # Install non-math packages
 RUN conda install -y                \
     astropy=4.0.1.post1             \
