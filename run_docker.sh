@@ -149,4 +149,4 @@ fi
 echo -e "Launching LeanEngine with command: "
 echo -e "$COMMAND"
 #Run built docker COMMAND;
-eval "$COMMAND" 2>&1
+eval "$COMMAND"
