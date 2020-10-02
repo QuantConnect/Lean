@@ -83,6 +83,11 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
+        public override string AccountBaseCurrency => _api.AccountBaseCurrency;
+
+        /// <summary>
         /// Connects the client to the broker's remote servers
         /// </summary>
         public override void Connect()

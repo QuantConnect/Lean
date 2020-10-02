@@ -28,7 +28,6 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using Timer = System.Timers.Timer;
 
 namespace QuantConnect.Brokerages.Oanda
 {
