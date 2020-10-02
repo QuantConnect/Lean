@@ -168,6 +168,42 @@ namespace QuantConnect.Lean.Engine.Setup
 
             try
             {
+                // let the world know what we're doing since logging in can take a minute
+                parameters.ResultHandler.SendStatusUpdate(AlgorithmStatus.LoggingIn, "Logging into brokerage...");
+
+                brokerage.Message += brokerageOnMessage;
+
+                Log.Trace("BrokerageSetupHandler.Setup(): Connecting to brokerage...");
+                try
+                {
+                    // this can fail for various reasons, such as already being logged in somewhere else
+                    brokerage.Connect();
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    AddInitializationError(
+                        $"Error connecting to brokerage: {err.Message}. " +
+                        "This may be caused by incorrect login credentials or an unsupported account type.", err);
+                    return false;
+                }
+
+                if (!brokerage.IsConnected)
+                {
+                    // if we're reporting that we're not connected, bail
+                    AddInitializationError("Unable to connect to brokerage.");
+                    return false;
+                }
+
+                Log.Trace($"BrokerageSetupHandler.Setup(): {brokerage.Name} account base currency: {brokerage.AccountBaseCurrency}");
+
+                if (brokerage.AccountBaseCurrency != algorithm.AccountCurrency)
+                {
+                    Log.Trace($"BrokerageSetupHandler.Setup(): Changing account currency from {algorithm.AccountCurrency} to {brokerage.AccountBaseCurrency}");
+
+                    algorithm.SetAccountCurrency(brokerage.AccountBaseCurrency);
+                }
+
                 Log.Trace("BrokerageSetupHandler.Setup(): Initializing algorithm...");
 
                 parameters.ResultHandler.SendStatusUpdate(AlgorithmStatus.Initializing, "Initializing algorithm...");
@@ -247,35 +283,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     AddInitializationError("Initialization timed out.");
                     return false;
                 }
-
-                // let the world know what we're doing since logging in can take a minute
-                parameters.ResultHandler.SendStatusUpdate(AlgorithmStatus.LoggingIn, "Logging into brokerage...");
-
-                brokerage.Message += brokerageOnMessage;
-
-                Log.Trace("BrokerageSetupHandler.Setup(): Connecting to brokerage...");
-                try
-                {
-                    // this can fail for various reasons, such as already being logged in somewhere else
-                    brokerage.Connect();
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err);
-                    AddInitializationError(
-                        $"Error connecting to brokerage: {err.Message}. " +
-                        "This may be caused by incorrect login credentials or an unsupported account type.", err);
-                    return false;
-                }
-
-                if (!brokerage.IsConnected)
-                {
-                    // if we're reporting that we're not connected, bail
-                    AddInitializationError("Unable to connect to brokerage.");
-                    return false;
-                }
-
-                Log.Trace($"BrokerageSetupHandler.Setup(): {brokerage.Name} account base currency: {brokerage.AccountBaseCurrency}");
 
                 Log.Trace("BrokerageSetupHandler.Setup(): Fetching cash balance from brokerage...");
                 try
