@@ -128,6 +128,7 @@ namespace QuantConnect.Tests.Engine.Setup
             var brokerage = new Mock<IBrokerage>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
             brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
             brokerage.Setup(x => x.GetAccountHoldings()).Returns(getHoldings);
             brokerage.Setup(x => x.GetOpenOrders()).Returns(getOrders);
@@ -181,6 +182,7 @@ namespace QuantConnect.Tests.Engine.Setup
             var objectStore = new Mock<IObjectStore>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
             brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
             brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>
             {
@@ -228,6 +230,7 @@ namespace QuantConnect.Tests.Engine.Setup
             var objectStore = new Mock<IObjectStore>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
             brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
             brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>
             {
@@ -283,6 +286,7 @@ namespace QuantConnect.Tests.Engine.Setup
             var objectStore = new Mock<IObjectStore>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
             brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
             brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>());
             brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
@@ -324,6 +328,7 @@ namespace QuantConnect.Tests.Engine.Setup
             var objectStore = new Mock<IObjectStore>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
             brokerage.Setup(x => x.GetCashBalance()).Returns(
                 hasCashBalance
                     ? new List<CashAmount>
