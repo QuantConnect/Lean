@@ -3101,7 +3101,21 @@ def Test(dataFrame, symbol):
             {
                 Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
 
-                var subDataFrame = dataFrame.loc[symbol];
+                dynamic datetime = Py.Import("datetime");
+                dynamic subDataFrame;
+                if (symbol.SecurityType == SecurityType.Future)
+                {
+                    subDataFrame = dataFrame.loc[datetime.datetime(symbol.ID.Date.Year, symbol.ID.Date.Month, symbol.ID.Date.Day)].loc[symbol];
+                }
+                else
+                {
+                    var locals = new PyDict();
+                    locals.SetItem("df", dataFrame);
+                    locals.SetItem("datetime", datetime);
+
+                    subDataFrame = PythonEngine.Eval($"df.loc[datetime.datetime({symbol.ID.Date.Year}, {symbol.ID.Date.Month}, {symbol.ID.Date.Day})].loc[{symbol.ID.StrikePrice.ToStringInvariant()}].loc['{symbol.ID.OptionRight.ToString()}'].loc['{symbol}']", null, locals.Handle);
+                }
+
                 Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
 
                 Assert.IsTrue(subDataFrame.get("openinterest") != null);

@@ -30,7 +30,7 @@ using QuantConnect.Util;
 namespace QuantConnect.Python
 {
     /// <summary>
-    /// Collection of methods that converts lists of objects in pandas.DataFrame
+    /// Converts <see cref="Slice"/> data into a Pandas DataFrame
     /// </summary>
     public class PandasConverter
     {
@@ -409,10 +409,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             var hasOption = false;
             var tickHasTrades = false;
             var tickHasQuotes = false;
+            var tickHasOpenInterest = false;
 
             foreach (var slice in data)
             {
-                // Add Quote symbols separately since they could potentially be dropped
+                // Add Quote/Tick symbols separately since they could potentially be dropped
                 // from the Slice.Keys call if only quotes were provided to the Slice.
                 // Related issues:
                 // https://github.com/QuantConnect/Lean/issues/4205
@@ -422,7 +423,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 {
                     symbols.Add(symbol);
                 }
-                foreach (var symbol in slice.QuoteBars.Keys)
+                foreach (var symbol in new HashSet<Symbol>(slice.QuoteBars.Keys))
+                {
+                    symbols.Add(symbol);
+                }
+                foreach (var symbol in new HashSet<Symbol>(slice.Ticks.Keys))
                 {
                     symbols.Add(symbol);
                 }
@@ -632,6 +637,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             }
                             else
                             {
+                                tickHasOpenInterest = true;
                                 _openInterestTimes.Append(new DateTimeOffset(tick.EndTime.Ticks, TimeSpan.Zero));
                                 _openInterestSymbols.Append(sid);
                                 _openInterestValue.Append((double)tick.Value);
@@ -832,13 +838,15 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
                 tickRecordBatchBuilder.Append("time", false, _tickTimes.Build(_allocator));
                 tickRecordBatchBuilder.Append("symbol", false, _tickSymbols.Build(_allocator));
-                tickRecordBatchBuilder.Append("lastprice", false, _tickValue.Build(_allocator));
                 tickRecordBatchBuilder.Append("exchange", true, _tickExchange.Build(_allocator));
 
                 if (hasSuspicious)
                 {
                     tickRecordBatchBuilder.Append("suspicious", true, _tickSuspicious.Build(_allocator));
                 }
+
+                tickRecordBatchBuilder.Append("lastprice", false, _tickValue.Build(_allocator));
+
                 if (tickHasTrades)
                 {
                     tickRecordBatchBuilder.Append("quantity", tickHasQuotes, _tickQuantity.Build(_allocator));
@@ -913,8 +921,8 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 }
             }
 
-            var addExpiry = hasExpiry && (hasTrades || hasQuotes || tickHasTrades || tickHasQuotes);
-            var addOption = hasOption && (hasTrades || hasQuotes || tickHasTrades || tickHasQuotes);
+            var addExpiry = hasExpiry && (hasTrades || hasQuotes || tickHasTrades || tickHasQuotes || tickHasOpenInterest);
+            var addOption = hasOption && (hasTrades || hasQuotes || tickHasTrades || tickHasQuotes || tickHasOpenInterest);
             var i = 0;
 
             unsafe
@@ -943,8 +951,6 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                 dynamic stream = _pa.ipc.open_stream(buf);
                                 dynamic df = stream.read_pandas(self_destruct: true, ignore_metadata: true);
 
-                                // If open interest appears by itself, we want to get rid of the
-                                // expiry column to maintain backwards compatibility.
                                 if (addExpiry)
                                 {
                                     df.set_index("expiry", inplace: true);
@@ -952,6 +958,10 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                 }
                                 else if (hasExpiry)
                                 {
+                                    // If open interest appears by itself, we want to get rid of the
+                                    // expiry column to maintain backwards compatibility for futures.
+                                    // We must note that for options, we want to always include the
+                                    addExpiry = false;
                                     df.drop(columns: new[] { "expiry" }, inplace: true);
                                 }
 
