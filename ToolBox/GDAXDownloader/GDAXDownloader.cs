@@ -21,6 +21,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
@@ -45,6 +46,10 @@ namespace QuantConnect.ToolBox.GDAXDownloader
         /// <returns>Enumerable of base data for this symbol</returns>
         public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
+            // get symbol mapper for GDAX
+            var mapper = new SymbolPropertiesDatabaseSymbolMapper(Market.GDAX);
+            var brokerageTicker = mapper.GetBrokerageSymbol(symbol);
+
             var returnData = new List<BaseData>();
             var granularity = resolution.ToTimeSpan().TotalSeconds;
 
@@ -59,7 +64,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
 
                 Log.Trace($"Getting data for timeperiod from {windowStartTime.ToStringInvariant()} to {windowEndTime.ToStringInvariant()}..");
 
-                var requestURL = $"http://api.pro.coinbase.com/products/{symbol.Value}/candles" +
+                var requestURL = $"http://api.pro.coinbase.com/products/{brokerageTicker}/candles" +
                      $"?start={windowStartTime.ToStringInvariant()}" +
                      $"&end={windowEndTime.ToStringInvariant()}" +
                      $"&granularity={granularity.ToStringInvariant()}";
