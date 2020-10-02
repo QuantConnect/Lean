@@ -294,10 +294,19 @@ namespace QuantConnect.Securities
         /// <returns>A <see cref="string"/> that represents the current <see cref="Cash"/>.</returns>
         public override string ToString()
         {
+            return ToString(Currencies.USD);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="string"/> that represents the current <see cref="Cash"/>.
+        /// </summary>
+        /// <returns>A <see cref="string"/> that represents the current <see cref="Cash"/>.</returns>
+        public string ToString(string accountCurrency)
+        {
             // round the conversion rate for output
             var rate = ConversionRate;
             rate = rate < 1000 ? rate.RoundToSignificantDigits(5) : Math.Round(rate, 2);
-            return Invariant($"{Symbol}: {CurrencySymbol}{Amount,15:0.00} @ {rate,10:0.00####} = ${Math.Round(ValueInAccountCurrency, 2)}");
+            return Invariant($"{Symbol}: {CurrencySymbol}{Amount,15:0.00} @ {rate,10:0.00####} = {Currencies.GetCurrencySymbol(accountCurrency)}{Math.Round(ValueInAccountCurrency, 2)}");
         }
 
         private static IEnumerable<KeyValuePair<SecurityDatabaseKey, SymbolProperties>> GetAvailableSymbolPropertiesDatabaseEntries(
