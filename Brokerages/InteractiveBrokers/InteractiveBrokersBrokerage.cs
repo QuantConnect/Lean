@@ -131,6 +131,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private readonly bool _enableDelayedStreamingData = Config.GetBool("ib-enable-delayed-streaming-data");
 
+        private bool _isDisposeCalled;
+
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
@@ -906,6 +908,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         public override void Dispose()
         {
             Log.Trace("InteractiveBrokersBrokerage.Dispose(): Disposing of IB resources.");
+
+            _isDisposeCalled = true;
 
             if (_client != null)
             {
@@ -3023,7 +3027,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var result = _ibAutomater.GetLastStartResult();
             CheckIbAutomaterError(result, false);
 
-            if (!result.HasError)
+            if (!result.HasError && !_isDisposeCalled)
             {
                 // IBGateway was closed by the v978+ automatic logoff or it was closed manually (less likely)
                 Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): IBGateway close detected, restarting IBAutomater and reconnecting...");
