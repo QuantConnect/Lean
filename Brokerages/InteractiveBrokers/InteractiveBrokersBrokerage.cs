@@ -40,7 +40,6 @@ using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities.Option;
 using Bar = QuantConnect.Data.Market.Bar;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -131,7 +130,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private readonly bool _enableDelayedStreamingData = Config.GetBool("ib-enable-delayed-streaming-data");
 
-        private bool _isDisposeCalled;
+        private volatile bool _isDisposeCalled;
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
@@ -907,6 +906,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         public override void Dispose()
         {
+            if (_isDisposeCalled)
+            {
+                return;
+            }
+
             Log.Trace("InteractiveBrokersBrokerage.Dispose(): Disposing of IB resources.");
 
             _isDisposeCalled = true;
