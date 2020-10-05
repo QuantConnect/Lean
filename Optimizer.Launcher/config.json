@@ -1,0 +1,40 @@
+{
+  // optional
+  // algorithm class selector
+  //"algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
+
+  // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
+  //"algorithm-language": "CSharp",
+
+  // Physical DLL location
+  //"algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
+
+  // How we generate parameter sets - grid/euler/genetic/remote
+  "optimization-strategy": "GridSearch",
+
+  // How we manage solutions and make decision to continue or stop
+  "optimization-manager": "BruteForceOptimizer",
+
+  // optimization problem
+  "optimization-criterion": {
+    // path in algorithm output json
+    "name": "TotalPerformance.TradeStatistics.TotalProfit",
+
+    // optimization: available options max, min
+    "extremum": "max"
+  },
+
+  // optimization parameters
+  "parameters": {
+    "ema-slow": {
+      "min": 1,
+      "max": 100,
+      "step": 0.5
+    },
+    "ema-fast": {
+      "min": 20,
+      "max": 200,
+      "step": 2
+    }
+  }
+}

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer
 {
@@ -23,7 +24,12 @@ namespace QuantConnect.Optimizer
 
         IOptimizationStrategy SearchStrategy { get; }
 
-        void Initialize();
+        Extremum Extremum { get; }
+
+        void Initialize(IOptimizationStrategy strategy, Extremum extremum, IReadOnlyDictionary<string, OptimizationParameter> parameters);
+        
         void PushNewResults(OptimizationResult result);
+
+        OptimizationResult Solution { get; }
     }
 }

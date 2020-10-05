@@ -12,13 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+using Newtonsoft.Json;
 
 namespace QuantConnect.Optimizer
 {
     public class OptimizationParameter
     {
-        public string Name { get; set; }
+        [JsonProperty("min")]
         public decimal MinValue { get; set; }
+        [JsonProperty("max")]
         public decimal MaxValue { get; set; }
         public decimal Step { get; set; }
     }

@@ -153,6 +153,12 @@ namespace QuantConnect.Packets
         AlphaHeartbeat,
 
         /// Used when debugging to send status updates
-        DebuggingStatus
+        DebuggingStatus,
+
+        /// Controller -> Optimization Node Packet:
+        OptimizationNode,
+
+        /// Optimization work status update
+        OptimizationStatus
     }
 }

@@ -19,7 +19,7 @@ namespace QuantConnect.Optimizer
 {
     public class EulerSearch : IOptimizationStrategy
     {
-        public IEnumerable<ParameterSet> Step(ParameterSet seed, IEnumerable<OptimizationParameter> args)
+        public IEnumerable<ParameterSet> Step(ParameterSet seed, IReadOnlyDictionary<string, OptimizationParameter> args)
         {
             throw new System.NotImplementedException();
         }

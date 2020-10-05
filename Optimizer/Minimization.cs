@@ -13,12 +13,13 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
-
 namespace QuantConnect.Optimizer
 {
-    public interface IOptimizationStrategy
+    public class Minimization : Extremum
     {
-        IEnumerable<ParameterSet> Step(ParameterSet seed, IReadOnlyDictionary<string, OptimizationParameter> args);
+        public Minimization() : base((v1, v2) => v1 > v2)
+        {
+
+        }
     }
 }

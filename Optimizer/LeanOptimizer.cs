@@ -14,18 +14,35 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using QuantConnect.Util;
 
 namespace QuantConnect.Optimizer
 {
     public class LeanOptimizer
     {
         protected IOptimizationManager Optimizer;
+        protected OptimizationNodePacket NodePacket;
 
-        public LeanOptimizer()
+        public LeanOptimizer(OptimizationNodePacket nodePacket)
         {
-            Optimizer = new BruteForceOptimizer(new GridSearch());
-            Optimizer.Initialize();
+            if (nodePacket.OptimizationParameters.IsNullOrEmpty())
+            {
+                throw new InvalidOperationException("Cannot start an optimization job with no parameter to optimize");
+            }
+
+            NodePacket = nodePacket;
+            Optimizer = Composer.Instance.GetExportedValueByTypeName<IOptimizationManager>(NodePacket.OptimizationManager);
+
+            Optimizer.Initialize(
+                Composer.Instance.GetExportedValueByTypeName<IOptimizationStrategy>(NodePacket.OptimizationStrategy),
+                NodePacket.Criterion["extremum"] == "max"
+                    ? new Maximization() as Extremum
+                    : new Minimization(),
+                NodePacket.OptimizationParameters);
+
             Optimizer.NewSuggestion += (s, e) =>
             {
                 if ((e as OptimizationEventArgs)?.ParameterSet == null) return;
@@ -37,10 +54,7 @@ namespace QuantConnect.Optimizer
             Optimizer.PushNewResults(null);
         }
 
-        public virtual void Abort()
-        {
-
-        }
+        public virtual void Abort() { }
 
         protected virtual decimal RunLean(ParameterSet suggestion) => suggestion.Arguments.Sum(s => s.Value);
     }

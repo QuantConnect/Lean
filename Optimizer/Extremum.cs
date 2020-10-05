@@ -13,12 +13,20 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer
 {
-    public interface IOptimizationStrategy
+    public class Extremum
     {
-        IEnumerable<ParameterSet> Step(ParameterSet seed, IReadOnlyDictionary<string, OptimizationParameter> args);
+        private Func<decimal, decimal, bool> _comparer;
+
+        public Extremum(Func<decimal, decimal, bool> comaprer)
+        {
+            _comparer = comaprer;
+        }
+
+        public bool Better(decimal current, decimal candidate) => _comparer(current, candidate);
     }
 }

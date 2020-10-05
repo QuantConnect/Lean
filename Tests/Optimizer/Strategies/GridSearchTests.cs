@@ -36,11 +36,15 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         [Test]
         public void Step1D()
         {
-            var param = new OptimizationParameter() { Name = "ema-fast", MinValue = 10, MaxValue = 100, Step = 1 };
-            var counter = 0;
-            using (var enumerator = _strategy.Step(null, new[] {param}).GetEnumerator())
+            var args = new Dictionary<string, OptimizationParameter>()
             {
-                for (var v = param.MinValue; v <= param.MaxValue; v += param.Step)
+                {"ema-fast", new OptimizationParameter { MinValue = 10, MaxValue = 100, Step = 1}}
+            };
+
+            var counter = 0;
+            using (var enumerator = _strategy.Step(null, args).GetEnumerator())
+            {
+                for (var v = args["ema-fast"].MinValue; v <= args["ema-fast"].MaxValue; v += args["ema-fast"].Step)
                 {
                     counter++;
                     Assert.IsTrue(enumerator.MoveNext());
@@ -48,29 +52,29 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     var suggestion = enumerator.Current;
 
                     Assert.IsNotNull(suggestion);
-                    Assert.IsTrue(suggestion.Arguments.Any(s => s.Key == param.Name));
+                    Assert.IsTrue(suggestion.Arguments.All(s => args.ContainsKey(s.Key)));
                     Assert.AreEqual(1, suggestion.Arguments.Count());
-                    Assert.AreEqual(v, suggestion.Arguments.First(s => s.Key == param.Name).Value);
+                    Assert.AreEqual(v, suggestion.Arguments.First(s => s.Key == "ema-fast").Value);
                 }
             }
 
-            Assert.AreEqual((param.MaxValue - param.MinValue)/param.Step + 1, counter);
+            Assert.AreEqual((args["ema-fast"].MaxValue - args["ema-fast"].MinValue) / args["ema-fast"].Step + 1, counter);
         }
 
         [Test]
         public void Step2D()
         {
-            var args = new List<OptimizationParameter>
+            var args = new Dictionary<string, OptimizationParameter>()
             {
-                new OptimizationParameter() {Name = "ema-fast", MinValue = 10, MaxValue = 100, Step = 1},
-                new OptimizationParameter() {Name = "ema-slow", MinValue = 20, MaxValue = 200, Step = 1}
+                { "ema-fast", new OptimizationParameter {MinValue = 10, MaxValue = 100, Step = 1}},
+                { "ema-slow", new OptimizationParameter {MinValue = 20, MaxValue = 200, Step = 1}}
             };
             var counter = 0;
             using (var enumerator = _strategy.Step(null, args).GetEnumerator())
             {
-                for (var fast = args[0].MinValue; fast <= args[0].MaxValue; fast += args[0].Step)
+                for (var fast = args["ema-fast"].MinValue; fast <= args["ema-fast"].MaxValue; fast += args["ema-fast"].Step)
                 {
-                    for (var slow = args[1].MinValue; slow <= args[1].MaxValue; slow += args[1].Step)
+                    for (var slow = args["ema-slow"].MinValue; slow <= args["ema-slow"].MaxValue; slow += args["ema-slow"].Step)
                     {
                         counter++;
                         Assert.IsTrue(enumerator.MoveNext());
@@ -78,17 +82,16 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                         var suggestion = enumerator.Current;
 
                         Assert.IsNotNull(suggestion);
-                        Assert.IsTrue(suggestion.Arguments.Any(s => s.Key == args[0].Name));
-                        Assert.IsTrue(suggestion.Arguments.Any(s => s.Key == args[1].Name));
+                        Assert.IsTrue(suggestion.Arguments.All(s => args.ContainsKey(s.Key)));
                         Assert.AreEqual(2, suggestion.Arguments.Count());
-                        Assert.AreEqual(fast, suggestion.Arguments.First(s => s.Key == args[0].Name).Value);
-                        Assert.AreEqual(slow, suggestion.Arguments.First(s => s.Key == args[1].Name).Value);
+                        Assert.AreEqual(fast, suggestion.Arguments.First(s => s.Key == "ema-fast").Value);
+                        Assert.AreEqual(slow, suggestion.Arguments.First(s => s.Key == "ema-slow").Value);
                     }
                 }
             }
 
             var total = 1m;
-            foreach (var arg in args)
+            foreach (var arg in args.Values)
             {
                 total *= (arg.MaxValue - arg.MinValue) / arg.Step + 1;
             }
@@ -99,20 +102,20 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         [Test]
         public void Step3D()
         {
-            var args = new List<OptimizationParameter>
+            var args = new Dictionary<string, OptimizationParameter>()
             {
-                new OptimizationParameter() {Name = "ema-fast", MinValue = 10, MaxValue = 100, Step = 1},
-                new OptimizationParameter() {Name = "ema-slow", MinValue = 20, MaxValue = 200, Step = 4},
-                new OptimizationParameter() {Name = "ema-custom", MinValue = 30, MaxValue = 300, Step = 2},
+                {"ema-fast", new OptimizationParameter {MinValue = 10, MaxValue = 100, Step = 1}},
+                {"ema-slow",new OptimizationParameter {MinValue = 20, MaxValue = 200, Step = 4}},
+                {"ema-custom",new OptimizationParameter {MinValue = 30, MaxValue = 300, Step = 2}},
             };
             var counter = 0;
             using (var enumerator = _strategy.Step(null, args).GetEnumerator())
             {
-                for (var fast = args[0].MinValue; fast <= args[0].MaxValue; fast += args[0].Step)
+                for (var fast = args["ema-fast"].MinValue; fast <= args["ema-fast"].MaxValue; fast += args["ema-fast"].Step)
                 {
-                    for (var slow = args[1].MinValue; slow <= args[1].MaxValue; slow += args[1].Step)
+                    for (var slow = args["ema-slow"].MinValue; slow <= args["ema-slow"].MaxValue; slow += args["ema-slow"].Step)
                     {
-                        for (var custom = args[2].MinValue; custom <= args[2].MaxValue; custom += args[2].Step)
+                        for (var custom = args["ema-custom"].MinValue; custom <= args["ema-custom"].MaxValue; custom += args["ema-custom"].Step)
                         {
                             counter++;
                             Assert.IsTrue(enumerator.MoveNext());
@@ -120,20 +123,18 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                             var suggestion = enumerator.Current;
 
                             Assert.IsNotNull(suggestion);
-                            Assert.IsTrue(suggestion.Arguments.Any(s => s.Key == args[0].Name));
-                            Assert.IsTrue(suggestion.Arguments.Any(s => s.Key == args[1].Name));
-                            Assert.IsTrue(suggestion.Arguments.Any(s => s.Key == args[2].Name));
+                            Assert.IsTrue(suggestion.Arguments.All(s => args.ContainsKey(s.Key)));
                             Assert.AreEqual(3, suggestion.Arguments.Count());
-                            Assert.AreEqual(fast, suggestion.Arguments.First(s => s.Key == args[0].Name).Value);
-                            Assert.AreEqual(slow, suggestion.Arguments.First(s => s.Key == args[1].Name).Value);
-                            Assert.AreEqual(custom, suggestion.Arguments.First(s => s.Key == args[2].Name).Value);
+                            Assert.AreEqual(fast, suggestion.Arguments.First(s => s.Key == "ema-fast").Value);
+                            Assert.AreEqual(slow, suggestion.Arguments.First(s => s.Key == "ema-slow").Value);
+                            Assert.AreEqual(custom, suggestion.Arguments.First(s => s.Key == "ema-custom").Value);
                         }
                     }
                 }
             }
 
             var total = 1m;
-            foreach (var arg in args)
+            foreach (var arg in args.Values)
             {
                 total *= (arg.MaxValue - arg.MinValue) / arg.Step + 1;
             }

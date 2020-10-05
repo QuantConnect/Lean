@@ -21,30 +21,28 @@ namespace QuantConnect.Optimizer
 {
     public class BruteForceOptimizer : IOptimizationManager
     {
-        private IEnumerable<OptimizationParameter> _args;
-        public IOptimizationStrategy SearchStrategy { get; }
+        private IReadOnlyDictionary<string, OptimizationParameter> _args;
+        public IOptimizationStrategy SearchStrategy { get; private set; }
+        public Extremum Extremum { get; private set; }
+        public event EventHandler NewSuggestion;
+        public OptimizationResult Solution { get; private set; }
 
-        public BruteForceOptimizer(IOptimizationStrategy searchStrategy)
+        public void Initialize(IOptimizationStrategy searchStrategy, Extremum extremum, IReadOnlyDictionary<string, OptimizationParameter> parameters)
         {
             SearchStrategy = searchStrategy;
-        }
-
-        public event EventHandler NewSuggestion;
-
-        public void Initialize()
-        {
-            _args = new List<OptimizationParameter>
-            {
-                new OptimizationParameter() {Name = "ema-fast", MinValue = 10, MaxValue = 100, Step = 1},
-                new OptimizationParameter() {Name = "ema-slow", MinValue = 20, MaxValue = 200, Step = 1}
-            };
+            Extremum = extremum;
+            _args = parameters;
         }
 
         public void PushNewResults(OptimizationResult result)
         {
             if (result != null)
             {
-                Console.WriteLine($"{string.Join(";", result.ParameterSet.Arguments.Select(s => $"{s.Key}={s.Value}"))}: {result.Profit}");
+                if (Solution == null || Extremum.Better(Solution.Profit, result.Profit))
+                {
+                    Solution = result;
+                }
+
                 return;
             }
 

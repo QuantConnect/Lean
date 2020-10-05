@@ -13,8 +13,11 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
+using QuantConnect.Configuration;
 using QuantConnect.Optimizer;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace QuantConnect.Optimizer.Launcher
@@ -31,8 +34,17 @@ namespace QuantConnect.Optimizer.Launcher
 
                 string path = System.IO.Path.Combine(myDir, _workingDirectory, "QuantConnect.Lean.Launcher.exe");
 
-                var chaser = new LeanOptimizer();
-
+                var packet = new OptimizationNodePacket()
+                {
+                    OptimizationStrategy = Config.Get("optimization-strategy", "GridSearch"),
+                    OptimizationManager = Config.Get("optimization-manager", "BruteForceOptimizer"),
+                    Criterion =
+                        JsonConvert.DeserializeObject<Dictionary<string, string>>(Config.Get("optimization-criterion", "{\"name\":\"TotalPerformance.TradeStatistics.TotalProfit\", \"direction\": \"max\"}")),
+                    OptimizationParameters = 
+                        JsonConvert.DeserializeObject<Dictionary<string, OptimizationParameter>>(Config.Get("parameters", "{}"))
+                };
+                var chaser = new LeanOptimizer(packet);
+                chaser.Abort();
                 Console.ReadKey();
 
                 // Use ProcessStartInfo class
