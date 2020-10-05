@@ -35,7 +35,13 @@ namespace QuantConnect.Brokerages.GDAX
     {
         private const int MaxDataPointsPerHistoricalRequest = 300;
 
-        private static readonly HashSet<string> FiatCurrencies = new List<string> { "EUR", "GBP", "USD" }.ToHashSet();
+        // These are the only currencies accepted for fiat deposits
+        private static readonly HashSet<string> FiatCurrencies = new List<string>
+        {
+            Currencies.EUR,
+            Currencies.GBP,
+            Currencies.USD
+        }.ToHashSet();
 
         #region IBrokerage
         /// <summary>
