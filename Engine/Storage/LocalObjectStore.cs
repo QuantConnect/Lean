@@ -248,6 +248,19 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 _dirty = true;
 
+                try
+                {
+                    var path = GetFilePathForKey(key);
+                    if (File.Exists(path))
+                    {
+                        File.Delete(path);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(exception);
+                }
+
                 // if <= 0 we disable periodic persistence and make it synchronous
                 if (Controls.PersistenceIntervalSeconds <= 0)
                 {
@@ -275,7 +288,7 @@ namespace QuantConnect.Lean.Engine.Storage
             var contents = ReadBytes(key);
 
             // write byte array to storage directory
-            var path = Path.Combine(AlgorithmStorageRoot, $"{key.ToMD5()}.dat");
+            var path = GetFilePathForKey(key);
             File.WriteAllBytes(path, contents);
 
             return path;
@@ -324,6 +337,14 @@ namespace QuantConnect.Lean.Engine.Storage
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        /// <summary>
+        /// Get's the file path for a giving object store key
+        /// </summary>
+        private string GetFilePathForKey(string key)
+        {
+            return Path.Combine(AlgorithmStorageRoot, $"{key.ToMD5()}.dat");
         }
 
         /// <summary>
