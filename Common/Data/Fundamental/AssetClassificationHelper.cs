@@ -203,7 +203,7 @@ namespace QuantConnect.Data.Fundamental
         public static int MetalsAndMining = 10150;
         public static int Steel = 10160;
         public static int VehiclesAndParts = 10200;
-        public static int FurnishingsFixturesAndAppliances = 10220;
+        public static int Furnishings = 10220;
         public static int FixturesAndAppliances = 10220;
         public static int HomebuildingAndConstruction = 10230;
         public static int ManufacturingApparelAndAccessories = 10240;
