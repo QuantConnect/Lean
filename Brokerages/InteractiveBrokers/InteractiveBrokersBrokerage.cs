@@ -40,7 +40,6 @@ using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities.Option;
 using Bar = QuantConnect.Data.Market.Bar;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -130,6 +129,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly TimeSpan _minimumTimespanBeforeUnsubscribe = TimeSpan.FromMilliseconds(500);
 
         private readonly bool _enableDelayedStreamingData = Config.GetBool("ib-enable-delayed-streaming-data");
+
+        private volatile bool _isDisposeCalled;
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
@@ -905,7 +906,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         public override void Dispose()
         {
+            if (_isDisposeCalled)
+            {
+                return;
+            }
+
             Log.Trace("InteractiveBrokersBrokerage.Dispose(): Disposing of IB resources.");
+
+            _isDisposeCalled = true;
 
             if (_client != null)
             {
@@ -3023,7 +3031,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var result = _ibAutomater.GetLastStartResult();
             CheckIbAutomaterError(result, false);
 
-            if (!result.HasError)
+            if (!result.HasError && !_isDisposeCalled)
             {
                 // IBGateway was closed by the v978+ automatic logoff or it was closed manually (less likely)
                 Log.Trace("InteractiveBrokersBrokerage.OnIbAutomaterExited(): IBGateway close detected, restarting IBAutomater and reconnecting...");
