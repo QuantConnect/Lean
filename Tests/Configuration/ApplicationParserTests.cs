@@ -18,7 +18,9 @@ using NUnit.Framework;
 using QuantConnect.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Tests.Configuration
 {
@@ -126,6 +128,40 @@ namespace QuantConnect.Tests.Configuration
             {
                 Assert.IsInstanceOf<string>(parameter.Value);
             }
+        }
+
+        [TestCase("algorithmId", true, 100, 100.5, 1, 100.5)]
+        [TestCase("algorithmId", "true", "100", "100.5", "1", "100.5")]
+        public void MergeWithArguments(string str, object bValue, object iValue, object dValue, object iParamValue, object dParamValue)
+        {
+            var args = $"--algorithm-id {str} --debugging {bValue} --symbol-tick-limit {iValue} --symbol-second-limit {Convert.ToString(dValue, CultureInfo.InvariantCulture)} --parameters ema-slow:{iParamValue},ema-fast:{Convert.ToString(dParamValue, CultureInfo.InvariantCulture)}";
+
+            var options = ApplicationParser.Parse(
+                "Test AppName",
+                "Test Description",
+                "Test Help Text",
+                args.Split(new[] { " " }, StringSplitOptions.None),
+                Options);
+
+            Config.MergeCommandLineArgumentsWithConfiguration(options);
+
+            Assert.AreEqual("algorithmId", Config.Get("algorithm-id"));
+            Assert.AreEqual(true, Config.GetBool("debugging"));
+            Assert.AreEqual(100, Config.GetInt("symbol-tick-limit"));
+            Assert.AreEqual(100.5, Config.GetDouble("symbol-second-limit"));
+
+            var parameters = new Dictionary<string, string>();
+
+            var parametersConfigString = Config.Get("parameters");
+            if (parametersConfigString != string.Empty)
+            {
+                parameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(parametersConfigString);
+            }
+
+            Assert.Contains("ema-slow", parameters.Keys);
+            Assert.AreEqual(1, parameters["ema-slow"].ConvertTo<int>());
+            Assert.Contains("ema-fast", parameters.Keys);
+            Assert.AreEqual(100.5, parameters["ema-fast"].ConvertTo<double>());
         }
     }
 }
