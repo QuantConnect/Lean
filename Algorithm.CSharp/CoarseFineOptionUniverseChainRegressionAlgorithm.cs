@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             var selectionUniverse = AddUniverse(enumerable => new[] { Time.Date <= new DateTime(2014, 6, 5) ? _twx : _aapl },
                 enumerable => new[] { Time.Date <= new DateTime(2014, 6, 5) ? _twx : _aapl });
 
-            AddChainedEquityOptionUniverseSelectionModel(selectionUniverse, universe =>
+            AddChainedOptionUniverse(selectionUniverse, universe =>
             {
                 if (universe.Underlying == null)
                 {

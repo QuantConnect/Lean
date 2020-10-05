@@ -457,7 +457,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="universe">The universe we want to chain an option universe selection model too</param>
         /// <param name="optionFilter">The option filter universe to use</param>
-        public void AddChainedEquityOptionUniverseSelectionModel(Universe universe, Func<OptionFilterUniverse, OptionFilterUniverse> optionFilter)
+        public void AddChainedOptionUniverse(Universe universe, Func<OptionFilterUniverse, OptionFilterUniverse> optionFilter)
         {
             AddUniverseSelection(new OptionChainedUniverseSelectionModel(universe, optionFilter));
         }

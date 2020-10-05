@@ -44,7 +44,7 @@ class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
 
         universe = self.AddUniverse(self.CoarseSelectionFunction, self.FineSelectionFunction)
         
-        self.AddChainedEquityOptionUniverseSelectionModel(universe, self.OptionFilterFunction)
+        self.AddChainedOptionUniverse(universe, self.OptionFilterFunction)
 
     def OptionFilterFunction(self, universe):
         universe.IncludeWeeklys().FrontMonth()

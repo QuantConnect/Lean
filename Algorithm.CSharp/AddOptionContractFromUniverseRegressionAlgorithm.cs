@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice data)
         {
-            if (!Portfolio.Invested && _option != null && Securities[_option].Price != 0 && !_traded)
+            if (_option != null && Securities[_option].Price != 0 && !_traded)
             {
                 _traded = true;
                 Buy(_option, 1);
@@ -164,7 +164,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

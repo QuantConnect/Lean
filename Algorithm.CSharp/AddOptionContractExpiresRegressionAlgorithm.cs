@@ -18,7 +18,6 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -29,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class AddOptionContractExpiresRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private DateTime _expiration = new DateTime(2014, 06, 21);
-        private Option _option;
+        private Symbol _option;
         private Symbol _twx;
         private bool _traded;
 
@@ -54,16 +53,16 @@ namespace QuantConnect.Algorithm.CSharp
                                                       && optionContract.ID.OptionStyle == OptionStyle.American);
                 if (option != null)
                 {
-                    _option = AddOptionContract(option);
+                    _option = AddOptionContract(option).Symbol;
                 }
             }
 
-            if (!Portfolio.Invested && _option != null && Securities[_option.Symbol].Price != 0 && !_traded)
+            if (_option != null && Securities[_option].Price != 0 && !_traded)
             {
                 _traded = true;
-                Buy(_option.Symbol, 1);
+                Buy(_option, 1);
 
-                foreach (var symbol in new [] { _option.Symbol, _option.Symbol.Underlying })
+                foreach (var symbol in new [] { _option, _option.Underlying })
                 {
                     var config = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).ToList();
 
@@ -80,9 +79,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Time.Date > _expiration)
             {
-                if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(_option.Symbol).Any())
+                if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(_option).Any())
                 {
-                    throw new Exception($"Unexpected configurations for {_option.Symbol} after it has been delisted");
+                    throw new Exception($"Unexpected configurations for {_option} after it has been delisted");
                 }
 
                 if (Securities[_twx].Invested)
@@ -113,7 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
