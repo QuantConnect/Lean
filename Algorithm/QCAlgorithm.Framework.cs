@@ -69,6 +69,15 @@ namespace QuantConnect.Algorithm
         /// </summary>
         public void FrameworkPostInitialize()
         {
+            //Prevents execution in the case of cash brokerage with IExecutionModel and IPortfolioConstructionModel
+            if (PortfolioConstruction.GetType() != typeof(NullPortfolioConstructionModel)
+                && Execution.GetType() != typeof(NullExecutionModel)
+                && BrokerageModel.AccountType == AccountType.Cash)
+            {
+                throw new InvalidOperationException($"Non null {nameof(IExecutionModel)} and {nameof(IPortfolioConstructionModel)} are currently unsuitable for Cash Modeled brokerages (e.g. GDAX) and may result in unexpected trades."
+                                                    + " To prevent possible user error we've restricted them to Margin trading. You can select margin account types with"
+                                                    + $" SetBrokerage( ... AccountType.Margin). Or please set them to {nameof(NullExecutionModel)}, {nameof(NullPortfolioConstructionModel)}");
+            }
             foreach (var universe in UniverseSelection.CreateUniverses(this))
             {
                 AddUniverse(universe);
@@ -216,16 +225,7 @@ namespace QuantConnect.Algorithm
                     Log($"{Time}: RISK ADJUSTED TARGETS: {string.Join(" | ", riskAdjustedTargets.Select(t => t.ToString()).OrderBy(t => t))}");
                 }
             }
-
-            if (riskAdjustedTargets.Length > 0
-                && Execution.GetType() != typeof(NullExecutionModel)
-                && BrokerageModel.AccountType == AccountType.Cash)
-            {
-                throw new InvalidOperationException($"Non null {nameof(IExecutionModel)} and {nameof(IPortfolioConstructionModel)} are currently unsuitable for Cash Modeled brokerages (e.g. GDAX) and may result in unexpected trades."
-                    + " To prevent possible user error we've restricted them to Margin trading. You can select margin account types with"
-                    + $" SetBrokerage( ... AccountType.Margin). Or please set them to {nameof(NullExecutionModel)}, {nameof(NullPortfolioConstructionModel)}");
-            }
-
+            
             Execution.Execute(this, riskAdjustedTargets);
         }
 
