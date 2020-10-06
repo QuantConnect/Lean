@@ -199,8 +199,6 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 if (brokerage.AccountBaseCurrency != algorithm.AccountCurrency)
                 {
-                    Log.Trace($"BrokerageSetupHandler.Setup(): Changing account currency from {algorithm.AccountCurrency} to {brokerage.AccountBaseCurrency}");
-
                     algorithm.SetAccountCurrency(brokerage.AccountBaseCurrency);
                 }
 

@@ -1135,6 +1135,8 @@ namespace QuantConnect.Algorithm
                     "Cannot change AccountCurrency after algorithm initialized.");
             }
 
+            Debug($"Changing account currency from {AccountCurrency} to {accountCurrency}...");
+
             Portfolio.SetAccountCurrency(accountCurrency);
         }
 
