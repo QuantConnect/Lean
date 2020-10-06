@@ -162,6 +162,9 @@
     <Reference Include="IKVM.Runtime.JNI, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
       <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.Runtime.JNI.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Extensions.CommandLineUtils, Version=1.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.CommandLineUtils.1.1.1\lib\net451\Microsoft.Extensions.CommandLineUtils.dll</HintPath>
+    </Reference>
     <Reference Include="Moq, Version=4.7.63.0, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
       <HintPath>..\packages\Moq.4.7.63\lib\net45\Moq.dll</HintPath>
     </Reference>
@@ -462,6 +465,7 @@
     <Compile Include="Common\Util\BaseDataExtensionsTests.cs" />
     <Compile Include="Common\Util\SubscriptionDataConfigExtensionsTests.cs" />
     <Compile Include="Common\Util\ValidateTests.cs" />
+    <Compile Include="Configuration\ApplicationParserTests.cs" />
     <Compile Include="Engine\AlgorithmTimeLimitManagerTests.cs" />
     <Compile Include="Engine\Alphas\DefaultAlphaHandlerTests.cs" />
     <Compile Include="Engine\Alphas\InsightAnalysisContextTests.cs" />
