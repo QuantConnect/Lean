@@ -281,7 +281,7 @@ namespace QuantConnect.Orders.Fills
 
             // Get the last trade bar since limit orders are triggered by trades
             DateTime endTime;
-            var lastBar = GetLastBar(asset, out endTime);
+            var lastBar = GetLastQuoteBar(asset, out endTime);
 
             // Do not fill on stale data
             var localOrderTime = order.Time.ConvertFromUtc(asset.Exchange.TimeZone);
@@ -292,21 +292,21 @@ namespace QuantConnect.Orders.Fills
             {
                 case OrderDirection.Buy:
                     //Buy limit seeks lowest price
-                    if (lastBar.Low < order.LimitPrice)
+                    if (lastBar.Ask.Low < order.LimitPrice)
                     {
                         // Fill at the worse price this bar or the limit price,
                         // this allows far out of the money limits to be executed properly
-                        fill.FillPrice = Math.Min(lastBar.High, order.LimitPrice);
+                        fill.FillPrice = Math.Min(lastBar.Ask.High, order.LimitPrice);
                         fill.Status = OrderStatus.Filled;
                     }
                     break;
                 case OrderDirection.Sell:
                     //Sell limit seeks highest price possible
-                    if (lastBar.High > order.LimitPrice)
+                    if (lastBar.Bid.High > order.LimitPrice)
                     {
                         // Fill at the worse price this bar or the limit price,
                         // this allows far out of the money limits to be executed properly
-                        fill.FillPrice = Math.Max(lastBar.Low, order.LimitPrice);
+                        fill.FillPrice = Math.Max(lastBar.Bid.Low, order.LimitPrice);
                         fill.Status = OrderStatus.Filled;
                     }
                     break;
@@ -590,6 +590,45 @@ namespace QuantConnect.Orders.Fills
             }
 
             return new Bar(asset.Open, asset.High, asset.Low, asset.Close);
+        }
+
+        private QuoteBar GetLastQuoteBar(Security asset, out DateTime endTime)
+        {
+            var subscribedTypes = GetSubscribedTypes(asset, out endTime);
+
+            if (subscribedTypes.Contains(typeof(QuoteBar)))
+            {
+                var quoteBar = asset.Cache.GetData<QuoteBar>();
+                if (quoteBar != null)
+                {
+                    return quoteBar;
+                }
+            }
+
+            if (subscribedTypes.Contains(typeof(Tick)))
+            {
+                var quote = asset.Cache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Quote);
+                if (quote != null)
+                {
+                    return new QuoteBar(
+                        endTime,
+                        asset.Symbol,
+                        new Bar(quote.BidPrice, quote.BidPrice, quote.BidPrice, quote.BidPrice),
+                        quote.BidSize,
+                        new Bar(quote.AskPrice, quote.AskPrice, quote.AskPrice, quote.AskPrice),
+                        quote.AskSize
+                    );
+                }
+            }
+
+            return new QuoteBar(
+                endTime,
+                asset.Symbol,
+                new Bar(asset.Open, asset.High, asset.Low, asset.BidPrice),
+                asset.BidSize,
+                new Bar(asset.Open, asset.High, asset.Low, asset.AskPrice),
+                asset.AskSize
+            );
         }
     }
 }

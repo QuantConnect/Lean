@@ -98,16 +98,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
-            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 102m, 103m, 101m, 102.3m, 100));
-            security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY,
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 102m, 103m, 102m, 102.3m, 100));
+            var quoteBar = new QuoteBar(Noon, Symbols.SPY,
                 new Bar(101m, 102m, 100m, 101.3m), 100,
-                new Bar(103m, 104m, 102m, 103.3m), 100));
+                new Bar(103m, 104m, 101m, 103.3m), 100);
+            security.SetMarketPrice(quoteBar);
 
             fill = model.LimitFill(security, order);
 
             // this fills worst case scenario, so it's at the limit price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(Math.Min(order.LimitPrice, security.High), fill.FillPrice);
+            Assert.AreEqual(Math.Min(order.LimitPrice, quoteBar.Ask.High), fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
@@ -136,15 +137,16 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
             security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 102m, 103m, 101m, 102.3m, 100));
-            security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY,
+            var quoteBar = new QuoteBar(Noon, Symbols.SPY,
                 new Bar(101.6m, 102m, 101.6m, 101.6m), 100,
-                new Bar(103m, 104m, 102m, 103.3m), 100));
+                new Bar(103m, 104m, 102m, 103.3m), 100);
+            security.SetMarketPrice(quoteBar);
 
             fill = model.LimitFill(security, order);
 
             // this fills worst case scenario, so it's at the limit price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(Math.Max(order.LimitPrice, security.Low), fill.FillPrice);
+            Assert.AreEqual(Math.Max(order.LimitPrice, quoteBar.Bid.Low), fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
