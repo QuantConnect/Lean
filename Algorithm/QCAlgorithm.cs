@@ -1500,7 +1500,8 @@ namespace QuantConnect.Algorithm
                     {
                         universe = new FuturesChainUniverse((Future)security, settings);
                     }
-                    _pendingUniverseAdditions.Add(universe);
+
+                    AddUniverse(universe);
                 }
                 return security;
             }
@@ -1776,6 +1777,7 @@ namespace QuantConnect.Algorithm
 
                     // finally, dispose and remove the canonical security from the universe manager
                     UniverseManager.Remove(symbol);
+                    _userAddedUniverses.Remove(symbol);
                 }
             }
             else
