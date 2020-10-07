@@ -17,7 +17,7 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer
 {
-    public class EulerSearch : IOptimizationStrategy
+    public class EulerSearch : IOptimizationParameterSetGenerator
     {
         public IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args)
         {

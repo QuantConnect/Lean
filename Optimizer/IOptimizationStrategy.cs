@@ -13,12 +13,23 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer
 {
     public interface IOptimizationStrategy
     {
-        IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args);
+        event EventHandler NewSuggestion;
+
+        IOptimizationParameterSetGenerator SearchStrategy { get; }
+
+        Extremum Extremum { get; }
+
+        void Initialize(IOptimizationParameterSetGenerator strategy, Extremum extremum, HashSet<OptimizationParameter> parameters);
+        
+        void PushNewResults(OptimizationResult result);
+
+        OptimizationResult Solution { get; }
     }
 }

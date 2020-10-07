@@ -14,16 +14,23 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using QuantConnect.Logging;
+using QuantConnect.Packets;
 using QuantConnect.Util;
 
 namespace QuantConnect.Optimizer
 {
     public class LeanOptimizer
     {
-        protected IOptimizationManager Optimizer;
+        private readonly ConcurrentDictionary<string, ParameterSet> _parameterSetForBacktest;
+
+        protected IOptimizationStrategy Optimizer;
         protected OptimizationNodePacket NodePacket;
 
         public LeanOptimizer(OptimizationNodePacket nodePacket)
@@ -34,21 +41,31 @@ namespace QuantConnect.Optimizer
             }
 
             NodePacket = nodePacket;
-            Optimizer = Composer.Instance.GetExportedValueByTypeName<IOptimizationManager>(NodePacket.OptimizationManager);
+            Optimizer = Composer.Instance.GetExportedValueByTypeName<IOptimizationStrategy>(NodePacket.OptimizationStrategy);
 
+            _parameterSetForBacktest = new ConcurrentDictionary<string, ParameterSet>();
             Optimizer.Initialize(
-                Composer.Instance.GetExportedValueByTypeName<IOptimizationStrategy>(NodePacket.OptimizationStrategy),
+                Composer.Instance.GetExportedValueByTypeName<IOptimizationParameterSetGenerator>(NodePacket.ParameterSetGenerator),
                 NodePacket.Criterion["extremum"] == "max"
                     ? new Maximization() as Extremum
                     : new Minimization(),
                 NodePacket.OptimizationParameters);
 
-            Optimizer.NewSuggestion += (s, e) =>
+            Optimizer.NewSuggestion += async (s, e) =>
             {
-                if ((e as OptimizationEventArgs)?.ParameterSet == null) return;
+                var paramSet = (e as OptimizationEventArgs)?.ParameterSet;
+                if (paramSet == null) return;
 
-                var result = RunLean((e as OptimizationEventArgs)?.ParameterSet);
-                Optimizer.PushNewResults(new OptimizationResult(result, (e as OptimizationEventArgs)?.ParameterSet));
+                var backtestId = await EnqueueComputing(paramSet);
+
+                if (!string.IsNullOrEmpty(backtestId))
+                {
+                    _parameterSetForBacktest.TryAdd(backtestId, paramSet);
+                }
+                else
+                {
+                    Log.Error($"Optimization compute job could not be placed into the queue");
+                }
             };
 
             Optimizer.PushNewResults(null);
@@ -56,6 +73,30 @@ namespace QuantConnect.Optimizer
 
         public virtual void Abort() { }
 
-        protected virtual decimal RunLean(ParameterSet suggestion) => suggestion.Arguments.Sum(s => s.Value);
+        protected virtual async Task<string> RunLean(ParameterSet parameterSet)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual void NewResult(string jsonString, string backtestId)
+        {
+            ParameterSet parameterSet;
+            if (_parameterSetForBacktest.TryGetValue(backtestId, out parameterSet))
+            {
+                var value = JObject.Parse(jsonString).SelectToken(NodePacket.Criterion["name"]).Value<decimal>();
+                Optimizer.PushNewResults(new OptimizationResult(value, parameterSet));
+            }
+            else
+            {
+                Log.Error($"Optimization compute job with id '{backtestId}' was not found");
+            }
+        }
+
+        private async Task<string> EnqueueComputing(ParameterSet parameterSet)
+        {
+            var result = await RunLean(parameterSet);
+
+            return await Task.FromResult(result);
+        }
     }
 }

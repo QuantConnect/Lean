@@ -27,20 +27,14 @@ namespace QuantConnect.Optimizer.Launcher
 {
     public class Program
     {
-        private static string _workingDirectory = "../../../Launcher/bin/Debug/";
         public static void Main(string[] args)
         {
             try
             {
-                string myPath = System.Reflection.Assembly.GetEntryAssembly().Location;
-                string myDir = System.IO.Path.GetDirectoryName(myPath);
-
-                string path = System.IO.Path.Combine(myDir, _workingDirectory, "QuantConnect.Lean.Launcher.exe");
-
                 var packet = new OptimizationNodePacket()
                 {
-                    OptimizationStrategy = Config.Get("optimization-strategy", "GridSearch"),
-                    OptimizationManager = Config.Get("optimization-manager", "BruteForceOptimizer"),
+                    ParameterSetGenerator = Config.Get("optimization-parameter-set-generator", "GridSearch"),
+                    OptimizationStrategy = Config.Get("optimization-strategy", "BruteForceOptimizer"),
                     Criterion =
                         JsonConvert.DeserializeObject<Dictionary<string, string>>(Config.Get("optimization-criterion", "{\"name\":\"TotalPerformance.TradeStatistics.TotalProfit\", \"direction\": \"max\"}")),
                     OptimizationParameters = 
@@ -48,24 +42,7 @@ namespace QuantConnect.Optimizer.Launcher
                         .Select( arg => new OptimizationParameter(arg.Key, arg.Value.Value<decimal>("min"), arg.Value.Value<decimal>("max"), arg.Value.Value<decimal>("step")))
                         .ToHashSet()
                 };
-                var chaser = new LeanOptimizer(packet);
-                chaser.Abort();
-                Console.ReadKey();
-
-                // Use ProcessStartInfo class
-                ProcessStartInfo startInfo = new ProcessStartInfo
-                {
-                    FileName = path,
-                    WorkingDirectory = _workingDirectory,
-                    Arguments = $"--results-destination-folder \"{myDir}\" --parameters \"ema-fast\":1"
-                };
-
-                // Start the process with the info we specified.
-                // Call WaitForExit and then the using statement will close.
-                using (Process exeProcess = Process.Start(startInfo))
-                {
-                    exeProcess.WaitForExit();
-                }
+                var optimizer = new ConsoleLeanOptimizer(packet);
             }
             catch (Exception e)
             {

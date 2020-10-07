@@ -37,9 +37,9 @@ namespace QuantConnect.Optimizer
 
         public string OptimizationId = "";
 
-        public string OptimizationStrategy = "";
+        public string ParameterSetGenerator = "";
 
-        public string OptimizationManager = "";
+        public string OptimizationStrategy = "";
 
         public Dictionary<string, string> OptimizationSettings;
 

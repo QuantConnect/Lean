@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
     [TestFixture]
     public class GridSearchTests
     {
-        private IOptimizationStrategy _strategy;
+        private IOptimizationParameterSetGenerator _strategy;
 
         public GridSearchTests()
         {

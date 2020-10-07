@@ -10,10 +10,10 @@
   //"algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
 
   // How we generate parameter sets - grid/euler/genetic/remote
-  "optimization-strategy": "GridSearch",
+  "optimization-parameter-set-generator": "GridSearch",
 
   // How we manage solutions and make decision to continue or stop
-  "optimization-manager": "BruteForceOptimizer",
+  "optimization-strategy": "BruteForceOptimizer",
 
   // optimization problem
   "optimization-criterion": {

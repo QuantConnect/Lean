@@ -20,7 +20,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Optimizer
 {
-    public class GridSearch : IOptimizationStrategy
+    public class GridSearch : IOptimizationParameterSetGenerator
     {
         public IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args)
         {

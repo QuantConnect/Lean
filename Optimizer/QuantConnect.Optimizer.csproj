@@ -57,8 +57,8 @@
     <Compile Include="Extremum.cs" />
     <Compile Include="EulerSearch.cs" />
     <Compile Include="GridSearch.cs" />
+    <Compile Include="IOptimizationParameterSetGenerator.cs" />
     <Compile Include="IOptimizationStrategy.cs" />
-    <Compile Include="IOptimizationManager.cs" />
     <Compile Include="BruteForceOptimizer.cs" />
     <Compile Include="OptimizationEventArgs.cs" />
     <Compile Include="OptimizationNodePacket.cs" />
@@ -75,6 +75,10 @@
     <ProjectReference Include="..\Common\QuantConnect.csproj">
       <Project>{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}</Project>
       <Name>QuantConnect</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
+      <Project>{01911409-86BE-4E7D-9947-DF714138610D}</Project>
+      <Name>QuantConnect.Logging</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

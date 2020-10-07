@@ -19,15 +19,15 @@ using System.Linq;
 
 namespace QuantConnect.Optimizer
 {
-    public class BruteForceOptimizer : IOptimizationManager
+    public class BruteForceOptimizer : IOptimizationStrategy
     {
         private HashSet<OptimizationParameter> _args;
-        public IOptimizationStrategy SearchStrategy { get; private set; }
+        public IOptimizationParameterSetGenerator SearchStrategy { get; private set; }
         public Extremum Extremum { get; private set; }
         public event EventHandler NewSuggestion;
         public OptimizationResult Solution { get; private set; }
 
-        public void Initialize(IOptimizationStrategy searchStrategy, Extremum extremum, HashSet<OptimizationParameter> parameters)
+        public void Initialize(IOptimizationParameterSetGenerator searchStrategy, Extremum extremum, HashSet<OptimizationParameter> parameters)
         {
             SearchStrategy = searchStrategy;
             Extremum = extremum;
