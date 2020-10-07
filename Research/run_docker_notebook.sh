@@ -61,7 +61,7 @@ fi
 
 echo "Starting docker container; container id is:"
 sudo docker run -d --rm -p 8888:8888 \
-    --mount type=bind,source=$data_dir,target=/Data,readonly \
+    --mount type=bind,source=$data_dir,target=/home/Data,readonly \
     --mount type=bind,source=$notebook_dir,target=/Lean/Launcher/bin/Debug/Notebooks \
     $image
 
