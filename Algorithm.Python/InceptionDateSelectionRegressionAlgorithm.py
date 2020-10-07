@@ -12,15 +12,15 @@
 # limitations under the License.
 
 from clr import AddReference
-AddReference("System.Core")
-AddReference("QuantConnect.Common")
+AddReference("System")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
+AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import QCAlgorithm
+from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework.Selection import *
+from QuantConnect.Data import *
 from QuantConnect.Data.UniverseSelection import *
 from datetime import timedelta
 

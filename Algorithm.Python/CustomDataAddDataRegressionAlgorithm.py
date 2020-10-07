@@ -23,6 +23,9 @@ from QuantConnect.Data.Custom.SEC import *
 from QuantConnect.Data.Custom.USTreasury import *
 import numpy as np
 
+from collections import namedtuple
+Market = namedtuple('_Market', 'USA')('usa')
+
 ### <summary>
 ### Regression algorithm checks that adding data via AddData
 ### works as expected
