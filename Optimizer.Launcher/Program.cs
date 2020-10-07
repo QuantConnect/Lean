@@ -19,6 +19,9 @@ using QuantConnect.Optimizer;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using Newtonsoft.Json.Linq;
+using QuantConnect.Util;
 
 namespace QuantConnect.Optimizer.Launcher
 {
@@ -41,7 +44,9 @@ namespace QuantConnect.Optimizer.Launcher
                     Criterion =
                         JsonConvert.DeserializeObject<Dictionary<string, string>>(Config.Get("optimization-criterion", "{\"name\":\"TotalPerformance.TradeStatistics.TotalProfit\", \"direction\": \"max\"}")),
                     OptimizationParameters = 
-                        JsonConvert.DeserializeObject<Dictionary<string, OptimizationParameter>>(Config.Get("parameters", "{}"))
+                        JsonConvert.DeserializeObject<Dictionary<string, JObject>>(Config.Get("parameters", "{}"))
+                        .Select( arg => new OptimizationParameter(arg.Key, arg.Value.Value<decimal>("min"), arg.Value.Value<decimal>("max"), arg.Value.Value<decimal>("step")))
+                        .ToHashSet()
                 };
                 var chaser = new LeanOptimizer(packet);
                 chaser.Abort();

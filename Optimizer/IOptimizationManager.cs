@@ -26,7 +26,7 @@ namespace QuantConnect.Optimizer
 
         Extremum Extremum { get; }
 
-        void Initialize(IOptimizationStrategy strategy, Extremum extremum, IReadOnlyDictionary<string, OptimizationParameter> parameters);
+        void Initialize(IOptimizationStrategy strategy, Extremum extremum, HashSet<OptimizationParameter> parameters);
         
         void PushNewResults(OptimizationResult result);
 

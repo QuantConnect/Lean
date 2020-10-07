@@ -19,6 +19,6 @@ namespace QuantConnect.Optimizer
 {
     public interface IOptimizationStrategy
     {
-        IEnumerable<ParameterSet> Step(ParameterSet seed, IReadOnlyDictionary<string, OptimizationParameter> args);
+        IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args);
     }
 }

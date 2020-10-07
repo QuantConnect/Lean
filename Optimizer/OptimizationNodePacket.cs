@@ -45,7 +45,7 @@ namespace QuantConnect.Optimizer
 
         public Dictionary<string, string> Criterion;
 
-        public Dictionary<string, OptimizationParameter> OptimizationParameters;
+        public HashSet<OptimizationParameter> OptimizationParameters;
 
         public OptimizationNodePacket() : base(PacketType.OptimizationNode)
         {

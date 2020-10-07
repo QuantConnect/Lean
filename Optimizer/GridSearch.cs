@@ -22,7 +22,7 @@ namespace QuantConnect.Optimizer
 {
     public class GridSearch : IOptimizationStrategy
     {
-        public IEnumerable<ParameterSet> Step(ParameterSet seed, IReadOnlyDictionary<string, OptimizationParameter> args)
+        public IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args)
         {
             foreach (var step in Recursive(seed?.Arguments, args))
             {
@@ -30,27 +30,27 @@ namespace QuantConnect.Optimizer
             }
         }
 
-        public IEnumerable<Dictionary<string, decimal>> Recursive(IEnumerable<KeyValuePair<string, decimal>> seed, IReadOnlyDictionary<string, OptimizationParameter> args)
+        public IEnumerable<Dictionary<string, decimal>> Recursive(IEnumerable<KeyValuePair<string, decimal>> seed, HashSet<OptimizationParameter> args)
         {
             if (args.Count == 1)
             {
                 var d = args.First();
-                for (var value = d.Value.MinValue; value <= d.Value.MaxValue; value += d.Value.Step)
+                for (var value = d.MinValue; value <= d.MaxValue; value += d.Step)
                 {
                     yield return new Dictionary<string, decimal>()
                     {
-                        {d.Key, value}
+                        {d.Name, value}
                     };
                 }
                 yield break;
             }
 
             var d2 = args.First();
-            for (var value = d2.Value.MinValue; value <= d2.Value.MaxValue; value += d2.Value.Step)
+            for (var value = d2.MinValue; value <= d2.MaxValue; value += d2.Step)
             {
-                foreach (var inner in Recursive(seed, args.Where(s => s.Key != d2.Key).ToReadOnlyDictionary()))
+                foreach (var inner in Recursive(seed, args.Where(s => s.Name != d2.Name).ToHashSet()))
                 {
-                    inner.Add(d2.Key, value);
+                    inner.Add(d2.Name, value);
 
                     yield return inner;
                 }

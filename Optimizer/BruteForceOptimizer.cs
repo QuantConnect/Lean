@@ -21,13 +21,13 @@ namespace QuantConnect.Optimizer
 {
     public class BruteForceOptimizer : IOptimizationManager
     {
-        private IReadOnlyDictionary<string, OptimizationParameter> _args;
+        private HashSet<OptimizationParameter> _args;
         public IOptimizationStrategy SearchStrategy { get; private set; }
         public Extremum Extremum { get; private set; }
         public event EventHandler NewSuggestion;
         public OptimizationResult Solution { get; private set; }
 
-        public void Initialize(IOptimizationStrategy searchStrategy, Extremum extremum, IReadOnlyDictionary<string, OptimizationParameter> parameters)
+        public void Initialize(IOptimizationStrategy searchStrategy, Extremum extremum, HashSet<OptimizationParameter> parameters)
         {
             SearchStrategy = searchStrategy;
             Extremum = extremum;
