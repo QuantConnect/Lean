@@ -15,7 +15,6 @@
 
 using System;
 using Newtonsoft.Json;
-using QuantConnect.API;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Orders;

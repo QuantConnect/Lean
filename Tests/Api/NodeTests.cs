@@ -16,17 +16,17 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.API;
+using QuantConnect.Api;
 using QuantConnect.Configuration;
 
 
 namespace QuantConnect.Tests.API
 {
-    [TestFixture, Ignore("These tests require an account, token, and organization ID")]
     /// <summary>
     /// Test class for all nodes/ endpoints:
     /// create, read, update, delete, stop
     /// </summary>
+    [TestFixture, Ignore("These tests require an account, token, and organization ID")]
     public class NodeTests
     {
         private int _testAccount = 1;
@@ -109,7 +109,7 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
-        /// Helper function for finding a node by name, used by tests that are looking 
+        /// Helper function for finding a node by name, used by tests that are looking
         /// for a certain node.
         /// With some small adjustments could be moved to an api function.
         /// </summary>

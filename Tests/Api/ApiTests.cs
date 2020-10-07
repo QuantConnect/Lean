@@ -19,7 +19,6 @@ using System.Threading;
 using System.Web;
 using NUnit.Framework;
 using QuantConnect.Api;
-using QuantConnect.API;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 

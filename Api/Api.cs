@@ -19,8 +19,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using Newtonsoft.Json;
-using QuantConnect.API;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using RestSharp;
@@ -808,7 +806,7 @@ namespace QuantConnect.Api
         /// <param name="name">The name of the new node</param>
         /// <param name="organizationId">ID of the organization</param>
         /// <param name="sku"><see cref="SKU"/> Object representing configuration</param>
-        /// <returns>Returns <see cref="CreatedNode"/> which contains API response and 
+        /// <returns>Returns <see cref="CreatedNode"/> which contains API response and
         /// <see cref="Node"/></returns>
         public CreatedNode CreateNode(string name, string organizationId, SKU sku)
         {
@@ -824,7 +822,7 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Reads the nodes associated with the organization, creating a 
+        /// Reads the nodes associated with the organization, creating a
         /// <see cref="NodeList"/> for the response
         /// </summary>
         /// <param name="organizationId">ID of the organization</param>

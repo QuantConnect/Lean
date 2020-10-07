@@ -22,7 +22,7 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 
-namespace QuantConnect.API
+namespace QuantConnect.Api
 {
     /// <summary>
     /// Custom JsonConverter for LiveResults data for live algorithms

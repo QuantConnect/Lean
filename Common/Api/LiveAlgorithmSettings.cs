@@ -16,7 +16,7 @@
 using Newtonsoft.Json;
 using QuantConnect.Brokerages;
 
-namespace QuantConnect.API
+namespace QuantConnect.Api
 {
     /// <summary>
     /// Helper class to put BaseLiveAlgorithmSettings in proper format.

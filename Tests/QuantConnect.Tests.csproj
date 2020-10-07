@@ -363,7 +363,7 @@
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetTests.cs" />
     <Compile Include="Algorithm\Framework\Selection\OpenInterestFutureUniverseSelectionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Selection\QC500UniverseSelectionModelTests.cs" />
-    <Compile Include="API\NodeTests.cs" />
+    <Compile Include="Api\NodeTests.cs" />
     <Compile Include="Brokerages\BrokerageFactoryTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageAdditionalTests.cs" />
     <Compile Include="Brokerages\Binance\BinanceBrokerageHistoryProviderTests.cs" />
@@ -513,7 +513,7 @@
     <Compile Include="Algorithm\Framework\QCAlgorithmFrameworkTests.cs" />
     <Compile Include="Algorithm\Framework\Risk\MaximumDrawdownPercentPerSecurityTests.cs" />
     <Compile Include="Algorithm\Framework\Selection\ManualUniverseSelectionModelTests.cs" />
-    <Compile Include="API\ApiTests.cs" />
+    <Compile Include="Api\ApiTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageTests.cs" />
     <Compile Include="Brokerages\BrokerageTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageHistoryProviderTests.cs" />

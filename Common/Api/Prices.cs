@@ -16,63 +16,48 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using QuantConnect.Api;
 using QuantConnect.Util;
 
-namespace QuantConnect.API
+namespace QuantConnect.Api
 {
     /// <summary>
-    /// Split returned from the api
+    /// Prices rest response wrapper
     /// </summary>
-    public class Split
+    public class Prices
     {
         /// <summary>
-        /// The Symbol
+        /// The requested Symbol
         /// </summary>
-        public Symbol Symbol
-        {
-            get
-            {
-                var sid = SecurityIdentifier.Parse(SymbolID);
-                return new Symbol(sid, sid.Symbol);
-            }
-        }
+        public Symbol Symbol { get; set; }
 
         /// <summary>
         /// The requested symbol ID
         /// </summary>
-        [JsonProperty(PropertyName = "symbol_id")]
+        [JsonProperty(PropertyName = "symbol")]
         public string SymbolID { get; set; }
 
         /// <summary>
-        /// The date of the split
+        /// The requested price
         /// </summary>
-        [JsonProperty(PropertyName = "date")]
-        [JsonConverter(typeof(DateTimeJsonConverter), "yyyyMMdd")]
-        public DateTime Date { get; set; }
+        [JsonProperty(PropertyName = "price")]
+        public decimal Price { get; set; }
 
         /// <summary>
-        /// The split factor
+        /// UTC time the price was updated
         /// </summary>
-        [JsonProperty(PropertyName = "split_factor")]
-        public decimal SplitFactor { get; set; }
-
-        /// <summary>
-        /// The reference price for the split
-        /// </summary>
-        [JsonProperty(PropertyName = "reference_price")]
-        public decimal ReferencePrice { get; set; }
+        [JsonProperty(PropertyName = "updated"), JsonConverter(typeof(DoubleUnixSecondsDateTimeJsonConverter))]
+        public DateTime Updated;
     }
 
     /// <summary>
-    /// Collection container for a list of split objects
+    /// Collection container for a list of prices objects
     /// </summary>
-    public class SplitList : RestResponse
+    public class PricesList : RestResponse
     {
         /// <summary>
-        /// The splits list
+        /// Collection of prices objects
         /// </summary>
-        [JsonProperty(PropertyName = "splits")]
-        public List<Split> Splits { get; set; }
+        [JsonProperty(PropertyName = "prices")]
+        public List<Prices> Prices;
     }
 }

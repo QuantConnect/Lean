@@ -16,15 +16,14 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using QuantConnect.Api;
 using QuantConnect.Util;
 
-namespace QuantConnect.API
+namespace QuantConnect.Api
 {
     /// <summary>
-    /// Dividend returned from the api
+    /// Split returned from the api
     /// </summary>
-    public class Dividend
+    public class Split
     {
         /// <summary>
         /// The Symbol
@@ -45,34 +44,34 @@ namespace QuantConnect.API
         public string SymbolID { get; set; }
 
         /// <summary>
-        /// The date of the dividend
+        /// The date of the split
         /// </summary>
         [JsonProperty(PropertyName = "date")]
         [JsonConverter(typeof(DateTimeJsonConverter), "yyyyMMdd")]
         public DateTime Date { get; set; }
 
         /// <summary>
-        /// The dividend distribution
+        /// The split factor
         /// </summary>
-        [JsonProperty(PropertyName = "dividend_per_share")]
-        public decimal DividendPerShare { get; set; }
+        [JsonProperty(PropertyName = "split_factor")]
+        public decimal SplitFactor { get; set; }
 
         /// <summary>
-        /// The reference price for the dividend
+        /// The reference price for the split
         /// </summary>
         [JsonProperty(PropertyName = "reference_price")]
         public decimal ReferencePrice { get; set; }
     }
 
     /// <summary>
-    /// Collection container for a list of dividend objects
+    /// Collection container for a list of split objects
     /// </summary>
-    public class DividendList : RestResponse
+    public class SplitList : RestResponse
     {
         /// <summary>
-        /// The dividends list
+        /// The splits list
         /// </summary>
-        [JsonProperty(PropertyName = "dividends")]
-        public List<Dividend> Dividends { get; set; }
+        [JsonProperty(PropertyName = "splits")]
+        public List<Split> Splits { get; set; }
     }
 }
