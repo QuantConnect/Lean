@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -27,9 +27,9 @@ using QuantConnect.Util;
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
     /// <summary>
-    /// Provides an implementation of <see cref="ISubscriptionEnumeratorFactory"/> that used the
-    /// <see cref="SubscriptionDataReader"/>
+    /// Provides an implementation of <see cref="ISubscriptionEnumeratorFactory"/> that used the <see cref="SubscriptionDataReader"/>
     /// </summary>
+    /// <remarks>Only used on backtesting by the <see cref="FileSystemDataFeed"/></remarks>
     public class SubscriptionDataReaderSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory, IDisposable
     {
         private readonly bool _isLiveMode;
@@ -113,7 +113,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 _factorFileProvider,
                 dataReader,
                 mapFileResolver,
-                _includeAuxiliaryData,
+                _includeAuxiliaryData && CorporateEventEnumeratorFactory.ShouldEmitAuxiliaryBaseData(request.Configuration),
                 request.StartTimeLocal,
                 _enablePriceScaling);
 

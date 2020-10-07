@@ -187,9 +187,12 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="date">The date to check the factor file for a dividend event</param>
         /// <param name="priceFactorRatio">When this function returns true, this value will be populated
         /// with the price factor ratio required to scale the closing value (pf_i/pf_i+1)</param>
-        public bool HasDividendEventOnNextTradingDay(DateTime date, out decimal priceFactorRatio)
+        /// <param name="referencePrice">When this function returns true, this value will be populated
+        /// with the reference raw price, which is the close of the provided date</param>
+        public bool HasDividendEventOnNextTradingDay(DateTime date, out decimal priceFactorRatio, out decimal referencePrice)
         {
             priceFactorRatio = 0;
+            referencePrice = 0;
             var index = SortedFactorFileData.IndexOfKey(date);
             if (index > -1 && index < SortedFactorFileData.Count - 1)
             {
@@ -201,6 +204,7 @@ namespace QuantConnect.Data.Auxiliary
                 if (thisRow.PriceFactor != nextRow.PriceFactor)
                 {
                     priceFactorRatio = thisRow.PriceFactor / nextRow.PriceFactor;
+                    referencePrice = thisRow.ReferencePrice;
                     return true;
                 }
             }
@@ -217,9 +221,15 @@ namespace QuantConnect.Data.Auxiliary
         /// has a split on 1999.03.29, but in the factor file the split factor is applied on
         /// 1999.03.26, which is the first trading day BEFORE the actual split date.
         /// </remarks>
-        public bool HasSplitEventOnNextTradingDay(DateTime date, out decimal splitFactor)
+        /// <param name="date">The date to check the factor file for a split event</param>
+        /// <param name="splitFactor">When this function returns true, this value will be populated
+        /// with the split factor ratio required to scale the closing value</param>
+        /// <param name="referencePrice">When this function returns true, this value will be populated
+        /// with the reference raw price, which is the close of the provided date</param>
+        public bool HasSplitEventOnNextTradingDay(DateTime date, out decimal splitFactor, out decimal referencePrice)
         {
             splitFactor = 1;
+            referencePrice = 0;
             var index = SortedFactorFileData.IndexOfKey(date);
             if (index > -1 && index < SortedFactorFileData.Count - 1)
             {
@@ -231,6 +241,7 @@ namespace QuantConnect.Data.Auxiliary
                 if (thisRow.SplitFactor != nextRow.SplitFactor)
                 {
                     splitFactor = thisRow.SplitFactor / nextRow.SplitFactor;
+                    referencePrice = thisRow.ReferencePrice;
                     return true;
                 }
             }

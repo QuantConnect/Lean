@@ -30,6 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         // we set the price factor ratio when we encounter a dividend in the factor file
         // and on the next trading day we use this data to produce the dividend instance
         private decimal? _priceFactorRatio;
+        private decimal? _referencePrice;
         private FactorFile _factorFile;
         private MapFile _mapFile;
         private SubscriptionDataConfig _config;
@@ -64,9 +65,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             {
                 if (_priceFactorRatio != null)
                 {
-                    var close = AuxiliaryDataEnumerator.GetRawClose(
-                        eventArgs.LastBaseData?.Price ?? 0,
-                        _config);
+                    decimal close;
+                    if (_referencePrice != null && _referencePrice != 0)
+                    {
+                        close = _referencePrice.Value;
+                    }
+                    else
+                    {
+                        close = eventArgs.LastRawPrice ?? 0;
+                    }
+
                     var baseData = Dividend.Create(
                         _config.Symbol,
                         eventArgs.Date,
@@ -76,15 +84,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     // let the config know about it for normalization
                     _config.SumOfDividends += baseData.Distribution;
                     _priceFactorRatio = null;
+                    _referencePrice = null;
 
                     yield return baseData;
                 }
 
                 // check the factor file to see if we have a dividend event tomorrow
                 decimal priceFactorRatio;
-                if (_factorFile.HasDividendEventOnNextTradingDay(eventArgs.Date, out priceFactorRatio))
+                decimal referencePrice;
+                if (_factorFile.HasDividendEventOnNextTradingDay(eventArgs.Date, out priceFactorRatio, out referencePrice))
                 {
                     _priceFactorRatio = priceFactorRatio;
+                    _referencePrice = referencePrice;
                 }
             }
         }
