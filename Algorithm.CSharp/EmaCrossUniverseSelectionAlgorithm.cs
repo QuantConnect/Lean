@@ -32,68 +32,78 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="coarse universes" />
     public class EmaCrossUniverseSelectionAlgorithm : QCAlgorithm
     {
-        // tolerance to prevent bouncing
-        const decimal Tolerance = 0.01m;
-        private const int Count = 10;
-        // use Buffer+Count to leave a little in cash
-        private const decimal TargetPercent = 0.1m;
-        private SecurityChanges _changes = SecurityChanges.None;
-        // holds our coarse fundamental indicators by symbol
-        private readonly ConcurrentDictionary<Symbol, SelectionData> _averages = new ConcurrentDictionary<Symbol, SelectionData>();
 
-
-        // class used to improve readability of the coarse selection function
-        private class SelectionData
-        {
-            public readonly ExponentialMovingAverage Fast;
-            public readonly ExponentialMovingAverage Slow;
-
-            public SelectionData()
-            {
-                Fast = new ExponentialMovingAverage(100);
-                Slow = new ExponentialMovingAverage(300);
-            }
-
-            // computes an object score of how much large the fast is than the slow
-            public decimal ScaledDelta
-            {
-                get { return (Fast - Slow)/((Fast + Slow)/2m); }
-            }
-
-            // updates the EMA50 and EMA100 indicators, returning true when they're both ready
-            public bool Update(DateTime time, decimal value)
-            {
-                return Fast.Update(time, value) && Slow.Update(time, value);
-            }
-        }
+        private IDictionary<Symbol, SelectionData> averages = new Dictionary<Symbol, SelectionData>();
+        private List<Symbol> symbols;
+        private bool canTrade = false;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            UniverseSettings.Leverage = 2.0m;
+            SetStartDate(2019, 12, 23);
+            SetEndDate(2020, 1, 15);
+            SetCash(100000);
             UniverseSettings.Resolution = Resolution.Daily;
-
-            SetStartDate(2010, 01, 01);
-            SetEndDate(2015, 01, 01);
-            SetCash(100*1000);
-
-            AddUniverse(coarse =>
-            {
-                return (from cf in coarse
-                        // grab th SelectionData instance for this symbol
-                        let avg = _averages.GetOrAdd(cf.Symbol, sym => new SelectionData())
-                        // Update returns true when the indicators are ready, so don't accept until they are
-                        where avg.Update(cf.EndTime, cf.AdjustedPrice)
-                        // only pick symbols who have their 50 day ema over their 100 day ema
-                        where avg.Fast > avg.Slow*(1 + Tolerance)
-                        // prefer symbols with a larger delta by percentage between the two averages
-                        orderby avg.ScaledDelta descending
-                        // we only need to return the symbol and return 'Count' symbols
-                        select cf.Symbol).Take(Count);
-            });
+            AddUniverse(CoarseSelectionFunction);
         }
+        
+        public IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
+        {
+            var sortedByDollarVolume = coarse
+                .Where(x => x.Price > 10)
+                .OrderByDescending(x => x.DollarVolume)
+                .Take(100);
+                
+            IDictionary<Symbol, CoarseFundamental> selected = new Dictionary<Symbol, CoarseFundamental>();
+            foreach(var c in sortedByDollarVolume)
+                selected.Add(c.Symbol, c);
+            IEnumerable<Symbol> allSymbols = sortedByDollarVolume.Select(x => x.Symbol);
+            
+            IEnumerable<Symbol> newSymbols = allSymbols.Where(symbol => !averages.ContainsKey(symbol));
+            
+            if (newSymbols.Count() > 0) {
+                var history = History(newSymbols, 200, Resolution.Daily);
+                if (history.Count() == 0) {
+                    Debug("Empty history on " + Time.ToString() + " for " + newSymbols.ToString());
+                    return Universe.Unchanged;
+                }
+                
+                foreach(var symbol in newSymbols) {
+                    averages[symbol] = new SelectionData(history, symbol);
+                }
+            }
+            
+            symbols = new List<Symbol>();
+            
+            foreach(KeyValuePair<Symbol, CoarseFundamental> entry in selected) {
+                Symbol symbol = entry.Key;
+                CoarseFundamental cf = entry.Value;
+                SelectionData symbolData = averages[symbol];
+                
+                if (!newSymbols.Contains(symbol))
+                    symbolData.Update(cf.EndTime, cf.AdjustedPrice);
+                    
+                if (symbolData.IsReady() & symbolData.fast > symbolData.slow)
+                    symbols.Add(symbol);
+            }
+            
+            return symbols;
+        }
+        
+        /// <summary>
+        /// Event fired each time the we add/remove securities from the data feed
+        /// </summary>
+        /// <param name="changes">Object containing AddedSecurities and RemovedSecurities</param>
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            foreach(var security in changes.RemovedSecurities)
+                Liquidate(security.Symbol, "Removed from Universe");
+
+            canTrade = true;
+        }
+        
 
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -101,31 +111,37 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">TradeBars dictionary object keyed by symbol containing the stock data</param>
         public void OnData(TradeBars data)
         {
-            if (_changes == SecurityChanges.None) return;
-
-            // liquidate securities removed from our universe
-            foreach (var security in _changes.RemovedSecurities)
-            {
-                if (security.Invested)
-                {
-                    Liquidate(security.Symbol);
-                }
-            }
-
-            // we'll simply go long each security we added to the universe
-            foreach (var security in _changes.AddedSecurities)
-            {
-                SetHoldings(security.Symbol, TargetPercent);
+            if (canTrade) {
+                int length = symbols.Count;
+                
+                foreach(var symbol in symbols)
+                    SetHoldings(symbol, 1.0 / length);
+                
+                canTrade = false;
             }
         }
-
-        /// <summary>
-        /// Event fired each time the we add/remove securities from the data feed
-        /// </summary>
-        /// <param name="changes">Object containing AddedSecurities and RemovedSecurities</param>
-        public override void OnSecuritiesChanged(SecurityChanges changes)
+        
+        
+        public class SelectionData
         {
-            _changes = changes;
+            public ExponentialMovingAverage slow = new ExponentialMovingAverage(200);
+            public ExponentialMovingAverage fast = new ExponentialMovingAverage(50);
+            
+            public SelectionData(IEnumerable<Slice> history, Symbol symbol){
+                foreach(var slice in history)
+                    if (slice.ContainsKey(symbol))
+                        Update(slice.Time, slice.Bars[symbol].Close);
+            }
+            
+            public void Update(DateTime time, decimal price) {
+                fast.Update(time, price);
+                slow.Update(time, price);
+            }
+            
+            public bool IsReady() {
+                return slow.IsReady & fast.IsReady;
+            }
         }
     }
+    
 }
