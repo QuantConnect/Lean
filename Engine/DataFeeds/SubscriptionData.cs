@@ -85,7 +85,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 var sumOfDividends = configuration.SumOfDividends;
 
-                BaseData normalizedData = data.Clone();
+                BaseData normalizedData = data.Clone(data.IsFillForward);
 
                 if (normalizationMode == DataNormalizationMode.Adjusted || normalizationMode == DataNormalizationMode.SplitAdjusted)
                 {
