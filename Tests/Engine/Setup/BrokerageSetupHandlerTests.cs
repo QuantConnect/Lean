@@ -356,15 +356,11 @@ namespace QuantConnect.Tests.Engine.Setup
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
                 transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
 
-            if (hasCashBalance || hasHoldings)
+            if (!hasCashBalance && !hasHoldings)
             {
-                Assert.AreEqual(0, algorithm.DebugMessages.Count);
-            }
-            else
-            {
-                Assert.AreEqual(1, algorithm.DebugMessages.Count);
+                Assert.That(algorithm.DebugMessages.Count > 0);
 
-                Assert.That(algorithm.DebugMessages.First().Contains("No cash balances or holdings were found in the brokerage account."));
+                Assert.That(algorithm.DebugMessages.Any(x => x.Contains("No cash balances or holdings were found in the brokerage account.")));
             }
         }
 
