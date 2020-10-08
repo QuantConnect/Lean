@@ -143,6 +143,7 @@
     </Compile>
     <Compile Include="AddAlphaModelAlgorithm.cs" />
     <Compile Include="AddOptionContractExpiresRegressionAlgorithm.cs" />
+    <Compile Include="ScaledFillForwardDataRegressionAlgorithm.cs" />
     <Compile Include="DailyHistoryForDailyResolutionRegressionAlgorithm.cs" />
     <Compile Include="DailyHistoryForMinuteResolutionRegressionAlgorithm.cs" />
     <Compile Include="ExtendedMarketHoursHistoryRegressionAlgorithm.cs" />

@@ -11,74 +11,58 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Equity;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regression test algorithm reproduces issue https://github.com/QuantConnect/Lean/issues/4031 
-    /// fixed in PR https://github.com/QuantConnect/Lean/pull/4650
-    /// Adjusted data have already been all loaded by the workers so DataNormalizationMode change has no effect in the data itself
+    /// This regression test algorithm reproduces issue https://github.com/QuantConnect/Lean/issues/4834
+    /// fixed in PR https://github.com/QuantConnect/Lean/pull/4836
+    /// Adjusted data of fill forward bars should use original scale factor
     /// </summary>
-    public class SwitchDataModeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ScaledFillForwardDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private const string UnderlyingTicker = "AAPL";
-
-        private readonly Dictionary<DateTime, decimal?> _expectedCloseValues = new Dictionary<DateTime, decimal?>() {
-            { new DateTime(2014, 6, 6, 9, 57, 0), 86.04398m},
-            { new DateTime(2014, 6, 6, 9, 58, 0), 86.05196m},
-            { new DateTime(2014, 6, 6, 9, 59, 0), 648.29m},
-            { new DateTime(2014, 6, 6, 10, 0, 0), 647.86m},
-            { new DateTime(2014, 6, 6, 10, 1, 0), 646.84m},
-            { new DateTime(2014, 6, 6, 10, 2, 0), 647.64m},
-            { new DateTime(2014, 6, 6, 10, 3, 0), 646.9m}
-        };
-
+        private const string UnderlyingTicker = "TWX";
+        private TradeBar _lastRealBar;
+        private Security _twx;
         public override void Initialize()
         {
-            SetStartDate(2014, 6, 6);
-            SetEndDate(2014, 6, 6);
+            SetStartDate(2014, 6, 5);
+            SetEndDate(2014, 6, 10);
 
-            var aapl = AddEquity(UnderlyingTicker, Resolution.Minute);
+            _twx = AddEquity(UnderlyingTicker, Resolution.Minute, extendedMarketHours: true);
         }
 
         public override void OnData(Slice data)
         {
-            if (Time.Hour == 9 && Time.Minute == 58)
+            var current = data.Bars.FirstOrDefault().Value;
+            if (current != null)
             {
-                AddOption(UnderlyingTicker);
+                if (_lastRealBar == null || !current.IsFillForward)
+                {
+                    _lastRealBar = current;
+                }
+                else if (_lastRealBar.Close != current.Close)
+                {
+                    throw new Exception($"FillForwarded data point at {Time} was scaled. Actual: {current}; Expected: {_lastRealBar}");
+                }
             }
-
-            AssertValue(data);
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (_expectedCloseValues.Count > 0)
+            if (_lastRealBar == null)
             {
                 throw new Exception($"Not all expected data points were received.");
-            }
-        }
-
-        private void AssertValue(Slice data)
-        {
-            decimal? value;
-            if (_expectedCloseValues.TryGetValue(data.Time, out value))
-            {
-                if (data.Bars.FirstOrDefault().Value?.Close.SmartRounding() != value)
-                {
-                    throw new Exception($"Expected tradebar price, expected {value} but was {data.Bars.First().Value.Close.SmartRounding()}");
-                }
-
-                _expectedCloseValues.Remove(data.Time);
             }
         }
 
@@ -113,15 +97,15 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
+            {"Information Ratio", "-10.607"},
+            {"Tracking Error", "0.033"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0"},
-            {"Return Over Maximum Drawdown", "0"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
