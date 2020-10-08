@@ -37,8 +37,8 @@ namespace QuantConnect.Brokerages.Oanda
     public abstract class OandaRestApiBase : Brokerage, IDataQueueHandler
     {
         private static readonly TimeSpan SubscribeDelay = TimeSpan.FromMilliseconds(250);
-        private ManualResetEvent _refreshEvent = new ManualResetEvent(false);
-        private CancellationTokenSource _streamingCancellationTokenSource = new CancellationTokenSource();
+        private readonly ManualResetEvent _refreshEvent = new ManualResetEvent(false);
+        private readonly CancellationTokenSource _streamingCancellationTokenSource = new CancellationTokenSource();
 
         private bool _isConnected;
 
@@ -65,11 +65,6 @@ namespace QuantConnect.Brokerages.Oanda
         /// The list of currently subscribed symbols
         /// </summary>
         protected IEnumerable<Symbol> SubscribedSymbols => _subscriptionManager.GetSubscribedSymbols();
-
-        /// <summary>
-        /// A lock object used to synchronize access to subscribed symbols
-        /// </summary>
-        protected readonly object LockerSubscriptions = new object();
 
         /// <summary>
         /// The symbol mapper
@@ -150,7 +145,7 @@ namespace QuantConnect.Brokerages.Oanda
             Aggregator = aggregator;
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += (s, t) => Refresh();
-            _subscriptionManager.UnsubscribeImpl += (s, t) => Refresh(); ;
+            _subscriptionManager.UnsubscribeImpl += (s, t) => Refresh();
 
             PricingConnectionHandler = new DefaultConnectionHandler { MaximumIdleTimeSpan = TimeSpan.FromSeconds(20) };
             PricingConnectionHandler.ConnectionLost += OnPricingConnectionLost;
