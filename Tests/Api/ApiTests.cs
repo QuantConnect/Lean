@@ -24,21 +24,25 @@ using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.API
 {
-    [TestFixture, Ignore("These tests require configured and active accounts to Tradier, FXCM and Oanda")]
+    [TestFixture, Ignore("These tests require QC User ID and API Token in the configuration")]
     class RestApiTests
     {
-        private int _testAccount = 1;
-        private string _testToken = "ec87b337ac970da4cbea648f24f1c851";
-        private string _dataFolder = Config.Get("data-folder");
+        private int _testAccount;
+        private string _testToken;
+        private string _dataFolder;
         private Api.Api _api;
         private const bool stopLiveAlgos = true;
 
         /// <summary>
-        /// Run before every test
+        /// Run before test
         /// </summary>
-        [SetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
+            _testAccount = Config.GetInt("job-user-id", 1);
+            _testToken = Config.Get("api-access-token", "ec87b337ac970da4cbea648f24f1c851");
+            _dataFolder = Config.Get("data-folder");
+
             _api = new Api.Api();
             _api.Initialize(_testAccount, _testToken, _dataFolder);
         }
@@ -183,7 +187,6 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(deleteProject.Success);
         }
 
-
         /// <summary>
         /// Test creating the settings object that provide the necessary parameters for each broker
         /// </summary>
@@ -287,7 +290,6 @@ namespace QuantConnect.Tests.API
             }
         }
 
-
         /// <summary>
         /// Reading live algorithm tests
         ///   - Get a list of live algorithms
@@ -310,262 +312,6 @@ namespace QuantConnect.Tests.API
 
             Assert.IsTrue(liveLogs.Success);
             Assert.IsTrue(liveLogs.Logs.Any());
-        }
-
-        /// <summary>
-        /// Paper trading FXCM
-        /// </summary>
-        [Test]
-        public void LiveForexAlgorithms_CanBeUsedWithFXCM_Successfully()
-        {
-            var user     = Config.Get("fxcm-user-name");
-            var password = Config.Get("fxcm-password");
-            var account  = Config.Get("fxcm-account-id");
-            var file = new ProjectFile
-            {
-                Name = "main.cs",
-                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateForexAlgorithm.cs")
-            };
-
-            // Create a new project
-            var project = _api.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp);
-            Assert.IsTrue(project.Success);
-
-            // Add Project Files
-            var addProjectFile = _api.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
-            Assert.IsTrue(addProjectFile.Success);
-
-            // Create compile
-            var compile = _api.CreateCompile(project.Projects.First().ProjectId);
-            Assert.IsTrue(compile.Success);
-
-            // Create default algorithm settings
-            var settings = new FXCMLiveAlgorithmSettings(user,
-                                                         password,
-                                                         BrokerageEnvironment.Paper,
-                                                         account);
-
-            // Wait for project to compile
-            Thread.Sleep(10000);
-
-            // Create live default algorithm
-            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, "server512", settings);
-            Assert.IsTrue(createLiveAlgorithm.Success);
-
-            if (stopLiveAlgos)
-            {
-                // Liquidate live algorithm
-                var liquidateLive = _api.LiquidateLiveAlgorithm(project.Projects.First().ProjectId);
-                Assert.IsTrue(liquidateLive.Success);
-
-                // Stop live algorithm
-                var stopLive = _api.StopLiveAlgorithm(project.Projects.First().ProjectId);
-                Assert.IsTrue(stopLive.Success);
-
-                // Delete the project
-                var deleteProject = _api.DeleteProject(project.Projects.First().ProjectId);
-                Assert.IsTrue(deleteProject.Success);
-            }
-        }
-
-        /// <summary>
-        /// Live paper trading via IB.
-        /// </summary>
-        [Test]
-        public void LiveEquityAlgorithms_CanBeUsedWithInteractiveBrokers_Successfully()
-        {
-            var user     = Config.Get("ib-user-name");
-            var password = Config.Get("ib-password");
-            var account  = Config.Get("ib-account");
-
-            var file = new ProjectFile
-            {
-                Name = "main.cs",
-                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
-            };
-
-
-            // Create a new project
-            var project = _api.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp);
-
-            // Add Project Files
-            var addProjectFile = _api.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
-            Assert.IsTrue(addProjectFile.Success);
-
-            // Create compile
-            var compile = _api.CreateCompile(project.Projects.First().ProjectId);
-            Assert.IsTrue(compile.Success);
-
-            // Create default algorithm settings
-            var settings = new InteractiveBrokersLiveAlgorithmSettings(user,
-                                                                       password,
-                                                                       account);
-
-            // Wait for project to compile
-            Thread.Sleep(10000);
-
-            // Create live default algorithm
-            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, "server512", settings);
-            Assert.IsTrue(createLiveAlgorithm.Success);
-
-            if (stopLiveAlgos)
-            {
-                // Liquidate live algorithm
-                var liquidateLive = _api.LiquidateLiveAlgorithm(project.Projects.First().ProjectId);
-                Assert.IsTrue(liquidateLive.Success);
-
-                // Stop live algorithm
-                var stopLive = _api.StopLiveAlgorithm(project.Projects.First().ProjectId);
-                Assert.IsTrue(stopLive.Success);
-
-                // Delete the project
-                var deleteProject = _api.DeleteProject(project.Projects.First().ProjectId);
-                Assert.IsTrue(deleteProject.Success);
-            }
-        }
-
-        /// <summary>
-        /// Live paper trading via Oanda
-        /// </summary>
-        [Test]
-        public void LiveForexAlgorithms_CanBeUsedWithOanda_Successfully()
-        {
-            var token       = Config.Get("oanda-access-token");
-            var account     = Config.Get("oanda-account-id");
-
-            var file = new ProjectFile
-                {
-                    Name = "main.cs",
-                    Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateForexAlgorithm.cs")
-                };
-
-            // Create a new project
-            var project = _api.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp);
-
-            // Add Project Files
-            var addProjectFile = _api.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
-            Assert.IsTrue(addProjectFile.Success);
-
-            // Create compile
-            var compile = _api.CreateCompile(project.Projects.First().ProjectId);
-            Assert.IsTrue(compile.Success);
-
-            // Create default algorithm settings
-            var settings = new OandaLiveAlgorithmSettings(token,
-                                                          BrokerageEnvironment.Paper,
-                                                          account);
-
-            // Wait for project to compile
-            Thread.Sleep(10000);
-
-            // Create live default algorithm
-            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, "server512", settings);
-            Assert.IsTrue(createLiveAlgorithm.Success);
-
-            if (stopLiveAlgos)
-            {
-                // Liquidate live algorithm
-                var liquidateLive = _api.LiquidateLiveAlgorithm(project.Projects.First().ProjectId);
-                Assert.IsTrue(liquidateLive.Success);
-
-                // Stop live algorithm
-                var stopLive = _api.StopLiveAlgorithm(project.Projects.First().ProjectId);
-                Assert.IsTrue(stopLive.Success);
-
-                // Delete the project
-                var deleteProject = _api.DeleteProject(project.Projects.First().ProjectId);
-                Assert.IsTrue(deleteProject.Success);
-            }
-        }
-
-        /// <summary>
-        /// Live paper trading via Tradier
-        /// </summary>
-        [Test]
-        public void LiveEquityAlgorithms_CanBeUsedWithTradier_Successfully()
-        {
-            var refreshToken    = Config.Get("tradier-refresh-token");
-            var account         = Config.Get("tradier-account-id");
-            var accessToken     = Config.Get("tradier-access-token");
-            var dateIssued      = Config.Get("tradier-issued-at");
-
-            var file = new ProjectFile
-            {
-                Name = "main.cs",
-                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
-            };
-
-            // Create a new project
-            var project = _api.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp);
-
-            // Add Project Files
-            var addProjectFile = _api.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
-            Assert.IsTrue(addProjectFile.Success);
-
-            var readProject = _api.ReadProject(project.Projects.First().ProjectId);
-            Assert.IsTrue(readProject.Success);
-
-            // Create compile
-            var compile = _api.CreateCompile(project.Projects.First().ProjectId);
-            Assert.IsTrue(compile.Success);
-
-            // Create default algorithm settings
-            var settings = new TradierLiveAlgorithmSettings(accessToken,
-                                                            dateIssued,
-                                                            refreshToken,
-                                                            account);
-
-            // Wait for project to compile
-            Thread.Sleep(10000);
-
-            // Create live default algorithm
-            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, "server512", settings);
-            Assert.IsTrue(createLiveAlgorithm.Success);
-
-            if (stopLiveAlgos)
-            {
-                // Liquidate live algorithm
-                var liquidateLive = _api.LiquidateLiveAlgorithm(project.Projects.First().ProjectId);
-                Assert.IsTrue(liquidateLive.Success);
-
-                // Stop live algorithm
-                var stopLive = _api.StopLiveAlgorithm(project.Projects.First().ProjectId);
-                Assert.IsTrue(stopLive.Success);
-
-                // Delete the project
-                var deleteProject = _api.DeleteProject(project.Projects.First().ProjectId);
-                Assert.IsTrue(deleteProject.Success);
-            }
-        }
-
-        /// <summary>
-        /// Test getting links to forex data for FXCM
-        /// </summary>
-        [Test]
-        public void FXCMDataLinks_CanBeRetrieved_Successfully()
-        {
-            var minuteDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
-                Resolution.Minute, new DateTime(2013, 10, 07));
-            var dailyDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
-                Resolution.Daily, new DateTime(2013, 10, 07));
-
-            Assert.IsTrue(minuteDataLink.Success);
-            Assert.IsTrue(dailyDataLink.Success);
-        }
-
-        /// <summary>
-        /// Test getting links to forex data for Oanda
-        /// </summary>
-        [Test]
-        public void OandaDataLinks_CanBeRetrieved_Successfully()
-        {
-            var minuteDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
-                Resolution.Minute, new DateTime(2013, 10, 07));
-            var dailyDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
-                Resolution.Daily, new DateTime(2013, 10, 07));
-
-            Assert.IsTrue(minuteDataLink.Success);
-            Assert.IsTrue(dailyDataLink.Success);
         }
 
         /// <summary>
