@@ -21,9 +21,9 @@ AddReference("QuantConnect.Indicators")
 from System import *
 from QuantConnect import *
 from QuantConnect.Indicators import *
-from QuantConnect.Data import IBaseData
-from QuantConnect.Data.Market import IBaseDataBar, TradeBar
-from QuantConnect.Data.Custom import Quandl
+from QuantConnect.Data import *
+from QuantConnect.Data.Market import *
+from QuantConnect.Data.Custom import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Python import *
 

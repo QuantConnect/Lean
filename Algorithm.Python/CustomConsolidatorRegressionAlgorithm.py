@@ -18,7 +18,7 @@ AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Indicators")
 
 from QuantConnect import *
-from QuantConnect.Python import PythonConsolidator
+from QuantConnect.Python import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
