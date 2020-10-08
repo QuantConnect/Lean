@@ -15,10 +15,9 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using QuantConnect.Api;
 using QuantConnect.Packets;
 
-namespace QuantConnect.API
+namespace QuantConnect.Api
 {
     /// <summary>
     /// Details a live algorithm from the "live/read" Api endpoint

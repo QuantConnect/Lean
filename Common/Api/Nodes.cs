@@ -15,9 +15,8 @@
 
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using QuantConnect.Api;
 
-namespace QuantConnect.API
+namespace QuantConnect.Api
 {
     /// <summary>
     /// Node class built for API endpoints nodes/read and nodes/create.
@@ -120,7 +119,7 @@ namespace QuantConnect.API
     }
 
     /// <summary>
-    /// Rest api response wrapper for node/create, reads in the nodes information into a 
+    /// Rest api response wrapper for node/create, reads in the nodes information into a
     /// node object
     /// </summary>
     public class CreatedNode : RestResponse
@@ -134,7 +133,7 @@ namespace QuantConnect.API
 
     /// <summary>
     /// Class for generating a SKU for a node with a given configuration
-    /// Every SKU is made up of 3 variables: 
+    /// Every SKU is made up of 3 variables:
     /// - Target environment (L for live, B for Backtest, R for Research)
     /// - CPU core count
     /// - Dedicated RAM (GB)
@@ -179,7 +178,7 @@ namespace QuantConnect.API
 
             switch (Target)
             {
-                case NodeType.Backtest: 
+                case NodeType.Backtest:
                     result += "B";
                     break;
                 case NodeType.Research:

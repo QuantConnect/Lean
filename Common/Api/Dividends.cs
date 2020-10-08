@@ -16,49 +16,62 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using QuantConnect.Api;
 using QuantConnect.Util;
 
-namespace QuantConnect.API
+namespace QuantConnect.Api
 {
     /// <summary>
-    /// Prices rest response wrapper
+    /// Dividend returned from the api
     /// </summary>
-    public class Prices
+    public class Dividend
     {
         /// <summary>
-        /// The requested Symbol
+        /// The Symbol
         /// </summary>
-        public Symbol Symbol { get; set; }
+        public Symbol Symbol
+        {
+            get
+            {
+                var sid = SecurityIdentifier.Parse(SymbolID);
+                return new Symbol(sid, sid.Symbol);
+            }
+        }
 
         /// <summary>
         /// The requested symbol ID
         /// </summary>
-        [JsonProperty(PropertyName = "symbol")]
+        [JsonProperty(PropertyName = "symbol_id")]
         public string SymbolID { get; set; }
 
         /// <summary>
-        /// The requested price
+        /// The date of the dividend
         /// </summary>
-        [JsonProperty(PropertyName = "price")]
-        public decimal Price { get; set; }
+        [JsonProperty(PropertyName = "date")]
+        [JsonConverter(typeof(DateTimeJsonConverter), "yyyyMMdd")]
+        public DateTime Date { get; set; }
 
         /// <summary>
-        /// UTC time the price was updated
+        /// The dividend distribution
         /// </summary>
-        [JsonProperty(PropertyName = "updated"), JsonConverter(typeof(DoubleUnixSecondsDateTimeJsonConverter))]
-        public DateTime Updated;
+        [JsonProperty(PropertyName = "dividend_per_share")]
+        public decimal DividendPerShare { get; set; }
+
+        /// <summary>
+        /// The reference price for the dividend
+        /// </summary>
+        [JsonProperty(PropertyName = "reference_price")]
+        public decimal ReferencePrice { get; set; }
     }
 
     /// <summary>
-    /// Collection container for a list of prices objects
+    /// Collection container for a list of dividend objects
     /// </summary>
-    public class PricesList : RestResponse
+    public class DividendList : RestResponse
     {
         /// <summary>
-        /// Collection of prices objects
+        /// The dividends list
         /// </summary>
-        [JsonProperty(PropertyName = "prices")]
-        public List<Prices> Prices;
+        [JsonProperty(PropertyName = "dividends")]
+        public List<Dividend> Dividends { get; set; }
     }
 }
