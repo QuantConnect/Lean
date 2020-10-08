@@ -659,21 +659,7 @@ namespace QuantConnect.Tests.API
             var algorithmName = "main.cs";
             var projectName = $"{DateTime.UtcNow.ToStringInvariant("u")} Test {_testAccount} Lang {language}";
 
-            Perform_CreateCompileBactest_Tests(projectName, language, algorithmName, code);
-        }
-
-        /// <summary>
-        /// Test creating, compiling and backtesting a F# project via the Api
-        /// </summary>
-        [Test]
-        public void FSharpProject_CreatedCompiledAndBacktested_Successully()
-        {
-            var language = Language.FSharp;
-            var code = File.ReadAllText("../../../Algorithm.FSharp/BasicTemplateAlgorithm.fs");
-            var algorithmName = "main.fs";
-            var projectName = $"{DateTime.UtcNow.ToStringInvariant("u")} Test {_testAccount} Lang {language}";
-
-            Perform_CreateCompileBactest_Tests(projectName, language, algorithmName, code);
+            Perform_CreateCompileBackTest_Tests(projectName, language, algorithmName, code);
         }
 
         /// <summary>
@@ -688,35 +674,10 @@ namespace QuantConnect.Tests.API
 
             var projectName = $"{DateTime.UtcNow.ToStringInvariant("u")} Test {_testAccount} Lang {language}";
 
-            Perform_CreateCompileBactest_Tests(projectName, language, algorithmName, code);
+            Perform_CreateCompileBackTest_Tests(projectName, language, algorithmName, code);
         }
 
-        [Test]
-        public void GetsSplits()
-        {
-            var date = new DateTime(2014, 06, 09);
-            var AAPL = new Symbol(SecurityIdentifier.Parse("AAPL R735QTJ8XC9X"), "AAPL");
-            var splits = _api.GetSplits(date, date);
-            var aapl = splits.Single(s => s.Symbol == AAPL);
-            Assert.AreEqual((1 / 7m).RoundToSignificantDigits(6), aapl.SplitFactor);
-            Assert.AreEqual(date, aapl.Time);
-            Assert.AreEqual(SplitType.SplitOccurred, aapl.Type);
-            Assert.AreEqual(645.57m, aapl.ReferencePrice);
-        }
-
-        [Test]
-        public void GetDividends()
-        {
-            var date = new DateTime(2018, 05, 11);
-            var AAPL = new Symbol(SecurityIdentifier.Parse("AAPL R735QTJ8XC9X"), "AAPL");
-            var dividends = _api.GetDividends(date, date);
-            var aapl = dividends.Single(s => s.Symbol == AAPL);
-            Assert.AreEqual(0.73m, aapl.Distribution);
-            Assert.AreEqual(date, aapl.Time);
-            Assert.AreEqual(190.03m, aapl.ReferencePrice);
-        }
-
-        private void Perform_CreateCompileBactest_Tests(string projectName, Language language, string algorithmName, string code)
+        private void Perform_CreateCompileBackTest_Tests(string projectName, Language language, string algorithmName, string code)
         {
             //Test create a new project successfully
             var project = _api.CreateProject(projectName, language);
