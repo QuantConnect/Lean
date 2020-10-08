@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities.Option;
+using static QuantConnect.Extensions;
 
 namespace QuantConnect.Orders.OptionExercise
 {
@@ -33,51 +34,51 @@ namespace QuantConnect.Orders.OptionExercise
         public IEnumerable<OrderEvent> OptionExercise(Option option, OptionExerciseOrder order)
         {
             var underlying = option.Underlying;
-
-            var isShort = order.Quantity < 0;
             var utcTime = option.LocalTime.ConvertToUtc(option.Exchange.TimeZone);
 
             var inTheMoney = option.IsAutoExercised(underlying.Close);
-
-            // we're assigned only if we get exercised against, meaning we wrote the option and it was exercised by the buyer
-            var isAssignment = inTheMoney && isShort;
+            var isAssignment = inTheMoney && option.Holdings.IsShort;
 
             yield return new OrderEvent(
                 order.Id,
                 option.Symbol,
                 utcTime,
                 OrderStatus.Filled,
-                isShort ? OrderDirection.Buy : OrderDirection.Sell,
+                GetOrderDirection(order.Quantity),
                 0.0m,
-                -order.Quantity,
+                order.Quantity,
                 OrderFee.Zero,
-                // note whether or not we expired OTM/ITM and whether we were assigned or exercised
-                inTheMoney ? isAssignment ? "Automatic Assignment" : "Automatic Exercise" : "OTM"
-            )
-            {
-                IsAssignment = isAssignment
-            };
+                GetContractHoldingsAdjustmentFillTag(inTheMoney, isAssignment)
+            ) { IsAssignment = isAssignment };
 
+            // TODO : Support Manual Exercise of OTM contracts [ inTheMoney = false ]
             if (inTheMoney && option.ExerciseSettlement == SettlementType.PhysicalDelivery)
             {
-                var right = option.Symbol.ID.OptionRight;
-
-                // TODO : Why doesn't this method take into account the directionality of the quantity like other quantity properties/methods
-                var fillQuantity = option.GetExerciseQuantity(order.Quantity);
-                var exerciseQuantity = right == OptionRight.Call ? fillQuantity : -fillQuantity;
+                var exerciseQuantity = option.GetExerciseQuantity(order.Quantity);
 
                 yield return new OrderEvent(
                     order.Id,
                     underlying.Symbol,
                     utcTime,
                     OrderStatus.Filled,
-                    right.GetExerciseDirection(isShort),
+                    GetOrderDirection(exerciseQuantity),
                     order.Price,
                     exerciseQuantity,
                     OrderFee.Zero,
                     isAssignment ? "Option Assignment" : "Option Exercise"
                 );
             }
+        }
+
+        private static string GetContractHoldingsAdjustmentFillTag(bool inTheMoney, bool isAssignment)
+        {
+            var action = isAssignment ? "Assignment" : "Exercise";
+            if (inTheMoney)
+            {
+                return $"Automatic {action}";
+            }
+
+            return "OTM";
         }
     }
 }
