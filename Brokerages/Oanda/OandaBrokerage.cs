@@ -20,7 +20,6 @@ using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -82,6 +81,11 @@ namespace QuantConnect.Brokerages.Oanda
         {
             get { return _api.IsConnected; }
         }
+
+        /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
+        public override string AccountBaseCurrency => _api.AccountBaseCurrency;
 
         /// <summary>
         /// Connects the client to the broker's remote servers

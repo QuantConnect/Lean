@@ -28,7 +28,6 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using Timer = System.Timers.Timer;
 
 namespace QuantConnect.Brokerages.Oanda
 {
@@ -183,7 +182,7 @@ namespace QuantConnect.Brokerages.Oanda
                         var symbolsToSubscribe = SubscribedSymbols;
                         // restart streaming session
                         SubscribeSymbols(symbolsToSubscribe);
-                        
+
                     } while (!_streamingCancellationTokenSource.IsCancellationRequested);
                 },
                 TaskCreationOptions.LongRunning
@@ -280,6 +279,8 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override void Connect()
         {
+            AccountBaseCurrency = GetAccountBaseCurrency();
+
             // Register to the event session to receive events.
             StartTransactionStream();
 
@@ -301,6 +302,11 @@ namespace QuantConnect.Brokerages.Oanda
 
             _isConnected = false;
         }
+
+        /// <summary>
+        /// Gets the account base currency
+        /// </summary>
+        public abstract string GetAccountBaseCurrency();
 
         /// <summary>
         /// Gets the list of available tradable instruments/products from Oanda

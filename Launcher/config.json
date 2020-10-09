@@ -100,7 +100,7 @@
   "fxcm-account-id": "",
 
   // iqfeed configuration
-  "iqfeed-host": "127.0.0.1", 
+  "iqfeed-host": "127.0.0.1",
   "iqfeed-username": "",
   "iqfeed-password": "",
   "iqfeed-productName": "",

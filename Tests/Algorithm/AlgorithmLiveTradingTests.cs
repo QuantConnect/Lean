@@ -88,6 +88,7 @@ namespace QuantConnect.Tests.Algorithm
             public void Connect() {}
             public void Disconnect() {}
             public bool AccountInstantlyUpdated { get; } = true;
+            public string AccountBaseCurrency => Currencies.USD;
             public IEnumerable<BaseData> GetHistory(HistoryRequest request) { return Enumerable.Empty<BaseData>(); }
             public DateTime LastSyncDateTimeUtc { get; } = DateTime.UtcNow;
             public bool ShouldPerformCashSync(DateTime currentTimeUtc) { return false; }
