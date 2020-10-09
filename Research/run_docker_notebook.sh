@@ -19,6 +19,7 @@ default_image=quantconnect/research:latest
 parent=$(dirname $current_dir)
 default_data_dir=$parent/Data
 default_notebook_dir=$current_dir/Notebooks/
+url=http://localhost:8888/lab
 
 #If arg is a file process the key values
 if [ -f "$1" ]; then
@@ -67,5 +68,8 @@ sudo docker run -d --rm -p 8888:8888 \
 
 echo "Docker container started; will wait 2 seconds before opening web browser."
 sleep 2s
-xdg-open http://localhost:8888/lab
-
+ 
+case $(uname | tr '[:upper:]' '[:lower:]') in
+  linux*) xdg-open $url;;
+  darwin*) open $url;;
+esac
