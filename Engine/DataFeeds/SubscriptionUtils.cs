@@ -98,7 +98,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             ? requestMode
                             : DataNormalizationMode.Adjusted;
                         // We update our price scale factor when the date changes for non fill forward bars or if we haven't initialized yet
-                        if (enablePriceScale && data?.Time.Date > lastTradableDate && (!data.IsFillForward || lastTradableDate == DateTime.MinValue))
+                        if (enablePriceScale && data?.Time.Date > lastTradableDate && data.DataType != MarketDataType.Auxiliary && (!data.IsFillForward || lastTradableDate == DateTime.MinValue))
                         {
                             lastTradableDate = data.Time.Date;
                             currentScale = GetScaleFactor(factorFile, mode, data.Time.Date);
