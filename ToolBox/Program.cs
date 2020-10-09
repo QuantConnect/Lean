@@ -49,6 +49,7 @@ using QuantConnect.ToolBox.YahooDownloader;
 using QuantConnect.Util;
 using QuantConnect.ToolBox.SmartInsider;
 using QuantConnect.ToolBox.TiingoNewsConverter;
+using QuantConnect.ToolBox.EODConverter;
 
 namespace QuantConnect.ToolBox
 {
@@ -182,8 +183,8 @@ namespace QuantConnect.ToolBox
                             tickers,
                             GetParameterOrExit(optionsObject, "security-type"),
                             GetParameterOrExit(optionsObject, "market"),
-                            resolution, 
-                            fromDate, 
+                            resolution,
+                            fromDate,
                             toDate);
                         break;
 
@@ -307,6 +308,13 @@ namespace QuantConnect.ToolBox
                             GetParameterOrExit(optionsObject, "destination-dir"),
                             GetParameterOrDefault(optionsObject, "source-meta-dir", Path.Combine(Globals.DataFolder, "alternative", "benzinga")),
                             GetParameterOrExit(optionsObject, "date"));
+                        break;
+
+                    case "eodc":
+                    case "eodconverter":
+                        EODConverterProgram.EODConverter(
+                            GetParameterOrExit(optionsObject, "source-dir"),
+                            GetParameterOrExit(optionsObject, "destination-dir"));
                         break;
 
                     default:
