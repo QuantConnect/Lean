@@ -142,10 +142,14 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="AddAlphaModelAlgorithm.cs" />
+    <Compile Include="AddOptionContractExpiresRegressionAlgorithm.cs" />
     <Compile Include="DailyHistoryForDailyResolutionRegressionAlgorithm.cs" />
     <Compile Include="DailyHistoryForMinuteResolutionRegressionAlgorithm.cs" />
     <Compile Include="ExtendedMarketHoursHistoryRegressionAlgorithm.cs" />
     <Compile Include="EquityTickQuoteAdjustedModeRegressionAlgorithm.cs" />
+    <Compile Include="AddOptionContractFromUniverseRegressionAlgorithm.cs" />
+    <Compile Include="CoarseFineOptionUniverseChainRegressionAlgorithm.cs" />
+    <Compile Include="OptionChainedAndUniverseSelectionRegressionAlgorithm.cs" />
     <Compile Include="SwitchDataModeRegressionAlgorithm.cs" />
     <Compile Include="AddRemoveOptionUniverseRegressionAlgorithm.cs" />
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />

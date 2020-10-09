@@ -71,7 +71,9 @@ namespace QuantConnect.Algorithm
         {
             foreach (var universe in UniverseSelection.CreateUniverses(this))
             {
-                AddUniverse(universe);
+                // on purpose we don't call 'AddUniverse' here so that these universes don't get registered as user added
+                // this is so that later during 'UniverseSelection.CreateUniverses' we wont remove them from UniverseManager
+                _pendingUniverseAdditions.Add(universe);
             }
 
             if (DebugMode)
@@ -94,8 +96,7 @@ namespace QuantConnect.Algorithm
                 foreach (var ukvp in UniverseManager)
                 {
                     var universeSymbol = ukvp.Key;
-                    var qcUserDefined = UserDefinedUniverse.CreateSymbol(ukvp.Value.SecurityType, ukvp.Value.Market);
-                    if (universeSymbol.Equals(qcUserDefined))
+                    if (_userAddedUniverses.Contains(universeSymbol))
                     {
                         // prevent removal of qc algorithm created user defined universes
                         continue;

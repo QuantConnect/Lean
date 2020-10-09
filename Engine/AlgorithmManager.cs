@@ -1003,13 +1003,22 @@ namespace QuantConnect.Lean.Engine
                     security.IsTradable = false;
                     security.IsDelisted = true;
 
+                    // the subscription are getting removed from the data feed because they end
                     // remove security from all universes
                     foreach (var ukvp in algorithm.UniverseManager)
                     {
                         var universe = ukvp.Value;
                         if (universe.ContainsMember(security.Symbol))
                         {
-                            universe.RemoveMember(algorithm.UtcTime, security);
+                            var userUniverse = universe as UserDefinedUniverse;
+                            if (userUniverse != null)
+                            {
+                                userUniverse.Remove(security.Symbol);
+                            }
+                            else
+                            {
+                                universe.RemoveMember(algorithm.UtcTime, security);
+                            }
                         }
                     }
 
