@@ -448,14 +448,14 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="universe">The universe we want to chain an option universe selection model too</param>
         /// <param name="optionFilter">The option filter universe to use</param>
-        public void AddChainedOptionUniverse(PyObject universe, PyObject optionFilter)
+        public void AddUniverseOptions(PyObject universe, PyObject optionFilter)
         {
             Func<OptionFilterUniverse, OptionFilterUniverse> convertedOptionChain;
             Universe universeToChain;
 
             if (universe.TryConvert(out universeToChain) && optionFilter.TryConvertToDelegate(out convertedOptionChain))
             {
-                AddChainedOptionUniverse(universeToChain, convertedOptionChain);
+                AddUniverseOptions(universeToChain, convertedOptionChain);
             }
             else
             {

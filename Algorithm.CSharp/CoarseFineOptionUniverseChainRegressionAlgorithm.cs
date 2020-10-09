@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             var selectionUniverse = AddUniverse(enumerable => new[] { Time.Date <= new DateTime(2014, 6, 5) ? _twx : _aapl },
                 enumerable => new[] { Time.Date <= new DateTime(2014, 6, 5) ? _twx : _aapl });
 
-            AddChainedOptionUniverse(selectionUniverse, universe =>
+            AddUniverseOptions(selectionUniverse, universe =>
             {
                 if (universe.Underlying == null)
                 {
@@ -120,7 +120,7 @@ namespace QuantConnect.Algorithm.CSharp
             var config = SubscriptionManager.Subscriptions.ToList();
             if (config.Any(dataConfig => dataConfig.Symbol == _twx || dataConfig.Symbol.Underlying == _twx))
             {
-                throw new Exception($"Was NOT expecting any configurations for {_twx} or it's options, since coarse/fine should deselected it");
+                throw new Exception($"Was NOT expecting any configurations for {_twx} or it's options, since coarse/fine should have deselected it");
             }
 
             if (_optionCount == 0)
