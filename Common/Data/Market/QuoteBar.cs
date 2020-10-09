@@ -455,7 +455,7 @@ namespace QuantConnect.Data.Market
         /// <returns><see cref="QuoteBar"/> with the bid/ask set to same values</returns>
         public QuoteBar ParseOption(SubscriptionDataConfig config, string line, DateTime date)
         {
-            return ParseQuote(config, date, line, true);
+            return ParseQuote(config, date, line, config.Symbol.Underlying.SecurityType == SecurityType.Equity);
         }
 
         /// <summary>
@@ -467,7 +467,7 @@ namespace QuantConnect.Data.Market
         /// <returns><see cref="QuoteBar"/> with the bid/ask set to same values</returns>
         public QuoteBar ParseOption(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
         {
-            return ParseQuote(config, date, streamReader, true);
+            return ParseQuote(config, date, streamReader, config.Symbol.Underlying.SecurityType == SecurityType.Equity);
         }
 
         /// <summary>

@@ -280,7 +280,7 @@ namespace QuantConnect.Data.Market
             DataType = MarketDataType.Tick;
             Symbol = symbol;
             Time = baseDate.Date.AddMilliseconds(csv[0].ToInt32());
-            Value = csv[1].ToDecimal() / GetScaleFactor(symbol.SecurityType);
+            Value = csv[1].ToDecimal() / GetScaleFactor(symbol);
             TickType = TickType.Trade;
             Quantity = csv[2].ToDecimal();
             Exchange = csv[3].Trim();
@@ -302,7 +302,7 @@ namespace QuantConnect.Data.Market
                 Symbol = config.Symbol;
 
                 // Which security type is this data feed:
-                var scaleFactor = GetScaleFactor(config.SecurityType);
+                var scaleFactor = GetScaleFactor(config.Symbol);
 
                 switch (config.SecurityType)
                 {
@@ -440,7 +440,7 @@ namespace QuantConnect.Data.Market
                 Symbol = config.Symbol;
 
                 // Which security type is this data feed:
-                var scaleFactor = GetScaleFactor(config.SecurityType);
+                var scaleFactor = GetScaleFactor(config.Symbol);
 
                 switch (config.SecurityType)
                 {
@@ -714,9 +714,10 @@ namespace QuantConnect.Data.Market
             }
         }
 
-        private static decimal GetScaleFactor(SecurityType securityType)
+        private static decimal GetScaleFactor(Symbol symbol)
         {
-            return securityType == SecurityType.Equity || securityType == SecurityType.Option ? 10000m : 1;
+            return symbol.SecurityType == SecurityType.Equity ||
+                    (symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType == SecurityType.Equity) ? 10000m : 1;
         }
 
     }

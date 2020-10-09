@@ -682,10 +682,11 @@ namespace QuantConnect.Data.Market
                 tradeBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
             }
 
-            tradeBar.Open = csv[1].ToDecimal() * _scaleFactor;
-            tradeBar.High = csv[2].ToDecimal() * _scaleFactor;
-            tradeBar.Low = csv[3].ToDecimal() * _scaleFactor;
-            tradeBar.Close = csv[4].ToDecimal() * _scaleFactor;
+            var scalingFactor = GetScaleFactor(config.Symbol);
+            tradeBar.Open = csv[1].ToDecimal() * scalingFactor;
+            tradeBar.High = csv[2].ToDecimal() * scalingFactor;
+            tradeBar.Low = csv[3].ToDecimal() * scalingFactor;
+            tradeBar.Close = csv[4].ToDecimal() * scalingFactor;
             tradeBar.Volume = csv[5].ToDecimal();
 
             return tradeBar;
@@ -719,10 +720,11 @@ namespace QuantConnect.Data.Market
                 tradeBar.Time = date.Date.AddMilliseconds(streamReader.GetInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
             }
 
-            tradeBar.Open = streamReader.GetDecimal() * _scaleFactor;
-            tradeBar.High = streamReader.GetDecimal() * _scaleFactor;
-            tradeBar.Low = streamReader.GetDecimal() * _scaleFactor;
-            tradeBar.Close = streamReader.GetDecimal() * _scaleFactor;
+            var scalingFactor = GetScaleFactor(config.Symbol);
+            tradeBar.Open = streamReader.GetDecimal() * scalingFactor;
+            tradeBar.High = streamReader.GetDecimal() * scalingFactor;
+            tradeBar.Low = streamReader.GetDecimal() * scalingFactor;
+            tradeBar.Close = streamReader.GetDecimal() * scalingFactor;
             tradeBar.Volume = streamReader.GetDecimal();
 
             return tradeBar;
@@ -934,6 +936,17 @@ namespace QuantConnect.Data.Market
                    $"L: {Low.SmartRounding()} " +
                    $"C: {Close.SmartRounding()} " +
                    $"V: {Volume.SmartRounding()}";
+        }
+
+        /// <summary>
+        /// Gets the scaling factor for the provided Symbol
+        /// </summary>
+        /// <param name="symbol">Symbol to scale data for</param>
+        /// <returns>Scaling factor</returns>
+        private static decimal GetScaleFactor(Symbol symbol)
+        {
+            return symbol.SecurityType == SecurityType.Equity ||
+                (symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType == SecurityType.Equity) ? 10000m : 1;
         }
 
         /// <summary>
