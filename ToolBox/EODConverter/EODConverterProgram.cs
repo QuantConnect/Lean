@@ -32,6 +32,8 @@ namespace QuantConnect.ToolBox.EODConverter
 
         public static void EODConverter(string sourceDir, string destinationDir)
         {
+            Market.Add("cad", 100);
+
             try 
             {
                 foreach (var filename in Directory.GetFiles(sourceDir, "*.csv"))
@@ -44,7 +46,7 @@ namespace QuantConnect.ToolBox.EODConverter
                         csv.Configuration.HasHeaderRecord = false;
                         var records = csv.GetRecords<Row>();
 
-                        var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.CAD);
+                        var symbol = Symbol.Create(ticker, SecurityType.Equity, "cad");
 
                         var bars =
                             records.Select(r =>
