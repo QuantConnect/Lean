@@ -31,7 +31,6 @@ namespace QuantConnect.Tests.API
         private string _testToken;
         private string _dataFolder;
         private Api.Api _api;
-        private const bool stopLiveAlgos = true;
 
         /// <summary>
         /// Run before test
@@ -316,6 +315,7 @@ namespace QuantConnect.Tests.API
 
         /// <summary>
         /// Test downloading data that does not come with the repo (Oanda)
+        /// Requires that your account has this data; its free at quantconnect.com/data
         /// </summary>
         [Test]
         public void BacktestingData_CanBeDownloadedAndSaved_Successfully()
@@ -339,47 +339,6 @@ namespace QuantConnect.Tests.API
 
             Assert.IsTrue(File.Exists(dailyPath));
             Assert.IsTrue(File.Exists(minutePath));
-        }
-
-        /// <summary>
-        /// Test read price API for given symbol
-        /// </summary>
-        [Test]
-        public void ReadPriceWorksCorrectlyFor1Symbol()
-        {
-            var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-            var pricesList = _api.ReadPrices(new [] { spy });
-
-            Assert.IsTrue(pricesList.Success);
-            Assert.AreEqual(pricesList.Prices.Count, 1);
-
-            var price = pricesList.Prices.First();
-            Assert.AreEqual(price.Symbol, spy);
-            Assert.AreNotEqual(price.Price, 0);
-            var updated = price.Updated;
-            var reference = DateTime.UtcNow.Subtract(TimeSpan.FromDays(3));
-            Assert.IsTrue(updated > reference);
-        }
-
-        /// <summary>
-        /// Test read price API for multiple symbols
-        /// </summary>
-        [Test]
-        public void ReadPriceWorksCorrectlyForMultipleSymbols()
-        {
-            var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-            var aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            var pricesList = _api.ReadPrices(new[] { spy, aapl });
-
-            Assert.IsTrue(pricesList.Success);
-            Assert.AreEqual(pricesList.Prices.Count, 2);
-
-            Assert.IsTrue(pricesList.Prices.All(x => x.Price != 0));
-            Assert.AreEqual(pricesList.Prices.Count(x => x.Symbol == aapl), 1);
-            Assert.AreEqual(pricesList.Prices.Count(x => x.Symbol == spy), 1);
-
-            var reference = DateTime.UtcNow.Subtract(TimeSpan.FromDays(3));
-            Assert.IsTrue(pricesList.Prices.All(x => x.Updated > reference));
         }
 
         /// <summary>
@@ -409,7 +368,7 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
-        /// Test creating, compiling and bactesting a Python project via the Api
+        /// Test creating, compiling and backtesting a Python project via the Api
         /// </summary>
         [Test]
         public void PythonProject_CreatedCompiledAndBacktested_Successully()
