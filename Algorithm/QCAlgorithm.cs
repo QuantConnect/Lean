@@ -1521,7 +1521,7 @@ namespace QuantConnect.Algorithm
                             }
                         }
 
-                        AddChainedOptionUniverse(universe, _ => _);
+                        AddUniverseOptions(universe, _ => _);
                     }
                     else
                     {
