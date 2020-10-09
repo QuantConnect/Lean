@@ -59,7 +59,7 @@
     <Compile Include="GridSearch.cs" />
     <Compile Include="IOptimizationParameterSetGenerator.cs" />
     <Compile Include="IOptimizationStrategy.cs" />
-    <Compile Include="BruteForceOptimizer.cs" />
+    <Compile Include="BruteForceStrategy.cs" />
     <Compile Include="OptimizationEventArgs.cs" />
     <Compile Include="OptimizationNodePacket.cs" />
     <Compile Include="OptimizationParameter.cs" />

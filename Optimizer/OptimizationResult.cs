@@ -19,11 +19,18 @@ namespace QuantConnect.Optimizer
 {
     public class OptimizationResult
     {
+        public static readonly OptimizationResult Empty = new OptimizationResult();
+
         public Guid Id { get; }
 
         public decimal Profit { get; }
 
         public ParameterSet ParameterSet { get; }
+
+        private OptimizationResult()
+        {
+            Id = Guid.Empty;
+        }
 
         public OptimizationResult(decimal profit, ParameterSet parameterSet)
         {

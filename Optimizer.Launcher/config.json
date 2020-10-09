@@ -13,7 +13,7 @@
   "optimization-parameter-set-generator": "GridSearch",
 
   // How we manage solutions and make decision to continue or stop
-  "optimization-strategy": "BruteForceOptimizer",
+  "optimization-strategy": "BruteForceStrategy",
 
   // optimization problem
   "optimization-criterion": {

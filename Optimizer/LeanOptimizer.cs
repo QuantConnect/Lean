@@ -17,6 +17,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -26,11 +27,11 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Optimizer
 {
-    public class LeanOptimizer
+    public abstract class LeanOptimizer
     {
         private readonly ConcurrentDictionary<string, ParameterSet> _parameterSetForBacktest;
 
-        protected IOptimizationStrategy Optimizer;
+        protected IOptimizationStrategy Strategy;
         protected OptimizationNodePacket NodePacket;
 
         public LeanOptimizer(OptimizationNodePacket nodePacket)
@@ -41,17 +42,18 @@ namespace QuantConnect.Optimizer
             }
 
             NodePacket = nodePacket;
-            Optimizer = Composer.Instance.GetExportedValueByTypeName<IOptimizationStrategy>(NodePacket.OptimizationStrategy);
+            Strategy = Composer.Instance.GetExportedValueByTypeName<IOptimizationStrategy>(NodePacket.OptimizationStrategy);
 
             _parameterSetForBacktest = new ConcurrentDictionary<string, ParameterSet>();
-            Optimizer.Initialize(
+
+            Strategy.Initialize(
                 Composer.Instance.GetExportedValueByTypeName<IOptimizationParameterSetGenerator>(NodePacket.ParameterSetGenerator),
                 NodePacket.Criterion["extremum"] == "max"
                     ? new Maximization() as Extremum
                     : new Minimization(),
                 NodePacket.OptimizationParameters);
 
-            Optimizer.NewSuggestion += async (s, e) =>
+            Strategy.NewParameterSet += async (s, e) =>
             {
                 var paramSet = (e as OptimizationEventArgs)?.ParameterSet;
                 if (paramSet == null) return;
@@ -68,27 +70,37 @@ namespace QuantConnect.Optimizer
                 }
             };
 
-            Optimizer.PushNewResults(null);
+            var empty = OptimizationResult.Empty;
+            Strategy.PushNewResults(empty);
         }
+
+        public virtual void OnComplete() { }
 
         public virtual void Abort() { }
 
-        protected virtual async Task<string> RunLean(ParameterSet parameterSet)
-        {
-            throw new NotImplementedException();
-        }
+        protected abstract Task<string> RunLean(ParameterSet parameterSet);
 
         protected virtual void NewResult(string jsonString, string backtestId)
         {
-            ParameterSet parameterSet;
-            if (_parameterSetForBacktest.TryGetValue(backtestId, out parameterSet))
+            OptimizationResult result;
+            lock (_parameterSetForBacktest)
             {
+                ParameterSet parameterSet;
+                if (!_parameterSetForBacktest.TryRemove(backtestId, out parameterSet))
+                {
+                    Log.Error($"Optimization compute job with id '{backtestId}' was not found");
+                    return;
+                }
                 var value = JObject.Parse(jsonString).SelectToken(NodePacket.Criterion["name"]).Value<decimal>();
-                Optimizer.PushNewResults(new OptimizationResult(value, parameterSet));
+
+                result = new OptimizationResult(value, parameterSet);
             }
-            else
+
+            Strategy.PushNewResults(result);
+
+            if (!_parameterSetForBacktest.Any())
             {
-                Log.Error($"Optimization compute job with id '{backtestId}' was not found");
+                OnComplete();
             }
         }
 

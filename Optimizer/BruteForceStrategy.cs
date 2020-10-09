@@ -15,43 +15,46 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Optimizer
 {
-    public class BruteForceOptimizer : IOptimizationStrategy
+    public class BruteForceStrategy : IOptimizationStrategy
     {
         private HashSet<OptimizationParameter> _args;
-        public IOptimizationParameterSetGenerator SearchStrategy { get; private set; }
+        private object _locker = new object();
+
+        public IOptimizationParameterSetGenerator ParameterSetGenerator { get; private set; }
         public Extremum Extremum { get; private set; }
-        public event EventHandler NewSuggestion;
         public OptimizationResult Solution { get; private set; }
+
+        public event EventHandler NewParameterSet;
 
         public void Initialize(IOptimizationParameterSetGenerator searchStrategy, Extremum extremum, HashSet<OptimizationParameter> parameters)
         {
-            SearchStrategy = searchStrategy;
+            ParameterSetGenerator = searchStrategy;
             Extremum = extremum;
             _args = parameters;
         }
 
         public void PushNewResults(OptimizationResult result)
         {
-            if (result != null)
+            lock (_locker)
             {
-                if (Solution == null || Extremum.Better(Solution.Profit, result.Profit))
+                if (result?.Id != Guid.Empty)
                 {
-                    Solution = result;
+                    if (Solution == null || Extremum.Better(Solution.Profit, result.Profit))
+                    {
+                        Solution = result;
+                    }
+
+                    return;
                 }
 
-                return;
+                foreach (var parameterSet in ParameterSetGenerator.Step(result?.ParameterSet, _args))
+                {
+                    NewParameterSet?.Invoke(this, new OptimizationEventArgs(parameterSet));
+                }
             }
-
-            foreach (var suggestion in SearchStrategy.Step(null, _args))
-            {
-                NewSuggestion?.Invoke(this, new OptimizationEventArgs(suggestion));
-            }
-
-            NewSuggestion?.Invoke(this, null);
         }
     }
 }

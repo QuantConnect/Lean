@@ -29,6 +29,13 @@ namespace QuantConnect.Optimizer.Launcher
         {
         }
 
+        public override void OnComplete()
+        {
+            var result = Strategy.Solution;
+            var args = string.Join(",", result.ParameterSet.Arguments.Select(a => $"{a.Key}={a.Value}"));
+            Console.Write($"Result {result.Profit} was reached at point ({args})");
+        }
+
         public override void Abort()
         {
             base.Abort();

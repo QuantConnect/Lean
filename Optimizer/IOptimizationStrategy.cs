@@ -20,9 +20,9 @@ namespace QuantConnect.Optimizer
 {
     public interface IOptimizationStrategy
     {
-        event EventHandler NewSuggestion;
+        event EventHandler NewParameterSet;
 
-        IOptimizationParameterSetGenerator SearchStrategy { get; }
+        IOptimizationParameterSetGenerator ParameterSetGenerator { get; }
 
         Extremum Extremum { get; }
 
