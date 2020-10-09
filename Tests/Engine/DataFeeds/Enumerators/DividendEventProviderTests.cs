@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         }
 
         [Test]
-        public void UsesRawPriceWhenEmptyReferencePrice()
+        public void ThrowsWhenEmptyReferencePrice()
         {
             var dividendProvider = new DividendEventProvider();
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.AAPL, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork,
@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             dividendProvider.Initialize(config, factorFile, mapFile.Get(Market.USA).ResolveMapFile(Symbols.AAPL, start), start);
 
-            foreach (var row in factorFile.Take(2))
+            foreach (var row in factorFile.Take(1))
             {
                 var lastRawPrice = 100;
                 var events = dividendProvider
@@ -111,15 +111,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 // ex dividend date does not emit anything
                 Assert.AreEqual(0, events.Count);
 
-                events = dividendProvider
-                    .GetEvents(new NewTradableDateEventArgs(row.Date.AddDays(1), null, Symbols.AAPL, lastRawPrice))
-                    .ToList();
-
-                Assert.AreEqual(1, events.Count);
-                var dividend = events[0] as Dividend;
-                Assert.IsNotNull(dividend);
-
-                Assert.AreEqual(lastRawPrice * 0.10, dividend.Distribution);
+                Assert.Throws<InvalidOperationException>(() =>
+                {
+                    dividendProvider
+                        .GetEvents(new NewTradableDateEventArgs(row.Date.AddDays(1), null, Symbols.AAPL, lastRawPrice))
+                        .ToList();
+                });
             }
         }
     }

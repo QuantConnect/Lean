@@ -30,7 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         // we set the split factor when we encounter a split in the factor file
         // and on the next trading day we use this data to produce the split instance
         private decimal? _splitFactor;
-        private decimal? _referencePrice;
+        private decimal _referencePrice;
         private FactorFile _factorFile;
         private MapFile _mapFile;
         private SubscriptionDataConfig _config;
@@ -66,18 +66,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var factor = _splitFactor;
                 if (factor != null)
                 {
-                    decimal close;
-                    if (_referencePrice != null && _referencePrice != 0)
+                    var close = _referencePrice;
+                    if (close == 0)
                     {
-                        close = _referencePrice.Value;
-                    }
-                    else
-                    {
-                        close = eventArgs.LastRawPrice ?? 0;
+                        throw new InvalidOperationException($"Zero reference price for {_config.Symbol} split at {eventArgs.Date}");
                     }
 
-                    _referencePrice = null;
                     _splitFactor = null;
+                    _referencePrice = 0;
                     yield return new Split(
                         eventArgs.Symbol,
                         eventArgs.Date,

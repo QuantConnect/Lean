@@ -30,7 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         // we set the price factor ratio when we encounter a dividend in the factor file
         // and on the next trading day we use this data to produce the dividend instance
         private decimal? _priceFactorRatio;
-        private decimal? _referencePrice;
+        private decimal _referencePrice;
         private FactorFile _factorFile;
         private MapFile _mapFile;
         private SubscriptionDataConfig _config;
@@ -65,26 +65,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             {
                 if (_priceFactorRatio != null)
                 {
-                    decimal close;
-                    if (_referencePrice != null && _referencePrice != 0)
+                    if (_referencePrice == 0)
                     {
-                        close = _referencePrice.Value;
-                    }
-                    else
-                    {
-                        close = eventArgs.LastRawPrice ?? 0;
+                        throw new InvalidOperationException($"Zero reference price for {_config.Symbol} dividend at {eventArgs.Date}");
                     }
 
                     var baseData = Dividend.Create(
                         _config.Symbol,
                         eventArgs.Date,
-                        close,
+                        _referencePrice,
                         _priceFactorRatio.Value
                     );
                     // let the config know about it for normalization
                     _config.SumOfDividends += baseData.Distribution;
                     _priceFactorRatio = null;
-                    _referencePrice = null;
+                    _referencePrice = 0;
 
                     yield return baseData;
                 }
