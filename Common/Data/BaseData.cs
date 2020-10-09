@@ -198,7 +198,8 @@ namespace QuantConnect.Data
         /// <returns>True indicates mapping should be used</returns>
         public virtual bool RequiresMapping()
         {
-            return Symbol.SecurityType == SecurityType.Equity || Symbol.SecurityType == SecurityType.Option;
+            return Symbol.SecurityType == SecurityType.Equity ||
+                   (Symbol.SecurityType == SecurityType.Option && Symbol.Underlying.SecurityType == SecurityType.Equity);
         }
 
         /// <summary>

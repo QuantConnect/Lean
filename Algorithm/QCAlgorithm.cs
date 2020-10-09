@@ -1504,9 +1504,24 @@ namespace QuantConnect.Algorithm
                 if (!UniverseManager.TryGetValue(symbol, out universe) && _pendingUniverseAdditions.All(u => u.Configuration.Symbol != symbol))
                 {
                     var settings = new UniverseSettings(configs.First().Resolution, leverage, true, false, TimeSpan.Zero);
-                    if (symbol.SecurityType == SecurityType.Option)
+                    if (symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType == SecurityType.Equity)
                     {
                         universe = new OptionChainUniverse((Option)security, settings, LiveMode);
+                    }
+                    else if (symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType == SecurityType.Future)
+                    {
+                        var future = (Future)Securities[symbol.Underlying];
+                        if (!UniverseManager.TryGetValue(future.Symbol, out universe))
+                        {
+                            universe = _pendingUniverseAdditions.SingleOrDefault(u => u.Configuration.Symbol == future.Symbol);
+                            if (universe == null)
+                            {
+                                universe = new FuturesChainUniverse(future, settings);
+                                AddUniverse(universe);
+                            }
+                        }
+
+                        AddChainedOptionUniverse(universe, _ => _);
                     }
                     else
                     {
@@ -1568,6 +1583,35 @@ namespace QuantConnect.Algorithm
             return (Option)AddSecurity(canonicalSymbol, resolution, fillDataForward, leverage);
         }
 
+        public Option AddOption(Symbol underlying, Resolution? resolution = null, string market = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
+        {
+            if (market == null)
+            {
+                if (!BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Option, out market))
+                {
+                    throw new KeyNotFoundException($"No default market set for security type: {SecurityType.Option}");
+                }
+            }
+
+            Symbol canonicalSymbol;
+            var alias = "?" + underlying;
+            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol) ||
+                canonicalSymbol.ID.Market != market ||
+                canonicalSymbol.SecurityType != SecurityType.Option)
+            {
+                canonicalSymbol = QuantConnect.Symbol.CreateOption(
+                    underlying,
+                    underlying.ID.Market,
+                    default(OptionStyle),
+                    default(OptionRight),
+                    0,
+                    SecurityIdentifier.DefaultDate,
+                    alias);
+            }
+
+            return (Option)AddSecurity(canonicalSymbol, resolution, fillDataForward, leverage);
+        }
+
         /// <summary>
         /// Creates and adds a new <see cref="Future"/> security to the algorithm
         /// </summary>
@@ -1611,6 +1655,16 @@ namespace QuantConnect.Algorithm
         public Future AddFutureContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
         {
             return (Future)AddSecurity(symbol, resolution, fillDataForward, leverage);
+        }
+
+        public Option AddFutureOption(Symbol symbol, Resolution? resolution = null, string market = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
+        {
+            if (!symbol.IsCanonical())
+            {
+                throw new ArgumentException("Symbol must be non-canonical");
+            }
+
+            return AddOption(symbol, resolution, market, fillDataForward, leverage);
         }
 
         /// <summary>

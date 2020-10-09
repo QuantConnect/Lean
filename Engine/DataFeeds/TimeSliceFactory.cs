@@ -303,8 +303,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         securityUpdate.Add(baseData);
 
                         // option underlying security update
-                        if (!packet.Configuration.IsInternalFeed
-                            && symbol.SecurityType == SecurityType.Equity)
+                        if (!packet.Configuration.IsInternalFeed)
                         {
                             optionUnderlyingUpdates[symbol] = baseData;
                         }

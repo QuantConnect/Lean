@@ -69,8 +69,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
             var sourceFactory = request.Configuration.GetBaseDataInstance();
-
-            using (var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider))
+            using (var dataCacheProvider = new ZipDataCacheProvider(dataProvider))
             {
                 foreach (var date in _tradableDaysProvider(request))
                 {
