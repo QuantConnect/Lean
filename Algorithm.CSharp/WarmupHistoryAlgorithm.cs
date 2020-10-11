@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (fast.Current.Value > slow.Current.Value)
+            if (fast > slow)
             {
                 SetHoldings("EURUSD", 1);
             }

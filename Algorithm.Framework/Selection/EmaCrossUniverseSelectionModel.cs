@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
                         // Update returns true when the indicators are ready, so don't accept until they are
                         where avg.Update(cf.EndTime, cf.AdjustedPrice)
                         // only pick symbols who have their _fastPeriod-day ema over their _slowPeriod-day ema
-                        where avg.Fast.Current.Value > avg.Slow.Current.Value * (1 + _tolerance)
+                        where avg.Fast > avg.Slow * (1 + _tolerance)
                         // prefer symbols with a larger delta by percentage between the two averages
                         orderby avg.ScaledDelta descending
                         // we only need to return the symbol and return 'Count' symbols
@@ -93,7 +93,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
             }
 
             // computes an object score of how much large the fast is than the slow
-            public decimal ScaledDelta => (Fast.Current.Value - Slow.Current.Value) / ((Fast.Current.Value + Slow.Current.Value) / 2m);
+            public decimal ScaledDelta => (Fast - Slow) / ((Fast + Slow) / 2m);
 
             // updates the EMAFast and EMASlow indicators, returning true when they're both ready
             public bool Update(DateTime time, decimal value) => Fast.Update(time, value) & Slow.Update(time, value);

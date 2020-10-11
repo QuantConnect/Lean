@@ -286,7 +286,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (Time.TimeOfDay.Hours >= 10) return;
 
             // expect capture 10% of the daily range
-            var expectedCaptureRange = 0.1m*ATR14.Current.Value;
+            var expectedCaptureRange = 0.1m*ATR14;
 
             var allowedDollarLoss = MaximumPorfolioRiskPercentPerPosition * Portfolio.TotalPortfolioValue;
 
@@ -366,7 +366,7 @@ namespace QuantConnect.Algorithm.CSharp
             // we've trigger the psar trailing stop, so start updating our stop loss tick
             if (EnablePsarTrailingStop && PSARMin.IsReady)
             {
-                StopLossTicket.Update(new UpdateOrderFields {StopPrice = PSARMin.Current.Value});
+                StopLossTicket.Update(new UpdateOrderFields {StopPrice = PSARMin});
                 Log("Submitted stop loss @ " + PSARMin.Current.Value.SmartRounding());
             }
         }
@@ -470,7 +470,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         private bool IsUptrend
         {
-            get { return ADX14 > 20 && ADX14.PositiveDirectionalIndex.Current.Value > ADX14.NegativeDirectionalIndex.Current.Value; }
+            get { return ADX14 > 20 && ADX14.PositiveDirectionalIndex > ADX14.NegativeDirectionalIndex; }
         }
 
         /// <summary>
@@ -492,7 +492,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         private bool IsDowntrend
         {
-            get { return ADX14 > 20 && ADX14.NegativeDirectionalIndex.Current.Value > ADX14.PositiveDirectionalIndex.Current.Value; }
+            get { return ADX14 > 20 && ADX14.NegativeDirectionalIndex > ADX14.PositiveDirectionalIndex; }
         }
 
         /// <summary>
@@ -503,8 +503,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             get
             {
-                return SmoothedATR14.Current.Value > Security.Close*AtrVolatilityThresholdPercent
-                    || SmoothedSTD14.Current.Value > Security.Close*StdVolatilityThresholdPercent;
+                return SmoothedATR14 > Security.Close*AtrVolatilityThresholdPercent
+                    || SmoothedSTD14 > Security.Close*StdVolatilityThresholdPercent;
             }
         }
 
@@ -531,8 +531,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             get
             {
-                return (Security.Holdings.IsLong && PSARMin.Current.Value < Security.Close)
-                    || (Security.Holdings.IsShort && PSARMin.Current.Value > Security.Close);
+                return (Security.Holdings.IsLong && PSARMin < Security.Close)
+                    || (Security.Holdings.IsShort && PSARMin > Security.Close);
             }
         }
 
@@ -541,8 +541,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         private bool IsPsarMoreProfitableThanStop(decimal stopPrice)
         {
-            return (Security.Holdings.IsLong && PSARMin.Current.Value > stopPrice)
-                || (Security.Holdings.IsShort && PSARMin.Current.Value < stopPrice);
+            return (Security.Holdings.IsLong && PSARMin > stopPrice)
+                || (Security.Holdings.IsShort && PSARMin < stopPrice);
         }
     }
 }

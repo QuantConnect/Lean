@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
             // computes an object score of how much large the fast is than the slow
             public decimal ScaledDelta
             {
-                get { return (Fast.Current.Value - Slow.Current.Value)/((Fast.Current.Value + Slow.Current.Value)/2m); }
+                get { return (Fast - Slow)/((Fast + Slow)/2m); }
             }
 
             // updates the EMA50 and EMA100 indicators, returning true when they're both ready
@@ -87,7 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
                         // Update returns true when the indicators are ready, so don't accept until they are
                         where avg.Update(cf.EndTime, cf.AdjustedPrice)
                         // only pick symbols who have their 50 day ema over their 100 day ema
-                        where avg.Fast.Current.Value > avg.Slow.Current.Value*(1 + Tolerance)
+                        where avg.Fast > avg.Slow*(1 + Tolerance)
                         // prefer symbols with a larger delta by percentage between the two averages
                         orderby avg.ScaledDelta descending
                         // we only need to return the symbol and return 'Count' symbols

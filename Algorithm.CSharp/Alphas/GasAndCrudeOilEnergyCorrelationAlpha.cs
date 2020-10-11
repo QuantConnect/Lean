@@ -120,13 +120,13 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     _nextUpdate = algorithm.Time.AddDays(30);
                 }
 
-                var magnitude = (double)Math.Round(_pair.Item1.Return.Current.Value / 100, 6);
+                var magnitude = (double)Math.Round(_pair.Item1.Return / 100, 6);
 
-                if (_pair.Item1.Return.Current.Value > _differenceTrigger)
+                if (_pair.Item1.Return > _differenceTrigger)
                 {
                     yield return Insight.Price(_pair.Item2.Symbol, _predictionInterval, InsightDirection.Up, magnitude);
                 }
-                if (_pair.Item1.Return.Current.Value < -_differenceTrigger)
+                if (_pair.Item1.Return < -_differenceTrigger)
                 {
                     yield return Insight.Price(_pair.Item2.Symbol, _predictionInterval, InsightDirection.Down, magnitude);
                 }

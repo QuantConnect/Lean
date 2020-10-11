@@ -106,8 +106,8 @@ namespace QuantConnect.Algorithm.CSharp
                     new[] {"lower", "short", "long"};
 
                 Log($"Brent Price is {logText[0]} than West Texas. Go {logText[1]} BNO and {logText[2]} USO. West Texas EMA: {_emaWti}");
-                SetHoldings(_bno, 0.25 * Math.Sign(_spread.Current.Value));
-                SetHoldings(_uso, -0.25 * Math.Sign(_spread.Current.Value));
+                SetHoldings(_bno, 0.25 * Math.Sign(_spread));
+                SetHoldings(_uso, -0.25 * Math.Sign(_spread));
             }
         }
 

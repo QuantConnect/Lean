@@ -67,9 +67,9 @@ namespace QuantConnect.Algorithm.CSharp
                         // Update returns true when the indicators are ready, so don't accept until they are
                         where avg.Update(cf.EndTime, cf.AdjustedPrice)
                         // only pick symbols who have their price over their 100 day sma
-                        where avg.Current.Value > cf.AdjustedPrice * _tolerance
+                        where avg > cf.AdjustedPrice * _tolerance
                         // prefer symbols with a larger delta by percentage between the two averages
-                        orderby (avg.Current.Value - cf.AdjustedPrice) / ((avg.Current.Value + cf.AdjustedPrice) / 2m) descending
+                        orderby (avg - cf.AdjustedPrice) / ((avg + cf.AdjustedPrice) / 2m) descending
                         // we only need to return the symbol and return 'Count' symbols
                         select cf.Symbol).Take(_count);
             });

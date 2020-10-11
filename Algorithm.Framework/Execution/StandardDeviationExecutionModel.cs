@@ -144,10 +144,10 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         protected virtual bool PriceIsFavorable(SymbolData data, decimal unorderedQuantity)
         {
-            var deviations = _deviations * data.STD.Current.Value;
+            var deviations = _deviations * data.STD;
             return unorderedQuantity > 0
-                ? data.Security.BidPrice < data.SMA.Current.Value - deviations
-                : data.Security.AskPrice > data.SMA.Current.Value + deviations;
+                ? data.Security.BidPrice < data.SMA - deviations
+                : data.Security.AskPrice > data.SMA + deviations;
         }
 
         /// <summary>

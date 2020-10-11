@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (Portfolio.TryGetValue(_symbol, out holding))
             {
                 // Buy the futures' front contract when the fast EMA is above the slow one
-                if (_fast.Current.Value > _slow.Current.Value * (1 + _tolerance))
+                if (_fast > _slow * (1 + _tolerance))
                 {
                     if (!holding.Invested)
                     {
@@ -115,8 +115,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void PlotEma()
         {
-            Plot("EMA Cross", "Fast", _fast.Current.Value);
-            Plot("EMA Cross", "Slow", _slow.Current.Value);
+            Plot("EMA Cross", "Fast", _fast);
+            Plot("EMA Cross", "Slow", _slow);
         }
     }
 }

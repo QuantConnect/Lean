@@ -64,11 +64,11 @@ namespace QuantConnect.Algorithm.CSharp
             _lastAction = Time;
 
             var holding = Portfolio[_spy];
-            if (holding.Quantity <= 0 && _macd.Current.Value > _macd.Signal.Current.Value && data[_ibm].Price > _ema.Current.Value)
+            if (holding.Quantity <= 0 && _macd > _macd.Signal && data[_ibm].Price > _ema)
             {
                 SetHoldings(_ibm, 0.25m);
             }
-            else if (holding.Quantity >= 0 && _macd.Current.Value < _macd.Signal.Current.Value && data[_ibm].Price < _ema.Current.Value)
+            else if (holding.Quantity >= 0 && _macd < _macd.Signal && data[_ibm].Price < _ema)
             {
                 SetHoldings(_ibm, -0.25m);
             }

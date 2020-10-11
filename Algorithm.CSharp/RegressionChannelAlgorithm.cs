@@ -63,13 +63,13 @@ namespace QuantConnect.Algorithm.CSharp
             if (!_rc.IsReady || !data.ContainsKey(_spy)) return;
             var value = data[_spy].Value;
 
-            if (_holdings.Quantity <= 0 && value < _rc.LowerChannel.Current.Value)
+            if (_holdings.Quantity <= 0 && value < _rc.LowerChannel)
             {
                 SetHoldings(_spy, 1);
                 Plot("Trade Plot", "Buy", value);
             }
 
-            if (_holdings.Quantity >= 0 && value > _rc.UpperChannel.Current.Value)
+            if (_holdings.Quantity >= 0 && value > _rc.UpperChannel)
             {
                 SetHoldings(_spy, -1);
                 Plot("Trade Plot", "Sell", value);
@@ -78,9 +78,9 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfDay()
         {
-            Plot("Trade Plot", "UpperChannel", _rc.UpperChannel.Current.Value);
-            Plot("Trade Plot", "LowerChannel", _rc.LowerChannel.Current.Value);
-            Plot("Trade Plot", "Regression", _rc.LinearRegression.Current.Value);
+            Plot("Trade Plot", "UpperChannel", _rc.UpperChannel);
+            Plot("Trade Plot", "LowerChannel", _rc.LowerChannel);
+            Plot("Trade Plot", "Regression", _rc.LinearRegression);
         }
     }
 }

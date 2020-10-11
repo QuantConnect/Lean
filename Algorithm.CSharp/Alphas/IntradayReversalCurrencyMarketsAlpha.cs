@@ -168,7 +168,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
                 public bool IsUptrend(decimal price)
                 {
-                    return _priceSMA.IsReady && price < Math.Round(_priceSMA.Current.Value * 1.001m, 6);
+                    return _priceSMA.IsReady && price < Math.Round(_priceSMA * 1.001m, 6);
                 }
             }
         }

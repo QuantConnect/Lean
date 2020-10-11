@@ -100,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     var symbolData = kvp.Value;
                     if (symbolData.CanEmit)
                     {
-                        var magnitude = Convert.ToDouble(Math.Abs(symbolData.Return.Current.Value));
+                        var magnitude = Convert.ToDouble(Math.Abs(symbolData.Return));
                         insights.Add(Insight.Price(kvp.Key, _predictionInterval, InsightDirection.Up, magnitude));
                     }
                 }

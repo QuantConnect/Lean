@@ -78,7 +78,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 }
 
                 var direction = InsightDirection.Flat;
-                var normalizedSignal = sd.MACD.Signal.Current.Value / sd.Security.Price;
+                var normalizedSignal = sd.MACD.Signal / sd.Security.Price;
                 if (normalizedSignal > BounceThresholdPercent)
                 {
                     direction = InsightDirection.Up;

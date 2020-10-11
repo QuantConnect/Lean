@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
             var pastSma = _smaWin[_smaWin.Count - 1];   // Oldest SMA has index of window count minus 1.
             Log($"SMA: {pastSma.Time} -> {pastSma.Value} ... {currSma.Time} -> {currSma.Value}");
 
-            if (!Portfolio.Invested && currSma.Value > pastSma.Value)
+            if (!Portfolio.Invested && currSma > pastSma)
             {
                 SetHoldings("SPY", 1);
             }

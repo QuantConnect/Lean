@@ -209,7 +209,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 }
 
                 // don't re-emit the same direction
-                if (_state != State.LongRatio && _ratio.Current.Value > _upperThreshold.Current.Value)
+                if (_state != State.LongRatio && _ratio > _upperThreshold)
                 {
                     _state = State.LongRatio;
 
@@ -222,7 +222,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 }
 
                 // don't re-emit the same direction
-                if (_state != State.ShortRatio && _ratio.Current.Value < _lowerThreshold.Current.Value)
+                if (_state != State.ShortRatio && _ratio < _lowerThreshold)
                 {
                     _state = State.ShortRatio;
 

@@ -66,11 +66,11 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // Simple EMA cross
-            if (!Portfolio.Invested && _emaFast.Current.Value > _emaSlow.Current.Value)
+            if (!Portfolio.Invested && _emaFast > _emaSlow)
             {
                 SetHoldings(_symbol, 1);
             }
-            else if (Portfolio.Invested && _emaFast.Current.Value < _emaSlow.Current.Value)
+            else if (Portfolio.Invested && _emaFast < _emaSlow)
             {
                 Liquidate(_symbol);
             }
