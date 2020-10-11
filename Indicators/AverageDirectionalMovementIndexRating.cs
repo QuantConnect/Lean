@@ -25,7 +25,7 @@ namespace QuantConnect.Indicators
     public class AverageDirectionalMovementIndexRating : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         private readonly int _period;
-        private readonly RollingWindow<decimal> _adxHistory;
+        private readonly RollingIndicatorHistoryWindow _adxHistory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AverageDirectionalMovementIndexRating"/> class using the specified name and period.
@@ -37,7 +37,7 @@ namespace QuantConnect.Indicators
         {
             _period = period;
             ADX = new AverageDirectionalIndex(name + "_ADX", period);
-            _adxHistory = new RollingWindow<decimal>(period);
+            _adxHistory = new RollingIndicatorHistoryWindow(ADX, period);
         }
 
         /// <summary>
@@ -72,12 +72,6 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             ADX.Update(input);
-
-            if (ADX.IsReady)
-            {
-                _adxHistory.Add(ADX);
-            }
-
             return IsReady ? (ADX + _adxHistory[_period - 1]) / 2 : 50m;
         }
 

@@ -180,10 +180,11 @@
     <Compile Include="DoubleExponentialMovingAverage.cs" />
     <Compile Include="PythonIndicator.cs" />
     <Compile Include="IntradayVwap.cs" />
+    <Compile Include="RollingIndicatorHistoryWindow.cs" />
     <Compile Include="SchaffTrendCycle.cs" />
     <Compile Include="WilderMovingAverage.cs" />
     <Compile Include="FractalAdaptiveMovingAverage.cs" />
-    <Compile Include="EaseOfMovementValue.cs"/>
+    <Compile Include="EaseOfMovementValue.cs" />
     <Compile Include="FilteredIdentity.cs" />
     <Compile Include="HullMovingAverage.cs" />
     <Compile Include="MassIndex.cs" />
