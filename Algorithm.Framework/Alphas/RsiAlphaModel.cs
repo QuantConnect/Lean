@@ -142,19 +142,19 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         private State GetState(RelativeStrengthIndex rsi, State previous)
         {
-            if (rsi > 70m)
+            if (rsi.Current.Value > 70m)
             {
                 return State.TrippedHigh;
             }
 
-            if (rsi < 30m)
+            if (rsi.Current.Value < 30m)
             {
                 return State.TrippedLow;
             }
 
             if (previous == State.TrippedLow)
             {
-                if (rsi > 35m)
+                if (rsi.Current.Value > 35m)
                 {
                     return State.Middle;
                 }
@@ -162,7 +162,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
             if (previous == State.TrippedHigh)
             {
-                if (rsi < 65m)
+                if (rsi.Current.Value < 65m)
                 {
                     return State.Middle;
                 }

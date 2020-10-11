@@ -133,14 +133,14 @@ namespace QuantConnect.Algorithm.Framework.Execution
         {
             if (unorderedQuantity > 0)
             {
-                if (data.Security.BidPrice < data.VWAP)
+                if (data.Security.BidPrice < data.VWAP.Current.Value)
                 {
                     return true;
                 }
             }
             else
             {
-                if (data.Security.AskPrice > data.VWAP)
+                if (data.Security.AskPrice > data.VWAP.Current.Value)
                 {
                     return true;
                 }

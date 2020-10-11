@@ -58,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug("Fast: " + _fast.Samples);
                 Debug("Slow: " + _slow.Samples);
             }
-            if (_fast > _slow)
+            if (_fast.Current.Value > _slow.Current.Value)
             {
                 SetHoldings(_symbol, 1);
             }

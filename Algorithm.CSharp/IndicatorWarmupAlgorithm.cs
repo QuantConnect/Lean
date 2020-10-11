@@ -136,8 +136,8 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     const decimal tolerance = 1 + PercentTolerance;
 
-                    return MACD.Signal > MACD*tolerance
-                        && EMA > Close*tolerance;
+                    return MACD.Signal.Current.Value > MACD.Current.Value*tolerance
+                        && EMA.Current.Value > Close.Current.Value*tolerance;
                 }
             }
 
@@ -147,8 +147,8 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     const decimal tolerance = 1 - PercentTolerance;
 
-                    return MACD.Signal < MACD*tolerance
-                        && EMA < Close*tolerance;
+                    return MACD.Signal.Current.Value < MACD.Current.Value*tolerance
+                        && EMA.Current.Value < Close.Current.Value*tolerance;
                 }
             }
 
@@ -228,11 +228,11 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 decimal limit = 0m;
-                if (Security.Holdings.IsLong && Close*exitTolerance < EMA)
+                if (Security.Holdings.IsLong && Close.Current.Value*exitTolerance < EMA.Current.Value)
                 {
                     limit = Security.High;
                 }
-                else if (Security.Holdings.IsShort && Close > EMA*exitTolerance)
+                else if (Security.Holdings.IsShort && Close.Current.Value > EMA.Current.Value*exitTolerance)
                 {
                     limit = Security.Low;
                 }

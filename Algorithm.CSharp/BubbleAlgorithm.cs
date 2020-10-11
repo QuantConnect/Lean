@@ -187,7 +187,7 @@ namespace QuantConnect.Algorithm.CSharp
         public void Buy(string symbol)
         {
             var s = Securities[symbol].Holdings;
-            if (_macdDic[symbol] > 0m)
+            if (_macdDic[symbol].Current.Value > 0m)
             {
                 SetHoldings(symbol, 1);
 
@@ -203,7 +203,7 @@ namespace QuantConnect.Algorithm.CSharp
         public void Sell(string symbol)
         {
             var s = Securities[symbol].Holdings;
-            if (s.Quantity > 0 && _macdDic[symbol] < 0m)
+            if (s.Quantity > 0 && _macdDic[symbol].Current.Value < 0m)
             {
                 Liquidate(symbol);
 

@@ -126,7 +126,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     //Reset invested boolean
                     _invested = true;
 
-                    if (_positionWindow[0] > _sma)
+                    if (_positionWindow[0] > _sma.Current.Value)
                     {
                         return Insight.Group(new[]
                         {
@@ -180,8 +180,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             /// <returns></returns>
             private bool CrossedMean()
             {
-                return (_positionWindow[0] >= _sma && _positionWindow[1] < _sma)
-                    || (_positionWindow[1] >= _sma && _positionWindow[0] < _sma);
+                return (_positionWindow[0] >= _sma.Current.Value && _positionWindow[1] < _sma.Current.Value)
+                    || (_positionWindow[1] >= _sma.Current.Value && _positionWindow[0] < _sma.Current.Value);
             }
         }
     }

@@ -107,7 +107,7 @@ namespace QuantConnect.Indicators
             var PF = new IndicatorDataPoint(input.Time, ComputeStoch(_D.Current.Value, _maximumD.Current.Value, _minimumD.Current.Value));
             _PF.Update(PF);
 
-            return _PFF;
+            return _PFF.Current.Value;
         }
 
         /// <summary>

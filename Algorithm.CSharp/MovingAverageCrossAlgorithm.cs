@@ -86,7 +86,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (holdings <= 0)
             {
                 // if the fast is greater than the slow, we'll go long
-                if (_fast > _slow * (1 + tolerance))
+                if (_fast.Current.Value > _slow.Current.Value * (1 + tolerance))
                 {
                     Log("BUY  >> " + Securities[_symbol].Price);
                     SetHoldings(_symbol, 1.0);
@@ -95,7 +95,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // we only want to liquidate if we're currently long
             // if the fast is less than the slow we'll liquidate our long
-            if (holdings > 0 && _fast < _slow)
+            if (holdings > 0 && _fast.Current.Value < _slow.Current.Value)
             {
                 Log("SELL >> " + Securities[_symbol].Price);
                 Liquidate(_symbol);

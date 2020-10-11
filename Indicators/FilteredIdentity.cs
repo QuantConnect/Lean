@@ -43,7 +43,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => Samples > 0 && Current > 0;
+        public override bool IsReady => Samples > 0 && Current.Value > 0;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state

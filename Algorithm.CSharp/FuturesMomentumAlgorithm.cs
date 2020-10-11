@@ -44,8 +44,8 @@ namespace QuantConnect.Algorithm.CSharp
         private ExponentialMovingAverage _slow;
 
         public bool IsReady { get { return _fast.IsReady && _slow.IsReady; } }
-        public bool IsUpTrend { get { return IsReady && _fast > _slow * (1 + _tolerance); } }
-        public bool IsDownTrend { get { return IsReady && _fast < _slow * (1 + _tolerance); } }
+        public bool IsUpTrend { get { return IsReady && _fast.Current.Value > _slow.Current.Value * (1 + _tolerance); } }
+        public bool IsDownTrend { get { return IsReady && _fast.Current.Value < _slow.Current.Value * (1 + _tolerance); } }
 
         public override void Initialize()
         {

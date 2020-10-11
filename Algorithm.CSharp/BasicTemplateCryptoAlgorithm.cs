@@ -156,7 +156,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // To include any initial holdings, we read the LTC amount from the cashbook
                 // instead of using Portfolio["LTCUSD"].Quantity
 
-                if (_fast > _slow)
+                if (_fast.Current.Value > _slow.Current.Value)
                 {
                     if (Portfolio.CashBook["LTC"].Amount == 0)
                     {

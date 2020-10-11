@@ -54,7 +54,7 @@ namespace QuantConnect.Indicators
         {
             var value = base.ComputeNextValue(input);
 
-            return Slow != 0 ? 100 * value / Slow : 0m;
+            return Slow != 0 ? 100 * value / Slow.Current.Value : 0m;
         }
     }
 }

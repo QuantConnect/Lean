@@ -69,21 +69,21 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     var insightPeriod = _resolution.ToTimeSpan().Multiply(_predictionInterval);
                     if (symbolData.FastIsOverSlow)
                     {
-                        if (symbolData.Slow > symbolData.Fast)
+                        if (symbolData.Slow.Current.Value > symbolData.Fast.Current.Value)
                         {
                             insights.Add(Insight.Price(symbolData.Symbol, insightPeriod, InsightDirection.Down));
                         }
                     }
                     else if (symbolData.SlowIsOverFast)
                     {
-                        if (symbolData.Fast > symbolData.Slow)
+                        if (symbolData.Fast.Current.Value > symbolData.Slow.Current.Value)
                         {
                             insights.Add(Insight.Price(symbolData.Symbol, insightPeriod, InsightDirection.Up));
                         }
                     }
                 }
 
-                symbolData.FastIsOverSlow = symbolData.Fast > symbolData.Slow;
+                symbolData.FastIsOverSlow = symbolData.Fast.Current.Value > symbolData.Slow.Current.Value;
             }
 
             return insights;

@@ -31,11 +31,11 @@ namespace QuantConnect.Algorithm.CSharp
     {
         // we'll use this to tell us when the month has ended
         private DateTime _lastRotationTime = DateTime.MinValue;
-        private TimeSpan _rotationInterval = TimeSpan.FromDays(30);
+        private readonly TimeSpan _rotationInterval = TimeSpan.FromDays(30);
         private bool _first = true;
 
         // these are the growth symbols we'll rotate through
-        List<string> _growthSymbols = new List<string>
+        private readonly List<string> _growthSymbols = new List<string>
         {
             "MDY", // US S&P mid cap 400
             "IEV", // iShares S&P europe 350
@@ -45,14 +45,14 @@ namespace QuantConnect.Algorithm.CSharp
         };
 
         // these are the safety symbols we go to when things are looking bad for growth
-        List<string> _safetySymbols = new List<string>
+        private readonly List<string> _safetySymbols = new List<string>
         {
             "EDV", // Vangaurd TSY 25yr+
             "SHY"  // Barclays Low Duration TSY
         };
 
         // we'll hold some computed data in these guys
-        List<SymbolData> _symbolData = new List<SymbolData>();
+        private readonly List<SymbolData> _symbolData = new List<SymbolData>();
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -116,7 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
                             Log("PREBUY>>LIQUIDATE>>");
                             Liquidate();
                         }
-                        Log($">>BUY>>{bestGrowth.Symbol}@{(100 * bestGrowth.OneMonthPerformance).ToStringInvariant("00.00")}");
+                        Log($">>BUY>>{bestGrowth.Symbol}@{(100 * bestGrowth.OneMonthPerformance.Current.Value).ToStringInvariant("00.00")}");
                         var qty = Portfolio.MarginRemaining / Securities[bestGrowth.Symbol].Close;
                         MarketOrder(bestGrowth.Symbol, (int) qty);
                     }
@@ -150,7 +150,7 @@ namespace QuantConnect.Algorithm.CSharp
                 decimal weight1 = 100;
                 decimal weight2 = 75;
 
-                return (weight1 * OneMonthPerformance + weight2 * ThreeMonthPerformance) / (weight1 + weight2);
+                return (weight1 * OneMonthPerformance.Current.Value + weight2 * ThreeMonthPerformance.Current.Value) / (weight1 + weight2);
             }
         }
     }

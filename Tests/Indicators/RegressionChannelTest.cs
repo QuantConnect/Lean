@@ -46,10 +46,10 @@ namespace QuantConnect.Tests.Indicators
             }
             Assert.AreEqual(expected, actual);
 
-            var expectedUpper = indicator.Current + stdDev.Current * 2;
-            Assert.AreEqual(expectedUpper, (decimal)indicator.UpperChannel);
-            var expectedLower = indicator.Current - stdDev.Current * 2;
-            Assert.AreEqual(expectedLower, (decimal)indicator.LowerChannel);
+            var expectedUpper = indicator.Current.Value + stdDev.Current.Value * 2;
+            Assert.AreEqual(expectedUpper, indicator.UpperChannel.Current.Value);
+            var expectedLower = indicator.Current.Value - stdDev.Current.Value * 2;
+            Assert.AreEqual(expectedLower, indicator.LowerChannel.Current.Value);
         }
 
         [Test]

@@ -104,24 +104,24 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (SPY_Close_EMA10 > SPY_Close && SPY_Close_EMA10 > SPY_Close_EMA50)
+            if (SPY_Close_EMA10.Current.Value > SPY_Close.Current.Value && SPY_Close_EMA10.Current.Value > SPY_Close_EMA50.Current.Value)
             {
                 SetHoldings(SPY, 1m);
             }
-            else if (SPY_Close_EMA10 < SPY_Close && SPY_Close_EMA10 < SPY_Close_EMA50)
+            else if (SPY_Close_EMA10.Current.Value < SPY_Close.Current.Value && SPY_Close_EMA10.Current.Value < SPY_Close_EMA50.Current.Value)
             {
                 SetHoldings(SPY, -1m);
             }
             else if (Portfolio[SPY].IsLong)
             {
-                if (SPY_Close_EMA10 < SPY_Close_EMA50)
+                if (SPY_Close_EMA10.Current.Value < SPY_Close_EMA50.Current.Value)
                 {
                     Liquidate(SPY);
                 }
             }
             else if (Portfolio[SPY].IsShort)
             {
-                if (SPY_Close_EMA10 > SPY_Close_EMA50)
+                if (SPY_Close_EMA10.Current.Value > SPY_Close_EMA50.Current.Value)
                 {
                     Liquidate(SPY);
                 }

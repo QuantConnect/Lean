@@ -153,8 +153,8 @@ namespace QuantConnect.Algorithm.CSharp
             private SimpleMovingAverage SMA;
             private StandardDeviation STD;
             public Symbol Symbol { get; private set; }
-            public decimal Return { get { return SMA.Current; }  }
-            public decimal Risk { get { return STD.Current; } }
+            public decimal Return { get { return SMA.Current.Value; }  }
+            public decimal Risk { get { return STD.Current.Value; } }
             public decimal Weight { get; private set; }
 
             public SymbolData(Symbol symbol, IEnumerable<BaseData> history)

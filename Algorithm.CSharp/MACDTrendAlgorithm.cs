@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var holding = Portfolio[_symbol];
 
-            var signalDeltaPercent = (_macd - _macd.Signal)/_macd.Fast;
+            var signalDeltaPercent = (_macd.Current.Value - _macd.Signal.Current.Value)/_macd.Fast.Current.Value;
             var tolerance = 0.0025m;
 
             // if our macd is greater than our signal, then let's go long
