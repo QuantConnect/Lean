@@ -415,22 +415,16 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void AddOptionWithUnderlyingFutureAddsUniverse()
+        public void AddFutureOptionAddsUniverseSelectionModel()
         {
-            // Adds an option containing a Future as its underlying Symbol.
-            // This is an essential step in enabling custom derivatives
-            // based on any asset class provided to Option. This test
-            // checks the ability to create Future Options.
             var algo = new QCAlgorithm();
             algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
 
             var underlying = algo.AddFuture("ES", Resolution.Minute, Market.CME);
             underlying.SetFilter(0, 365);
 
-            var futureOption = algo.AddOption(underlying.Symbol, Resolution.Minute);
-
-            Assert.IsNotNull(algo.UniverseManager.OfType<OptionChainUniverse>().SingleOrDefault(x => x.ContainsMember(futureOption.Symbol)));
-            Assert.IsNotNull(algo.UniverseManager.OfType<FuturesChainUniverse>().SingleOrDefault(x => x.ContainsMember(underlying.Symbol)));
+            algo.AddFutureOption(underlying.Symbol, _ => _);
+            Assert.IsTrue(algo.UniverseSelection is OptionChainedUniverseSelectionModel);
         }
 
         [TestCase("AAPL", typeof(TiingoNews), true)]

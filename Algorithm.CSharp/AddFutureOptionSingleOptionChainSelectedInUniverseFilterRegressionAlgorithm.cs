@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 return contracts;
-            }, Resolution.Minute, Market.CME);
+            });
         }
 
         public override void OnData(Slice data)
