@@ -50,6 +50,7 @@ class MaximumDrawdownPercentPortfolio(RiskManagementModel):
 
         # Update trailing high value if in trailing mode
         if self.isTrailing and self.portfolioHigh < currentValue:
+            self.initialised = False # reset the trailing high value for restart investing on next rebalcing period
             self.portfolioHigh = currentValue
             return []   # return if new high reached
 
