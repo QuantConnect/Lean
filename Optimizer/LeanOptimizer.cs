@@ -53,20 +53,30 @@ namespace QuantConnect.Optimizer
                     : new Minimization(),
                 NodePacket.OptimizationParameters);
 
-            Strategy.NewParameterSet += async (s, e) =>
+            Strategy.NewParameterSet += (s, e) =>
             {
                 var paramSet = (e as OptimizationEventArgs)?.ParameterSet;
                 if (paramSet == null) return;
 
-                var backtestId = await EnqueueComputing(paramSet);
+                lock (ParameterSetForBacktest)
+                {
+                    try
+                    {
+                        var backtestId = RunLean(paramSet);
 
-                if (!string.IsNullOrEmpty(backtestId))
-                {
-                    ParameterSetForBacktest.TryAdd(backtestId, paramSet);
-                }
-                else
-                {
-                    Log.Error($"Optimization compute job could not be placed into the queue");
+                        if (!string.IsNullOrEmpty(backtestId))
+                        {
+                            ParameterSetForBacktest.TryAdd(backtestId, paramSet);
+                        }
+                        else
+                        {
+                            Log.Error($"Optimization compute job could not be placed into the queue");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error($"OptimizationStrategy.NewParameterSet(): Error encountered while placing optimization message into the queue. Error: {ex.Message}");
+                    }
                 }
             };
         }
@@ -80,7 +90,7 @@ namespace QuantConnect.Optimizer
 
         public virtual void Abort() { }
 
-        protected abstract Task<string> RunLean(ParameterSet parameterSet);
+        protected abstract string RunLean(ParameterSet parameterSet);
 
         protected virtual void NewResult(string jsonString, string backtestId)
         {
@@ -104,13 +114,6 @@ namespace QuantConnect.Optimizer
             {
                 OnComplete();
             }
-        }
-
-        private async Task<string> EnqueueComputing(ParameterSet parameterSet)
-        {
-            var result = await RunLean(parameterSet);
-
-            return await Task.FromResult(result);
         }
     }
 }

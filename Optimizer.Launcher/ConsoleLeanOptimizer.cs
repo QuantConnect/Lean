@@ -41,7 +41,7 @@ namespace QuantConnect.Optimizer.Launcher
             base.Abort();
         }
 
-        protected override Task<string> RunLean(ParameterSet parameterSet)
+        protected override string RunLean(ParameterSet parameterSet)
         {
             string myPath = System.Reflection.Assembly.GetEntryAssembly().Location;
             string myDir = System.IO.Path.GetDirectoryName(myPath);
@@ -75,7 +75,7 @@ namespace QuantConnect.Optimizer.Launcher
 
             process.Start();
 
-            return Task.FromResult(guid);
+            return guid;
         }
     }
 }
