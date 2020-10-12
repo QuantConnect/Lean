@@ -20,6 +20,7 @@ using Newtonsoft.Json;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
+using QuantConnect.Algorithm.Selection;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -29,6 +30,7 @@ using QuantConnect.Data.Custom;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Data.Custom.TradingEconomics;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -391,6 +393,44 @@ namespace QuantConnect.Tests.Algorithm
                     Assert.AreEqual(asset.Symbol.Value, customData.Symbol.Value.Split('.').First());
                 }
             }
+        }
+
+        [Test]
+        public void AddOptionWithUnderlyingFuture()
+        {
+            // Adds an option containing a Future as its underlying Symbol.
+            // This is an essential step in enabling custom derivatives
+            // based on any asset class provided to Option. This test
+            // checks the ability to create Future Options.
+            var algo = new QCAlgorithm();
+            algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
+
+            var underlying = algo.AddFuture("ES", Resolution.Minute, Market.CME);
+            underlying.SetFilter(0, 365);
+
+            var futureOption = algo.AddOption(underlying.Symbol, Resolution.Minute);
+
+            Assert.IsTrue(futureOption.Symbol.HasUnderlying);
+            Assert.AreEqual(underlying.Symbol, futureOption.Symbol.Underlying);
+        }
+
+        [Test]
+        public void AddOptionWithUnderlyingFutureAddsUniverse()
+        {
+            // Adds an option containing a Future as its underlying Symbol.
+            // This is an essential step in enabling custom derivatives
+            // based on any asset class provided to Option. This test
+            // checks the ability to create Future Options.
+            var algo = new QCAlgorithm();
+            algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
+
+            var underlying = algo.AddFuture("ES", Resolution.Minute, Market.CME);
+            underlying.SetFilter(0, 365);
+
+            var futureOption = algo.AddOption(underlying.Symbol, Resolution.Minute);
+
+            Assert.IsNotNull(algo.UniverseManager.OfType<OptionChainUniverse>().SingleOrDefault(x => x.ContainsMember(futureOption.Symbol)));
+            Assert.IsNotNull(algo.UniverseManager.OfType<FuturesChainUniverse>().SingleOrDefault(x => x.ContainsMember(underlying.Symbol)));
         }
 
         [TestCase("AAPL", typeof(TiingoNews), true)]

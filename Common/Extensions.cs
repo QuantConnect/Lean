@@ -2510,8 +2510,20 @@ namespace QuantConnect
             var underlying = symbol.Underlying;
             if (!symbol.IsCanonical())
             {
+                // The underlying can be a non-equity Symbol, so we must explicitly
+                // initialize the Symbol using the CreateOption(Symbol, ...) overload
+                // to ensure that the underlying SecurityType is preserved and not
+                // written as SecurityType.Equity.
                 var alias = $"?{underlying.Value}";
-                symbol = Symbol.Create(underlying.Value, SecurityType.Option, market, alias);
+                symbol = Symbol.CreateOption(
+                    underlying,
+                    market,
+                    default(OptionStyle),
+                    default(OptionRight),
+                    0m,
+                    SecurityIdentifier.DefaultDate,
+                    alias
+                );
             }
 
             // resolve defaults if not specified

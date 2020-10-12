@@ -59,8 +59,18 @@ namespace QuantConnect.Algorithm.Selection
                 // the universe we were watching changed, this will trigger a call to CreateUniverses
                 _nextRefreshTimeUtc = DateTime.MinValue;
 
+                // We must create the new option Symbol using the CreateOption(Symbol, ...) overload.
+                // Otherwise, we'll end up loading equity data for the selected Symbol, which won't
+                // work whenever we're loading options data for any non-equity underlying asset class.
                 _currentSymbols = ((Universe.SelectionEventArgs)args).CurrentSelection
-                    .Select(symbol => Symbol.Create(symbol.Value, SecurityType.Option, symbol.ID.Market, $"?{symbol.Value}"))
+                    .Select(symbol => Symbol.CreateOption(
+                        symbol,
+                        symbol.ID.Market,
+                        default(OptionStyle),
+                        default(OptionRight),
+                        0m,
+                        SecurityIdentifier.DefaultDate)
+                    )
                     .ToList();
             };
         }

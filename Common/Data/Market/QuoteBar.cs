@@ -552,6 +552,7 @@ namespace QuantConnect.Data.Market
         /// <returns><see cref="QuoteBar"/> with the bid/ask prices set appropriately</returns>
         private QuoteBar ParseQuote(SubscriptionDataConfig config, DateTime date, StreamReader streamReader, bool useScaleFactor)
         {
+            // Non-equity asset classes will not use scaling, including options that have a non-equity underlying asset class.
             var scaleFactor = useScaleFactor
                               ? _scaleFactor
                               : 1;

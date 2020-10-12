@@ -1475,8 +1475,9 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice.</param>
         /// <param name="leverage">leverage for this security</param>
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
-        /// <returns></returns>
-        public Security AddSecurity(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage, bool extendedMarketHours = false)
+        /// <param name="optionUniverseFilter">User-defined function used to filter a universe of options. Only applicable to options securities</param>
+        /// <returns>The new Security that was added to the algorithm</returns>
+        public Security AddSecurity(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage, bool extendedMarketHours = false, Func<OptionFilterUniverse, OptionFilterUniverse> optionUniverseFilter = null)
         {
             var isCanonical = symbol.IsCanonical();
 
@@ -1510,9 +1511,14 @@ namespace QuantConnect.Algorithm
                     }
                     else if (symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType == SecurityType.Future)
                     {
+                        // We need to load the future option chain and provide that universe to the option filter universe.
+                        // The option filter universe will subscribe to any changes in the future chain universe,
+                        // ensuring that we load the option chain for every contract found in the future chain.
+
                         var future = (Future)Securities[symbol.Underlying];
                         if (!UniverseManager.TryGetValue(future.Symbol, out universe))
                         {
+                            // The universe might be already added, but not registered with the UniverseManager.
                             universe = _pendingUniverseAdditions.SingleOrDefault(u => u.Configuration.Symbol == future.Symbol);
                             if (universe == null)
                             {
@@ -1521,7 +1527,8 @@ namespace QuantConnect.Algorithm
                             }
                         }
 
-                        AddUniverseOptions(universe, _ => _);
+                        // Allow all option contracts through without filtering if we're not provided a filter.
+                        AddUniverseOptions(universe, optionUniverseFilter ?? (_ => _));
                     }
                     else
                     {
@@ -1563,27 +1570,42 @@ namespace QuantConnect.Algorithm
         /// <returns>The new <see cref="Option"/> security</returns>
         public Option AddOption(string underlying, Resolution? resolution = null, string market = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
         {
-            if (market == null)
-            {
-                if (!BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Option, out market))
-                {
-                    throw new KeyNotFoundException($"No default market set for security type: {SecurityType.Option}");
-                }
-            }
-
-            Symbol canonicalSymbol;
-            var alias = "?" + underlying;
-            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol) ||
-                canonicalSymbol.ID.Market != market ||
-                canonicalSymbol.SecurityType != SecurityType.Option)
-            {
-                canonicalSymbol = QuantConnect.Symbol.Create(underlying, SecurityType.Option, market, alias);
-            }
-
-            return (Option)AddSecurity(canonicalSymbol, resolution, fillDataForward, leverage);
+            var underlyingSymbol = QuantConnect.Symbol.Create(underlying, SecurityType.Equity, market);
+            return AddOption(underlyingSymbol, resolution, market, fillDataForward, leverage);
         }
 
+        /// <summary>
+        /// Creates and adds a new <see cref="Option"/> security to the algorithm.
+        /// This method can be used to add options with non-equity asset classes
+        /// to the algorithm (e.g. Future Options).
+        /// </summary>
+        /// <param name="underlying">Underlying asset Symbol to use as the option's underlying</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="market">The option's market, <seealso cref="Market"/>. Default value is null, but will be resolved using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
+        /// <param name="fillDataForward">If true, data will be provided to the algorithm every Second, Minute, Hour, or Day, while the asset is open and depending on the Resolution this option was configured to use.</param>
+        /// <param name="leverage">The requested leverage for the </param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFoundException"></exception>
         public Option AddOption(Symbol underlying, Resolution? resolution = null, string market = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
+        {
+            return AddOption(underlying, null, resolution, market, fillDataForward, leverage);
+        }
+
+        /// <summary>
+        /// Creates and adds a new <see cref="Option"/> security to the algorithm with a filter used to select option
+        /// contracts we accept into our algorithm.
+        /// This method can be used to add options with non-equity asset classes
+        /// to the algorithm (e.g. Future Options).
+        /// </summary>
+        /// <param name="underlying">Underlying asset Symbol to use as the option's underlying</param>
+        /// <param name="optionUniverseFilter">Filter to apply to the universe of option contracts</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="market">The option's market, <seealso cref="Market"/>. Default value is null, but will be resolved using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
+        /// <param name="fillDataForward">If true, data will be provided to the algorithm every Second, Minute, Hour, or Day, while the asset is open and depending on the Resolution this option was configured to use.</param>
+        /// <param name="leverage">The requested leverage for the </param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFoundException"></exception>
+        public Option AddOption(Symbol underlying, Func<OptionFilterUniverse, OptionFilterUniverse> optionUniverseFilter, Resolution? resolution = null, string market = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
         {
             if (market == null)
             {
@@ -1609,7 +1631,7 @@ namespace QuantConnect.Algorithm
                     alias);
             }
 
-            return (Option)AddSecurity(canonicalSymbol, resolution, fillDataForward, leverage);
+            return (Option)AddSecurity(canonicalSymbol, resolution, fillDataForward, leverage, optionUniverseFilter: optionUniverseFilter);
         }
 
         /// <summary>
@@ -1657,14 +1679,45 @@ namespace QuantConnect.Algorithm
             return (Future)AddSecurity(symbol, resolution, fillDataForward, leverage);
         }
 
+        /// <summary>
+        /// Creates and adds a new Future Option contract to the algorithm.
+        /// </summary>
+        /// <param name="symbol">The <see cref="Future"/> canonical symbol (i.e. Symbol returned from <see cref="AddFuture"/>)</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/><</param>
+        /// <param name="market">The futures market, <seealso cref="Market"/>. Default is value null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/><</param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/><</param>
+        /// <returns>The new <see cref="Option"/> security, containing a <see cref="Future"/> as its underlying.</returns>
+        /// <exception cref="ArgumentException">The symbol provided is not canonical.</exception>
         public Option AddFutureOption(Symbol symbol, Resolution? resolution = null, string market = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
         {
             if (!symbol.IsCanonical())
             {
-                throw new ArgumentException("Symbol must be non-canonical");
+                throw new ArgumentException("Symbol provided must be canonical (i.e. the Symbol returned from AddFuture(), not AddFutureContract().");
             }
 
-            return AddOption(symbol, resolution, market, fillDataForward, leverage);
+            return AddFutureOption(symbol, null, resolution, market, fillDataForward, leverage);
+        }
+
+        /// <summary>
+        /// Creates and adds a new Future Option contract to the algorithm.
+        /// </summary>
+        /// <param name="symbol">The <see cref="Future"/> canonical symbol (i.e. Symbol returned from <see cref="AddFuture"/>)</param>
+        /// <param name="optionFilter">Filter to apply to the universe of option contracts</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/><</param>
+        /// <param name="market">The futures market, <seealso cref="Market"/>. Default is value null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/><</param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/><</param>
+        /// <returns>The new <see cref="Option"/> security, containing a <see cref="Future"/> as its underlying.</returns>
+        /// <exception cref="ArgumentException">The symbol provided is not canonical.</exception>
+        public Option AddFutureOption(Symbol symbol, Func<OptionFilterUniverse, OptionFilterUniverse> optionFilter = null, Resolution? resolution = null, string market = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
+        {
+            if (!symbol.IsCanonical())
+            {
+                throw new ArgumentException("Symbol provided must be canonical (i.e. the Symbol returned from AddFuture(), not AddFutureContract().");
+            }
+
+            return AddOption(symbol, optionFilter, resolution, market, fillDataForward, leverage);
         }
 
         /// <summary>
@@ -1679,7 +1732,6 @@ namespace QuantConnect.Algorithm
         {
             var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward, dataNormalizationMode:DataNormalizationMode.Raw);
             var option = (Option)Securities.CreateSecurity(symbol, configs, leverage);
-
             // add underlying if not present
             var underlying = option.Symbol.Underlying;
             Security equity;

@@ -426,12 +426,7 @@ namespace QuantConnect.Util
 
                 case SecurityType.Option:
                     // options uses the underlying symbol for pathing
-                    var underlyingSymbol = symbol.Underlying.Value;
-                    if (symbol.Underlying.SecurityType != SecurityType.Equity)
-                    {
-                        underlyingSymbol = symbol.Underlying.ID.Symbol;
-                    }
-                    return !isHourOrDaily ? Path.Combine(directory, underlyingSymbol.ToLowerInvariant()) : directory;
+                    return !isHourOrDaily ? Path.Combine(directory, symbol.Underlying.Value.ToLowerInvariant()) : directory;
 
                 case SecurityType.Future:
                     return !isHourOrDaily ? Path.Combine(directory, symbol.ID.Symbol.ToLowerInvariant()) : directory;
@@ -518,9 +513,7 @@ namespace QuantConnect.Util
 
                     return string.Join("_",
                         formattedDate,
-                        symbol.Underlying.SecurityType == SecurityType.Equity ?
-                            symbol.Underlying.Value.ToLowerInvariant() :
-                            symbol.Underlying.ID.Symbol.ToLowerInvariant(),
+                        symbol.Underlying.Value.ToLowerInvariant(),
                         resolution.ResolutionToLower(),
                         tickType.TickTypeToLower(),
                         symbol.ID.OptionStyle.ToLower(),

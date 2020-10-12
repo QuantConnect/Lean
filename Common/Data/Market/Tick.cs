@@ -714,6 +714,12 @@ namespace QuantConnect.Data.Market
             }
         }
 
+        /// <summary>
+        /// Gets the scaling factor according to the <see cref="SecurityType"/> of the <see cref="Symbol"/> provided.
+        /// Non-equity data will not be scaled, including options with an underlying non-equity asset class.
+        /// </summary>
+        /// <param name="symbol">Symbol to get scaling factor for</param>
+        /// <returns>Scaling factor</returns>
         private static decimal GetScaleFactor(Symbol symbol)
         {
             return symbol.SecurityType == SecurityType.Equity ||

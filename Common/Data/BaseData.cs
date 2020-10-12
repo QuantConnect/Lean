@@ -198,6 +198,8 @@ namespace QuantConnect.Data
         /// <returns>True indicates mapping should be used</returns>
         public virtual bool RequiresMapping()
         {
+            // Excludes any non-equity options from being classified as "mappable". This is to enable support
+            // for arbitrary asset class options, which will hopefully prevent unwanted behavior in the future.
             return Symbol.SecurityType == SecurityType.Equity ||
                    (Symbol.SecurityType == SecurityType.Option && Symbol.Underlying.SecurityType == SecurityType.Equity);
         }

@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.IO;
+using System.Text;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -116,6 +118,90 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual("NASDAQ", tick.Exchange);
             Assert.AreEqual("00000001", tick.SaleCondition);
             Assert.IsFalse(tick.Suspicious);
+        }
+
+        [Test]
+        public void OptionWithUnderlyingEquityScaled()
+        {
+            var factory = new Tick();
+            var tickLine = "40560000,10000,10,NYSE,00000001,0";
+            var underlying = Symbol.Create("SPY", SecurityType.Equity, QuantConnect.Market.USA);
+            var optionSymbol = Symbol.CreateOption(
+                underlying,
+                QuantConnect.Market.USA,
+                OptionStyle.American,
+                OptionRight.Put,
+                4200m,
+                SecurityIdentifier.DefaultDate);
+
+            var config = new SubscriptionDataConfig(
+                typeof(Tick),
+                optionSymbol,
+                Resolution.Tick,
+                TimeZones.Chicago,
+                TimeZones.Chicago,
+                true,
+                false,
+                false,
+                false,
+                TickType.Trade,
+                true,
+                DataNormalizationMode.Raw);
+
+            var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(tickLine)));
+
+            var tickFromLine = (Tick)factory.Reader(config, tickLine, new DateTime(2020, 9, 22), false);
+            var tickFromStream = (Tick)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
+
+            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 16, 0), tickFromLine.Time);
+            Assert.AreEqual(1m, tickFromLine.Price);
+            Assert.AreEqual(10, tickFromLine.Quantity);
+
+            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 16, 0), tickFromStream.Time);
+            Assert.AreEqual(1m, tickFromStream.Price);
+            Assert.AreEqual(10, tickFromStream.Quantity);
+        }
+
+        [Test]
+        public void OptionWithUnderlyingFutureNotScaled()
+        {
+            var factory = new Tick();
+            var tickLine = "40560000,10000,10,CME,00000001,0";
+            var underlying = Symbol.CreateFuture("ES", QuantConnect.Market.CME, new DateTime(2021, 3, 19));
+            var optionSymbol = Symbol.CreateOption(
+                underlying,
+                QuantConnect.Market.CME,
+                OptionStyle.American,
+                OptionRight.Put,
+                4200m,
+                SecurityIdentifier.DefaultDate);
+
+            var config = new SubscriptionDataConfig(
+                typeof(Tick),
+                optionSymbol,
+                Resolution.Tick,
+                TimeZones.Chicago,
+                TimeZones.Chicago,
+                true,
+                false,
+                false,
+                false,
+                TickType.Trade,
+                true,
+                DataNormalizationMode.Raw);
+
+            var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(tickLine)));
+
+            var tickFromLine = (Tick)factory.Reader(config, tickLine, new DateTime(2020, 9, 22), false);
+            var tickFromStream = (Tick)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
+
+            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 16, 0), tickFromLine.Time);
+            Assert.AreEqual(10000m, tickFromLine.Price);
+            Assert.AreEqual(10, tickFromLine.Quantity);
+
+            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 16, 0), tickFromStream.Time);
+            Assert.AreEqual(10000m, tickFromStream.Price);
+            Assert.AreEqual(10, tickFromStream.Quantity);
         }
     }
 }
