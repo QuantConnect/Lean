@@ -40,7 +40,7 @@ namespace QuantConnect.Optimizer
         {
             lock (_locker)
             {
-                if (result?.Id != Guid.Empty)
+                if (result?.Id > 0)
                 {
                     if (Solution == null || Extremum.Better(Solution.Profit, result.Profit))
                     {

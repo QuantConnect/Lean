@@ -49,9 +49,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     var suggestion = enumerator.Current;
 
                     Assert.IsNotNull(suggestion);
-                    Assert.IsTrue(suggestion.Keys.All(s => set.Any(arg => arg.Name == s)));
-                    Assert.AreEqual(1, suggestion.Keys.Count());
-                    Assert.AreEqual(v, suggestion["ema-fast"]);
+                    Assert.IsTrue(suggestion.Value.All(s => set.Any(arg => arg.Name == s.Key)));
+                    Assert.AreEqual(1, suggestion.Value.Count);
+                    Assert.AreEqual(v.ToStringInvariant(), suggestion.Value["ema-fast"]);
                 }
             }
 
@@ -81,10 +81,10 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                         var suggestion = enumerator.Current;
 
                         Assert.IsNotNull(suggestion);
-                        Assert.IsTrue(suggestion.Keys.All(s => args.Any(arg => arg.Name == s)));
-                        Assert.AreEqual(2, suggestion.Keys.Count());
-                        Assert.AreEqual(fast, suggestion["ema-fast"]);
-                        Assert.AreEqual(slow, suggestion["ema-slow"]);
+                        Assert.IsTrue(suggestion.Value.All(s => args.Any(arg => arg.Name == s.Key)));
+                        Assert.AreEqual(2, suggestion.Value.Count);
+                        Assert.AreEqual(fast.ToStringInvariant(), suggestion.Value["ema-fast"]);
+                        Assert.AreEqual(slow.ToStringInvariant(), suggestion.Value["ema-slow"]);
                     }
                 }
             }
@@ -125,11 +125,11 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                             var suggestion = enumerator.Current;
 
                             Assert.IsNotNull(suggestion);
-                            Assert.IsTrue(suggestion.Keys.All(s => args.Any(arg => arg.Name == s)));
-                            Assert.AreEqual(3, suggestion.Keys.Count());
-                            Assert.AreEqual(fast, suggestion["ema-fast"]);
-                            Assert.AreEqual(slow, suggestion["ema-slow"]);
-                            Assert.AreEqual(custom, suggestion["ema-custom"]);
+                            Assert.IsTrue(suggestion.Value.All(s => args.Any(arg => arg.Name == s.Key)));
+                            Assert.AreEqual(3, suggestion.Value.Count());
+                            Assert.AreEqual(fast.ToStringInvariant(), suggestion.Value["ema-fast"]);
+                            Assert.AreEqual(slow.ToStringInvariant(), suggestion.Value["ema-slow"]);
+                            Assert.AreEqual(custom.ToStringInvariant(), suggestion.Value["ema-custom"]);
                         }
                     }
                 }

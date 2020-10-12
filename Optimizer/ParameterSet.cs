@@ -13,26 +13,21 @@
  * limitations under the License.
 */
 
+using QuantConnect.Util;
 using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer
 {
     public class ParameterSet
     {
-        private Dictionary<string, decimal> _arguments;
+        public int Id { get; }
 
-        public IEnumerable<string> Keys => _arguments.Keys;
+        public IReadOnlyDictionary<string, string> Value;
 
-        public ParameterSet(Dictionary<string, decimal> arguments)
+        public ParameterSet(int id, Dictionary<string, string> arguments)
         {
-            _arguments = arguments;
+            Id = id;
+            Value = arguments.ToReadOnlyDictionary();
         }
-
-        public bool TryGetValue(string name, out decimal value)
-        {
-            return _arguments.TryGetValue(name, out value);
-        }
-
-        public decimal this[string s] => _arguments[s];
     }
 }

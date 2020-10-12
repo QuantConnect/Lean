@@ -24,9 +24,12 @@ namespace QuantConnect.Optimizer
     {
         public IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args)
         {
+            int i = 0;
             foreach (var step in Recursive(seed, args))
             {
-                yield return new ParameterSet(step);
+                yield return new ParameterSet(
+                    ++i,
+                    step.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToStringInvariant()));
             }
         }
 
