@@ -85,11 +85,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "-0.500%"},
-            {"Drawdown", "0.000%"},
+            {"Average Loss", "-0.12%"},
+            {"Compounding Annual Return", "-9.062%"},
+            {"Drawdown", "0.100%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-0.006%"},
+            {"Net Profit", "-0.121%"},
             {"Sharpe Ratio", "0"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "100%"},
@@ -103,12 +103,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.22"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$6.41"},
-            {"Fitness Score", "0.248"},
+            {"Fitness Score", "0.249"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-82.815"},
-            {"Portfolio Turnover", "0.497"},
+            {"Return Over Maximum Drawdown", "-79.031"},
+            {"Portfolio Turnover", "0.498"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -122,7 +122,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "1213851303"}
+            {"OrderListHash", "-1760998125"}
         };
     }
 }

@@ -18,7 +18,6 @@ using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Indicators;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
@@ -672,9 +671,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(0, fill.OrderFee.Value.Amount);
         }
 
-        [TestCase(100, 105)]
-        [TestCase(-100, 100)]
-        public void StopMarketOrderDoesNotFillWithOpenInterest(decimal orderQuantity, decimal openInterest)
+        [TestCase(100, 105, 100)]
+        [TestCase(-100, 100, 102)]
+        public void StopMarketOrderDoesNotFillWithOpenInterest(decimal orderQuantity, decimal openInterest, decimal tickPrice)
         {
             var model = new EquityFillModel();
             var order = new StopMarketOrder(Symbols.SPY, orderQuantity, 101.5m, Noon);
@@ -686,7 +685,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var configProvider = new MockSubscriptionDataConfigProvider(configOpenInterest);
             configProvider.SubscriptionDataConfigs.Add(configTick);
 
-            security.SetMarketPrice(new Tick(Noon, Symbols.SPY, 101.5m, 101.5m, 101.5m));
+            security.SetMarketPrice(new Tick(Noon, Symbols.SPY, tickPrice, tickPrice, tickPrice));
 
             var fill = model.Fill(new FillModelParameters(
                 security,
@@ -727,45 +726,6 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.IsTrue(fill.Message.Contains("Warning: fill at stale price"));
         }
 
-        [TestCase(OrderDirection.Sell, 11)]
-        [TestCase(OrderDirection.Buy, 21)]
-        // uses the trade bar last close
-        [TestCase(OrderDirection.Hold, 291)]
-        public void PriceReturnsQuoteBarsIfPresent(OrderDirection orderDirection, decimal expected)
-        {
-            var time = new DateTime(2018, 9, 24, 9, 30, 0);
-            var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
-            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-
-            var configTradeBar = CreateTradeBarConfig(symbol);
-            var configQuoteBar = new SubscriptionDataConfig(configTradeBar, typeof(QuoteBar));
-            var security = CreateSecurity(configQuoteBar);
-            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-
-            var tradeBar = new TradeBar(time, symbol, 290m, 292m, 289m, 291m, 12345);
-            security.SetMarketPrice(tradeBar);
-
-            var quoteBar = new QuoteBar(time, symbol,
-                new Bar(10, 15, 5, 11),
-                100,
-                new Bar(20, 25, 15, 21),
-                100);
-            security.SetMarketPrice(quoteBar);
-
-            var configProvider = new MockSubscriptionDataConfigProvider(configQuoteBar);
-            configProvider.SubscriptionDataConfigs.Add(configTradeBar);
-
-            var testFillModel = new TestFillModel();
-            testFillModel.SetParameters(new FillModelParameters(security,
-                null,
-                configProvider,
-                TimeSpan.FromDays(1)));
-
-            //var result = testFillModel.GetPricesPublic(security, orderDirection);
-
-            //Assert.AreEqual(expected, result.Current);
-        }
-
         private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
@@ -782,14 +742,6 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache()
             );
-        }
-
-        private class TestFillModel : FillModel
-        {
-            public void SetParameters(FillModelParameters parameters)
-            {
-                Parameters = parameters;
-            }
         }
     }
 }
