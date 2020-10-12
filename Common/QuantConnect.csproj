@@ -370,6 +370,7 @@
     <Compile Include="IsolatorLimitResultProvider.cs" />
     <Compile Include="ITimeProvider.cs" />
     <Compile Include="Orders\Fees\AlphaStreamsFeeModel.cs" />
+    <Compile Include="Orders\Fees\ModifiedFillQuantityOrderFee.cs" />
     <Compile Include="Orders\Fills\Fill.cs" />
     <Compile Include="Orders\Fills\FillModelParameters.cs" />
     <Compile Include="Orders\Fees\FeeModel.cs" />
