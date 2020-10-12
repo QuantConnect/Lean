@@ -432,35 +432,8 @@
     <Compile Include="InteractiveBrokers\InteractiveBrokersSymbolMapper.cs" />
     <Compile Include="ISymbolMapper.cs" />
     <Compile Include="Oanda\OandaRestApiBase.cs" />
-    <Compile Include="Oanda\OandaRestApiV1.cs" />
     <Compile Include="Oanda\OandaRestApiV20.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Account.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Candle.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\AccountResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\AccountsResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\CandlesResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\InstrumentsResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\OrdersResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\PositionsResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\PostOrderResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\PricesResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\Requests\CandlesRequest.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\Requests\Request.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\Response.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\TradesResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Event.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Heartbeat.cs" />
-    <Compile Include="Oanda\RestV1\DataType\IHeartbeat.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Instrument.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Order.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Position.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Price.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\RateStreamResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\TradeData.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Transaction.cs" />
     <Compile Include="Oanda\Environment.cs" />
-    <Compile Include="Oanda\RestV1\Framework\Common.cs" />
-    <Compile Include="Oanda\RestV1\Framework\EndpointResolver.cs" />
     <Compile Include="Oanda\OandaBrokerage.cs" />
     <Compile Include="Oanda\OandaBrokerageFactory.cs" />
     <Compile Include="Oanda\OandaSymbolMapper.cs" />
@@ -667,9 +640,6 @@
     <Compile Include="Oanda\RestV20\Session\StreamSession.cs" />
     <Compile Include="Oanda\RestV20\Session\TransactionStreamSession.cs" />
     <Compile Include="Oanda\Server.cs" />
-    <Compile Include="Oanda\RestV1\Session\EventsSession.cs" />
-    <Compile Include="Oanda\RestV1\Session\RatesSession.cs" />
-    <Compile Include="Oanda\RestV1\Session\StreamSession.cs" />
     <Compile Include="Paper\PaperBrokerage.cs" />
     <Compile Include="Paper\PaperBrokerageFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -693,7 +663,6 @@
     <None Include="InteractiveBrokers\IB-symbol-map.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Oanda\RestV1\LICENSE.md" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
