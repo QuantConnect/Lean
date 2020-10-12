@@ -32,7 +32,7 @@ namespace QuantConnect.Optimizer.Launcher
         public override void OnComplete()
         {
             var result = Strategy.Solution;
-            var args = string.Join(",", result.ParameterSet.Arguments.Select(a => $"{a.Key}={a.Value}"));
+            var args = string.Join(",", result.ParameterSet.Keys.Select(a => $"{a}={result.ParameterSet[a]}"));
             Console.Write($"Result {result.Profit} was reached at point ({args})");
         }
 
@@ -47,7 +47,7 @@ namespace QuantConnect.Optimizer.Launcher
             string myDir = System.IO.Path.GetDirectoryName(myPath);
 
             string path = System.IO.Path.Combine(myDir, _workingDirectory, "QuantConnect.Lean.Launcher.exe");
-            string parametersString = string.Join(",", parameterSet.Arguments.Select(arg => $"{arg.Key}:{arg.Value}"));
+            string parametersString = string.Join(",", parameterSet.Keys.Select(arg => $"{arg}:{parameterSet[arg]}"));
 
             string guid = Guid.NewGuid().ToString();
             // Use ProcessStartInfo class

@@ -29,7 +29,7 @@ namespace QuantConnect.Optimizer
 {
     public abstract class LeanOptimizer
     {
-        private readonly ConcurrentDictionary<string, ParameterSet> _parameterSetForBacktest;
+        protected readonly ConcurrentDictionary<string, ParameterSet> ParameterSetForBacktest;
 
         protected IOptimizationStrategy Strategy;
         protected OptimizationNodePacket NodePacket;
@@ -44,7 +44,7 @@ namespace QuantConnect.Optimizer
             NodePacket = nodePacket;
             Strategy = Composer.Instance.GetExportedValueByTypeName<IOptimizationStrategy>(NodePacket.OptimizationStrategy);
 
-            _parameterSetForBacktest = new ConcurrentDictionary<string, ParameterSet>();
+            ParameterSetForBacktest = new ConcurrentDictionary<string, ParameterSet>();
 
             Strategy.Initialize(
                 Composer.Instance.GetExportedValueByTypeName<IOptimizationParameterSetGenerator>(NodePacket.ParameterSetGenerator),
@@ -62,19 +62,21 @@ namespace QuantConnect.Optimizer
 
                 if (!string.IsNullOrEmpty(backtestId))
                 {
-                    _parameterSetForBacktest.TryAdd(backtestId, paramSet);
+                    ParameterSetForBacktest.TryAdd(backtestId, paramSet);
                 }
                 else
                 {
                     Log.Error($"Optimization compute job could not be placed into the queue");
                 }
             };
-
-            var empty = OptimizationResult.Empty;
-            Strategy.PushNewResults(empty);
         }
 
         public virtual void OnComplete() { }
+
+        public virtual void Start()
+        {
+            Strategy.PushNewResults(OptimizationResult.Empty);
+        }
 
         public virtual void Abort() { }
 
@@ -83,10 +85,10 @@ namespace QuantConnect.Optimizer
         protected virtual void NewResult(string jsonString, string backtestId)
         {
             OptimizationResult result;
-            lock (_parameterSetForBacktest)
+            lock (ParameterSetForBacktest)
             {
                 ParameterSet parameterSet;
-                if (!_parameterSetForBacktest.TryRemove(backtestId, out parameterSet))
+                if (!ParameterSetForBacktest.TryRemove(backtestId, out parameterSet))
                 {
                     Log.Error($"Optimization compute job with id '{backtestId}' was not found");
                     return;
@@ -98,7 +100,7 @@ namespace QuantConnect.Optimizer
 
             Strategy.PushNewResults(result);
 
-            if (!_parameterSetForBacktest.Any())
+            if (!ParameterSetForBacktest.Any())
             {
                 OnComplete();
             }

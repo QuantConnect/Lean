@@ -24,13 +24,13 @@ namespace QuantConnect.Optimizer
     {
         public IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args)
         {
-            foreach (var step in Recursive(seed?.Arguments, args))
+            foreach (var step in Recursive(seed, args))
             {
                 yield return new ParameterSet(step);
             }
         }
 
-        public IEnumerable<Dictionary<string, decimal>> Recursive(IEnumerable<KeyValuePair<string, decimal>> seed, HashSet<OptimizationParameter> args)
+        private IEnumerable<Dictionary<string, decimal>> Recursive(ParameterSet seed, HashSet<OptimizationParameter> args)
         {
             if (args.Count == 1)
             {

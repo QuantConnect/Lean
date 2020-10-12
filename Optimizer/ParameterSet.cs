@@ -19,11 +19,20 @@ namespace QuantConnect.Optimizer
 {
     public class ParameterSet
     {
-        public IEnumerable<KeyValuePair<string, decimal>> Arguments { get; }
+        private Dictionary<string, decimal> _arguments;
 
-        public ParameterSet(IEnumerable<KeyValuePair<string, decimal>> arguments)
+        public IEnumerable<string> Keys => _arguments.Keys;
+
+        public ParameterSet(Dictionary<string, decimal> arguments)
         {
-            Arguments = arguments;
+            _arguments = arguments;
         }
+
+        public bool TryGetValue(string name, out decimal value)
+        {
+            return _arguments.TryGetValue(name, out value);
+        }
+
+        public decimal this[string s] => _arguments[s];
     }
 }
