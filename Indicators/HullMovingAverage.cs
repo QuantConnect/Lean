@@ -85,9 +85,9 @@ namespace QuantConnect.Indicators
             _slowWma.Update(input);
             if (_fastWma.IsReady && _slowWma.IsReady)
             {
-                _hullMa.Update(new IndicatorDataPoint(input.Time, 2 * _fastWma - _slowWma));
+                _hullMa.Update(new IndicatorDataPoint(input.Time, 2 * _fastWma.Current.Value - _slowWma.Current.Value));
             }
-            return _hullMa;
+            return _hullMa.Current.Value;
         }
     }
 }

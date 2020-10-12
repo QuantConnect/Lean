@@ -68,7 +68,7 @@ namespace QuantConnect.Indicators
             ADRatio.Update(input);
             ADVRatio.Update(input);
 
-            return _arms;
+            return _arms.Current.Value;
         }
 
         /// <summary>

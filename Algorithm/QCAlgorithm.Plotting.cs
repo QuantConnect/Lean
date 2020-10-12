@@ -227,7 +227,7 @@ namespace QuantConnect.Algorithm
         {
             foreach (var indicator in indicators)
             {
-                Plot(chart, indicator.Name, indicator);
+                Plot(chart, indicator.Name, indicator.Current.Value);
             }
         }
 
