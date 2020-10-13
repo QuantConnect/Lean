@@ -470,11 +470,7 @@ namespace QuantConnect.Algorithm
                  universe = _pendingUniverseAdditions.SingleOrDefault(u => u.Configuration.Symbol == underlyingSymbol);
                  if (universe == null)
                  {
-                     var config = SubscriptionManager.SubscriptionDataConfigService
-                         .GetSubscriptionDataConfigs(underlyingSymbol)
-                         .FirstOrDefault();
-
-                     underlyingSymbol = AddSecurity(underlyingSymbol, config?.Resolution ?? Resolution.Minute).Symbol;
+                     underlyingSymbol = AddSecurity(underlyingSymbol).Symbol;
                  }
 
                  // Recheck again, we should have a universe addition pending for the provided Symbol

@@ -47,7 +47,9 @@ namespace QuantConnect.Algorithm.CSharp
                 _optionFilterRan = true;
 
                 var expiry = new HashSet<DateTime>(contracts.Select(x => x.Underlying.ID.Date)).SingleOrDefault();
-                var symbol = new HashSet<Symbol>(contracts.Select(x => x.Underlying)).SingleOrDefault();
+                // Cast to IEnumerable<Symbol> because OptionFilterContract overrides some LINQ operators like `Select` and `Where`
+                // and cause it to mutate the underlying Symbol collection when using those operators.
+                var symbol = new HashSet<Symbol>(((IEnumerable<Symbol>)contracts).Select(x => x.Underlying)).SingleOrDefault();
 
                 if (expiry == null || symbol == null)
                 {
@@ -65,10 +67,13 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            foreach (var future in data.FuturesChains.Values.Select(x => x.Symbol))
+            foreach (var contracts in data.FutureChains.Values)
             {
-                SetHoldings(future, 0.1m);
-                _invested = true;
+                foreach (var contract in contracts.Contracts.Values.Select(x => x.Symbol))
+                {
+                    SetHoldings(contract, 0.25);
+                    _invested = true;
+                }
             }
         }
 
@@ -82,8 +87,50 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         public bool CanRunLocally { get; } = true;
-        public Language[] Languages { get; } = new[] { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp };
 
-        public Dictionary<string, string> ExpectedStatistics { get; }
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            { "Total Trades", "4" },
+            { "Average Win", "0%" },
+            { "Average Loss", "0%" },
+            { "Compounding Annual Return", "26078.108%" },
+            { "Drawdown", "4.900%" },
+            { "Expectancy", "0" },
+            { "Net Profit", "3.098%" },
+            { "Sharpe Ratio", "12.031" },
+            { "Probabilistic Sharpe Ratio", "0%" },
+            { "Loss Rate", "0%" },
+            { "Win Rate", "0%" },
+            { "Profit-Loss Ratio", "0" },
+            { "Alpha", "0" },
+            { "Beta", "0" },
+            { "Annual Standard Deviation", "0.012" },
+            { "Annual Variance", "0" },
+            { "Information Ratio", "12.031" },
+            { "Tracking Error", "0.012" },
+            { "Treynor Ratio", "0" },
+            { "Total Fees", "$7.40" },
+            { "Fitness Score", "1" },
+            { "Kelly Criterion Estimate", "0" },
+            { "Kelly Criterion Probability Value", "0" },
+            { "Sortino Ratio", "79228162514264337593543950335" },
+            { "Return Over Maximum Drawdown", "79228162514264337593543950335" },
+            { "Portfolio Turnover", "3.167" },
+            { "Total Insights Generated", "0" },
+            { "Total Insights Closed", "0" },
+            { "Total Insights Analysis Completed", "0" },
+            { "Long Insight Count", "0" },
+            { "Short Insight Count", "0" },
+            { "Long/Short Ratio", "100%" },
+            { "Estimated Monthly Alpha Value", "$0" },
+            { "Total Accumulated Estimated Alpha Value", "$0" },
+            { "Mean Population Estimated Insight Value", "$0" },
+            { "Mean Population Direction", "0%" },
+            { "Mean Population Magnitude", "0%" },
+            { "Rolling Averaged Population Direction", "0%" },
+            { "Rolling Averaged Population Magnitude", "0%" },
+            { "OrderListHash", "-1071948949" }
+        };
     }
 }

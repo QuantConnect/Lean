@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.Selection
                         default(OptionStyle),
                         default(OptionRight),
                         0m,
-                        SecurityIdentifier.DefaultDate)
+                        symbol.ID.Date)
                     )
                     .ToList();
             };
