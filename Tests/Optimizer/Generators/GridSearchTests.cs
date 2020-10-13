@@ -20,7 +20,7 @@ using QuantConnect.Optimizer;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace QuantConnect.Tests.Optimizer.Strategies
+namespace QuantConnect.Tests.Optimizer.Generators
 {
     [TestFixture]
     public class GridSearchTests

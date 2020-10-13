@@ -18,18 +18,43 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer
 {
+    /// <summary>
+    /// Defines the optimization settings, direction, solution and exit, i.e. optimization strategy
+    /// </summary>
     public interface IOptimizationStrategy
     {
+        /// <summary>
+        /// Fires when new parameter set is retrieved
+        /// </summary>
         event EventHandler NewParameterSet;
 
+        /// <summary>
+        /// Generates parameters for given settings of optimization parameters
+        /// </summary>
         IOptimizationParameterSetGenerator ParameterSetGenerator { get; }
 
+        /// <summary>
+        /// The way to compare and find the better point
+        /// </summary>
         Extremum Extremum { get; }
 
-        void Initialize(IOptimizationParameterSetGenerator strategy, Extremum extremum, HashSet<OptimizationParameter> parameters);
-        
-        void PushNewResults(OptimizationResult result);
-
+        /// <summary>
+        /// Best found solution, its value and parameter set
+        /// </summary>
         OptimizationResult Solution { get; }
+
+        /// <summary>
+        /// Initializes the strategy using generator, extremum settings and optimization parameters
+        /// </summary>
+        /// <param name="parameterSetGetGenerator">Parameter set generator</param>
+        /// <param name="extremum">Maximize or Minimize the target value</param>
+        /// <param name="parameters">Optimization parameters</param>
+        void Initialize(IOptimizationParameterSetGenerator parameterSetGetGenerator, Extremum extremum, HashSet<OptimizationParameter> parameters);
+        
+        /// <summary>
+        /// Callback when lean compute job completed.
+        /// </summary>
+        /// <param name="result">Lean compute job result and corresponding parameter set</param>
+        void PushNewResults(OptimizationResult result);
     }
 }

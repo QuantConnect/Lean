@@ -18,24 +18,51 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer
 {
+    /// <summary>
+    /// Find the best solution in first generation
+    /// </summary>
     public class BruteForceStrategy : IOptimizationStrategy
     {
         private HashSet<OptimizationParameter> _args;
         private object _locker = new object();
 
+        /// <summary>
+        /// Parameter set generator
+        /// </summary>
         public IOptimizationParameterSetGenerator ParameterSetGenerator { get; private set; }
+
+        /// <summary>
+        /// Defines the direction of optimization, i.e. maximization or minimization
+        /// </summary>
         public Extremum Extremum { get; private set; }
+
+        /// <summary>
+        /// Keep the best found solution - lean computed job result and corresponding  parameter set 
+        /// </summary>
         public OptimizationResult Solution { get; private set; }
 
+        /// <summary>
+        /// Fires when new parameter set is generated
+        /// </summary>
         public event EventHandler NewParameterSet;
 
-        public void Initialize(IOptimizationParameterSetGenerator searchStrategy, Extremum extremum, HashSet<OptimizationParameter> parameters)
+        /// <summary>
+        /// Initializes the strategy using generator, extremum settings and optimization parameters
+        /// </summary>
+        /// <param name="parameterSetGetGenerator">Parameter set generator</param>
+        /// <param name="extremum">Maximize or Minimize the target value</param>
+        /// <param name="parameters">Optimization parameters</param>
+        public void Initialize(IOptimizationParameterSetGenerator parameterSetGetGenerator, Extremum extremum, HashSet<OptimizationParameter> parameters)
         {
-            ParameterSetGenerator = searchStrategy;
+            ParameterSetGenerator = parameterSetGetGenerator;
             Extremum = extremum;
             _args = parameters;
         }
 
+        /// <summary>
+        /// Checks whether new lean compute job better than previous and run new iteration if necessary.
+        /// </summary>
+        /// <param name="result">Lean compute job result and corresponding parameter set</param>
         public void PushNewResults(OptimizationResult result)
         {
             lock (_locker)
