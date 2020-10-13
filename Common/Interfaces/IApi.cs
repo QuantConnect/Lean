@@ -17,10 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Net;
 using QuantConnect.Api;
-using QuantConnect.API;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Interfaces
 {

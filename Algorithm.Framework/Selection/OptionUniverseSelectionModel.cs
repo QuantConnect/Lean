@@ -15,12 +15,9 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -107,51 +104,9 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 // prevent creating duplicate option chains -- one per underlying
                 if (uniqueUnderlyingSymbols.Add(optionSymbol.Underlying))
                 {
-                    yield return CreateOptionChain(algorithm, optionSymbol);
+                    yield return algorithm.CreateOptionChain(optionSymbol, Filter, _universeSettings);
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates the canonical <see cref="Option"/> chain security for a given symbol
-        /// </summary>
-        /// <param name="algorithm">The algorithm instance to create universes for</param>
-        /// <param name="symbol">Symbol of the option</param>
-        /// <param name="settings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
-        /// <param name="initializer">Performs extra initialization (such as setting models) after we create a new security object</param>
-        /// <returns><see cref="Option"/> for the given symbol</returns>
-        [Obsolete("This method is obsolete because SecurityInitializer is obsolete and will not be used.")]
-        protected virtual Option CreateOptionChainSecurity(QCAlgorithm algorithm, Symbol symbol, UniverseSettings settings, ISecurityInitializer initializer)
-        {
-            return CreateOptionChainSecurity(
-                algorithm.SubscriptionManager.SubscriptionDataConfigService,
-                symbol,
-                settings,
-                algorithm.Securities);
-        }
-
-        /// <summary>
-        /// Creates the canonical <see cref="Option"/> chain security for a given symbol
-        /// </summary>
-        /// <param name="subscriptionDataConfigService">The service used to create new <see cref="SubscriptionDataConfig"/></param>
-        /// <param name="symbol">Symbol of the option</param>
-        /// <param name="settings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
-        /// <param name="securityManager">Used to create new <see cref="Security"/></param>
-        /// <returns><see cref="Option"/> for the given symbol</returns>
-        protected virtual Option CreateOptionChainSecurity(
-            ISubscriptionDataConfigService subscriptionDataConfigService,
-            Symbol symbol,
-            UniverseSettings settings,
-            SecurityManager securityManager)
-        {
-            var config = subscriptionDataConfigService.Add(
-                typeof(ZipEntryName),
-                symbol,
-                settings.Resolution,
-                settings.FillForward,
-                settings.ExtendedMarketHours,
-                false);
-            return (Option)securityManager.CreateSecurity(symbol, config, settings.Leverage, false);
         }
 
         /// <summary>
@@ -161,56 +116,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
         {
             // NOP
             return filter;
-        }
-
-        /// <summary>
-        /// Creates a <see cref="OptionChainUniverse"/> for a given symbol
-        /// </summary>
-        /// <param name="algorithm">The algorithm instance to create universes for</param>
-        /// <param name="symbol">Symbol of the option</param>
-        /// <returns><see cref="OptionChainUniverse"/> for the given symbol</returns>
-        private OptionChainUniverse CreateOptionChain(QCAlgorithm algorithm, Symbol symbol)
-        {
-            if (symbol.SecurityType != SecurityType.Option)
-            {
-                throw new ArgumentException("CreateOptionChain requires an option symbol.");
-            }
-
-            // rewrite non-canonical symbols to be canonical
-            var market = symbol.ID.Market;
-            var underlying = symbol.Underlying;
-            if (!symbol.IsCanonical())
-            {
-                var alias = $"?{underlying.Value}";
-                symbol = Symbol.Create(underlying.Value, SecurityType.Option, market, alias);
-            }
-
-            // resolve defaults if not specified
-            var settings = _universeSettings ?? algorithm.UniverseSettings;
-
-            // create canonical security object, but don't duplicate if it already exists
-            Security security;
-            Option optionChain;
-            if (!algorithm.Securities.TryGetValue(symbol, out security))
-            {
-                optionChain = CreateOptionChainSecurity(
-                    algorithm.SubscriptionManager.SubscriptionDataConfigService,
-                    symbol,
-                    settings,
-                    algorithm.Securities);
-            }
-            else
-            {
-                optionChain = (Option)security;
-            }
-
-            // set the option chain contract filter function
-            optionChain.SetFilter(Filter);
-
-            // force option chain security to not be directly tradable AFTER it's configured to ensure it's not overwritten
-            optionChain.IsTradable = false;
-
-            return new OptionChainUniverse(optionChain, settings, algorithm.LiveMode);
         }
     }
 }

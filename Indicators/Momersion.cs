@@ -117,7 +117,7 @@ namespace QuantConnect.Indicators
         {
             if (window.Count >= 3)
             {
-                _multipliedDiffWindow.Add((window[0] - window[1]) * (window[1] - window[2]));
+                _multipliedDiffWindow.Add((window[0].Value - window[1].Value) * (window[1].Value - window[2].Value));
             }
 
             // Estimate the indicator if less than 50% of observation are zero. Avoid division by

@@ -70,8 +70,8 @@ namespace QuantConnect.Indicators
             if (n == Period)
             {
                 var removedValue = window[Period - 1];
-                _rollingSum -= removedValue;
-                _rollingSumOfSquares -= removedValue * removedValue;
+                _rollingSum -= removedValue.Value;
+                _rollingSumOfSquares -= removedValue.Value * removedValue.Value;
             }
 
             // Ensure non-negative variance

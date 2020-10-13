@@ -84,13 +84,13 @@ namespace QuantConnect.Indicators
                 }).OrderByDescending(x => x.Value.Value).First();
 
                 PeriodsSinceMaximum = maximum.Index;
-                return maximum.Value;
+                return maximum.Value.Value;
             }
 
             // if we made it here then we didn't see a new maximum and we haven't reached our period limit,
             // so just increment our periods since maximum and return the same value as we had before
             PeriodsSinceMaximum++;
-            return Current;
+            return Current.Value;
         }
 
         /// <summary>

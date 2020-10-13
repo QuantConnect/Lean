@@ -488,9 +488,11 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">String tag for the order (optional)</param>
         public OrderTicket ExerciseOption(Symbol optionSymbol, int quantity, bool asynchronous = false, string tag = "")
         {
-            var option = (Option)Securities[optionSymbol];
+            var option = (Option) Securities[optionSymbol];
 
-            var request = CreateSubmitOrderRequest(OrderType.OptionExercise, option, quantity, tag, DefaultOrderProperties?.Clone());
+            // SubmitOrderRequest.Quantity indicates the change in holdings quantity, therefore manual exercise quantities must be negative
+            // PreOrderChecksImpl confirms that we don't hold a short position, so we're lenient here and accept +/- quantity values
+            var request = CreateSubmitOrderRequest(OrderType.OptionExercise, option, -Math.Abs(quantity), tag, DefaultOrderProperties?.Clone());
 
             // If warming up, do not submit
             if (IsWarmingUp)
@@ -657,7 +659,9 @@ namespace QuantConnect.Algorithm
             Security security;
             if (!Securities.TryGetValue(request.Symbol, out security))
             {
-                return OrderResponse.Error(request, OrderResponseErrorCode.MissingSecurity, "You haven't requested " + request.Symbol.ToString() + " data. Add this with AddSecurity() in the Initialize() Method.");
+                return OrderResponse.Error(request, OrderResponseErrorCode.MissingSecurity,
+                    $"You haven't requested {request.Symbol} data. Add this with AddSecurity() in the Initialize() Method."
+                );
             }
 
             //Ordering 0 is useless.
@@ -677,7 +681,9 @@ namespace QuantConnect.Algorithm
 
             if (!security.IsTradable)
             {
-                return OrderResponse.Error(request, OrderResponseErrorCode.NonTradableSecurity, "The security with symbol '" + request.Symbol.ToString() + "' is marked as non-tradable.");
+                return OrderResponse.Error(request, OrderResponseErrorCode.NonTradableSecurity,
+                    $"The security with symbol '{request.Symbol}' is marked as non-tradable."
+                );
             }
 
             var price = security.Price;
@@ -685,13 +691,17 @@ namespace QuantConnect.Algorithm
             //Check the exchange is open before sending a market on close orders
             if (request.OrderType == OrderType.MarketOnClose && !security.Exchange.ExchangeOpen)
             {
-                return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen, request.OrderType + " order and exchange not open.");
+                return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen,
+                    $"{request.OrderType} order and exchange not open."
+                );
             }
 
             //Check the exchange is open before sending a exercise orders
             if (request.OrderType == OrderType.OptionExercise && !security.Exchange.ExchangeOpen)
             {
-                return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen, request.OrderType + " order and exchange not open.");
+                return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen,
+                    $"{request.OrderType} order and exchange not open."
+                );
             }
 
             if (price == 0)
@@ -704,11 +714,15 @@ namespace QuantConnect.Algorithm
             var quoteCurrency = security.QuoteCurrency.Symbol;
             if (!Portfolio.CashBook.TryGetValue(quoteCurrency, out quoteCash))
             {
-                return OrderResponse.Error(request, OrderResponseErrorCode.QuoteCurrencyRequired, request.Symbol.Value + ": requires " + quoteCurrency + " in the cashbook to trade.");
+                return OrderResponse.Error(request, OrderResponseErrorCode.QuoteCurrencyRequired,
+                    $"{request.Symbol.Value}: requires {quoteCurrency} in the cashbook to trade."
+                );
             }
             if (security.QuoteCurrency.ConversionRate == 0m)
             {
-                return OrderResponse.Error(request, OrderResponseErrorCode.ConversionRateZero, request.Symbol.Value + ": requires " + quoteCurrency + " to have a non-zero conversion rate. This can be caused by lack of data.");
+                return OrderResponse.Error(request, OrderResponseErrorCode.ConversionRateZero,
+                    $"{request.Symbol.Value}: requires {quoteCurrency} to have a non-zero conversion rate. This can be caused by lack of data."
+                );
             }
 
             // need to also check base currency existence/conversion rate on forex orders
@@ -718,18 +732,24 @@ namespace QuantConnect.Algorithm
                 var baseCurrency = ((IBaseCurrencySymbol)security).BaseCurrencySymbol;
                 if (!Portfolio.CashBook.TryGetValue(baseCurrency, out baseCash))
                 {
-                    return OrderResponse.Error(request, OrderResponseErrorCode.ForexBaseAndQuoteCurrenciesRequired, request.Symbol.Value + ": requires " + baseCurrency + " and " + quoteCurrency + " in the cashbook to trade.");
+                    return OrderResponse.Error(request, OrderResponseErrorCode.ForexBaseAndQuoteCurrenciesRequired,
+                        $"{request.Symbol.Value}: requires {baseCurrency} and {quoteCurrency} in the cashbook to trade."
+                    );
                 }
                 if (baseCash.ConversionRate == 0m)
                 {
-                    return OrderResponse.Error(request, OrderResponseErrorCode.ForexConversionRateZero, request.Symbol.Value + ": requires " + baseCurrency + " and " + quoteCurrency + " to have non-zero conversion rates. This can be caused by lack of data.");
+                    return OrderResponse.Error(request, OrderResponseErrorCode.ForexConversionRateZero,
+                        $"{request.Symbol.Value}: requires {baseCurrency} and {quoteCurrency} to have non-zero conversion rates. This can be caused by lack of data."
+                    );
                 }
             }
 
             //Make sure the security has some data:
             if (!security.HasData)
             {
-                return OrderResponse.Error(request, OrderResponseErrorCode.SecurityHasNoData, "There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point.");
+                return OrderResponse.Error(request, OrderResponseErrorCode.SecurityHasNoData,
+                    "There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point."
+                );
             }
 
             // We've already processed too many orders: max 10k
@@ -737,28 +757,38 @@ namespace QuantConnect.Algorithm
             {
                 Status = AlgorithmStatus.Stopped;
                 return OrderResponse.Error(request, OrderResponseErrorCode.ExceededMaximumOrders,
-                    $"You have exceeded maximum number of orders ({_maxOrders.ToStringInvariant()}), for unlimited orders upgrade your account."
+                    Invariant($"You have exceeded maximum number of orders ({_maxOrders}), for unlimited orders upgrade your account.")
                 );
             }
 
             if (request.OrderType == OrderType.OptionExercise)
             {
                 if (security.Type != SecurityType.Option)
-                    return OrderResponse.Error(request, OrderResponseErrorCode.NonExercisableSecurity, "The security with symbol '" + request.Symbol.ToString() + "' is not exercisable.");
+                {
+                    return OrderResponse.Error(request, OrderResponseErrorCode.NonExercisableSecurity,
+                        $"The security with symbol '{request.Symbol}' is not exercisable."
+                    );
+                }
 
                 if (security.Holdings.IsShort)
-                    return OrderResponse.Error(request, OrderResponseErrorCode.UnsupportedRequestType, "The security with symbol '" + request.Symbol.ToString() + "' has a short option position. Only long option positions are exercisable.");
+                {
+                    return OrderResponse.Error(request, OrderResponseErrorCode.UnsupportedRequestType,
+                        $"The security with symbol '{request.Symbol}' has a short option position. Only long option positions are exercisable."
+                    );
+                }
 
-                if (request.Quantity > security.Holdings.Quantity)
-                    return OrderResponse.Error(request, OrderResponseErrorCode.UnsupportedRequestType, "Cannot exercise more contracts of '" + request.Symbol.ToString() + "' than is currently available in the portfolio. ");
-
-                if (request.Quantity <= 0.0m)
-                    OrderResponse.ZeroQuantity(request);
+                if (Math.Abs(request.Quantity) > security.Holdings.Quantity)
+                {
+                    return OrderResponse.Error(request, OrderResponseErrorCode.UnsupportedRequestType,
+                        $"Cannot exercise more contracts of '{request.Symbol}' than is currently available in the portfolio. "
+                    );
+                }
             }
 
             if (request.OrderType == OrderType.MarketOnClose)
             {
                 var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
+
                 // must be submitted with at least 10 minutes in trading day, add buffer allow order submission
                 var latestSubmissionTime = nextMarketClose.Subtract(Orders.MarketOnCloseOrder.DefaultSubmissionTimeBuffer);
                 if (!security.Exchange.ExchangeOpen || Time > latestSubmissionTime)
@@ -766,7 +796,9 @@ namespace QuantConnect.Algorithm
                     // tell the user we require a 16 minute buffer, on minute data in live a user will receive the 3:44->3:45 bar at 3:45,
                     // this is already too late to submit one of these orders, so make the user do it at the 3:43->3:44 bar so it's submitted
                     // to the brokerage before 3:45.
-                    return OrderResponse.Error(request, OrderResponseErrorCode.MarketOnCloseOrderTooLate, "MarketOnClose orders must be placed with at least a 16 minute buffer before market close.");
+                    return OrderResponse.Error(request, OrderResponseErrorCode.MarketOnCloseOrderTooLate,
+                        "MarketOnClose orders must be placed with at least a 16 minute buffer before market close."
+                    );
                 }
             }
 

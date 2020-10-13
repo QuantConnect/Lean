@@ -168,6 +168,44 @@ namespace QuantConnect.Lean.Engine.Setup
 
             try
             {
+                // let the world know what we're doing since logging in can take a minute
+                parameters.ResultHandler.SendStatusUpdate(AlgorithmStatus.LoggingIn, "Logging into brokerage...");
+
+                brokerage.Message += brokerageOnMessage;
+
+                Log.Trace("BrokerageSetupHandler.Setup(): Connecting to brokerage...");
+                try
+                {
+                    // this can fail for various reasons, such as already being logged in somewhere else
+                    brokerage.Connect();
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    AddInitializationError(
+                        $"Error connecting to brokerage: {err.Message}. " +
+                        "This may be caused by incorrect login credentials or an unsupported account type.", err);
+                    return false;
+                }
+
+                if (!brokerage.IsConnected)
+                {
+                    // if we're reporting that we're not connected, bail
+                    AddInitializationError("Unable to connect to brokerage.");
+                    return false;
+                }
+
+                var message = $"{brokerage.Name} account base currency: {brokerage.AccountBaseCurrency}";
+
+                Log.Trace($"BrokerageSetupHandler.Setup(): {message}");
+
+                algorithm.Debug(message);
+
+                if (brokerage.AccountBaseCurrency != algorithm.AccountCurrency)
+                {
+                    algorithm.SetAccountCurrency(brokerage.AccountBaseCurrency);
+                }
+
                 Log.Trace("BrokerageSetupHandler.Setup(): Initializing algorithm...");
 
                 parameters.ResultHandler.SendStatusUpdate(AlgorithmStatus.Initializing, "Initializing algorithm...");
@@ -219,13 +257,6 @@ namespace QuantConnect.Lean.Engine.Setup
                         //Initialise the algorithm, get the required data:
                         algorithm.Initialize();
 
-                        if (algorithm.AccountCurrency != Currencies.USD)
-                        {
-                            throw new NotImplementedException(
-                                "BrokerageSetupHandler.Setup(): calling 'QCAlgorithm.SetAccountCurrency()' " +
-                                "is only supported in backtesting for now.");
-                        }
-
                         if (liveJob.Brokerage != "PaperBrokerage")
                         {
                             //Zero the CashBook - we'll populate directly from brokerage
@@ -245,33 +276,6 @@ namespace QuantConnect.Lean.Engine.Setup
                 if (!initializeComplete)
                 {
                     AddInitializationError("Initialization timed out.");
-                    return false;
-                }
-
-                // let the world know what we're doing since logging in can take a minute
-                parameters.ResultHandler.SendStatusUpdate(AlgorithmStatus.LoggingIn, "Logging into brokerage...");
-
-                brokerage.Message += brokerageOnMessage;
-
-                Log.Trace("BrokerageSetupHandler.Setup(): Connecting to brokerage...");
-                try
-                {
-                    // this can fail for various reasons, such as already being logged in somewhere else
-                    brokerage.Connect();
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err);
-                    AddInitializationError(
-                        $"Error connecting to brokerage: {err.Message}. " +
-                        "This may be caused by incorrect login credentials or an unsupported account type.", err);
-                    return false;
-                }
-
-                if (!brokerage.IsConnected)
-                {
-                    // if we're reporting that we're not connected, bail
-                    AddInitializationError("Unable to connect to brokerage.");
                     return false;
                 }
 

@@ -183,9 +183,9 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("OptionExercise order price should be strike price!!");
             }
 
-            if (orderEvent.Quantity != 1)
+            if (orderEvent.Quantity != -1)
             {
-                throw new Exception("OrderEvent Quantity should be 1");
+                throw new Exception("OrderEvent Quantity should be -1");
             }
         }
 
@@ -317,7 +317,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "-0.018"},
             {"Total Fees", "$2.00"},
             {"Fitness Score", "0.213"},
-            {"OrderListHash", "-2119400842"}
+            {"OrderListHash", "904167951"}
         };
     }
 }

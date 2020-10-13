@@ -165,7 +165,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="symbol">Symbol object to create OSI ticker from</param>
         /// <returns>The OSI ticker representation</returns>
-        public static string GenerateOptionTickerOSI(Symbol symbol)
+        public static string GenerateOptionTickerOSI(this Symbol symbol)
         {
             if (symbol.SecurityType != SecurityType.Option)
             {

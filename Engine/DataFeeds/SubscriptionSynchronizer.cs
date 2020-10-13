@@ -237,8 +237,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         protected virtual void OnSubscriptionFinished(Subscription subscription)
         {
-            var handler = SubscriptionFinished;
-            if (handler != null) handler(this, subscription);
+            SubscriptionFinished?.Invoke(this, subscription);
         }
 
         /// <summary>

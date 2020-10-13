@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using System.Linq;
 using System.Collections;
+using Python.Runtime;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Securities
@@ -340,6 +341,17 @@ namespace QuantConnect.Securities
         public OptionFilterUniverse Expiration(int minExpiryDays, int maxExpiryDays)
         {
             return Expiration(TimeSpan.FromDays(minExpiryDays), TimeSpan.FromDays(maxExpiryDays));
+        }
+
+        /// <summary>
+        /// Explicitly sets the selected contract symbols for this universe.
+        /// This overrides and and all other methods of selecting symbols assuming it is called last.
+        /// </summary>
+        /// <param name="contracts">The option contract symbol objects to select</param>
+        public OptionFilterUniverse Contracts(PyObject contracts)
+        {
+            _allSymbols = contracts.ConvertToSymbolEnumerable();
+            return this;
         }
 
         /// <summary>
