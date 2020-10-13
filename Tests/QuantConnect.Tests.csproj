@@ -763,6 +763,7 @@
     <Compile Include="Indicators\RateOfChangeTests.cs" />
     <Compile Include="Indicators\EaseOfMovementValueTests.cs" />
     <Compile Include="Indicators\StochasticTests.cs" />
+    <Compile Include="Optimizer\ExtremumTests.cs" />
     <Compile Include="Optimizer\Strategies\GridSearchTests.cs" />
     <Compile Include="Research\QuantBookFundamentalTests.cs" />
     <Compile Include="Python\PythonOptionTests.cs" />
