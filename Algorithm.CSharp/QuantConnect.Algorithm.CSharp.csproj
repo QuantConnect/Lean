@@ -143,6 +143,7 @@
     </Compile>
     <Compile Include="AddAlphaModelAlgorithm.cs" />
     <Compile Include="CustomBuyingPowerModelAlgorithm.cs" />
+    <Compile Include="AddFutureOptionContractDataStreamingRegressionAlgorithm.cs" />
     <Compile Include="AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorithm.cs" />
     <Compile Include="AddOptionContractExpiresRegressionAlgorithm.cs" />
     <Compile Include="AltData\QuiverWallStreetBetsDataAlgorithm.cs" />

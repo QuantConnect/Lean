@@ -1667,6 +1667,25 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Adds a future option contract to the algorithm.
+        /// </summary>
+        /// <param name="symbol">Option contract Symbol</param>
+        /// <param name="resolution">Resolution of the option contract, i.e. the granularity of the data</param>
+        /// <param name="fillDataForward">If true, this will fill in missing data points with the previous data point</param>
+        /// <param name="leverage">The leverage to apply to the option contract</param>
+        /// <returns>Option security</returns>
+        /// <exception cref="ArgumentException">Symbol is canonical (i.e. a generic Symbol returned from <see cref="AddFuture"/> or <see cref="AddOption"/>)</exception>
+        public Option AddFutureOptionContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
+        {
+            if (symbol.IsCanonical())
+            {
+                throw new ArgumentException("Expected non-canonical Symbol (i.e. a Symbol representing a specific Future contract");
+            }
+
+            return AddOptionContract(symbol, resolution, fillDataForward, leverage);
+        }
+
+        /// <summary>
         /// Creates and adds a new single <see cref="Option"/> contract to the algorithm
         /// </summary>
         /// <param name="symbol">The option contract symbol</param>
@@ -1680,11 +1699,11 @@ namespace QuantConnect.Algorithm
             var option = (Option)Securities.CreateSecurity(symbol, configs, leverage);
             // add underlying if not present
             var underlying = option.Symbol.Underlying;
-            Security equity;
+            Security underlyingSecurity;
             List<SubscriptionDataConfig> underlyingConfigs;
-            if (!Securities.TryGetValue(underlying, out equity))
+            if (!Securities.TryGetValue(underlying, out underlyingSecurity))
             {
-                equity = AddEquity(underlying.Value, resolution, underlying.ID.Market, false);
+                underlyingSecurity = AddSecurity(underlying, resolution, fillDataForward, leverage);
                 underlyingConfigs = SubscriptionManager.SubscriptionDataConfigService
                     .GetSubscriptionDataConfigs(underlying);
             }
@@ -1704,11 +1723,12 @@ namespace QuantConnect.Algorithm
                     );
                 }
             }
+
             underlyingConfigs.SetDataNormalizationMode(DataNormalizationMode.Raw);
             // For backward compatibility we need to refresh the security DataNormalizationMode Property
-            equity.RefreshDataNormalizationModeProperty();
+            underlyingSecurity.RefreshDataNormalizationModeProperty();
 
-            option.Underlying = equity;
+            option.Underlying = underlyingSecurity;
             Securities.Add(option);
 
             // get or create the universe
