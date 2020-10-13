@@ -187,137 +187,10 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
-        /// Test creating the settings object that provide the necessary parameters for each broker
-        /// </summary>
-        [Test]
-        public void LiveAlgorithmSettings_CanBeCreated_Successfully()
-        {
-            string user = "";
-            string password = "";
-            BrokerageEnvironment environment = BrokerageEnvironment.Paper;
-            string account = "";
-
-            // Oanda Custom Variables
-            string accessToken = "";
-            var dateIssuedString = "20160920";
-
-            // Tradier Custom Variables
-            string dateIssued = "";
-            string refreshToken = "";
-            string lifetime = "";
-
-            // Create and test settings for each brokerage
-            foreach (BrokerageName brokerageName in Enum.GetValues(typeof(BrokerageName)))
-            {
-                BaseLiveAlgorithmSettings settings = null;
-
-                switch (brokerageName)
-                {
-                    case BrokerageName.Default:
-                        user     = Config.Get("default-username");
-                        password = Config.Get("default-password");
-                        settings = new DefaultLiveAlgorithmSettings(user, password, environment, account);
-
-                        Assert.IsTrue(settings.Id == BrokerageName.Default.ToString());
-                        break;
-                    case BrokerageName.FxcmBrokerage:
-                        user     = Config.Get("fxcm-user-name");
-                        password = Config.Get("fxcm-password");
-                        settings = new FXCMLiveAlgorithmSettings(user, password, environment, account);
-
-                        Assert.IsTrue(settings.Id == BrokerageName.FxcmBrokerage.ToString());
-                        break;
-                    case BrokerageName.InteractiveBrokersBrokerage:
-                        user     = Config.Get("ib-user-name");
-                        password = Config.Get("ib-password");
-                        account = Config.Get("ib-account");
-                        settings = new InteractiveBrokersLiveAlgorithmSettings(user, password, account);
-
-                        Assert.IsTrue(settings.Id == BrokerageName.InteractiveBrokersBrokerage.ToString());
-                        break;
-                    case BrokerageName.OandaBrokerage:
-                        accessToken = Config.Get("oanda-access-token");
-                        account     = Config.Get("oanda-account-id");
-
-                        settings = new OandaLiveAlgorithmSettings(accessToken, environment, account);
-                        Assert.IsTrue(settings.Id == BrokerageName.OandaBrokerage.ToString());
-                        break;
-                    case BrokerageName.TradierBrokerage:
-                        dateIssued   = Config.Get("tradier-issued-at");
-                        refreshToken = Config.Get("tradier-refresh-token");
-                        account      = Config.Get("tradier-account-id");
-
-                        settings = new TradierLiveAlgorithmSettings(refreshToken, dateIssued, refreshToken, account);
-
-                        break;
-                    default:
-                        throw new Exception($"Settings have not been implemented for this brokerage: {brokerageName}");
-                }
-
-                // Tests common to all brokerage configuration classes
-                Assert.IsTrue(settings != null);
-                Assert.IsTrue(settings.Password == password);
-                Assert.IsTrue(settings.User == user);
-
-                // tradier brokerage is always live, the rest are variable
-                if (brokerageName != BrokerageName.TradierBrokerage)
-                    Assert.IsTrue(settings.Environment == environment);
-
-                // Oanda specific settings
-                if (brokerageName == BrokerageName.OandaBrokerage)
-                {
-                    var oandaSetting = settings as OandaLiveAlgorithmSettings;
-
-                    Assert.IsTrue(oandaSetting.AccessToken == accessToken);
-                }
-
-                // Tradier specific settings
-                if (brokerageName == BrokerageName.TradierBrokerage)
-                {
-                    var tradierLiveAlogrithmSettings = settings as TradierLiveAlgorithmSettings;
-
-                    Assert.IsTrue(tradierLiveAlogrithmSettings.DateIssued == dateIssued);
-                    Assert.IsTrue(tradierLiveAlogrithmSettings.RefreshToken == refreshToken);
-                    Assert.IsTrue(settings.Environment == BrokerageEnvironment.Live);
-                }
-
-                // reset variables
-                user = "";
-                password = "";
-                environment = BrokerageEnvironment.Paper;
-                account = "";
-            }
-        }
-
-        /// <summary>
-        /// Reading live algorithm tests
-        ///   - Get a list of live algorithms
-        ///   - Get logs for the first algorithm returned
-        /// Will there always be a live algorithm for the test user?
-        /// </summary>
-        [Test]
-        public void LiveAlgorithmsAndLiveLogs_CanBeRead_Successfully()
-        {
-            // Read all currently running algorithms
-            var liveAlgorithms = _api.ListLiveAlgorithms(AlgorithmStatus.Running);
-
-            Assert.IsTrue(liveAlgorithms.Success);
-            // There has to be at least one running algorithm
-            Assert.IsTrue(liveAlgorithms.Algorithms.Any());
-
-            // Read the logs of the first live algorithm
-            var firstLiveAlgo = liveAlgorithms.Algorithms[0];
-            var liveLogs = _api.ReadLiveLogs(firstLiveAlgo.ProjectId, firstLiveAlgo.DeployId);
-
-            Assert.IsTrue(liveLogs.Success);
-            Assert.IsTrue(liveLogs.Logs.Any());
-        }
-
-        /// <summary>
         /// Test downloading data that does not come with the repo (Oanda)
         /// Requires that your account has this data; its free at quantconnect.com/data
         /// </summary>
-        [Test]
+        [Test, Ignore("Requires EURUSD daily data and minute data for 10/2013 in cloud data library")]
         public void BacktestingData_CanBeDownloadedAndSaved_Successfully()
         {
             var minutePath = Path.Combine(_dataFolder, "forex/oanda/minute/eurusd/20131011_quote.zip");
@@ -380,6 +253,36 @@ namespace QuantConnect.Tests.API
             var projectName = $"{DateTime.UtcNow.ToStringInvariant("u")} Test {_testAccount} Lang {language}";
 
             Perform_CreateCompileBackTest_Tests(projectName, language, algorithmName, code);
+        }
+
+        /// <summary>
+        /// Test getting links to forex data for FXCM
+        /// </summary>
+        [Test, Ignore("Requires configured FXCM account")]
+        public void FXCMDataLinks_CanBeRetrieved_Successfully()
+        {
+            var minuteDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
+                Resolution.Minute, new DateTime(2013, 10, 07));
+            var dailyDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
+                Resolution.Daily, new DateTime(2013, 10, 07));
+
+            Assert.IsTrue(minuteDataLink.Success);
+            Assert.IsTrue(dailyDataLink.Success);
+        }
+
+        /// <summary>
+        /// Test getting links to forex data for Oanda
+        /// </summary>
+        [Test, Ignore("Requires configured Oanda account")]
+        public void OandaDataLinks_CanBeRetrieved_Successfully()
+        {
+            var minuteDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
+                Resolution.Minute, new DateTime(2013, 10, 07));
+            var dailyDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
+                Resolution.Daily, new DateTime(2013, 10, 07));
+
+            Assert.IsTrue(minuteDataLink.Success);
+            Assert.IsTrue(dailyDataLink.Success);
         }
 
         private void Perform_CreateCompileBackTest_Tests(string projectName, Language language, string algorithmName, string code)
