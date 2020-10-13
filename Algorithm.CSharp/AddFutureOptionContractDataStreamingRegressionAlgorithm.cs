@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
@@ -29,39 +30,47 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class AddFutureOptionContractDataStreamingRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private bool _onDataReached;
         private bool _invested;
-        private bool _optionFilterRan;
-        private Future _es;
+        private Symbol _es18z20;
+        private Symbol _es19h21;
+
+        private readonly HashSet<Symbol> _symbolsReceived = new HashSet<Symbol>();
+        private readonly HashSet<Symbol> _expectedSymbolsReceived = new HashSet<Symbol>();
+        private readonly Dictionary<Symbol, List<QuoteBar>> _dataReceived = new Dictionary<Symbol, List<QuoteBar>>();
 
         public override void Initialize()
         {
             SetStartDate(2020, 9, 22);
             SetEndDate(2020, 9, 23);
 
-            var es18z20 = AddFutureContract(
+            _es18z20 = AddFutureContract(
                 QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 12, 18)),
-                Resolution.Minute);
+                Resolution.Minute).Symbol;
 
-            var es19h21 = AddFutureContract(
+            _es19h21 = AddFutureContract(
                 QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2021, 3, 19)),
-                Resolution.Minute);
+                Resolution.Minute).Symbol;
 
-            AddFutureOptionContract(
-                QuantConnect.Symbol.CreateOption(es18z20.Symbol, Market.CME, OptionStyle.American, OptionRight.Call, 3280m, new DateTime(2020, 12, 18)),
-                Resolution.Minute);
+            _expectedSymbolsReceived.Add(AddFutureOptionContract(
+                QuantConnect.Symbol.CreateOption(_es18z20, Market.CME, OptionStyle.American, OptionRight.Call, 3280m, new DateTime(2020, 12, 18)),
+                Resolution.Minute).Symbol);
 
-            AddFutureOptionContract(
-                QuantConnect.Symbol.CreateOption(es19h21.Symbol, Market.CME, OptionStyle.American, OptionRight.Put, 3700m, new DateTime(2021, 3, 19)),
-                Resolution.Minute);
+            _expectedSymbolsReceived.Add(AddFutureOptionContract(
+                QuantConnect.Symbol.CreateOption(_es19h21, Market.CME, OptionStyle.American, OptionRight.Put, 3700m, new DateTime(2021, 3, 19)),
+                Resolution.Minute).Symbol);
         }
 
         public override void OnData(Slice data)
         {
-            if (_invested || !data.HasData)
+            if (!data.HasData)
             {
                 return;
             }
 
+            _onDataReached = true;
+
+            var hasOptionQuoteBars = false;
             foreach (var qb in data.QuoteBars.Values)
             {
                 if (qb.Symbol.SecurityType != SecurityType.Option)
@@ -69,7 +78,71 @@ namespace QuantConnect.Algorithm.CSharp
                     continue;
                 }
 
-                Log($"{Time} - {qb}");
+                hasOptionQuoteBars = true;
+
+                _symbolsReceived.Add(qb.Symbol);
+                if (!_dataReceived.ContainsKey(qb.Symbol))
+                {
+                    _dataReceived[qb.Symbol] = new List<QuoteBar>();
+                }
+
+                _dataReceived[qb.Symbol].Add(qb);
+            }
+
+            if (_invested || !hasOptionQuoteBars)
+            {
+                return;
+            }
+
+            if (data.ContainsKey(_es18z20) && data.ContainsKey(_es19h21))
+            {
+                SetHoldings(_es18z20, 0.2);
+                SetHoldings(_es19h21, 0.2);
+
+                _invested = true;
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            base.OnEndOfAlgorithm();
+
+            if (!_onDataReached)
+            {
+                throw new Exception("OnData() was never called.");
+            }
+            if (_symbolsReceived.Count != 2)
+            {
+                throw new AggregateException($"Expected 2 option contracts Symbols, found {_symbolsReceived.Count}");
+            }
+
+            var missingSymbols = new List<Symbol>();
+            foreach (var expectedSymbol in _expectedSymbolsReceived)
+            {
+                if (!_symbolsReceived.Contains(expectedSymbol))
+                {
+                    missingSymbols.Add(expectedSymbol);
+                }
+            }
+
+            if (missingSymbols.Count > 0)
+            {
+                throw new Exception($"Symbols: \"{string.Join(", ", missingSymbols)}\" were not found in OnData");
+            }
+
+            foreach (var expectedSymbol in _expectedSymbolsReceived)
+            {
+                var data = _dataReceived[expectedSymbol];
+                var nonDupeDataCount = data.Select(x =>
+                {
+                    x.EndTime = default(DateTime);
+                    return x;
+                }).Distinct().Count();
+
+                if (nonDupeDataCount < 1000)
+                {
+                    throw new Exception($"Received too few data points. Expected >=1000, found {nonDupeDataCount}");
+                }
             }
         }
 

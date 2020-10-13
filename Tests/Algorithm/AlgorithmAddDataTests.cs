@@ -415,6 +415,29 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void AddFutureOptionContractNonEquityOption()
+        {
+            // Adds an option contract containing an underlying future contract.
+            // We test to make sure that the security returned is a specific option
+            // contract and with the future as the underlying.
+            var algo = new QCAlgorithm();
+            algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
+
+            var underlying = algo.AddFutureContract(
+                Symbol.CreateFuture("ES", Market.CME, new DateTime(2021, 3, 19)),
+                Resolution.Minute);
+
+            var futureOptionContract = algo.AddFutureOptionContract(
+                Symbol.CreateOption(underlying.Symbol, Market.CME, OptionStyle.American, OptionRight.Call, 2550m, new DateTime(2021, 3, 19)),
+                Resolution.Minute);
+
+            Assert.AreEqual(underlying.Symbol, futureOptionContract.Symbol.Underlying);
+            Assert.AreEqual(underlying, futureOptionContract.Underlying);
+            Assert.IsFalse(underlying.Symbol.IsCanonical());
+            Assert.IsFalse(futureOptionContract.Symbol.IsCanonical());
+        }
+
+        [Test]
         public void AddFutureOptionAddsUniverseSelectionModel()
         {
             var algo = new QCAlgorithm();
