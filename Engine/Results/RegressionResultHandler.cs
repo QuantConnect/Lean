@@ -27,6 +27,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -149,11 +150,17 @@ namespace QuantConnect.Lean.Engine.Results
             lock (_sync)
             {
                 WriteLine("==============================================================");
-                WriteLine($"    Order: {order} Tag: {order.Tag}");
-                WriteLine($"    Event: {newEvent}");
-                WriteLine($" Position: {Algorithm.Portfolio[newEvent.Symbol].Quantity}");
-                WriteLine($"     Cash: {Algorithm.Portfolio.Cash:0.00}");
-                WriteLine($"Portfolio: {Algorithm.Portfolio.TotalPortfolioValue:0.00}");
+                WriteLine($"    Symbol: {order.Symbol}");
+                WriteLine($"     Order: {order}");
+                WriteLine($"     Event: {newEvent}");
+                WriteLine($"  Position: {Algorithm.Portfolio[newEvent.Symbol].Quantity}");
+                SecurityHolding underlyingHolding;
+                if (newEvent.Symbol.HasUnderlying && Algorithm.Portfolio.TryGetValue(newEvent.Symbol.Underlying, out underlyingHolding))
+                {
+                    WriteLine($"Underlying: {underlyingHolding.Quantity}");
+                }
+                WriteLine($"      Cash: {Algorithm.Portfolio.Cash:0.00}");
+                WriteLine($" Portfolio: {Algorithm.Portfolio.TotalPortfolioValue:0.00}");
                 WriteLine("==============================================================");
             }
 
