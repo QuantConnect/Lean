@@ -17,8 +17,17 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer
 {
+    /// <summary>
+    /// Defines the way of generation of the new set of parameters based on optimization parameters settings
+    /// </summary>
     public interface IOptimizationParameterSetGenerator
     {
+        /// <summary>
+        /// Generates a new set of parameters based on optimization parameters settings
+        /// </summary>
+        /// <param name="seed">Seeding parameter set, i.e. approximation</param>
+        /// <param name="args">Optimization parameters settings</param>
+        /// <returns>New set of parameters combinations</returns>
         IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args);
     }
 }

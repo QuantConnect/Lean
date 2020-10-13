@@ -20,8 +20,17 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Optimizer
 {
+    /// <summary>
+    /// Defines the way of enumerating all possible candidates for the solution for given optimization parameters settings
+    /// </summary>
     public class GridSearch : IOptimizationParameterSetGenerator
     {
+        /// <summary>
+        /// Enumerate all possible arrangements
+        /// </summary>
+        /// <param name="seed">Seeding</param>
+        /// <param name="args"></param>
+        /// <returns>Collection of possible combinations for given optimization parameters settings</returns>
         public IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args)
         {
             int i = 0;

@@ -18,12 +18,26 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer
 {
+    /// <summary>
+    /// Represents the single combination of optimization parameters
+    /// </summary>
     public class ParameterSet
     {
+        /// <summary>
+        /// The unique identifier within scope (current optimization job)
+        /// </summary>
         public int Id { get; }
 
+        /// <summary>
+        /// Represent a combination as key value of parameters, i.e. order doesn't matter
+        /// </summary>
         public IReadOnlyDictionary<string, string> Value;
 
+        /// <summary>
+        /// Creates an instance of <see cref="ParameterSet"/> based on new combination of optimization parameters
+        /// </summary>
+        /// <param name="id">Unique identifier</param>
+        /// <param name="arguments">Combination of optimization parameters</param>
         public ParameterSet(int id, Dictionary<string, string> arguments)
         {
             Id = id;
