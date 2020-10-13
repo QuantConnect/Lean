@@ -63,7 +63,8 @@ namespace QuantConnect.Securities
                     var feeThisOrder = fill.OrderFee.Value;
                     feeInAccountCurrency = portfolio.CashBook.ConvertToAccountCurrency(feeThisOrder).Amount;
                     security.Holdings.AddNewFee(feeInAccountCurrency);
-                    portfolio.CashBook[feeThisOrder.Currency].AddAmount(-feeThisOrder.Amount);
+
+                    fill.OrderFee.ApplyToPortfolio(portfolio, fill);
                 }
 
                 // apply the funds using the current settlement model
