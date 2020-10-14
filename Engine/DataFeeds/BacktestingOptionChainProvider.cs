@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,22 +33,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="symbol">The underlying symbol</param>
         /// <param name="date">The date for which to request the option chain (only used in backtesting)</param>
         /// <returns>The list of option contracts</returns>
-        public IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date)
+        public IEnumerable<Symbol> GetOptionContractList(Symbol underlyingSymbol, DateTime date)
         {
-            if (symbol.SecurityType != SecurityType.Equity)
-            {
-                throw new NotSupportedException($"BacktestingOptionChainProvider.GetOptionContractList(): SecurityType.Equity is expected but was {symbol.SecurityType}");
-            }
-
             // build the option contract list from the open interest zip file entry names
 
             // create a canonical option symbol for the given underlying
-            var canonicalSymbol = Symbol.CreateOption(symbol.Value, symbol.ID.Market, default(OptionStyle), default(OptionRight), 0, SecurityIdentifier.DefaultDate);
+            var canonicalSymbol = Symbol.CreateOption(underlyingSymbol, underlyingSymbol.ID.Market, default(OptionStyle), default(OptionRight), 0, SecurityIdentifier.DefaultDate);
 
-            // build the zip file name for open interest data
-            var zipFileName = LeanData.GenerateZipFilePath(Globals.DataFolder, canonicalSymbol, date, Resolution.Minute, TickType.OpenInterest);
+            var fileExists = false;
+            var zipFileName = string.Empty;
 
-            if (!File.Exists(zipFileName))
+            foreach (var tickType in new[] { TickType.Trade, TickType.Quote, TickType.OpenInterest })
+            {
+                // build the zip file name for open interest data
+                zipFileName = LeanData.GenerateZipFilePath(Globals.DataFolder, canonicalSymbol, date, Resolution.Minute, tickType);
+                if (File.Exists(zipFileName))
+                {
+                    fileExists = true;
+                    break;
+                }
+            }
+
+            if (!fileExists)
             {
                 Log.Trace($"BacktestingOptionChainProvider.GetOptionContractList(): File not found: {zipFileName}");
                 yield break;

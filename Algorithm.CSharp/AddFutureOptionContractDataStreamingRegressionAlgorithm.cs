@@ -25,8 +25,8 @@ using QuantConnect.Securities.Future;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regression algorithm tests that we receive the expected data from
-    /// in the option universe filter.
+    /// This regression algorithm tests that we receive the expected data when
+    /// we add future option contracts individually using <see cref="AddFutureOptionContract"/>
     /// </summary>
     public class AddFutureOptionContractDataStreamingRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -52,13 +52,13 @@ namespace QuantConnect.Algorithm.CSharp
                 QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2021, 3, 19)),
                 Resolution.Minute).Symbol;
 
-            _expectedSymbolsReceived.Add(AddFutureOptionContract(
-                QuantConnect.Symbol.CreateOption(_es18z20, Market.CME, OptionStyle.American, OptionRight.Call, 3280m, new DateTime(2020, 12, 18)),
-                Resolution.Minute).Symbol);
+            var optionChains = OptionChainProvider.GetOptionContractList(_es18z20, Time)
+                .Concat(OptionChainProvider.GetOptionContractList(_es19h21, Time));
 
-            _expectedSymbolsReceived.Add(AddFutureOptionContract(
-                QuantConnect.Symbol.CreateOption(_es19h21, Market.CME, OptionStyle.American, OptionRight.Put, 3700m, new DateTime(2021, 3, 19)),
-                Resolution.Minute).Symbol);
+            foreach (var optionContract in optionChains)
+            {
+                _expectedSymbolsReceived.Add(AddFutureOptionContract(optionContract, Resolution.Minute).Symbol);
+            }
         }
 
         public override void OnData(Slice data)
@@ -111,9 +111,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("OnData() was never called.");
             }
-            if (_symbolsReceived.Count != 2)
+            if (_symbolsReceived.Count != _expectedSymbolsReceived.Count)
             {
-                throw new AggregateException($"Expected 2 option contracts Symbols, found {_symbolsReceived.Count}");
+                throw new AggregateException($"Expected {_expectedSymbolsReceived.Count} option contracts Symbols, found {_symbolsReceived.Count}");
             }
 
             var missingSymbols = new List<Symbol>();
@@ -141,14 +141,24 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (nonDupeDataCount < 1000)
                 {
-                    throw new Exception($"Received too few data points. Expected >=1000, found {nonDupeDataCount}");
+                    throw new Exception($"Received too few data points. Expected >=1000, found {nonDupeDataCount} for {expectedSymbol}");
                 }
             }
         }
 
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
         public bool CanRunLocally { get; } = true;
-        public Language[] Languages { get; } = { Language.CSharp };
 
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             { "Total Trades", "2" },

@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
@@ -30,7 +31,12 @@ namespace QuantConnect.Algorithm.CSharp
     public class AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private bool _invested;
+        private bool _onDataReached;
         private bool _optionFilterRan;
+        private readonly HashSet<Symbol> _symbolsReceived = new HashSet<Symbol>();
+        private readonly HashSet<Symbol> _expectedSymbolsReceived = new HashSet<Symbol>();
+        private readonly Dictionary<Symbol, List<QuoteBar>> _dataReceived = new Dictionary<Symbol, List<QuoteBar>>();
+
         private Future _es;
 
         public override void Initialize()
@@ -44,37 +50,72 @@ namespace QuantConnect.Algorithm.CSharp
                 return futureFilter.Expiration(0, 365).ExpirationCycle(new[] { 3, 12 });
             });
 
-            AddFutureOption(_es.Symbol, contracts =>
+            AddFutureOption(_es.Symbol, optionContracts =>
             {
                 _optionFilterRan = true;
 
-                var expiry = new HashSet<DateTime>(contracts.Select(x => x.Underlying.ID.Date)).SingleOrDefault();
+                var expiry = new HashSet<DateTime>(optionContracts.Select(x => x.Underlying.ID.Date)).SingleOrDefault();
                 // Cast to IEnumerable<Symbol> because OptionFilterContract overrides some LINQ operators like `Select` and `Where`
                 // and cause it to mutate the underlying Symbol collection when using those operators.
-                var symbol = new HashSet<Symbol>(((IEnumerable<Symbol>)contracts).Select(x => x.Underlying)).SingleOrDefault();
+                var symbol = new HashSet<Symbol>(((IEnumerable<Symbol>)optionContracts).Select(x => x.Underlying)).SingleOrDefault();
 
                 if (expiry == null || symbol == null)
                 {
                     throw new InvalidOperationException("Expected a single Option contract in the chain, found 0 contracts");
                 }
 
-                return contracts;
+                var enumerator = optionContracts.GetEnumerator();
+                while (enumerator.MoveNext())
+                {
+                    _expectedSymbolsReceived.Add(enumerator.Current);
+                }
+
+                return optionContracts;
             });
         }
 
         public override void OnData(Slice data)
         {
-            if (_invested || !data.HasData)
+            if (!data.HasData)
             {
                 return;
             }
 
-            foreach (var contracts in data.FutureChains.Values)
+            _onDataReached = true;
+
+            var hasOptionQuoteBars = false;
+            foreach (var qb in data.QuoteBars.Values)
             {
-                foreach (var contract in contracts.Contracts.Values.Select(x => x.Symbol))
+                if (qb.Symbol.SecurityType != SecurityType.Option)
                 {
-                    SetHoldings(contract, 0.25);
-                    _invested = true;
+                    continue;
+                }
+
+                hasOptionQuoteBars = true;
+
+                _symbolsReceived.Add(qb.Symbol);
+                if (!_dataReceived.ContainsKey(qb.Symbol))
+                {
+                    _dataReceived[qb.Symbol] = new List<QuoteBar>();
+                }
+
+                _dataReceived[qb.Symbol].Add(qb);
+            }
+
+            if (_invested || !hasOptionQuoteBars)
+            {
+                return;
+            }
+
+            foreach (var chain in data.FutureChains.Values)
+            {
+                foreach (var future in chain.Contracts.Keys)
+                {
+                    if (data.ContainsKey(future))
+                    {
+                        SetHoldings(future, 0.25);
+                        _invested = true;
+                    }
                 }
             }
         }
@@ -82,25 +123,73 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnEndOfAlgorithm()
         {
             base.OnEndOfAlgorithm();
+
             if (!_optionFilterRan)
             {
                 throw new InvalidOperationException("Option chain filter was never ran");
             }
+            if (!_onDataReached)
+            {
+                throw new Exception("OnData() was never called.");
+            }
+            if (_symbolsReceived.Count != _expectedSymbolsReceived.Count)
+            {
+                throw new AggregateException($"Expected {_expectedSymbolsReceived.Count} option contracts Symbols, found {_symbolsReceived.Count}");
+            }
+
+            var missingSymbols = new List<Symbol>();
+            foreach (var expectedSymbol in _expectedSymbolsReceived)
+            {
+                if (!_symbolsReceived.Contains(expectedSymbol))
+                {
+                    missingSymbols.Add(expectedSymbol);
+                }
+            }
+
+            if (missingSymbols.Count > 0)
+            {
+                throw new Exception($"Symbols: \"{string.Join(", ", missingSymbols)}\" were not found in OnData");
+            }
+
+            foreach (var expectedSymbol in _expectedSymbolsReceived)
+            {
+                var data = _dataReceived[expectedSymbol];
+                var nonDupeDataCount = data.Select(x =>
+                {
+                    x.EndTime = default(DateTime);
+                    return x;
+                }).Distinct().Count();
+
+                if (nonDupeDataCount < 1000)
+                {
+                    throw new Exception($"Received too few data points. Expected >=1000, found {nonDupeDataCount} for {expectedSymbol}");
+                }
+            }
         }
 
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
         public bool CanRunLocally { get; } = true;
-        public Language[] Languages { get; } = { Language.CSharp };
 
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             { "Total Trades", "2" },
             { "Average Win", "0%" },
             { "Average Loss", "0%" },
-            { "Compounding Annual Return", "21631.964%" },
-            { "Drawdown", "2.500%" },
+            { "Compounding Annual Return", "15141.855%" },
+            { "Drawdown", "2.600%" },
             { "Expectancy", "0" },
-            { "Net Profit", "2.993%" },
-            { "Sharpe Ratio", "11.754" },
+            { "Net Profit", "2.793%" },
+            { "Sharpe Ratio", "11.755" },
             { "Probabilistic Sharpe Ratio", "0%" },
             { "Loss Rate", "0%" },
             { "Win Rate", "0%" },
@@ -109,7 +198,7 @@ namespace QuantConnect.Algorithm.CSharp
             { "Beta", "0" },
             { "Annual Standard Deviation", "0.008" },
             { "Annual Variance", "0" },
-            { "Information Ratio", "11.754" },
+            { "Information Ratio", "11.755" },
             { "Tracking Error", "0.008" },
             { "Treynor Ratio", "0" },
             { "Total Fees", "$3.70" },
@@ -118,7 +207,7 @@ namespace QuantConnect.Algorithm.CSharp
             { "Kelly Criterion Probability Value", "0" },
             { "Sortino Ratio", "79228162514264337593543950335" },
             { "Return Over Maximum Drawdown", "79228162514264337593543950335" },
-            { "Portfolio Turnover", "1.586" },
+            { "Portfolio Turnover", "1.59" },
             { "Total Insights Generated", "0" },
             { "Total Insights Closed", "0" },
             { "Total Insights Analysis Completed", "0" },
@@ -132,7 +221,7 @@ namespace QuantConnect.Algorithm.CSharp
             { "Mean Population Magnitude", "0%" },
             { "Rolling Averaged Population Direction", "0%" },
             { "Rolling Averaged Population Magnitude", "0%" },
-            { "OrderListHash", "-1899680538" }
+            { "OrderListHash", "-733157772" }
         };
     }
 }
