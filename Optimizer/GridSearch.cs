@@ -26,6 +26,11 @@ namespace QuantConnect.Optimizer
     public class GridSearch : IOptimizationParameterSetGenerator
     {
         /// <summary>
+        /// Should be global for all Step()'s
+        /// </summary>
+        private int _i = 0;
+
+        /// <summary>
         /// Enumerate all possible arrangements
         /// </summary>
         /// <param name="seed">Seeding</param>
@@ -33,20 +38,19 @@ namespace QuantConnect.Optimizer
         /// <returns>Collection of possible combinations for given optimization parameters settings</returns>
         public IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args)
         {
-            int i = 0;
-            foreach (var step in Recursive(seed, args))
+            foreach (var step in Recursive(seed, new Queue<OptimizationParameter>(args)))
             {
                 yield return new ParameterSet(
-                    ++i,
+                    ++_i,
                     step.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToStringInvariant()));
             }
         }
 
-        private IEnumerable<Dictionary<string, decimal>> Recursive(ParameterSet seed, HashSet<OptimizationParameter> args)
+        private IEnumerable<Dictionary<string, decimal>> Recursive(ParameterSet seed, Queue<OptimizationParameter> args)
         {
             if (args.Count == 1)
             {
-                var d = args.First();
+                var d = args.Dequeue();
                 for (var value = d.MinValue; value <= d.MaxValue; value += d.Step)
                 {
                     yield return new Dictionary<string, decimal>()
@@ -57,10 +61,10 @@ namespace QuantConnect.Optimizer
                 yield break;
             }
 
-            var d2 = args.First();
+            var d2 = args.Dequeue();
             for (var value = d2.MinValue; value <= d2.MaxValue; value += d2.Step)
             {
-                foreach (var inner in Recursive(seed, args.Where(s => s.Name != d2.Name).ToHashSet()))
+                foreach (var inner in Recursive(seed, new Queue<OptimizationParameter>(args)))
                 {
                     inner.Add(d2.Name, value);
 

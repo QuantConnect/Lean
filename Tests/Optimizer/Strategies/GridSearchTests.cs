@@ -14,12 +14,11 @@
  *
 */
 
+using System;
+using NUnit.Framework;
+using QuantConnect.Optimizer;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Optimizer;
-using NUnit.Framework;
-using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Optimizer.Strategies
 {
@@ -33,10 +32,35 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             this._strategy = new GridSearch();
         }
 
-        [Test]
-        public void Step1D()
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(-2.5)]
+        public void SinglePoint(decimal step)
         {
-            var param = new OptimizationParameter("ema-fast", 10, 100, 1);
+            var args = new HashSet<OptimizationParameter>()
+            {
+                new OptimizationParameter("ema-fast", 0, 0, step),
+                new OptimizationParameter("ema-slow", 0, 0, step),
+                new OptimizationParameter("ema-custom", 1, 1, step)
+            };
+            using (var enumerator = _strategy.Step(null, args).GetEnumerator())
+            {
+                Assert.IsTrue(enumerator.MoveNext());
+                var parameterSet = enumerator.Current;
+                Assert.AreEqual("0", parameterSet.Value["ema-fast"]);
+                Assert.AreEqual("0", parameterSet.Value["ema-slow"]);
+                Assert.AreEqual("1", parameterSet.Value["ema-custom"]);
+                Assert.IsFalse(enumerator.MoveNext());
+            }
+        }
+
+        [TestCase(-10, 0, -1)]
+        [TestCase(-10, 10.5, -0.5)]
+        [TestCase(10, 100, 1)]
+        [TestCase(10, 100, 500)]
+        public void Step1D(decimal min, decimal max, decimal step)
+        {
+            var param = new OptimizationParameter("ema-fast", min, max, step);
             var set = new HashSet<OptimizationParameter>() { param };
             var counter = 0;
             using (var enumerator = _strategy.Step(null, set).GetEnumerator())
@@ -53,18 +77,29 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     Assert.AreEqual(1, suggestion.Value.Count);
                     Assert.AreEqual(v.ToStringInvariant(), suggestion.Value["ema-fast"]);
                 }
+
+                Assert.IsFalse(enumerator.MoveNext());
             }
 
-            Assert.AreEqual((param.MaxValue - param.MinValue) / param.Step + 1, counter);
+            Assert.Greater(counter, 0);
+            Assert.AreEqual(Math.Floor((param.MaxValue - param.MinValue) / param.Step) + 1, counter);
         }
 
-        [Test]
-        public void Step2D()
+        private static TestCaseData[] OptimizationParameter2D =>
+        new[]{
+            new TestCaseData(new decimal[,] {{10, 100, 1}, {20, 200, 1}}),
+            new TestCaseData(new decimal[,] {{10.5m, 100.5m, 1.5m}, { 20m, 209.9m, 3.5m}}),
+            new TestCaseData(new decimal[,] {{ -10.5m, 0m, -1.5m }, { -209.9m, -20m, -3.5m } }),
+            new TestCaseData(new decimal[,] {{ 10.5m, 0m, 1.5m }, { 209.9m, -20m, -3.5m } })
+        };
+
+        [Test, TestCaseSource(nameof(OptimizationParameter2D))]
+        public void Step2D(decimal[,] data)
         {
             var args = new HashSet<OptimizationParameter>()
             {
-                new OptimizationParameter ("ema-fast", 10,100, 1),
-                new OptimizationParameter ("ema-slow", 20, 200, 1)
+                new OptimizationParameter("ema-fast", data[0,0], data[0,1], data[0,2]),
+                new OptimizationParameter("ema-slow", data[1,0], data[1,1], data[1,2])
             };
             var counter = 0;
             using (var enumerator = _strategy.Step(null, args).GetEnumerator())
@@ -87,12 +122,16 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                         Assert.AreEqual(slow.ToStringInvariant(), suggestion.Value["ema-slow"]);
                     }
                 }
+
+                Assert.IsFalse(enumerator.MoveNext());
             }
+
+            Assert.Greater(counter, 0);
 
             var total = 1m;
             foreach (var arg in args)
             {
-                total *= (arg.MaxValue - arg.MinValue) / arg.Step + 1;
+                total *= Math.Floor((arg.MaxValue - arg.MinValue) / arg.Step) + 1;
             }
 
             Assert.AreEqual(total, counter);
@@ -133,7 +172,11 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                         }
                     }
                 }
+
+                Assert.IsFalse(enumerator.MoveNext());
             }
+
+            Assert.Greater(counter, 0);
 
             var total = 1m;
             foreach (var arg in args)
@@ -142,6 +185,59 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             }
 
             Assert.AreEqual(total, counter);
+        }
+
+        [Test]
+        public void NoStackOverflowException()
+        {
+            var depth = 100;
+            var args = new HashSet<OptimizationParameter>();
+
+            for (int i = 0; i < depth; i++)
+            {
+                args.Add(new OptimizationParameter($"ema-{i}", 10, 100, 1));
+            }
+
+            var counter = 0;
+            foreach (var parameterSet in _strategy.Step(null, args))
+            {
+                counter++;
+
+                Assert.AreEqual(depth, parameterSet.Value.Count);
+                if (counter == 10000)
+                {
+                    break;
+                }
+            }
+
+            Assert.AreEqual(10000, counter);
+        }
+
+        [Test]
+        public void IncrementParameterSetId()
+        {
+            int nextId = 1;
+
+            var set1 = new HashSet<OptimizationParameter>()
+            {
+                new OptimizationParameter("ema-fast", 10, 100, 1)
+            };
+            foreach (var parameterSet in _strategy.Step(null, set1))
+            {
+                Assert.AreEqual(nextId++, parameterSet.Id);
+            }
+
+            var set2 = new HashSet<OptimizationParameter>()
+            {
+                new OptimizationParameter("ema-fast", 10, 100, 1),
+                new OptimizationParameter("ema-slow", 1, 50, 0.5m)
+            };
+            foreach (var parameterSet in _strategy.Step(null, set2))
+            {
+                Assert.AreEqual(nextId++, parameterSet.Id);
+            }
+
+            Assert.Greater(nextId, 1);
         }
     }
 }

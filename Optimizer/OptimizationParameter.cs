@@ -13,7 +13,7 @@
  * limitations under the License.
 */
 
-using System.Runtime.CompilerServices;
+using System;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Optimizer
@@ -30,9 +30,11 @@ namespace QuantConnect.Optimizer
         public OptimizationParameter(string name, decimal min, decimal max, decimal step)
         {
             Name = name;
-            MinValue = min;
-            MaxValue = max;
-            Step = step;
+            MinValue = Math.Min(min, max);
+            MaxValue = Math.Max(min, max);
+            Step = step != 0
+                ? Math.Abs(step)
+                : 1;
         }
 
         /// <summary>
