@@ -466,7 +466,7 @@ namespace QuantConnect.Orders.Fills
         {
             var subscribedTypes = GetSubscribedTypes(asset);
 
-            var ticks = new List<Tick>();
+            List<Tick> ticks = null;
             var isTickSubscribed = subscribedTypes.Contains(typeof(Tick));
 
             if (isTickSubscribed)
@@ -501,11 +501,14 @@ namespace QuantConnect.Orders.Fills
                 }
             }
 
-            var tradeBar = asset.Cache.GetData<TradeBar>();
-            if (tradeBar != null)
+            if (subscribedTypes.Contains(typeof(TradeBar)))
             {
-                endTime = tradeBar.EndTime;
-                return tradeBar.Close;
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar != null)
+                {
+                    endTime = tradeBar.EndTime;
+                    return tradeBar.Close;
+                }
             }
 
             endTime = asset.LocalTime;
@@ -521,7 +524,7 @@ namespace QuantConnect.Orders.Fills
         {
             var subscribedTypes = GetSubscribedTypes(asset);
 
-            var ticks = new List<Tick>();
+            List<Tick> ticks = null;
             var isTickSubscribed = subscribedTypes.Contains(typeof(Tick));
 
             if (isTickSubscribed)
@@ -548,7 +551,7 @@ namespace QuantConnect.Orders.Fills
 
             if (isTickSubscribed)
             {
-                var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade && x.BidPrice != 0);
+                var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade && x.Price != 0);
                 if (trade != null)
                 {
                     endTime = trade.EndTime;
@@ -556,11 +559,14 @@ namespace QuantConnect.Orders.Fills
                 }
             }
 
-            var tradeBar = asset.Cache.GetData<TradeBar>();
-            if (tradeBar != null)
+            if (subscribedTypes.Contains(typeof(TradeBar)))
             {
-                endTime = tradeBar.EndTime;
-                return tradeBar.Close;
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar != null)
+                {
+                    endTime = tradeBar.EndTime;
+                    return tradeBar.Close;
+                }
             }
 
             endTime = asset.LocalTime;
@@ -574,15 +580,6 @@ namespace QuantConnect.Orders.Fills
         private TradeBar GetLastTradeBar(Security asset)
         {
             var subscribedTypes = GetSubscribedTypes(asset);
-
-            if (subscribedTypes.Contains(typeof(TradeBar)))
-            {
-                var tradeBar = asset.Cache.GetData<TradeBar>();
-                if (tradeBar != null)
-                {
-                    return tradeBar;
-                }
-            }
 
             if (subscribedTypes.Contains(typeof(Tick)))
             {
@@ -603,8 +600,21 @@ namespace QuantConnect.Orders.Fills
 
             }
 
+            if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar != null)
+                {
+                    return tradeBar;
+                }
+            }
+
+            // Use any data available
             var lastData = asset.GetLastData();
-            return new TradeBar(lastData.Time, asset.Symbol, asset.Open, asset.High, asset.Low, asset.Close, asset.Volume, lastData.EndTime - lastData.Time);
+            var time = lastData?.Time ?? asset.LocalTime;
+            var period = lastData == null ? TimeSpan.Zero : lastData.EndTime - time;
+
+            return new TradeBar(time, asset.Symbol, asset.Open, asset.High, asset.Low, asset.Close, asset.Volume, period);
         }
 
         /// <summary>
@@ -614,15 +624,6 @@ namespace QuantConnect.Orders.Fills
         private QuoteBar GetLastQuoteBar(Security asset)
         {
             var subscribedTypes = GetSubscribedTypes(asset);
-
-            if (subscribedTypes.Contains(typeof(QuoteBar)))
-            {
-                var quoteBar = asset.Cache.GetData<QuoteBar>();
-                if (quoteBar != null)
-                {
-                    return quoteBar;
-                }
-            }
 
             if (subscribedTypes.Contains(typeof(Tick)))
             {
@@ -650,16 +651,28 @@ namespace QuantConnect.Orders.Fills
                 }
             }
 
+            if (subscribedTypes.Contains(typeof(QuoteBar)))
+            {
+                var quoteBar = asset.Cache.GetData<QuoteBar>();
+                if (quoteBar != null)
+                {
+                    return quoteBar;
+                }
+            }
+
+            // Use any data available
             var lastData = asset.GetLastData();
+            var time = lastData?.Time ?? asset.LocalTime;
+            var period = lastData == null ? TimeSpan.Zero : lastData.EndTime - time;
 
             return new QuoteBar(
-                lastData.Time,
+                time,
                 asset.Symbol,
                 new Bar(asset.Open, asset.High, asset.Low, asset.BidPrice),
                 asset.BidSize,
                 new Bar(asset.Open, asset.High, asset.Low, asset.AskPrice),
                 asset.AskSize,
-                lastData.EndTime - lastData.Time
+                period
             );
         }
     }
