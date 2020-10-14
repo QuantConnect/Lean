@@ -43,6 +43,9 @@ else
     read -p "Would you like to debug C#? (Requires mono debugger attachment) [default: N]: " debugging
 fi
 
+#Have to reset IFS for cfg files to work properly
+IFS=" "
+
 if [ -z "$image" ]; then
     image=$default_image
 fi

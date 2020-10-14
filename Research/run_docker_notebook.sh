@@ -38,6 +38,9 @@ else
     read -p "Enter absolute path to store notebooks [default: $default_notebook_dir]: " notebook_dir
 fi
 
+#Have to reset IFS for cfg files to work properly
+IFS=" "
+
 if [ -z "$image" ]; then
     image=$default_image
 fi
