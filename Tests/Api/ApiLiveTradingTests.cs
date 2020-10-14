@@ -25,11 +25,13 @@ using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.API
 {
-    [TestFixture, Ignore("These tests require configured and active accounts to Interactive Brokers, FXCM, Oanda, and Tradier")]
+    [TestFixture, Ignore("These tests require configured and active accounts to Interactive Brokers, FXCM, Oanda, and Tradier " +
+         "as well as your Organization ID and available live nodes")]
     class ApiLiveTradingTests
     {
         private int _testAccount;
         private string _testToken;
+        private string _testOrganization;
         private string _dataFolder;
         private Api.Api _api;
         private const bool stopLiveAlgos = true;
@@ -42,6 +44,7 @@ namespace QuantConnect.Tests.API
         {
             _testAccount = Config.GetInt("job-user-id");
             _testToken = Config.Get("api-access-token");
+            _testOrganization = Config.Get("job-organization-id", "EnterOrgHere"); //This org must be your preferred org
             _dataFolder = Config.Get("data-folder");
 
             _api = new Api.Api();
@@ -293,24 +296,26 @@ namespace QuantConnect.Tests.API
             var compile = _api.CreateCompile(project.Projects.First().ProjectId);
             Assert.IsTrue(compile.Success);
 
-            // Wait at max 10 seconds for project to compile
-            Compile compileCheck = WaitForCompilerResponse(project.Projects.First().ProjectId, compile.CompileId, 10);
+            // Wait at max 30 seconds for project to compile
+            Compile compileCheck = WaitForCompilerResponse(project.Projects.First().ProjectId, compile.CompileId, 30);
             Assert.IsTrue(compileCheck.Success);
             Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
 
+            // Get a live node to launch the algorithm on
+            var nodes = _api.ReadNodes(_testOrganization);
+            Assert.IsTrue(nodes.Success);
+            var freeNode = nodes.LiveNodes.Where(x => x.Busy == false);
+            Assert.IsNotEmpty(freeNode, "No free Live Nodes found");
+
             // Create live default algorithm
-            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, "server512", settings);
+            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, freeNode.FirstOrDefault().Id, settings);
             Assert.IsTrue(createLiveAlgorithm.Success);
 
             if (stopLiveAlgos)
             {
-                // Liquidate live algorithm
+                // Liquidate live algorithm; will also stop algorithm
                 var liquidateLive = _api.LiquidateLiveAlgorithm(project.Projects.First().ProjectId);
                 Assert.IsTrue(liquidateLive.Success);
-
-                // Stop live algorithm
-                var stopLive = _api.StopLiveAlgorithm(project.Projects.First().ProjectId);
-                Assert.IsTrue(stopLive.Success);
 
                 // Delete the project
                 var deleteProject = _api.DeleteProject(project.Projects.First().ProjectId);
@@ -331,9 +336,9 @@ namespace QuantConnect.Tests.API
             var finish = DateTime.Now.AddSeconds(seconds);
             while (DateTime.Now < finish)
             {
+                Thread.Sleep(1000);
                 compile = _api.ReadCompile(projectId, compileId);
                 if (compile.State == CompileState.BuildSuccess) break;
-                Thread.Sleep(1000);
             }
             return compile;
         }

@@ -398,7 +398,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Id of the project on QuantConnect</param>
         /// <param name="compileId">Id of the compilation on QuantConnect</param>
-        /// <param name="serverType">Type of server instance that will run the algorithm</param>
+        /// <param name="nodeId">Id of the node that will run the algorithm</param>
         /// <param name="baseLiveAlgorithmSettings">Brokerage specific <see cref="BaseLiveAlgorithmSettings">BaseLiveAlgorithmSettings</see>.</param>
         /// <param name="versionId">The version of the Lean used to run the algorithm.
         ///                         -1 is master, however, sometimes this can create problems with live deployments.
@@ -407,7 +407,7 @@ namespace QuantConnect.Api
 
         public LiveAlgorithm CreateLiveAlgorithm(int projectId,
                                                  string compileId,
-                                                 string serverType,
+                                                 string nodeId,
                                                  BaseLiveAlgorithmSettings baseLiveAlgorithmSettings,
                                                  string versionId = "-1")
         {
@@ -416,7 +416,7 @@ namespace QuantConnect.Api
             request.Parameters.Clear();
             var body = JsonConvert.SerializeObject(new LiveAlgorithmApiSettingsWrapper(projectId,
                                                                                        compileId,
-                                                                                       serverType,
+                                                                                       nodeId,
                                                                                        baseLiveAlgorithmSettings,
                                                                                        versionId));
             request.AddParameter("application/json", body, ParameterType.RequestBody);
