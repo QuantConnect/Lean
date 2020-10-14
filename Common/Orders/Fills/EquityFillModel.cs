@@ -591,13 +591,17 @@ namespace QuantConnect.Orders.Fills
                     return new TradeBar(trade.Time, trade.Symbol, trade.Price, trade.Price, trade.Price, trade.Price, trade.Quantity, TimeSpan.Zero);
                 }
 
-                var quote = ticks.LastOrDefault(x => x.TickType == TickType.Quote && x.AskPrice != 0 && x.BidPrice != 0);
-                if (quote != null)
-                {
-                    var price = (quote.AskPrice + quote.BidPrice) / 2;
-                    return new TradeBar(quote.Time, quote.Symbol, price, price, price, price, 0, TimeSpan.Zero);
-                }
+                DateTime quoteTime;
+                decimal askPrice;
+                decimal askSize;
+                decimal bidPrice;
+                decimal bidSize;
 
+                if (TryGetLastQuoteTick(asset, ticks, out quoteTime, out bidPrice, out bidSize, out askPrice, out askSize))
+                {
+                    var price = (askPrice + bidPrice) / 2;
+                    return new TradeBar(quoteTime, asset.Symbol, price, price, price, price, 0, TimeSpan.Zero);
+                }
             }
 
             if (subscribedTypes.Contains(typeof(TradeBar)))
@@ -629,16 +633,21 @@ namespace QuantConnect.Orders.Fills
             {
                 var ticks = asset.Cache.GetAll<Tick>().ToList();
 
-                var quote = ticks.LastOrDefault(x => x.TickType == TickType.Quote && x.AskPrice != 0 && x.BidPrice != 0);
-                if (quote != null)
+                DateTime quoteTime;
+                decimal askPrice;
+                decimal askSize;
+                decimal bidPrice;
+                decimal bidSize;
+
+                if (TryGetLastQuoteTick(asset, ticks, out quoteTime, out bidPrice, out bidSize, out askPrice, out askSize))
                 {
                     return new QuoteBar(
-                        quote.Time,
-                        quote.Symbol,
-                        new Bar(quote.BidPrice, quote.BidPrice, quote.BidPrice, quote.BidPrice),
-                        quote.BidSize,
-                        new Bar(quote.AskPrice, quote.AskPrice, quote.AskPrice, quote.AskPrice),
-                        quote.AskSize,
+                        quoteTime,
+                        asset.Symbol,
+                        new Bar(bidPrice, bidPrice, bidPrice, bidPrice),
+                        bidSize,
+                        new Bar(askPrice, askPrice, askPrice, askPrice),
+                        askSize,
                         TimeSpan.Zero
                     );
                 }
@@ -674,6 +683,47 @@ namespace QuantConnect.Orders.Fills
                 asset.AskSize,
                 period
             );
+        }
+
+        /// <summary>
+        /// Get the last quote information
+        /// </summary>
+        /// <param name="asset">Security which has subscribed to tick data</param>
+        /// <param name="ticks">Current collection of Tick for the asset</param>
+        /// <param name="time">DateTime of the last bid or ask</param>
+        /// <param name="bidPrice">Last bid price available</param>
+        /// <param name="bidSize">Last bid size. Zero if there is no bid information in the current collection of Tick</param>
+        /// <param name="askPrice">Last ask price available</param>
+        /// <param name="askSize">Last ask size. Zero if there is no ask information in the current collection of Tick</param>
+        /// <returns></returns>
+        private bool TryGetLastQuoteTick(Security asset, List<Tick> ticks, out DateTime time, out decimal bidPrice, out decimal bidSize, out decimal askPrice, out decimal askSize)
+        {
+            time = DateTime.MinValue;
+            bidPrice = asset.BidPrice;
+            bidSize = 0;
+            askPrice = asset.AskPrice;
+            askSize = 0;
+
+            var quoteAsk = ticks.LastOrDefault(x => x.TickType == TickType.Quote && x.AskPrice != 0);
+            if (quoteAsk != null)
+            {
+                askPrice = quoteAsk.AskPrice;
+                askSize = quoteAsk.AskSize;
+                time = quoteAsk.Time;
+            }
+
+            var quoteBid = ticks.LastOrDefault(x => x.TickType == TickType.Quote && x.BidPrice != 0);
+            if (quoteBid != null)
+            {
+                bidPrice = quoteBid.BidPrice;
+                bidSize = quoteBid.BidSize;
+                if (quoteBid.Time > time)
+                {
+                    time = quoteBid.Time;
+                }
+            }
+
+            return quoteAsk != null || quoteBid != null;
         }
     }
 }
