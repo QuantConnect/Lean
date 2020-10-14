@@ -19,6 +19,9 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Optimizer
 {
+    /// <summary>
+    /// Provide a packet type containing information on the optimization compute job.
+    /// </summary>
     public class OptimizationNodePacket : Packet
     {
         /// <summary>
@@ -37,14 +40,29 @@ namespace QuantConnect.Optimizer
 
         public string OptimizationId = "";
 
-        public string ParameterSetGenerator = "";
-
+        /// <summary>
+        /// Optimization strategy name
+        /// </summary>
         public string OptimizationStrategy = "";
 
+        /// <summary>
+        /// Parameter set generator name
+        /// </summary>
+        public string ParameterSetGenerator = "";
+
+        /// <summary>
+        /// Optimization settings
+        /// </summary>
         public Dictionary<string, string> OptimizationSettings;
 
+        /// <summary>
+        /// Objective settings
+        /// </summary>
         public Dictionary<string, string> Criterion;
 
+        /// <summary>
+        /// Optimization parameters
+        /// </summary>
         public HashSet<OptimizationParameter> OptimizationParameters;
 
         public OptimizationNodePacket() : base(PacketType.OptimizationNode)

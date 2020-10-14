@@ -13,22 +13,43 @@
  * limitations under the License.
 */
 
-using System;
-
 namespace QuantConnect.Optimizer
 {
+    /// <summary>
+    /// Defines the result of Lean compute job
+    /// </summary>
     public class OptimizationResult
     {
+        /// <summary>
+        /// Corresponds to empty result - zero profit at empty permission set
+        /// </summary>
         public static readonly OptimizationResult Empty = new OptimizationResult();
 
+        /// <summary>
+        /// Id of optimization job. Equals to parameter set Id
+        /// </summary>
         public int Id => ParameterSet?.Id ?? 0;
 
+        /// <summary>
+        /// Target criterion value
+        /// </summary>
         public decimal Profit { get; }
 
+        /// <summary>
+        /// The parameter set at which the result was achieved
+        /// </summary>
         public ParameterSet ParameterSet { get; }
 
+        /// <summary>
+        /// Create an empty instance of <see cref="OptimizationResult"/>
+        /// </summary>
         private OptimizationResult() {}
 
+        /// <summary>
+        /// Create an instance of <see cref="OptimizationResult"/>
+        /// </summary>
+        /// <param name="profit">Result of compute job</param>
+        /// <param name="parameterSet">Parameter set used in compute job</param>
         public OptimizationResult(decimal profit, ParameterSet parameterSet)
         {
             Profit = profit;

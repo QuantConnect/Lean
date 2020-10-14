@@ -18,15 +18,40 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.Optimizer
 {
+    /// <summary>
+    /// Defines the optimization parameter meta information
+    /// </summary>
     public class OptimizationParameter
     {
+        /// <summary>
+        /// Name of optimization parameter
+        /// </summary>
         public string Name { get; }
+
+        /// <summary>
+        /// Minimum value of optimization parameter, applicable for boundary conditions
+        /// </summary>
         [JsonProperty("min")]
         public decimal MinValue { get; }
+
+        /// <summary>
+        /// Maximum value of optimization parameter, applicable for boundary conditions
+        /// </summary>
         [JsonProperty("max")]
         public decimal MaxValue { get; }
+
+        /// <summary>
+        /// Movement, should be positive
+        /// </summary>
         public decimal Step { get; }
 
+        /// <summary>
+        /// Create an instance of <see cref="OptimizationParameter"/> based on configuration
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <param name="step"></param>
         public OptimizationParameter(string name, decimal min, decimal max, decimal step)
         {
             Name = name;
