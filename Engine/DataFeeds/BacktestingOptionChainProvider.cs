@@ -43,7 +43,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var fileExists = false;
             var zipFileName = string.Empty;
 
-            foreach (var tickType in new[] { TickType.Trade, TickType.Quote, TickType.OpenInterest })
+            // In order of trust-worthiness of containing the complete option chain, OpenInterest is guaranteed
+            // to have the complete option chain. Quotes come after open-interest
+            // because it's also likely to contain the option chain. Trades may be
+            // missing portions of the option chain, so we resort to it last.
+            foreach (var tickType in new[] { TickType.OpenInterest, TickType.Quote, TickType.Trade })
             {
                 // build the zip file name for open interest data
                 zipFileName = LeanData.GenerateZipFilePath(Globals.DataFolder, canonicalSymbol, date, Resolution.Minute, tickType);

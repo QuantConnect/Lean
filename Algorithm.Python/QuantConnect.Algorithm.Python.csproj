@@ -46,6 +46,8 @@
   <ItemGroup>
     <Content Include="AccumulativeInsightPortfolioRegressionAlgorithm.py" />
     <Content Include="AddAlphaModelAlgorithm.py" />
+    <Content Include="AddFutureOptionContractDataStreamingRegressionAlgorithm.py" />
+    <Content Include="AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorithm.py" />
     <Content Include="AddOptionContractExpiresRegressionAlgorithm.py" />
     <Content Include="AddOptionContractFromUniverseRegressionAlgorithm.py" />
     <Content Include="AddRiskManagementAlgorithm.py" />
