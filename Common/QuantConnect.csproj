@@ -440,6 +440,7 @@
     <Compile Include="Securities\Option\StrategyMatcher\OptionStrategyMatcherOptions.cs" />
     <Compile Include="Securities\Option\StrategyMatcher\PredicateTargetValue.cs" />
     <Compile Include="Securities\Option\StrategyMatcher\UnmatchedPositionCountOptionStrategyMatchObjectiveFunction.cs" />
+    <Compile Include="Securities\Option\FutureOptionMarginModel.cs" />
     <Compile Include="Securities\RegisteredSecurityDataTypesProvider.cs" />
     <Compile Include="Securities\ErrorCurrencyConverter.cs" />
     <Compile Include="Securities\GetMaximumOrderQuantityForTargetBuyingPowerParameters.cs" />
