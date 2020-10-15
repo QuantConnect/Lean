@@ -1163,7 +1163,7 @@ namespace QuantConnect.Lean.Engine
                     // mark option contract as not tradable
                     optionContractSecurity.IsTradable = false;
 
-                    algorithm.Debug($"MarktetOnClose order submitted for option contract '{optionContractSymbol}' due to impending {split.Symbol.Value} split event. "
+                    algorithm.Debug($"MarketOnClose order submitted for option contract '{optionContractSymbol}' due to impending {split.Symbol.Value} split event. "
                         + "Option splits are not currently supported.");
                 }
 

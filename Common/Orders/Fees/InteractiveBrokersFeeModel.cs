@@ -90,6 +90,13 @@ namespace QuantConnect.Orders.Fees
                     break;
 
                 case SecurityType.Option:
+                    // The future option fee model is exactly the same as the one futures
+                    // uses. Let's fall through and use that fee model instead.
+                    if (security.Symbol.Underlying.SecurityType == SecurityType.Future)
+                    {
+                        goto case SecurityType.Future;
+                    }
+
                     Func<decimal, decimal, CashAmount> optionsCommissionFunc;
                     if (!_optionFee.TryGetValue(market, out optionsCommissionFunc))
                     {
