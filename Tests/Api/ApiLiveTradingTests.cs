@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.API
 {
     [TestFixture, Ignore("These tests require configured and active accounts to Interactive Brokers, FXCM, Oanda, and Tradier " +
          "as well as your Organization ID and available live nodes")]
-    class ApiLiveTradingTests
+    public class ApiLiveTradingTests
     {
         private int _testAccount;
         private string _testToken;

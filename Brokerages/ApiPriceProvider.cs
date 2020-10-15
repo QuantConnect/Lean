@@ -55,7 +55,7 @@ namespace QuantConnect.Brokerages
         public decimal GetLastPrice(Symbol symbol)
         {
             //NOP ReadPrices endpoint has been removed
-            throw new Exception("Prices endpoint is no longer supported");
+            throw new InvalidOperationException("Prices endpoint is no longer supported");
         }
     }
 }
