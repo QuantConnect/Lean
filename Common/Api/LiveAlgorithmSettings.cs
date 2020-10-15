@@ -28,15 +28,15 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Id of project from QuantConnect</param>
         /// <param name="compileId">Id of compilation of project from QuantConnect</param>
-        /// <param name="serverType">Server type to run live Algorithm</param>
+        /// <param name="nodeId">Server type to run live Algorithm</param>
         /// <param name="settings"><see cref="BaseLiveAlgorithmSettings ">Live Algorithm Settings</see> for a specific brokerage</param>
         /// <param name="version">The version identifier</param>
-        public LiveAlgorithmApiSettingsWrapper(int projectId, string compileId, string serverType, BaseLiveAlgorithmSettings settings, string version = "-1")
+        public LiveAlgorithmApiSettingsWrapper(int projectId, string compileId, string nodeId, BaseLiveAlgorithmSettings settings, string version = "-1")
         {
             VersionId = version;
             ProjectId = projectId;
             CompileId = compileId;
-            ServerType = serverType;
+            NodeId = nodeId;
             Brokerage = settings;
         }
 
@@ -59,10 +59,10 @@ namespace QuantConnect.Api
         public string CompileId { get; private set; }
 
         /// <summary>
-        /// Type of server being used to run live algorithm
+        /// Id of the node being used to run live algorithm
         /// </summary>
-        [JsonProperty(PropertyName = "serverType")]
-        public string ServerType { get; private set; }
+        [JsonProperty(PropertyName = "nodeId")]
+        public string NodeId { get; private set; }
 
         /// <summary>
         /// The API expects the settings as part of a brokerage object

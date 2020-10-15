@@ -398,7 +398,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Id of the project on QuantConnect</param>
         /// <param name="compileId">Id of the compilation on QuantConnect</param>
-        /// <param name="serverType">Type of server instance that will run the algorithm</param>
+        /// <param name="nodeId">Id of the node that will run the algorithm</param>
         /// <param name="baseLiveAlgorithmSettings">Brokerage specific <see cref="BaseLiveAlgorithmSettings">BaseLiveAlgorithmSettings</see>.</param>
         /// <param name="versionId">The version of the Lean used to run the algorithm.
         ///                         -1 is master, however, sometimes this can create problems with live deployments.
@@ -407,7 +407,7 @@ namespace QuantConnect.Api
 
         public LiveAlgorithm CreateLiveAlgorithm(int projectId,
                                                  string compileId,
-                                                 string serverType,
+                                                 string nodeId,
                                                  BaseLiveAlgorithmSettings baseLiveAlgorithmSettings,
                                                  string versionId = "-1")
         {
@@ -416,7 +416,7 @@ namespace QuantConnect.Api
             request.Parameters.Clear();
             var body = JsonConvert.SerializeObject(new LiveAlgorithmApiSettingsWrapper(projectId,
                                                                                        compileId,
-                                                                                       serverType,
+                                                                                       nodeId,
                                                                                        baseLiveAlgorithmSettings,
                                                                                        versionId));
             request.AddParameter("application/json", body, ParameterType.RequestBody);
@@ -585,35 +585,6 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Will get the prices for requested symbols
-        /// </summary>
-        /// <param name="symbols">Symbols for which the price is requested</param>
-        /// <returns><see cref="Prices"/></returns>
-        public PricesList ReadPrices(IEnumerable<Symbol> symbols)
-        {
-            var symbolByID = new Dictionary<string, Symbol>();
-            foreach (var symbol in symbols)
-            {
-                symbolByID[symbol.ID.ToString()] = symbol;
-            }
-
-            var request = new RestRequest("prices", Method.POST);
-            var symbolsToRequest = string.Join(",", symbolByID.Keys);
-            request.AddParameter("symbols", symbolsToRequest);
-
-            PricesList pricesList;
-            if (ApiConnection.TryRequest(request, out pricesList))
-            {
-                foreach (var price in pricesList.Prices)
-                {
-                    price.Symbol = symbolByID[price.SymbolID];
-                }
-            }
-
-            return pricesList;
-        }
-
-        /// <summary>
         /// Method to download and save the data purchased through QuantConnect
         /// </summary>
         /// <param name="symbol">Symbol of security of which data will be requested.</param>
@@ -702,54 +673,6 @@ namespace QuantConnect.Api
         {
             //
         }
-
-        /// <summary>
-        /// Gets all split events between the specified times. From and to are inclusive.
-        /// </summary>
-        /// <param name="from">The first date to get splits for</param>
-        /// <param name="to">The last date to get splits for</param>
-        /// <returns>A list of all splits in the specified range</returns>
-        public List<Data.Market.Split> GetSplits(DateTime from, DateTime to)
-        {
-            var request = new RestRequest("splits", Method.POST);
-            request.AddParameter("from", from.ToStringInvariant("yyyyMMdd"));
-            request.AddParameter("to", from.ToStringInvariant("yyyyMMdd"));
-
-            SplitList splits;
-            ApiConnection.TryRequest(request, out splits);
-
-            return splits.Splits.Select(s => new Data.Market.Split(
-                s.Symbol,
-                s.Date,
-                s.ReferencePrice,
-                s.SplitFactor,
-                SplitType.SplitOccurred)
-            ).ToList();
-        }
-
-        /// <summary>
-        /// Gets all dividend events between the specified times. From and to are inclusive.
-        /// </summary>
-        /// <param name="from">The first date to get dividend for</param>
-        /// <param name="to">The last date to get dividend for</param>
-        /// <returns>A list of all dividend in the specified range</returns>
-        public List<Data.Market.Dividend> GetDividends(DateTime from, DateTime to)
-        {
-            var request = new RestRequest("dividends", Method.POST);
-            request.AddParameter("from", from.ToStringInvariant("yyyyMMdd"));
-            request.AddParameter("to", from.ToStringInvariant("yyyyMMdd"));
-
-            DividendList dividends;
-            ApiConnection.TryRequest(request, out dividends);
-
-            return dividends.Dividends.Select(s => new Data.Market.Dividend(
-                s.Symbol,
-                s.Date,
-                s.DividendPerShare,
-                s.ReferencePrice)
-            ).ToList();
-        }
-
 
         /// <summary>
         /// Local implementation for downloading data to algorithms

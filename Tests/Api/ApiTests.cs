@@ -19,26 +19,28 @@ using System.Threading;
 using System.Web;
 using NUnit.Framework;
 using QuantConnect.Api;
-using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.API
 {
-    [TestFixture, Ignore("These tests require configured and active accounts to Tradier, FXCM and Oanda")]
+    [TestFixture, Ignore("These tests require QC User ID and API Token in the configuration")]
     class RestApiTests
     {
-        private int _testAccount = 1;
-        private string _testToken = "ec87b337ac970da4cbea648f24f1c851";
-        private string _dataFolder = Config.Get("data-folder");
+        private int _testAccount;
+        private string _testToken;
+        private string _dataFolder;
         private Api.Api _api;
-        private const bool stopLiveAlgos = true;
 
         /// <summary>
-        /// Run before every test
+        /// Run before test
         /// </summary>
-        [SetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
+            _testAccount = Config.GetInt("job-user-id", 1);
+            _testToken = Config.Get("api-access-token", "ec87b337ac970da4cbea648f24f1c851");
+            _dataFolder = Config.Get("data-folder");
+
             _api = new Api.Api();
             _api.Initialize(_testAccount, _testToken, _dataFolder);
         }
@@ -183,395 +185,11 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(deleteProject.Success);
         }
 
-
-        /// <summary>
-        /// Test creating the settings object that provide the necessary parameters for each broker
-        /// </summary>
-        [Test]
-        public void LiveAlgorithmSettings_CanBeCreated_Successfully()
-        {
-            string user = "";
-            string password = "";
-            BrokerageEnvironment environment = BrokerageEnvironment.Paper;
-            string account = "";
-
-            // Oanda Custom Variables
-            string accessToken = "";
-            var dateIssuedString = "20160920";
-
-            // Tradier Custom Variables
-            string dateIssued = "";
-            string refreshToken = "";
-            string lifetime = "";
-
-            // Create and test settings for each brokerage
-            foreach (BrokerageName brokerageName in Enum.GetValues(typeof(BrokerageName)))
-            {
-                BaseLiveAlgorithmSettings settings = null;
-
-                switch (brokerageName)
-                {
-                    case BrokerageName.Default:
-                        user     = Config.Get("default-username");
-                        password = Config.Get("default-password");
-                        settings = new DefaultLiveAlgorithmSettings(user, password, environment, account);
-
-                        Assert.IsTrue(settings.Id == BrokerageName.Default.ToString());
-                        break;
-                    case BrokerageName.FxcmBrokerage:
-                        user     = Config.Get("fxcm-user-name");
-                        password = Config.Get("fxcm-password");
-                        settings = new FXCMLiveAlgorithmSettings(user, password, environment, account);
-
-                        Assert.IsTrue(settings.Id == BrokerageName.FxcmBrokerage.ToString());
-                        break;
-                    case BrokerageName.InteractiveBrokersBrokerage:
-                        user     = Config.Get("ib-user-name");
-                        password = Config.Get("ib-password");
-                        account = Config.Get("ib-account");
-                        settings = new InteractiveBrokersLiveAlgorithmSettings(user, password, account);
-
-                        Assert.IsTrue(settings.Id == BrokerageName.InteractiveBrokersBrokerage.ToString());
-                        break;
-                    case BrokerageName.OandaBrokerage:
-                        accessToken = Config.Get("oanda-access-token");
-                        account     = Config.Get("oanda-account-id");
-
-                        settings = new OandaLiveAlgorithmSettings(accessToken, environment, account);
-                        Assert.IsTrue(settings.Id == BrokerageName.OandaBrokerage.ToString());
-                        break;
-                    case BrokerageName.TradierBrokerage:
-                        dateIssued   = Config.Get("tradier-issued-at");
-                        refreshToken = Config.Get("tradier-refresh-token");
-                        account      = Config.Get("tradier-account-id");
-
-                        settings = new TradierLiveAlgorithmSettings(refreshToken, dateIssued, refreshToken, account);
-
-                        break;
-                    default:
-                        throw new Exception($"Settings have not been implemented for this brokerage: {brokerageName}");
-                }
-
-                // Tests common to all brokerage configuration classes
-                Assert.IsTrue(settings != null);
-                Assert.IsTrue(settings.Password == password);
-                Assert.IsTrue(settings.User == user);
-
-                // tradier brokerage is always live, the rest are variable
-                if (brokerageName != BrokerageName.TradierBrokerage)
-                    Assert.IsTrue(settings.Environment == environment);
-
-                // Oanda specific settings
-                if (brokerageName == BrokerageName.OandaBrokerage)
-                {
-                    var oandaSetting = settings as OandaLiveAlgorithmSettings;
-
-                    Assert.IsTrue(oandaSetting.AccessToken == accessToken);
-                }
-
-                // Tradier specific settings
-                if (brokerageName == BrokerageName.TradierBrokerage)
-                {
-                    var tradierLiveAlogrithmSettings = settings as TradierLiveAlgorithmSettings;
-
-                    Assert.IsTrue(tradierLiveAlogrithmSettings.DateIssued == dateIssued);
-                    Assert.IsTrue(tradierLiveAlogrithmSettings.RefreshToken == refreshToken);
-                    Assert.IsTrue(settings.Environment == BrokerageEnvironment.Live);
-                }
-
-                // reset variables
-                user = "";
-                password = "";
-                environment = BrokerageEnvironment.Paper;
-                account = "";
-            }
-        }
-
-
-        /// <summary>
-        /// Reading live algorithm tests
-        ///   - Get a list of live algorithms
-        ///   - Get logs for the first algorithm returned
-        /// Will there always be a live algorithm for the test user?
-        /// </summary>
-        [Test]
-        public void LiveAlgorithmsAndLiveLogs_CanBeRead_Successfully()
-        {
-            // Read all currently running algorithms
-            var liveAlgorithms = _api.ListLiveAlgorithms(AlgorithmStatus.Running);
-
-            Assert.IsTrue(liveAlgorithms.Success);
-            // There has to be at least one running algorithm
-            Assert.IsTrue(liveAlgorithms.Algorithms.Any());
-
-            // Read the logs of the first live algorithm
-            var firstLiveAlgo = liveAlgorithms.Algorithms[0];
-            var liveLogs = _api.ReadLiveLogs(firstLiveAlgo.ProjectId, firstLiveAlgo.DeployId);
-
-            Assert.IsTrue(liveLogs.Success);
-            Assert.IsTrue(liveLogs.Logs.Any());
-        }
-
-        /// <summary>
-        /// Paper trading FXCM
-        /// </summary>
-        [Test]
-        public void LiveForexAlgorithms_CanBeUsedWithFXCM_Successfully()
-        {
-            var user     = Config.Get("fxcm-user-name");
-            var password = Config.Get("fxcm-password");
-            var account  = Config.Get("fxcm-account-id");
-            var file = new ProjectFile
-            {
-                Name = "main.cs",
-                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateForexAlgorithm.cs")
-            };
-
-            // Create a new project
-            var project = _api.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp);
-            Assert.IsTrue(project.Success);
-
-            // Add Project Files
-            var addProjectFile = _api.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
-            Assert.IsTrue(addProjectFile.Success);
-
-            // Create compile
-            var compile = _api.CreateCompile(project.Projects.First().ProjectId);
-            Assert.IsTrue(compile.Success);
-
-            // Create default algorithm settings
-            var settings = new FXCMLiveAlgorithmSettings(user,
-                                                         password,
-                                                         BrokerageEnvironment.Paper,
-                                                         account);
-
-            // Wait for project to compile
-            Thread.Sleep(10000);
-
-            // Create live default algorithm
-            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, "server512", settings);
-            Assert.IsTrue(createLiveAlgorithm.Success);
-
-            if (stopLiveAlgos)
-            {
-                // Liquidate live algorithm
-                var liquidateLive = _api.LiquidateLiveAlgorithm(project.Projects.First().ProjectId);
-                Assert.IsTrue(liquidateLive.Success);
-
-                // Stop live algorithm
-                var stopLive = _api.StopLiveAlgorithm(project.Projects.First().ProjectId);
-                Assert.IsTrue(stopLive.Success);
-
-                // Delete the project
-                var deleteProject = _api.DeleteProject(project.Projects.First().ProjectId);
-                Assert.IsTrue(deleteProject.Success);
-            }
-        }
-
-        /// <summary>
-        /// Live paper trading via IB.
-        /// </summary>
-        [Test]
-        public void LiveEquityAlgorithms_CanBeUsedWithInteractiveBrokers_Successfully()
-        {
-            var user     = Config.Get("ib-user-name");
-            var password = Config.Get("ib-password");
-            var account  = Config.Get("ib-account");
-
-            var file = new ProjectFile
-            {
-                Name = "main.cs",
-                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
-            };
-
-
-            // Create a new project
-            var project = _api.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp);
-
-            // Add Project Files
-            var addProjectFile = _api.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
-            Assert.IsTrue(addProjectFile.Success);
-
-            // Create compile
-            var compile = _api.CreateCompile(project.Projects.First().ProjectId);
-            Assert.IsTrue(compile.Success);
-
-            // Create default algorithm settings
-            var settings = new InteractiveBrokersLiveAlgorithmSettings(user,
-                                                                       password,
-                                                                       account);
-
-            // Wait for project to compile
-            Thread.Sleep(10000);
-
-            // Create live default algorithm
-            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, "server512", settings);
-            Assert.IsTrue(createLiveAlgorithm.Success);
-
-            if (stopLiveAlgos)
-            {
-                // Liquidate live algorithm
-                var liquidateLive = _api.LiquidateLiveAlgorithm(project.Projects.First().ProjectId);
-                Assert.IsTrue(liquidateLive.Success);
-
-                // Stop live algorithm
-                var stopLive = _api.StopLiveAlgorithm(project.Projects.First().ProjectId);
-                Assert.IsTrue(stopLive.Success);
-
-                // Delete the project
-                var deleteProject = _api.DeleteProject(project.Projects.First().ProjectId);
-                Assert.IsTrue(deleteProject.Success);
-            }
-        }
-
-        /// <summary>
-        /// Live paper trading via Oanda
-        /// </summary>
-        [Test]
-        public void LiveForexAlgorithms_CanBeUsedWithOanda_Successfully()
-        {
-            var token       = Config.Get("oanda-access-token");
-            var account     = Config.Get("oanda-account-id");
-
-            var file = new ProjectFile
-                {
-                    Name = "main.cs",
-                    Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateForexAlgorithm.cs")
-                };
-
-            // Create a new project
-            var project = _api.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp);
-
-            // Add Project Files
-            var addProjectFile = _api.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
-            Assert.IsTrue(addProjectFile.Success);
-
-            // Create compile
-            var compile = _api.CreateCompile(project.Projects.First().ProjectId);
-            Assert.IsTrue(compile.Success);
-
-            // Create default algorithm settings
-            var settings = new OandaLiveAlgorithmSettings(token,
-                                                          BrokerageEnvironment.Paper,
-                                                          account);
-
-            // Wait for project to compile
-            Thread.Sleep(10000);
-
-            // Create live default algorithm
-            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, "server512", settings);
-            Assert.IsTrue(createLiveAlgorithm.Success);
-
-            if (stopLiveAlgos)
-            {
-                // Liquidate live algorithm
-                var liquidateLive = _api.LiquidateLiveAlgorithm(project.Projects.First().ProjectId);
-                Assert.IsTrue(liquidateLive.Success);
-
-                // Stop live algorithm
-                var stopLive = _api.StopLiveAlgorithm(project.Projects.First().ProjectId);
-                Assert.IsTrue(stopLive.Success);
-
-                // Delete the project
-                var deleteProject = _api.DeleteProject(project.Projects.First().ProjectId);
-                Assert.IsTrue(deleteProject.Success);
-            }
-        }
-
-        /// <summary>
-        /// Live paper trading via Tradier
-        /// </summary>
-        [Test]
-        public void LiveEquityAlgorithms_CanBeUsedWithTradier_Successfully()
-        {
-            var refreshToken    = Config.Get("tradier-refresh-token");
-            var account         = Config.Get("tradier-account-id");
-            var accessToken     = Config.Get("tradier-access-token");
-            var dateIssued      = Config.Get("tradier-issued-at");
-
-            var file = new ProjectFile
-            {
-                Name = "main.cs",
-                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
-            };
-
-            // Create a new project
-            var project = _api.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp);
-
-            // Add Project Files
-            var addProjectFile = _api.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
-            Assert.IsTrue(addProjectFile.Success);
-
-            var readProject = _api.ReadProject(project.Projects.First().ProjectId);
-            Assert.IsTrue(readProject.Success);
-
-            // Create compile
-            var compile = _api.CreateCompile(project.Projects.First().ProjectId);
-            Assert.IsTrue(compile.Success);
-
-            // Create default algorithm settings
-            var settings = new TradierLiveAlgorithmSettings(accessToken,
-                                                            dateIssued,
-                                                            refreshToken,
-                                                            account);
-
-            // Wait for project to compile
-            Thread.Sleep(10000);
-
-            // Create live default algorithm
-            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, "server512", settings);
-            Assert.IsTrue(createLiveAlgorithm.Success);
-
-            if (stopLiveAlgos)
-            {
-                // Liquidate live algorithm
-                var liquidateLive = _api.LiquidateLiveAlgorithm(project.Projects.First().ProjectId);
-                Assert.IsTrue(liquidateLive.Success);
-
-                // Stop live algorithm
-                var stopLive = _api.StopLiveAlgorithm(project.Projects.First().ProjectId);
-                Assert.IsTrue(stopLive.Success);
-
-                // Delete the project
-                var deleteProject = _api.DeleteProject(project.Projects.First().ProjectId);
-                Assert.IsTrue(deleteProject.Success);
-            }
-        }
-
-        /// <summary>
-        /// Test getting links to forex data for FXCM
-        /// </summary>
-        [Test]
-        public void FXCMDataLinks_CanBeRetrieved_Successfully()
-        {
-            var minuteDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
-                Resolution.Minute, new DateTime(2013, 10, 07));
-            var dailyDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
-                Resolution.Daily, new DateTime(2013, 10, 07));
-
-            Assert.IsTrue(minuteDataLink.Success);
-            Assert.IsTrue(dailyDataLink.Success);
-        }
-
-        /// <summary>
-        /// Test getting links to forex data for Oanda
-        /// </summary>
-        [Test]
-        public void OandaDataLinks_CanBeRetrieved_Successfully()
-        {
-            var minuteDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
-                Resolution.Minute, new DateTime(2013, 10, 07));
-            var dailyDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
-                Resolution.Daily, new DateTime(2013, 10, 07));
-
-            Assert.IsTrue(minuteDataLink.Success);
-            Assert.IsTrue(dailyDataLink.Success);
-        }
-
         /// <summary>
         /// Test downloading data that does not come with the repo (Oanda)
+        /// Requires that your account has this data; its free at quantconnect.com/data
         /// </summary>
-        [Test]
+        [Test, Ignore("Requires EURUSD daily data and minute data for 10/2013 in cloud data library")]
         public void BacktestingData_CanBeDownloadedAndSaved_Successfully()
         {
             var minutePath = Path.Combine(_dataFolder, "forex/oanda/minute/eurusd/20131011_quote.zip");
@@ -593,47 +211,6 @@ namespace QuantConnect.Tests.API
 
             Assert.IsTrue(File.Exists(dailyPath));
             Assert.IsTrue(File.Exists(minutePath));
-        }
-
-        /// <summary>
-        /// Test read price API for given symbol
-        /// </summary>
-        [Test]
-        public void ReadPriceWorksCorrectlyFor1Symbol()
-        {
-            var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-            var pricesList = _api.ReadPrices(new [] { spy });
-
-            Assert.IsTrue(pricesList.Success);
-            Assert.AreEqual(pricesList.Prices.Count, 1);
-
-            var price = pricesList.Prices.First();
-            Assert.AreEqual(price.Symbol, spy);
-            Assert.AreNotEqual(price.Price, 0);
-            var updated = price.Updated;
-            var reference = DateTime.UtcNow.Subtract(TimeSpan.FromDays(3));
-            Assert.IsTrue(updated > reference);
-        }
-
-        /// <summary>
-        /// Test read price API for multiple symbols
-        /// </summary>
-        [Test]
-        public void ReadPriceWorksCorrectlyForMultipleSymbols()
-        {
-            var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-            var aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            var pricesList = _api.ReadPrices(new[] { spy, aapl });
-
-            Assert.IsTrue(pricesList.Success);
-            Assert.AreEqual(pricesList.Prices.Count, 2);
-
-            Assert.IsTrue(pricesList.Prices.All(x => x.Price != 0));
-            Assert.AreEqual(pricesList.Prices.Count(x => x.Symbol == aapl), 1);
-            Assert.AreEqual(pricesList.Prices.Count(x => x.Symbol == spy), 1);
-
-            var reference = DateTime.UtcNow.Subtract(TimeSpan.FromDays(3));
-            Assert.IsTrue(pricesList.Prices.All(x => x.Updated > reference));
         }
 
         /// <summary>
@@ -659,25 +236,11 @@ namespace QuantConnect.Tests.API
             var algorithmName = "main.cs";
             var projectName = $"{DateTime.UtcNow.ToStringInvariant("u")} Test {_testAccount} Lang {language}";
 
-            Perform_CreateCompileBactest_Tests(projectName, language, algorithmName, code);
+            Perform_CreateCompileBackTest_Tests(projectName, language, algorithmName, code);
         }
 
         /// <summary>
-        /// Test creating, compiling and backtesting a F# project via the Api
-        /// </summary>
-        [Test]
-        public void FSharpProject_CreatedCompiledAndBacktested_Successully()
-        {
-            var language = Language.FSharp;
-            var code = File.ReadAllText("../../../Algorithm.FSharp/BasicTemplateAlgorithm.fs");
-            var algorithmName = "main.fs";
-            var projectName = $"{DateTime.UtcNow.ToStringInvariant("u")} Test {_testAccount} Lang {language}";
-
-            Perform_CreateCompileBactest_Tests(projectName, language, algorithmName, code);
-        }
-
-        /// <summary>
-        /// Test creating, compiling and bactesting a Python project via the Api
+        /// Test creating, compiling and backtesting a Python project via the Api
         /// </summary>
         [Test]
         public void PythonProject_CreatedCompiledAndBacktested_Successully()
@@ -688,35 +251,40 @@ namespace QuantConnect.Tests.API
 
             var projectName = $"{DateTime.UtcNow.ToStringInvariant("u")} Test {_testAccount} Lang {language}";
 
-            Perform_CreateCompileBactest_Tests(projectName, language, algorithmName, code);
+            Perform_CreateCompileBackTest_Tests(projectName, language, algorithmName, code);
         }
 
-        [Test]
-        public void GetsSplits()
+        /// <summary>
+        /// Test getting links to forex data for FXCM
+        /// </summary>
+        [Test, Ignore("Requires configured FXCM account")]
+        public void FXCMDataLinks_CanBeRetrieved_Successfully()
         {
-            var date = new DateTime(2014, 06, 09);
-            var AAPL = new Symbol(SecurityIdentifier.Parse("AAPL R735QTJ8XC9X"), "AAPL");
-            var splits = _api.GetSplits(date, date);
-            var aapl = splits.Single(s => s.Symbol == AAPL);
-            Assert.AreEqual((1 / 7m).RoundToSignificantDigits(6), aapl.SplitFactor);
-            Assert.AreEqual(date, aapl.Time);
-            Assert.AreEqual(SplitType.SplitOccurred, aapl.Type);
-            Assert.AreEqual(645.57m, aapl.ReferencePrice);
+            var minuteDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
+                Resolution.Minute, new DateTime(2013, 10, 07));
+            var dailyDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
+                Resolution.Daily, new DateTime(2013, 10, 07));
+
+            Assert.IsTrue(minuteDataLink.Success);
+            Assert.IsTrue(dailyDataLink.Success);
         }
 
-        [Test]
-        public void GetDividends()
+        /// <summary>
+        /// Test getting links to forex data for Oanda
+        /// </summary>
+        [Test, Ignore("Requires configured Oanda account")]
+        public void OandaDataLinks_CanBeRetrieved_Successfully()
         {
-            var date = new DateTime(2018, 05, 11);
-            var AAPL = new Symbol(SecurityIdentifier.Parse("AAPL R735QTJ8XC9X"), "AAPL");
-            var dividends = _api.GetDividends(date, date);
-            var aapl = dividends.Single(s => s.Symbol == AAPL);
-            Assert.AreEqual(0.73m, aapl.Distribution);
-            Assert.AreEqual(date, aapl.Time);
-            Assert.AreEqual(190.03m, aapl.ReferencePrice);
+            var minuteDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
+                Resolution.Minute, new DateTime(2013, 10, 07));
+            var dailyDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
+                Resolution.Daily, new DateTime(2013, 10, 07));
+
+            Assert.IsTrue(minuteDataLink.Success);
+            Assert.IsTrue(dailyDataLink.Success);
         }
 
-        private void Perform_CreateCompileBactest_Tests(string projectName, Language language, string algorithmName, string code)
+        private void Perform_CreateCompileBackTest_Tests(string projectName, Language language, string algorithmName, string code)
         {
             //Test create a new project successfully
             var project = _api.CreateProject(projectName, language);
