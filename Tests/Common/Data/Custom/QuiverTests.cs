@@ -15,8 +15,8 @@
 
 using Newtonsoft.Json;
 using NUnit.Framework;
-using QuantConnect.Data.Custom.Estimize;
-using QuantConnect.ToolBox.EstimizeDataDownloader;
+using QuantConnect.Data.Custom.Quiver;
+using QuantConnect.ToolBox.QuiverDataDownloader;
 using System;
 using System.Collections.Generic;
 using System.IO;
