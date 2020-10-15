@@ -24,7 +24,6 @@ using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Lean.Engine.DataFeeds;
-using Type = QuantConnect.Data.Custom.Quiver.Type;
 
 namespace QuantConnect.Tests.Common.Data.Custom
 {
