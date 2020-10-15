@@ -153,7 +153,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void PerformsStopLimitFillBuy()
         {
             var model = new EquityFillModel();
-            var order = new StopLimitOrder(Symbols.SPY, 100, 101.5m, 101.75m, Noon);
+            var order = new StopLimitOrder(Symbols.SPY, 100, 101.5m, 103m, Noon);
             var configTradeBar = CreateTradeBarConfig(Symbols.SPY);
             var security = CreateSecurity(configTradeBar);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -173,7 +173,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
-            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 102m, 102m, 102m, 102m, 100));
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 102m, 104m, 102m, 104m, 100));
 
             fill = model.Fill(new FillModelParameters(
                 security,
@@ -202,7 +202,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void PerformsStopLimitFillSell()
         {
             var model = new EquityFillModel();
-            var order = new StopLimitOrder(Symbols.SPY, -100, 101.75m, 101.50m, Noon);
+            var order = new StopLimitOrder(Symbols.SPY, -100, 101.75m, 100.5m, Noon);
             var configTradeBar = CreateTradeBarConfig(Symbols.SPY);
             var security = CreateSecurity(configTradeBar);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -222,7 +222,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
-            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 101m, 101m, 101m, 101m, 100));
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 101m, 101m, 100m, 100m, 100));
 
             fill = model.Fill(new FillModelParameters(
                 security,
@@ -470,7 +470,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         }
 
         [Test]
-        public void ImmediateFillModelUsesPriceForTicksWhenBidAskSpreadsAreNotAvailable()
+        public void EquityFillModelUsesPriceForTicksWhenBidAskSpreadsAreNotAvailable()
         {
             var noon = new DateTime(2014, 6, 24, 12, 0, 0);
             var timeKeeper = new TimeKeeper(noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
@@ -498,8 +498,70 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(0, fill.OrderFee.Value.Amount);
         }
 
+        [TestCase(1000, 100, 0)]
+        [TestCase(-1000, 0, 100)]
+        public void EquityFillModelDoesNotUseTicksWhenThereIsNoValidAskQuote(decimal quantity, decimal bidPrice, decimal askPrice)
+        {
+            var noon = new DateTime(2014, 6, 24, 12, 0, 0);
+            var timeKeeper = new TimeKeeper(noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            var config = new SubscriptionDataConfig(typeof(Tick), Symbols.SPY, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var security = CreateSecurity(config);
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new TradeBar(noon, Symbols.SPY, 101.123m, 101.123m, 101.123m, 101.123m, 100));
+            security.SetMarketPrice(new Tick(noon, Symbols.SPY, 90, 90));
+
+            // Add both a tradebar and a tick to the security cache
+            // This is the case when a tick is seeded with minute data in an algorithm
+            security.Cache.AddData(new TradeBar(DateTime.MinValue, symbol, 1.0m, 1.0m, 1.0m, 1.0m, 1.0m));
+            // Zero-price tick is not valid will fill with previous tick prices 90
+            security.Cache.AddData(new Tick(DateTime.MinValue, symbol, bidPrice, askPrice));
+
+            var fillModel = new EquityFillModel();
+            var order = new MarketOrder(symbol, quantity, DateTime.Now);
+            var fill = fillModel.Fill(new FillModelParameters(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour)).OrderEvent;
+
+            // The fill model should use the tick.Price
+            Assert.AreEqual(fill.FillPrice, 90);
+            Assert.AreEqual(0, fill.OrderFee.Value.Amount);
+        }
+
         [Test]
-        public void ImmediateFillModelDoesNotUseTicksWhenThereIsNoTickSubscription()
+        public void EquityFillModelDoesNotUseTicksWhenThereIsNoValidTickTrade()
+        {
+            var noon = new DateTime(2014, 6, 24, 12, 0, 0);
+            var timeKeeper = new TimeKeeper(noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            var config = new SubscriptionDataConfig(typeof(Tick), Symbols.SPY, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var security = CreateSecurity(config);
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new TradeBar(noon, Symbols.SPY, 101.123m, 101.123m, 101.123m, 101.123m, 100));
+
+            // Add both a tradebar and a tick to the security cache
+            // This is the case when a tick is seeded with minute data in an algorithm
+            security.Cache.AddData(new TradeBar(DateTime.MinValue, symbol, 1.0m, 1.0m, 1.0m, 1.0m, 1.0m));
+            // Zero-price tick is not valid
+            security.Cache.AddData(new Tick(config, "42525000,0,100,A,@,0", DateTime.MinValue));
+
+            var fillModel = new EquityFillModel();
+            var order = new MarketOrder(symbol, 1000, DateTime.Now);
+            var fill = fillModel.Fill(new FillModelParameters(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour)).OrderEvent;
+
+            // The fill model should use the tick.Price
+            Assert.AreEqual(fill.FillPrice, 1m);
+            Assert.AreEqual(0, fill.OrderFee.Value.Amount);
+        }
+
+        [Test]
+        public void EquityFillModelDoesNotUseTicksWhenThereIsNoTickSubscription()
         {
             var noon = new DateTime(2014, 6, 24, 12, 0, 0);
             var timeKeeper = new TimeKeeper(noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });

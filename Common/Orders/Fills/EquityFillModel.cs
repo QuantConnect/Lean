@@ -110,11 +110,10 @@ namespace QuantConnect.Orders.Fills
 
             // Get the last trade bar since stop orders are triggered by trades
             var lastTradeBar = GetLastTradeBar(asset);
-            var endTime = lastTradeBar.EndTime;
 
             // Do not fill on stale data
             var localOrderTime = order.Time.ConvertFromUtc(asset.Exchange.TimeZone);
-            if (endTime <= localOrderTime) return fill;
+            if (lastTradeBar.EndTime <= localOrderTime) return fill;
 
             // Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
@@ -126,8 +125,10 @@ namespace QuantConnect.Orders.Fills
                     // Buy Stop: If Price Above set point, Buy:
                     if (lastTradeBar.High >= order.StopPrice)
                     {
+                        DateTime unused;
+
                         // Assuming worse case scenario fill - fill at highest of the stop & asset ask price.
-                        fill.FillPrice = Math.Max(order.StopPrice, GetAskPrice(asset, out endTime) + slip);
+                        fill.FillPrice = Math.Max(order.StopPrice, GetAskPrice(asset, out unused) + slip);
                         fill.Status = OrderStatus.Filled;
                     }
                     break;
@@ -136,8 +137,10 @@ namespace QuantConnect.Orders.Fills
                     // Sell Stop: If Price below set point, Sell:
                     if (lastTradeBar.Low <= order.StopPrice)
                     {
+                        DateTime unused;
+
                         // Assuming worse case scenario fill - fill at lowest of the stop & asset bid price.
-                        fill.FillPrice = Math.Min(order.StopPrice, GetBidPrice(asset, out endTime) - slip);
+                        fill.FillPrice = Math.Min(order.StopPrice, GetBidPrice(asset, out unused) - slip);
                         fill.Status = OrderStatus.Filled;
                     }
                     break;
@@ -171,7 +174,7 @@ namespace QuantConnect.Orders.Fills
         ///     gapped past our fill price. We have to make the assumption of a fluid, high volume market.
         ///
         ///     Stop limit orders we also can't be sure of the order of the H - L values for the limit fill. The assumption
-        ///     was made the limit fill will be done with closing price of the bar after the stop has been triggered..
+        ///     was made the limit fill will be done with current bid or ask price of the security after the stop has been triggered.
         /// </remarks>
         public override OrderEvent StopLimitFill(Security asset, StopLimitOrder order)
         {
@@ -210,10 +213,12 @@ namespace QuantConnect.Orders.Fills
                     if (lastTradeBar.High >= order.StopPrice || order.StopTriggered)
                     {
                         order.StopTriggered = true;
+                        DateTime unused;
 
                         // Fill the limit order, using closing price of bar:
-                        // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
-                        if (asset.Price <= order.LimitPrice)
+                        // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered,
+                        // so we will will the current ask price
+                        if (GetAskPrice(asset, out unused) <= order.LimitPrice)
                         {
                             fill.FillPrice = Math.Min(lastTradeBar.High, order.LimitPrice);
                             fill.Status = OrderStatus.Filled;
@@ -226,10 +231,12 @@ namespace QuantConnect.Orders.Fills
                     if (lastTradeBar.Low <= order.StopPrice || order.StopTriggered)
                     {
                         order.StopTriggered = true;
+                        DateTime unused;
 
                         // Fill the limit order, using minimum price of the bar
-                        // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
-                        if (asset.Price >= order.LimitPrice)
+                        // Note > Can't use maximum price, because no way to be sure maximum wasn't before the stop triggered,
+                        // so we will will the current bid price
+                        if (GetBidPrice(asset, out unused) >= order.LimitPrice)
                         {
                             fill.FillPrice = Math.Max(lastTradeBar.Low, order.LimitPrice);
                             fill.Status = OrderStatus.Filled;
