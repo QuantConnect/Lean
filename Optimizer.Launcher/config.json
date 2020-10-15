@@ -10,19 +10,21 @@
   //"algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
 
   // How we generate parameter sets - grid/euler/genetic/remote
-  "optimization-parameter-set-generator": "GridSearch",
+  "optimization-parameter-set-generator": "QuantConnect.Optimizer.GridSearch",
 
   // How we manage solutions and make decision to continue or stop
-  "optimization-strategy": "BruteForceStrategy",
+  "optimization-strategy": "QuantConnect.Optimizer.BruteForceStrategy",
 
   // optimization problem
   "optimization-criterion": {
     // path in algorithm output json
-    "name": "TotalPerformance.TradeStatistics.TotalProfit",
+    "target": "Statistics.Sharpe Ratio",
 
     // optimization: available options max, min
     "extremum": "max"
   },
+
+  //"maximum-concurrent-backtests": 10,
 
   // optimization parameters
   "parameters": {

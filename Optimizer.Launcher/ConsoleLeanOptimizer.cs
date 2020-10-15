@@ -14,68 +14,114 @@
 */
 
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using QuantConnect.Util;
+using System.Diagnostics;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Optimizer.Launcher
 {
+    /// <summary>
+    /// Optimizer implementation that launches Lean as a local process
+    /// TODO: review object store location, believe it's being shared, when the algos end they all try to delete the directory
+    /// </summary>
     public class ConsoleLeanOptimizer: LeanOptimizer
     {
-        private static string _workingDirectory = "../../../Launcher/bin/Debug/";
+        private volatile bool _disposed;
+        private readonly string _leanLocation;
+        private readonly string _rootResultDirectory;
+        private readonly bool _closeLeanAutomatically;
+        private readonly ConcurrentDictionary<string, Process> _processByBacktestId;
 
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="nodePacket">The optimization node packet to handle</param>
         public ConsoleLeanOptimizer(OptimizationNodePacket nodePacket) : base(nodePacket)
         {
+            _processByBacktestId = new ConcurrentDictionary<string, Process>();
+
+            _rootResultDirectory = Configuration.Config.Get("results-destination-folder",
+                Path.Combine(Directory.GetCurrentDirectory(), $"opt-{nodePacket.OptimizationId}"));
+            Directory.CreateDirectory(_rootResultDirectory);
+
+            _leanLocation = Configuration.Config.Get("lean-binaries-location",
+                Path.Combine(Directory.GetCurrentDirectory(), "../../../Launcher/bin/Debug/QuantConnect.Lean.Launcher.exe"));
+
+            _closeLeanAutomatically = Configuration.Config.GetBool("close-automatically", true);
         }
 
-        public override void OnComplete()
+        /// <summary>
+        /// Disposes of any resources
+        /// </summary>
+        public override void Dispose()
         {
-            var result = Strategy.Solution;
-            var args = string.Join(",", result.ParameterSet.Value.Select(a => $"{a.Key}={a.Value}"));
-            Console.Write($"Result {result.Profit} was reached at point ({args})");
+            if (_disposed)
+            {
+                return;
+            }
+            _disposed = true;
+
+            foreach (var process in _processByBacktestId)
+            {
+                try
+                {
+                    process.Value.Kill();
+                    process.Value.DisposeSafely();
+                }
+                catch
+                {
+                    // pass
+                }
+            }
         }
 
-        public override void Abort()
-        {
-            base.Abort();
-        }
-
+        /// <summary>
+        /// Handles starting Lean for a given parameter set
+        /// </summary>
+        /// <param name="parameterSet">The parameter set for the backtest to run</param>
+        /// <returns>The new unique backtest id</returns>
         protected override string RunLean(ParameterSet parameterSet)
         {
-            string myPath = System.Reflection.Assembly.GetEntryAssembly().Location;
-            string myDir = System.IO.Path.GetDirectoryName(myPath);
+            var backtestId = Guid.NewGuid().ToString();
 
-            string path = System.IO.Path.Combine(myDir, _workingDirectory, "QuantConnect.Lean.Launcher.exe");
-            string parametersString = string.Join(",", parameterSet.Value.Select(arg => $"{arg.Key}:{arg.Value}"));
+            // start each lean instance in its own directory so they store their logs & results, else they fight for the log.txt file
+            var resultDirectory = Path.Combine(_rootResultDirectory, backtestId);
+            Directory.CreateDirectory(resultDirectory);
 
-            string guid = Guid.NewGuid().ToString();
             // Use ProcessStartInfo class
-            ProcessStartInfo startInfo = new ProcessStartInfo
+            var startInfo = new ProcessStartInfo
             {
-                FileName = path,
-                WorkingDirectory = _workingDirectory,
-                Arguments = $"--results-destination-folder \"{myDir}\" --algorithm-id \"{guid}\" --parameters {parametersString}"
+                FileName = _leanLocation,
+                WorkingDirectory = Directory.GetParent(_leanLocation).FullName,
+                Arguments = $"--results-destination-folder \"{resultDirectory}\" --algorithm-id \"{backtestId}\" --close-automatically {_closeLeanAutomatically} --parameters {parameterSet}",
+                WindowStyle = ProcessWindowStyle.Minimized
             };
-
-            var tcs = new TaskCompletionSource<int>();
 
             var process = new Process
             {
                 StartInfo = startInfo,
                 EnableRaisingEvents = true
             };
+            _processByBacktestId[backtestId] = process;
 
             process.Exited += (sender, args) =>
             {
-                NewResult(File.ReadAllText($"{guid}.json"), guid);
-                tcs.SetResult(process.ExitCode);
-                process.Dispose();
+                _processByBacktestId.TryRemove(backtestId, out process);
+                if (_disposed)
+                {
+                    return;
+                }
+
+                var backtestResult = $"{backtestId}.json";
+                var resultJson = Path.Combine(_rootResultDirectory, backtestId, backtestResult);
+                NewResult(File.Exists(resultJson) ? File.ReadAllText(resultJson) : null, backtestId);
+                process.DisposeSafely();
             };
 
             process.Start();
 
-            return guid;
+            return backtestId;
         }
     }
 }

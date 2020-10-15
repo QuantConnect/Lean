@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             _strategy.PushNewResults(OptimizationResult.Empty);
 
             var solution = _parameterSets.First(s => s.Id == bestSet);
-            Assert.AreEqual(_compute(solution), _strategy.Solution.Profit);
+            Assert.AreEqual(_compute(solution), _strategy.Solution.Target);
             foreach (var arg in _strategy.Solution.ParameterSet.Value)
             {
                 Assert.AreEqual(solution.Value[arg.Key], arg.Value);
@@ -85,7 +85,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             }
 
             var solution = _parameterSets.First(s => s.Id == bestSet);
-            Assert.AreEqual(_compute(solution), _strategy.Solution.Profit);
+            Assert.AreEqual(_compute(solution), _strategy.Solution.Target);
             foreach (var arg in _strategy.Solution.ParameterSet.Value)
             {
                 Assert.AreEqual(solution.Value[arg.Key], arg.Value);

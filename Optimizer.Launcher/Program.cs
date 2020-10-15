@@ -15,10 +15,8 @@
 
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
-using QuantConnect.Optimizer;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Util;
@@ -27,22 +25,26 @@ namespace QuantConnect.Optimizer.Launcher
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static void Main()
         {
             try
             {
-                var packet = new OptimizationNodePacket()
+                var packet = new OptimizationNodePacket
                 {
-                    ParameterSetGenerator = Config.Get("optimization-parameter-set-generator", "GridSearch"),
-                    OptimizationStrategy = Config.Get("optimization-strategy", "BruteForceOptimizer"),
+                    OptimizationId = Guid.NewGuid().ToString(),
+                    ParameterSetGenerator = Config.Get("optimization-parameter-set-generator", "QuantConnect.Optimizer.GridSearch"),
+                    OptimizationStrategy = Config.Get("optimization-strategy", "QuantConnect.Optimizer.BruteForceOptimizer"),
                     Criterion =
                         JsonConvert.DeserializeObject<Dictionary<string, string>>(Config.Get("optimization-criterion", "{\"name\":\"TotalPerformance.TradeStatistics.TotalProfit\", \"direction\": \"max\"}")),
                     OptimizationParameters = 
                         JsonConvert.DeserializeObject<Dictionary<string, JObject>>(Config.Get("parameters", "{}"))
                         .Select( arg => new OptimizationParameter(arg.Key, arg.Value.Value<decimal>("min"), arg.Value.Value<decimal>("max"), arg.Value.Value<decimal>("step")))
-                        .ToHashSet()
+                        .ToHashSet(),
+                    MaximumConcurrentBacktests = Config.GetInt("maximum-concurrent-backtests", Environment.ProcessorCount)
                 };
                 var optimizer = new ConsoleLeanOptimizer(packet);
+
+                optimizer.Start();
             }
             catch (Exception e)
             {

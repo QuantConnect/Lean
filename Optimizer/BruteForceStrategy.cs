@@ -67,9 +67,15 @@ namespace QuantConnect.Optimizer
         {
             lock (_locker)
             {
-                if (result?.Id > 0)
+                if (!ReferenceEquals(result, OptimizationResult.Empty) && result?.Target == null)
                 {
-                    if (Solution == null || Extremum.Better(Solution.Profit, result.Profit))
+                    // one of the requested backtests failed
+                    return;
+                }
+
+                if (result.Id > 0)
+                {
+                    if (Solution == null || Extremum.Better(Solution.Target.Value, result.Target.Value))
                     {
                         Solution = result;
                     }
@@ -77,7 +83,7 @@ namespace QuantConnect.Optimizer
                     return;
                 }
 
-                foreach (var parameterSet in ParameterSetGenerator.Step(result?.ParameterSet, _args))
+                foreach (var parameterSet in ParameterSetGenerator.Step(result.ParameterSet, _args))
                 {
                     NewParameterSet?.Invoke(this, new OptimizationEventArgs(parameterSet));
                 }

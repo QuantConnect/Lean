@@ -21,7 +21,7 @@ namespace QuantConnect.Optimizer
     {
         public IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args)
         {
-            throw new System.NotImplementedException();
+            throw new System.NotImplementedException("EulerSearch isn't implemented yet");
         }
     }
 }

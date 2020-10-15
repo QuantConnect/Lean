@@ -33,7 +33,7 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Target criterion value
         /// </summary>
-        public decimal Profit { get; }
+        public decimal? Target { get; }
 
         /// <summary>
         /// The parameter set at which the result was achieved
@@ -48,11 +48,11 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Create an instance of <see cref="OptimizationResult"/>
         /// </summary>
-        /// <param name="profit">Result of compute job</param>
+        /// <param name="target">Optimization target value for this backtest</param>
         /// <param name="parameterSet">Parameter set used in compute job</param>
-        public OptimizationResult(decimal profit, ParameterSet parameterSet)
+        public OptimizationResult(decimal? target, ParameterSet parameterSet)
         {
-            Profit = profit;
+            Target = target;
             ParameterSet = parameterSet;
         }
     }

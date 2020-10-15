@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System.Linq;
 using QuantConnect.Util;
 using System.Collections.Generic;
 
@@ -42,6 +43,14 @@ namespace QuantConnect.Optimizer
         {
             Id = id;
             Value = arguments.ToReadOnlyDictionary();
+        }
+
+        /// <summary>
+        /// String representation of this parameter set
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Join(",", Value.Select(arg => $"{arg.Key}:{arg.Value}"));
         }
     }
 }
