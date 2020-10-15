@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var tickers = new List<QuiverDataDownloader.Company>();
 
             var destinationFolder = Path.Combine(Globals.DataFolder, "alternative", "quiver");
-            var downloader = new QuiverReleaseDataDownloader(destinationFolder);
+            var downloader = new QuiverWikipediaDataDownloader(destinationFolder);
 
             Assert.DoesNotThrow(() => tickers = downloader.GetCompanies().Result);
             Assert.IsTrue(tickers.Count > 0);
@@ -62,9 +62,9 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.NotNull(data);
             Assert.AreEqual("ABBV", data.Ticker);
             Assert.AreEqual(new DateTime(2020, 01, 01, 0, 0, 0), data.Date);
-            Assert.AreEqual(3500, data.Views);
-            Assert.AreEqual(3.2, data.pct_change_week);
-            Assert.AreEqual(6.75, data.pct_change_month);
+            Assert.AreEqual(3500, data.Wiki_Views);
+            Assert.AreEqual(3.2, data.Wiki_Pct_Change_Week);
+            Assert.AreEqual(6.75, data.Wiki_Pct_Change_Month);
 
         }
 
@@ -95,7 +95,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var dataCacheProvider = new SingleEntryDataCacheProvider(new DefaultDataProvider());
 
             var config = new SubscriptionDataConfig(
-                typeof(EstimizeRelease),
+                typeof(QuiverWikipedia),
                 Symbol.Create("AAPL.R", SecurityType.Base, QuantConnect.Market.USA),
                 Resolution.Daily,
                 DateTimeZone.Utc,
