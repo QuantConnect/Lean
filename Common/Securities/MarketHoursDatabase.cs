@@ -284,7 +284,11 @@ namespace QuantConnect.Securities
                 switch (symbol.ID.SecurityType)
                 {
                     case SecurityType.Option:
-                        stringSymbol = symbol.HasUnderlying ? symbol.Underlying.Value : string.Empty;
+                        stringSymbol = symbol.HasUnderlying
+                            ? symbol.Underlying.SecurityType != SecurityType.Equity
+                                ? symbol.Underlying.ID.Symbol
+                                : symbol.Underlying.Value
+                            : string.Empty;
                         break;
 
                     case SecurityType.Base:

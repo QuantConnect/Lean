@@ -369,9 +369,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             else if (type == SecurityType.Option)
             {
-                _symbol = new Symbol(SecurityIdentifier.GenerateOption(DateTime.Now,
-                    SecurityIdentifier.GenerateEquity(DateTime.Now, symbol, Market.USA),
-                    Market.USA, 0.0m, OptionRight.Call, OptionStyle.American), symbol);
+                _symbol = Symbol.CreateOption(
+                    new Symbol(SecurityIdentifier.GenerateEquity(DateTime.Now, symbol, Market.USA), symbol),
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    0m,
+                    DateTime.Now
+                );
                 security = new Option(
                     _symbol,
                     SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
