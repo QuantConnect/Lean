@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using RestSharp;
@@ -558,24 +559,18 @@ namespace QuantConnect.Api
             var epochStartTime = startTime == null ? 0 : Time.DateTimeToUnixTimeStamp(startTime.Value);
             var epochEndTime   = endTime   == null ? Time.DateTimeToUnixTimeStamp(DateTime.UtcNow) : Time.DateTimeToUnixTimeStamp(endTime.Value);
 
-            switch (status.HasValue)
+            JObject obj = new JObject
             {
-                case true:
-                    request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                    {
-                        start = epochStartTime,
-                        end = epochEndTime,
-                        status = status.ToString()
-                    }), ParameterType.RequestBody);
-                    break;
-                case false:
-                    request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                    {
-                        start = epochStartTime,
-                        end = epochEndTime,
-                    }), ParameterType.RequestBody);
-                    break;
+                { "start", epochStartTime },
+                { "end", epochEndTime }
+            };
+
+            if (status.HasValue)
+            {
+                obj.Add("status", status.ToString());
             }
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
 
             LiveList result;
             ApiConnection.TryRequest(request, out result);
