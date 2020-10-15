@@ -672,6 +672,10 @@
       <Project>{C5D44209-49A0-4505-A870-043C5EF5FDDF}</Project>
       <Name>QuantConnect.Api</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Common\QuantConnect.csproj">
+      <Project>{2545c0b4-fabb-49c9-8dd1-9ad7ee23f86b}</Project>
+      <Name>QuantConnect</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Compression\QuantConnect.Compression.csproj">
       <Project>{bc3bc77e-0502-43db-a727-b94f9765d74b}</Project>
       <Name>QuantConnect.Compression</Name>

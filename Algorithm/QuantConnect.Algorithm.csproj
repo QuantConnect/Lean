@@ -194,6 +194,10 @@
       <Project>{73FB2522-C3ED-4E47-8E3D-AFAD48A6B888}</Project>
       <Name>QuantConnect.Indicators</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Common\QuantConnect.csproj">
+      <Project>{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}</Project>
+      <Name>QuantConnect</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
       <Project>{01911409-86BE-4E7D-9947-DF714138610D}</Project>
       <Name>QuantConnect.Logging</Name>

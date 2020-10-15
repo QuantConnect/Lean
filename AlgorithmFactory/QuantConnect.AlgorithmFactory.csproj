@@ -108,6 +108,10 @@
       <Project>{3240ACA4-BDD4-4D24-AC36-BBB651C39212}</Project>
       <Name>QuantConnect.Algorithm</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Common\QuantConnect.csproj">
+      <Project>{2545c0b4-fabb-49c9-8dd1-9ad7ee23f86b}</Project>
+      <Name>QuantConnect</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">
       <Project>{0aeb4ea3-28c8-476e-89fd-926f06590b4c}</Project>
       <Name>QuantConnect.Configuration</Name>

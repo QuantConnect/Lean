@@ -133,6 +133,10 @@
       <Project>{c5d44209-49a0-4505-a870-043c5ef5fddf}</Project>
       <Name>QuantConnect.Api</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Common\QuantConnect.csproj">
+      <Project>{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}</Project>
+      <Name>QuantConnect</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">
       <Project>{0AEB4EA3-28C8-476E-89FD-926F06590B4C}</Project>
       <Name>QuantConnect.Configuration</Name>
