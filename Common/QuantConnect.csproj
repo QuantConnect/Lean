@@ -256,6 +256,8 @@
     <Compile Include="Benchmarks\FuncBenchmark.cs" />
     <Compile Include="Benchmarks\IBenchmark.cs" />
     <Compile Include="Benchmarks\SecurityBenchmark.cs" />
+    <Compile Include="BinaryComparison.cs" />
+    <Compile Include="BinaryComparisonExtensions.cs" />
     <Compile Include="Brokerages\AlpacaBrokerageModel.cs" />
     <Compile Include="Brokerages\AlphaStreamsBrokerageModel.cs" />
     <Compile Include="Brokerages\BinanceBrokerageModel.cs" />
