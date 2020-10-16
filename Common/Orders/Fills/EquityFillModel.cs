@@ -93,7 +93,8 @@ namespace QuantConnect.Orders.Fills
         /// </summary>
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
-        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <returns>There's no way to know if the price has "gapped" past the stop price within a single OHLC bar.
+        /// So we have to assume a fluid, high volume market, where every price between the high and low has been touched.</returns>
         /// <seealso cref="MarketFill(Security, MarketOrder)"/>
         public override OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
         {
@@ -125,10 +126,18 @@ namespace QuantConnect.Orders.Fills
                     // Buy Stop: If Price Above set point, Buy:
                     if (lastTradeBar.High >= order.StopPrice)
                     {
-                        DateTime unused;
+                        // Bar opens above stop price, fill at open price
+                        if (lastTradeBar.Open >= order.StopPrice)
+                        {
+                            fill.FillPrice = lastTradeBar.Open + slip;
+                        }
+                        // Otherwise, assuming worse case scenario fill - fill at highest of the stop & asset ask price.
+                        else
+                        {
+                            DateTime unused;
+                            fill.FillPrice = Math.Max(order.StopPrice, GetAskPrice(asset, out unused) + slip);
+                        }
 
-                        // Assuming worse case scenario fill - fill at highest of the stop & asset ask price.
-                        fill.FillPrice = Math.Max(order.StopPrice, GetAskPrice(asset, out unused) + slip);
                         fill.Status = OrderStatus.Filled;
                     }
                     break;
@@ -137,10 +146,18 @@ namespace QuantConnect.Orders.Fills
                     // Sell Stop: If Price below set point, Sell:
                     if (lastTradeBar.Low <= order.StopPrice)
                     {
-                        DateTime unused;
+                        // Bar opens below stop price, fill at open price
+                        if (lastTradeBar.Open <= order.StopPrice)
+                        {
+                            fill.FillPrice = lastTradeBar.Open - slip;
+                        }
+                        // Otherwise, assume worse case scenario fill - fill at lowest of the stop & asset bid price.
+                        else
+                        {
+                            DateTime unused;
+                            fill.FillPrice = Math.Min(order.StopPrice, GetBidPrice(asset, out unused) - slip);
+                        }
 
-                        // Assuming worse case scenario fill - fill at lowest of the stop & asset bid price.
-                        fill.FillPrice = Math.Min(order.StopPrice, GetBidPrice(asset, out unused) - slip);
                         fill.Status = OrderStatus.Filled;
                     }
                     break;

@@ -247,8 +247,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
-        [Test]
-        public void PerformsStopMarketFillBuy()
+        [TestCase(101.25)]
+        [TestCase(102)]
+        public void PerformsStopMarketFillBuy(decimal open)
         {
             var model = new EquityFillModel();
             var order = new StopMarketOrder(Symbols.SPY, 100, 101.5m, Noon);
@@ -271,7 +272,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
-            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 102m, 103m, 101m, 102.5m, 100));
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, open, 103m, 101m, 102.5m, 100));
             security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY,
                 new Bar(101m, 102m, 100m, 101.5m), 100,
                 new Bar(103m, 104m, 102m, 103.5m), 100));
@@ -282,14 +283,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 configProvider,
                 Time.OneHour)).OrderEvent;
 
-            // this fills worst case scenario, so it's min of asset/stop price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(security.AskPrice, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            // this fills worst case scenario, so it's min of asset/stop price
+            // or the open (gap case)
+            var expected = open > order.StopPrice ? open : security.AskPrice;
+            Assert.AreEqual(expected, fill.FillPrice);
         }
 
-        [Test]
-        public void PerformsStopMarketFillSell()
+        [TestCase(101.25)]
+        [TestCase(102)]
+        public void PerformsStopMarketFillSell(decimal open)
         {
             var model = new EquityFillModel();
             var order = new StopMarketOrder(Symbols.SPY, -100, 101.5m, Noon);
@@ -312,7 +316,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
-            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 102m, 103m, 101m, 101m, 100));
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, open, 103m, 101m, 101m, 100));
             security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY,
                 new Bar(101m, 102m, 100m, 100m), 100,
                 new Bar(103m, 104m, 102m, 102m), 100));
@@ -323,10 +327,12 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 configProvider,
                 Time.OneHour)).OrderEvent;
 
-            // this fills worst case scenario, so it's min of asset/stop price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(security.BidPrice, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            // this fills worst case scenario, so it's min of asset/stop price
+            // or the open (gap case)
+            var expected = open < order.StopPrice ? open : security.BidPrice;
+            Assert.AreEqual(expected, fill.FillPrice);
         }
 
         [Test]
@@ -674,7 +680,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             time += TimeSpan.FromMinutes(1);
             timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
 
-            tradeBar = new TradeBar(time, symbol, 290m, 292m, 289m, 291m, 12345);
+            tradeBar = new TradeBar(time, symbol, 291m, 292m, 289m, 291m, 12345);
             security.SetMarketPrice(tradeBar);
 
             fill = fillModel.StopMarketFill(security, order);
