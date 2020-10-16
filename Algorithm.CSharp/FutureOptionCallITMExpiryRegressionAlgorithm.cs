@@ -10,70 +10,70 @@ using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    public class FutureOptionCallPutITMExpiryRegressionAlgorithm : QCAlgorithm
+    public class FutureOptionCallITMExpiryRegressionAlgorithm : QCAlgorithm
     {
-        private Symbol _es18z20;
         private Symbol _es19h21;
-        private List<Symbol> _esChains;
-        private List<Symbol> _expectedContracts;
+        private Symbol _esOption;
+        private Symbol _expectedContract;
 
         public override void Initialize()
         {
             SetStartDate(2020, 9, 22);
             typeof(QCAlgorithm)
                 .GetField("_endDate", BindingFlags.NonPublic | BindingFlags.Instance)
-                .SetValue(this, new DateTime(2021, 3, 22));
-
-            _es18z20 = AddFutureContract(
-                QuantConnect.Symbol.CreateFuture(
-                    Futures.Indices.SP500EMini,
-                    Market.CME,
-                    new DateTime(2020, 12, 18)),
-                Resolution.Minute).Symbol;
+                .SetValue(this, new DateTime(2021, 3, 30));
 
             _es19h21 = AddFutureContract(
                 QuantConnect.Symbol.CreateFuture(
                     Futures.Indices.SP500EMini,
                     Market.CME,
-                    new DateTime(2021, 3, 19)),
+                    new DateTime(2020, 12, 18)),//new DateTime(2021, 3, 19)),
                 Resolution.Minute).Symbol;
 
-            _esChains = OptionChainProvider.GetOptionContractList(_es18z20, Time)
-                .Where(x => x.ID.StrikePrice <= 3250m)
+            _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19h21, Time)
+                .Where(x => x.ID.StrikePrice <= 3300m)
                 .OrderByDescending(x => x.ID.StrikePrice)
                 .Take(1)
-                .Concat(OptionChainProvider.GetOptionContractList(_es19h21, Time)
-                .Where(x => x.ID.StrikePrice <= 3250m)
+                .Single(), Resolution.Minute).Symbol;
+
+            _es19h21 = AddFutureContract(
+                            QuantConnect.Symbol.CreateFuture(
+                                Futures.Indices.SP500EMini,
+                                Market.CME,
+                                new DateTime(2021, 3, 19)),
+                            Resolution.Minute).Symbol;
+            var asdf = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19h21, Time)
+                .Where(x => x.ID.StrikePrice <= 3300m)
                 .OrderByDescending(x => x.ID.StrikePrice)
-                .Take(1))
-                .Select(x => AddFutureOptionContract(x, Resolution.Minute).Symbol)
-                .ToList();
+                .Take(1)
+                .Single(), Resolution.Minute).Symbol;
 
-            _expectedContracts = new List<Symbol>
-            {
-                QuantConnect.Symbol.CreateOption(_es18z20, Market.CME, OptionStyle.American, OptionRight.Call, 3250m, new DateTime(2020, 12, 18)),
-                QuantConnect.Symbol.CreateOption(_es19h21, Market.CME, OptionStyle.American, OptionRight.Call, 3250m, new DateTime(2021, 3, 19)),
-            };
-
-            foreach (var contract in _expectedContracts)
-            {
-                if (!_esChains.Contains(contract))
-                {
-                    throw new Exception($"Contract {contract} was not found in the chain");
-                }
-            }
+            //_expectedContract = QuantConnect.Symbol.CreateOption(_es19h21, Market.CME, OptionStyle.American, OptionRight.Call, 3250m, new DateTime(2020, 12, 18));
+            //_expectedContract = QuantConnect.Symbol.CreateOption(_es19h21, Market.CME, OptionStyle.American, OptionRight.Call, 3250m, new DateTime(2021, 3, 19));
+            //if (_esOption != _expectedContract)
+            //{
+            //    throw new Exception($"Contract {_expectedContract} was not found in the chain");
+            //}
 
             Schedule.On(DateRules.Today, TimeRules.AfterMarketOpen(_es19h21, 1), () =>
             {
-                foreach (var contract in _esChains)
-                {
-                    MarketOrder(contract, 1);
-                }
+                MarketOrder(_esOption, 1);
+                MarketOrder(asdf, 1);
             });
         }
 
         public override void OnData(Slice data)
         {
+            foreach (var thing in data.QuoteBars.Values)
+            {
+                if (!thing.Symbol.HasUnderlying)
+                {
+                    continue;
+                }
+
+                Log($"{Time} -- {thing}");
+            }
+            /*
             foreach (var delisting in data.Delistings.Values)
             {
                 if (delisting.Type == DelistingType.Warning)
@@ -91,11 +91,12 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
             }
+            */
         }
 
+        /*
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            //Log($"{orderEvent.UtcTime} -- {orderEvent.OrderId} :: {orderEvent.Symbol} - Price: {orderEvent.FillPrice} - Qty: {orderEvent.Quantity} - Msg: {orderEvent.Message}");
             if (orderEvent.Status != OrderStatus.Filled)
             {
                 return;
@@ -107,16 +108,12 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var security = Securities[orderEvent.Symbol];
-            if (security.Symbol == _es18z20)
+            if (security.Symbol == _es19h21)
             {
-                AssertFutureOptionOrderExercise(orderEvent, security, Securities[_expectedContracts[0]]);
-            }
-            else if (security.Symbol == _es19h21)
-            {
-                AssertFutureOptionOrderExercise(orderEvent, security, Securities[_expectedContracts[0]]);
+                AssertFutureOptionOrderExercise(orderEvent, security, Securities[_expectedContract]);
             }
             // Expected contract is ES18Z20 Call Option
-            else if (security.Symbol == _expectedContracts[0] || security.Symbol == _expectedContracts[1])
+            else if (security.Symbol == _expectedContract)
             {
                 AssertFutureOptionContractOrder(orderEvent, security);
             }
@@ -130,9 +127,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void AssertFutureOptionOrderExercise(OrderEvent orderEvent, Security future, Security optionContract)
         {
-            var expectedLiquidationTimeUtc = future.Symbol == _expectedContracts[0]
-                ? new DateTime(2020, 12, 18, 5, 0, 0)
-                : new DateTime(2021, 3, 19, 5, 0, 0);
+            var expectedLiquidationTimeUtc = new DateTime(2021, 3, 19, 5, 0, 0);
 
             if (orderEvent.Direction == OrderDirection.Sell && future.Holdings.Quantity != 0)
             {
@@ -174,6 +169,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"Holdings were found after exercising option contract {option.Symbol}");
             }
         }
+        */
     }
 }
 
