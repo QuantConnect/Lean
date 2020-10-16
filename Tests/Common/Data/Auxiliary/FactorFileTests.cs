@@ -185,11 +185,11 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             var splitsAndDividends = file.GetSplitsAndDividends(Symbols.SPY, exchangeHours);
 
             var dividend = (Dividend)splitsAndDividends.Single(d => d.Time == reference.AddDays(-6));
-            var distribution = Dividend.ComputeDistribution(100m, .9m / 1m);
+            var distribution = Dividend.ComputeDistribution(100m, .9m / 1m, 2);
             Assert.AreEqual(distribution, dividend.Distribution);
 
             dividend = (Dividend) splitsAndDividends.Single(d => d.Time == reference.AddDays(-13));
-            distribution = Math.Round(Dividend.ComputeDistribution(100m, .8m / .9m), 2);
+            distribution = Math.Round(Dividend.ComputeDistribution(100m, .8m / .9m, 2), 2);
             Assert.AreEqual(distribution, dividend.Distribution);
 
             var split = (Split) splitsAndDividends.Single(d => d.Time == reference.AddDays(-20));
@@ -201,7 +201,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             Assert.AreEqual(splitFactor, split.SplitFactor);
 
             dividend = splitsAndDividends.OfType<Dividend>().Single(d => d.Time == reference.AddDays(-363));
-            distribution = Dividend.ComputeDistribution(100m, .7m / .8m);
+            distribution = Dividend.ComputeDistribution(100m, .7m / .8m, 2);
             Assert.AreEqual(distribution, dividend.Distribution);
 
             split = splitsAndDividends.OfType<Split>().Single(d => d.Time == reference.AddDays(-363));

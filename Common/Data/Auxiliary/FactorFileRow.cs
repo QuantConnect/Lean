@@ -230,7 +230,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="symbol">The symbol to use for the dividend</param>
         /// <param name="exchangeHours">Exchange hours used for resolving the previous trading day</param>
         /// <returns>A new dividend instance</returns>
-        public Dividend GetDividend(FactorFileRow futureFactorFileRow, Symbol symbol, SecurityExchangeHours exchangeHours)
+        public Dividend GetDividend(FactorFileRow futureFactorFileRow, Symbol symbol, SecurityExchangeHours exchangeHours, int decimalPlaces)
         {
             if (futureFactorFileRow.PriceFactor == 0m)
             {
@@ -246,7 +246,8 @@ namespace QuantConnect.Data.Auxiliary
                 symbol,
                 previousTradingDay,
                 ReferencePrice,
-                PriceFactor / futureFactorFileRow.PriceFactor
+                PriceFactor / futureFactorFileRow.PriceFactor,
+                decimalPlaces
             );
         }
 
@@ -300,9 +301,9 @@ namespace QuantConnect.Data.Auxiliary
         {
             source = source == null ? "" : $",{source}";
             return $"{Date.ToStringInvariant(DateFormat.EightCharacter)}," +
-                   Invariant($"{Math.Round(PriceFactor, 6).Normalize()},") +
-                   Invariant($"{Math.Round(SplitFactor, 7).Normalize()},") +
-                   Invariant($"{Math.Round(ReferencePrice, 2).Normalize()}") +
+                   Invariant($"{Math.Round(PriceFactor, 7)},") +
+                   Invariant($"{Math.Round(SplitFactor, 8)},") +
+                   Invariant($"{Math.Round(ReferencePrice, 4).Normalize()}") +
                    $"{source}";
         }
 
