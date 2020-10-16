@@ -445,6 +445,27 @@ namespace QuantConnect
     }
 
     /// <summary>
+    /// Specifies what side a position is on, long/short
+    /// </summary>
+    public enum PositionSide
+    {
+        /// <summary>
+        /// A short position, quantity less than zero
+        /// </summary>
+        Short = -1,
+
+        /// <summary>
+        /// No position, quantity equals zero
+        /// </summary>
+        None = 0,
+
+        /// <summary>
+        /// A long position, quantity greater than zero
+        /// </summary>
+        Long = 1
+    }
+
+    /// <summary>
     /// Specifies the different types of options
     /// </summary>
     public enum OptionRight

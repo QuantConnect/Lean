@@ -2512,5 +2512,19 @@ namespace QuantConnect
 
             return new OptionChainUniverse(optionChain, settings, algorithm.LiveMode);
         }
+
+        /// <summary>
+        /// Inverts the specified <paramref name="right"/>
+        /// </summary>
+        public static OptionRight Invert(this OptionRight right)
+        {
+            switch (right)
+            {
+                case OptionRight.Call: return OptionRight.Put;
+                case OptionRight.Put:  return OptionRight.Call;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(right), right, null);
+            }
+        }
     }
 }
