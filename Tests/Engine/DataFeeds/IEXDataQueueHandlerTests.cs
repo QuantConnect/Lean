@@ -16,7 +16,6 @@
 
 using System;
 using System.Net;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -61,41 +60,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             });
         }
-
-        [Test]
-        public void IEXCouldConnect()
-        {
-            var iex = new IEXDataQueueHandler();
-            Thread.Sleep(5000);
-            Assert.IsTrue(iex.IsConnected);
-            iex = null;
-            GC.Collect(2, GCCollectionMode.Forced, true);
-            Thread.Sleep(1000);
-            // finalizer should print disconnected message
-        }
-
-        /// <summary>
-        /// Firehose is a special symbol that subscribes to all IEX symbols
-        /// </summary>
-        [Test]
-        public void IEXCouldSubscribeToAll()
-        {
-            var iex = new IEXDataQueueHandler();
-
-            ProcessFeed(
-                iex.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbol.Create("firehose", SecurityType.Equity, Market.USA), Resolution.Second), (s, e) => { }),
-                tick =>
-                {
-                    if (tick != null)
-                    {
-                        Console.WriteLine(tick.ToString());
-                    }
-                });
-
-            Thread.Sleep(30000);
-            iex.Dispose();
-        }
-
+        
         /// <summary>
         /// Subscribe to multiple symbols in a single call
         /// </summary>
@@ -103,21 +68,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void IEXCouldSubscribe()
         {
             var iex = new IEXDataQueueHandler();
+            var symbols = new[] {"SPY", "AAPL", "XIV", "PTN", "USO"};
+            var leanSymbols = symbols.Select(ticker => Symbol.Create(ticker, SecurityType.Equity, Market.USA));
 
-            Array.ForEach(new[] { "FB", "AAPL", "XIV", "PTN", "USO" }, (ticker) =>
-            {
-                ProcessFeed(
-                    iex.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbol.Create(ticker, SecurityType.Equity, Market.USA), Resolution.Second), (sender, e) => { }),
-                    tick =>
-                    {
-                        if (tick != null)
-                        {
-                            Console.WriteLine(tick.ToString());
-                        }
-                    });
-            });
+            iex.Subscribe(leanSymbols);
 
             Thread.Sleep(10000);
+            Assert.IsTrue(iex.IsConnected);
+
             iex.Dispose();
         }
 
@@ -209,23 +167,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             iex.Dispose();
         }
 
-        [Test]
-        public void IEXCouldReconnect()
-        {
-            var iex = new IEXDataQueueHandler();
-            var realEndpoint = iex.Endpoint;
-            Thread.Sleep(1000);
-            iex.Dispose();
-            iex.Endpoint = "https://badd.address";
-            iex.Reconnect();
-            Thread.Sleep(1000);
-            iex.Dispose();
-            iex.Endpoint = realEndpoint;
-            iex.Reconnect();
-            Thread.Sleep(1000);
-            Assert.IsTrue(iex.IsConnected);
-            iex.Dispose();
-        }
 
         #region History provider tests
 

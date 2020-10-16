@@ -18,16 +18,12 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Configuration;
 using QuantConnect.Packets;
-using Quobject.SocketIoClientDotNet.Client;
 using QuantConnect.Logging;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Data.Market;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Text;
 using QuantConnect.Interfaces;
 using NodaTime;
 using System.Globalization;
@@ -36,41 +32,39 @@ using static QuantConnect.StringExtensions;
 using QuantConnect.Util;
 using System.Linq;
 using System.Net;
+using System.Text;
+using System.Threading.Tasks;
+using LaunchDarkly.EventSource;
+using Newtonsoft.Json;
+using QuantConnect.ToolBox.IEX.Response;
 
 namespace QuantConnect.ToolBox.IEX
 {
     /// <summary>
     /// IEX live data handler.
-    /// Data provided for free by IEX. See more at https://iextrading.com/developers/docs/#websockets
+    /// See more at https://iexcloud.io/docs/api/
     /// </summary>
     public class IEXDataQueueHandler : HistoryProviderBase, IDataQueueHandler
     {
-        // using SocketIoClientDotNet is a temp solution until IEX implements standard WebSockets protocol
-        private Socket _socket;
+        private EventSource _client;
+
+        private readonly ConcurrentDictionary<string, Symbol> _symbols = new ConcurrentDictionary<string, Symbol>(StringComparer.InvariantCultureIgnoreCase);
+        private readonly ConcurrentDictionary<string, long> _tickLastTradeTime = new ConcurrentDictionary<string, long>();
 
         // only required for history requests to IEX Cloud
         private readonly string _apiKey = Config.Get("iex-cloud-api-key");
 
-        private readonly ConcurrentDictionary<string, Symbol> _symbols = new ConcurrentDictionary<string, Symbol>(StringComparer.InvariantCultureIgnoreCase);
-        private Manager _manager;
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private static DateTime _unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified);
-        private readonly TaskCompletionSource<bool> _connected = new TaskCompletionSource<bool>();
-        private bool _subscribedToAll;
         private int _dataPointCount;
         private readonly IDataAggregator _aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
             Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
-        public string Endpoint { get; internal set; }
+        public bool IsConnected {get; private set; }
 
-        public bool IsConnected => _manager.ReadyState == Manager.ReadyStateEnum.OPEN;
-
-        public IEXDataQueueHandler() : this(true)
-        {
-        }
-
-        public IEXDataQueueHandler(bool live)
+        
+        public IEXDataQueueHandler()
         {
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += (s, t) =>
@@ -85,97 +79,77 @@ namespace QuantConnect.ToolBox.IEX
                 return true;
             };
 
-            Endpoint = "https://ws-api.iextrading.com/1.0/tops";
-
             if (string.IsNullOrWhiteSpace(_apiKey))
             {
-                Log.Trace("IEXDataQueueHandler(): The IEX API key was not provided, history calls will return no data.");
-            }
-
-            if (live)
-            {
-                Reconnect();
+                throw new Exception("The IEX API key was not provided.");
             }
         }
 
-        internal void Reconnect()
-        {
-            try
-            {
-                _socket = IO.Socket(Endpoint,
-                    new IO.Options()
-                    {
-                        // default is 1000, default attempts is int.MaxValue
-                        ReconnectionDelay = 1000
-                    });
-                _socket.On(Socket.EVENT_CONNECT, () =>
-                {
-                    _connected.TrySetResult(true);
-                    Log.Trace("IEXDataQueueHandler.Reconnect(): Connected to IEX live data");
-                    Log.Trace("IEXDataQueueHandler.Reconnect(): IEX Real-Time Price");
-                });
-
-                _socket.On("message", message => ProcessJsonObject(JObject.Parse((string)message)));
-                _manager = _socket.Io();
-            }
-            catch (Exception err)
-            {
-                Log.Error("IEXDataQueueHandler.Reconnect(): " + err.Message);
-            }
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void ProcessJsonObject(JObject message)
+        internal void ProcessJsonObject(string json)
         {
             try
             {
-                // https://iextrading.com/developer/#tops-tops-response
-                var symbolString = message["symbol"].Value<string>();
-                Symbol symbol;
-                if (!_symbols.TryGetValue(symbolString, out symbol))
+                var dataList = JsonConvert.DeserializeObject<List<QuoteSSE>>(json);
+
+                foreach (var item in dataList)
                 {
-                    if (_subscribedToAll)
+                    var symbolString = item.Symbol;
+                    Symbol symbol;
+                    if (!_symbols.TryGetValue(symbolString, out symbol))
                     {
-                        symbol = Symbol.Create(symbolString, SecurityType.Equity, Market.USA);
+                        throw new Exception("");
                     }
-                    else
+                    
+                    var bidSize = item.IexBidSize;
+                    var bidPrice = item.IexBidPrice;
+                    var askSize = item.IexAskSize;
+                    var askPrice = item.IexAskPrice;
+                    var lastSalePrice = item.IexRealtimePrice;
+                    var lastSaleSize = item.IexRealtimeSize;
+
+                    var lastTradeTime = item.LastTradeTime;
+                    var lastTradeDateTime = _unixEpoch.AddMilliseconds(lastTradeTime);
+                    var lastUpdated = item.IexLastUpdated;
+                    var lastUpdatedDatetime = _unixEpoch.AddMilliseconds(lastUpdated);
+
+                    if (lastUpdated == -1)
                     {
-                        Log.Trace("IEXDataQueueHandler.ProcessJsonObject(): Received unexpected symbol '" + symbolString + "' from IEX in IEXDataQueueHandler");
+                        // there were no trades on this day
                         return;
                     }
-                }
-                var bidSize = message["bidSize"].Value<long>();
-                var bidPrice = message["bidPrice"].Value<decimal>();
-                var askSize = message["askSize"].Value<long>();
-                var askPrice = message["askPrice"].Value<decimal>();
-                var volume = message["volume"].Value<int>();
-                var lastSalePrice = message["lastSalePrice"].Value<decimal>();
-                var lastSaleSize = message["lastSaleSize"].Value<int>();
-                var lastSaleTime = message["lastSaleTime"].Value<long>();
-                var lastSaleDateTime = _unixEpoch.AddMilliseconds(lastSaleTime);
-                var lastUpdated = message["lastUpdated"].Value<long>();
-                if (lastUpdated == -1)
-                {
-                    // there were no trades on this day
-                    return;
-                }
-                var lastUpdatedDatetime = _unixEpoch.AddMilliseconds(lastUpdated);
 
-                var tick = new Tick()
-                {
-                    Symbol = symbol,
-                    Time = lastUpdatedDatetime.ConvertFromUtc(TimeZones.NewYork),
-                    TickType = lastUpdatedDatetime == lastSaleDateTime ? TickType.Trade : TickType.Quote,
-                    Exchange = "IEX",
-                    BidSize = bidSize,
-                    BidPrice = bidPrice,
-                    AskSize = askSize,
-                    AskPrice = askPrice,
-                    Value = lastSalePrice,
-                    Quantity = lastSaleSize
-                };
+                    // By a strange circumstance, IEX sends the same ticks several times in a row, we must skip the same entries
+                    long value;
+                    if (_tickLastTradeTime.TryGetValue(symbolString, out value))
+                    {
+                        if (value == lastTradeTime) return;
+                    }
 
-                _aggregator.Update(tick);
+                    // Otherwise update a dictionary and update a tick
+                    _tickLastTradeTime[symbolString] = lastTradeTime;
+
+                    var tick = new Tick()
+                    {
+                        Symbol = symbol,
+                        Time = lastUpdatedDatetime.ConvertFromUtc(TimeZones.NewYork),
+                        TickType = lastUpdatedDatetime == lastTradeDateTime ? TickType.Trade : TickType.Quote,
+                        Exchange = "IEX",
+                        BidSize = bidSize,
+                        BidPrice = bidPrice,
+                        AskSize = askSize,
+                        AskPrice = askPrice,
+                        Value = lastSalePrice,
+                        Quantity = lastSaleSize
+                    };
+
+                    // test test
+                    Console.WriteLine($"1:{lastTradeTime} 2:{lastTradeDateTime} 3:{lastUpdated} 4:{lastUpdatedDatetime}");
+                    Console.WriteLine(tick.ToString());
+
+                    _aggregator.Update(tick);
+                }
             }
             catch (Exception err)
             {
@@ -216,32 +190,31 @@ namespace QuantConnect.ToolBox.IEX
         /// </summary>
         public void Subscribe(IEnumerable<Symbol> symbols)
         {
-            try
+            var added = false;
+            var enumerable = symbols as Symbol[] ?? symbols.ToArray();
+
+            foreach (var symbol in enumerable)
             {
-                var sb = new StringBuilder();
-                foreach (var symbol in symbols)
+                if (_symbols.TryAdd(symbol.Value, symbol))
                 {
-                    // IEX only supports equities
-                    if (symbol.Value.Equals("firehose", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        _subscribedToAll = true;
-                    }
-                    if (_symbols.TryAdd(symbol.Value, symbol))
-                    {
-                        // added new symbol
-                        sb.Append(symbol.Value);
-                        sb.Append(",");
-                    }
-                }
-                var symbolsList = sb.ToString().TrimEnd(',');
-                if (!string.IsNullOrEmpty(symbolsList))
-                {
-                    SocketSafeAsyncEmit("subscribe", symbolsList);
+                    // added new symbol
+                    added = true;
                 }
             }
-            catch (Exception err)
+
+            // If either symbolsArray is empty or there was no new symbols addition - need take no action
+            if (!enumerable.IsNullOrEmpty() && added)
             {
-                Log.Error("IEXDataQueueHandler.Subscribe(): " + err.Message);
+                // If there is no subscription at all, create it for the first time
+                if (_client == null)
+                {
+                    CreateNewSubscription();
+                }
+                // Otherwise, need to gracefully make the replacement, update existing subscription, so that in-between data updates are not lost
+                else
+                {
+                    GracefullyReplaceSubscription();
+                }
             }
         }
 
@@ -255,83 +228,71 @@ namespace QuantConnect.ToolBox.IEX
             _aggregator.Remove(dataConfig);
         }
 
-
         /// <summary>
         /// Unsubscribe from symbols
         /// </summary>
         public void Unsubscribe(IEnumerable<Symbol> symbols)
         {
-            try
+            bool removed = false;
+            var enumerable = symbols as Symbol[] ?? symbols.ToArray();
+
+            foreach (var symbol in enumerable)
             {
-                var sb = new StringBuilder();
-                foreach (var symbol in symbols)
+                Symbol tmp;
+                if (_symbols.TryRemove(symbol.Value, out tmp))
                 {
-                    // IEX only supports equities
-                    if (symbol.SecurityType != SecurityType.Equity) continue;
-                    Symbol tmp;
-                    if (_symbols.TryRemove(symbol.Value, out tmp))
-                    {
-                        // removed existing
-                        Trace.Assert(symbol.Value == tmp.Value);
-                        sb.Append(symbol.Value);
-                        sb.Append(",");
-                    }
-                }
-                var symbolsList = sb.ToString().TrimEnd(',');
-                if (!string.IsNullOrEmpty(symbolsList))
-                {
-                    SocketSafeAsyncEmit("unsubscribe", symbolsList);
+                    // removed existing
+                    removed = true;
                 }
             }
-            catch (Exception err)
+
+            if (!enumerable.IsNullOrEmpty() && removed)
             {
-                Log.Error("IEXDataQueueHandler.Unsubscribe(): " + err.Message);
+                GracefullyReplaceSubscription();
             }
         }
 
-        /// <summary>
-        /// This method is used to schedule _socket.Emit request until the connection state is OPEN
-        /// </summary>
-        /// <param name="symbol"></param>
-        private void SocketSafeAsyncEmit(string command, string value)
+        private void CreateNewSubscription()
         {
-            Task.Run(async () =>
+            var url = "https://cloud-sse.iexapis.com/stable/stocksUSNoUTP?token=" + _apiKey;
+            url += "&symbols=" + BuildSymbolsQuery();
+
+            // Build an Uri, create a client
+            _client = new EventSource(LaunchDarkly.EventSource.Configuration.Builder(new Uri(url)).Build());
+
+            // Set up the handlers
+            _client.Opened += (sender, args) => { IsConnected = true; };
+            _client.Error += (s, e) => { throw new Exception($"Error Occurred. Details: {e.Exception.Message}"); };
+            _client.MessageReceived += (sender, args) =>
             {
-                await _connected.Task;
-                const int retriesLimit = 100;
-                var retriesCount = 0;
-                while (true)
-                {
-                    try
-                    {
-                        if (_manager.ReadyState == Manager.ReadyStateEnum.OPEN)
-                        {
-                            // there is an ACK functionality in socket.io, but IEX will be moving to standard WebSockets
-                            // and this retry logic is just for rare cases of connection interrupts
-                            _socket.Emit(command, value);
-                            break;
-                        }
-                    }
-                    catch (Exception err)
-                    {
-                        Log.Error("IEXDataQueueHandler.SocketSafeAsyncEmit(): " + err.Message);
-                    }
-                    await Task.Delay(100);
-                    retriesCount++;
-                    if (retriesCount >= retriesLimit)
-                    {
-                        Log.Error("IEXDataQueueHandler.SocketSafeAsyncEmit(): " +
-                                  (new TimeoutException("Cannot subscribe to symbol :" + value)));
-                        break;
-                    }
-                }
-            }, _cts.Token)
-            .ContinueWith((t) =>
+                var message = args.Message.Data;
+                ProcessJsonObject(message);
+            };
+
+            // Client start call will block until Stop() is called (!) - so let it run in a background and report in case of any issues
+            Task.Run(async () => await _client.StartAsync())
+                .ContinueWith((t) =>
             {
-                Log.Error("IEXDataQueueHandler.SocketSafeAsyncEmit(): " + t.Exception.Message);
+                Log.Error("IEXDataQueueHandler.CreateNewSubscription(): " + t.Exception?.Message);
                 return t;
 
             }, TaskContinuationOptions.OnlyOnFaulted);
+        }
+
+        private void GracefullyReplaceSubscription()
+        {
+
+        }
+
+        private string BuildSymbolsQuery()
+        {
+            return _symbols.Values.Aggregate(new StringBuilder(), (sb, symbol) =>
+            {
+                sb.Append(symbol.Value);
+                sb.Append(",");
+                return sb;
+
+            }).ToString().TrimEnd(',');
         }
 
         /// <summary>
@@ -347,11 +308,10 @@ namespace QuantConnect.ToolBox.IEX
         {
             _aggregator.DisposeSafely();
             _cts.Cancel();
-            if (_socket != null)
-            {
-                _socket.Disconnect();
-                _socket.Close();
-            }
+
+            _client.Dispose();
+            IsConnected = false;
+
             Log.Trace("IEXDataQueueHandler.Dispose(): Disconnected from IEX live data");
         }
 

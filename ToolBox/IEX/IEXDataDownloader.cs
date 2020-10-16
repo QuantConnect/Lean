@@ -28,7 +28,7 @@ namespace QuantConnect.ToolBox.IEX
 
         public IEXDataDownloader()
         {
-            _handler = new IEXDataQueueHandler(false);
+            _handler = new IEXDataQueueHandler();
         }
 
         public void Dispose()

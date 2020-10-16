@@ -667,7 +667,7 @@ namespace QuantConnect.Data.Market
             switch (TickType)
             {
                 case TickType.Trade:
-                    return $"{Symbol}: Price: {Price} Quantity: {Quantity}";
+                    return $"{Symbol}: Price: {Price} Quantity: {Quantity} Time: {Time:O}";
 
                 case TickType.Quote:
                     return $"{Symbol}: Bid: {BidSize}@{BidPrice} Ask: {AskSize}@{AskPrice}";
