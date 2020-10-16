@@ -356,7 +356,7 @@ namespace QuantConnect.Util
         /// <param name="key">Lookup key</param>
         /// <param name="defaultValue">Default value</param>
         /// <returns>Value associated with the specified key or  default value</returns>
-        public static V GetValueOrDefault<K, V>(this IDictionary<K, V> dictionary, K key, V defaultValue)
+        public static V GetValueOrDefault<K, V>(this IDictionary<K, V> dictionary, K key, V defaultValue = default(V))
         {
             V obj;
             return dictionary.TryGetValue(key, out obj) ? obj : defaultValue;
