@@ -89,6 +89,12 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use TradingTechnologies models
         /// </summary>
-        TradingTechnologies
+        TradingTechnologies,
+        
+         /// <summary>
+        /// Transaction and submit/execution rules will use Samco models
+        /// </summary>
+        Samco,
+
     }
 }
