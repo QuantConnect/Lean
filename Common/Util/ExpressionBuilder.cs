@@ -113,6 +113,32 @@ namespace QuantConnect.Util
             return expression.AsEnumerable().OfType<T>();
         }
 
+        /// <summary>
+        /// Returns the single expression of the specified type or throws if none or more than one expression
+        /// of the specified type is contained within the expression.
+        /// </summary>
+        /// <typeparam name="T">The type of expression to search for</typeparam>
+        /// <param name="expression">The expression to search</param>
+        /// <returns>Expression of the specified type</returns>
+        public static T Single<T>(this Expression expression)
+            where T : Expression
+        {
+            return expression.AsEnumerable().OfType<T>().Single();
+        }
+
+        /// <summary>
+        /// Returns the single expression of the specified type or throws if none or more than one expression
+        /// of the specified type is contained within the expression.
+        /// </summary>
+        /// <typeparam name="T">The type of expression to search for</typeparam>
+        /// <param name="expressions">The expressions to search</param>
+        /// <returns>Expression of the specified type</returns>
+        public static T Single<T>(this IEnumerable<Expression> expressions)
+            where T : Expression
+        {
+            return expressions.OfType<T>().Single();
+        }
+
         private class ExpressionWalker : ExpressionVisitor
         {
             public readonly HashSet<Expression> Expressions = new HashSet<Expression>();

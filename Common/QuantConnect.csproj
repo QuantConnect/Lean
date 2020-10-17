@@ -415,8 +415,15 @@
     <Compile Include="Securities\ContractSecurityFilterUniverse.cs" />
     <Compile Include="Securities\Future\FutureSymbol.cs" />
     <Compile Include="Securities\GetMaximumOrderQuantityForDeltaBuyingPowerParameters.cs" />
+    <Compile Include="Securities\Option\StrategyMatcher\ConstantOptionStrategyLegPredicateReferenceValue.cs" />
+    <Compile Include="Securities\Option\StrategyMatcher\IOptionStrategyLegPredicateReferenceValue.cs" />
+    <Compile Include="Securities\Option\StrategyMatcher\OptionStrategyLegDefinitionMatch.cs" />
+    <Compile Include="Securities\Option\StrategyMatcher\OptionStrategyLegPredicateReferenceValue.cs" />
     <Compile Include="Securities\Option\StrategyMatcher\OptionPosition.cs" />
     <Compile Include="Securities\Option\StrategyMatcher\OptionPositionCollection.cs" />
+    <Compile Include="Securities\Option\StrategyMatcher\OptionStrategyLegDefinition.cs" />
+    <Compile Include="Securities\Option\StrategyMatcher\OptionStrategyLegPredicate.cs" />
+    <Compile Include="Securities\Option\StrategyMatcher\PredicateTargetValue.cs" />
     <Compile Include="Securities\RegisteredSecurityDataTypesProvider.cs" />
     <Compile Include="Securities\ErrorCurrencyConverter.cs" />
     <Compile Include="Securities\GetMaximumOrderQuantityForTargetBuyingPowerParameters.cs" />
