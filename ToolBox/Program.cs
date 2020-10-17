@@ -67,6 +67,8 @@ namespace QuantConnect.ToolBox
             {
                 var fromDate = Parse.DateTimeExact(GetParameterOrExit(optionsObject, "from-date"), "yyyyMMdd-HH:mm:ss");
                 var resolution = optionsObject.ContainsKey("resolution") ? optionsObject["resolution"].ToString() : "";
+                                var market = optionsObject.ContainsKey("market") ? optionsObject["market"].ToString() : "";
+                var securityType = optionsObject.ContainsKey("security-type") ? optionsObject["security-type"].ToString() : "";
                 var tickers = optionsObject.ContainsKey("tickers")
                     ? (optionsObject["tickers"] as Dictionary<string, object>)?.Keys.ToList()
                     : new List<string>();
@@ -75,6 +77,10 @@ namespace QuantConnect.ToolBox
                     : DateTime.UtcNow;
                 switch (targetApp)
                 {
+                    case "samcodl":
+                    case "samcodownloader":
+                        SamcoDataDownloaderProgram.SamcoDataDownloader(tickers,market, resolution, securityType, fromDate, toDate);
+                        break;
                     case "gdaxdl":
                     case "gdaxdownloader":
                         GDAXDownloaderProgram.GDAXDownloader(tickers, resolution, fromDate, toDate);

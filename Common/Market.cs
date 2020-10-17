@@ -60,6 +60,14 @@ namespace QuantConnect
             Tuple.Create(CME, 23),
             Tuple.Create(SGX, 24),
             Tuple.Create(HKFE, 25),
+
+            Tuple.Create(NSEFO, 26),
+            Tuple.Create(NSECDS, 27),
+            Tuple.Create(NCDEX, 28),
+
+            Tuple.Create(BSE, 29),
+            Tuple.Create(MCX, 30),
+            Tuple.Create(BSEFO, 31),
         };
 
         static Market()
@@ -125,9 +133,39 @@ namespace QuantConnect
         public const string CBOE = "cboe";
 
         /// <summary>
-        /// NSE
+        /// NSE - National Stock Exchange
         /// </summary>
         public const string NSE = "nse";
+
+        /// <summary>
+        /// NSE - National Stock Exchange Commodity Derivatives
+        /// </summary>
+        public const string NSECDS = "nsecds";
+
+        /// <summary>
+        /// NSE - National Stock Exchange Futures and Options
+        /// </summary>
+        public const string NSEFO = "nsefo";
+
+        /// <summary>
+        /// BSE - Bombay Stock Exchange
+        /// </summary>
+        public const string BSE = "bse";
+
+        /// BSE Futures and Options
+        /// </summary>
+        public const string BSEFO = "bsefo";
+
+        /// <summary>
+        /// MCX - Multi Commodity Exchange
+        /// </summary>
+        public const string MCX = "mcx";
+
+        /// <summary>
+        /// NCDEX
+        /// </summary>
+        public const string NCDEX = "ncdex";
+
         
         /// <summary>
         /// Comex
