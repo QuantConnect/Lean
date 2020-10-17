@@ -58,7 +58,17 @@ namespace QuantConnect.Orders
         /// <summary>
         ///  Limit if Touched Order Type - a limit order to be placed after first reaching a trigger value.
         /// </summary>
-        LimitIfTouched
+        LimitIfTouched,
+
+        /// <summary>
+        /// Option Exercise Order Type
+        /// </summary>
+        Bracket,
+
+        /// <summary>
+        /// Option Exercise Order Type
+        /// </summary>
+        Cover,
     }
 
     /// <summary>

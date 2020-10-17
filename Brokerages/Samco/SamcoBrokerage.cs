@@ -17,7 +17,6 @@ using QuantConnect.Brokerages.Samco.Messages;
 using NodaTime;
 using QuantConnect.Orders.Fees;
 using Newtonsoft.Json.Linq;
-using QuantConnect.Configuration;
 
 namespace QuantConnect.Brokerages.Samco
 {
@@ -89,7 +88,7 @@ namespace QuantConnect.Brokerages.Samco
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="yob">year of birth</param>
         public SamcoBrokerage(string wssUrl, SamcoWebSocketClientWrapper websocket, IRestClient restClient, string apiKey, string apiSecret, string yob, IAlgorithm algorithm)
-            : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.NSE, "Samco")
+            : base(wssUrl, websocket, restClient, apiKey, apiSecret, "Samco")
         {
             RestClient = restClient;
             _algorithm = algorithm;
@@ -103,7 +102,7 @@ namespace QuantConnect.Brokerages.Samco
             websocket = new SamcoWebSocketClientWrapper();
             websocket.Initialize(_wssUrl);
             websocket.SetAuthTokenHeader(sessionToken);
-            WebSocket = websocket;
+            //WebSocket = websocket;
             _subscriptionManager = new SamcoSubscriptionManager(this, _wssUrl, _symbolMapper, sessionToken);
             Log.Trace("Start Samco Brokerage");
         }
@@ -284,7 +283,6 @@ namespace QuantConnect.Brokerages.Samco
         /// </summary>
         public override void Disconnect()
         {
-            base.Disconnect();
             if (WebSocket.IsOpen)
             {
                 WebSocket.Close();
@@ -301,14 +299,14 @@ namespace QuantConnect.Brokerages.Samco
         {
             LockStream();
             Messages.OrderResponse orderResponse = null;
-            if (order.Type == OrderType.Bracket)
-            {
-                orderResponse = _samcoAPI.PlaceBracketOrder(order, _algorithm);
-            }
-            else
-            {
+            //if (order.Type == OrderType.Bracket)
+            //{
+            //    orderResponse = _samcoAPI.PlaceBracketOrder(order, _algorithm);
+            //}
+            //else
+            //{
                 orderResponse = _samcoAPI.PlaceOrder(order, _algorithm);
-            }
+            //}
             Log.Debug("SamcoOrderResponse:");
             Log.Debug(orderResponse.ToString());
 
@@ -426,14 +424,14 @@ namespace QuantConnect.Brokerages.Samco
         {
             LockStream();
             Messages.OrderResponse orderResponse = null;
-            if (order.Type == OrderType.Bracket)
-            {
-                orderResponse = _samcoAPI.CancelBracketOrder(order.Id.ToStringInvariant());
-            }
-            else
-            {
+            //if (order.Type == OrderType.Bracket)
+            //{
+            //    orderResponse = _samcoAPI.CancelBracketOrder(order.Id.ToStringInvariant());
+            //}
+            //else
+            //{
                 orderResponse = _samcoAPI.CancelOrder(order.Id.ToStringInvariant());
-            }
+            //}
             if (orderResponse.status == "Success")
             {
                 UnlockStream();
@@ -757,7 +755,8 @@ namespace QuantConnect.Brokerages.Samco
         /// Gets the total number of data points emitted by this history provider
         /// </summary>
         public int DataPointCount { get; private set; }
-     
+        public DateTime LastHeartbeatUtcTime { get; private set; }
+
 
 
         /// <summary>
@@ -1046,15 +1045,23 @@ namespace QuantConnect.Brokerages.Samco
         #endregion
     }
 
-
     /// <summary>
-    /// Represents Samco channel information
+    /// Represents a subscription channel
     /// </summary>
-    public class SamcoChannel : BaseWebsocketsBrokerage.Channel
+    public class Channel
     {
+
         /// <summary>
         /// Represents channel identifier for specific subscription
         /// </summary>
         public string ChannelId { get; set; }
+        /// <summary>
+        /// The name of the channel
+        /// </summary>
+        public string Name { get; set; }
+        /// <summary>
+        /// The ticker symbol of the channel
+        /// </summary>
+        public string Symbol { get; set; }
     }
 }
