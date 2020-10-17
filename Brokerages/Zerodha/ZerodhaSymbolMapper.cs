@@ -248,7 +248,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="strike">The strike of the security (if applicable)</param>
         /// <param name="optionRight">The option right of the security (if applicable)</param>
         /// <returns>A new Lean Symbol instance</returns>
-        public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market, DateTime expirationDate = default(DateTime), decimal strike = 0, OptionRight optionRight = 0, OptionStyle optionStyle = 0)
+        public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market, DateTime expirationDate = default(DateTime), decimal strike = 0, OptionRight optionRight = OptionRight.Call)
         {
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 throw new ArgumentException($"Invalid Samco symbol: {brokerageSymbol}");
@@ -265,6 +265,7 @@ namespace QuantConnect.Brokerages.Zerodha
             switch (securityType)
             {
                 case SecurityType.Option:
+                    OptionStyle optionStyle = OptionStyle.European;
                     return Symbol.CreateOption(ConvertSamcoSymbolToLeanSymbol(brokerageSymbol) , market, optionStyle, optionRight,strike,expirationDate);
                 case SecurityType.Future:
                     return Symbol.CreateFuture(ConvertSamcoSymbolToLeanSymbol(brokerageSymbol), market,expirationDate);
@@ -364,11 +365,6 @@ namespace QuantConnect.Brokerages.Zerodha
 
             // return as it is due to Samco has similar Symbol format
             return leanSymbol.ToUpperInvariant();
-        }
-
-        public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market, DateTime expirationDate = default(DateTime), decimal strike = 0, OptionRight optionRight = OptionRight.Call)
-        {
-            throw new NotImplementedException();
         }
     }
 }
