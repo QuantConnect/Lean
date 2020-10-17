@@ -22,7 +22,7 @@ namespace QuantConnect.Brokerages.Samco
         private ConcurrentDictionary<string, Symbol> _subscriptionsById = new ConcurrentDictionary<string, Symbol>();
         private RateGate _connectionRateLimiter = new RateGate(30, TimeSpan.FromMinutes(1));
         private ConcurrentDictionary<Symbol, List<SamcoWebSocketWrapper>> _subscriptionsBySymbol = new ConcurrentDictionary<Symbol, List<SamcoWebSocketWrapper>>();
-        private ConcurrentDictionary<SamcoWebSocketWrapper, List<SamcoChannel>> _channelsByWebSocket = new ConcurrentDictionary<SamcoWebSocketWrapper, List<SamcoChannel>>();
+        private ConcurrentDictionary<SamcoWebSocketWrapper, List<Channel>> _channelsByWebSocket = new ConcurrentDictionary<SamcoWebSocketWrapper, List<Channel>>();
         private ConcurrentDictionary<Symbol, DefaultOrderBook> _orderBooks = new ConcurrentDictionary<Symbol, DefaultOrderBook>();
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace QuantConnect.Brokerages.Samco
             return _subscriptionsBySymbol.ContainsKey(symbol);
         }
 
-        private SamcoWebSocketWrapper GetFreeWebSocket(SamcoChannel channel)
+        private SamcoWebSocketWrapper GetFreeWebSocket(Channel channel)
         {
             int count;
 
@@ -77,7 +77,7 @@ namespace QuantConnect.Brokerages.Samco
 
             lock (_locker)
             {
-                _channelsByWebSocket.TryAdd(webSocket, new List<SamcoChannel> { channel });
+                _channelsByWebSocket.TryAdd(webSocket, new List<Channel> { channel });
 
                 count = _channelsByWebSocket.Sum(x => x.Value.Count);
                 Log.Trace($"SamcoSubscriptionManager.GetFreeWebSocket(): Channel added: Total channels:{count}");
@@ -165,7 +165,7 @@ namespace QuantConnect.Brokerages.Samco
 
             Log.Trace($"SamcoSubscriptionManager.OnReconnectRequested(): Reconnected: IsOpen:{webSocket.IsOpen} ReadyState:{webSocket.ReadyState} [Id: {connectionHandler.ConnectionId}]");
 
-            List<SamcoChannel> channels;
+            List<Channel> channels;
             lock (_locker)
             {
                 if (!_channelsByWebSocket.TryGetValue(webSocket, out channels))
@@ -207,7 +207,8 @@ namespace QuantConnect.Brokerages.Samco
                     var raw = token.ToObject<QuoteUpdate>();
                     if (raw.response.streaming_type.ToLowerInvariant() == "quote")
                     {
-                        if (!quotes.TryGetValue(raw.response.data.sym, out var existing))
+                        QuoteUpdate existing;
+                        if (!quotes.TryGetValue(raw.response.data.sym, out existing))
                         {
                             existing = raw;
                             quotes[raw.response.data.sym] = raw;
@@ -266,7 +267,7 @@ namespace QuantConnect.Brokerages.Samco
             var sub = new Subscription();
             sub.request.data.symbols.Add(new Subscription.Symbol { symbol = listingId });
             var request = JsonConvert.SerializeObject(sub);
-            var channel = new SamcoChannel { Name = channelName, Symbol = ticker, ChannelId = listingId };
+            var channel = new Channel { Name = channelName, Symbol = ticker, ChannelId = listingId };
             var webSocket = GetFreeWebSocket(channel);
             //TODO: bug handle if websocket state is still connecting
             System.Threading.Thread.Sleep(1000);
@@ -297,7 +298,7 @@ namespace QuantConnect.Brokerages.Samco
                     {
                         lock (_locker)
                         {
-                            List<SamcoChannel> channels;
+                            List<Channel> channels;
                             if (_channelsByWebSocket.TryGetValue(webSocket, out channels))
                             {
                                 foreach (var channel in channels)
@@ -318,7 +319,7 @@ namespace QuantConnect.Brokerages.Samco
 
         }
 
-        private void UnsubscribeChannel(SamcoWebSocketWrapper webSocket, SamcoChannel channel)
+        private void UnsubscribeChannel(SamcoWebSocketWrapper webSocket, Channel channel)
         {
             var sub = new Subscription();
             sub.request.request_type = "unsubcribe";
@@ -329,13 +330,13 @@ namespace QuantConnect.Brokerages.Samco
             OnUnsubscribe(webSocket, channel);
         }
 
-        private void OnSubscribe(SamcoWebSocketWrapper webSocket, SamcoChannel data)
+        private void OnSubscribe(SamcoWebSocketWrapper webSocket, Channel data)
         {
             try
             {
                 lock (_locker)
                 {
-                    List<SamcoChannel> channels;
+                    List<Channel> channels;
                     if (_channelsByWebSocket.TryGetValue(webSocket, out channels))
                     {
                         var channel = channels.First(x => x.Name == data.Name && x.Symbol == data.Symbol);
@@ -353,13 +354,13 @@ namespace QuantConnect.Brokerages.Samco
             }
         }
 
-        private void OnUnsubscribe(SamcoWebSocketWrapper webSocket, SamcoChannel data)
+        private void OnUnsubscribe(SamcoWebSocketWrapper webSocket, Channel data)
         {
             try
             {
                 lock (_locker)
                 {
-                    List<SamcoChannel> channels;
+                    List<Channel> channels;
                     if (!_channelsByWebSocket.TryGetValue(webSocket, out channels)) return;
 
                     channels.Remove(channels.First(x => x.ChannelId == data.ChannelId));

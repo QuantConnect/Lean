@@ -166,8 +166,8 @@ namespace QuantConnect.Brokerages.Samco
                     // Order price must be positive for market order too;
                     // refuses for price = 0
                     return 0;
-                case OrderType.Bracket:
-                    return ((BracketOrder)order).EntryPrice;
+                //case OrderType.Bracket:
+                //    return ((BracketOrder)order).EntryPrice;
                 case OrderType.StopMarket:
                     return ((StopMarketOrder)order).StopPrice;
             }

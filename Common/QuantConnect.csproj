@@ -870,6 +870,10 @@
     <Compile Include="Util\VersionHelper.cs" />
     <Compile Include="Util\WorkerThread.cs" />
     <Compile Include="Util\XElementExtensions.cs" />
+    <Compile Include="Brokerages\ZerodhaBrokerageModel.cs" />
+    <Compile Include="Brokerages\SamcoBrokerageModel.cs" />
+    <Compile Include="Orders\Fees\SamcoFeeModel.cs" />
+    <Compile Include="Orders\Fees\ZerodhaFeeModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">

@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
-using CsvHelper;
-using CsvHelper.Configuration;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Zerodha
@@ -368,6 +364,11 @@ namespace QuantConnect.Brokerages.Zerodha
 
             // return as it is due to Samco has similar Symbol format
             return leanSymbol.ToUpperInvariant();
+        }
+
+        public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market, DateTime expirationDate = default(DateTime), decimal strike = 0, OptionRight optionRight = OptionRight.Call)
+        {
+            throw new NotImplementedException();
         }
     }
 }

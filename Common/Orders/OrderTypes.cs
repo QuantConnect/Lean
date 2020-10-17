@@ -53,7 +53,17 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Option Exercise Order Type
         /// </summary>
-        OptionExercise
+        OptionExercise,
+
+        /// <summary>
+        /// Option Exercise Order Type
+        /// </summary>
+        Bracket,
+
+        /// <summary>
+        /// Option Exercise Order Type
+        /// </summary>
+        Cover,
     }
 
     /// <summary>

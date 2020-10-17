@@ -49,6 +49,7 @@ using QuantConnect.ToolBox.YahooDownloader;
 using QuantConnect.Util;
 using QuantConnect.ToolBox.SmartInsider;
 using QuantConnect.ToolBox.TiingoNewsConverter;
+using QuantConnect.ToolBox.SamcoDownloader;
 
 namespace QuantConnect.ToolBox
 {

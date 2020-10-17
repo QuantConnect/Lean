@@ -322,14 +322,14 @@ namespace QuantConnect.Brokerages.Zerodha
             LockStream();
             Dictionary<string,dynamic> orderResponse;
 
-            if (order.Type == OrderType.Bracket)
-            {
-                orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market, order.Symbol.ID.Symbol,"",order.Quantity.ConvertInvariant<int>());
-            }
-            else
-            {
+            //if (order.Type == OrderType.Bracket)
+            //{
+            //    orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market, order.Symbol.ID.Symbol,"",order.Quantity.ConvertInvariant<int>());
+            //}
+            //else
+            //{
                 orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market, order.Symbol.ID.Symbol, "", order.Quantity.ConvertInvariant<int>());
-            }
+            //}
             Log.Debug("ZerodhaOrderResponse:");
             Log.Debug(orderResponse.ToString());
 
@@ -445,14 +445,14 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             LockStream();
             Dictionary<string, dynamic> orderResponse = null;
-            if (order.Type == OrderType.Bracket)
-            {
+            //if (order.Type == OrderType.Bracket)
+            //{
+            //    orderResponse = _kite.CancelOrder(order.Id.ToStringInvariant());
+            //}
+            //else
+            //{
                 orderResponse = _kite.CancelOrder(order.Id.ToStringInvariant());
-            }
-            else
-            {
-                orderResponse = _kite.CancelOrder(order.Id.ToStringInvariant());
-            }
+            //}
             if (orderResponse["status"] == "Success")
             {
                 UnlockStream();

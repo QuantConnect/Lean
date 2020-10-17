@@ -1121,7 +1121,7 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             string url = _root + _routes[Route];
 
-            if (Params is null)
+            if (Params.Equals(null))
                 Params = new Dictionary<string, dynamic>();
 
             if (url.Contains("{"))
@@ -1175,7 +1175,7 @@ namespace QuantConnect.Brokerages.Zerodha
             }
             catch (WebException e)
             {
-                if (e.Response is null)
+                if (e.Response.Equals(null))
                     throw e;
 
                 webResponse = e.Response;
