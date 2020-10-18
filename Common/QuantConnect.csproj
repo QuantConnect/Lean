@@ -874,6 +874,8 @@
     <Compile Include="Brokerages\SamcoBrokerageModel.cs" />
     <Compile Include="Orders\Fees\SamcoFeeModel.cs" />
     <Compile Include="Orders\Fees\ZerodhaFeeModel.cs" />
+    <Compile Include="Orders\BracketOrder.cs" />
+    <Compile Include="Orders\CoverOrder.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">

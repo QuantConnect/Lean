@@ -165,7 +165,6 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>SHA256 checksum in hex format.</returns>
         public static string SHA256(string Data)
         {
-            Console.WriteLine(Data);
             SHA256Managed sha256 = new SHA256Managed();
             StringBuilder hexhash = new StringBuilder();
             byte[] hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(Data), 0, Encoding.UTF8.GetByteCount(Data));

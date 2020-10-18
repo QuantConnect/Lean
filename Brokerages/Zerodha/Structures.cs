@@ -654,7 +654,7 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
                 Exchange = data["exchange"];
 
                 if (data["strike"].Contains("e"))
-                    Strike = Decimal.Parse(data["strike"], System.Globalization.NumberStyles.Float);
+                    Strike = decimal.Parse(data["strike"], NumberStyles.Float);
                 else
                     Strike = Convert.ToDecimal(data["strike"]);
 
@@ -667,8 +667,8 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
 
         }
 
-        public UInt32 InstrumentToken { get; set; }
-        public UInt32 ExchangeToken { get; set; }
+        public uint InstrumentToken { get; set; }
+        public uint ExchangeToken { get; set; }
         public string TradingSymbol { get; set; }
         public string Name { get; set; }
         public decimal LastPrice { get; set; }
@@ -678,7 +678,7 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
         public string Segment { get; set; }
         public string Exchange { get; set; }
         public decimal Strike { get; set; }
-        public UInt32 LotSize { get; set; }
+        public uint LotSize { get; set; }
     }
 
     /// <summary>

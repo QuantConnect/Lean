@@ -23,7 +23,7 @@ namespace QuantConnect.Brokerages.Zerodha
     /// <summary>
     /// Zerodha Brokerage implementation
     /// </summary>
-    public partial class ZerodhaBrokerage : Brokerage, IDataQueueUniverseProvider, IHistoryProvider
+    public partial class ZerodhaBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler, IHistoryProvider
     {
         #region Declarations
         /// <summary>
@@ -74,6 +74,8 @@ namespace QuantConnect.Brokerages.Zerodha
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
         private ZerodhaSubscriptionManager _subscriptionManager;
         private readonly ConcurrentQueue<MessageData> _messageBuffer = new ConcurrentQueue<MessageData>();
+
+        private readonly IDataAggregator _aggregator;
 
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
@@ -1037,7 +1039,36 @@ namespace QuantConnect.Brokerages.Zerodha
 
         #endregion
 
-        
+        #region IDataQueueHandler implementation
+
+        public void SetJob(LiveNodePacket job)
+        {
+        }
+
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
+        {
+            var symbol = dataConfig.Symbol;
+            if (symbol.Value.Contains("UNIVERSE") ||
+                !_symbolMapper.IsKnownLeanSymbol(symbol) ||
+                symbol.SecurityType != _symbolMapper.GetLeanSecurityType(symbol.Value))
+            {
+                return Enumerable.Empty<BaseData>().GetEnumerator();
+            }
+
+            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
+            SubscriptionManager.Subscribe(dataConfig);
+
+            return enumerator;
+        }
+
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            SubscriptionManager.Unsubscribe(dataConfig);
+            _aggregator.Remove(dataConfig);
+        }
+        #endregion
+
+
     }
 
     /// <summary>
