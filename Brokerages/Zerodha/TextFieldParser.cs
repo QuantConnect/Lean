@@ -31,7 +31,7 @@ namespace QuantConnect.Brokerages.Zerodha
         {
 
             // Default to UTF-8 and detect encoding
-            InitializeFromPath(path, System.Text.Encoding.UTF8, true);
+            InitializeFromPath(path, Encoding.UTF8, true);
         }
 
         /// *********************************************************************
@@ -43,7 +43,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="defaultEncoding">The decoding to default to if encoding isn't determined from file</param>
         /// <remarks></remarks>
         //[HostProtection(Resources = HostProtectionResource.ExternalProcessMgmt)]
-        public TextFieldParser(string path, System.Text.Encoding defaultEncoding)
+        public TextFieldParser(string path, Encoding defaultEncoding)
         {
 
             // Default to detect encoding
@@ -60,7 +60,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="detectEncoding">Indicates whether or not to try to detect the encoding from the BOM</param>
         /// <remarks></remarks>
         //[HostProtection(Resources = HostProtectionResource.ExternalProcessMgmt)]
-        public TextFieldParser(string path, System.Text.Encoding defaultEncoding, bool detectEncoding)
+        public TextFieldParser(string path, Encoding defaultEncoding, bool detectEncoding)
         {
             InitializeFromPath(path, defaultEncoding, detectEncoding);
         }
@@ -77,7 +77,7 @@ namespace QuantConnect.Brokerages.Zerodha
         {
 
             // Default to UTF-8 and detect encoding
-            InitializeFromStream(stream, System.Text.Encoding.UTF8, true);
+            InitializeFromStream(stream, Encoding.UTF8, true);
         }
 
         /// *********************************************************************
@@ -89,7 +89,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="defaultEncoding">The decoding to default to if encoding isn't determined from file</param>
         /// <remarks></remarks>
         //[HostProtection(Resources = HostProtectionResource.ExternalProcessMgmt)]
-        public TextFieldParser(Stream stream, System.Text.Encoding defaultEncoding)
+        public TextFieldParser(Stream stream, Encoding defaultEncoding)
         {
 
             // Default to detect encoding
@@ -106,7 +106,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="detectEncoding">Indicates whether or not to try to detect the encoding from the BOM</param>
         /// <remarks></remarks>
         //[HostProtection(Resources = HostProtectionResource.ExternalProcessMgmt)]
-        public TextFieldParser(Stream stream, System.Text.Encoding defaultEncoding, bool detectEncoding)
+        public TextFieldParser(Stream stream, Encoding defaultEncoding, bool detectEncoding)
         {
             InitializeFromStream(stream, defaultEncoding, detectEncoding);
         }
@@ -122,7 +122,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="leaveOpen">Indicates whether or not to leave the passed in stream open</param>
         /// <remarks></remarks>
         //[HostProtection(Resources = HostProtectionResource.ExternalProcessMgmt)]
-        public TextFieldParser(Stream stream, System.Text.Encoding defaultEncoding, bool detectEncoding, bool leaveOpen)
+        public TextFieldParser(Stream stream, Encoding defaultEncoding, bool detectEncoding, bool leaveOpen)
         {
             m_LeaveOpen = leaveOpen;
             InitializeFromStream(stream, defaultEncoding, detectEncoding);
