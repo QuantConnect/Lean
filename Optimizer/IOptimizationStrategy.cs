@@ -45,13 +45,5 @@ namespace QuantConnect.Optimizer
         /// </summary>
         /// <param name="result">Lean compute job result and corresponding parameter set</param>
         void PushNewResults(OptimizationResult result);
-
-        /// <summary>
-        /// Enumerate all possible arrangements
-        /// </summary>
-        /// <param name="seed">Seeding</param>
-        /// <param name="args">Optimization parameters settings</param>
-        /// <returns>Collection of possible combinations for given optimization parameters settings</returns>
-        IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args);
     }
 }

@@ -41,6 +41,12 @@ namespace QuantConnect.Optimizer
         public int ProjectId;
 
         /// <summary>
+        /// Unique compile id of this optimization
+        /// </summary>
+        [JsonProperty(PropertyName = "compileId")]
+        public string CompileId = "";
+
+        /// <summary>
         /// The unique optimization Id of the request
         /// </summary>
         [JsonProperty(PropertyName = "optimizationId")]

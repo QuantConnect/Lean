@@ -96,7 +96,7 @@ namespace QuantConnect.Optimizer
         /// <param name="seed">Seeding</param>
         /// <param name="args"></param>
         /// <returns>Collection of possible combinations for given optimization parameters settings</returns>
-        public IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args)
+        private IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args)
         {
             foreach (var step in Recursive(seed, new Queue<OptimizationParameter>(args)))
             {

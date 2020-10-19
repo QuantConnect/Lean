@@ -14,12 +14,13 @@
  *
 */
 
+using NUnit.Framework;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Optimizer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Moq;
-using NUnit.Framework;
-using QuantConnect.Optimizer;
+using Math = System.Math;
 
 namespace QuantConnect.Tests.Optimizer.Strategies
 {
@@ -76,14 +77,26 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         [Test, TestCaseSource(nameof(StrategySettings))]
         public void FindBest(Extremum extremum, int bestSet)
         {
+            var emaSlow = _optimizationParameters.First(s => s.Name == "ema-slow");
+            var emaFast = _optimizationParameters.First(s => s.Name == "ema-fast");
+
             _strategy.Initialize(extremum, _optimizationParameters);
             ParameterSet solution = null;
-            foreach (var parameterSet in _strategy.Step(null, _optimizationParameters))
+            int i = 0;
+            for (var slow = emaSlow.MinValue; slow <= emaSlow.MaxValue; slow += emaSlow.Step)
             {
-                _strategy.PushNewResults(new OptimizationResult(_compute(parameterSet), parameterSet));
-                if (parameterSet.Id == bestSet)
+                for (var fast = emaFast.MinValue; fast <= emaFast.MaxValue; fast += emaFast.Step)
                 {
-                    solution = parameterSet;
+                    var parameterSet = new ParameterSet(++i, new Dictionary<string, string>
+                    {
+                        {emaSlow.Name, slow.ToStringInvariant()},
+                        {emaFast.Name, fast.ToStringInvariant()}
+                    });
+                    _strategy.PushNewResults(new OptimizationResult(_compute(parameterSet), parameterSet));
+                    if (parameterSet.Id == bestSet)
+                    {
+                        solution = parameterSet;
+                    }
                 }
             }
 
@@ -97,9 +110,10 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         [TestFixture]
         public class GridSearchTests
         {
-            private IOptimizationStrategy _strategy;
+            private GridSearchOptimizationStrategy _strategy;
 
-            public GridSearchTests()
+            [SetUp]
+            public void Init()
             {
                 this._strategy = new GridSearchOptimizationStrategy();
             }
@@ -110,20 +124,23 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             public void SinglePoint(decimal step)
             {
                 var args = new HashSet<OptimizationParameter>()
-            {
-                new OptimizationParameter("ema-fast", 0, 0, step),
-                new OptimizationParameter("ema-slow", 0, 0, step),
-                new OptimizationParameter("ema-custom", 1, 1, step)
-            };
-                using (var enumerator = _strategy.Step(null, args).GetEnumerator())
                 {
-                    Assert.IsTrue(enumerator.MoveNext());
-                    var parameterSet = enumerator.Current;
+                    new OptimizationParameter("ema-fast", 0, 0, step),
+                    new OptimizationParameter("ema-slow", 0, 0, step),
+                    new OptimizationParameter("ema-custom", 1, 1, step)
+                };
+
+                _strategy.Initialize(new Maximization(), args);
+
+                _strategy.NewParameterSet += (s, e) =>
+                {
+                    var parameterSet = (e as OptimizationEventArgs).ParameterSet;
                     Assert.AreEqual("0", parameterSet.Value["ema-fast"]);
                     Assert.AreEqual("0", parameterSet.Value["ema-slow"]);
                     Assert.AreEqual("1", parameterSet.Value["ema-custom"]);
-                    Assert.IsFalse(enumerator.MoveNext());
-                }
+                };
+
+                _strategy.PushNewResults(OptimizationResult.Empty);
             }
 
             [TestCase(-10, 0, -1)]
@@ -134,9 +151,18 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             {
                 var param = new OptimizationParameter("ema-fast", min, max, step);
                 var set = new HashSet<OptimizationParameter>() { param };
+                _strategy.Initialize(new Maximization(), set);
                 var counter = 0;
-                using (var enumerator = _strategy.Step(null, set).GetEnumerator())
+
+                using (var enumerator = new EnqueueableEnumerator<ParameterSet>())
                 {
+                    _strategy.NewParameterSet += (s, e) =>
+                    {
+                        enumerator.Enqueue((e as OptimizationEventArgs)?.ParameterSet);
+                    };
+
+                    _strategy.PushNewResults(OptimizationResult.Empty);
+
                     for (var v = param.MinValue; v <= param.MaxValue; v += param.Step)
                     {
                         counter++;
@@ -150,7 +176,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                         Assert.AreEqual(v.ToStringInvariant(), suggestion.Value["ema-fast"]);
                     }
 
-                    Assert.IsFalse(enumerator.MoveNext());
+                    Assert.AreEqual(0, enumerator.Count);
                 }
 
                 Assert.Greater(counter, 0);
@@ -169,13 +195,21 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             public void Step2D(decimal[,] data)
             {
                 var args = new HashSet<OptimizationParameter>()
-            {
-                new OptimizationParameter("ema-fast", data[0,0], data[0,1], data[0,2]),
-                new OptimizationParameter("ema-slow", data[1,0], data[1,1], data[1,2])
-            };
-                var counter = 0;
-                using (var enumerator = _strategy.Step(null, args).GetEnumerator())
                 {
+                    new OptimizationParameter("ema-fast", data[0,0], data[0,1], data[0,2]),
+                    new OptimizationParameter("ema-slow", data[1,0], data[1,1], data[1,2])
+                };
+                _strategy.Initialize(new Maximization(), args);
+                var counter = 0;
+                using (var enumerator = new EnqueueableEnumerator<ParameterSet>())
+                {
+                    _strategy.NewParameterSet += (s, e) =>
+                    {
+                        enumerator.Enqueue((e as OptimizationEventArgs)?.ParameterSet);
+                    };
+
+                    _strategy.PushNewResults(OptimizationResult.Empty);
+
                     var fastParam = args.First(arg => arg.Name == "ema-fast");
                     var slowParam = args.First(arg => arg.Name == "ema-slow");
                     for (var fast = fastParam.MinValue; fast <= fastParam.MaxValue; fast += fastParam.Step)
@@ -195,7 +229,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                         }
                     }
 
-                    Assert.IsFalse(enumerator.MoveNext());
+                    Assert.AreEqual(0, enumerator.Count);
                 }
 
                 Assert.Greater(counter, 0);
@@ -213,14 +247,23 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             public void Step3D()
             {
                 var args = new HashSet<OptimizationParameter>()
-            {
-                new OptimizationParameter("ema-fast", 10, 100, 1),
-                new OptimizationParameter("ema-slow", 20, 200, 4),
-                new OptimizationParameter("ema-custom", 30, 300, 2)
-            };
-                var counter = 0;
-                using (var enumerator = _strategy.Step(null, args).GetEnumerator())
                 {
+                    new OptimizationParameter("ema-fast", 10, 100, 1),
+                    new OptimizationParameter("ema-slow", 20, 200, 4),
+                    new OptimizationParameter("ema-custom", 30, 300, 2)
+                };
+                _strategy.Initialize(new Maximization(), args);
+                var counter = 0;
+
+                using (var enumerator = new EnqueueableEnumerator<ParameterSet>())
+                {
+                    _strategy.NewParameterSet += (s, e) =>
+                    {
+                        enumerator.Enqueue((e as OptimizationEventArgs)?.ParameterSet);
+                    };
+
+                    _strategy.PushNewResults(OptimizationResult.Empty);
+
                     var fastParam = args.First(arg => arg.Name == "ema-fast");
                     var slowParam = args.First(arg => arg.Name == "ema-slow");
                     var customParam = args.First(arg => arg.Name == "ema-custom");
@@ -245,7 +288,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                         }
                     }
 
-                    Assert.IsFalse(enumerator.MoveNext());
+                    Assert.AreEqual(0, enumerator.Count);
                 }
 
                 Assert.Greater(counter, 0);
@@ -269,18 +312,23 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 {
                     args.Add(new OptimizationParameter($"ema-{i}", 10, 100, 1));
                 }
+                _strategy.Initialize(new Maximization(), args);
 
                 var counter = 0;
-                foreach (var parameterSet in _strategy.Step(null, args))
+                _strategy.NewParameterSet += (s, e) =>
                 {
                     counter++;
-
-                    Assert.AreEqual(depth, parameterSet.Value.Count);
+                    Assert.AreEqual(depth, (e as OptimizationEventArgs).ParameterSet.Value.Count);
                     if (counter == 10000)
                     {
-                        break;
+                        throw new Exception("Break loop due to large amount of data");
                     }
-                }
+                };
+
+                Assert.Throws<Exception>(() =>
+                {
+                    _strategy.PushNewResults(OptimizationResult.Empty);
+                });
 
                 Assert.AreEqual(10000, counter);
             }
@@ -288,27 +336,55 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             [Test]
             public void IncrementParameterSetId()
             {
+                int nextId = 1,
+                    last = 1;
+
+                var set = new HashSet<OptimizationParameter>()
+                {
+                    new OptimizationParameter("ema-fast", 10, 100, 1)
+                };
+                _strategy.Initialize(new Maximization(), set);
+
+                _strategy.NewParameterSet += (s, e) =>
+                {
+                    Assert.AreEqual(nextId++, (e as OptimizationEventArgs).ParameterSet.Id);
+                };
+
+                last = nextId;
+                _strategy.PushNewResults(OptimizationResult.Empty);
+                Assert.Greater(nextId, last);
+
+                last = nextId;
+                _strategy.PushNewResults(OptimizationResult.Empty);
+                Assert.Greater(nextId, last);
+            }
+
+            [Test]
+            public void ResetCounterAfterInitialize()
+            {
                 int nextId = 1;
+                _strategy.NewParameterSet += (s, e) =>
+                {
+                    Assert.AreEqual(nextId++, (e as OptimizationEventArgs).ParameterSet.Id);
+                };
 
                 var set1 = new HashSet<OptimizationParameter>()
-            {
-                new OptimizationParameter("ema-fast", 10, 100, 1)
-            };
-                foreach (var parameterSet in _strategy.Step(null, set1))
                 {
-                    Assert.AreEqual(nextId++, parameterSet.Id);
-                }
+                    new OptimizationParameter("ema-fast", 10, 100, 1)
+                };
+                _strategy.Initialize(new Maximization(), set1);
+
+                _strategy.PushNewResults(OptimizationResult.Empty);
+                Assert.Greater(nextId, 1);
 
                 var set2 = new HashSet<OptimizationParameter>()
-            {
-                new OptimizationParameter("ema-fast", 10, 100, 1),
-                new OptimizationParameter("ema-slow", 1, 50, 0.5m)
-            };
-                foreach (var parameterSet in _strategy.Step(null, set2))
                 {
-                    Assert.AreEqual(nextId++, parameterSet.Id);
-                }
-
+                    new OptimizationParameter("ema-fast", 10, 100, 1),
+                    new OptimizationParameter("ema-slow", 10, 100, 2)
+                };
+                _strategy.Initialize(new Minimization(), set2);
+                nextId = 1;
+                _strategy.PushNewResults(OptimizationResult.Empty);
                 Assert.Greater(nextId, 1);
             }
         }
