@@ -44,10 +44,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     while (enumerator.MoveNext())
                     {
                         BaseData tick = enumerator.Current;
-                        if (callback != null)
-                        {
-                            callback.Invoke(tick);
-                        }
+                        callback?.Invoke(tick);
                     }
                 }
                 catch (AssertionException)
@@ -88,10 +85,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var iex = new IEXDataQueueHandler();
 
             var configs = new[] {
-                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("MBLY", SecurityType.Equity, Market.USA), Resolution.Second),
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("GOOG", SecurityType.Equity, Market.USA), Resolution.Second),
                 GetSubscriptionDataConfig<TradeBar>(Symbol.Create("FB", SecurityType.Equity, Market.USA), Resolution.Second),
                 GetSubscriptionDataConfig<TradeBar>(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), Resolution.Second),
-                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("USO", SecurityType.Equity, Market.USA), Resolution.Second)
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create("MSFT", SecurityType.Equity, Market.USA), Resolution.Second)
             };
 
             Array.ForEach(configs, (c) =>
@@ -107,19 +104,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     });
             });
 
-            Thread.Sleep(10000);
+            Thread.Sleep(20000);
 
-            Console.WriteLine("Unsubscribing from all except MBLY");
+            Log.Trace("Unsubscribing from all except AAPL");
 
             Array.ForEach(configs, (c) =>
             {
-                if (!string.Equals(c.Symbol.Value, "MBLY"))
+                if (!string.Equals(c.Symbol.Value, "AAPL"))
                 {
                     iex.Unsubscribe(c);
                 }
             });
 
-            Thread.Sleep(10000);
+            Thread.Sleep(20000);
 
             iex.Dispose();
         }

@@ -57,6 +57,9 @@ namespace QuantConnect.ToolBox.IEX
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private static DateTime _unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified);
         private int _dataPointCount;
+        private bool _isSubscriptionUpdateRequested;
+        private bool _isDisposing;
+
         private readonly IDataAggregator _aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
             Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
@@ -83,8 +86,32 @@ namespace QuantConnect.ToolBox.IEX
             {
                 throw new Exception("The IEX API key was not provided.");
             }
-        }
 
+            // In this thread, we check at each interval whether the client needs to be updated
+            // Subscription renewal requests can come in dozens at the same time - we cannot update them one by one when use SSE
+            var clientUpdateThread = new Thread(() =>
+            {
+                while (true)
+                {
+                    if (_isSubscriptionUpdateRequested)
+                    {
+                        // Reset the flag
+                        _isSubscriptionUpdateRequested = false;
+
+                        GracefullyUpdateSubscription();
+                    }
+
+                    Thread.Sleep(5000);
+
+                    if (_isDisposing)
+                    {
+                        break;
+                    }
+                }
+
+            }) {IsBackground = true};
+            clientUpdateThread.Start();
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void ProcessJsonObject(string json)
@@ -99,9 +126,12 @@ namespace QuantConnect.ToolBox.IEX
                     Symbol symbol;
                     if (!_symbols.TryGetValue(symbolString, out symbol))
                     {
-                        throw new Exception("");
+                        // If this called, then the symbol is not in the collection,
+                        // then it was removed in Unsubscribe(), then no updates are needed
+                        Log.Trace($"ProcessJsonObject(): Could not get the symbol {symbolString}");
+                        continue;
                     }
-                    
+
                     var bidSize = item.IexBidSize;
                     var bidPrice = item.IexBidPrice;
                     var askSize = item.IexAskSize;
@@ -153,7 +183,6 @@ namespace QuantConnect.ToolBox.IEX
             }
             catch (Exception err)
             {
-                // this method should never fail
                 Log.Error("IEXDataQueueHandler.ProcessJsonObject(): " + err.Message);
             }
         }
@@ -210,10 +239,12 @@ namespace QuantConnect.ToolBox.IEX
                 {
                     CreateNewSubscription();
                 }
-                // Otherwise, need to gracefully make the replacement, update existing subscription, so that in-between data updates are not lost
                 else
                 {
-                    GracefullyReplaceSubscription();
+                    // Otherwise, need to gracefully make the replacement, update existing subscription,
+                    // so that in-between data updates are not lost
+                    // Call a request for subscription renewal
+                    _isSubscriptionUpdateRequested = true;
                 }
             }
         }
@@ -241,47 +272,89 @@ namespace QuantConnect.ToolBox.IEX
                 Symbol tmp;
                 if (_symbols.TryRemove(symbol.Value, out tmp))
                 {
-                    // removed existing
                     removed = true;
                 }
             }
 
             if (!enumerable.IsNullOrEmpty() && removed)
             {
-                GracefullyReplaceSubscription();
+                // Call a request for subscription renewal
+                _isSubscriptionUpdateRequested = true;
             }
         }
 
         private void CreateNewSubscription()
         {
-            var url = "https://cloud-sse.iexapis.com/stable/stocksUSNoUTP?token=" + _apiKey;
-            url += "&symbols=" + BuildSymbolsQuery();
-
             // Build an Uri, create a client
+            var url = BuildUrlString();
             _client = new EventSource(LaunchDarkly.EventSource.Configuration.Builder(new Uri(url)).Build());
 
             // Set up the handlers
             _client.Opened += (sender, args) => { IsConnected = true; };
-            _client.Error += (s, e) => { throw new Exception($"Error Occurred. Details: {e.Exception.Message}"); };
-            _client.MessageReceived += (sender, args) =>
-            {
-                var message = args.Message.Data;
-                ProcessJsonObject(message);
-            };
+            _client.Error += ClientOnError;
+            _client.MessageReceived += ClientOnMessageReceived;
+            _client.Closed += ClientOnClosed;
 
-            // Client start call will block until Stop() is called (!) - so let it run in a background and report in case of any issues
-            Task.Run(async () => await _client.StartAsync())
-                .ContinueWith((t) =>
-            {
-                Log.Error("IEXDataQueueHandler.CreateNewSubscription(): " + t.Exception?.Message);
-                return t;
-
-            }, TaskContinuationOptions.OnlyOnFaulted);
+            // Client start call will block until Stop() is called (!)
+            Task.Run(async () => await _client.StartAsync());
         }
 
-        private void GracefullyReplaceSubscription()
+        private void GracefullyUpdateSubscription()
         {
+            // Need to build new uri and client to reflect the changes in symbols
+            var url = BuildUrlString();
+            var tmpClient = new EventSource(LaunchDarkly.EventSource.Configuration.Builder(new Uri(url)).Build());
 
+            // First handler receives new data, second handler is responsible for replacing the client.
+            tmpClient.MessageReceived += ClientOnMessageReceived;
+            tmpClient.MessageReceived += ReplacementHandler;
+
+            tmpClient.Error += ClientOnError;
+            tmpClient.Closed += ClientOnClosed;
+
+            Task.Run(async () => await tmpClient.StartAsync());
+        }
+
+        private void ReplacementHandler(object sender, MessageReceivedEventArgs e)
+        {
+            var tmpClient = sender as EventSource;
+            if(tmpClient == null)
+            {
+                throw new InvalidCastException("Invalid cast in ReplacementHandler()");
+            }
+
+            // Once this handler is called we are guaranteed for the data updates to come with no interruption
+            // Dispose an old client and continue to work with the new one.
+            Log.Trace("ReplacementHandler(): Disposing an old client.");
+            _client.Close();
+            _client.Dispose();
+
+            _client = tmpClient;
+            tmpClient.MessageReceived -= ReplacementHandler;
+        }
+
+        private static void ClientOnClosed(object sender, StateChangedEventArgs e)
+        {
+            Log.Trace("ClientOnClosed(): Closing a client");
+        }
+
+        private static void ClientOnError(object sender, ExceptionEventArgs e)
+        {
+            Log.Trace($"ClientOnError(): EventSource Error Occurred. Details: {e.Exception.Message}");
+        }
+
+        // Handler is called every time new data is received from an API.
+        private void ClientOnMessageReceived(object sender, MessageReceivedEventArgs e)
+        {
+            var message = e.Message.Data;
+            ProcessJsonObject(message);
+        }
+
+        private string BuildUrlString()
+        {
+            var url = "https://cloud-sse.iexapis.com/stable/stocksUSNoUTP?token=" + _apiKey;
+            url += "&symbols=" + BuildSymbolsQuery();
+            return url;
         }
 
         private string BuildSymbolsQuery()
@@ -311,6 +384,7 @@ namespace QuantConnect.ToolBox.IEX
 
             _client.Dispose();
             IsConnected = false;
+            _isDisposing = true;
 
             Log.Trace("IEXDataQueueHandler.Dispose(): Disconnected from IEX live data");
         }
