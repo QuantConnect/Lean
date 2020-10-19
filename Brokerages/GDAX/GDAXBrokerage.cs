@@ -35,6 +35,14 @@ namespace QuantConnect.Brokerages.GDAX
     {
         private const int MaxDataPointsPerHistoricalRequest = 300;
 
+        // These are the only currencies accepted for fiat deposits
+        private static readonly HashSet<string> FiatCurrencies = new List<string>
+        {
+            Currencies.EUR,
+            Currencies.GBP,
+            Currencies.USD
+        }.ToHashSet();
+
         #region IBrokerage
         /// <summary>
         /// Checks if the websocket connection is connected or in the process of connecting
@@ -184,6 +192,16 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
             return success.All(a => a);
+        }
+
+        /// <summary>
+        /// Connects the client to the broker's remote servers
+        /// </summary>
+        public override void Connect()
+        {
+            base.Connect();
+
+            AccountBaseCurrency = GetAccountBaseCurrency();
         }
 
         /// <summary>
@@ -432,6 +450,31 @@ namespace QuantConnect.Brokerages.GDAX
         }
 
         #endregion
+
+        /// <summary>
+        /// Gets the account base currency
+        /// </summary>
+        private string GetAccountBaseCurrency()
+        {
+            var req = new RestRequest("/accounts", Method.GET);
+            GetAuthenticationToken(req);
+            var response = ExecuteRestRequest(req, GdaxEndpointType.Private);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception($"GDAXBrokerage.GetAccountBaseCurrency(): request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+            }
+
+            foreach (var item in JsonConvert.DeserializeObject<Messages.Account[]>(response.Content))
+            {
+                if (FiatCurrencies.Contains(item.Currency))
+                {
+                    return item.Currency;
+                }
+            }
+
+            return Currencies.USD;
+        }
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.

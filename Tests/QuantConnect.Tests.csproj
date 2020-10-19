@@ -162,6 +162,9 @@
     <Reference Include="IKVM.Runtime.JNI, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
       <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.Runtime.JNI.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Extensions.CommandLineUtils, Version=1.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.CommandLineUtils.1.1.1\lib\net451\Microsoft.Extensions.CommandLineUtils.dll</HintPath>
+    </Reference>
     <Reference Include="Moq, Version=4.7.63.0, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
       <HintPath>..\packages\Moq.4.7.63\lib\net45\Moq.dll</HintPath>
     </Reference>
@@ -360,9 +363,14 @@
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetTests.cs" />
     <Compile Include="Algorithm\Framework\Selection\OpenInterestFutureUniverseSelectionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Selection\QC500UniverseSelectionModelTests.cs" />
-    <Compile Include="API\NodeTests.cs" />
+    <Compile Include="Api\NodeTests.cs" />
     <Compile Include="Brokerages\BrokerageFactoryTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageAdditionalTests.cs" />
+    <Compile Include="Brokerages\Binance\BinanceBrokerageHistoryProviderTests.cs" />
+    <Compile Include="Brokerages\Binance\BinanceBrokerageTests.cs" />
+    <Compile Include="Brokerages\Binance\BinanceFeeModelTests.cs" />
+    <Compile Include="Brokerages\Binance\BinanceSymbolMapperTests.cs" />
+    <Compile Include="Brokerages\Binance\BinanceBrokerageExchangeInfoTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexFeeModelTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexSymbolMapperTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageHistoryProviderTests.cs" />
@@ -457,6 +465,7 @@
     <Compile Include="Common\Util\BaseDataExtensionsTests.cs" />
     <Compile Include="Common\Util\SubscriptionDataConfigExtensionsTests.cs" />
     <Compile Include="Common\Util\ValidateTests.cs" />
+    <Compile Include="Configuration\ApplicationParserTests.cs" />
     <Compile Include="Engine\AlgorithmTimeLimitManagerTests.cs" />
     <Compile Include="Engine\Alphas\DefaultAlphaHandlerTests.cs" />
     <Compile Include="Engine\Alphas\InsightAnalysisContextTests.cs" />
@@ -504,7 +513,8 @@
     <Compile Include="Algorithm\Framework\QCAlgorithmFrameworkTests.cs" />
     <Compile Include="Algorithm\Framework\Risk\MaximumDrawdownPercentPerSecurityTests.cs" />
     <Compile Include="Algorithm\Framework\Selection\ManualUniverseSelectionModelTests.cs" />
-    <Compile Include="API\ApiTests.cs" />
+    <Compile Include="Api\ApiTests.cs" />
+    <Compile Include="Api\ApiLiveTradingTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageTests.cs" />
     <Compile Include="Brokerages\BrokerageTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageHistoryProviderTests.cs" />
@@ -733,6 +743,7 @@
     <Compile Include="Indicators\StochasticTests.cs" />
     <Compile Include="Research\QuantBookFundamentalTests.cs" />
     <Compile Include="Python\PythonOptionTests.cs" />
+    <Compile Include="Report\DrawdownCollectionTests.cs" />
     <Compile Include="Research\QuantBookIndicatorsTests.cs" />
     <Compile Include="Research\QuantBookHistoryTests.cs" />
     <Compile Include="Messaging\StreamingMessageHandlerTests.cs" />

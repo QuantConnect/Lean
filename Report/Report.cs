@@ -51,16 +51,17 @@ namespace QuantConnect.Report
             Log.Trace($"QuantConnect.Report.Report(): Processing live orders");
             var livePortfolioInTime = PortfolioLooper.FromOrders(liveCurve, liveOrders, liveSeries: true).ToList();
 
-            _elements = new List<ReportElement>
+            _elements = new List<IReportElement>
             {
                 //Basics
                 new TextReportElement("strategy name", ReportKey.StrategyName, name),
                 new TextReportElement("description", ReportKey.StrategyDescription, description),
                 new TextReportElement("version", ReportKey.StrategyVersion, version),
                 new TextReportElement("stylesheet", ReportKey.Stylesheet, File.ReadAllText("css/report.css")),
+                new TextReportElement("live marker key", ReportKey.LiveMarker, live == null ? string.Empty : "Live "),
 
                 //KPI's Backtest:
-                new EstimatedCapacityReportElement("estimated capacity kpi", ReportKey.EstimatedCapacity, backtest, live),
+                new DaysLiveReportElement("days live kpi", ReportKey.DaysLive, live),
                 new CAGRReportElement("cagr kpi", ReportKey.CAGR, backtest, live),
                 new TurnoverReportElement("turnover kpi", ReportKey.Turnover, backtest, live),
                 new MaxDrawdownReportElement("max drawdown kpi", ReportKey.MaxDrawdown, backtest, live),
@@ -88,6 +89,7 @@ namespace QuantConnect.Report
                 new CrisisReportElement("crisis page", ReportKey.CrisisPageStyle, backtest, live),
                 new CrisisReportElement("crisis plots", ReportKey.CrisisPlots, backtest, live)
             };
+
         }
 
         /// <summary>

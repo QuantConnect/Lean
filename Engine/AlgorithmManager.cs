@@ -1003,13 +1003,22 @@ namespace QuantConnect.Lean.Engine
                     security.IsTradable = false;
                     security.IsDelisted = true;
 
+                    // the subscription are getting removed from the data feed because they end
                     // remove security from all universes
                     foreach (var ukvp in algorithm.UniverseManager)
                     {
                         var universe = ukvp.Value;
                         if (universe.ContainsMember(security.Symbol))
                         {
-                            universe.RemoveMember(algorithm.UtcTime, security);
+                            var userUniverse = universe as UserDefinedUniverse;
+                            if (userUniverse != null)
+                            {
+                                userUniverse.Remove(security.Symbol);
+                            }
+                            else
+                            {
+                                universe.RemoveMember(algorithm.UtcTime, security);
+                            }
                         }
                     }
 
@@ -1032,46 +1041,36 @@ namespace QuantConnect.Lean.Engine
             {
                 // check if we are holding position
                 var security = algorithm.Securities[delistings[i].Symbol];
-                if (security.Holdings.Quantity == 0) continue;
+                if (security.Holdings.Quantity == 0)
+                {
+                    continue;
+                }
 
                 // check if the time has come for delisting
                 var delistingTime = delistings[i].Time;
                 var nextMarketOpen = security.Exchange.Hours.GetNextMarketOpen(delistingTime, false);
                 var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(nextMarketOpen, false);
 
-                if (security.LocalTime < nextMarketClose) continue;
+                if (security.LocalTime < nextMarketClose)
+                {
+                    continue;
+                }
 
-                // submit an order to liquidate on market close or exercise (for options)
-                SubmitOrderRequest request;
-
+                var orderType = OrderType.Market;
+                var tag = "Liquidate from delisting";
                 if (security.Type == SecurityType.Option)
                 {
-                    var option = (Option)security;
-
-                    if (security.Holdings.Quantity > 0)
-                    {
-                        request = new SubmitOrderRequest(OrderType.OptionExercise, security.Type, security.Symbol,
-                            security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Automatic option exercise on expiration");
-                    }
-                    else
-                    {
-                        var message = option.GetPayOff(option.Underlying.Price) > 0
-                            ? "Automatic option assignment on expiration"
-                            : "Option expiration";
-
-                        request = new SubmitOrderRequest(OrderType.OptionExercise, security.Type, security.Symbol,
-                            security.Holdings.Quantity, 0, 0, algorithm.UtcTime, message);
-                    }
-                }
-                else
-                {
-                    request = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol,
-                        -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Liquidate from delisting");
+                    // tx handler will determine auto exercise/assignment
+                    tag = "Option Expired";
+                    orderType = OrderType.OptionExercise;
                 }
 
-                algorithm.Transactions.ProcessRequest(request);
+                // submit an order to liquidate on market close or exercise (for options)
+                var request = new SubmitOrderRequest(orderType, security.Type, security.Symbol,
+                    -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, tag);
 
                 delistings.RemoveAt(i);
+                algorithm.Transactions.ProcessRequest(request);
             }
         }
 

@@ -69,9 +69,20 @@ namespace QuantConnect.Algorithm
         /// </summary>
         public void FrameworkPostInitialize()
         {
+            //Prevents execution in the case of cash brokerage with IExecutionModel and IPortfolioConstructionModel
+            if (PortfolioConstruction.GetType() != typeof(NullPortfolioConstructionModel)
+                && Execution.GetType() != typeof(NullExecutionModel)
+                && BrokerageModel.AccountType == AccountType.Cash)
+            {
+                throw new InvalidOperationException($"Non null {nameof(IExecutionModel)} and {nameof(IPortfolioConstructionModel)} are currently unsuitable for Cash Modeled brokerages (e.g. GDAX) and may result in unexpected trades."
+                                                    + " To prevent possible user error we've restricted them to Margin trading. You can select margin account types with"
+                                                    + $" SetBrokerage( ... AccountType.Margin). Or please set them to {nameof(NullExecutionModel)}, {nameof(NullPortfolioConstructionModel)}");
+            }
             foreach (var universe in UniverseSelection.CreateUniverses(this))
             {
-                AddUniverse(universe);
+                // on purpose we don't call 'AddUniverse' here so that these universes don't get registered as user added
+                // this is so that later during 'UniverseSelection.CreateUniverses' we wont remove them from UniverseManager
+                _pendingUniverseAdditions.Add(universe);
             }
 
             if (DebugMode)
@@ -94,8 +105,7 @@ namespace QuantConnect.Algorithm
                 foreach (var ukvp in UniverseManager)
                 {
                     var universeSymbol = ukvp.Key;
-                    var qcUserDefined = UserDefinedUniverse.CreateSymbol(ukvp.Value.SecurityType, ukvp.Value.Market);
-                    if (universeSymbol.Equals(qcUserDefined))
+                    if (_userAddedUniverses.Contains(universeSymbol))
                     {
                         // prevent removal of qc algorithm created user defined universes
                         continue;
@@ -216,16 +226,7 @@ namespace QuantConnect.Algorithm
                     Log($"{Time}: RISK ADJUSTED TARGETS: {string.Join(" | ", riskAdjustedTargets.Select(t => t.ToString()).OrderBy(t => t))}");
                 }
             }
-
-            if (riskAdjustedTargets.Length > 0
-                && Execution.GetType() != typeof(NullExecutionModel)
-                && BrokerageModel.AccountType == AccountType.Cash)
-            {
-                throw new InvalidOperationException($"Non null {nameof(IExecutionModel)} and {nameof(IPortfolioConstructionModel)} are currently unsuitable for Cash Modeled brokerages (e.g. GDAX) and may result in unexpected trades."
-                    + " To prevent possible user error we've restricted them to Margin trading. You can select margin account types with"
-                    + $" SetBrokerage( ... AccountType.Margin). Or please set them to {nameof(NullExecutionModel)}, {nameof(NullPortfolioConstructionModel)}");
-            }
-
+            
             Execution.Execute(this, riskAdjustedTargets);
         }
 

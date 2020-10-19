@@ -82,7 +82,7 @@ namespace QuantConnect.Indicators
         {
             _priceLag.Update(input);
             _sma.Update(input);
-            return _priceLag - _sma;
+            return _priceLag.Current.Value - _sma.Current.Value;
         }
     }
 }

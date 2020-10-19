@@ -24,13 +24,14 @@ namespace QuantConnect.Report
         public const string StrategyName = @"{{$TEXT-STRATEGY-NAME}}";
         public const string StrategyDescription = @"{{$TEXT-STRATEGY-DESCRIPTION}}";
         public const string StrategyVersion = @"{{$TEXT-STRATEGY-VERSION}}";
+        public const string LiveMarker = @"{{$LIVE-MARKER}}";
 
         public const string CAGR = @"{{$KPI-CAGR}}";
         public const string Turnover = @"{{$KPI-TURNOVER}}";
         public const string MaxDrawdown = @"{{$KPI-DRAWDOWN}}";
         public const string KellyEstimate = @"{{$KPI-KELLY-ESTIMATE}}";
         public const string SharpeRatio = @"{{$KPI-SHARPE}}";
-        public const string EstimatedCapacity = @"{{$KPI-CAPACITY}}";
+        public const string DaysLive = @"{{$KPI-DAYS-LIVE}}";
         public const string InformationRatio = @"{{$KPI-INFORMATION-RATIO}}";
         public const string TradesPerDay = @"{{$KPI-TRADES-PER-DAY}}";
         public const string Markets = @"{{$KPI-MARKETS}}";

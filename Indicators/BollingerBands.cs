@@ -125,7 +125,7 @@ namespace QuantConnect.Indicators
             MiddleBand.Update(input);
             Price.Update(input);
 
-            return input;
+            return input.Value;
         }
 
         /// <summary>

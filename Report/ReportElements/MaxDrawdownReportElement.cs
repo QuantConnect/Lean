@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
+using Deedle;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Report.ReportElements
@@ -42,7 +45,24 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            return _backtest?.TotalPerformance?.PortfolioStatistics?.Drawdown.ToString("P1") ?? "-";
+            if (_live == null)
+            {
+                return _backtest?.TotalPerformance?.PortfolioStatistics?.Drawdown.ToString("P1") ?? "-";
+            }
+
+            var backtestEquityPoints = new Series<DateTime, double>(ResultsUtil.EquityPoints(_backtest));
+            var liveEquityPoints = new Series<DateTime, double>(ResultsUtil.EquityPoints(_live));
+
+            var backtestDrawdownGroups = new DrawdownCollection(backtestEquityPoints, 1);
+            var liveDrawdownGroups = new DrawdownCollection(liveEquityPoints, 1);
+
+            var separateResultsMaxDrawdown = backtestDrawdownGroups.Drawdowns
+                .Concat(liveDrawdownGroups.Drawdowns)
+                .Select(x => x.PeakToTrough)
+                .OrderByDescending(x => x)
+                .FirstOrDefault();
+
+            return $"{separateResultsMaxDrawdown:P1}";
         }
     }
 }

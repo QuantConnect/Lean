@@ -53,9 +53,10 @@ namespace QuantConnect.Report
                 Converters = new List<JsonConverter> { new NullResultValueTypeJsonConverter<BacktestResult>() },
                 FloatParseHandling = FloatParseHandling.Decimal
             };
-            var backtest = JsonConvert.DeserializeObject<BacktestResult>(File.ReadAllText(backtestDataFile), backtestSettings);
 
+            var backtest = JsonConvert.DeserializeObject<BacktestResult>(File.ReadAllText(backtestDataFile), backtestSettings);
             LiveResult live = null;
+
             if (liveDataFile != string.Empty)
             {
                 var settings = new JsonSerializerSettings

@@ -56,10 +56,10 @@ namespace QuantConnect.Indicators
             if (window.Samples <= window.Size)
             {
                 // keep returning the delta from the first item put in there to init
-                return input - window[window.Count - 1];
+                return input.Value - window[window.Count - 1].Value;
             }
 
-            return input - window.MostRecentlyRemoved;
+            return input.Value - window.MostRecentlyRemoved.Value;
         }
     }
 }

@@ -1250,12 +1250,19 @@ namespace QuantConnect.Tests.Common.Securities
             securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 1);
             securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, 1, 0, 0, securities.UtcTime, ""));
+            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(2, fills.Count);
+            Assert.IsFalse(fills[0].IsAssignment);
+            Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
+            Assert.AreEqual("Automatic Exercise", fills[0].Message);
+            Assert.AreEqual("Option Exercise", fills[1].Message);
 
             foreach (var fill in fills)
             {
@@ -1313,12 +1320,17 @@ namespace QuantConnect.Tests.Common.Securities
             securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 100);
             securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 20 });
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, 100, 0, 0, securities.UtcTime, ""));
+            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.AreEqual("OTM", fills[0].Message);
+            Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
 
             foreach (var fill in fills)
             {
@@ -1375,13 +1387,17 @@ namespace QuantConnect.Tests.Common.Securities
             securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, 100);
             securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 2000 });
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, 100, 0, 0, securities.UtcTime, ""));
+            var holdings = securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.AreEqual("OTM", fills[0].Message);
 
             foreach (var fill in fills)
             {
@@ -1437,12 +1453,19 @@ namespace QuantConnect.Tests.Common.Securities
             );
             securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, 1);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, 1, 0, 0, securities.UtcTime, ""));
+            var holdings = securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(2, fills.Count);
+            Assert.IsFalse(fills[0].IsAssignment);
+            Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
+            Assert.AreEqual("Automatic Exercise", fills[0].Message);
+            Assert.AreEqual("Option Exercise", fills[1].Message);
 
             foreach (var fill in fills)
             {
@@ -1502,12 +1525,19 @@ namespace QuantConnect.Tests.Common.Securities
             securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 2);
             securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, 1, 0, 0, securities.UtcTime, ""));
+            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings/2, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(2, fills.Count);
+            Assert.IsFalse(fills[0].IsAssignment);
+            Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
+            Assert.AreEqual("Automatic Exercise", fills[0].Message);
+            Assert.AreEqual("Option Exercise", fills[1].Message);
 
             foreach (var fill in fills)
             {
@@ -1564,12 +1594,19 @@ namespace QuantConnect.Tests.Common.Securities
             securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, -1);
             securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -1, 0, 0, securities.UtcTime, ""));
+            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(2, fills.Count);
+            Assert.IsTrue(fills[0].IsAssignment);
+            Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
+            Assert.AreEqual("Automatic Assignment", fills[0].Message);
+            Assert.AreEqual("Option Assignment", fills[1].Message);
 
             // we are simulating assignment by calling a method for this
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
@@ -1633,12 +1670,19 @@ namespace QuantConnect.Tests.Common.Securities
             );
             securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -1);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -1, 0, 0, securities.UtcTime, ""));
+            var holdings = securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(2, fills.Count);
+            Assert.IsTrue(fills[0].IsAssignment);
+            Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
+            Assert.AreEqual("Automatic Assignment", fills[0].Message);
+            Assert.AreEqual("Option Assignment", fills[1].Message);
 
             // we are simulating assignment by calling a method for this
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
@@ -1699,12 +1743,19 @@ namespace QuantConnect.Tests.Common.Securities
             );
             securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -2);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -1, 0, 0, securities.UtcTime, ""));
+            var holdings = securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings/2, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(2, fills.Count);
+            Assert.IsTrue(fills[0].IsAssignment);
+            Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
+            Assert.AreEqual("Automatic Assignment", fills[0].Message);
+            Assert.AreEqual("Option Assignment", fills[1].Message);
 
             // we are simulating assignment by calling a method for this
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
@@ -1766,13 +1817,19 @@ namespace QuantConnect.Tests.Common.Securities
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
             securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 1);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, 1, 0, 0, securities.UtcTime, ""));
+            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.IsFalse(fills[0].IsAssignment);
+            Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
+            Assert.AreEqual("Automatic Exercise", fills[0].Message);
 
             foreach (var fill in fills)
             {
@@ -1828,13 +1885,19 @@ namespace QuantConnect.Tests.Common.Securities
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 190 });
             securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 100);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, 100, 0, 0, securities.UtcTime, ""));
+            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.IsFalse(fills[0].IsAssignment);
+            Assert.AreEqual("OTM", fills[0].Message);
+            Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
 
             foreach (var fill in fills)
             {
@@ -1889,13 +1952,19 @@ namespace QuantConnect.Tests.Common.Securities
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 189 });
             securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, 1);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, 1, 0, 0, securities.UtcTime, ""));
+            var holdings = securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.IsFalse(fills[0].IsAssignment);
+            Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
+            Assert.AreEqual("Automatic Exercise", fills[0].Message);
 
             foreach (var fill in fills)
             {
@@ -1954,7 +2023,8 @@ namespace QuantConnect.Tests.Common.Securities
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             option.Underlying = securities[Symbols.SPY];
 
-            var order = new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, 10, time.AddSeconds(1));
+            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            var order = new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, -holdings, time.AddSeconds(1));
             orderProcessor.AddOrder(order);
             var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, order.Quantity, 0, 0, order.Time, null);
             request.SetOrderId(0);
@@ -1964,7 +2034,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 150 });
 
-            order = new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, 10, time.AddSeconds(1));
+            order = new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, -holdings, time.AddSeconds(1));
             orderProcessor.AddOrder(order);
             request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, order.Quantity, 0, 0, order.Time, null);
             request.SetOrderId(0);
@@ -2017,7 +2087,8 @@ namespace QuantConnect.Tests.Common.Securities
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             option.Underlying = securities[Symbols.SPY];
 
-            var order = new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, -10, time.AddSeconds(1));
+            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            var order = new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, -holdings, time.AddSeconds(1));
             orderProcessor.AddOrder(order);
             var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, order.Quantity, 0, 0, order.Time, null);
             request.SetOrderId(0);
@@ -2027,7 +2098,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 150 });
 
-            order = new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, -10, time.AddSeconds(1));
+            order = new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, -holdings, time.AddSeconds(1));
             orderProcessor.AddOrder(order);
             request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, order.Quantity, 0, 0, order.Time, null);
             request.SetOrderId(0);
@@ -2076,13 +2147,19 @@ namespace QuantConnect.Tests.Common.Securities
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
             securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 2);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, 1, 0, 0, securities.UtcTime, ""));
+            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings/2, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.IsFalse(fills[0].IsAssignment);
+            Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
+            Assert.AreEqual("Automatic Exercise", fills[0].Message);
 
             foreach (var fill in fills)
             {
@@ -2139,13 +2216,19 @@ namespace QuantConnect.Tests.Common.Securities
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
             securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, -1);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -1, 0, 0, securities.UtcTime, ""));
+            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.IsTrue(fills[0].IsAssignment);
+            Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
+            Assert.AreEqual("Automatic Assignment", fills[0].Message);
 
             // we are simulating assignment by calling a method for this
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
@@ -2204,13 +2287,19 @@ namespace QuantConnect.Tests.Common.Securities
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 10 });
             securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, -100);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -100, 0, 0, securities.UtcTime, ""));
+            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.IsFalse(fills[0].IsAssignment);
+            Assert.AreEqual("OTM", fills[0].Message);
+            Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
 
             // we are simulating assignment by calling a method for this
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
@@ -2271,13 +2360,19 @@ namespace QuantConnect.Tests.Common.Securities
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 189 });
             securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -1);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -1, 0, 0, securities.UtcTime, ""));
+            var holdings = securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.IsTrue(fills[0].IsAssignment);
+            Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
+            Assert.AreEqual("Automatic Assignment", fills[0].Message);
 
             // we are simulating assignment by calling a method for this
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
@@ -2338,13 +2433,19 @@ namespace QuantConnect.Tests.Common.Securities
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 189 });
             securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -2);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -1, 0, 0, securities.UtcTime, ""));
+            var holdings = securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings/2, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var fills = option.OptionExerciseModel.OptionExercise(option, order);
+            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+            Assert.AreEqual(1, fills.Count);
+            Assert.IsTrue(fills[0].IsAssignment);
+            Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
+            Assert.AreEqual("Automatic Assignment", fills[0].Message);
 
             // we are simulating assignment by calling a method for this
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;

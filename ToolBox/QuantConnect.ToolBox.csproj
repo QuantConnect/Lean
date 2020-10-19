@@ -317,6 +317,11 @@
     <Compile Include="Benzinga\BenzingaNewsDataConverter.cs" />
     <Compile Include="Benzinga\BenzingaProgram.cs" />
     <Compile Include="Benzinga\BenzingaNewsDataDownloader.cs" />
+    <Compile Include="BinanceDownloader\Models\ExchangeInfo.cs" />
+    <Compile Include="BinanceDownloader\Models\Symbol.cs" />
+    <Compile Include="BinanceDownloader\BinanceDownloaderProgram.cs" />
+    <Compile Include="BinanceDownloader\BinanceDataDownloader.cs" />
+    <Compile Include="BinanceDownloader\BinanceExchangeInfoDownloader.cs" />
     <Compile Include="BitfinexDownloader\BitfinexDataDownloader.cs" />
     <Compile Include="BitfinexDownloader\BitfinexDownloaderProgram.cs" />
     <Compile Include="CoarseUniverseGenerator\SecurityIdentifierContext.cs" />
@@ -344,6 +349,8 @@
     <Compile Include="GzipStreamProvider.cs" />
     <Compile Include="IBDownloader\IBDataDownloader.cs" />
     <Compile Include="IBDownloader\IBDownloaderProgram.cs" />
+    <Compile Include="IExchangeInfoDownloader.cs" />
+    <Compile Include="ExchangeInfoUpdater.cs" />
     <Compile Include="IEX\IEXDataDownloader.cs" />
     <Compile Include="IEX\IEXDownloaderProgram.cs" />
     <Compile Include="IQFeedDownloader\IQFeedDataDownloader.cs" />

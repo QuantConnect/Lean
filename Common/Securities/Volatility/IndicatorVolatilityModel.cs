@@ -37,7 +37,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal Volatility
         {
-            get { return _indicator.Current; }
+            get { return _indicator.Current.Value; }
         }
 
         /// <summary>

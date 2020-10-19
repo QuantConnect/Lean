@@ -48,7 +48,7 @@ namespace QuantConnect.Brokerages.Backtesting
         // last update time
         private DateTime _lastUpdate = DateTime.MinValue;
         private Queue<DateTime> _assignmentScans;
-        private static Random _rand = new Random((int)12345);
+        private readonly Random _rand = new Random(12345);
 
         /// <summary>
         /// We generate a list of time points when we would like to run our simulation. we then return true if the time is in the list.
@@ -124,12 +124,12 @@ namespace QuantConnect.Brokerages.Backtesting
 
             Func<Symbol, bool> deepITM = symbol =>
             {
-                var undelyingPrice = algorithm.Securities[symbol.Underlying].Close;
+                var underlyingPrice = algorithm.Securities[symbol.Underlying].Close;
 
                 var result =
-                    symbol.ID.OptionRight == OptionRight.Call ?
-                        (undelyingPrice - symbol.ID.StrikePrice) / undelyingPrice > _deepITM :
-                        (symbol.ID.StrikePrice - undelyingPrice) / undelyingPrice > _deepITM;
+                    symbol.ID.OptionRight == OptionRight.Call
+                        ? (underlyingPrice - symbol.ID.StrikePrice) / underlyingPrice > _deepITM
+                        : (symbol.ID.StrikePrice - underlyingPrice) / underlyingPrice > _deepITM;
 
                 return result;
             };
@@ -168,13 +168,13 @@ namespace QuantConnect.Brokerages.Backtesting
 
             // we are interested in underlying bid price if we exercise calls and want to sell the underlying immediately.
             // we are interested in underlying ask price if we exercise puts
-            var underlyingPrice = option.Symbol.ID.OptionRight == OptionRight.Call ?
-                                   underlying.BidPrice :
-                                    underlying.AskPrice;
+            var underlyingPrice = option.Symbol.ID.OptionRight == OptionRight.Call
+                ? underlying.BidPrice
+                : underlying.AskPrice;
 
-            var underlyingQuantity = option.Symbol.ID.OptionRight == OptionRight.Call ?
-                                        option.GetExerciseQuantity((int)holding.AbsoluteQuantity) :
-                                        -option.GetExerciseQuantity((int)holding.AbsoluteQuantity);
+            // quantity is normally negative algo's holdings, but since we're modeling the contract holder (counter-party)
+            // it's negative THEIR holdings. holding.Quantity is negative, so if counter-party exercises, they would reduce holdings
+            var underlyingQuantity = option.GetExerciseQuantity(holding.Quantity);
 
             // Scenario 1 (base): we just close option position
             var marketOrder1 = new MarketOrder(option.Symbol, -holding.Quantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));

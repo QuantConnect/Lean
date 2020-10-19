@@ -21,6 +21,7 @@ using QuantConnect.Configuration;
 using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
 using QuantConnect.ToolBox.AlgoSeekOptionsConverter;
 using QuantConnect.ToolBox.Benzinga;
+using QuantConnect.ToolBox.BinanceDownloader;
 using QuantConnect.ToolBox.BitfinexDownloader;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.ToolBox.CoinApiDataConverter;
@@ -126,6 +127,10 @@ namespace QuantConnect.ToolBox
                     case "bitfinexdownloader":
                         BitfinexDownloaderProgram.BitfinexDownloader(tickers, resolution, fromDate, toDate);
                         break;
+                    case "mbxdl":
+                    case "binancedownloader":
+                        BinanceDownloaderProgram.DataDownloader(tickers, resolution, fromDate, toDate);
+                        break;
                     case "secdl":
                     case "secdownloader":
                         SECDataDownloaderProgram.SECDataDownloader(
@@ -182,6 +187,19 @@ namespace QuantConnect.ToolBox
                             toDate);
                         break;
 
+                    default:
+                        PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
+                        break;
+                }
+            }
+            else if (targetApp.Contains("updater") || targetApp.EndsWith("spu"))
+            {
+                switch (targetApp)
+                {
+                    case "mbxspu":
+                    case "binancesymbolpropertiesupdater":
+                        BinanceDownloaderProgram.ExchangeInfoDownloader();
+                        break;
                     default:
                         PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
                         break;

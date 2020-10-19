@@ -38,6 +38,10 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public abstract class BaseResultsHandler
     {
+        // used for resetting out/error upon completion
+        private static readonly TextWriter StandardOut = Console.Out;
+        private static readonly TextWriter StandardError = Console.Error;
+
         /// <summary>
         /// The main loop update interval
         /// </summary>
@@ -210,6 +214,16 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="newEvent">New event details</param>
         public virtual void OrderEvent(OrderEvent newEvent)
         {
+        }
+
+        /// <summary>
+        /// Terminate the result thread and apply any required exit procedures like sending final results
+        /// </summary>
+        public virtual void Exit()
+        {
+            // reset standard out/error
+            Console.SetOut(StandardOut);
+            Console.SetError(StandardError);
         }
 
         /// <summary>
@@ -444,7 +458,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="value">Current equity value.</param>
         protected virtual void SampleEquity(DateTime time, decimal value)
         {
-            Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value);
+            var accountCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
+
+            Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value, accountCurrencySymbol);
         }
 
         /// <summary>
@@ -511,13 +527,15 @@ namespace QuantConnect.Lean.Engine.Results
                 runtimeStatistics["Probabilistic Sharpe Ratio"] = "0%";
             }
 
-            runtimeStatistics["Unrealized"] = "$" + Algorithm.Portfolio.TotalUnrealizedProfit.ToStringInvariant("N2");
-            runtimeStatistics["Fees"] = "-$" + Algorithm.Portfolio.TotalFees.ToStringInvariant("N2");
-            runtimeStatistics["Net Profit"] = "$" + Algorithm.Portfolio.TotalProfit.ToStringInvariant("N2");
+            var accountCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
+
+            runtimeStatistics["Unrealized"] = accountCurrencySymbol + Algorithm.Portfolio.TotalUnrealizedProfit.ToStringInvariant("N2");
+            runtimeStatistics["Fees"] = $"-{accountCurrencySymbol}{Algorithm.Portfolio.TotalFees.ToStringInvariant("N2")}";
+            runtimeStatistics["Net Profit"] = accountCurrencySymbol + Algorithm.Portfolio.TotalProfit.ToStringInvariant("N2");
             runtimeStatistics["Return"] = GetNetReturn().ToStringInvariant("P");
-            runtimeStatistics["Equity"] = "$" + Algorithm.Portfolio.TotalPortfolioValue.ToStringInvariant("N2");
-            runtimeStatistics["Holdings"] = "$" + Algorithm.Portfolio.TotalHoldingsValue.ToStringInvariant("N2");
-            runtimeStatistics["Volume"] = "$" + Algorithm.Portfolio.TotalSaleVolume.ToStringInvariant("N2");
+            runtimeStatistics["Equity"] = accountCurrencySymbol + Algorithm.Portfolio.TotalPortfolioValue.ToStringInvariant("N2");
+            runtimeStatistics["Holdings"] = accountCurrencySymbol + Algorithm.Portfolio.TotalHoldingsValue.ToStringInvariant("N2");
+            runtimeStatistics["Volume"] = accountCurrencySymbol + Algorithm.Portfolio.TotalSaleVolume.ToStringInvariant("N2");
 
             return runtimeStatistics;
         }

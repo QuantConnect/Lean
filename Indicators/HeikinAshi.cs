@@ -101,10 +101,10 @@ namespace QuantConnect.Indicators
             }
             else
             {
-                Open.Update(input.Time, (Open + Close) / 2);
+                Open.Update(input.Time, (Open.Current.Value + Close.Current.Value) / 2);
                 Close.Update(input.Time, (input.Open + input.High + input.Low + input.Close) / 4);
-                High.Update(input.Time, Math.Max(input.High, Math.Max(Open, Close)));
-                Low.Update(input.Time, Math.Min(input.Low, Math.Min(Open, Close)));
+                High.Update(input.Time, Math.Max(input.High, Math.Max(Open.Current.Value, Close.Current.Value)));
+                Low.Update(input.Time, Math.Min(input.Low, Math.Min(Open.Current.Value, Close.Current.Value)));
             }
 
             var volume = 0.0m;
@@ -118,7 +118,7 @@ namespace QuantConnect.Indicators
             }
             Volume.Update(input.Time, volume);
 
-            return Close;
+            return Close.Current.Value;
         }
 
         /// <summary>

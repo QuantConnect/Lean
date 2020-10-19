@@ -14,6 +14,7 @@
  *
 */
 
+using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -23,6 +24,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 {
     public class MockDataFeed : IDataFeed
     {
+        private List<SubscriptionData> _dummyData = new List<SubscriptionData>();
         public bool IsActive { get; }
 
         public void Initialize(
@@ -41,7 +43,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         public Subscription CreateSubscription(SubscriptionRequest request)
         {
-            return null;
+            var offsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone,
+                request.StartTimeUtc,
+                request.EndTimeUtc);
+            return new Subscription(request, _dummyData.GetEnumerator(), offsetProvider);
         }
 
         public void RemoveSubscription(Subscription subscription)
