@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // normal feed
                 { "EURGBP", 3 },
                 // internal feed on the first day, normal feed on the other two days
-                { "EURUSD", 3 },
+                { "EURUSD", 2 },
                 // internal feed only
                 { "GBPUSD", 0 }
             };
