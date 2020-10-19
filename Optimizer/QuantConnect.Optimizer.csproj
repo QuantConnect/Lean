@@ -59,10 +59,8 @@
     <Compile Include="Maximization.cs" />
     <Compile Include="Extremum.cs" />
     <Compile Include="EulerSearch.cs" />
-    <Compile Include="GridSearch.cs" />
-    <Compile Include="IOptimizationParameterSetGenerator.cs" />
     <Compile Include="IOptimizationStrategy.cs" />
-    <Compile Include="BruteForceStrategy.cs" />
+    <Compile Include="GridSearchOptimizationStrategy.cs" />
     <Compile Include="OptimizationEventArgs.cs" />
     <Compile Include="OptimizationNodePacket.cs" />
     <Compile Include="OptimizationParameter.cs" />

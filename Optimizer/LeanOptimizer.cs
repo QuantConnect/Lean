@@ -87,8 +87,7 @@ namespace QuantConnect.Optimizer
             RunningParameterSetForBacktest = new ConcurrentDictionary<string, ParameterSet>();
             PendingParameterSet = new ConcurrentQueue<ParameterSet>();
 
-            Strategy.Initialize((IOptimizationParameterSetGenerator)Activator.CreateInstance(Type.GetType(NodePacket.ParameterSetGenerator)),
-                NodePacket.Criterion["extremum"] == "max"
+            Strategy.Initialize(NodePacket.Criterion["extremum"] == "max"
                     ? new Maximization() as Extremum
                     : new Minimization(),
                 NodePacket.OptimizationParameters);

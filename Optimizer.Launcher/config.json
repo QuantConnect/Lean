@@ -9,11 +9,8 @@
   // Physical DLL location
   //"algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
 
-  // How we generate parameter sets - grid/euler/genetic/remote
-  "optimization-parameter-set-generator": "QuantConnect.Optimizer.GridSearch",
-
   // How we manage solutions and make decision to continue or stop
-  "optimization-strategy": "QuantConnect.Optimizer.BruteForceStrategy",
+  "optimization-strategy": "QuantConnect.Optimizer.GridSearchOptimizationStrategy",
 
   // optimization problem
   "optimization-criterion": {

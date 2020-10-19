@@ -13,12 +13,29 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer
 {
-    public class EulerSearch : IOptimizationParameterSetGenerator
+    public class EulerSearchOptimizationStrategy : IOptimizationStrategy
     {
+        public Extremum Extremum => throw new NotImplementedException();
+
+        public OptimizationResult Solution => throw new NotImplementedException();
+
+        public event EventHandler NewParameterSet;
+
+        public void Initialize(Extremum extremum, HashSet<OptimizationParameter> parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void PushNewResults(OptimizationResult result)
+        {
+            throw new NotImplementedException();
+        }
+
         public IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args)
         {
             throw new System.NotImplementedException("EulerSearch isn't implemented yet");

@@ -29,16 +29,6 @@ namespace QuantConnect.Optimizer
         event EventHandler NewParameterSet;
 
         /// <summary>
-        /// Generates parameters for given settings of optimization parameters
-        /// </summary>
-        IOptimizationParameterSetGenerator ParameterSetGenerator { get; }
-
-        /// <summary>
-        /// The way to compare and find the better point
-        /// </summary>
-        Extremum Extremum { get; }
-
-        /// <summary>
         /// Best found solution, its value and parameter set
         /// </summary>
         OptimizationResult Solution { get; }
@@ -46,15 +36,22 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Initializes the strategy using generator, extremum settings and optimization parameters
         /// </summary>
-        /// <param name="parameterSetGetGenerator">Parameter set generator</param>
         /// <param name="extremum">Maximize or Minimize the target value</param>
         /// <param name="parameters">Optimization parameters</param>
-        void Initialize(IOptimizationParameterSetGenerator parameterSetGetGenerator, Extremum extremum, HashSet<OptimizationParameter> parameters);
+        void Initialize(Extremum extremum, HashSet<OptimizationParameter> parameters);
         
         /// <summary>
         /// Callback when lean compute job completed.
         /// </summary>
         /// <param name="result">Lean compute job result and corresponding parameter set</param>
         void PushNewResults(OptimizationResult result);
+
+        /// <summary>
+        /// Enumerate all possible arrangements
+        /// </summary>
+        /// <param name="seed">Seeding</param>
+        /// <param name="args">Optimization parameters settings</param>
+        /// <returns>Collection of possible combinations for given optimization parameters settings</returns>
+        IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args);
     }
 }

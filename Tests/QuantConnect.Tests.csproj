@@ -764,8 +764,7 @@
     <Compile Include="Indicators\EaseOfMovementValueTests.cs" />
     <Compile Include="Indicators\StochasticTests.cs" />
     <Compile Include="Optimizer\ExtremumTests.cs" />
-    <Compile Include="Optimizer\Generators\GridSearchTests.cs" />
-    <Compile Include="Optimizer\Strategies\BruteForceStrategyTests.cs" />
+    <Compile Include="Optimizer\Strategies\GridSearchOptimizationStrategyTests.cs" />
     <Compile Include="Research\QuantBookFundamentalTests.cs" />
     <Compile Include="Python\PythonOptionTests.cs" />
     <Compile Include="Report\DrawdownCollectionTests.cs" />

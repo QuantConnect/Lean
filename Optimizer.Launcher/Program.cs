@@ -32,8 +32,7 @@ namespace QuantConnect.Optimizer.Launcher
                 var packet = new OptimizationNodePacket
                 {
                     OptimizationId = Guid.NewGuid().ToString(),
-                    ParameterSetGenerator = Config.Get("optimization-parameter-set-generator", "QuantConnect.Optimizer.GridSearch"),
-                    OptimizationStrategy = Config.Get("optimization-strategy", "QuantConnect.Optimizer.BruteForceOptimizer"),
+                    OptimizationStrategy = Config.Get("optimization-strategy", "QuantConnect.Optimizer.GridSearchOptimizationStrategy"),
                     Criterion =
                         JsonConvert.DeserializeObject<Dictionary<string, string>>(Config.Get("optimization-criterion", "{\"name\":\"TotalPerformance.TradeStatistics.TotalProfit\", \"direction\": \"max\"}")),
                     OptimizationParameters = 

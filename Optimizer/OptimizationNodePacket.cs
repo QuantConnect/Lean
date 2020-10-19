@@ -56,13 +56,7 @@ namespace QuantConnect.Optimizer
         /// Optimization strategy name
         /// </summary>
         [JsonProperty(PropertyName = "optimizationStrategy")]
-        public string OptimizationStrategy = "QuantConnect.Optimizer.BruteForceStrategy";
-
-        /// <summary>
-        /// Parameter set generator name
-        /// </summary>
-        [JsonProperty(PropertyName = "parameterSetGenerator")]
-        public string ParameterSetGenerator = "QuantConnect.Optimizer.GridSearch";
+        public string OptimizationStrategy = "QuantConnect.Optimizer.GridSearchOptimizationStrategy";
 
         /// <summary>
         /// Optimization settings
