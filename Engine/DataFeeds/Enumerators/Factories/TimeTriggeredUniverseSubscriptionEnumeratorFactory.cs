@@ -75,7 +75,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                         args.Action == NotifyCollectionChangedAction.Add ? args.NewItems :
                         args.Action == NotifyCollectionChangedAction.Remove ? args.OldItems : null;
 
-                    var time = _timeProvider.GetUtcNow();
+                    // Set time 1 tick ahead to properly sync data with next timeslice
+                    var time = _timeProvider.GetUtcNow().AddTicks(1);
                     if (items == null || time == DateTime.MinValue) return;
 
                     var symbol = items.OfType<Symbol>().FirstOrDefault();
