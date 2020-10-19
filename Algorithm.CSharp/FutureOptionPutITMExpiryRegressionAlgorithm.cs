@@ -12,17 +12,17 @@ using QuantConnect.Securities.Option;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regression algorithm tests In The Money (ITM) future option expiry for calls.
+    /// This regression algorithm tests In The Money (ITM) future option expiry for puts.
     /// We expect 3 orders from the algorithm, which are:
     ///
-    ///   * Initial entry, buy ES Call Option (expiring ITM)
-    ///   * Option exercise, receiving ES future contracts
-    ///   * Future contract liquidation, due to impending expiry
+    ///   * Initial entry, buy ES Put Option (expiring ITM) (buy, qty 1)
+    ///   * Option exercise, receiving short ES future contracts (sell, qty -1)
+    ///   * Future contract liquidation (buyback), due to impending expiry (buy qty 1)
     ///
     /// Additionally, we test delistings for future options and assert that our
     /// portfolio holdings reflect the orders the algorithm has submitted.
     /// </summary>
-    public class FutureOptionCallITMExpiryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FutureOptionPutITMExpiryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _es19h21;
         private Symbol _esOption;
@@ -49,12 +49,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Select a future option expiring ITM, and adds it to the algorithm.
             _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19h21, Time)
-                .Where(x => x.ID.StrikePrice <= 3250m)
-                .OrderByDescending(x => x.ID.StrikePrice)
+                .Where(x => x.ID.StrikePrice >= 3300m && x.ID.OptionRight == OptionRight.Put)
+                .OrderBy(x => x.ID.StrikePrice)
                 .Take(1)
                 .Single(), Resolution.Minute).Symbol;
 
-            _expectedContract = QuantConnect.Symbol.CreateOption(_es19h21, Market.CME, OptionStyle.American, OptionRight.Call, 3250m, new DateTime(2021, 3, 19));
+            _expectedContract = QuantConnect.Symbol.CreateOption(_es19h21, Market.CME, OptionStyle.American, OptionRight.Put, 3300m, new DateTime(2021, 3, 19));
             if (_esOption != _expectedContract)
             {
                 throw new Exception($"Contract {_expectedContract} was not found in the chain");
@@ -127,21 +127,25 @@ namespace QuantConnect.Algorithm.CSharp
             // `new DateTime(2021, 3, 19, 5, 0, 0);`
             var expectedLiquidationTimeUtc = new DateTime(2021, 3, 22, 13, 32, 0);
 
-            if (orderEvent.Direction == OrderDirection.Sell && future.Holdings.Quantity != 0)
+            if (orderEvent.Direction == OrderDirection.Buy && future.Holdings.Quantity != 0)
             {
                 // We expect the contract to have been liquidated immediately
                 throw new Exception($"Did not liquidate existing holdings for Symbol {future.Symbol}");
             }
-            if (orderEvent.Direction == OrderDirection.Sell && orderEvent.UtcTime != expectedLiquidationTimeUtc)
+            if (orderEvent.Direction == OrderDirection.Buy && orderEvent.UtcTime != expectedLiquidationTimeUtc)
             {
                 throw new Exception($"Liquidated future contract, but not at the expected time. Expected: {expectedLiquidationTimeUtc:yyyy-MM-dd HH:mm:ss} - found {orderEvent.UtcTime:yyyy-MM-dd HH:mm:ss}");
+            }
+            if (orderEvent.Direction == OrderDirection.Sell && future.Holdings.Quantity != -1)
+            {
+                throw new Exception($"Exercised option contract, but future contracts are not in our portfolio");
             }
 
             // No way to detect option exercise orders or any other kind of special orders
             // other than matching strings, for now.
             if (orderEvent.Message.Contains("Option Exercise"))
             {
-                if (future.Holdings.Quantity != 1)
+                if (future.Holdings.Quantity != -1)
                 {
                     // Here, we expect to have some holdings in the underlying, but not in the future option anymore.
                     throw new Exception($"Exercised option contract, but we have no holdings for Future {future.Symbol}");

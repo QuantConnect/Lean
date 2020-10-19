@@ -150,6 +150,7 @@
     <Compile Include="OnOrderEventExceptionRegression.cs" />
     <Compile Include="FutureOptionCallPutITMExpiryRegressionAlgorithm.cs" />
     <Compile Include="FutureOptionCallITMExpiryRegressionAlgorithm.cs" />
+    <Compile Include="FutureOptionPutITMExpiryRegressionAlgorithm.cs" />
     <Compile Include="ScaledFillForwardDataRegressionAlgorithm.cs" />
     <Compile Include="DailyHistoryForDailyResolutionRegressionAlgorithm.cs" />
     <Compile Include="DailyHistoryForMinuteResolutionRegressionAlgorithm.cs" />
