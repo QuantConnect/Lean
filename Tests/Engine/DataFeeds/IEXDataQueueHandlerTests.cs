@@ -164,6 +164,32 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             iex.Dispose();
         }
 
+        [Test]
+        public void IEXCouldSubscribeMoreThan100Symbols()
+        {
+            var symbols = new[]
+            {
+                "AAPL", "MSFT", "AMZN", "FB",  "GOOG", "JNJ", "PG", "NVDA", "V", "UNH", "HD", "JPM", "MA", "ADBE", "VZ", "PYPL", "CRM", "NFLX", "INTC", "DIS",
+                "PFE", "CMCSA", "MRK", "WMT", "PEP", "T", "ABT", "KO", "TMO", "BAC", "MCD", "CSCO", "COST", "NKE", "ABBV", "AVGO", "NEE", "MDT", "ACN", "QCOM",
+                "XOM", "DHR", "UNP", "TXN", "CVX", "AMGN", "BMY", "LOW", "PM", "UPS",  "HON", "LIN", "ORCL", "LLY", "IBM", "AMT", "SBUX", "NOW", "MMM", "AMD",
+                "LMT", "CHTR", "RTX", "WFC", "BLK", "CAT", "C", "INTU", "FIS", "BA", "ISRG", "SPGI", "MDLZ", "TGT", "CVS", "GILD", "ZTS", "PLD", "DE", "ANTM",
+                "MS", "MO", "SYK", "EQIX", "GS", "CCI", "BDX", "CL", "FDX", "AXP", "D", "BKNG", "DUK", "TJX", "TMUS", "APD", "CI", "ADP", "GE", "REGN",
+                "ATVI", "SO", "CSX", "CME", "ITW", "MMC", "SCHW", "HUM", "AMAT", "MU", "ADSK", "SHW", "ICE", "VRTX", "PGR", "FISV", "TFC",
+                "NSC", "DG", "BSX", "CB", "USB", "EW", "GPN", "LRCX", "KMB", "ECL", "EL", "NEM", "AON", "NOC", "ILMN", "PNC", "MCO", "ADI"
+            };
+
+            var configs = symbols.Select(s =>
+                GetSubscriptionDataConfig<TradeBar>(Symbol.Create(s, SecurityType.Equity, Market.USA),
+                    Resolution.Second)).ToArray();
+            
+            using (var iex = new IEXDataQueueHandler())
+            {
+                Array.ForEach(configs, dataConfig => iex.Subscribe(dataConfig, (s, e) => {  }));
+                Thread.Sleep(20000);
+                Assert.IsTrue(iex.IsConnected);
+            }
+        }
+
 
         #region History provider tests
 

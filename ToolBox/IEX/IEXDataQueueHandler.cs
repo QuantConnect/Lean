@@ -98,10 +98,19 @@ namespace QuantConnect.ToolBox.IEX
                         // Reset the flag
                         _isSubscriptionUpdateRequested = false;
 
-                        GracefullyUpdateSubscription();
+
+                        // If there is no subscription at all, create it for the first time
+                        if (_client == null)
+                        {
+                            CreateNewSubscription();
+                        }
+                        else
+                        {
+                            UpdateSubscription();
+                        }
                     }
 
-                    Thread.Sleep(5000);
+                    Thread.Sleep(10000);
 
                     if (_isDisposing)
                     {
@@ -234,18 +243,8 @@ namespace QuantConnect.ToolBox.IEX
             // If either symbolsArray is empty or there was no new symbols addition - need take no action
             if (!enumerable.IsNullOrEmpty() && added)
             {
-                // If there is no subscription at all, create it for the first time
-                if (_client == null)
-                {
-                    CreateNewSubscription();
-                }
-                else
-                {
-                    // Otherwise, need to gracefully make the replacement, update existing subscription,
-                    // so that in-between data updates are not lost
-                    // Call a request for subscription renewal
-                    _isSubscriptionUpdateRequested = true;
-                }
+                // Call a request for subscription renewal
+                _isSubscriptionUpdateRequested = true;
             }
         }
 
@@ -291,15 +290,15 @@ namespace QuantConnect.ToolBox.IEX
 
             // Set up the handlers
             _client.Opened += (sender, args) => { IsConnected = true; };
-            _client.Error += ClientOnError;
             _client.MessageReceived += ClientOnMessageReceived;
+            _client.Error += ClientOnError;
             _client.Closed += ClientOnClosed;
 
             // Client start call will block until Stop() is called (!)
             Task.Run(async () => await _client.StartAsync());
         }
 
-        private void GracefullyUpdateSubscription()
+        private void UpdateSubscription()
         {
             // Need to build new uri and client to reflect the changes in symbols
             var url = BuildUrlString();
@@ -308,7 +307,6 @@ namespace QuantConnect.ToolBox.IEX
             // First handler receives new data, second handler is responsible for replacing the client.
             tmpClient.MessageReceived += ClientOnMessageReceived;
             tmpClient.MessageReceived += ReplacementHandler;
-
             tmpClient.Error += ClientOnError;
             tmpClient.Closed += ClientOnClosed;
 
@@ -330,7 +328,7 @@ namespace QuantConnect.ToolBox.IEX
             _client.Dispose();
 
             _client = tmpClient;
-            tmpClient.MessageReceived -= ReplacementHandler;
+            tmpClient.MessageReceived -= ReplacementHandler;  // Remove replacement handler
         }
 
         private static void ClientOnClosed(object sender, StateChangedEventArgs e)
