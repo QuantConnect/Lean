@@ -75,8 +75,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                         args.Action == NotifyCollectionChangedAction.Add ? args.NewItems :
                         args.Action == NotifyCollectionChangedAction.Remove ? args.OldItems : null;
 
-                    // Set time 1 tick ahead to properly sync data with next timeslice
-                    var time = _timeProvider.GetUtcNow().AddTicks(1);
+                    // If it is an add we will set time 1 tick ahead to properly sync data
+                    // with next timeslice, if it is a remove then we will set time to now
+                    var time =
+                        args.Action == NotifyCollectionChangedAction.Add ? _timeProvider.GetUtcNow().AddTicks(1) :
+                        args.Action == NotifyCollectionChangedAction.Remove ? _timeProvider.GetUtcNow() : DateTime.MinValue;
+                    
+                    // Check that we have our items and time
                     if (items == null || time == DateTime.MinValue) return;
 
                     var symbol = items.OfType<Symbol>().FirstOrDefault();
@@ -87,7 +92,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     time = time.ConvertFromUtc(request.Configuration.ExchangeTimeZone);
 
                     var collection = new BaseDataCollection(time, symbol);
-
                     ((InjectionEnumerator) enumerator).InjectDataPoint(collection);
                 };
             }
