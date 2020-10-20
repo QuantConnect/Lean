@@ -45,7 +45,7 @@ namespace QuantConnect.Brokerages.Zerodha
         }
 
         /// <summary>
-        /// The list of known Samco symbols.
+        /// The list of known Zerodha symbols.
         /// </summary>
         public static readonly HashSet<string> KnownSymbolStrings = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -53,17 +53,18 @@ namespace QuantConnect.Brokerages.Zerodha
         };
 
         /// <summary>
-        /// The list of active Samco symbols.
+        /// The list of active Zerodha symbols.
         /// </summary>
         public static List<string> ActiveSymbolStrings =
             KnownSymbolStrings
                 .ToList();
 
         /***
-         * public SamcoSymbolMapper()
+         * public ZerodhaSymbolMapper()
         {
             
             StreamReader streamReader;
+            //TODO: Append Date in filename to check the tradable scrips for the day?
             var path = Path.Combine(Globals.DataFolder, "ScripMaster.csv");
             if (File.Exists(path))
             {
@@ -77,6 +78,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 streamReader = new StreamReader(resp.GetResponseStream());
                 SaveStreamAsFile(Globals.DataFolder, resp.GetResponseStream(), "ScripMaster.csv");
             }
+
             CsvConfiguration configuration = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HasHeaderRecord = true,
@@ -86,7 +88,7 @@ namespace QuantConnect.Brokerages.Zerodha
             char[] sep = { '-' };
             KnownSymbolStrings = scrips.Select(x => x.TradingSymbol.Split(sep)[0]).ToHashSet();
             var symbols = new List<Symbol>();
-            var mapper = new SamcoSymbolMapper();
+            var mapper = new ZerodhaSymbolMapper();
 
             foreach (var tp in scrips)
             {
@@ -218,10 +220,10 @@ namespace QuantConnect.Brokerages.Zerodha
     }
         ***/
         /// <summary>
-        /// Converts a Lean symbol instance to an Samco symbol
+        /// Converts a Lean symbol instance to an Zerodha symbol
         /// </summary>
         /// <param name="symbol">A Lean symbol instance</param>
-        /// <returns>The Samco symbol</returns>
+        /// <returns>The Zerodha symbol</returns>
         public string GetBrokerageSymbol(Symbol symbol)
         {
             if (symbol == null || string.IsNullOrWhiteSpace(symbol.Value))
@@ -230,7 +232,7 @@ namespace QuantConnect.Brokerages.Zerodha
             //if (symbol.ID.SecurityType != SecurityType.Equity)
             //    throw new ArgumentException("Invalid security type: " + symbol.ID.SecurityType);
 
-            var brokerageSymbol = ConvertLeanSymbolToSamcoSymbol(symbol.Value);
+            var brokerageSymbol = ConvertLeanSymbolToZerodhaSymbol(symbol.Value);
 
             if (!IsKnownBrokerageSymbol(brokerageSymbol))
                 throw new ArgumentException("Unknown symbol: " + symbol.Value);
@@ -239,9 +241,9 @@ namespace QuantConnect.Brokerages.Zerodha
         } 
 
         /// <summary>
-        /// Converts an Samco symbol to a Lean symbol instance
+        /// Converts an Zerodha symbol to a Lean symbol instance
         /// </summary>
-        /// <param name="brokerageSymbol">The Samco symbol</param>
+        /// <param name="brokerageSymbol">The Zerodha symbol</param>
         /// <param name="securityType">The security type</param>
         /// <param name="market">The market</param>
         /// <param name="expirationDate">Expiration date of the security(if applicable)</param>
@@ -251,10 +253,10 @@ namespace QuantConnect.Brokerages.Zerodha
         public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market, DateTime expirationDate = default(DateTime), decimal strike = 0, OptionRight optionRight = OptionRight.Call)
         {
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
-                throw new ArgumentException($"Invalid Samco symbol: {brokerageSymbol}");
+                throw new ArgumentException($"Invalid Zerodha symbol: {brokerageSymbol}");
 
             if (!IsKnownBrokerageSymbol(brokerageSymbol))
-                throw new ArgumentException($"Unknown Samco symbol: {brokerageSymbol}");
+                throw new ArgumentException($"Unknown Zerodha symbol: {brokerageSymbol}");
 
             if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Commodity || securityType == SecurityType.Crypto)
                 throw new ArgumentException($"Invalid security type: {securityType}");
@@ -266,19 +268,19 @@ namespace QuantConnect.Brokerages.Zerodha
             {
                 case SecurityType.Option:
                     OptionStyle optionStyle = OptionStyle.European;
-                    return Symbol.CreateOption(ConvertSamcoSymbolToLeanSymbol(brokerageSymbol) , market, optionStyle, optionRight,strike,expirationDate);
+                    return Symbol.CreateOption(ConvertZerodhaSymbolToLeanSymbol(brokerageSymbol) , market, optionStyle, optionRight,strike,expirationDate);
                 case SecurityType.Future:
-                    return Symbol.CreateFuture(ConvertSamcoSymbolToLeanSymbol(brokerageSymbol), market,expirationDate);
+                    return Symbol.CreateFuture(ConvertZerodhaSymbolToLeanSymbol(brokerageSymbol), market,expirationDate);
                 default:
-                    return Symbol.Create(ConvertSamcoSymbolToLeanSymbol(brokerageSymbol), securityType, market);
+                    return Symbol.Create(ConvertZerodhaSymbolToLeanSymbol(brokerageSymbol), securityType, market);
             }
 
         }
 
         /// <summary>
-        /// Converts an Samco symbol to a Lean symbol instance
+        /// Converts an Zerodha symbol to a Lean symbol instance
         /// </summary>
-        /// <param name="brokerageSymbol">The Samco symbol</param>
+        /// <param name="brokerageSymbol">The Zerodha symbol</param>
         /// <returns>A new Lean Symbol instance</returns>
         public Symbol GetLeanSymbol(string brokerageSymbol)
         {
@@ -288,17 +290,17 @@ namespace QuantConnect.Brokerages.Zerodha
         }
         
         /// <summary>
-        /// Returns the security type for an Samco symbol
+        /// Returns the security type for an Zerodha symbol
         /// </summary>
-        /// <param name="brokerageSymbol">The Samco symbol</param>
+        /// <param name="brokerageSymbol">The Zerodha symbol</param>
         /// <returns>The security type</returns>
         public SecurityType GetBrokerageSecurityType(string brokerageSymbol)
         {
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
-                throw new ArgumentException($"Invalid Samco symbol: {brokerageSymbol}");
+                throw new ArgumentException($"Invalid Zerodha symbol: {brokerageSymbol}");
 
             if (!IsKnownBrokerageSymbol(brokerageSymbol))
-                throw new ArgumentException($"Unknown Samco symbol: {brokerageSymbol}");
+                throw new ArgumentException($"Unknown Zerodha symbol: {brokerageSymbol}");
             //var symbol = KnownSymbols.Where(s => s.ID.Symbol == brokerageSymbol).FirstOrDefault();
             //TODO:Handle in better way
             return SecurityType.Equity;
@@ -312,14 +314,14 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>The security type</returns>
         public SecurityType GetLeanSecurityType(string leanSymbol)
         {
-            return GetBrokerageSecurityType(ConvertLeanSymbolToSamcoSymbol(leanSymbol));
+            return GetBrokerageSecurityType(ConvertLeanSymbolToZerodhaSymbol(leanSymbol));
         }
 
         /// <summary>
-        /// Checks if the symbol is supported by Samco
+        /// Checks if the symbol is supported by Zerodha
         /// </summary>
-        /// <param name="brokerageSymbol">The Samco symbol</param>
-        /// <returns>True if Samco supports the symbol</returns>
+        /// <param name="brokerageSymbol">The Zerodha symbol</param>
+        /// <returns>True if Zerodha supports the symbol</returns>
         public bool IsKnownBrokerageSymbol(string brokerageSymbol)
         {
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
@@ -329,41 +331,41 @@ namespace QuantConnect.Brokerages.Zerodha
         }
 
         /// <summary>
-        /// Checks if the symbol is supported by Samco
+        /// Checks if the symbol is supported by Zerodha
         /// </summary>
         /// <param name="symbol">The Lean symbol</param>
-        /// <returns>True if Samco supports the symbol</returns>
+        /// <returns>True if Zerodha supports the symbol</returns>
         public bool IsKnownLeanSymbol(Symbol symbol)
         {
             if (string.IsNullOrWhiteSpace(symbol?.Value) || symbol.Value.Length <= 3)
                 return false;
 
-            var samcoSymbol = ConvertLeanSymbolToSamcoSymbol(symbol.Value);
+            var ZerodhaSymbol = ConvertLeanSymbolToZerodhaSymbol(symbol.Value);
 
-            return IsKnownBrokerageSymbol(samcoSymbol) && GetBrokerageSecurityType(samcoSymbol) == symbol.ID.SecurityType;
+            return IsKnownBrokerageSymbol(ZerodhaSymbol) && GetBrokerageSecurityType(ZerodhaSymbol) == symbol.ID.SecurityType;
         }
 
         /// <summary>
-        /// Converts an Samco symbol to a Lean symbol string
+        /// Converts an Zerodha symbol to a Lean symbol string
         /// </summary>
-        private static string ConvertSamcoSymbolToLeanSymbol(string samcoSymbol)
+        private static string ConvertZerodhaSymbolToLeanSymbol(string ZerodhaSymbol)
         {
-            if (string.IsNullOrWhiteSpace(samcoSymbol))
-                throw new ArgumentException($"Invalid Samco symbol: {samcoSymbol}");
+            if (string.IsNullOrWhiteSpace(ZerodhaSymbol))
+                throw new ArgumentException($"Invalid Zerodha symbol: {ZerodhaSymbol}");
 
-            // return as it is due to Samco has similar Symbol format
-            return samcoSymbol.ToUpperInvariant();
+            // return as it is due to Zerodha has similar Symbol format
+            return ZerodhaSymbol.ToUpperInvariant();
         }
 
         /// <summary>
-        /// Converts a Lean symbol string to an Samco symbol
+        /// Converts a Lean symbol string to an Zerodha symbol
         /// </summary>
-        private static string ConvertLeanSymbolToSamcoSymbol(string leanSymbol)
+        private static string ConvertLeanSymbolToZerodhaSymbol(string leanSymbol)
         {
             if (string.IsNullOrWhiteSpace(leanSymbol))
                 throw new ArgumentException($"Invalid Lean symbol: {leanSymbol}");
 
-            // return as it is due to Samco has similar Symbol format
+            // return as it is due to Zerodha has similar Symbol format
             return leanSymbol.ToUpperInvariant();
         }
     }

@@ -2,26 +2,30 @@
 using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
-using QuantConnect.Brokerages.Samco;
+using QuantConnect.Brokerages.Zerodha;
+using QuantConnect.Brokerages.Zerodha.Messages;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using RestSharp;
 
-namespace QuantConnect.ToolBox.SamcoDownloader
+namespace QuantConnect.ToolBox.ZerodhaDownloader
 {
-    public class SamcoDataDownloaderProgram
+    public class ZerodhaDataDownloaderProgram
     {
+        private static readonly string _apiKey = Config.Get("zerodha-api-key");
+        private static readonly string _accessToken = Config.Get("zerodha-access-token");
+
         /// <summary>
-        /// Samco Data Downloader Toolbox Project For LEAN Algorithmic Trading Engine.
+        /// Zerodha Historical Data Downloader Toolbox Project For LEAN Algorithmic Trading Engine.
         /// By @itsbalamurali
         /// </summary>
-        public static void SamcoDataDownloader(IList<string> tickers, string market, string resolution, string securityType, DateTime startDate, DateTime endDate)
+        public static void ZerodhaDataDownloader(IList<string> tickers, string market, string resolution, string securityType, DateTime startDate, DateTime endDate)
         {
             if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
-                Console.WriteLine("SamcoDataDownloader ERROR: '--tickers=', --securityType, '--market' or '--resolution=' parameter is missing");
+                Console.WriteLine("ZerodhaDataDownloader ERROR: '--tickers=', --securityType, '--market' or '--resolution=' parameter is missing");
                 Console.WriteLine("--tickers=eg JSWSTEEL,TCS,INFY");
                 Console.WriteLine("--market=MCX/NSE/NFO/CDS/BSE");
                 Console.WriteLine("--security-type=Equity/Future/Option/Commodity");
@@ -30,11 +34,7 @@ namespace QuantConnect.ToolBox.SamcoDownloader
             }
             try
             {
-                var restClient = new RestClient("https://api.stocknote.com");
-                var _samcoAPI = new SamcoBrokerageAPI(restClient);
-                //TODO: get this from cli params
-                //_samcoAPI.Authorize("dpid", "pass", "dob");
-
+                var _kite = new Kite(_apiKey,_accessToken);
                 var castResolution = (Resolution)Enum.Parse(typeof(Resolution), resolution);
                 var castSecurityType = (SecurityType)Enum.Parse(typeof(SecurityType), securityType);
 
@@ -65,28 +65,32 @@ namespace QuantConnect.ToolBox.SamcoDownloader
                         // Write data
                         var writer = new LeanDataWriter(castResolution, pairObject, dataDirectory);
                         IList<TradeBar> fileEnum = new List<TradeBar>();
-                        var history = new List<TradeBar>();
+                        var history = new List<Historical>();
                         var timeSpan = new TimeSpan();
                         switch (castResolution)
                         {
                             case Resolution.Tick:
-                                throw new ArgumentException("Samco Doesn't support tick resolution");
+                                throw new ArgumentException("Zerodha Doesn't support tick resolution");
 
                             case Resolution.Minute:
-                                history = _samcoAPI.GetIntradayCandles(pairObject.ID.Symbol, market, start, end).ToList();
+                                history = _kite.GetHistoricalData(pairObject.ID.Symbol, start, end, "minute").ToList();
                                 timeSpan = Time.OneMinute;
                                 break;
 
                             case Resolution.Hour:
-                                throw new ArgumentException("Samco Doesn't support second resolution");
+                                history = _kite.GetHistoricalData(pairObject.ID.Symbol, start, end, "60minute").ToList();
+                                timeSpan = Time.OneHour;
+                                break;
 
                             case Resolution.Daily:
-                                throw new ArgumentException("Samco Doesn't support second resolution");
+                                history = _kite.GetHistoricalData(pairObject.ID.Symbol, start, end, "day").ToList();
+                                timeSpan = Time.OneDay;
+                                break;
                         }
 
                         foreach (var bar in history)
                         {
-                            var linedata = new TradeBar(bar.Time, pairObject, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, timeSpan);
+                            var linedata = new TradeBar(bar.TimeStamp, pairObject, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, timeSpan);
                             fileEnum.Add(linedata);
                         }
 

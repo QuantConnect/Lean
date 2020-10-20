@@ -115,10 +115,6 @@
   // Required for streaming Polygon.io data
   // To get your access token go to https://polygon.io
   "polygon-api-key": "",
-  //Samco API Credentials for credentials go to https://stocknote.com
-  "samco-api-secret": "",
-  "samco-api-key": "",
-  "samco-api-yob": "",
   // zerodha configuration goto https://kite.trade
   "zerodha-access-token": "",
   "zerodha-api-key": "",
@@ -167,19 +163,7 @@
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
       "history-provider": "BrokerageHistoryProvider"
     },
-    // defines 'samco' environment
-    "live-samco": {
-      "live-mode": true,
-      // real brokerage implementations require the BrokerageTransactionHandler
-      "live-mode-brokerage": "SamcoBrokerage",
-      "data-queue-handler": "SamcoBrokerage",
-      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
-      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-      "history-provider": "BrokerageHistoryProvider"
-    },
+
     // defines the 'live-tradier' environment
     "live-tradier": {
       "live-mode": true,

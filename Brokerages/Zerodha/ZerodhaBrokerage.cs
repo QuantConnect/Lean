@@ -5,7 +5,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using RestSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -23,7 +22,7 @@ namespace QuantConnect.Brokerages.Zerodha
     /// <summary>
     /// Zerodha Brokerage implementation
     /// </summary>
-    public partial class ZerodhaBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler, IHistoryProvider
+    public partial class ZerodhaBrokerage : Brokerage, IDataQueueHandler, IHistoryProvider
     {
         #region Declarations
         /// <summary>
@@ -33,11 +32,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// The websockets client instance
         /// </summary>
-        protected IWebSocket WebSocket;
-        /// <summary>
-        /// The rest client instance
-        /// </summary>
-        protected IRestClient RestClient;
+        protected ZerodhaWebSocketClientWrapper WebSocket;
         /// <summary>
         /// standard json parsing settings
         /// </summary>
@@ -76,7 +71,7 @@ namespace QuantConnect.Brokerages.Zerodha
         private readonly ConcurrentQueue<MessageData> _messageBuffer = new ConcurrentQueue<MessageData>();
 
         private readonly IDataAggregator _aggregator;
-
+        private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
         /// </summary>
@@ -94,8 +89,7 @@ namespace QuantConnect.Brokerages.Zerodha
         #endregion
 
 
-
-
+        
         /// <summary>
         /// Constructor for brokerage
         /// </summary>
@@ -117,6 +111,8 @@ namespace QuantConnect.Brokerages.Zerodha
             WebSocket.Message += OnMessage;
             WebSocket.Error += OnError;
             _subscriptionManager = new ZerodhaSubscriptionManager(this, _wssUrl, _symbolMapper, sessionToken);
+            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+
             Log.Trace("Start Zerodha Brokerage");
         }
 
@@ -293,7 +289,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         public override bool IsConnected => WebSocket.IsOpen;
         /// <summary>
-        /// Connects to samco wss
+        /// Connects to Zerodha wss
         /// </summary>
 
         public override void Connect()
@@ -813,7 +809,7 @@ namespace QuantConnect.Brokerages.Zerodha
             {
                 if (request.Symbol.ID.SecurityType == SecurityType.Cfd || request.Symbol.ID.SecurityType == SecurityType.Crypto || request.Symbol.ID.SecurityType == SecurityType.Forex || request.Symbol.ID.SecurityType == SecurityType.Commodity)
                 {
-                    throw new ArgumentException("Invalid security type: " + request.Symbol.ID.SecurityType);
+                    throw new ArgumentException("Zerodha does not support this security type: " + request.Symbol.ID.SecurityType);
                 }
 
                 if (request.StartTimeUtc >= request.EndTimeUtc)
@@ -1056,14 +1052,14 @@ namespace QuantConnect.Brokerages.Zerodha
             }
 
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
-            SubscriptionManager.Subscribe(dataConfig);
+            _subscriptionManager.Subscribe(dataConfig);
 
             return enumerator;
         }
 
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            SubscriptionManager.Unsubscribe(dataConfig);
+            _subscriptionManager.Unsubscribe(dataConfig);
             _aggregator.Remove(dataConfig);
         }
         #endregion

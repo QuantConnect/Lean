@@ -664,15 +664,6 @@
     <Compile Include="Tradier\Tokens.cs" />
     <Compile Include="Tradier\TradierBrokerageFactory.cs" />
     <Compile Include="Tradier\UserProfile.cs" />
-    <Compile Include="Samco\SamcoBrokerage.cs" />
-    <Compile Include="Samco\SamcoWebSocketWrapper.cs" />
-    <Compile Include="Samco\SamcoSubscriptionManager.cs" />
-    <Compile Include="Samco\SamcoBrokerageFactory.cs" />
-    <Compile Include="Samco\SamcoSymbolMapper.cs" />
-    <Compile Include="Samco\ScripMaster.cs" />
-    <Compile Include="Samco\SamcoWebSocketClientWrapper.cs" />
-    <Compile Include="Samco\Messages.cs" />
-    <Compile Include="Samco\SamcoBrokerageAPI.cs" />
     <Compile Include="Zerodha\Constants.cs" />
     <Compile Include="Zerodha\ZerodhaSymbolMapper.cs" />
     <Compile Include="Zerodha\ZerodhaWebSocketClientWrapper.cs" />

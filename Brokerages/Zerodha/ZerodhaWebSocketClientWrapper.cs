@@ -12,7 +12,7 @@ namespace QuantConnect.Brokerages.Zerodha
     //<summary>
     // ZerodhaWebSocketClientWrapper ..
     //</summary>
-    public class ZerodhaWebSocketClientWrapper : IWebSocket
+    public class ZerodhaWebSocketClientWrapper
     {
         private const int ReceiveBufferSize = 8192;
 
@@ -59,7 +59,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     _taskConnect = Task.Factory.StartNew(
                         () =>
                         {
-                            Log.Trace("SamcoWebSocketClientWrapper connection task started.");
+                            Log.Trace("ZerodhaWebSocketClientWrapper connection task started.");
 
                             try
                             {
@@ -74,10 +74,10 @@ namespace QuantConnect.Brokerages.Zerodha
                             }
                             catch (Exception e)
                             {
-                                Log.Error(e, "Error in SamcoWebSocketClientWrapper connection task");
+                                Log.Error(e, "Error in ZerodhaWebSocketClientWrapper connection task");
                             }
 
-                            Log.Trace("SamcoWebSocketClientWrapper connection task ended.");
+                            Log.Trace("ZerodhaWebSocketClientWrapper connection task ended.");
                         },
                         _cts.Token);
                 }
@@ -101,7 +101,7 @@ namespace QuantConnect.Brokerages.Zerodha
             }
             catch (Exception e)
             {
-                Log.Error($"SamcoWebSocketClientWrapper.Close(): {e}");
+                Log.Error($"ZerodhaWebSocketClientWrapper.Close(): {e}");
             }
 
             _cts = null;
@@ -144,7 +144,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         protected virtual void OnMessage(MessageData e)
         {
-            //Log.Trace("SamcoWebSocketClientWrapper.OnMessage(): " + e.Message);
+            //Log.Trace("ZerodhaWebSocketClientWrapper.OnMessage(): " + e.Message);
             Message?.Invoke(this, e);
         }
 
@@ -154,7 +154,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="e"></param>
         protected virtual void OnError(WebSocketError e)
         {
-            Log.Error(e.Exception, $"SamcoWebSocketClientWrapper.OnError(): (IsOpen:{IsOpen}, State:{_client.State}): {e.Message}");
+            Log.Error(e.Exception, $"ZerodhaWebSocketClientWrapper.OnError(): (IsOpen:{IsOpen}, State:{_client.State}): {e.Message}");
             Error?.Invoke(this, e);
         }
 
@@ -163,7 +163,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         protected virtual void OnOpen()
         {
-            Log.Trace($"SamcoWebSocketClientWrapper.OnOpen(): Connection opened (IsOpen:{IsOpen}, State:{_client.State}): {_url}");
+            Log.Trace($"ZerodhaWebSocketClientWrapper.OnOpen(): Connection opened (IsOpen:{IsOpen}, State:{_client.State}): {_url}");
             Open?.Invoke(this, EventArgs.Empty);
         }
 
@@ -172,7 +172,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         protected virtual void OnClose(WebSocketCloseData e)
         {
-            Log.Trace($"SamcoWebSocketClientWrapper.OnClose(): Connection closed (IsOpen:{IsOpen}, State:{_client.State}): {_url}");
+            Log.Trace($"ZerodhaWebSocketClientWrapper.OnClose(): Connection closed (IsOpen:{IsOpen}, State:{_client.State}): {_url}");
             Closed?.Invoke(this, e);
         }
 
@@ -180,7 +180,7 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             using (_client = new ClientWebSocket())
             {
-                Log.Trace("SamcoWebSocketClientWrapper.HandleConnection(): Connecting to " + _url + " ....");
+                Log.Trace("ZerodhaWebSocketClientWrapper.HandleConnection(): Connecting to " + _url + " ....");
 
                 try
                 {                    
@@ -196,7 +196,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
                         if (messageData.MessageType == WebSocketMessageType.Close)
                         {
-                            Log.Trace("SamcoWebSocketClientWrapper.HandleConnection(): WebSocketMessageType.Close");
+                            Log.Trace("ZerodhaWebSocketClientWrapper.HandleConnection(): WebSocketMessageType.Close");
                             return;
                         }
 

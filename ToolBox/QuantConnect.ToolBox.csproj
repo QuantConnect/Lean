@@ -477,7 +477,7 @@
     <Compile Include="YahooDownloader\Token.cs" />
     <Compile Include="YahooDownloader\YahooDataDownloader.cs" />
     <Compile Include="ZipStreamProvider.cs" />
-    <Compile Include="SamcoDownloader\SamcoDataDownloaderProgram.cs" />
+    <Compile Include="ZerodhaDownloader\ZerodhaDataDownloaderProgram.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="AlgoSeekFuturesConverter\AlgoSeek.US.Futures.PriceMultipliers.1.1.csv">

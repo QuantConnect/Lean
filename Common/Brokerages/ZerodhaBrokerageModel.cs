@@ -99,7 +99,7 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Provides Samco fee model
+        /// Provides Zerodha fee model
         /// </summary>
         /// <param name="security"></param>
         /// <returns></returns>
