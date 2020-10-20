@@ -1015,13 +1015,14 @@ namespace QuantConnect.Brokerages.Zerodha
                     break;
             }
 
-            var result = ZerodhaSymbolMapper.KnownSymbols.Where(x => lookupFunc(x) == lookupName &&
+            var result = _symbolMapper.KnownSymbols.Where(x => lookupFunc(x) == lookupName &&
                                             x.ID.SecurityType == securityType &&
                                             (securityExchange == null || x.ID.Market == securityExchange))
                                          .ToList();
 
             return result.Select(x => x);
         }
+
 
         /// <summary>
         /// Returns whether the time can be advanced or not.
