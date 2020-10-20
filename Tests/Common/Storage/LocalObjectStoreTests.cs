@@ -221,8 +221,8 @@ namespace QuantConnect.Tests.Common.Storage
             Assert.IsTrue(error.Message.Contains("Please use ObjectStore.ContainsKey(key)"));
         }
 
-        [TestCase("my_key", "./LocalObjectStoreTests/CSharp-TestAlgorithm/9ed6e46a3ff88783ff75296a4ba523f9.dat")]
-        [TestCase("test/123", "./LocalObjectStoreTests/CSharp-TestAlgorithm/0a2557f6be73a1b8a6abe84104899591.dat")]
+        [TestCase("my_key", "./LocalObjectStoreTests/CSharp-TestAlgorithm/temp/9ed6e46a3ff88783ff75296a4ba523f9.dat")]
+        [TestCase("test/123", "./LocalObjectStoreTests/CSharp-TestAlgorithm/temp/0a2557f6be73a1b8a6abe84104899591.dat")]
         public void GetFilePathReturnsFileName(string key, string expectedRelativePath)
         {
             var expectedPath = Path.GetFullPath(expectedRelativePath).Replace("\\", "/");
