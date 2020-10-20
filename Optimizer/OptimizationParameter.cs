@@ -26,6 +26,7 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Name of optimization parameter
         /// </summary>
+        [JsonProperty("name")]
         public string Name { get; }
 
         /// <summary>
@@ -43,6 +44,7 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Movement, should be positive
         /// </summary>
+        [JsonProperty("step")]
         public decimal Step { get; }
 
         /// <summary>
