@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.CommandLineUtils;
 
 namespace QuantConnect.Configuration
@@ -86,6 +87,16 @@ namespace QuantConnect.Configuration
         public static Dictionary<string, object> ParseArguments(string[] args)
         {
             return ApplicationParser.Parse(ApplicationName, ApplicationDescription, ApplicationHelpText, args, Options);
+        }
+
+        /// <summary>
+        /// Helper method to get the tickers from the provided options
+        /// </summary>
+        public static List<string> GetTickers(Dictionary<string, object> optionsObject)
+        {
+            return optionsObject.ContainsKey("tickers")
+                ? (optionsObject["tickers"] as Dictionary<string, string>)?.Keys.ToList()
+                : new List<string>();
         }
     }
 }

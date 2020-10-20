@@ -16,14 +16,14 @@
 
 using NUnit.Framework;
 using QuantConnect.Interfaces;
-using QuantConnect.Util;
 using System;
 using System.Linq;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.ToolBox
 {
     [TestFixture]
-    public class BasicTests
+    public class ToolBoxTests
     {
         [Test]
         public void ComposeDataQueueHandlerInstances()
@@ -41,6 +41,17 @@ namespace QuantConnect.Tests.ToolBox
             {
                 Assert.NotNull(t.GetConstructor(Type.EmptyTypes));
             });            
+        }
+
+        [TestCase("--app=ydl --tickers=AAPL --resolution=Daily --from-date=20200820-00:00:00 --to-date=20200830-00:00:00", 1)]
+        [TestCase("--app=ydl --resolution=Daily --from-date=20200820-00:00:00 --to-date=20200830-00:00:00", 0)]
+        [TestCase("--app=ydl --tickers=AAPL,SPY,TSLA --resolution=Daily --from-date=20200820-00:00:00 --to-date=20200830-00:00:00", 3)]
+        public void CanParseTickersCorrectly(string args, int expectedCount)
+        {
+            var options = ToolboxArgumentParser.ParseArguments(args.Split(' '));
+            var tickers = ToolboxArgumentParser.GetTickers(options);
+
+            Assert.AreEqual(expectedCount, tickers.Count);
         }
     }
 }
