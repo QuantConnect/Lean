@@ -2583,28 +2583,6 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.Throws<InvalidOperationException>(() => portfolio.SetAccountCurrency(Currencies.USD));
         }
 
-        [TestCase("USD", "USD")]
-        [TestCase("USD", "EUR")]
-        [TestCase("EUR", "USD")]
-        [TestCase("EUR", "EUR")]
-        public void CanChangeAccountCurrencyMoreThanOnce(string currency1, string currency2)
-        {
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
-
-            // initial default currency is always USD
-            Assert.AreEqual(Currencies.USD, portfolio.CashBook.AccountCurrency);
-
-            // account currency fetched from brokerage
-            portfolio.SetAccountCurrency(currency1);
-            Assert.AreEqual(currency1, portfolio.CashBook.AccountCurrency);
-
-            // account currency set by algorithm
-            portfolio.SetAccountCurrency(currency2);
-            Assert.AreEqual(currency2, portfolio.CashBook.AccountCurrency);
-        }
-
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
         {
             if (type == SecurityType.Equity)

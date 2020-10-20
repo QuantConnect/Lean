@@ -250,6 +250,7 @@ namespace QuantConnect.Tests.Common.Packets
         {
             public override void Initialize()
             {
+                SetAccountCurrency("EUR");
                 base.Initialize();
                 SetCash("EUR", 1000000);
             }
