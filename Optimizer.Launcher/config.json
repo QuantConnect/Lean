@@ -18,8 +18,20 @@
     "target": "Statistics.Sharpe Ratio",
 
     // optimization: available options max, min
-    "extremum": "max"
+    "extremum": "max",
+
+    // optional, if defined and backtest complies with the targets then trigger ended event
+    "target-value": 100
   },
+
+  // if it doesn't comply just drop the backtest
+  "constraints": [
+    {
+      "name": "Drawdown",
+      "operator": "lessOrEqual",
+      "value": 0.3
+    }
+  ],
 
   //"maximum-concurrent-backtests": 10,
 
