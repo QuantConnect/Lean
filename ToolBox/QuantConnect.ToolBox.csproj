@@ -363,6 +363,7 @@
     <Compile Include="IBDownloader\IBDownloaderProgram.cs" />
     <Compile Include="IExchangeInfoDownloader.cs" />
     <Compile Include="ExchangeInfoUpdater.cs" />
+    <Compile Include="IEX\IEXEventSourceCollection.cs" />
     <Compile Include="IEX\IEXDataDownloader.cs" />
     <Compile Include="IEX\IEXDownloaderProgram.cs" />
     <Compile Include="IEX\Response\QuoteSSE.cs" />

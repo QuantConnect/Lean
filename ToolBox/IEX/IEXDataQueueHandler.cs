@@ -32,9 +32,6 @@ using static QuantConnect.StringExtensions;
 using QuantConnect.Util;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using LaunchDarkly.EventSource;
 using Newtonsoft.Json;
 using QuantConnect.ToolBox.IEX.Response;
 
@@ -46,7 +43,7 @@ namespace QuantConnect.ToolBox.IEX
     /// </summary>
     public class IEXDataQueueHandler : HistoryProviderBase, IDataQueueHandler
     {
-        private EventSource _client;
+        private readonly IEXEventSourceCollection _clients;
 
         private readonly ConcurrentDictionary<string, Symbol> _symbols = new ConcurrentDictionary<string, Symbol>(StringComparer.InvariantCultureIgnoreCase);
         private readonly ConcurrentDictionary<string, long> _tickLastTradeTime = new ConcurrentDictionary<string, long>();
@@ -64,7 +61,7 @@ namespace QuantConnect.ToolBox.IEX
             Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
-        public bool IsConnected {get; private set; }
+        public bool IsConnected => _clients.IsConnected;
 
         
         public IEXDataQueueHandler()
@@ -87,27 +84,26 @@ namespace QuantConnect.ToolBox.IEX
                 throw new Exception("The IEX API key was not provided.");
             }
 
+            // Set the sse-clients collection
+            _clients = new IEXEventSourceCollection( ((o, args) =>
+            {
+                var message = args.Message.Data;
+                ProcessJsonObject(message);
+
+            }), _apiKey);
+
             // In this thread, we check at each interval whether the client needs to be updated
-            // Subscription renewal requests can come in dozens at the same time - we cannot update them one by one when use SSE
+            // Subscription renewal requests may come in dozens and all at relatively same time - we cannot update them one by one when work with SSE
             var clientUpdateThread = new Thread(() =>
             {
                 while (true)
                 {
                     if (_isSubscriptionUpdateRequested)
                     {
-                        // Reset the flag
+                        // Reset the flag and update a sse-stream
                         _isSubscriptionUpdateRequested = false;
 
-
-                        // If there is no subscription at all, create it for the first time
-                        if (_client == null)
-                        {
-                            CreateNewSubscription();
-                        }
-                        else
-                        {
-                            UpdateSubscription();
-                        }
+                        _clients.UpdateSubscription(_symbols.Keys.ToArray());
                     }
 
                     Thread.Sleep(10000);
@@ -184,8 +180,8 @@ namespace QuantConnect.ToolBox.IEX
                     };
 
                     // test test
-                    Console.WriteLine($"1:{lastTradeTime} 2:{lastTradeDateTime} 3:{lastUpdated} 4:{lastUpdatedDatetime}");
-                    Console.WriteLine(tick.ToString());
+                    //Console.WriteLine($"1:{lastTradeTime} 2:{lastTradeDateTime} 3:{lastUpdated} 4:{lastUpdatedDatetime}");
+                    //Console.WriteLine(tick.ToString());
 
                     _aggregator.Update(tick);
                 }
@@ -281,91 +277,7 @@ namespace QuantConnect.ToolBox.IEX
                 _isSubscriptionUpdateRequested = true;
             }
         }
-
-        private void CreateNewSubscription()
-        {
-            // Build an Uri, create a client
-            var url = BuildUrlString();
-            _client = new EventSource(LaunchDarkly.EventSource.Configuration.Builder(new Uri(url)).Build());
-
-            // Set up the handlers
-            _client.Opened += (sender, args) => { IsConnected = true; };
-            _client.MessageReceived += ClientOnMessageReceived;
-            _client.Error += ClientOnError;
-            _client.Closed += ClientOnClosed;
-
-            // Client start call will block until Stop() is called (!)
-            Task.Run(async () => await _client.StartAsync());
-        }
-
-        private void UpdateSubscription()
-        {
-            // Need to build new uri and client to reflect the changes in symbols
-            var url = BuildUrlString();
-            var tmpClient = new EventSource(LaunchDarkly.EventSource.Configuration.Builder(new Uri(url)).Build());
-
-            // First handler receives new data, second handler is responsible for replacing the client.
-            tmpClient.MessageReceived += ClientOnMessageReceived;
-            tmpClient.MessageReceived += ReplacementHandler;
-            tmpClient.Error += ClientOnError;
-            tmpClient.Closed += ClientOnClosed;
-
-            Task.Run(async () => await tmpClient.StartAsync());
-        }
-
-        private void ReplacementHandler(object sender, MessageReceivedEventArgs e)
-        {
-            var tmpClient = sender as EventSource;
-            if(tmpClient == null)
-            {
-                throw new InvalidCastException("Invalid cast in ReplacementHandler()");
-            }
-
-            // Once this handler is called we are guaranteed for the data updates to come with no interruption
-            // Dispose an old client and continue to work with the new one.
-            Log.Trace("ReplacementHandler(): Disposing an old client.");
-            _client.Close();
-            _client.Dispose();
-
-            _client = tmpClient;
-            tmpClient.MessageReceived -= ReplacementHandler;  // Remove replacement handler
-        }
-
-        private static void ClientOnClosed(object sender, StateChangedEventArgs e)
-        {
-            Log.Trace("ClientOnClosed(): Closing a client");
-        }
-
-        private static void ClientOnError(object sender, ExceptionEventArgs e)
-        {
-            Log.Trace($"ClientOnError(): EventSource Error Occurred. Details: {e.Exception.Message}");
-        }
-
-        // Handler is called every time new data is received from an API.
-        private void ClientOnMessageReceived(object sender, MessageReceivedEventArgs e)
-        {
-            var message = e.Message.Data;
-            ProcessJsonObject(message);
-        }
-
-        private string BuildUrlString()
-        {
-            var url = "https://cloud-sse.iexapis.com/stable/stocksUSNoUTP?token=" + _apiKey;
-            url += "&symbols=" + BuildSymbolsQuery();
-            return url;
-        }
-
-        private string BuildSymbolsQuery()
-        {
-            return _symbols.Values.Aggregate(new StringBuilder(), (sb, symbol) =>
-            {
-                sb.Append(symbol.Value);
-                sb.Append(",");
-                return sb;
-
-            }).ToString().TrimEnd(',');
-        }
-
+        
         /// <summary>
         /// Dispose connection to IEX
         /// </summary>
@@ -380,8 +292,7 @@ namespace QuantConnect.ToolBox.IEX
             _aggregator.DisposeSafely();
             _cts.Cancel();
 
-            _client.Dispose();
-            IsConnected = false;
+            _clients.Dispose();
             _isDisposing = true;
 
             Log.Trace("IEXDataQueueHandler.Dispose(): Disconnected from IEX live data");
