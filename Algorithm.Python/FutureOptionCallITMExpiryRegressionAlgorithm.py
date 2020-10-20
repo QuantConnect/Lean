@@ -4,13 +4,13 @@ import clr
 from System import *
 from System.Reflection import *
 from QuantConnect import *
-from QuantConnect import Market
 from QuantConnect.Algorithm import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Orders import *
 from QuantConnect.Securities import *
 from QuantConnect.Securities.Future import *
+from QuantConnect import Market
 
 
 class FutureOptionCallITMExpiryRegressionAlgorithm(QCAlgorithm):

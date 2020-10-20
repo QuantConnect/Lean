@@ -119,13 +119,13 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"{orderEvent}");
         }
 
-        private void AssertFutureOptionContractOrder(OrderEvent orderEvent, Security option)
+        private void AssertFutureOptionContractOrder(OrderEvent orderEvent, Security optionContract)
         {
-            if (orderEvent.Direction == OrderDirection.Sell && option.Holdings.Quantity != -1)
+            if (orderEvent.Direction == OrderDirection.Sell && optionContract.Holdings.Quantity != -1)
             {
-                throw new Exception($"No holdings were created for option contract {option.Symbol}");
+                throw new Exception($"No holdings were created for option contract {optionContract.Symbol}");
             }
-            if (orderEvent.Direction == OrderDirection.Buy && option.Holdings.Quantity != 0)
+            if (orderEvent.Direction == OrderDirection.Buy && optionContract.Holdings.Quantity != 0)
             {
                 throw new Exception("Expected no options holdings after closing position");
             }

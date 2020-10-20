@@ -4,16 +4,16 @@ import clr
 from System import *
 from System.Reflection import *
 from QuantConnect import *
-from QuantConnect import Market
 from QuantConnect.Algorithm import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Orders import *
 from QuantConnect.Securities import *
 from QuantConnect.Securities.Future import *
+from QuantConnect import Market
 
 
-class FutureOptionCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
+class FutureOptionPutOTMExpiryRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
         self.SetStartDate(2020, 9, 22)
         clr.GetClrType(QCAlgorithm).GetField("_endDate", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(self, DateTime(2021, 3, 30))

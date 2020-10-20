@@ -13,7 +13,7 @@ from QuantConnect.Securities.Future import *
 from QuantConnect import Market
 
 
-class FutureOptionCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
+class FutureOptionShortCallITMExpiryRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
         self.SetStartDate(2020, 9, 22)
         clr.GetClrType(QCAlgorithm).GetField("_endDate", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(self, DateTime(2021, 3, 30))
@@ -34,20 +34,20 @@ class FutureOptionCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
         self.esOption = self.AddFutureOptionContract(
             list(
                 sorted(
-                    [x for x in self.OptionChainProvider.GetOptionContractList(self.es19h21, self.Time) if x.ID.StrikePrice <= 3400.0],
+                    [x for x in self.OptionChainProvider.GetOptionContractList(self.es19h21, self.Time) if x.ID.StrikePrice <= 3250.0],
                     key=lambda x: x.ID.StrikePrice,
                     reverse=True
                 )
             )[0], Resolution.Minute).Symbol
 
-        self.expectedContract = Symbol.CreateOption(self.es19h21, Market.CME, OptionStyle.American, OptionRight.Call, 3400.0, datetime(2021, 3, 19))
+        self.expectedContract = Symbol.CreateOption(self.es19h21, Market.CME, OptionStyle.American, OptionRight.Call, 3250.0, datetime(2021, 3, 19))
         if self.esOption != self.expectedContract:
             raise Exception(f"Contract {self.expectedContract} was not found in the chain");
 
         self.Schedule.On(self.DateRules.Today, self.TimeRules.AfterMarketOpen(self.es19h21, 1), self.ScheduledMarketOrder)
 
     def ScheduledMarketOrder(self):
-        self.MarketOrder(self.esOption, 1)
+        self.MarketOrder(self.esOption, -1)
 
     def OnData(self, data: Slice):
         # Assert delistings, so that we can make sure that we receive the delisting warnings at
@@ -72,26 +72,27 @@ class FutureOptionCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
 
         security = self.Securities[orderEvent.Symbol]
         if security.Symbol == self.es19h21:
-            raise Exception("Invalid state: did not expect a position for the underlying to be opened, since this contract expires OTM")
-        
-        # Expected contract is ES19H21 Call Option expiring OTM @ 3300
-        if (security.Symbol == self.expectedContract):
+            self.AssertFutureOptionOrderExercise(orderEvent, security, self.Securities[self.expectedContract])
+
+        elif security.Symbol == self.expectedContract:
             self.AssertFutureOptionContractOrder(orderEvent, security)
+
         else:
             raise Exception(f"Received order event for unknown Symbol: {orderEvent.Symbol}")
 
         self.Log(f"{orderEvent}");
-        
+
+    def AssertFutureOptionOrderExercise(self, orderEvent: OrderEvent, future: Security, optionContract: Security):
+        if "Assignment" in orderEvent.Message and orderEvent.Direction == OrderDirection.Sell and future.Holdings.Quantity != -1:
+            raise Exception(f"Expected Qty: -1 futures holdings for assigned future {future.Symbol}, found {future.Holdings.Quantity}")
+
+        if "Assignment" not in orderEvent.Message and orderEvent.Direction == OrderDirection.Buy and future.Holdings.Quantity != 0:
+            # We buy back the underlying at expiration, so we expect a neutral position then
+            raise Exception(f"Expected no holdings when liquidating future contract {future.Symbol}")
 
     def AssertFutureOptionContractOrder(self, orderEvent: OrderEvent, option: Security):
-        if orderEvent.Direction == OrderDirection.Buy and option.Holdings.Quantity != 1:
+        if orderEvent.Direction == OrderDirection.Sell and option.Holdings.Quantity != -1:
             raise Exception(f"No holdings were created for option contract {option.Symbol}");
 
-        if orderEvent.Direction == OrderDirection.Sell and option.Holdings.Quantity != 0:
-            raise Exception("Holdings were found after a filled option exercise");
-
-        if orderEvent.Direction == OrderDirection.Sell and "OTM" not in orderEvent.Message:
-            raise Exception("Contract did not expire OTM");
-
-        if "Exercise" in orderEvent.Message:
-            raise Exception("Exercised option, even though it expires OTM");
+        if orderEvent.IsAssignment and option.Holdings.Quantity != 0:
+            raise Exception(f"Holdings were found after option contract was assigned: {option.Symbol}")

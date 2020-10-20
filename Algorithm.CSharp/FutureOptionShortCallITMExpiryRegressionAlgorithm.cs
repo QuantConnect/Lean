@@ -139,10 +139,6 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception($"No holdings were created for option contract {option.Symbol}");
             }
-            if (orderEvent.Direction == OrderDirection.Buy && option.Holdings.Quantity != 0)
-            {
-                throw new Exception($"Holdings were found after a filled option exercise");
-            }
             if (orderEvent.IsAssignment && option.Holdings.Quantity != 0)
             {
                 throw new Exception($"Holdings were found after option contract was assigned: {option.Symbol}");
@@ -154,31 +150,31 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             { "Total Trades", "3" },
-            { "Average Win", "2.21%" },
-            { "Average Loss", "-0.27%" },
-            { "Compounding Annual Return", "3.774%" },
-            { "Drawdown", "0.000%" },
-            { "Expectancy", "3.572" },
-            { "Net Profit", "1.937%" },
-            { "Sharpe Ratio", "1.28" },
-            { "Probabilistic Sharpe Ratio", "65.965%" },
+            { "Average Win", "0.26%" },
+            { "Average Loss", "-2.21%" },
+            { "Compounding Annual Return", "-3.742%" },
+            { "Drawdown", "2.000%" },
+            { "Expectancy", "-0.441" },
+            { "Net Profit", "-1.956%" },
+            { "Sharpe Ratio", "-1.246" },
+            { "Probabilistic Sharpe Ratio", "0.016%" },
             { "Loss Rate", "50%" },
             { "Win Rate", "50%" },
-            { "Profit-Loss Ratio", "8.14" },
+            { "Profit-Loss Ratio", "0.12" },
             { "Alpha", "0" },
             { "Beta", "0" },
             { "Annual Standard Deviation", "0.025" },
             { "Annual Variance", "0.001" },
-            { "Information Ratio", "1.28" },
+            { "Information Ratio", "-1.246" },
             { "Tracking Error", "0.025" },
             { "Treynor Ratio", "0" },
             { "Total Fees", "$7.40" },
-            { "Fitness Score", "0.02" },
+            { "Fitness Score", "0.007" },
             { "Kelly Criterion Estimate", "0" },
             { "Kelly Criterion Probability Value", "0" },
-            { "Sortino Ratio", "79228162514264337593543950335" },
-            { "Return Over Maximum Drawdown", "980.31" },
-            { "Portfolio Turnover", "0.02" },
+            { "Sortino Ratio", "-0.171" },
+            { "Return Over Maximum Drawdown", "-1.913" },
+            { "Portfolio Turnover", "0.021" },
             { "Total Insights Generated", "0" },
             { "Total Insights Closed", "0" },
             { "Total Insights Analysis Completed", "0" },
@@ -192,7 +188,7 @@ namespace QuantConnect.Algorithm.CSharp
             { "Mean Population Magnitude", "0%" },
             { "Rolling Averaged Population Direction", "0%" },
             { "Rolling Averaged Population Magnitude", "0%" },
-            { "OrderListHash", "610527226" }
+            { "OrderListHash", "-20549921" }
         };
     }
 }
