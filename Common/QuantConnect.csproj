@@ -865,6 +865,7 @@
     <Compile Include="Util\BusyBlockingCollection.cs" />
     <Compile Include="Util\BusyCollection.cs" />
     <Compile Include="Util\CircularQueue.cs" />
+    <Compile Include="Util\ComparisonOperator.cs" />
     <Compile Include="Util\Composer.cs" />
     <Compile Include="Util\ConcurrentSet.cs" />
     <Compile Include="Util\DateTimeJsonConverter.cs" />
@@ -876,6 +877,7 @@
     <Compile Include="Util\FixedSizeHashQueue.cs" />
     <Compile Include="Util\FuncTextWriter.cs" />
     <Compile Include="Util\JsonRoundingConverter.cs" />
+    <Compile Include="Util\ComparisonOperatorTypes.cs" />
     <Compile Include="Util\RateLimit\BusyWaitSleepStrategy.cs" />
     <Compile Include="Util\RateLimit\FixedIntervalRefillStrategy.cs" />
     <Compile Include="Util\RateLimit\IRefillStrategy.cs" />
