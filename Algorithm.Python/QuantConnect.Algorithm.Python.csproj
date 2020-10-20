@@ -100,6 +100,14 @@
     <Content Include="ExtendedMarketTradingRegressionAlgorithm.py" />
     <Content Include="FilterUniverseRegressionAlgorithm.py" />
     <Content Include="FineFundamentalFilteredUniverseRegressionAlgorithm.py" />
+    <Content Include="FutureOptionCallITMExpiryRegressionAlgorithm.py" />
+    <Content Include="FutureOptionCallOTMExpiryRegressionAlgorithm.py" />
+    <Content Include="FutureOptionPutITMExpiryRegressionAlgorithm.py" />
+    <Content Include="FutureOptionPutOTMExpiryRegressionAlgorithm.py" />
+    <Content Include="FutureOptionShortCallITMExpiryRegressionAlgorithm.py" />
+    <Content Include="FutureOptionShortCallOTMExpiryRegressionAlgorithm.py" />
+    <Content Include="FutureOptionShortPutITMExpiryRegressionAlgorithm.py" />
+    <Content Include="FutureOptionShortPutOTMExpiryRegressionAlgorithm.py" />
     <Content Include="KerasNeuralNetworkAlgorithm.py" />
     <Content Include="CustomDataUsingMapFileRegressionAlgorithm.py" />
     <Content Include="LiquidETFUniverseFrameworkAlgorithm.py" />
