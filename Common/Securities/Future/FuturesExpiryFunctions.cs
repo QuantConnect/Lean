@@ -505,7 +505,7 @@ namespace QuantConnect.Securities.Future
             {Symbol.Create(Futures.Indices.Nifty50, SecurityType.Future, Market.NSEFO), (time =>
                 {
                     // Last Thursday of the expiring contract month. If this falls on an NSE non-business day, the last trading day shall be the preceding business day.
-                    // The expiring contract shall close on its last trading day at 6.15 pm.
+                    // The expiring contract shall close on its last trading day at 3.30 pm.
 
                     var holidays = MarketHoursDatabase.FromDataFolder()
                         .GetEntry(Market.NSEFO, Futures.Indices.Nifty50, SecurityType.Future)
@@ -526,7 +526,7 @@ namespace QuantConnect.Securities.Future
             {Symbol.Create(Futures.Indices.BankNifty, SecurityType.Future, Market.NSEFO), (time =>
                 {
                     // Last Thursday of the expiring contract month. If this falls on an NSE non-business day, the last trading day shall be the preceding business day.
-                    // The expiring contract shall close on its last trading day at 6.15 pm.
+                    // The expiring contract shall close on its last trading day at 3.30 pm.
 
                     var holidays = MarketHoursDatabase.FromDataFolder()
                         .GetEntry(Market.NSEFO, Futures.Indices.BankNifty, SecurityType.Future)
@@ -544,11 +544,11 @@ namespace QuantConnect.Securities.Future
             },
 
 
-            // Sensex Index Futures: https://www.bseindia.com/static/markets/Derivatives/DeriReports/market_information.html#!#ach6
+            // BSE S&P Sensex Index Futures: https://www.bseindia.com/static/markets/Derivatives/DeriReports/market_information.html#!#ach6
             {Symbol.Create(Futures.Indices.BseSensex, SecurityType.Future, Market.BSE), (time =>
                 {
-                    // Last Thursday of the expiring contract month. If this falls on an NSE non-business day, the last trading day shall be the preceding business day.
-                    // The expiring contract shall close on its last trading day at 6.15 pm.
+                    // Last Thursday of the expiring contract month. If this falls on an BSE non-business day, the last trading day shall be the preceding business day.
+                    // The expiring contract shall close on its last trading day at 3.30 pm.
                     var holidays = MarketHoursDatabase.FromDataFolder()
                         .GetEntry(Market.BSE, Futures.Indices.BseSensex, SecurityType.Future)
                         .ExchangeHours
