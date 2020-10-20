@@ -241,7 +241,7 @@ namespace QuantConnect.Brokerages.Zerodha
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 return false;
 
-            return KnownSymbolStrings.Contains(brokerageSymbol);
+            return KnownSymbolsList.Contains(brokerageSymbol);
         }
 
         /// <summary>
