@@ -8,10 +8,11 @@ using QuantConnect.Logging;
 using QuantConnect.Util;
 using System.Text;
 using QuantConnect.Brokerages.Zerodha.Messages;
+using QuantConnect.Data;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
-    public class ZerodhaSubscriptionManager
+    public class ZerodhaSubscriptionManager : DataQueueHandlerSubscriptionManager
     {
         private readonly string _wssUrl;
         private readonly object _locker = new object();
@@ -500,9 +501,9 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// Reads 4 byte int32 from byte stream
         /// </summary>
-        private UInt32 ReadInt(byte[] b, ref int offset)
+        private uint ReadInt(byte[] b, ref int offset)
         {
-            UInt32 data = (UInt32)BitConverter.ToUInt32(new byte[] { b[offset + 3], b[offset + 2], b[offset + 1], b[offset + 0] }, 0);
+            uint data = BitConverter.ToUInt32(new byte[] { b[offset + 3], b[offset + 2], b[offset + 1], b[offset + 0] }, 0);
             offset += 4;
             return data;
         }
@@ -510,9 +511,9 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// Reads an ltp mode tick from raw binary data
         /// </summary>
-        private Messages.Tick ReadLTP(byte[] b, ref int offset)
+        private Tick ReadLTP(byte[] b, ref int offset)
         {
-            Messages.Tick tick = new Messages.Tick();
+            Tick tick = new Tick();
             tick.Mode = Constants.MODE_LTP;
             tick.InstrumentToken = ReadInt(b, ref offset);
 
@@ -526,9 +527,9 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// Reads a index's quote mode tick from raw binary data
         /// </summary>
-        private Messages.Tick ReadIndexQuote(byte[] b, ref int offset)
+        private Tick ReadIndexQuote(byte[] b, ref int offset)
         {
-            Messages.Tick tick = new Messages.Tick();
+            Tick tick = new Tick();
             tick.Mode = Constants.MODE_QUOTE;
             tick.InstrumentToken = ReadInt(b, ref offset);
 
@@ -544,9 +545,9 @@ namespace QuantConnect.Brokerages.Zerodha
             return tick;
         }
 
-        private Messages.Tick ReadIndexFull(byte[] b, ref int offset)
+        private Tick ReadIndexFull(byte[] b, ref int offset)
         {
-            Messages.Tick tick = new Messages.Tick();
+            Tick tick = new Tick();
             tick.Mode = Constants.MODE_FULL;
             tick.InstrumentToken = ReadInt(b, ref offset);
 
@@ -567,7 +568,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// Reads a quote mode tick from raw binary data
         /// </summary>
-        private Messages.Tick ReadQuote(byte[] b, ref int offset)
+        private Tick ReadQuote(byte[] b, ref int offset)
         {
             Tick tick = new Tick
             {
@@ -595,9 +596,9 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// Reads a full mode tick from raw binary data
         /// </summary>
-        private Messages.Tick ReadFull(byte[] b, ref int offset)
+        private Tick ReadFull(byte[] b, ref int offset)
         {
-            Messages.Tick tick = new Messages.Tick();
+            Tick tick = new Tick();
             tick.Mode = Constants.MODE_FULL;
             tick.InstrumentToken = ReadInt(b, ref offset);
 
@@ -641,6 +642,21 @@ namespace QuantConnect.Brokerages.Zerodha
                 offset += 2;
             }
             return tick;
+        }
+
+        protected override bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override string ChannelNameFromTickType(TickType tickType)
+        {
+            throw new NotImplementedException();
         }
     }
 }
