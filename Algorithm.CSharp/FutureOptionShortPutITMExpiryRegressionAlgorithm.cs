@@ -12,17 +12,17 @@ using QuantConnect.Securities.Option;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regression algorithm tests In The Money (ITM) future option expiry for puts.
+    /// This regression algorithm tests In The Money (ITM) future option expiry for short calls.
     /// We expect 3 orders from the algorithm, which are:
     ///
-    ///   * Initial entry, buy ES Put Option (expiring ITM) (buy, qty 1)
-    ///   * Option exercise, receiving short ES future contracts (sell, qty -1)
-    ///   * Future contract liquidation, due to impending expiry (buy qty 1)
+    ///   * Initial entry, sell ES Put Option (expiring ITM)
+    ///   * Option assignment, buy 1 contract of the underlying (ES)
+    ///   * Future contract expiry, liquidation (sell 1 ES future)
     ///
     /// Additionally, we test delistings for future options and assert that our
     /// portfolio holdings reflect the orders the algorithm has submitted.
     /// </summary>
-    public class FutureOptionPutITMExpiryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FutureOptionShortPutITMExpiryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _es19h21;
         private Symbol _esOption;
@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             Schedule.On(DateRules.Today, TimeRules.AfterMarketOpen(_es19h21, 1), () =>
             {
-                MarketOrder(_esOption, 1);
+                MarketOrder(_esOption, -1);
             });
         }
 
@@ -117,56 +117,35 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"Received order event for unknown Symbol: {orderEvent.Symbol}");
             }
 
-            Log($"{Time:yyyy-MM-dd HH:mm:ss} -- {orderEvent.Symbol} :: Price: {Securities[orderEvent.Symbol].Holdings.Price} Qty: {Securities[orderEvent.Symbol].Holdings.Quantity} Direction: {orderEvent.Direction} Msg: {orderEvent.Message}");
+            Log($"{orderEvent}");
         }
 
         private void AssertFutureOptionOrderExercise(OrderEvent orderEvent, Security future, Security optionContract)
         {
-            // This vvvv is the actual expected liquidation date. But because of the issue described above w/ FillForward,
-            // we will modify the liquidation date to 2021-03-22 (Monday) since that's when equities start trading again.
-            // `new DateTime(2021, 3, 19, 5, 0, 0);`
-            var expectedLiquidationTimeUtc = new DateTime(2021, 3, 22, 13, 32, 0);
-
-            if (orderEvent.Direction == OrderDirection.Buy && future.Holdings.Quantity != 0)
+            if (orderEvent.Message.Contains("Assignment") && orderEvent.Direction == OrderDirection.Buy && future.Holdings.Quantity != 1)
             {
-                // We expect the contract to have been liquidated immediately
-                throw new Exception($"Did not liquidate existing holdings for Symbol {future.Symbol}");
+                throw new Exception($"Expected Qty: 1 futures holdings for assigned future {future.Symbol}, found {future.Holdings.Quantity}");
             }
-            if (orderEvent.Direction == OrderDirection.Buy && orderEvent.UtcTime != expectedLiquidationTimeUtc)
+            if (!orderEvent.Message.Contains("Assignment") && orderEvent.Direction == OrderDirection.Sell && future.Holdings.Quantity != 0)
             {
-                throw new Exception($"Liquidated future contract, but not at the expected time. Expected: {expectedLiquidationTimeUtc:yyyy-MM-dd HH:mm:ss} - found {orderEvent.UtcTime:yyyy-MM-dd HH:mm:ss}");
-            }
-
-            // No way to detect option exercise orders or any other kind of special orders
-            // other than matching strings, for now.
-            if (orderEvent.Message.Contains("Option Exercise"))
-            {
-                if (future.Holdings.Quantity != -1)
-                {
-                    // Here, we expect to have some holdings in the underlying, but not in the future option anymore.
-                    throw new Exception($"Exercised option contract, but we have no holdings for Future {future.Symbol}");
-                }
-
-                if (optionContract.Holdings.Quantity != 0)
-                {
-                    throw new Exception($"Exercised option contract, but we have holdings for Option contract {optionContract.Symbol}");
-                }
+                // We buy back the underlying at expiration, so we expect a neutral position then
+                throw new Exception($"Expected no holdings when liquidating future contract {future.Symbol}");
             }
         }
 
         private void AssertFutureOptionContractOrder(OrderEvent orderEvent, Security option)
         {
-            if (orderEvent.Direction == OrderDirection.Buy && option.Holdings.Quantity != 1)
+            if (orderEvent.Direction == OrderDirection.Sell && option.Holdings.Quantity != -1)
             {
                 throw new Exception($"No holdings were created for option contract {option.Symbol}");
             }
-            if (orderEvent.Direction == OrderDirection.Sell && option.Holdings.Quantity != 0)
+            if (orderEvent.Direction == OrderDirection.Buy && option.Holdings.Quantity != 0)
             {
-                throw new Exception($"Holdings were found after a filled option exercise");
+                throw new Exception("Holdings were found after a filled option exercise");
             }
-            if (orderEvent.Message.Contains("Exercise") && option.Holdings.Quantity != 0)
+            if (orderEvent.IsAssignment && option.Holdings.Quantity != 0)
             {
-                throw new Exception($"Holdings were found after exercising option contract {option.Symbol}");
+                throw new Exception($"Holdings were found after option contract was assigned: {option.Symbol}");
             }
         }
 
@@ -175,30 +154,30 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             { "Total Trades", "3" },
-            { "Average Win", "0.28%" },
-            { "Average Loss", "-0.25%" },
-            { "Compounding Annual Return", "0.071%" },
+            { "Average Win", "2.21%" },
+            { "Average Loss", "-0.27%" },
+            { "Compounding Annual Return", "3.774%" },
             { "Drawdown", "0.000%" },
-            { "Expectancy", "0.076" },
-            { "Net Profit", "0.037%" },
-            { "Sharpe Ratio", "1.157" },
-            { "Probabilistic Sharpe Ratio", "58.961%" },
+            { "Expectancy", "3.572" },
+            { "Net Profit", "1.937%" },
+            { "Sharpe Ratio", "1.28" },
+            { "Probabilistic Sharpe Ratio", "65.965%" },
             { "Loss Rate", "50%" },
             { "Win Rate", "50%" },
-            { "Profit-Loss Ratio", "1.15" },
+            { "Profit-Loss Ratio", "8.14" },
             { "Alpha", "0" },
             { "Beta", "0" },
-            { "Annual Standard Deviation", "0.001" },
-            { "Annual Variance", "0" },
-            { "Information Ratio", "1.157" },
-            { "Tracking Error", "0.001" },
+            { "Annual Standard Deviation", "0.025" },
+            { "Annual Variance", "0.001" },
+            { "Information Ratio", "1.28" },
+            { "Tracking Error", "0.025" },
             { "Treynor Ratio", "0" },
             { "Total Fees", "$7.40" },
             { "Fitness Score", "0.02" },
             { "Kelly Criterion Estimate", "0" },
             { "Kelly Criterion Probability Value", "0" },
             { "Sortino Ratio", "79228162514264337593543950335" },
-            { "Return Over Maximum Drawdown", "22.07" },
+            { "Return Over Maximum Drawdown", "980.31" },
             { "Portfolio Turnover", "0.02" },
             { "Total Insights Generated", "0" },
             { "Total Insights Closed", "0" },
@@ -213,7 +192,7 @@ namespace QuantConnect.Algorithm.CSharp
             { "Mean Population Magnitude", "0%" },
             { "Rolling Averaged Population Direction", "0%" },
             { "Rolling Averaged Population Magnitude", "0%" },
-            { "OrderListHash", "-738107713" }
+            { "OrderListHash", "610527226" }
         };
     }
 }

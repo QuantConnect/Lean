@@ -83,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (delisting.Time != new DateTime(2021, 3, 20))
                     {
-                        throw new Exception($"Delisting warning issued at unexpected date: {delisting.Time}");
+                        throw new Exception($"Delisting happened at unexpected date: {delisting.Time}");
                     }
                 }
             }
@@ -171,7 +171,7 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         public bool CanRunLocally { get; } = true;
-        public Language[] Languages { get; } = { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             { "Total Trades", "3" },
