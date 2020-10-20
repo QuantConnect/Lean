@@ -175,5 +175,61 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(security.Subscriptions.Any(x => x.TickType == TickType.Quote && x.Type == typeof(QuoteBar)));
             Assert.IsTrue(security.Subscriptions.Any(x => x.TickType == TickType.Trade && x.Type == typeof(TradeBar)));
         }
+        
+        [Test]
+        public void CreatesEquityOptionWithContractMultiplierEqualsToContractUnitOfTrade()
+        {
+            var underlying = Symbol.Create("TWX", SecurityType.Equity, Market.USA);
+            var equityOption = Symbol.CreateOption(
+                underlying, 
+                Market.USA, 
+                OptionStyle.American, 
+                OptionRight.Call, 
+                320m,
+                new DateTime(2020, 12, 18));
+            
+            var subscriptionTypes = new List<Tuple<Type, TickType>>
+            {
+                new Tuple<Type, TickType>(typeof(TradeBar), TickType.Trade),
+                new Tuple<Type, TickType>(typeof(QuoteBar), TickType.Quote),
+                new Tuple<Type, TickType>(typeof(OpenInterest), TickType.OpenInterest)
+            };
+
+            var configs = _subscriptionManager.SubscriptionDataConfigService.Add(equityOption, Resolution.Minute, true, false, false, false, false, subscriptionTypes);
+            var equityOptionSecurity = (QuantConnect.Securities.Option.Option)_securityService.CreateSecurity(equityOption, configs, 1.0m);
+            
+            Assert.AreEqual(100, equityOptionSecurity.ContractMultiplier);
+            Assert.AreEqual(100,equityOptionSecurity.ContractUnitOfTrade);
+        }
+
+        [Test]
+        public void CreatesFutureOptionWithContractMultiplierEqualsToFutureContractMultiplier()
+        {
+            var underlying = Symbol.CreateFuture(
+                QuantConnect.Securities.Futures.Indices.SP500EMini,
+                Market.CME,
+                new DateTime(2020, 12, 18));
+
+            var futureOption = Symbol.CreateOption(
+                underlying, 
+                Market.CME, 
+                OptionStyle.American, 
+                OptionRight.Call, 
+                3250m,
+                new DateTime(2020, 12, 18));
+            
+            var subscriptionTypes = new List<Tuple<Type, TickType>>
+            {
+                new Tuple<Type, TickType>(typeof(TradeBar), TickType.Trade),
+                new Tuple<Type, TickType>(typeof(QuoteBar), TickType.Quote),
+                new Tuple<Type, TickType>(typeof(OpenInterest), TickType.OpenInterest)
+            };
+
+            var configs = _subscriptionManager.SubscriptionDataConfigService.Add(futureOption, Resolution.Minute, true, false, false, false, false, subscriptionTypes);
+            var futureOptionSecurity = (QuantConnect.Securities.Option.Option)_securityService.CreateSecurity(futureOption, configs, 1.0m);
+            
+            Assert.AreEqual(50, futureOptionSecurity.ContractMultiplier);
+            Assert.AreEqual(1, futureOptionSecurity.ContractUnitOfTrade);
+        }
     }
 }

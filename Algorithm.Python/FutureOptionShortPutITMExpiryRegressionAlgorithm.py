@@ -106,8 +106,12 @@ class FutureOptionShortPutITMExpiryRegressionAlgorithm(QCAlgorithm):
         self.Log(f"{orderEvent}");
 
     def AssertFutureOptionOrderExercise(self, orderEvent: OrderEvent, future: Security, optionContract: Security):
-        if "Assignment" in orderEvent.Message and orderEvent.Direction == OrderDirection.Buy and future.Holdings.Quantity != 1:
-            raise Exception(f"Expected Qty: 1 futures holdings for assigned future {future.Symbol}, found {future.Holdings.Quantity}")
+        if "Assignment" in orderEvent.Message:
+            if orderEvent.FillPrice != 3300.0:
+                raise Exception("Option was not assigned at expected strike price (3300)")
+
+            if orderEvent.Direction == OrderDirection.Buy and future.Holdings.Quantity != 1:
+                raise Exception(f"Expected Qty: 1 futures holdings for assigned future {future.Symbol}, found {future.Holdings.Quantity}")
 
         if "Assignment" not in orderEvent.Message and orderEvent.Direction == OrderDirection.Sell and future.Holdings.Quantity != 0:
             # We buy back the underlying at expiration, so we expect a neutral position then

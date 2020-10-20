@@ -116,6 +116,9 @@ class FutureOptionCallITMExpiryRegressionAlgorithm(QCAlgorithm):
         # No way to detect option exercise orders or any other kind of special orders
         # other than matching strings, for now.
         if "Option Exercise" in orderEvent.Message:
+            if orderEvent.FillPrice != 3250.0:
+                raise Exception("Option did not exercise at expected strike price (3250)")
+
             if future.Holdings.Quantity != 1:
                 # Here, we expect to have some holdings in the underlying, but not in the future option anymore.
                 raise Exception(f"Exercised option contract, but we have no holdings for Future {future.Symbol}")

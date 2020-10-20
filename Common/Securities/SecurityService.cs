@@ -78,7 +78,13 @@ namespace QuantConnect.Securities
                 throw new ArgumentException($"Symbol can't be found in the Symbol Properties Database: {symbol.Value}");
             }
 
-            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
+            var hasUnderlyingFuture = symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType == SecurityType.Future;
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
+                hasUnderlyingFuture ? symbol.Underlying.ID.Market : symbol.ID.Market,
+                hasUnderlyingFuture ? symbol.Underlying : symbol,
+                hasUnderlyingFuture ? symbol.Underlying.ID.SecurityType : symbol.ID.SecurityType, 
+                defaultQuoteCurrency);
+            
             // add the symbol to our cache
             if (addToSymbolCache)
             {
@@ -129,7 +135,16 @@ namespace QuantConnect.Securities
 
                 case SecurityType.Option:
                     if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
-                    security = new Option.Option(symbol, exchangeHours, quoteCash, new Option.OptionSymbolProperties(symbolProperties), _cashBook, _registeredTypes, cache);
+                    var optionSymbolProperties = new Option.OptionSymbolProperties(symbolProperties);
+                    
+                    // Future options exercised only gives us one contract back, rather than the
+                    // 100x seen in equities.
+                    if (symbol.Underlying.SecurityType == SecurityType.Future)
+                    {
+                        optionSymbolProperties.SetContractUnitOfTrade(1);
+                    }
+                    
+                    security = new Option.Option(symbol, exchangeHours, quoteCash, optionSymbolProperties, _cashBook, _registeredTypes, cache);
                     break;
 
                 case SecurityType.Future:
