@@ -61,12 +61,12 @@ namespace QuantConnect.Orders
         LimitIfTouched,
 
         /// <summary>
-        /// Option Exercise Order Type
+        /// Bracket Order Type (Multi leg order)
         /// </summary>
         Bracket,
 
         /// <summary>
-        /// Option Exercise Order Type
+        /// Cover Order Type (Multi leg order)
         /// </summary>
         Cover,
     }
