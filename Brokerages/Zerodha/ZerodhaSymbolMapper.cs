@@ -28,146 +28,57 @@ namespace QuantConnect.Brokerages.Zerodha
         }
 
         /// <summary>
-        /// Symbols that are both active and delisted
+        /// Symbols that are Tradable
         /// </summary>
-        public static List<Symbol> KnownSymbols
+        public List<Symbol> KnownSymbols
         {
             get
             {
                 var symbols = new List<Symbol>();
                 var mapper = new ZerodhaSymbolMapper();
-                foreach (var tp in KnownSymbolStrings)
-                {
-                    symbols.Add(mapper.GetLeanSymbol(tp, mapper.GetBrokerageSecurityType(tp), Market.NSE));
-                }
-                return symbols;
+                return KnownSymbolsList;
             }
         }
 
         /// <summary>
         /// The list of known Zerodha symbols.
         /// </summary>
-        public static readonly HashSet<string> KnownSymbolStrings = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "JSWSTEEL","SBIN"
-        };
+        public List<Symbol> KnownSymbolsList = new List<Symbol>();
 
-        /// <summary>
-        /// The list of active Zerodha symbols.
-        /// </summary>
-        public static List<string> ActiveSymbolStrings =
-            KnownSymbolStrings
-                .ToList();
 
-        /***
-         * public ZerodhaSymbolMapper()
+        public ZerodhaSymbolMapper()
         {
             
-            StreamReader streamReader;
-            //TODO: Append Date in filename to check the tradable scrips for the day?
-            var path = Path.Combine(Globals.DataFolder, "ScripMaster.csv");
-            if (File.Exists(path))
-            {
-                streamReader = new StreamReader(path);
-            }
-            else
-            {
-                HttpWebRequest req = (HttpWebRequest)WebRequest.Create("https://developers.stocknote.com/doc/ScripMaster.csv");
-                req.KeepAlive = false;
-                HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
-                streamReader = new StreamReader(resp.GetResponseStream());
-                SaveStreamAsFile(Globals.DataFolder, resp.GetResponseStream(), "ScripMaster.csv");
-            }
-
-            CsvConfiguration configuration = new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                HasHeaderRecord = true,
-            };
-            var csv = new CsvReader(streamReader, configuration);
-            var scrips = csv.GetRecords<ScripMaster>();
-            char[] sep = { '-' };
-            KnownSymbolStrings = scrips.Select(x => x.TradingSymbol.Split(sep)[0]).ToHashSet();
+            var kite = new Kite("", "");
+            var tradableInstruments = kite.GetInstruments();
             var symbols = new List<Symbol>();
             var mapper = new ZerodhaSymbolMapper();
 
-            foreach (var tp in scrips)
+            foreach (var tp in tradableInstruments)
             {
                 var securityType = SecurityType.Equity;
                 var market = Market.NSE;
                 OptionRight optionRight = 0;
-                OptionStyle optionStyle = OptionStyle.European;
-                switch (tp.Instrument)
+
+                switch (tp.InstrumentType)
                 {
                     //Equities
                     case "EQ":
                         securityType = SecurityType.Equity;
                         break;
-                    //Index Options
-                    case "OPTIDX":
+                    //Call Options
+                    case "CE":
                         securityType = SecurityType.Option;
-                        optionStyle = OptionStyle.European;
+                        optionRight = OptionRight.Call;
+                        break;
+                    //Put Options
+                    case "PE":
+                        securityType = SecurityType.Option;
+                        optionRight = OptionRight.Put;
                         break;
                     //Stock Futures
-                    case "FUTSTK":
+                    case "FUT":
                         securityType = SecurityType.Future;
-                        break;
-                    //Stock options
-                    case "OPTSTK":
-                        securityType = SecurityType.Option;
-                        optionStyle = OptionStyle.European;
-                        break;
-                    //Commodity Futures
-                    case "FUTCOM":
-                        securityType = SecurityType.Future;
-                        break;
-                    //Commodity Options
-                    case "OPTCOM":
-                        securityType = SecurityType.Option;
-                        optionStyle = OptionStyle.European;
-                        break;
-
-                    //Bullion Options
-                    case "OPTBLN":
-
-                        securityType = SecurityType.Option;
-                        optionStyle = OptionStyle.European;
-                        break;
-
-                    //Energy Futures
-                    case "FUTENR":
-
-                        securityType = SecurityType.Future;
-                        break;
-
-                    //Currenty Options
-                    case "OPTCUR":
-
-                        securityType = SecurityType.Option;
-                        optionStyle = OptionStyle.European;
-                        break;
-
-                    //Currency Futures
-                    case "FUTCUR":
-
-                        securityType = SecurityType.Option;
-                        break;
-
-                    //Bond Futures
-                    case "FUTIRC":
-
-                        securityType = SecurityType.Future;
-                        break;
-
-                    //Bond Futures
-                    case "FUTIRT":
-
-                        securityType = SecurityType.Future;
-                        break;
-
-                    //Bond Option
-                    case "OPTIRC":
-                        securityType = SecurityType.Option;
-                        optionStyle = OptionStyle.European;
                         break;
                     default:
                         securityType = SecurityType.Base;
@@ -181,44 +92,47 @@ namespace QuantConnect.Brokerages.Zerodha
                         market = Market.NSE;
                         break;
                     case "NFO":
-                        market = Market.NFO;
+                        market = Market.NSEFO;
                         break;
                     case "CDS":
-                        market = Market.CDS;
+                        market = Market.NSECDS;
                         break;
                     case "BSE":
                         market = Market.BSE;
                         break;
-                    case "MFO":
+                    case "BCD":
+                        market = Market.BSE;
+                        break;
+                    case "MCX":
                         market = Market.MCX;
                         break;
                     default:
                         market = Market.NSE;
                         break;
                 }
-
-
+               
                 
-                string[] ticker = tp.TradingSymbol.Split(sep);
                 if (securityType == SecurityType.Option)
                 {
-                    if (ticker[0].EndsWithInvariant("PE", true))
-                    {
-                        optionRight = OptionRight.Put;
-                    }
-                    if (ticker[0].EndsWithInvariant("CE", true))
-                    {
-                        optionRight = OptionRight.Call;
-                    }
+                    var strikePrice = tp.Strike;
+                    var expiryDate = tp.Expiry;
+                    symbols.Add(mapper.GetLeanSymbol(tp.TradingSymbol, securityType, market, (DateTime)expiryDate, strikePrice, optionRight));
                 }
-                var strikePrice = tp.StrikePrice.IfNotNullOrEmpty(s => Convert.ToDecimal(s, CultureInfo.InvariantCulture));
-                var expiryDate = tp.ExpiryDate.IfNotNullOrEmpty(s => DateTime.ParseExact(s, "yyyy-MM-dd HH:mm tt", CultureInfo.InvariantCulture));
-                symbols.Add(mapper.GetLeanSymbol(ticker[0], securityType, market, expiryDate, strikePrice, optionRight, optionStyle));
+                if (securityType == SecurityType.Future) {
+                    var expiryDate = tp.Expiry;
+                    symbols.Add(mapper.GetLeanSymbol(tp.TradingSymbol, securityType, market, (DateTime)expiryDate));
+                }
+                if (securityType == SecurityType.Equity)
+                {
+                    symbols.Add(mapper.GetLeanSymbol(tp.TradingSymbol, securityType, market));
+                }
+
             }
-            KnownSymbols = symbols;
+
+            KnownSymbolsList = symbols;
             
     }
-        ***/
+
         /// <summary>
         /// Converts a Lean symbol instance to an Zerodha symbol
         /// </summary>
