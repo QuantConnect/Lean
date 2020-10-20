@@ -59,6 +59,7 @@ namespace QuantConnect.Lean.Engine.Storage
         private TimeSpan _persistenceInterval;
         private readonly string _storageRoot = Path.GetFullPath(Config.Get("object-store-root", "./storage"));
         private readonly ConcurrentDictionary<string, byte[]> _storage = new ConcurrentDictionary<string, byte[]>();
+        private string TempObjectStorage => Path.Combine(AlgorithmStorageRoot, "temp");
 
         /// <summary>
         /// Provides access to the controls governing behavior of this instance, such as the persistence interval
@@ -85,6 +86,7 @@ namespace QuantConnect.Lean.Engine.Storage
 
             // create the root path if it does not exist
             Directory.CreateDirectory(AlgorithmStorageRoot);
+            Directory.CreateDirectory(TempObjectStorage);
 
             Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}");
 
@@ -344,7 +346,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         private string GetFilePathForKey(string key)
         {
-            return Path.Combine(AlgorithmStorageRoot, $"{key.ToMD5()}.dat");
+            return Path.Combine(TempObjectStorage, $"{key.ToMD5()}.dat");
         }
 
         /// <summary>
