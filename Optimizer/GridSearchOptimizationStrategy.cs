@@ -33,9 +33,14 @@ namespace QuantConnect.Optimizer
         private int _i = 0;
 
         /// <summary>
-        /// Defines the direction of optimization, i.e. maximization or minimization
+        /// Optimization target, i.e. maximize or minimize
         /// </summary>
-        public Extremum Extremum { get; private set; }
+        public Target Target { get; private set; }
+
+        /// <summary>
+        /// Optimization constraints; if it doesn't comply just drop the backtest
+        /// </summary>
+        public IEnumerable<Constraint> Constraints { get; private set; }
 
         /// <summary>
         /// Keep the best found solution - lean computed job result and corresponding  parameter set 
@@ -52,9 +57,10 @@ namespace QuantConnect.Optimizer
         /// </summary>
         /// <param name="extremum">Maximize or Minimize the target value</param>
         /// <param name="parameters">Optimization parameters</param>
-        public void Initialize(Extremum extremum, HashSet<OptimizationParameter> parameters)
+        public void Initialize(Target target, IEnumerable<Constraint> constraints, HashSet<OptimizationParameter> parameters)
         {
-            Extremum = extremum;
+            Target = target;
+            Constraints = constraints;
             _args = parameters;
             _i = 0;
         }
@@ -67,7 +73,7 @@ namespace QuantConnect.Optimizer
         {
             lock (_locker)
             {
-                if (!ReferenceEquals(result, OptimizationResult.Empty) && result?.Target == null)
+                if (!ReferenceEquals(result, OptimizationResult.Empty) && string.IsNullOrEmpty(result?.JsonBacktestResult))
                 {
                     // one of the requested backtests failed
                     return;
@@ -75,9 +81,12 @@ namespace QuantConnect.Optimizer
 
                 if (result.Id > 0)
                 {
-                    if (Solution == null || Extremum.Better(Solution.Target.Value, result.Target.Value))
+                    if (Constraints.All(constraint => constraint.IsMet(result.JsonBacktestResult)))
                     {
-                        Solution = result;
+                        if (Solution == null || Target.MoveAhead(result.JsonBacktestResult))
+                        {
+                            Solution = result;
+                        }
                     }
 
                     return;

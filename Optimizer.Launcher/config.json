@@ -27,7 +27,7 @@
   // if it doesn't comply just drop the backtest
   "constraints": [
     {
-      "name": "Drawdown",
+      "objective": "Drawdown",
       "operator": "lessOrEqual",
       "value": 0.3
     }

@@ -36,9 +36,10 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Initializes the strategy using generator, extremum settings and optimization parameters
         /// </summary>
-        /// <param name="extremum">Maximize or Minimize the target value</param>
-        /// <param name="parameters">Optimization parameters</param>
-        void Initialize(Extremum extremum, HashSet<OptimizationParameter> parameters);
+        /// <param name="target">optimization target</param>
+        /// <param name="constraints">if it doesn't comply just drop the backtest</param>
+        /// <param name="parameters">optimization parameters</param>
+        void Initialize(Target target, IEnumerable<Constraint> constraints, HashSet<OptimizationParameter> parameters);
         
         /// <summary>
         /// Callback when lean compute job completed.

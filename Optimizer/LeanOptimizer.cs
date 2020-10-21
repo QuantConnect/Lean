@@ -32,7 +32,7 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// The optimization target
         /// </summary>
-        protected readonly string OptimizationTarget;
+        protected readonly Target OptimizationTarget;
 
         /// <summary>
         /// Collection holding <see cref="ParameterSet"/> for each backtest id we are waiting to finish
@@ -71,26 +71,29 @@ namespace QuantConnect.Optimizer
                 throw new InvalidOperationException("Cannot start an optimization job with no parameter to optimize");
             }
 
-            OptimizationTarget = nodePacket.Criterion["target"];
-            if (!OptimizationTarget.Contains("."))
+            var _objective = nodePacket.Criterion["target"];
+            if (!_objective.Contains("."))
             {
                 // default path
-                OptimizationTarget = $"Statistics.{OptimizationTarget}";
+                _objective = $"Statistics.{_objective}";
             }
             // escape empty space in json path
-            _jsonEscapedTarget = string.Join(".", OptimizationTarget.Split('.').Select(s => $"['{s}']"));
+            _jsonEscapedTarget = string.Join(".", _objective.Split('.').Select(s => $"['{s}']"));
 
             NodePacket = nodePacket;
 
+            OptimizationTarget = new Target(
+                _jsonEscapedTarget
+                , NodePacket.Criterion["extremum"] == "max"
+                    ? new Maximization() as Extremum
+                    : new Minimization()
+                , null);
             Strategy = (IOptimizationStrategy)Activator.CreateInstance(Type.GetType(NodePacket.OptimizationStrategy));
 
             RunningParameterSetForBacktest = new ConcurrentDictionary<string, ParameterSet>();
             PendingParameterSet = new ConcurrentQueue<ParameterSet>();
 
-            Strategy.Initialize(NodePacket.Criterion["extremum"] == "max"
-                    ? new Maximization() as Extremum
-                    : new Minimization(),
-                NodePacket.OptimizationParameters);
+            Strategy.Initialize(OptimizationTarget, new Constraint[0], NodePacket.OptimizationParameters);
 
             Strategy.NewParameterSet += (s, e) =>
             {
@@ -130,7 +133,7 @@ namespace QuantConnect.Optimizer
             if (result != null)
             {
                 Log.Trace($"LeanOptimizer.TriggerOnEndEvent({GetLogDetails()}): Optimization has ended. " +
-                    $"Result for {OptimizationTarget}: {result.Target} was reached using ParameterSet: ({result.ParameterSet})");
+                    $"Result for {OptimizationTarget}: {result.JsonBacktestResult} was reached using ParameterSet: ({result.ParameterSet})");
             }
             else
             {
@@ -185,8 +188,7 @@ namespace QuantConnect.Optimizer
             {
                 try
                 {
-                    var value = JObject.Parse(jsonBacktestResult).SelectToken(_jsonEscapedTarget).Value<decimal>();
-                    result = new OptimizationResult(value, parameterSet);
+                    result = new OptimizationResult(jsonBacktestResult, parameterSet);
                 }
                 catch (Exception e)
                 {

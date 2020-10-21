@@ -31,9 +31,9 @@ namespace QuantConnect.Optimizer
         public int Id => ParameterSet?.Id ?? 0;
 
         /// <summary>
-        /// Target criterion value
+        /// Json Backtest result
         /// </summary>
-        public decimal? Target { get; }
+        public string JsonBacktestResult { get; }
 
         /// <summary>
         /// The parameter set at which the result was achieved
@@ -48,11 +48,11 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Create an instance of <see cref="OptimizationResult"/>
         /// </summary>
-        /// <param name="target">Optimization target value for this backtest</param>
+        /// <param name="jsonBacktestResult">Optimization target value for this backtest</param>
         /// <param name="parameterSet">Parameter set used in compute job</param>
-        public OptimizationResult(decimal? target, ParameterSet parameterSet)
+        public OptimizationResult(string jsonBacktestResult, ParameterSet parameterSet)
         {
-            Target = target;
+            JsonBacktestResult = jsonBacktestResult;
             ParameterSet = parameterSet;
         }
     }
