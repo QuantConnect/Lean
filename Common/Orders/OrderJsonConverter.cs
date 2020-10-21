@@ -266,6 +266,14 @@ namespace QuantConnect.Orders
                     order = new OptionExerciseOrder();
                     break;
 
+                case OrderType.Bracket:
+                    order = new BracketOrder();
+                    break;
+
+                case OrderType.Cover:
+                    order = new CoverOrder();
+                    break;
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }
