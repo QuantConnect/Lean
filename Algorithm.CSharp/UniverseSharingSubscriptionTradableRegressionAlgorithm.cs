@@ -32,6 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Symbol _spy;
         private int _reselectedSpy = -1;
+        private DateTime lastDataTime = DateTime.MinValue;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -57,6 +58,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            if (lastDataTime == data.Time)
+            {
+                throw new Exception("Duplicate time for current data and last data slice");
+            }
+
+            lastDataTime = data.Time;
+
             if (_reselectedSpy == 0)
             {
                 if (!Securities[_spy].IsTradable)
