@@ -78,6 +78,8 @@ namespace QuantConnect.Securities
                 throw new ArgumentException($"Symbol can't be found in the Symbol Properties Database: {symbol.Value}");
             }
 
+            // We want to redirect the Symbol Properties Database lookup for future options -> futures,
+            // since future options share the same symbol properties as their underlying future.
             var hasUnderlyingFuture = symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType == SecurityType.Future;
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
                 hasUnderlyingFuture ? symbol.Underlying.ID.Market : symbol.ID.Market,

@@ -284,6 +284,11 @@ namespace QuantConnect.Securities
                 switch (symbol.ID.SecurityType)
                 {
                     case SecurityType.Option:
+                        // Only for equity options we will use `Symbol.Value` since it's an accurate representation
+                        // of the underlying's ticker, unlike futures.
+                        // The `Symbol.Value` of a non-canonical future  will contain contract-specific information in
+                        // it, such as the expiry of the contract. We use the SID Symbol value instead to get
+                        // the value of the underlying without the contract information.
                         stringSymbol = symbol.HasUnderlying
                             ? symbol.Underlying.SecurityType != SecurityType.Equity
                                 ? symbol.Underlying.ID.Symbol
