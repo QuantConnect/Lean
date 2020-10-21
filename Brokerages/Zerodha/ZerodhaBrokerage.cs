@@ -284,6 +284,12 @@ namespace QuantConnect.Brokerages.Zerodha
         }
 
         #region IBrokerage
+
+        /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
+        public override string AccountBaseCurrency => Currencies.INR;
+
         /// <summary>
         /// Checks if the websocket connection is connected or in the process of connecting
         /// </summary>
