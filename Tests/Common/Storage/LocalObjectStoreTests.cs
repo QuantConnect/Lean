@@ -305,6 +305,46 @@ namespace QuantConnect.Tests.Common.Storage
             Assert.IsFalse(Directory.Exists("./LocalObjectStoreTests/unused"));
         }
 
+        [Test]
+        public void DisposeDoesNotDeleteStoreFiles()
+        {
+            using (var store = new LocalObjectStore())
+            {
+                store.Initialize("test", 0, 0, "", new Controls() {PersistenceIntervalSeconds = -1});
+                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
+
+                var validData = new byte[1024 * 1024 * 4];
+                var saved = store.SaveBytes("a.txt", validData);
+
+                Assert.IsTrue(saved);
+                Assert.IsTrue(File.Exists("./LocalObjectStoreTests/test/a.txt"));
+            }
+
+            // Check that it still exists
+            Assert.IsTrue(File.Exists("./LocalObjectStoreTests/test/a.txt"));
+        }
+
+        [Test]
+        public void DisposeDoesNotDeleteTempFiles()
+        {
+            string path;
+            using (var store = new LocalObjectStore())
+            {
+                store.Initialize("test", 0, 0, "", new Controls());
+                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
+
+                var validData = new byte[1024 * 1024 * 4];
+                var saved = store.SaveBytes("a.txt", validData);
+                path = store.GetFilePath("a.txt");
+
+                Assert.IsTrue(saved);
+                Assert.IsTrue(File.Exists(path));
+            }
+
+            // Check that it still exists
+            Assert.IsTrue(File.Exists(path));
+        }
+
         public class TestSettings
         {
             public int EmaFastPeriod { get; set; }
