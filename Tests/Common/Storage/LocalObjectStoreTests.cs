@@ -15,12 +15,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.Storage;
 using QuantConnect.Packets;
+using QuantConnect.Research;
 using QuantConnect.Storage;
 using QuantConnect.Util;
 
@@ -343,6 +345,28 @@ namespace QuantConnect.Tests.Common.Storage
 
             // Check that it still exists
             Assert.IsTrue(File.Exists(path));
+        }
+
+        [Test]
+        public void QuantBookObjectStoreBehavior()
+        {
+            // Test for issue #4811, on loop store objects would duplicate
+            for (int i = 0; i < 3; i++)
+            {
+                // Create a QuantBook and save some data
+                var qb = new QuantBook();
+                qb.ObjectStore.Save("a.txt", "1010101010101010101010");
+                Assert.IsTrue(qb.ObjectStore.ContainsKey("a.txt"));
+
+                // Assert the store has only a.txt
+                var store = qb.ObjectStore.GetEnumerator().AsEnumerable().ToList();
+                Assert.IsTrue(store.Count == 1);
+                Assert.IsTrue(store[0].Key == "a.txt");
+
+                // Create a copy for use using GetFilePath, check that it exists
+                var path = qb.ObjectStore.GetFilePath("a.txt");
+                Assert.IsTrue(File.Exists(path));
+            }
         }
 
         public class TestSettings
