@@ -111,6 +111,11 @@ namespace QuantConnect.Brokerages.Alpaca
         public override bool IsConnected => _sockClient.IsConnected;
 
         /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
+        public override string AccountBaseCurrency => Currencies.USD;
+
+        /// <summary>
         /// Connects the client to the broker's remote servers
         /// </summary>
         public override void Connect()

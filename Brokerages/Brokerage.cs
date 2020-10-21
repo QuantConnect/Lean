@@ -226,7 +226,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Returns the brokerage account's base currency
         /// </summary>
-        public virtual string AccountBaseCurrency { get; protected set; } = Currencies.USD;
+        public virtual string AccountBaseCurrency { get; protected set; }
 
         /// <summary>
         /// Gets the history for the requested security
