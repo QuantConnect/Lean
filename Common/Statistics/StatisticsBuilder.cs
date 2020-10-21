@@ -191,13 +191,6 @@ namespace QuantConnect.Statistics
             };
         }
 
-        private static decimal SafeMultiply100(this decimal value)
-        {
-            const decimal max = decimal.MaxValue/100m;
-            if (value >= max) return decimal.MaxValue;
-            return value*100m;
-        }
-
         /// <summary>
         /// Helper class for rolling statistics
         /// </summary>

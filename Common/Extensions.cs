@@ -65,6 +65,18 @@ namespace QuantConnect
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
 
+        /// <summary>/// <summary>
+        /// Safe multiplies a decimal by 100
+        /// </summary>
+        /// <param name="value">The decimal to multiply</param>
+        /// <returns>The result, maxed out at decimal.MaxValue</returns>
+        public static decimal SafeMultiply100(this decimal value)
+        {
+            const decimal max = decimal.MaxValue / 100m;
+            if (value >= max) return decimal.MaxValue;
+            return value * 100m;
+        }
+
         /// <summary>
         /// Will return a memory stream using the <see cref="RecyclableMemoryStreamManager"/> instance.
         /// </summary>
