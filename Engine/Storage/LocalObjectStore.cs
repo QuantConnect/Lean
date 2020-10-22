@@ -59,7 +59,7 @@ namespace QuantConnect.Lean.Engine.Storage
         private TimeSpan _persistenceInterval;
         private readonly string _storageRoot = Path.GetFullPath(Config.Get("object-store-root", "./storage"));
         private readonly ConcurrentDictionary<string, byte[]> _storage = new ConcurrentDictionary<string, byte[]>();
-        private string TempObjectStorage => Path.Combine(AlgorithmStorageRoot, "temp");
+        private readonly object _persistLock = new object();
 
         /// <summary>
         /// Provides access to the controls governing behavior of this instance, such as the persistence interval
@@ -86,26 +86,35 @@ namespace QuantConnect.Lean.Engine.Storage
 
             // create the root path if it does not exist
             Directory.CreateDirectory(AlgorithmStorageRoot);
-            Directory.CreateDirectory(TempObjectStorage);
 
             Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}");
 
             Controls = controls;
 
-            if (Controls.StoragePermissions.HasFlag(FileAccess.Read))
-            {
-                foreach (var file in Directory.EnumerateFiles(AlgorithmStorageRoot))
-                {
-                    var contents = File.ReadAllBytes(file);
-                    _storage[Path.GetFileName(file)] = contents;
-                }
-            }
+            // Load in any already existing objects in the storage directory
+            LoadObjectsFromDisk();
 
             // if <= 0 we disable periodic persistence and make it synchronous
             if (Controls.PersistenceIntervalSeconds > 0)
             {
                 _persistenceInterval = TimeSpan.FromSeconds(Controls.PersistenceIntervalSeconds);
                 _persistenceTimer = new Timer(_ => Persist(), null, _persistenceInterval, _persistenceInterval);
+            }
+        }
+
+        /// <summary>
+        /// Loads objects from the AlgorithmStorageRoot into the ObjectStore
+        /// </summary>
+        protected virtual void LoadObjectsFromDisk()
+        {
+            if (Controls.StoragePermissions.HasFlag(FileAccess.Read))
+            {
+                foreach (var file in Directory.EnumerateFiles(AlgorithmStorageRoot))
+                {
+                    var contents = File.ReadAllBytes(file);
+                    var key = Path.GetFileName(file);
+                    _storage[key] = contents;
+                }
             }
         }
 
@@ -135,22 +144,16 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <returns>A byte array containing the data</returns>
         public byte[] ReadBytes(string key)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
-            if (!Controls.StoragePermissions.HasFlag(FileAccess.Read))
-            {
-                throw new InvalidOperationException($"LocalObjectStore.ReadBytes(): {NoReadPermissionsError}");
-            }
-
-            byte[] data;
-            if (!_storage.TryGetValue(key, out data))
+            // Ensure we have the key, also takes care of null or improper access
+            if (!ContainsKey(key))
             {
                 throw new KeyNotFoundException($"Object with key '{key}' was not found in the current project. " +
                     "Please use ObjectStore.ContainsKey(key) to check if an object exists before attempting to read."
                 );
             }
+
+            byte[] data;
+            _storage.TryGetValue(key, out data);
 
             return data;
         }
@@ -252,7 +255,7 @@ namespace QuantConnect.Lean.Engine.Storage
 
                 try
                 {
-                    var path = GetFilePathForKey(key);
+                    var path = PathForKey(key);
                     if (File.Exists(path))
                     {
                         File.Delete(path);
@@ -281,19 +284,23 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <returns>The path for the file</returns>
         public string GetFilePath(string key)
         {
-            if (key == null)
+            // Ensure we have an object for that key
+            if (!ContainsKey(key))
             {
-                throw new ArgumentNullException(nameof(key));
+                throw new KeyNotFoundException($"Object with key '{key}' was not found in the current project. " +
+                    "Please use ObjectStore.ContainsKey(key) to check if an object exists before attempting to read."
+                );
             }
 
-            // read from RAM
-            var contents = ReadBytes(key);
+            // Get the persist lock to stop interval persisting
+            lock (_persistLock)
+            {
+                // Persist to ensure the file is up to date
+                PersistData(this);
 
-            // write byte array to storage directory
-            var path = GetFilePathForKey(key);
-            File.WriteAllBytes(path, contents);
-
-            return path;
+                // Fetch the path to file and return it
+                return PathForKey(key);
+            }
         }
 
         /// <summary>
@@ -313,10 +320,8 @@ namespace QuantConnect.Lean.Engine.Storage
                 }
 
                 // if the object store was not used, delete the empty storage directory created in Initialize.
-                // can be null if not initialized
-                if (AlgorithmStorageRoot != null && !Directory.GetFiles(AlgorithmStorageRoot).Any() && !Directory.GetFiles(TempObjectStorage).Any())
+                if (AlgorithmStorageRoot != null && !Directory.GetFileSystemEntries(AlgorithmStorageRoot).Any())
                 {
-                    Directory.Delete(TempObjectStorage);
                     Directory.Delete(AlgorithmStorageRoot);
                 }
             }
@@ -343,11 +348,12 @@ namespace QuantConnect.Lean.Engine.Storage
         }
 
         /// <summary>
-        /// Get's the file path for a giving object store key
+        /// Get's a file path for a given key.
+        /// Internal use only because it does not guarantee the existence of the file.
         /// </summary>
-        private string GetFilePathForKey(string key)
+        private string PathForKey(string key)
         {
-            return Path.Combine(TempObjectStorage, $"{key.ToMD5()}.dat");
+            return Path.Combine(AlgorithmStorageRoot, $"{key}");
         }
 
         /// <summary>
@@ -355,32 +361,35 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         private void Persist()
         {
-            if (!_dirty)
+            // Acquire the persist lock
+            lock (_persistLock)
             {
-                return;
-            }
-
-            try
-            {
-
-                // pause timer will persisting
-                _persistenceTimer?.Change(Timeout.Infinite, Timeout.Infinite);
-
-                if (PersistData(this))
+                // If there are no changes we are fine
+                if (!_dirty)
                 {
-                    _dirty = false;
+                    return;
                 }
 
-            }
-            catch (Exception err)
-            {
-                Log.Error("LocalObjectStore.Persist()", err);
-                OnErrorRaised(err);
-            }
-            finally
-            {
-                // restart timer following end of persistence
-                _persistenceTimer?.Change(_persistenceInterval, _persistenceInterval);
+                try
+                {
+                    // Pause timer while persisting
+                    _persistenceTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+
+                    if (PersistData(this))
+                    {
+                        _dirty = false;
+                    }
+                }
+                catch (Exception err)
+                {
+                    Log.Error("LocalObjectStore.Persist()", err);
+                    OnErrorRaised(err);
+                }
+                finally
+                {
+                    // restart timer following end of persistence
+                    _persistenceTimer?.Change(_persistenceInterval, _persistenceInterval);
+                }
             }
         }
 
@@ -395,13 +404,14 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 foreach (var kvp in data)
                 {
-                    var path = Path.Combine(AlgorithmStorageRoot, kvp.Key);
+                    // Get a path for this key and write to it
+                    var path = PathForKey(kvp.Key);
                     File.WriteAllBytes(path, kvp.Value);
                 }
 
                 return true;
             }
-            catch (Exception err)
+            catch (Exception err) 
             {
                 Log.Error("LocalObjectStore.PersistData()", err);
                 OnErrorRaised(err);

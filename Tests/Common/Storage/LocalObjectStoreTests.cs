@@ -223,8 +223,8 @@ namespace QuantConnect.Tests.Common.Storage
             Assert.IsTrue(error.Message.Contains("Please use ObjectStore.ContainsKey(key)"));
         }
 
-        [TestCase("my_key", "./LocalObjectStoreTests/CSharp-TestAlgorithm/temp/9ed6e46a3ff88783ff75296a4ba523f9.dat")]
-        [TestCase("test/123", "./LocalObjectStoreTests/CSharp-TestAlgorithm/temp/0a2557f6be73a1b8a6abe84104899591.dat")]
+        [TestCase("my_key", "./LocalObjectStoreTests/CSharp-TestAlgorithm/my_key")]
+        [TestCase("test123", "./LocalObjectStoreTests/CSharp-TestAlgorithm/test123")]
         public void GetFilePathReturnsFileName(string key, string expectedRelativePath)
         {
             var expectedPath = Path.GetFullPath(expectedRelativePath).Replace("\\", "/");
@@ -324,27 +324,6 @@ namespace QuantConnect.Tests.Common.Storage
 
             // Check that it still exists
             Assert.IsTrue(File.Exists("./LocalObjectStoreTests/test/a.txt"));
-        }
-
-        [Test]
-        public void DisposeDoesNotDeleteTempFiles()
-        {
-            string path;
-            using (var store = new LocalObjectStore())
-            {
-                store.Initialize("test", 0, 0, "", new Controls());
-                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
-
-                var validData = new byte[1024 * 1024 * 4];
-                var saved = store.SaveBytes("a.txt", validData);
-                path = store.GetFilePath("a.txt");
-
-                Assert.IsTrue(saved);
-                Assert.IsTrue(File.Exists(path));
-            }
-
-            // Check that it still exists
-            Assert.IsTrue(File.Exists(path));
         }
 
         [Test]
