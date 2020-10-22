@@ -57,24 +57,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             });
         }
-        
-        /// <summary>
-        /// Subscribe to multiple symbols in a single call
-        /// </summary>
-        [Test]
-        public void IEXCouldSubscribe()
-        {
-            var iex = new IEXDataQueueHandler();
-            var symbols = new[] {"SPY", "AAPL", "XIV", "PTN", "USO"};
-            var leanSymbols = symbols.Select(ticker => Symbol.Create(ticker, SecurityType.Equity, Market.USA));
-
-            iex.Subscribe(leanSymbols);
-
-            Thread.Sleep(10000);
-            Assert.IsTrue(iex.IsConnected);
-
-            iex.Dispose();
-        }
 
         /// <summary>
         /// Subscribe to multiple symbols in a series of calls

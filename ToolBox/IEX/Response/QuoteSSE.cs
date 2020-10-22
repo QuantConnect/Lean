@@ -92,7 +92,7 @@ namespace QuantConnect.ToolBox.IEX.Response
 
 		public long Volume { get; set; }
 
-		public decimal IexMarketPercent { get; set; }
+		public decimal? IexMarketPercent { get; set; }
 
 		public int IexVolume { get; set; }
 

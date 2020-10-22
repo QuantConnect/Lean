@@ -43,7 +43,9 @@ namespace QuantConnect.ToolBox.IEX
     /// </summary>
     public class IEXDataQueueHandler : HistoryProviderBase, IDataQueueHandler
     {
+        private static readonly TimeSpan SubscribeDelay = TimeSpan.FromMilliseconds(1500);
         private readonly IEXEventSourceCollection _clients;
+        private readonly ManualResetEvent _refreshEvent = new ManualResetEvent(false);
 
         private readonly ConcurrentDictionary<string, Symbol> _symbols = new ConcurrentDictionary<string, Symbol>(StringComparer.InvariantCultureIgnoreCase);
         private readonly ConcurrentDictionary<string, long> _tickLastTradeTime = new ConcurrentDictionary<string, long>();
@@ -54,7 +56,6 @@ namespace QuantConnect.ToolBox.IEX
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private static DateTime _unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified);
         private int _dataPointCount;
-        private bool _isSubscriptionUpdateRequested;
         private bool _isDisposing;
 
         private readonly IDataAggregator _aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
@@ -63,19 +64,37 @@ namespace QuantConnect.ToolBox.IEX
 
         public bool IsConnected => _clients.IsConnected;
 
-        
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IEXDataQueueHandler"/> class.
+        /// </summary>
         public IEXDataQueueHandler()
         {
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            _subscriptionManager.SubscribeImpl += (s, t) =>
+
+            _subscriptionManager.SubscribeImpl += (symbols, t) =>
             {
-                Subscribe(s);
+                symbols.DoForEach(symbol =>
+                {
+                    if (!_symbols.TryAdd(symbol.Value, symbol))
+                    {
+                        throw new Exception($"Invalid logic, SubscriptionManager tries to subscribe to existing symbol : {symbol.Value}");
+                    }
+                });
+
+                Refresh();
                 return true;
             };
 
-            _subscriptionManager.UnsubscribeImpl += (s, t) =>
+            _subscriptionManager.UnsubscribeImpl += (symbols, t) =>
             {
-                Unsubscribe(s);
+                symbols.DoForEach(symbol =>
+                {
+                    Symbol tmp;
+                    _symbols.TryRemove(symbol.Value, out tmp);
+                });
+
+                Refresh();
                 return true;
             };
 
@@ -98,15 +117,11 @@ namespace QuantConnect.ToolBox.IEX
             {
                 while (true)
                 {
-                    if (_isSubscriptionUpdateRequested)
-                    {
-                        // Reset the flag and update a sse-stream
-                        _isSubscriptionUpdateRequested = false;
+                    _refreshEvent.WaitOne();
+                    Thread.Sleep(SubscribeDelay);
 
-                        _clients.UpdateSubscription(_symbols.Keys.ToArray());
-                    }
-
-                    Thread.Sleep(10000);
+                    _clients.UpdateSubscription(_symbols.Keys.ToArray());
+                    _refreshEvent.Reset();
 
                     if (_isDisposing)
                     {
@@ -179,10 +194,6 @@ namespace QuantConnect.ToolBox.IEX
                         Quantity = lastSaleSize
                     };
 
-                    // test test
-                    //Console.WriteLine($"1:{lastTradeTime} 2:{lastTradeDateTime} 3:{lastUpdated} 4:{lastUpdatedDatetime}");
-                    //Console.WriteLine(tick.ToString());
-
                     _aggregator.Update(tick);
                 }
             }
@@ -219,29 +230,9 @@ namespace QuantConnect.ToolBox.IEX
         {
         }
 
-        /// <summary>
-        /// Subscribe to symbols
-        /// </summary>
-        public void Subscribe(IEnumerable<Symbol> symbols)
+        private void Refresh()
         {
-            var added = false;
-            var enumerable = symbols as Symbol[] ?? symbols.ToArray();
-
-            foreach (var symbol in enumerable)
-            {
-                if (_symbols.TryAdd(symbol.Value, symbol))
-                {
-                    // added new symbol
-                    added = true;
-                }
-            }
-
-            // If either symbolsArray is empty or there was no new symbols addition - need take no action
-            if (!enumerable.IsNullOrEmpty() && added)
-            {
-                // Call a request for subscription renewal
-                _isSubscriptionUpdateRequested = true;
-            }
+            _refreshEvent.Set();
         }
 
         /// <summary>
@@ -254,30 +245,6 @@ namespace QuantConnect.ToolBox.IEX
             _aggregator.Remove(dataConfig);
         }
 
-        /// <summary>
-        /// Unsubscribe from symbols
-        /// </summary>
-        public void Unsubscribe(IEnumerable<Symbol> symbols)
-        {
-            bool removed = false;
-            var enumerable = symbols as Symbol[] ?? symbols.ToArray();
-
-            foreach (var symbol in enumerable)
-            {
-                Symbol tmp;
-                if (_symbols.TryRemove(symbol.Value, out tmp))
-                {
-                    removed = true;
-                }
-            }
-
-            if (!enumerable.IsNullOrEmpty() && removed)
-            {
-                // Call a request for subscription renewal
-                _isSubscriptionUpdateRequested = true;
-            }
-        }
-        
         /// <summary>
         /// Dispose connection to IEX
         /// </summary>
