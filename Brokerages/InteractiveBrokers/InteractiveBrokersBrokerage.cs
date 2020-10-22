@@ -1825,6 +1825,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private Contract CreateContract(Symbol symbol, bool includeExpired, string exchange = null)
         {
             var securityType = ConvertSecurityType(symbol.ID.SecurityType);
+            // TODO: Maybe we should refactor ^^^ and make this vvv happen inside that method?
+            if (symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType == SecurityType.Future)
+            {
+                securityType = IB.SecurityType.FutureOption;
+                exchange = _futuresExchanges[Market.CME];
+            }
+
             var ibSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
             var contract = new Contract
             {
@@ -1845,7 +1852,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 contract.PrimaryExch = GetPrimaryExchange(contract, symbol);
             }
-
             if (symbol.ID.SecurityType == SecurityType.Option)
             {
                 contract.LastTradeDateOrContractMonth = symbol.ID.Date.ToStringInvariant(DateFormat.EightCharacter);
@@ -1857,7 +1863,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 contract.IncludeExpired = includeExpired;
             }
-
+            if (symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType == SecurityType.Future)
+            {
+                contract.Exchange = _futuresExchanges.ContainsKey(symbol.ID.Market) ?
+                    _futuresExchanges[symbol.ID.Market] :
+                    symbol.ID.Market;
+            }
             if (symbol.ID.SecurityType == SecurityType.Future)
             {
                 // we convert Market.* markets into IB exchanges if we have them in our map
@@ -2120,6 +2131,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case IB.SecurityType.Stock:
                     return SecurityType.Equity;
 
+                case IB.SecurityType.FutureOption:
                 case IB.SecurityType.Option:
                     return SecurityType.Option;
 
@@ -2224,8 +2236,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var ibSymbol = securityType == SecurityType.Forex ? contract.Symbol + contract.Currency : contract.Symbol;
 
             var market = InteractiveBrokersBrokerageModel.DefaultMarketMap[securityType];
+            var isFutureOption = securityType == SecurityType.Option && contract.SecType == IB.SecurityType.FutureOption;
 
-            if (securityType == SecurityType.Future)
+            if (isFutureOption || securityType == SecurityType.Future)
             {
                 var leanSymbol = _symbolMapper.GetLeanRootSymbol(ibSymbol);
                 var defaultMarket = market;
@@ -2235,10 +2248,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
 
                 var contractDate = DateTime.ParseExact(contract.LastTradeDateOrContractMonth, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                var futureSymbol = _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market, contractDate);
 
-                return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market, contractDate);
+                if (!isFutureOption)
+                {
+                    return futureSymbol;
+                }
+
+                var expiryDate = DateTime.ParseExact(contract.LastTradeDateOrContractMonth, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                var right = contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put;
+                var strike = Convert.ToDecimal(contract.Strike);
+
+                return Symbol.CreateOption(futureSymbol, defaultMarket, OptionStyle.American, right, strike, expiryDate);
             }
-            else if (securityType == SecurityType.Option)
+            if (securityType == SecurityType.Option)
             {
                 var expiryDate = DateTime.ParseExact(contract.LastTradeDateOrContractMonth, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
                 var right = contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put;
@@ -2853,7 +2876,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // preparing the data for IB request
-            var contract = CreateContract(request.Symbol, true);
+
+            // Future options orders will be routed through CME's GLOBEX venue.
+            // The exchanges GLOBEX encompasses are: CME, NYMEX, COMEX, CBOT.
+            // Default back to SMART for all other order types.
+            var exchange = request.Symbol.SecurityType == SecurityType.Option &&
+                request.Symbol.Underlying.SecurityType == SecurityType.Future ?
+                    _futuresExchanges[Market.CME] :
+                    null;
+
+            var contract = CreateContract(request.Symbol, true, exchange);
             var resolution = ConvertResolution(request.Resolution);
             var duration = ConvertResolutionToDuration(request.Resolution);
             var startTime = request.Resolution == Resolution.Daily ? request.StartTimeUtc.Date : request.StartTimeUtc;

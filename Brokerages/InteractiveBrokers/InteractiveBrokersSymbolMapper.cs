@@ -26,7 +26,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     /// </summary>
     public class InteractiveBrokersSymbolMapper : ISymbolMapper
     {
-        // we have a special treatment of futures, because IB renamed several exchange tickers (like GBP instead of 6B). We fix this: 
+        // we have a special treatment of futures, because IB renamed several exchange tickers (like GBP instead of 6B). We fix this:
         // We map those tickers back to their original names using the map below
         private readonly Dictionary<string, string> _ibNameMap = new Dictionary<string, string>();
 
@@ -135,7 +135,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new ArgumentException($"Invalid symbol: {brokerageSymbol}, security type: {securityType}, market: {market}.");
             }
         }
-
 
         /// <summary>
         /// IB specific versions of the symbol mapping (GetBrokerageRootSymbol) for future root symbols
