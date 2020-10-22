@@ -41,9 +41,20 @@ namespace QuantConnect.Optimizer.Launcher
                         .ToHashSet(),
                     MaximumConcurrentBacktests = Config.GetInt("maximum-concurrent-backtests", Environment.ProcessorCount)
                 };
+                bool disposed = false;
                 var optimizer = new ConsoleLeanOptimizer(packet);
 
                 optimizer.Start();
+                optimizer.Ended += (s, e) =>
+                {
+                    if (disposed)
+                    {
+                        return;
+                    }
+
+                    disposed = true;
+                    optimizer.DisposeSafely();
+                };
             }
             catch (Exception e)
             {

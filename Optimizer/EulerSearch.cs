@@ -26,6 +26,8 @@ namespace QuantConnect.Optimizer
 
         public event EventHandler NewParameterSet;
 
+        public event EventHandler GoalHasBeenReached;
+
         public void Initialize(Target target, IEnumerable<Constraint> constraints, HashSet<OptimizationParameter> parameters)
         {
             throw new NotImplementedException();

@@ -27,6 +27,7 @@ namespace QuantConnect.Optimizer
     /// </summary>
     public abstract class LeanOptimizer : IDisposable
     {
+        private volatile bool _disposed;
         private string _jsonEscapedTarget;
 
         /// <summary>
@@ -103,6 +104,10 @@ namespace QuantConnect.Optimizer
                     return;
                 }
                 LaunchLeanForParameterSet(parameterSet);
+            };
+            Strategy.GoalHasBeenReached += (s, e) =>
+            {
+                TriggerOnEndEvent(EventArgs.Empty);
             };
         }
 
@@ -208,11 +213,39 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Disposes of any resources
         /// </summary>
-        public abstract void Dispose();
+        /// <summary>
+        /// Disposes of any resources
+        /// </summary>
+        public virtual void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+            _disposed = true;
 
+            PendingParameterSet.Clear();
+
+            lock (RunningParameterSetForBacktest)
+            {
+                foreach (var backtestId in RunningParameterSetForBacktest.Keys)
+                {
+                    ParameterSet parameterSet;
+                    if (RunningParameterSetForBacktest.TryRemove(backtestId, out parameterSet))
+                    {
+                        AbortLean(backtestId);
+                    }
+                }
+            }
+        }
 
         private void LaunchLeanForParameterSet(ParameterSet parameterSet)
         {
+            if (_disposed)
+            {
+                return;
+            }
+
             if (NodePacket.MaximumConcurrentBacktests != 0 && RunningParameterSetForBacktest.Count > NodePacket.MaximumConcurrentBacktests)
             {
                 // we hit the limit on the concurrent backtests
@@ -250,5 +283,11 @@ namespace QuantConnect.Optimizer
             }
             return $"UI {NodePacket.UserId} PID {NodePacket.ProjectId} OID {NodePacket.OptimizationId}";
         }
+
+        /// <summary>
+        /// Handles breaking Lean process
+        /// </summary>
+        /// <param name="backtestId">Specified backtest id</param>
+        public abstract void AbortLean(string backtestId);
     }
 }

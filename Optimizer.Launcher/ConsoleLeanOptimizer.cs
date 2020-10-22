@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
-using System;
-using System.IO;
 using QuantConnect.Util;
-using System.Diagnostics;
+using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.IO;
 
 namespace QuantConnect.Optimizer.Launcher
 {
@@ -25,9 +25,8 @@ namespace QuantConnect.Optimizer.Launcher
     /// Optimizer implementation that launches Lean as a local process
     /// TODO: review object store location, believe it's being shared, when the algos end they all try to delete the directory
     /// </summary>
-    public class ConsoleLeanOptimizer: LeanOptimizer
+    public class ConsoleLeanOptimizer : LeanOptimizer
     {
-        private volatile bool _disposed;
         private readonly string _leanLocation;
         private readonly string _rootResultDirectory;
         private readonly bool _closeLeanAutomatically;
@@ -49,31 +48,6 @@ namespace QuantConnect.Optimizer.Launcher
                 Path.Combine(Directory.GetCurrentDirectory(), "../../../Launcher/bin/Debug/QuantConnect.Lean.Launcher.exe"));
 
             _closeLeanAutomatically = Configuration.Config.GetBool("close-automatically", true);
-        }
-
-        /// <summary>
-        /// Disposes of any resources
-        /// </summary>
-        public override void Dispose()
-        {
-            if (_disposed)
-            {
-                return;
-            }
-            _disposed = true;
-
-            foreach (var process in _processByBacktestId)
-            {
-                try
-                {
-                    process.Value.Kill();
-                    process.Value.DisposeSafely();
-                }
-                catch
-                {
-                    // pass
-                }
-            }
         }
 
         /// <summary>
@@ -108,11 +82,6 @@ namespace QuantConnect.Optimizer.Launcher
             process.Exited += (sender, args) =>
             {
                 _processByBacktestId.TryRemove(backtestId, out process);
-                if (_disposed)
-                {
-                    return;
-                }
-
                 var backtestResult = $"{backtestId}.json";
                 var resultJson = Path.Combine(_rootResultDirectory, backtestId, backtestResult);
                 NewResult(File.Exists(resultJson) ? File.ReadAllText(resultJson) : null, backtestId);
@@ -122,6 +91,27 @@ namespace QuantConnect.Optimizer.Launcher
             process.Start();
 
             return backtestId;
+        }
+
+        /// <summary>
+        /// Stops lean process
+        /// </summary>
+        /// <param name="backtestId">Specified backtest id</param>
+        public override void AbortLean(string backtestId)
+        {
+            try
+            {
+                Process process;
+                if (_processByBacktestId.TryRemove(backtestId, out process))
+                {
+                    process.Kill();
+                    process.DisposeSafely();
+                }
+            }
+            catch
+            {
+                // pass
+            }
         }
     }
 }

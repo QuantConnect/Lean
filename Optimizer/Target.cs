@@ -36,7 +36,7 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Target value; if defined and backtest complies with the targets then finish
         /// </summary>
-        public decimal? TargetValue { get; private set; }
+        public decimal? TargetValue { get;}
 
         public Target(string objective, Extremum extremum, decimal? targetValue)
         {
@@ -56,6 +56,6 @@ namespace QuantConnect.Optimizer
             return false;
         }
 
-        public bool IsComplied() => TargetValue.HasValue && Extremum.Better(Current.Value, TargetValue.Value);
+        public bool IsComplied() => TargetValue.HasValue && Current.HasValue && Extremum.Better(Current.Value, TargetValue.Value);
     }
 }

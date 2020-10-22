@@ -29,6 +29,11 @@ namespace QuantConnect.Optimizer
         event EventHandler NewParameterSet;
 
         /// <summary>
+        /// Fires when target complies specified value
+        /// </summary>
+        public event EventHandler GoalHasBeenReached;
+
+        /// <summary>
         /// Best found solution, its value and parameter set
         /// </summary>
         OptimizationResult Solution { get; }
