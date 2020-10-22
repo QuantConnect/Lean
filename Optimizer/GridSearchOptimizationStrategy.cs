@@ -81,7 +81,7 @@ namespace QuantConnect.Optimizer
 
                 if (result.Id > 0)
                 {
-                    if (Constraints.All(constraint => constraint.IsMet(result.JsonBacktestResult)))
+                    if (Constraints?.All(constraint => constraint.IsMet(result.JsonBacktestResult)) != false)
                     {
                         if (Solution == null || Target.MoveAhead(result.JsonBacktestResult))
                         {

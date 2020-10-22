@@ -28,7 +28,6 @@ namespace QuantConnect.Optimizer
     public abstract class LeanOptimizer : IDisposable
     {
         private volatile bool _disposed;
-        private string _jsonEscapedTarget;
 
         /// <summary>
         /// The optimization target
@@ -77,23 +76,16 @@ namespace QuantConnect.Optimizer
                 throw new InvalidOperationException("Cannot start an optimization job with no parameter to optimize");
             }
 
-            var _objective = nodePacket.Criterion["target"];
-            if (!_objective.Contains("."))
-            {
-                // default path
-                _objective = $"Statistics.{_objective}";
-            }
-            // escape empty space in json path
-            _jsonEscapedTarget = string.Join(".", _objective.Split('.').Select(s => $"['{s}']"));
-
             NodePacket = nodePacket;
 
             OptimizationTarget = new Target(
-                _jsonEscapedTarget
+                nodePacket.Criterion["target"]
                 , NodePacket.Criterion["extremum"] == "max"
                     ? new Maximization() as Extremum
                     : new Minimization()
-                , null);
+                , string.IsNullOrEmpty(NodePacket.Criterion["target-value"])
+                    ? (null as decimal?)
+                    : NodePacket.Criterion["target-value"].ToDecimal());
             OptimizationTarget.Reached += (s, e) =>
             {
                 TriggerOnEndEvent(EventArgs.Empty);
@@ -104,7 +96,7 @@ namespace QuantConnect.Optimizer
             RunningParameterSetForBacktest = new ConcurrentDictionary<string, ParameterSet>();
             PendingParameterSet = new ConcurrentQueue<ParameterSet>();
 
-            Strategy.Initialize(OptimizationTarget, new Constraint[0], NodePacket.OptimizationParameters);
+            Strategy.Initialize(OptimizationTarget, nodePacket.Constraints, NodePacket.OptimizationParameters);
 
             Strategy.NewParameterSet += (s, e) =>
             {

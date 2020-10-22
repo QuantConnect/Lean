@@ -34,10 +34,19 @@ namespace QuantConnect.Optimizer.Launcher
                     OptimizationId = Guid.NewGuid().ToString(),
                     OptimizationStrategy = Config.Get("optimization-strategy", "QuantConnect.Optimizer.GridSearchOptimizationStrategy"),
                     Criterion =
-                        JsonConvert.DeserializeObject<Dictionary<string, string>>(Config.Get("optimization-criterion", "{\"name\":\"TotalPerformance.TradeStatistics.TotalProfit\", \"direction\": \"max\"}")),
-                    OptimizationParameters = 
+                        JsonConvert.DeserializeObject<Dictionary<string, string>>(Config.Get("optimization-criterion", "{\"target\":\"TotalPerformance.TradeStatistics.TotalProfit\", \"extremum\": \"max\"}")),
+                    Constraints = JArray.Parse(Config.Get("constraints", "[]")).Select(t => new Constraint(
+                            t.Value<string>("target"),
+                            (ComparisonOperatorTypes)Enum.Parse(typeof(ComparisonOperatorTypes), t.Value<string>("operator"), true),
+                            t.Value<decimal>("target-value")
+                        )).ToList(),
+                    OptimizationParameters =
                         JsonConvert.DeserializeObject<Dictionary<string, JObject>>(Config.Get("parameters", "{}"))
-                        .Select( arg => new OptimizationParameter(arg.Key, arg.Value.Value<decimal>("min"), arg.Value.Value<decimal>("max"), arg.Value.Value<decimal>("step")))
+                        .Select(arg => new OptimizationParameter(
+                            arg.Key,
+                            arg.Value.Value<decimal>("min"),
+                            arg.Value.Value<decimal>("max"),
+                            arg.Value.Value<decimal>("step")))
                         .ToHashSet(),
                     MaximumConcurrentBacktests = Config.GetInt("maximum-concurrent-backtests", Environment.ProcessorCount)
                 };

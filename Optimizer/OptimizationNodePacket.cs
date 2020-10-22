@@ -77,6 +77,12 @@ namespace QuantConnect.Optimizer
         public Dictionary<string, string> Criterion;
 
         /// <summary>
+        /// Optimization constraints
+        /// </summary>
+        [JsonProperty(PropertyName = "constraints")]
+        public IEnumerable<Constraint> Constraints;
+
+        /// <summary>
         /// The user optimization parameters
         /// </summary>
         [JsonProperty(PropertyName = "optimizationParameters")]

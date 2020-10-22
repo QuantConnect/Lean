@@ -17,19 +17,20 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Util;
 using System;
+using System.Linq;
 
 namespace QuantConnect.Optimizer
 {
     public class Constraint
     {
         [JsonProperty("target")]
-        public string Objective { get; set; }
+        public string Objective { get; }
 
         [JsonProperty("operator")]
-        public ComparisonOperatorTypes Operator { get; set; }
+        public ComparisonOperatorTypes Operator { get; }
 
         [JsonProperty("target-value")]
-        public decimal TargetValue { get; set; }
+        public decimal TargetValue { get; }
 
         public Constraint(string target, ComparisonOperatorTypes op, decimal? targetValue)
         {
@@ -43,13 +44,21 @@ namespace QuantConnect.Optimizer
                 throw new ArgumentNullException("targetValue", $"Constraint target is not specified");
             }
 
-            Objective = target;
+            var _objective = target;
+            if (!_objective.Contains("."))
+            {
+                // default path
+                _objective = $"Statistics.{_objective}";
+            }
+            // escape empty space in json path
+            Objective = string.Join(".", _objective.Split('.').Select(s => $"['{s}']"));
+
             Operator = op;
             TargetValue = targetValue.Value;
         }
 
         public bool IsMet(string jsonBacktestResult) => Operator.Compare(
             TargetValue, 
-            JObject.Parse(jsonBacktestResult).SelectToken(Objective).Value<decimal>());
+            JObject.Parse(jsonBacktestResult).SelectToken(Objective).Value<string>().ToDecimal());
     }
 }

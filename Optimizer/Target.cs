@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -27,6 +28,7 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Defines the direction of optimization, i.e. maximization or minimization
         /// </summary>
+        [JsonProperty("extremum")]
         public Extremum Extremum { get; }
 
         /// <summary>
@@ -37,6 +39,7 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Target value; if defined and backtest complies with the targets then finish
         /// </summary>
+        [JsonProperty("target-value")]
         public decimal? TargetValue { get; }
 
         /// <summary>
@@ -44,15 +47,24 @@ namespace QuantConnect.Optimizer
         /// </summary>
         public event EventHandler Reached;
 
-        public Target(string objective, Extremum extremum, decimal? targetValue)
+        public Target(string target, Extremum extremum, decimal? targetValue)
         {
-            Objective = objective;
+            var _objective = target;
+            if (!_objective.Contains("."))
+            {
+                // default path
+                _objective = $"Statistics.{_objective}";
+            }
+            // escape empty space in json path
+            Objective = string.Join(".", _objective.Split('.').Select(s => $"['{s}']"));
+
             Extremum = extremum;
+            TargetValue = targetValue;
         }
 
         public bool MoveAhead(string jsonBacktestResult)
         {
-            var computedValue = JObject.Parse(jsonBacktestResult).SelectToken(Objective).Value<decimal>();
+            var computedValue = JObject.Parse(jsonBacktestResult).SelectToken(Objective).Value<string>().ToDecimal();
             if (!Current.HasValue || Extremum.Better(Current.Value, computedValue))
             {
                 Current = computedValue;
