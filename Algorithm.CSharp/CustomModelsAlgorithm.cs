@@ -26,11 +26,12 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Demonstration of using custom fee, slippage and fill models for modelling transactions in backtesting.
+    /// Demonstration of using custom fee, slippage, fill, and buying power models for modelling transactions in backtesting.
     /// QuantConnect allows you to model all orders as deeply and accurately as you need.
     /// </summary>
     /// <meta name="tag" content="trading and orders" />
     /// <meta name="tag" content="transaction fees and slippage" />
+    /// <meta name="tag" content="custom buying power models" />
     /// <meta name="tag" content="custom transaction models" />
     /// <meta name="tag" content="custom slippage models" />
     /// <meta name="tag" content="custom fee models" />
@@ -50,6 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
             _security.SetFeeModel(new CustomFeeModel(this));
             _security.SetFillModel(new CustomFillModel(this));
             _security.SetSlippageModel(new CustomSlippageModel(this));
+            _security.SetBuyingPowerModel(new CustomBuyingPowerModel(this));
         }
 
         public void OnData(TradeBars data)
@@ -60,13 +62,13 @@ namespace QuantConnect.Algorithm.CSharp
             if (Time.Day > 10 && _security.Holdings.Quantity <= 0)
             {
                 var quantity = CalculateOrderQuantity(_spy, .5m);
-                Log("MarketOrder: " + quantity);
+                Log($"MarketOrder: {quantity}");
                 MarketOrder(_spy, quantity, asynchronous: true); // async needed for partial fill market orders
             }
             else if (Time.Day > 20 && _security.Holdings.Quantity >= 0)
             {
                 var quantity = CalculateOrderQuantity(_spy, -.5m);
-                Log("MarketOrder: " + quantity);
+                Log($"MarketOrder: {quantity}");
                 MarketOrder(_spy, quantity, asynchronous: true); // async needed for partial fill market orders
             }
         }
@@ -109,7 +111,7 @@ namespace QuantConnect.Algorithm.CSharp
                     fill.Status = OrderStatus.PartiallyFilled;
                 }
 
-                _algorithm.Log("CustomFillModel: " + fill);
+                _algorithm.Log($"CustomFillModel: {fill}");
 
                 return fill;
             }
@@ -131,7 +133,7 @@ namespace QuantConnect.Algorithm.CSharp
                     1m,
                     parameters.Security.Price*parameters.Order.AbsoluteQuantity*0.00001m);
 
-                _algorithm.Log("CustomFeeModel: " + fee);
+                _algorithm.Log($"CustomFeeModel: {fee}");
                 return new OrderFee(new CashAmount(fee, "USD"));
             }
         }
@@ -150,8 +152,28 @@ namespace QuantConnect.Algorithm.CSharp
                 // custom slippage math
                 var slippage = asset.Price*0.0001m*(decimal) Math.Log10(2*(double) order.AbsoluteQuantity);
 
-                _algorithm.Log("CustomSlippageModel: " + slippage);
+                _algorithm.Log($"CustomSlippageModel: {slippage}");
                 return slippage;
+            }
+        }
+
+        public class CustomBuyingPowerModel : BuyingPowerModel
+        {
+            private readonly QCAlgorithm _algorithm;
+
+            public CustomBuyingPowerModel(QCAlgorithm algorithm)
+            {
+                _algorithm = algorithm;
+            }
+
+            public override HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(
+                HasSufficientBuyingPowerForOrderParameters parameters)
+            {
+                // custom behavior: this model will assume that there is always enough buying power
+                var hasSufficientBuyingPowerForOrderResult = new HasSufficientBuyingPowerForOrderResult(true);
+                _algorithm.Log($"CustomBuyingPowerModel: {hasSufficientBuyingPowerForOrderResult.IsSufficient}");
+
+                return hasSufficientBuyingPowerForOrderResult;
             }
         }
 
