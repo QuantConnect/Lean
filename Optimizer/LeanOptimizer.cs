@@ -108,7 +108,17 @@ namespace QuantConnect.Optimizer
         /// </summary>
         public virtual void Start()
         {
-            Strategy.PushNewResults(OptimizationResult.Empty);
+            lock (RunningParameterSetForBacktest)
+            {
+                Strategy.PushNewResults(OptimizationResult.Empty);
+
+                // if after we started there are no running parameter sets means we have failed to start
+                if (!RunningParameterSetForBacktest.Any())
+                {
+                    throw new Exception($"LeanOptimizer.Start({GetLogDetails()}): failed to start");
+                }
+                Log.Trace($"LeanOptimizer.Start({GetLogDetails()}): start ended. Waiting on {RunningParameterSetForBacktest.Count} backtests");
+            }
         }
 
         /// <summary>
