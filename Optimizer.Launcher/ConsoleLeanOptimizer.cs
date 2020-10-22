@@ -103,20 +103,13 @@ namespace QuantConnect.Optimizer.Launcher
         /// Stops lean process
         /// </summary>
         /// <param name="backtestId">Specified backtest id</param>
-        public override void AbortLean(string backtestId)
+        protected override void AbortLean(string backtestId)
         {
-            try
+            Process process;
+            if (_processByBacktestId.TryRemove(backtestId, out process))
             {
-                Process process;
-                if (_processByBacktestId.TryRemove(backtestId, out process))
-                {
-                    process.Kill();
-                    process.DisposeSafely();
-                }
-            }
-            catch
-            {
-                // pass
+                process.Kill();
+                process.DisposeSafely();
             }
         }
     }

@@ -26,6 +26,11 @@ namespace QuantConnect.Optimizer
         public static readonly OptimizationResult Empty = new OptimizationResult();
 
         /// <summary>
+        /// The backtest id that generated this result
+        /// </summary>
+        public string BacktestId { get; }
+
+        /// <summary>
         /// Id of optimization job. Equals to parameter set Id
         /// </summary>
         public int Id => ParameterSet?.Id ?? 0;
@@ -50,10 +55,12 @@ namespace QuantConnect.Optimizer
         /// </summary>
         /// <param name="jsonBacktestResult">Optimization target value for this backtest</param>
         /// <param name="parameterSet">Parameter set used in compute job</param>
-        public OptimizationResult(string jsonBacktestResult, ParameterSet parameterSet)
+        /// <param name="backtestId">The backtest id that generated this result</param>
+        public OptimizationResult(string jsonBacktestResult, ParameterSet parameterSet, string backtestId)
         {
             JsonBacktestResult = jsonBacktestResult;
             ParameterSet = parameterSet;
+            BacktestId = backtestId;
         }
     }
 }

@@ -80,7 +80,7 @@ namespace QuantConnect.Optimizer
         /// Optimization constraints
         /// </summary>
         [JsonProperty(PropertyName = "constraints")]
-        public IEnumerable<Constraint> Constraints;
+        public List<Constraint> Constraints;
 
         /// <summary>
         /// The user optimization parameters

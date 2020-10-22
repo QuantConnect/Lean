@@ -62,6 +62,18 @@ namespace QuantConnect.Optimizer
             TargetValue = targetValue;
         }
 
+        /// <summary>
+        /// Pretty representation of this optimization target
+        /// </summary>
+        public override string ToString()
+        {
+            if (TargetValue.HasValue)
+            {
+                return $"Target: {Objective} TargetValue: {TargetValue.Value} at: {Current}";
+            }
+            return $"Target: {Objective} at: {Current}";
+        }
+
         public bool MoveAhead(string jsonBacktestResult)
         {
             var computedValue = JObject.Parse(jsonBacktestResult).SelectToken(Objective).Value<string>().ToDecimal();

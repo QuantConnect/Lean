@@ -24,7 +24,7 @@ namespace QuantConnect.Optimizer
 
         public event EventHandler NewParameterSet;
 
-        public void Initialize(Target target, IEnumerable<Constraint> constraints, HashSet<OptimizationParameter> parameters)
+        public void Initialize(Target target, List<Constraint> constraints, HashSet<OptimizationParameter> parameters)
         {
             throw new NotImplementedException();
         }

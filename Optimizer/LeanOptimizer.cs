@@ -16,7 +16,6 @@
 using System;
 using System.Linq;
 using QuantConnect.Util;
-using Newtonsoft.Json.Linq;
 using QuantConnect.Logging;
 using System.Collections.Concurrent;
 
@@ -78,12 +77,11 @@ namespace QuantConnect.Optimizer
 
             NodePacket = nodePacket;
 
-            OptimizationTarget = new Target(
-                nodePacket.Criterion["target"]
-                , NodePacket.Criterion["extremum"] == "max"
+            OptimizationTarget = new Target(nodePacket.Criterion["target"],
+                NodePacket.Criterion["extremum"] == "max"
                     ? new Maximization() as Extremum
-                    : new Minimization()
-                , string.IsNullOrEmpty(NodePacket.Criterion["target-value"])
+                    : new Minimization(),
+                string.IsNullOrEmpty(NodePacket.Criterion.ContainsKey("target-value") ? NodePacket.Criterion["target-value"] : null)
                     ? (null as decimal?)
                     : NodePacket.Criterion["target-value"].ToDecimal());
             OptimizationTarget.Reached += (s, e) =>
@@ -141,7 +139,7 @@ namespace QuantConnect.Optimizer
             if (result != null)
             {
                 Log.Trace($"LeanOptimizer.TriggerOnEndEvent({GetLogDetails()}): Optimization has ended. " +
-                    $"Result for {OptimizationTarget}: {result.JsonBacktestResult} was reached using ParameterSet: ({result.ParameterSet})");
+                    $"Result for {OptimizationTarget}: was reached using ParameterSet: ({result.ParameterSet}) backtestId {result.BacktestId}");
             }
             else
             {
@@ -187,28 +185,20 @@ namespace QuantConnect.Optimizer
                 LaunchLeanForParameterSet(pendingParameterSet);
             }
 
-            var result = new OptimizationResult(null, parameterSet);
+            var result = new OptimizationResult(null, parameterSet, backtestId);
             if (string.IsNullOrEmpty(jsonBacktestResult))
             {
                 Log.Error($"LeanOptimizer.NewResult({GetLogDetails()}): Got null/empty backtest result for backtest id '{backtestId}'");
             }
             else
             {
-                try
-                {
-                    result = new OptimizationResult(jsonBacktestResult, parameterSet);
-                }
-                catch (Exception e)
-                {
-                    Log.Error($"LeanOptimizer.NewResult({GetLogDetails()}): Failed to get optimization target '{backtestId}'. Exception: {e}");
-                }
+                result = new OptimizationResult(jsonBacktestResult, parameterSet, backtestId);
             }
             // always notify the strategy
             Strategy.PushNewResults(result);
 
             if (!RunningParameterSetForBacktest.Any())
             {
-                // TODO: could send winning backtest id/result?
                 TriggerOnEndEvent(EventArgs.Empty);
             }
         }
@@ -236,7 +226,14 @@ namespace QuantConnect.Optimizer
                     ParameterSet parameterSet;
                     if (RunningParameterSetForBacktest.TryRemove(backtestId, out parameterSet))
                     {
-                        AbortLean(backtestId);
+                        try
+                        {
+                            AbortLean(backtestId);
+                        }
+                        catch
+                        {
+                            // pass
+                        }
                     }
                 }
             }
@@ -264,6 +261,7 @@ namespace QuantConnect.Optimizer
 
                     if (!string.IsNullOrEmpty(backtestId))
                     {
+                        Log.Trace($"LeanOptimizer.LaunchLeanForParameterSet({GetLogDetails()}): launched backtest '{backtestId}'");
                         RunningParameterSetForBacktest.TryAdd(backtestId, parameterSet);
                     }
                     else
@@ -278,6 +276,9 @@ namespace QuantConnect.Optimizer
             }
         }
 
+        /// <summary>
+        /// Helper method to have pretty more informative logs
+        /// </summary>
         protected string GetLogDetails()
         {
             if (NodePacket.UserId == 0)
@@ -291,6 +292,6 @@ namespace QuantConnect.Optimizer
         /// Handles breaking Lean process
         /// </summary>
         /// <param name="backtestId">Specified backtest id</param>
-        public abstract void AbortLean(string backtestId);
+        protected abstract void AbortLean(string backtestId);
     }
 }

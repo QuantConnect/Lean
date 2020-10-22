@@ -28,19 +28,19 @@ namespace QuantConnect.Optimizer
         private object _locker = new object();
 
         /// <summary>
-        /// Should be global for all Step()'s
+        /// Global parameter step Id
         /// </summary>
-        private int _i = 0;
+        private int _i;
 
         /// <summary>
         /// Optimization target, i.e. maximize or minimize
         /// </summary>
-        public Target Target { get; private set; }
+        private Target Target { get; set; }
 
         /// <summary>
         /// Optimization constraints; if it doesn't comply just drop the backtest
         /// </summary>
-        public IEnumerable<Constraint> Constraints { get; private set; }
+        private IEnumerable<Constraint> Constraints { get; set; }
 
         /// <summary>
         /// Keep the best found solution - lean computed job result and corresponding  parameter set 
@@ -55,14 +55,14 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Initializes the strategy using generator, extremum settings and optimization parameters
         /// </summary>
-        /// <param name="extremum">Maximize or Minimize the target value</param>
+        /// <param name="target">The optimization target</param>
+        /// <param name="constraints">The optimization constraints to apply on backtest results</param>
         /// <param name="parameters">Optimization parameters</param>
-        public void Initialize(Target target, IEnumerable<Constraint> constraints, HashSet<OptimizationParameter> parameters)
+        public void Initialize(Target target, List<Constraint> constraints, HashSet<OptimizationParameter> parameters)
         {
             Target = target;
             Constraints = constraints;
             _args = parameters;
-            _i = 0;
         }
 
         /// <summary>
@@ -79,11 +79,12 @@ namespace QuantConnect.Optimizer
                     return;
                 }
 
+                // check if the incoming result is not the initial seed
                 if (result.Id > 0)
                 {
                     if (Constraints?.All(constraint => constraint.IsMet(result.JsonBacktestResult)) != false)
                     {
-                        if (Solution == null || Target.MoveAhead(result.JsonBacktestResult))
+                        if (Target.MoveAhead(result.JsonBacktestResult))
                         {
                             Solution = result;
                         }
