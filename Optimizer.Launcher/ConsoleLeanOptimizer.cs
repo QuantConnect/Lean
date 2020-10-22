@@ -81,6 +81,12 @@ namespace QuantConnect.Optimizer.Launcher
 
             process.Exited += (sender, args) =>
             {
+                if (Disposed)
+                {
+                    // handle abort
+                    return;
+                }
+
                 _processByBacktestId.TryRemove(backtestId, out process);
                 var backtestResult = $"{backtestId}.json";
                 var resultJson = Path.Combine(_rootResultDirectory, backtestId, backtestResult);

@@ -22,20 +22,20 @@ namespace QuantConnect.Optimizer
 {
     public class Constraint
     {
-        [JsonProperty("objective")]
+        [JsonProperty("target")]
         public string Objective { get; set; }
 
         [JsonProperty("operator")]
         public ComparisonOperatorTypes Operator { get; set; }
 
-        [JsonProperty("value")]
+        [JsonProperty("target-value")]
         public decimal TargetValue { get; set; }
 
-        public Constraint(string objective, ComparisonOperatorTypes op, decimal? targetValue)
+        public Constraint(string target, ComparisonOperatorTypes op, decimal? targetValue)
         {
-            if (string.IsNullOrEmpty(objective))
+            if (string.IsNullOrEmpty(target))
             {
-                throw new ArgumentNullException("objective", $"Constraint object can't be null or empty");
+                throw new ArgumentNullException("target", $"Constraint object can't be null or empty");
             }
 
             if (!targetValue.HasValue)
@@ -43,7 +43,7 @@ namespace QuantConnect.Optimizer
                 throw new ArgumentNullException("targetValue", $"Constraint target is not specified");
             }
 
-            Objective = objective;
+            Objective = target;
             Operator = op;
             TargetValue = targetValue.Value;
         }

@@ -53,11 +53,6 @@ namespace QuantConnect.Optimizer
         public event EventHandler NewParameterSet;
 
         /// <summary>
-        /// Fires when target complies specified value
-        /// </summary>
-        public event EventHandler GoalHasBeenReached;
-
-        /// <summary>
         /// Initializes the strategy using generator, extremum settings and optimization parameters
         /// </summary>
         /// <param name="extremum">Maximize or Minimize the target value</param>
@@ -91,20 +86,9 @@ namespace QuantConnect.Optimizer
                         if (Solution == null || Target.MoveAhead(result.JsonBacktestResult))
                         {
                             Solution = result;
-
-                            if (Target.IsComplied())
-                            {
-                                GoalHasBeenReached?.Invoke(this, null);
-                            }
                         }
                     }
 
-                    return;
-                }
-
-                if (Target.IsComplied())
-                {
-                    // target value has been reached, do not generate new parameter sets
                     return;
                 }
 

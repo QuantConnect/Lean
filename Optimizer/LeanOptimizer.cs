@@ -57,6 +57,11 @@ namespace QuantConnect.Optimizer
         protected readonly OptimizationNodePacket NodePacket;
 
         /// <summary>
+        /// Indicates whether optimizer was disposed
+        /// </summary>
+        protected bool Disposed => _disposed;
+
+        /// <summary>
         /// Event triggered when the optimization work ended
         /// </summary>
         public event EventHandler Ended;
@@ -89,6 +94,11 @@ namespace QuantConnect.Optimizer
                     ? new Maximization() as Extremum
                     : new Minimization()
                 , null);
+            OptimizationTarget.Reached += (s, e) =>
+            {
+                TriggerOnEndEvent(EventArgs.Empty);
+            };
+
             Strategy = (IOptimizationStrategy)Activator.CreateInstance(Type.GetType(NodePacket.OptimizationStrategy));
 
             RunningParameterSetForBacktest = new ConcurrentDictionary<string, ParameterSet>();
@@ -104,10 +114,6 @@ namespace QuantConnect.Optimizer
                     return;
                 }
                 LaunchLeanForParameterSet(parameterSet);
-            };
-            Strategy.GoalHasBeenReached += (s, e) =>
-            {
-                TriggerOnEndEvent(EventArgs.Empty);
             };
         }
 
@@ -134,6 +140,11 @@ namespace QuantConnect.Optimizer
         /// </summary>
         protected virtual void TriggerOnEndEvent(EventArgs eventArgs)
         {
+            if (_disposed)
+            {
+                return;
+            }
+
             var result = Strategy.Solution;
             if (result != null)
             {

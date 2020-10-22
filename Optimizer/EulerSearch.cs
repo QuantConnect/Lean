@@ -20,13 +20,9 @@ namespace QuantConnect.Optimizer
 {
     public class EulerSearchOptimizationStrategy : IOptimizationStrategy
     {
-        public Extremum Extremum => throw new NotImplementedException();
-
         public OptimizationResult Solution => throw new NotImplementedException();
 
         public event EventHandler NewParameterSet;
-
-        public event EventHandler GoalHasBeenReached;
 
         public void Initialize(Target target, IEnumerable<Constraint> constraints, HashSet<OptimizationParameter> parameters)
         {
