@@ -87,9 +87,9 @@ namespace QuantConnect.Parameters
                 string parameterValue;
                 if (!parameters.TryGetValue(parameterName, out parameterValue)) continue;
 
-                if (parameterValue == null)
+                if (string.IsNullOrEmpty(parameterValue))
                 {
-                    Log.Error($"ParameterAttribute.ApplyAttributes(): parameter '{parameterName}' provided value is null, skipping");
+                    Log.Error($"ParameterAttribute.ApplyAttributes(): parameter '{parameterName}' provided value is null/empty, skipping");
                     continue;
                 }
 
