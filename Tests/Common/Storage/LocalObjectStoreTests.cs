@@ -348,6 +348,29 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
+        [Test]
+        public void OversizedObject()
+        {
+            // Create a big byte array
+            var bytesToWrite = new byte[7000000];
+
+            // Attempt to save it to local store with 5MB cap
+            Assert.IsFalse(_store.SaveBytes("test", bytesToWrite));
+        }
+
+        [Test]
+        public void TooManyObjects()
+        {
+            // Write 100 Files first, should not throw
+            for (int i = _store.Count(); i < 100; i++)
+            {
+                Assert.IsTrue(_store.SaveString($"{i}", $"{i}"));
+            }
+
+            // Write 1 more; should throw
+            Assert.IsFalse(_store.SaveString("breaker", "gotem"));
+        }
+
         public class TestSettings
         {
             public int EmaFastPeriod { get; set; }

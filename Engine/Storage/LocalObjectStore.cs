@@ -194,22 +194,25 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         protected bool InternalSaveBytes(string key, byte[] contents)
         {
-            var fileCount = 0;
-            var expectedStorageSizeBytes = 0L;
+            // Before saving confirm we are abiding by the control rules
+            // Start by counting our file and its length
+            var fileCount = 1;
+            var expectedStorageSizeBytes = contents.Length;
             foreach (var kvp in _storage)
             {
-                fileCount++;
-                if (string.Equals(kvp.Key, key))
+                if (key.Equals(kvp.Key))
                 {
-                    // we use the New content size
-                    expectedStorageSizeBytes += contents.Length;
+                    // Skip we have already counted this above
+                    // If this key was already in storage it will be replaced.
                 }
                 else
                 {
+                    fileCount++;
                     expectedStorageSizeBytes += kvp.Value.Length;
                 }
             }
 
+            // Verify we are within FileCount limit
             if (fileCount > Controls.StorageFileCount)
             {
                 var message = $"LocalObjectStore.InternalSaveBytes(): at file capacity: {fileCount}. Unable to save: '{key}'";
@@ -218,6 +221,7 @@ namespace QuantConnect.Lean.Engine.Storage
                 return false;
             }
 
+            // Verify we are within Storage limit
             var expectedStorageSizeMb = BytesToMb(expectedStorageSizeBytes);
             if (expectedStorageSizeMb > Controls.StorageLimitMB)
             {
@@ -227,8 +231,8 @@ namespace QuantConnect.Lean.Engine.Storage
                 return false;
             }
 
+            // Add the entry
             _storage.AddOrUpdate(key, k => contents, (k, v) => contents);
-
             return true;
         }
 
