@@ -15,11 +15,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Runtime.Remoting.Activation;
 using System.Threading;
+using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Securities.Future;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -29,6 +35,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class LiveOptionChainProvider : IOptionChainProvider
     {
+        private static readonly HttpClient _client = new HttpClient();
+        private static readonly DateTime _epoch = new DateTime(1970, 1, 1);
+
+        private readonly RateGate _rateGate = new RateGate(1, TimeSpan.FromSeconds(0.5));
+
+        private const string CMESymbolReplace = "{{SYMBOL}}";
+        private const string CMEProductCodeReplace = "{{PRODUCT_CODE}}";
+        private const string CMEProductExpirationReplace = "{{PRODUCT_EXPIRATION}}";
+
+        private const string CMEProductSlateURL = "https://www.cmegroup.com/CmeWS/mvc/ProductSlate/V2/List?pageNumber=1&sortAsc=false&sortField=rank&searchString=" + CMESymbolReplace + "&pageSize=5";
+        private const string CMEOptionsCategoryListURL = "https://www.cmegroup.com/CmeWS/mvc/Options/Categories/List/" + CMEProductCodeReplace + "/G?optionTypeFilter=&_=";
+        private const string CMEOptionChainURL = "https://www.cmegroup.com/CmeWS/mvc/Quotes/Option/" + CMEProductCodeReplace + "/G/" + CMEProductExpirationReplace + "/ALL?_=";
+
         private const int MaxDownloadAttempts = 5;
 
         /// <summary>
@@ -41,19 +60,123 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
         }
 
+        public IEnumerable<Symbol> GetOptionContractList(Symbol underlyingSymbol, DateTime date)
+        {
+            if (underlyingSymbol.SecurityType == SecurityType.Equity)
+            {
+                return GetEquityOptionContractList(underlyingSymbol, date);
+            }
+            if (underlyingSymbol.SecurityType == SecurityType.Future)
+            {
+                return GetFutureOptionContractList(underlyingSymbol, date);
+            }
+
+            throw new ArgumentException("Option's Underlying SecurityType is not supported. Supported types are: Equity, Future");
+        }
+
+        private IEnumerable<Symbol> GetFutureOptionContractList(Symbol futureContractSymbol, DateTime date)
+        {
+            var symbols = new List<Symbol>();
+            var retries = 0;
+            var maxRetries = 5;
+
+            while (++retries <= maxRetries)
+            {
+                try
+                {
+                    var productResponse = _client.GetAsync(CMEProductSlateURL.Replace(CMESymbolReplace, futureContractSymbol.ID.Symbol))
+                        .SynchronouslyAwaitTaskResult();
+
+                    productResponse.EnsureSuccessStatusCode();
+
+                    var productResults = JsonConvert.DeserializeObject<CMEProductSlateV2ListResponse>(productResponse.Content.ReadAsStringAsync()
+                        .SynchronouslyAwaitTaskResult());
+
+                    var futureProductId = productResults.Products.Where(p => p.Globex == futureContractSymbol.ID.Symbol && p.GlobexTraded && p.Cleared == "Futures")
+                        .Select(p => p.Id)
+                        .Single();
+
+                    _rateGate.WaitToProceed();
+
+                    var categoryListUrl = CMEOptionsCategoryListURL.Replace(CMEProductCodeReplace, futureProductId.ToStringInvariant())
+                        + Math.Floor((DateTime.UtcNow - _epoch).TotalMilliseconds).ToStringInvariant();
+
+                    var categoryListResponse = _client.GetAsync(categoryListUrl).SynchronouslyAwaitTaskResult();
+                    categoryListResponse.EnsureSuccessStatusCode();
+
+                    var categoryList = JsonConvert.DeserializeObject<Dictionary<int, CMEOptionsCategoryListEntry>>(categoryListResponse.Content
+                        .ReadAsStringAsync()
+                        .SynchronouslyAwaitTaskResult());
+
+                    var optionProductId = categoryList
+                        .Where(kvp => !kvp.Value.Daily && !kvp.Value.Weekly && !kvp.Value.Sto && kvp.Value.OptionType == "AME")
+                        .Select(x => x.Key)
+                        .FirstOrDefault();
+
+                    if (optionProductId == default(int))
+                    {
+                        Log.Error($"LiveOptionChainProvider.GetFutureOptionContractList(): Found no matching future options for contract {futureContractSymbol}");
+                        yield break;
+                    }
+
+                    var futureContractMonthCode = futureContractSymbol.Value[futureContractSymbol.Value.Length - 3].ToStringInvariant() + futureContractSymbol.Value[futureContractSymbol.Value.Length - 1].ToStringInvariant();
+                    _rateGate.WaitToProceed();
+
+                    var optionChainQuotesResponseResult = _client.GetAsync(CMEOptionChainURL.Replace(CMEProductCodeReplace, optionProductId.ToStringInvariant())
+                        .Replace(CMEProductExpirationReplace, futureContractMonthCode)
+                        + Math.Floor((DateTime.UtcNow - _epoch).TotalMilliseconds).ToStringInvariant());
+
+                    optionChainQuotesResponseResult.Result.EnsureSuccessStatusCode();
+
+                    var futureOptionChain = JsonConvert.DeserializeObject<CMEOptionChainQuotes>(optionChainQuotesResponseResult.Result.Content
+                        .ReadAsStringAsync()
+                        .SynchronouslyAwaitTaskResult());
+
+                    foreach (var optionChainEntry in futureOptionChain.OptionContractQuotes)
+                    {
+                        symbols.Add(Symbol.CreateOption(
+                            futureContractSymbol,
+                            futureContractSymbol.ID.Market,
+                            OptionStyle.American,
+                            OptionRight.Call,
+                            optionChainEntry.Call.StrikePrice,
+                            futureContractSymbol.ID.Date));
+
+                       symbols.Add(Symbol.CreateOption(
+                           futureContractSymbol,
+                           futureContractSymbol.ID.Market,
+                           OptionStyle.American,
+                           OptionRight.Put,
+                           optionChainEntry.Call.StrikePrice,
+                           futureContractSymbol.ID.Date));
+                    }
+                }
+                catch (HttpRequestException err)
+                {
+                    if (retries != maxRetries)
+                    {
+                        Log.Error(err, $"Failed to retrieve futures options chain from CME, retrying ({retries} / {maxRetries})");
+                        continue;
+                    }
+
+                    Log.Error(err, $"Failed to retrieve futures options chain from CME, returning empty result ({retries} / {retries})");
+                }
+            }
+
+            foreach (var symbol in symbols)
+            {
+                yield return symbol;
+            }
+        }
+
         /// <summary>
-        /// Gets the list of option contracts for a given underlying symbol
+        /// Gets the list of option contracts for a given underlying equity symbol
         /// </summary>
         /// <param name="symbol">The underlying symbol</param>
         /// <param name="date">The date for which to request the option chain (only used in backtesting)</param>
         /// <returns>The list of option contracts</returns>
-        public IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date)
+        private IEnumerable<Symbol> GetEquityOptionContractList(Symbol symbol, DateTime date)
         {
-            if (symbol.SecurityType != SecurityType.Equity)
-            {
-                throw new NotSupportedException($"LiveOptionChainProvider.GetOptionContractList(): SecurityType.Equity is expected but was {symbol.SecurityType}");
-            }
-
             var attempt = 1;
             IEnumerable<Symbol> contracts;
 
@@ -63,7 +186,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     Log.Trace($"LiveOptionChainProvider.GetOptionContractList(): Fetching option chain for {symbol.Value} [Attempt {attempt}]");
 
-                    contracts = FindOptionContracts(symbol.Value);
+                    contracts = FindEquityOptionContracts(symbol.Value);
                     break;
                 }
                 catch (WebException exception)
@@ -85,7 +208,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Retrieve the list of option contracts for an underlying symbol from the OCC website
         /// </summary>
-        private static IEnumerable<Symbol> FindOptionContracts(string underlyingSymbol)
+        private static IEnumerable<Symbol> FindEquityOptionContracts(string underlyingSymbol)
         {
             var symbols = new List<Symbol>();
 

@@ -129,35 +129,35 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <param name="securityCurrency">Expected security currency(if any)</param>
         /// <param name="securityExchange">Expected security exchange name(if any)</param>
         /// <returns></returns>
-        public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, bool includeExpired, string securityCurrency = null, string securityExchange = null)
+        public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null)
         {
             Func<Symbol, string> lookupFunc;
 
-            switch (securityType)
+            switch (symbol.SecurityType)
             {
                 case SecurityType.Option:
                     // for option, futures contract we search the underlying
-                    lookupFunc = symbol => symbol.HasUnderlying ? symbol.Underlying.Value : string.Empty;
+                    lookupFunc = lookupSymbol => lookupSymbol.HasUnderlying ? lookupSymbol.Underlying.Value : string.Empty;
                     break;
                 case SecurityType.Future:
-                    lookupFunc = symbol => symbol.ID.Symbol;
+                    lookupFunc = lookupSymbol => lookupSymbol.ID.Symbol;
                     break;
                 default:
-                    lookupFunc = symbol => symbol.Value;
+                    lookupFunc = lookupSymbol => lookupSymbol.Value;
                     break;
             }
 
+            var lookupName = lookupFunc(symbol);
             var result = _symbolUniverse.Where(x => lookupFunc(x.Symbol) == lookupName &&
-                                            x.Symbol.ID.SecurityType == securityType &&
-                                            (securityCurrency == null || x.SecurityCurrency == securityCurrency) &&
-                                            (securityExchange == null || x.SecurityExchange == securityExchange))
+                                            x.Symbol.ID.SecurityType == symbol.SecurityType &&
+                                            (securityCurrency == null || x.SecurityCurrency == securityCurrency))
                                          .ToList();
 
             bool onDemandRequests = result.All(symbolData => !symbolData.IsDataLoaded());
 
             if (onDemandRequests)
             {
-                var exchanges = securityType == SecurityType.Future ?
+                var exchanges = symbol.SecurityType == SecurityType.Future ?
                                     FuturesExchanges.Values.Reverse().ToArray() :
                                     new string[] { };
 
@@ -176,9 +176,8 @@ namespace QuantConnect.ToolBox.IQFeed
                 // if we found some data that was loaded on demand, then we have to re-run the query to include that data into method output
 
                 result = _symbolUniverse.Where(x => lookupFunc(x.Symbol) == lookupName &&
-                                            x.Symbol.ID.SecurityType == securityType &&
-                                            (securityCurrency == null || x.SecurityCurrency == securityCurrency) &&
-                                            (securityExchange == null || x.SecurityExchange == securityExchange))
+                                            x.Symbol.ID.SecurityType == symbol.SecurityType &&
+                                            (securityCurrency == null || x.SecurityCurrency == securityCurrency))
                                         .ToList();
             }
 

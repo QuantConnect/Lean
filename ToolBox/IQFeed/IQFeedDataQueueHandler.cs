@@ -349,9 +349,9 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <param name="securityCurrency">Expected security currency(if any)</param>
         /// <param name="securityExchange">Expected security exchange name(if any)</param>
         /// <returns></returns>
-        public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, bool includeExpired, string securityCurrency = null, string securityExchange = null)
+        public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null)
         {
-            return _symbolUniverse.LookupSymbols(lookupName, securityType, includeExpired, securityCurrency, securityExchange);
+            return _symbolUniverse.LookupSymbols(symbol, includeExpired, securityCurrency);
         }
 
         /// <summary>

@@ -80,6 +80,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             switch (symbol.ID.SecurityType)
             {
                 case SecurityType.Option:
+                    if (symbol.Underlying.SecurityType == SecurityType.Future)
+                    {
+                        goto case SecurityType.Future;
+                    }
+                    else if (symbol.Underlying.SecurityType != SecurityType.Equity)
+                    {
+                        return symbol.Underlying.ID.Symbol;
+                    }
+
                     return symbol.Underlying.Value;
 
                 case SecurityType.Future:

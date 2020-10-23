@@ -93,7 +93,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     .ConvertFromUtc(_subscriptionRequest.Configuration.ExchangeTimeZone);
 
                 // loading the list of futures contracts and converting them into zip entries
-                var symbols = _universeProvider.LookupSymbols(_subscriptionRequest.Security.Symbol.ID.Symbol, _subscriptionRequest.Security.Type, false);
+                var symbols = _universeProvider.LookupSymbols(_subscriptionRequest.Security.Symbol, false);
                 var zipEntries = symbols.Select(x => new ZipEntryName { Time = localTime, Symbol = x } as BaseData).ToList();
                 var current = new FuturesChainUniverseDataCollection
                 {

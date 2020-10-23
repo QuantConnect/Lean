@@ -38,8 +38,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var lookup = symbolUniverse as IDataQueueUniverseProvider;
             var mapper = symbolUniverse as ISymbolMapper;
 
-            Assert.IsTrue(lookup.LookupSymbols("SPY", SecurityType.Option, false).Any());
-            Assert.IsTrue(lookup.LookupSymbols("SPY", SecurityType.Equity, false).Count() == 1);
+            Assert.IsTrue(lookup.LookupSymbols(Symbols.SPY_C_192_Feb19_2016, false).Any());//Option
+            Assert.IsTrue(lookup.LookupSymbols(Symbols.SPY, false).Count() == 1);
             Assert.IsTrue(!string.IsNullOrEmpty(mapper.GetBrokerageSymbol(Symbols.SPY)));
             Assert.IsTrue(mapper.GetLeanSymbol("SPY", SecurityType.Equity, "") != Symbol.Empty);
 
