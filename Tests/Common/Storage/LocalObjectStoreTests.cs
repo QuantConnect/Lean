@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Text;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.Storage;
@@ -176,7 +177,11 @@ namespace QuantConnect.Tests.Common.Storage
             var store = new TestLocalObjectStore();
             var dir = Path.Combine(TestStorageRoot, $"CSharp-TestAlgorithm-8");
             Directory.CreateDirectory(dir);
-            File.WriteAllText(Path.Combine(dir, "Jose"), "Pepe");
+
+            //Determine filename for key "Jose" using Base64
+            var filename = Convert.ToBase64String(Encoding.UTF8.GetBytes("Jose"));
+            File.WriteAllText(Path.Combine(dir, filename), "Pepe");
+
             store.Initialize($"CSharp-TestAlgorithm-8", 0, 0, "", new Controls { StoragePermissions = permissions });
 
             if (shouldThrow)
@@ -223,8 +228,11 @@ namespace QuantConnect.Tests.Common.Storage
             Assert.IsTrue(error.Message.Contains("Please use ObjectStore.ContainsKey(key)"));
         }
 
-        [TestCase("my_key", "./LocalObjectStoreTests/CSharp-TestAlgorithm/my_key")]
-        [TestCase("test123", "./LocalObjectStoreTests/CSharp-TestAlgorithm/test123")]
+        [TestCase("my_key", "./LocalObjectStoreTests/CSharp-TestAlgorithm/bXlfa2V5")]
+        [TestCase("test/123", "./LocalObjectStoreTests/CSharp-TestAlgorithm/dGVzdC8xMjM=")]
+        [TestCase("**abc**", "./LocalObjectStoreTests/CSharp-TestAlgorithm/KiphYmMqKg==")]
+        [TestCase("<random>", "./LocalObjectStoreTests/CSharp-TestAlgorithm/PHJhbmRvbT4=")]
+        [TestCase("?|", "./LocalObjectStoreTests/CSharp-TestAlgorithm/P3w=")]
         public void GetFilePathReturnsFileName(string key, string expectedRelativePath)
         {
             var expectedPath = Path.GetFullPath(expectedRelativePath).Replace("\\", "/");
@@ -310,6 +318,7 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void DisposeDoesNotDeleteStoreFiles()
         {
+            string path;
             using (var store = new LocalObjectStore())
             {
                 store.Initialize("test", 0, 0, "", new Controls() {PersistenceIntervalSeconds = -1});
@@ -317,13 +326,14 @@ namespace QuantConnect.Tests.Common.Storage
 
                 var validData = new byte[1024 * 1024 * 4];
                 var saved = store.SaveBytes("a.txt", validData);
-
                 Assert.IsTrue(saved);
-                Assert.IsTrue(File.Exists("./LocalObjectStoreTests/test/a.txt"));
+
+                path = store.GetFilePath("a.txt");
+                Assert.IsTrue(File.Exists(path));
             }
 
             // Check that it still exists
-            Assert.IsTrue(File.Exists("./LocalObjectStoreTests/test/a.txt"));
+            Assert.IsTrue(File.Exists(path));
         }
 
         [Test]

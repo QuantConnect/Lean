@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
@@ -112,7 +113,7 @@ namespace QuantConnect.Lean.Engine.Storage
                 foreach (var file in Directory.EnumerateFiles(AlgorithmStorageRoot))
                 {
                     var contents = File.ReadAllBytes(file);
-                    var key = Path.GetFileName(file);
+                    var key = Base64ToKey(Path.GetFileName(file));
                     _storage[key] = contents;
                 }
             }
@@ -357,7 +358,8 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         private string PathForKey(string key)
         {
-            return Path.Combine(AlgorithmStorageRoot, $"{key}");
+            var base64string = KeyToBase64(key);
+            return Path.Combine(AlgorithmStorageRoot, $"{base64string}");
         }
 
         /// <summary>
@@ -437,6 +439,28 @@ namespace QuantConnect.Lean.Engine.Storage
         private static double BytesToMb(long bytes)
         {
             return bytes / 1024.0 / 1024.0;
+        }
+
+        /// <summary>
+        /// Convert a given key to a Base64 string
+        /// </summary>
+        /// <param name="key">Key to be encoded</param>
+        /// <returns>Base64 hash string</returns>
+        private static string KeyToBase64(string key)
+        {
+            var textAsBytes = Encoding.UTF8.GetBytes(key);
+            return Convert.ToBase64String(textAsBytes);
+        }
+
+        /// <summary>
+        /// Convert a given Base64 string back to a key
+        /// </summary>
+        /// <param name="hash">Hash to be decoded</param>
+        /// <returns>Key string</returns>
+        private static string Base64ToKey(string hash)
+        {
+            var textAsBytes = Convert.FromBase64String(hash);
+            return Encoding.UTF8.GetString(textAsBytes);
         }
     }
 }
