@@ -400,7 +400,7 @@ namespace QuantConnect.Securities
                         var securityType = position.Type;
                         // we can't include forex in this calculation since we would be double accounting with respect to the cash book
                         // we also exclude futures, future options, and CFD as they are calculated separately
-                        if (securityType == SecurityType.Option && position.Symbol.Underlying.SecurityType != SecurityType.Future &&
+                        if ((securityType != SecurityType.Option || position.Symbol.Underlying.SecurityType != SecurityType.Future) &&
                             securityType != SecurityType.Forex && securityType != SecurityType.Crypto &&
                             securityType != SecurityType.Future && securityType != SecurityType.Cfd)
                         {

@@ -69,7 +69,7 @@ namespace QuantConnect.Securities
 
                 // apply the funds using the current settlement model
                 // we dont adjust funds for futures, future options, and CFDs: it is zero upfront payment derivative (margin applies though)
-                if ((security.Type == SecurityType.Option && security.Symbol.Underlying.SecurityType != SecurityType.Future) &&
+                if ((security.Type != SecurityType.Option || security.Symbol.Underlying.SecurityType != SecurityType.Future) &&
                     (security.Type != SecurityType.Future && security.Type != SecurityType.Cfd))
                 {
                     security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, -fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier);
