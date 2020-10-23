@@ -93,7 +93,7 @@ namespace QuantConnect.Lean.Engine.Storage
             Controls = controls;
 
             // Load in any already existing objects in the storage directory
-            LoadObjectsFromDisk();
+            LoadExistingObjects();
 
             // if <= 0 we disable periodic persistence and make it synchronous
             if (Controls.PersistenceIntervalSeconds > 0)
@@ -106,12 +106,13 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Loads objects from the AlgorithmStorageRoot into the ObjectStore
         /// </summary>
-        protected virtual void LoadObjectsFromDisk()
+        protected virtual void LoadExistingObjects()
         {
             if (Controls.StoragePermissions.HasFlag(FileAccess.Read))
             {
                 foreach (var file in Directory.EnumerateFiles(AlgorithmStorageRoot))
                 {
+                    // Read the contents of the file and decode the filename to get our key
                     var contents = File.ReadAllBytes(file);
                     var key = Base64ToKey(Path.GetFileName(file));
                     _storage[key] = contents;
@@ -362,8 +363,11 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         private string PathForKey(string key)
         {
-            var base64string = KeyToBase64(key);
-            return Path.Combine(AlgorithmStorageRoot, $"{base64string}");
+            // We use an encoded filename because certain keys will cause problems with persisting
+            // data to a file; we use Base64 because it allow us to use all chars except '?' in our
+            // key, this is because '?' in the right place will output '/' which will break during
+            // persist
+            return Path.Combine(AlgorithmStorageRoot, $"{KeyToBase64(key)}");
         }
 
         /// <summary>
