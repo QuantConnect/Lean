@@ -120,8 +120,8 @@ namespace QuantConnect.ToolBox.IEX
                     _refreshEvent.WaitOne();
                     Thread.Sleep(SubscribeDelay);
 
-                    _clients.UpdateSubscription(_symbols.Keys.ToArray());
                     _refreshEvent.Reset();
+                    _clients.UpdateSubscription(_symbols.Keys.ToArray());
 
                     if (_isDisposing)
                     {
@@ -152,15 +152,10 @@ namespace QuantConnect.ToolBox.IEX
                         continue;
                     }
 
-                    var bidSize = item.IexBidSize;
-                    var bidPrice = item.IexBidPrice;
-                    var askSize = item.IexAskSize;
-                    var askPrice = item.IexAskPrice;
-                    var lastSalePrice = item.IexRealtimePrice;
-                    var lastSaleSize = item.IexRealtimeSize;
+                    var lastPrice = item.IexRealtimePrice;
+                    var lastSize = item.IexRealtimeSize;
 
                     var lastTradeTime = item.LastTradeTime;
-                    var lastTradeDateTime = _unixEpoch.AddMilliseconds(lastTradeTime);
                     var lastUpdated = item.IexLastUpdated;
                     var lastUpdatedDatetime = _unixEpoch.AddMilliseconds(lastUpdated);
 
@@ -170,7 +165,7 @@ namespace QuantConnect.ToolBox.IEX
                         return;
                     }
 
-                    // By a strange circumstance, IEX sends the same ticks several times in a row, we must skip the same entries
+                    // IEX may send the same ticks several times - we must skip repeating entries
                     long value;
                     if (_tickLastTradeTime.TryGetValue(symbolString, out value))
                     {
@@ -184,14 +179,10 @@ namespace QuantConnect.ToolBox.IEX
                     {
                         Symbol = symbol,
                         Time = lastUpdatedDatetime.ConvertFromUtc(TimeZones.NewYork),
-                        TickType = lastUpdatedDatetime == lastTradeDateTime ? TickType.Trade : TickType.Quote,
+                        TickType = TickType.Trade,
                         Exchange = "IEX",
-                        BidSize = bidSize,
-                        BidPrice = bidPrice,
-                        AskSize = askSize,
-                        AskPrice = askPrice,
-                        Value = lastSalePrice,
-                        Quantity = lastSaleSize
+                        Value = lastPrice,
+                        Quantity = lastSize
                     };
 
                     _aggregator.Update(tick);
