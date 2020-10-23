@@ -76,14 +76,14 @@ namespace QuantConnect.Optimizer
             }
 
             NodePacket = nodePacket;
-
+            string targetValue;
             OptimizationTarget = new Target(nodePacket.Criterion["target"],
                 NodePacket.Criterion["extremum"] == "max"
                     ? new Maximization() as Extremum
                     : new Minimization(),
-                string.IsNullOrEmpty(NodePacket.Criterion.ContainsKey("target-value") ? NodePacket.Criterion["target-value"] : null)
-                    ? (null as decimal?)
-                    : NodePacket.Criterion["target-value"].ToDecimal());
+                NodePacket.Criterion.TryGetValue("target-value", out targetValue) && !string.IsNullOrEmpty(targetValue)
+                    ? targetValue.ToDecimal()
+                    : (decimal?)null);
             OptimizationTarget.Reached += (s, e) =>
             {
                 TriggerOnEndEvent(EventArgs.Empty);
