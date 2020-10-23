@@ -2094,7 +2094,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Maps SecurityType enum
+        /// Maps SecurityType enum to an IBApi SecurityType value
         /// </summary>
         private static string ConvertSecurityType(SecurityType type, SecurityType? underlyingSecurityType = null)
         {
@@ -2104,6 +2104,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return IB.SecurityType.Stock;
 
                 case SecurityType.Option:
+                    // IB distinguishes Options and FutureOptions as different asset classes.
+                    // We must detect an underlying future and designate it as a future option here.
                     return underlyingSecurityType == SecurityType.Future
                         ? IB.SecurityType.FutureOption
                         : IB.SecurityType.Option;
@@ -2236,6 +2238,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var market = InteractiveBrokersBrokerageModel.DefaultMarketMap[securityType];
             var isFutureOption = contract.SecType == IB.SecurityType.FutureOption;
 
+            // Handle future options as a Future, up until we actually return the future.
+            // Note that this may be problematic, since some future option symbols might
+            // differ from the underlying Symbol, but it's all dependent on IB.
             if (isFutureOption || securityType == SecurityType.Future)
             {
                 var leanSymbol = _symbolMapper.GetLeanRootSymbol(ibSymbol);
@@ -2471,6 +2476,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (symbol.Value.IndexOfInvariant("universe", true) != -1) return false;
 
+            // Include future options as a special case with no matching market, otherwise
+            // our subscriptions are removed without any sort of notice.
             return
                 (securityType == SecurityType.Equity && market == Market.USA) ||
                 (securityType == SecurityType.Forex && market == Market.Oanda) ||
@@ -2752,6 +2759,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var futuresExchanges = _futuresExchanges.Values.Reverse().ToArray();
             Func<string, int> exchangeFilter = exchange => symbol.SecurityType == SecurityType.Future ? Array.IndexOf(futuresExchanges, exchange) : 0;
 
+            // Non-equity Symbols do not undergo mapping, so to get a Symbol representing the asset without expiry information,
+            // we use the SID's Symbol property, since it's guaranteed to never change unlike with equities.
             var lookupName = symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType != SecurityType.Equity
                 ? symbol.Underlying.ID.Symbol
                 : symbol.Underlying.Value;
@@ -3067,8 +3076,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case SecurityType.Option:
                     if (symbol.Underlying.SecurityType == SecurityType.Future)
                     {
+                        // Future options share the same market as the underlying Symbol
                         goto case SecurityType.Future;
                     }
+                    // Regular equity options uses default, in this case "Smart"
                     goto default;
 
                 case SecurityType.Future:

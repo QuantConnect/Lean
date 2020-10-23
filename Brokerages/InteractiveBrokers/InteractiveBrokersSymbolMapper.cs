@@ -82,13 +82,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case SecurityType.Option:
                     if (symbol.Underlying.SecurityType == SecurityType.Future)
                     {
+                        // Future options case, we handle exactly as a future
+                        // since we're making the assumption that they both
+                        // share the same ticker.
                         goto case SecurityType.Future;
                     }
                     else if (symbol.Underlying.SecurityType != SecurityType.Equity)
                     {
+                        // Use the SID's Symbol to get a non-changing ticker representing
+                        // the Symbol without expiry information.
                         return symbol.Underlying.ID.Symbol;
                     }
 
+                    // Final case is for equities. We use the mapped value to select
+                    // the equity we want to trade.
                     return symbol.Underlying.Value;
 
                 case SecurityType.Future:

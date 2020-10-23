@@ -29,8 +29,7 @@ namespace QuantConnect.Interfaces
         /// <param name="symbol">Symbol to lookup</param>
         /// <param name="includeExpired">Include expired contracts</param>
         /// <param name="securityCurrency">Expected security currency(if any)</param>
-        /// <param name="securityExchange">Expected security exchange name(if any)</param>
-        /// <returns></returns>
+        /// <returns>Enumerable of Symbols, that are associated with the provided Symbol</returns>
         IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null);
 
         /// <summary>

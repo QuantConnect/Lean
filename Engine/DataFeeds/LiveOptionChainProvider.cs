@@ -60,14 +60,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
         }
 
+        /// <summary>
+        /// Gets the option chain associated with the underlying Symbol
+        /// </summary>
+        /// <param name="underlyingSymbol">Underlying symbol to get the option chain for</param>
+        /// <param name="date">Unused</param>
+        /// <returns>Option chain</returns>
+        /// <exception cref="ArgumentException">Option underlying Symbol is not Future or Equity</exception>
         public IEnumerable<Symbol> GetOptionContractList(Symbol underlyingSymbol, DateTime date)
         {
             if (underlyingSymbol.SecurityType == SecurityType.Equity)
             {
+                // Source data from TheOCC if we're trading equity options
                 return GetEquityOptionContractList(underlyingSymbol, date);
             }
             if (underlyingSymbol.SecurityType == SecurityType.Future)
             {
+                // We get our data from CME if we're trading future options
                 return GetFutureOptionContractList(underlyingSymbol, date);
             }
 
@@ -84,22 +93,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 try
                 {
+                    _rateGate.WaitToProceed();
+
                     var productResponse = _client.GetAsync(CMEProductSlateURL.Replace(CMESymbolReplace, futureContractSymbol.ID.Symbol))
                         .SynchronouslyAwaitTaskResult();
 
                     productResponse.EnsureSuccessStatusCode();
 
-                    var productResults = JsonConvert.DeserializeObject<CMEProductSlateV2ListResponse>(productResponse.Content.ReadAsStringAsync()
+                    var productResults = JsonConvert.DeserializeObject<CMEProductSlateV2ListResponse>(productResponse.Content
+                        .ReadAsStringAsync()
                         .SynchronouslyAwaitTaskResult());
 
+                    // We want to gather the future product to get the future options ID
                     var futureProductId = productResults.Products.Where(p => p.Globex == futureContractSymbol.ID.Symbol && p.GlobexTraded && p.Cleared == "Futures")
                         .Select(p => p.Id)
                         .Single();
 
-                    _rateGate.WaitToProceed();
 
                     var categoryListUrl = CMEOptionsCategoryListURL.Replace(CMEProductCodeReplace, futureProductId.ToStringInvariant())
                         + Math.Floor((DateTime.UtcNow - _epoch).TotalMilliseconds).ToStringInvariant();
+
+                    _rateGate.WaitToProceed();
 
                     var categoryListResponse = _client.GetAsync(categoryListUrl).SynchronouslyAwaitTaskResult();
                     categoryListResponse.EnsureSuccessStatusCode();
@@ -108,6 +122,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         .ReadAsStringAsync()
                         .SynchronouslyAwaitTaskResult());
 
+                    // For now, only support American options on CME
                     var optionProductId = categoryList
                         .Where(kvp => !kvp.Value.Daily && !kvp.Value.Weekly && !kvp.Value.Sto && kvp.Value.OptionType == "AME")
                         .Select(x => x.Key)
@@ -119,7 +134,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         yield break;
                     }
 
+                    // Gather the month code and the year's last number to query the next API, which expects an expiration as `<MONTH_CODE><YEAR_LAST_NUMBER>`
                     var futureContractMonthCode = futureContractSymbol.Value[futureContractSymbol.Value.Length - 3].ToStringInvariant() + futureContractSymbol.Value[futureContractSymbol.Value.Length - 1].ToStringInvariant();
+
                     _rateGate.WaitToProceed();
 
                     var optionChainQuotesResponseResult = _client.GetAsync(CMEOptionChainURL.Replace(CMEProductCodeReplace, optionProductId.ToStringInvariant())
@@ -134,6 +151,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     foreach (var optionChainEntry in futureOptionChain.OptionContractQuotes)
                     {
+                        // Calls and puts share the same strike, create two symbols per each to avoid iterating twice.
                         symbols.Add(Symbol.CreateOption(
                             futureContractSymbol,
                             futureContractSymbol.ID.Market,
