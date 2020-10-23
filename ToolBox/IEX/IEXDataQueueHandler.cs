@@ -48,7 +48,8 @@ namespace QuantConnect.ToolBox.IEX
         private readonly ManualResetEvent _refreshEvent = new ManualResetEvent(false);
 
         private readonly ConcurrentDictionary<string, Symbol> _symbols = new ConcurrentDictionary<string, Symbol>(StringComparer.InvariantCultureIgnoreCase);
-        private readonly ConcurrentDictionary<string, long> _tickLastTradeTime = new ConcurrentDictionary<string, long>();
+        private readonly ConcurrentDictionary<string, long> _iexLastUpdateTime = new ConcurrentDictionary<string, long>();
+        private readonly ConcurrentDictionary<string, long> _iexLastTradeTime = new ConcurrentDictionary<string, long>();
 
         // only required for history requests to IEX Cloud
         private readonly string _apiKey = Config.Get("iex-cloud-api-key");
@@ -121,7 +122,16 @@ namespace QuantConnect.ToolBox.IEX
                     Thread.Sleep(SubscribeDelay);
 
                     _refreshEvent.Reset();
-                    _clients.UpdateSubscription(_symbols.Keys.ToArray());
+
+                    try
+                    {
+                        _clients.UpdateSubscription(_symbols.Keys.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e);
+                        throw;
+                    }
 
                     if (_isDisposing)
                     {
@@ -146,46 +156,79 @@ namespace QuantConnect.ToolBox.IEX
                     Symbol symbol;
                     if (!_symbols.TryGetValue(symbolString, out symbol))
                     {
-                        // If this called, then the symbol is not in the collection,
-                        // then it was removed in Unsubscribe(), then no updates are needed
-                        Log.Trace($"ProcessJsonObject(): Could not get the symbol {symbolString}");
+                        // Symbol is no loner in dictionary, it may be the stream not has been updated yet,
+                        // so there can be residual messages for the symbol, which we must skip
                         continue;
                     }
 
+                    var bidSize = item.IexBidSize;
+                    var bidPrice = item.IexBidPrice;
+                    var askSize = item.IexAskSize;
+                    var askPrice = item.IexAskPrice;
                     var lastPrice = item.IexRealtimePrice;
                     var lastSize = item.IexRealtimeSize;
 
-                    var lastTradeTime = item.LastTradeTime;
-                    var lastUpdated = item.IexLastUpdated;
-                    var lastUpdatedDatetime = _unixEpoch.AddMilliseconds(lastUpdated);
+                    var lastTradeMillis = item.LastTradeTime;
+                    var lastUpdateMillis = item.IexLastUpdated;
+                    var lastUpdatedDatetime = _unixEpoch.AddMilliseconds(lastUpdateMillis);
+                    var lastUpdateTimeNewYork = lastUpdatedDatetime.ConvertFromUtc(TimeZones.NewYork);
 
-                    if (lastUpdated == -1)
+                    if (lastUpdateMillis == -1)
                     {
                         // there were no trades on this day
                         return;
                     }
 
-                    // IEX may send the same ticks several times - we must skip repeating entries
+                    // The data stream update logic allows short-term intervals when we can receive
+                    // several identical updates per one symbol at a time when replacing event sources.
+                    // So we always check if we could already get a snapshot with such time-stamp
                     long value;
-                    if (_tickLastTradeTime.TryGetValue(symbolString, out value))
+                    if (_iexLastUpdateTime.TryGetValue(symbolString, out value))
                     {
-                        if (value == lastTradeTime) return;
+                        if (value == lastTradeMillis) return;
                     }
 
-                    // Otherwise update a dictionary and update a tick
-                    _tickLastTradeTime[symbolString] = lastTradeTime;
+                    _iexLastUpdateTime[symbolString] = lastUpdateMillis;
 
-                    var tick = new Tick()
+                    // The same logic with ticks, if last trade time is not newer than previous, we don't update trade-ticks
+                    Tick tradeTick = null;
+                    if (_iexLastTradeTime.TryGetValue(symbolString, out value))
+                    {
+                        if (value != lastTradeMillis)
+                        {
+                            tradeTick = new Tick()
+                            {
+                                Symbol = symbol,
+                                Time = lastUpdateTimeNewYork,
+                                TickType = TickType.Trade,
+                                Exchange = "IEX",
+                                Value = lastPrice,
+                                Quantity = lastSize
+                            };
+                        }
+                    }
+
+                    // Update with new value
+                    _iexLastTradeTime[symbolString] = lastTradeMillis; 
+
+                    if (tradeTick != null)
+                        _aggregator.Update(tradeTick);
+
+                    // Always update quotes for a new snapshot, if there is a bid and ask price
+                    if (bidPrice == 0 && askPrice == 0) return;
+                    var quoteTick = new Tick()
                     {
                         Symbol = symbol,
-                        Time = lastUpdatedDatetime.ConvertFromUtc(TimeZones.NewYork),
-                        TickType = TickType.Trade,
+                        Time = lastUpdateTimeNewYork,
+                        TickType = TickType.Quote,
                         Exchange = "IEX",
-                        Value = lastPrice,
-                        Quantity = lastSize
+                        BidSize = bidSize,
+                        BidPrice = bidPrice,
+                        AskSize = askSize,
+                        AskPrice = askPrice,
                     };
+                    _aggregator.Update(quoteTick);
 
-                    _aggregator.Update(tick);
                 }
             }
             catch (Exception err)
