@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
     [TestFixture]
     public class GridSearchOptimizationStrategyTests
     {
-        private GridSearchOptimizationStrategy _strategy = new GridSearchOptimizationStrategy();
+        private GridSearchOptimizationStrategy _strategy;
         private Func<ParameterSet, decimal> _compute = parameterSet => parameterSet.Value.Sum(arg => arg.Value.ToDecimal());
         private Func<string, decimal> _parse = dump => JObject.Parse(dump).SelectToken("Statistics.Profit").Value<decimal>();
         private Func<decimal, string> _stringify = value => $"{{\"Statistics\":{{\"Profit\":{value}}}}}";
@@ -42,6 +42,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         [SetUp]
         public void Init()
         {
+            _strategy = new GridSearchOptimizationStrategy();
             _strategy.NewParameterSet += (s, e) =>
             {
                 var parameterSet = (e as OptimizationEventArgs)?.ParameterSet;
@@ -115,6 +116,46 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             {
                 Assert.AreEqual(solution?.Value[arg.Key], arg.Value);
             }
+        }
+
+
+        [Test]
+        public void ThrowOnReinitialization()
+        {
+            int nextId = 1;
+            _strategy.NewParameterSet += (s, e) =>
+            {
+                Assert.AreEqual(nextId++, (e as OptimizationEventArgs).ParameterSet.Id);
+            };
+
+            var set1 = new HashSet<OptimizationParameter>()
+            {
+                new OptimizationParameter("ema-fast", 10, 100, 1)
+            };
+            _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set1);
+
+            _strategy.PushNewResults(OptimizationResult.Empty);
+            Assert.Greater(nextId, 1);
+
+            var set2 = new HashSet<OptimizationParameter>()
+            {
+                new OptimizationParameter("ema-fast", 10, 100, 1),
+                new OptimizationParameter("ema-slow", 10, 100, 2)
+            };
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                _strategy.Initialize(new Target("Profit", new Minimization(), null), null, set2);
+            });
+        }
+
+        [Test]
+        public void ThrowIfNotInitialized()
+        {
+            var strategy = new GridSearchOptimizationStrategy();
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                strategy.PushNewResults(OptimizationResult.Empty);
+            });
         }
 
         [TestFixture]
@@ -367,35 +408,6 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 last = nextId;
                 _strategy.PushNewResults(OptimizationResult.Empty);
                 Assert.Greater(nextId, last);
-            }
-
-            [Test]
-            public void ResetCounterAfterInitialize()
-            {
-                int nextId = 1;
-                _strategy.NewParameterSet += (s, e) =>
-                {
-                    Assert.AreEqual(nextId++, (e as OptimizationEventArgs).ParameterSet.Id);
-                };
-
-                var set1 = new HashSet<OptimizationParameter>()
-                {
-                    new OptimizationParameter("ema-fast", 10, 100, 1)
-                };
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set1);
-
-                _strategy.PushNewResults(OptimizationResult.Empty);
-                Assert.Greater(nextId, 1);
-
-                var set2 = new HashSet<OptimizationParameter>()
-                {
-                    new OptimizationParameter("ema-fast", 10, 100, 1),
-                    new OptimizationParameter("ema-slow", 10, 100, 2)
-                };
-                _strategy.Initialize(new Target("Profit", new Minimization(), null), null, set2);
-                nextId = 1;
-                _strategy.PushNewResults(OptimizationResult.Empty);
-                Assert.Greater(nextId, 1);
             }
         }
     }

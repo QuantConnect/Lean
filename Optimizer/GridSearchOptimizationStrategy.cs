@@ -26,21 +26,18 @@ namespace QuantConnect.Optimizer
     {
         private HashSet<OptimizationParameter> _args;
         private object _locker = new object();
+        private bool _initialized = false;
 
         /// <summary>
         /// Global parameter step Id
         /// </summary>
         private int _i;
 
-        /// <summary>
-        /// Optimization target, i.e. maximize or minimize
-        /// </summary>
-        private Target Target { get; set; }
+        // Optimization target, i.e. maximize or minimize
+        private Target _target;
 
-        /// <summary>
-        /// Optimization constraints; if it doesn't comply just drop the backtest
-        /// </summary>
-        private IEnumerable<Constraint> Constraints { get; set; }
+        // Optimization constraints; if it doesn't comply just drop the backtest
+        private IEnumerable<Constraint> _constraints;
 
         /// <summary>
         /// Keep the best found solution - lean computed job result and corresponding  parameter set 
@@ -60,9 +57,15 @@ namespace QuantConnect.Optimizer
         /// <param name="parameters">Optimization parameters</param>
         public void Initialize(Target target, List<Constraint> constraints, HashSet<OptimizationParameter> parameters)
         {
-            Target = target;
-            Constraints = constraints;
+            if (_initialized)
+            {
+                throw new InvalidOperationException($"GridSearchOptimizationStrategy.Initialize: can not be re-initialized.");
+            }
+
+            _target = target;
+            _constraints = constraints;
             _args = parameters;
+            _initialized = true;
         }
 
         /// <summary>
@@ -71,6 +74,11 @@ namespace QuantConnect.Optimizer
         /// <param name="result">Lean compute job result and corresponding parameter set</param>
         public void PushNewResults(OptimizationResult result)
         {
+            if (!_initialized)
+            {
+                throw new InvalidOperationException($"GridSearchOptimizationStrategy.PushNewResults: strategy has not been initialized yet.");
+            }
+
             lock (_locker)
             {
                 if (!ReferenceEquals(result, OptimizationResult.Empty) && string.IsNullOrEmpty(result?.JsonBacktestResult))
@@ -82,9 +90,9 @@ namespace QuantConnect.Optimizer
                 // check if the incoming result is not the initial seed
                 if (result.Id > 0)
                 {
-                    if (Constraints?.All(constraint => constraint.IsMet(result.JsonBacktestResult)) != false)
+                    if (_constraints?.All(constraint => constraint.IsMet(result.JsonBacktestResult)) != false)
                     {
-                        if (Target.MoveAhead(result.JsonBacktestResult))
+                        if (_target.MoveAhead(result.JsonBacktestResult))
                         {
                             Solution = result;
                         }
