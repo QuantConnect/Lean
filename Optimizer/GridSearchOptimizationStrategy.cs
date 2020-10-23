@@ -55,7 +55,7 @@ namespace QuantConnect.Optimizer
         /// <param name="target">The optimization target</param>
         /// <param name="constraints">The optimization constraints to apply on backtest results</param>
         /// <param name="parameters">Optimization parameters</param>
-        public void Initialize(Target target, List<Constraint> constraints, HashSet<OptimizationParameter> parameters)
+        public void Initialize(Target target, IReadOnlyList<Constraint> constraints, HashSet<OptimizationParameter> parameters)
         {
             if (_initialized)
             {

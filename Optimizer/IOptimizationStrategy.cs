@@ -39,7 +39,7 @@ namespace QuantConnect.Optimizer
         /// <param name="target">The optimization target</param>
         /// <param name="constraints">The optimization constraints to apply on backtest results</param>
         /// <param name="parameters">optimization parameters</param>
-        void Initialize(Target target, List<Constraint> constraints, HashSet<OptimizationParameter> parameters);
+        void Initialize(Target target, IReadOnlyList<Constraint> constraints, HashSet<OptimizationParameter> parameters);
         
         /// <summary>
         /// Callback when lean compute job completed.

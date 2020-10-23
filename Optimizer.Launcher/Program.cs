@@ -39,7 +39,7 @@ namespace QuantConnect.Optimizer.Launcher
                             t.Value<string>("target"),
                             (ComparisonOperatorTypes)Enum.Parse(typeof(ComparisonOperatorTypes), t.Value<string>("operator"), true),
                             t.Value<decimal>("target-value")
-                        )).ToList(),
+                        )).ToList().AsReadOnly(),
                     OptimizationParameters =
                         JsonConvert.DeserializeObject<Dictionary<string, JObject>>(Config.Get("parameters", "{}"))
                         .Select(arg => new OptimizationParameter(
