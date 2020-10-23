@@ -232,7 +232,7 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase("test/123", "./LocalObjectStoreTests/CSharp-TestAlgorithm/dGVzdC8xMjM=")]
         [TestCase("**abc**", "./LocalObjectStoreTests/CSharp-TestAlgorithm/KiphYmMqKg==")]
         [TestCase("<random>", "./LocalObjectStoreTests/CSharp-TestAlgorithm/PHJhbmRvbT4=")]
-        [TestCase("?|", "./LocalObjectStoreTests/CSharp-TestAlgorithm/P3w=")]
+        [TestCase("|", "./LocalObjectStoreTests/CSharp-TestAlgorithm/fA==")]
         public void GetFilePathReturnsFileName(string key, string expectedRelativePath)
         {
             var expectedPath = Path.GetFullPath(expectedRelativePath).Replace("\\", "/");

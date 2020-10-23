@@ -171,6 +171,10 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(key));
             }
+            if (key.Contains("?"))
+            {
+                throw new ArgumentException($"LocalObjectStore.SaveBytes(): char '?' is not supported in the key {key}");
+            }
             if (!Controls.StoragePermissions.HasFlag(FileAccess.Write))
             {
                 throw new InvalidOperationException($"LocalObjectStore.SaveBytes(): {NoWritePermissionsError}");
