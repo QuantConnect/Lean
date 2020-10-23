@@ -14,14 +14,14 @@
  *
 */
 
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Optimizer;
+using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Math = System.Math;
 
 namespace QuantConnect.Tests.Optimizer.Strategies
@@ -30,9 +30,10 @@ namespace QuantConnect.Tests.Optimizer.Strategies
     public class GridSearchOptimizationStrategyTests
     {
         private GridSearchOptimizationStrategy _strategy;
-        private Func<ParameterSet, decimal> _compute = parameterSet => parameterSet.Value.Sum(arg => arg.Value.ToDecimal());
-        private Func<string, decimal> _parse = dump => JObject.Parse(dump).SelectToken("Statistics.Profit").Value<decimal>();
-        private Func<decimal, string> _stringify = value => $"{{\"Statistics\":{{\"Profit\":{value}}}}}";
+        private Func<ParameterSet, decimal> _profit = parameterSet => parameterSet.Value.Sum(arg => arg.Value.ToDecimal());
+        private Func<ParameterSet, decimal> _drawdown = parameterSet => parameterSet.Value.Sum(arg => arg.Value.ToDecimal()) / 100.0m;
+        private Func<string, string, decimal> _parse = (dump, parameter) => JObject.Parse(dump).SelectToken($"Statistics.{parameter}").Value<decimal>();
+        private Func<decimal, decimal, string> _stringify = (profit, drawdown) => $"{{\"Statistics\":{{\"Profit\":{profit.ToStringInvariant()}, \"Drawdown\":{drawdown.ToStringInvariant()}}}}}";
         private HashSet<OptimizationParameter> _optimizationParameters = new HashSet<OptimizationParameter>
         {
             new OptimizationParameter("ema-slow", 1, 5, 1),
@@ -46,7 +47,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             _strategy.NewParameterSet += (s, e) =>
             {
                 var parameterSet = (e as OptimizationEventArgs)?.ParameterSet;
-                _strategy.PushNewResults(new OptimizationResult(_stringify(_compute(parameterSet)), parameterSet, ""));
+                _strategy.PushNewResults(new OptimizationResult(_stringify(_profit(parameterSet), _drawdown(parameterSet)), parameterSet, ""));
             };
         }
 
@@ -57,7 +58,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         };
 
         [Test, TestCaseSource(nameof(StrategySettings))]
-        public void StepInside(Extremum extremum, int bestSet)
+        public void StepInsideNoTargetNoConstraints(Extremum extremum, int bestSet)
         {
             ParameterSet solution = null;
             _strategy.Initialize(
@@ -75,15 +76,92 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
             _strategy.PushNewResults(OptimizationResult.Empty);
 
-            Assert.AreEqual(_compute(solution), _parse(_strategy.Solution.JsonBacktestResult));
+            Assert.AreEqual(_profit(solution), _parse(_strategy.Solution.JsonBacktestResult, "Profit"));
             foreach (var arg in _strategy.Solution.ParameterSet.Value)
             {
                 Assert.AreEqual(solution.Value[arg.Key], arg.Value);
             }
         }
 
+        [TestCase(1, 0.05)]
+        [TestCase(3, 0.06)]
+        public void StepInsideWithConstraints(int bestSet, double drawdown)
+        {
+            ParameterSet solution = null;
+            _strategy.Initialize(
+                new Target("Profit", new Maximization(), null),
+                new List<Constraint> { new Constraint("Drawdown", ComparisonOperatorTypes.Less, new decimal(drawdown)) },
+                _optimizationParameters);
+            _strategy.NewParameterSet += (s, e) =>
+            {
+                var parameterSet = (e as OptimizationEventArgs)?.ParameterSet;
+                if (parameterSet.Id == bestSet)
+                {
+                    solution = parameterSet;
+                }
+            };
+
+            _strategy.PushNewResults(OptimizationResult.Empty);
+
+            Assert.AreEqual(_profit(solution), _parse(_strategy.Solution.JsonBacktestResult, "Profit"));
+            Assert.AreEqual(_drawdown(solution), _parse(_strategy.Solution.JsonBacktestResult, "Drawdown"));
+            foreach (var arg in _strategy.Solution.ParameterSet.Value)
+            {
+                Assert.AreEqual(solution.Value[arg.Key], arg.Value);
+            }
+        }
+
+        [TestCase(1, 0)]
+        [TestCase(1, 4)]
+        [TestCase(2, 5)]
+        [TestCase(6, 8)]
+        public void StepInsideWithTarget(int bestSet, double targetValue)
+        {
+            bool reached = false;
+            ParameterSet parameterSet = null;
+            var target = new Target("Profit", new Maximization(), new decimal(targetValue));
+            target.Reached += (s, e) =>
+            {
+                reached = true;
+            };
+
+            _strategy = new GridSearchOptimizationStrategy();
+
+            _strategy.Initialize(
+                target,
+                null,
+                _optimizationParameters);
+
+            var queue = new Queue<ParameterSet>();
+            _strategy.NewParameterSet += (s, e) =>
+            {
+                queue.Enqueue((e as OptimizationEventArgs)?.ParameterSet);
+            };
+
+            _strategy.PushNewResults(OptimizationResult.Empty);
+
+            while (queue.Any())
+            {
+                parameterSet = queue.Dequeue();
+                var newResult = new OptimizationResult(_stringify(_profit(parameterSet), _drawdown(parameterSet)), parameterSet, "");
+                _strategy.PushNewResults(newResult);
+                if (reached)
+                {
+                    break;
+                }
+            }
+            
+            Assert.IsTrue(reached);
+            Assert.AreEqual(bestSet, parameterSet.Id);
+            Assert.AreEqual(_profit(parameterSet), _parse(_strategy.Solution.JsonBacktestResult, "Profit"));
+            foreach (var arg in _strategy.Solution.ParameterSet.Value)
+            {
+                Assert.AreEqual(parameterSet.Value[arg.Key], arg.Value);
+            }
+        }
+
         [Test, TestCaseSource(nameof(StrategySettings))]
-        public void FindBest(Extremum extremum, int bestSet)
+        public void FindBestNoConstraints(Extremum extremum, int bestSet)
         {
             var emaSlow = _optimizationParameters.First(s => s.Name == "ema-slow");
             var emaFast = _optimizationParameters.First(s => s.Name == "ema-fast");
@@ -103,7 +181,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                         {emaSlow.Name, slow.ToStringInvariant()},
                         {emaFast.Name, fast.ToStringInvariant()}
                     });
-                    _strategy.PushNewResults(new OptimizationResult(_stringify(_compute(parameterSet)), parameterSet, ""));
+                    _strategy.PushNewResults(new OptimizationResult(_stringify(_profit(parameterSet), _drawdown(parameterSet)), parameterSet, ""));
                     if (parameterSet.Id == bestSet)
                     {
                         solution = parameterSet;
@@ -111,13 +189,12 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 }
             }
 
-            Assert.AreEqual(_compute(solution), _parse(_strategy.Solution.JsonBacktestResult));
+            Assert.AreEqual(_profit(solution), _parse(_strategy.Solution.JsonBacktestResult, "Profit"));
             foreach (var arg in _strategy.Solution.ParameterSet.Value)
             {
                 Assert.AreEqual(solution?.Value[arg.Key], arg.Value);
             }
         }
-
 
         [Test]
         public void ThrowOnReinitialization()

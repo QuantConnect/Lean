@@ -58,7 +58,7 @@ namespace QuantConnect.Optimizer
         }
 
         public bool IsMet(string jsonBacktestResult) => Operator.Compare(
-            TargetValue, 
-            JObject.Parse(jsonBacktestResult).SelectToken(Objective).Value<string>().ToDecimal());
+            JObject.Parse(jsonBacktestResult).SelectToken(Objective).Value<string>().ToDecimal(),
+            TargetValue);
     }
 }

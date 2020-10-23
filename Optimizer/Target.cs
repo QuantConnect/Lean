@@ -82,7 +82,7 @@ namespace QuantConnect.Optimizer
                 Current = computedValue;
                 if (IsComplied())
                 {
-                    Reached?.Invoke(this, null);
+                    Reached?.Invoke(this, EventArgs.Empty);
                 }
 
                 return true;
@@ -91,6 +91,6 @@ namespace QuantConnect.Optimizer
             return false;
         }
 
-        private bool IsComplied() => TargetValue.HasValue && Current.HasValue && Extremum.Better(Current.Value, TargetValue.Value);
+        private bool IsComplied() => TargetValue.HasValue && Current.HasValue && (TargetValue.Value == Current.Value || Extremum.Better(TargetValue.Value, Current.Value));
     }
 }
