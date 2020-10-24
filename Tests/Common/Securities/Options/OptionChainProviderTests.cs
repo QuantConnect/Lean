@@ -106,6 +106,32 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             Assert.IsFalse(result.Any());
         }
+
+        [Test]
+        public void LiveOptionChainProviderReturnsFutureOptionData()
+        {
+            var now = DateTime.Now;
+            var december = now.AddMonths(-now.Month).AddMonths(12);
+            var underlyingFuture = Symbol.CreateFuture("ES", Market.CME, december);
+
+            var provider = new LiveOptionChainProvider();
+            var result = provider.GetOptionContractList(underlyingFuture, december);
+
+            Assert.AreNotEqual(0, result.Count());
+        }
+
+        [Test]
+        public void LiveOptionChainProviderReturnsNoDataForOldFuture()
+        {
+            var now = DateTime.Now;
+            var december = now.AddMonths(-now.Month).AddYears(-1);
+            var underlyingFuture = Symbol.CreateFuture("ES", Market.CME, december);
+
+            var provider = new LiveOptionChainProvider();
+            var result = provider.GetOptionContractList(underlyingFuture, december);
+
+            Assert.AreEqual(0, result.Count());
+        }
     }
 
     internal class DelayedOptionChainProvider : IOptionChainProvider
