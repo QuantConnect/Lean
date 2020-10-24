@@ -40,6 +40,11 @@ namespace QuantConnect.ToolBox.IEX
         private static readonly CountdownEvent Counter = new CountdownEvent(1);
         private static readonly ManualResetEvent UpdateInProgressEvent = new ManualResetEvent(true);
 
+        // IEX API documentation syas:
+        // 'We limit requests to 100 per second per IP measured in milliseconds, so no more than 1 request per 10 milliseconds.'
+        // Just to be on a safe side we make the rate limit 1 request per 20 milliseconds 
+        private readonly RateGate _rateGate = new RateGate(1, TimeSpan.FromMilliseconds(20));
+
         /// <summary>
         /// Indicates whether a client is connected - i.e delivers any data.
         /// </summary>
@@ -119,9 +124,10 @@ namespace QuantConnect.ToolBox.IEX
             }
             while (remainingSymbols.Any());
 
-            // Create new client for every package
+            // Create new client for every package (make sure that we do not exceed the rate-gate-limit while creating)
             foreach (var package in packagedSymbols)
             {
+                _rateGate.WaitToProceed();
                 var newClient = CreateNewSubscription(package);
 
                 // This message handler should be called once only
@@ -195,7 +201,7 @@ namespace QuantConnect.ToolBox.IEX
             client.MessageReceived += _messageAction;
             client.Error += (sender, args) =>
             {
-                Log.Trace($"ClientOnError(): EventSource Error Occurred. Details: {args.Exception.Message}");
+                Log.Trace($"ClientOnError(): EventSource Error Occurred. Details: {args.Exception.Message} ErrorType: {args.Exception.GetType().FullName}");
             };
             client.Closed += (sender, args) =>
             {
