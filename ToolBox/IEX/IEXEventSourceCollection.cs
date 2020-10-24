@@ -38,6 +38,7 @@ namespace QuantConnect.ToolBox.IEX
         private readonly EventHandler<MessageReceivedEventArgs> _messageAction;
         private readonly ConcurrentDictionary<EventSource, string[]> _clientSymbolsDictionary = new ConcurrentDictionary<EventSource, string[]>();
         private static readonly CountdownEvent Counter = new CountdownEvent(1);
+        private static readonly ManualResetEvent UpdateInProgressEvent = new ManualResetEvent(true);
 
         /// <summary>
         /// Indicates whether a client is connected - i.e delivers any data.
@@ -60,15 +61,16 @@ namespace QuantConnect.ToolBox.IEX
         /// <returns></returns>
         public void UpdateSubscription(string[] symbols)
         {
-            Counter.Signal();
-            if (!Counter.Wait(TimeoutToUpdate))
+            if (!UpdateInProgressEvent.WaitOne(TimeoutToUpdate))
             {
                 throw new Exception("IEXEventSourceCollection.UpdateSubscription(): " +
                                     "The last UpdateSubscription was not successful, counter was not signaled on time.");
             }
 
-            Counter.Reset(1);
-
+            // Block the event until operation completes so if suddenly, which is unlikely,
+            // during current execution the method will be run again, then it waited for the end of the current update
+            UpdateInProgressEvent.Reset();
+            
             var remainingSymbols = new List<string>(symbols);
             var clientsToRemove = new List<EventSource>();
 
@@ -129,6 +131,7 @@ namespace QuantConnect.ToolBox.IEX
             // Called for example when UpdateSubscription is called for the first time
             if (!clientsToRemove.Any())
             {
+                UpdateInProgressEvent.Set();
                 return;
             }
 
@@ -140,7 +143,6 @@ namespace QuantConnect.ToolBox.IEX
                 {
                     throw new Exception("IEXEventSourceCollection.UpdateSubscription(): Could not update subscription within a timeout");
                 }
-                Counter.Reset(1);
 
                 clientsToRemove.DoForEach(i =>
                 {
@@ -152,6 +154,10 @@ namespace QuantConnect.ToolBox.IEX
                     i.Close();
                     i.Dispose();
                 });
+
+                // Reset synchronization objects
+                Counter.Reset(1);
+                UpdateInProgressEvent.Set();
 
             }).ContinueWith(t =>
             {

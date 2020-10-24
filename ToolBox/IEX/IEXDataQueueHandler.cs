@@ -157,6 +157,7 @@ namespace QuantConnect.ToolBox.IEX
                     if (!_symbols.TryGetValue(symbolString, out symbol))
                     {
                         // Symbol is no loner in dictionary, it may be the stream not has been updated yet,
+                        // and the old client is still sending messages for unsubscribed symbols -
                         // so there can be residual messages for the symbol, which we must skip
                         continue;
                     }
@@ -185,7 +186,7 @@ namespace QuantConnect.ToolBox.IEX
                     long value;
                     if (_iexLastUpdateTime.TryGetValue(symbolString, out value))
                     {
-                        if (value == lastTradeMillis) return;
+                        if (value == lastUpdateMillis) return;
                     }
 
                     _iexLastUpdateTime[symbolString] = lastUpdateMillis;
@@ -215,7 +216,7 @@ namespace QuantConnect.ToolBox.IEX
                         _aggregator.Update(tradeTick);
 
                     // Always update quotes for a new snapshot, if there is a bid and ask price
-                    if (bidPrice == 0 && askPrice == 0) return;
+                    if (bidPrice == 0 || askPrice == 0) return;
                     var quoteTick = new Tick()
                     {
                         Symbol = symbol,
