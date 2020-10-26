@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using QuantConnect.Configuration;
 using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
 using QuantConnect.ToolBox.AlgoSeekOptionsConverter;
@@ -56,6 +57,8 @@ namespace QuantConnect.ToolBox
     {
         public static void Main(string[] args)
         {
+            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomainAssemblyResolve;
+
             var optionsObject = ToolboxArgumentParser.ParseArguments(args);
             if (optionsObject.Count == 0)
             {
@@ -345,6 +348,21 @@ namespace QuantConnect.ToolBox
             }
 
             return value.ToString();
+        }
+
+        private static Assembly CurrentDomainAssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            // Multiple assemblies in bin folder refer to System.Collections.Immutable but versions may vary.
+            // if this code is called, it is most likely that the protobuf cannot find its version, load it from Common\bin\Debug
+            if (args.Name.Contains("System.Collections.Immutable"))
+            {
+                var path = new FileInfo(@"..\..\..\Common\bin\Debug\System.Collections.Immutable.dll");
+                var dll = Assembly.LoadFrom(path.FullName);
+
+                Console.WriteLine($"Successfully loaded conflicted assembly : {dll.FullName}");
+            }
+
+            return null;
         }
     }
 }

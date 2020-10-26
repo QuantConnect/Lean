@@ -31,10 +31,11 @@ using System.Text;
 using QuantConnect.Interfaces;
 using NodaTime;
 using System.Globalization;
+using System.IO;
 using static QuantConnect.StringExtensions;
 using QuantConnect.Util;
-using CoinAPI.WebSocket.V1.DataModels;
 using System.Linq;
+using System.Net;
 
 namespace QuantConnect.ToolBox.IEX
 {
@@ -463,14 +464,36 @@ namespace QuantConnect.ToolBox.IEX
             {
                 suffixes.Add("5y");
             }
-
             // Download and parse data
-            using (var client = new System.Net.WebClient())
+            using (var client = new WebClient())
             {
+
                 foreach (var suffix in suffixes)
                 {
-                    var response = client.DownloadString("https://cloud.iexapis.com/v1/stock/" + ticker + "/chart/" + suffix + "?token=" + _apiKey);
-                    var parsedResponse = JArray.Parse(response);
+                    JArray parsedResponse;
+                    try
+                    {
+                        var response = client.DownloadString("https://cloud.iexapis.com/v1/stock/" + ticker + "/chart/" + suffix + "?token=" + _apiKey);
+                        parsedResponse = JArray.Parse(response);
+                    }
+                    catch (WebException webExc)
+                    {
+                        // To find a reason why does web exception occur need to retrieve additional details
+                        if (webExc.Response != null)
+                        {
+                            var response = webExc.Response;
+                            var dataStream = response.GetResponseStream();
+                            if (dataStream != null)
+                            {
+                                var reader = new StreamReader(dataStream);
+                                var details = reader.ReadToEnd();
+                                
+                                throw new Exception(details);
+                            }
+                        }
+
+                        throw;
+                    }
 
                     foreach (var item in parsedResponse.Children())
                     {
