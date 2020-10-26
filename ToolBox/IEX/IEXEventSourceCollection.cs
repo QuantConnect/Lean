@@ -32,18 +32,17 @@ namespace QuantConnect.ToolBox.IEX
     /// </summary>
     public class IEXEventSourceCollection : IDisposable
     {
-        private static readonly TimeSpan TimeoutToUpdate = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan TimeoutToUpdate = TimeSpan.FromSeconds(10);
         private const int SymbolsPerConnectionLimit = 50;
         private readonly string _apiKey;
         private readonly EventHandler<MessageReceivedEventArgs> _messageAction;
-        private readonly ConcurrentDictionary<EventSource, string[]> _clientSymbolsDictionary = new ConcurrentDictionary<EventSource, string[]>();
+        private static readonly ConcurrentDictionary<EventSource, string[]> _clientSymbolsDictionary = new ConcurrentDictionary<EventSource, string[]>();
         private static readonly CountdownEvent Counter = new CountdownEvent(1);
         private static readonly ManualResetEvent UpdateInProgressEvent = new ManualResetEvent(true);
 
-        // IEX API documentation syas:
-        // 'We limit requests to 100 per second per IP measured in milliseconds, so no more than 1 request per 10 milliseconds.'
-        // Just to be on a safe side we make the rate limit 1 request per 20 milliseconds 
-        private readonly RateGate _rateGate = new RateGate(1, TimeSpan.FromMilliseconds(20));
+        // IEX API documentation says:
+        // "We limit requests to 100 per second per IP measured in milliseconds, so no more than 1 request per 10 milliseconds."
+        private readonly RateGate _rateGate = new RateGate(1, TimeSpan.FromMilliseconds(10));
 
         /// <summary>
         /// Indicates whether a client is connected - i.e delivers any data.
@@ -60,7 +59,7 @@ namespace QuantConnect.ToolBox.IEX
         }
 
         /// <summary>
-        /// Updates the data subscription to reflect the current symbols set.
+        /// Updates the data subscription to reflect the current user-subscribed symbols set.
         /// </summary>
         /// <param name="symbols">Symbols that user is currently subscribed to</param>
         /// <returns></returns>
@@ -68,12 +67,13 @@ namespace QuantConnect.ToolBox.IEX
         {
             if (!UpdateInProgressEvent.WaitOne(TimeoutToUpdate))
             {
+                UpdateInProgressEvent.Set();
                 throw new Exception("IEXEventSourceCollection.UpdateSubscription(): " +
                                     "The last UpdateSubscription was not successful, counter was not signaled on time.");
             }
 
-            // Block the event until operation completes so if suddenly, which is unlikely,
-            // during current execution the method will be run again, then it waited for the end of the current update
+            // Block the event until operation completes so if during current execution
+            // the method will be run again, then it waited for the end of the current update
             UpdateInProgressEvent.Reset();
             
             var remainingSymbols = new List<string>(symbols);
@@ -94,7 +94,7 @@ namespace QuantConnect.ToolBox.IEX
                     continue;
                 }
 
-                // Otherwise client has to be replaced
+                // Client has to be replaced
                 clientsToRemove.Add(kvp.Key);
             }
 
@@ -104,7 +104,7 @@ namespace QuantConnect.ToolBox.IEX
             }
 
             // Group all remaining symbols in a smaller packages to comply with per-connection-limits
-            var packagedSymbols = new List<string[]>();
+            var packagedSymbolsList = new List<string[]>();
             do
             {
                 Counter.AddCount();
@@ -113,26 +113,25 @@ namespace QuantConnect.ToolBox.IEX
                 {
                     var firstFifty = remainingSymbols.Take(SymbolsPerConnectionLimit).ToArray();
                     remainingSymbols.RemoveAll(i => firstFifty.Contains(i));
-                    packagedSymbols.Add(firstFifty);
+                    packagedSymbolsList.Add(firstFifty);
                 }
                 else
                 {
                     // Add all remaining symbols as a last package
-                    packagedSymbols.Add(remainingSymbols.ToArray());
+                    packagedSymbolsList.Add(remainingSymbols.ToArray());
                     break;
                 }
             }
             while (remainingSymbols.Any());
 
             // Create new client for every package (make sure that we do not exceed the rate-gate-limit while creating)
-            foreach (var package in packagedSymbols)
+            packagedSymbolsList.DoForEach(package =>
             {
                 _rateGate.WaitToProceed();
-                var newClient = CreateNewSubscription(package);
-
+                var client = CreateNewSubscription(package);
                 // This message handler should be called once only
-                newClient.MessageReceived += MessageHandler;
-            }
+                client.MessageReceived += MessageHandler;
+            });
 
             // Called for example when UpdateSubscription is called for the first time
             if (!clientsToRemove.Any())
@@ -165,6 +164,8 @@ namespace QuantConnect.ToolBox.IEX
                 Counter.Reset(1);
                 UpdateInProgressEvent.Set();
 
+                IsConnected = true;
+
             }).ContinueWith(t =>
             {
                 if (t.Exception != null)
@@ -185,6 +186,7 @@ namespace QuantConnect.ToolBox.IEX
             }
 
             Counter.Signal();
+            Log.Trace($"IEXEventSourceCollection.MessageHandler(): CountdownEvent count: {Counter.CurrentCount}");
             tmpClient.MessageReceived -= MessageHandler;  // Remove the handler
         }
 
@@ -194,25 +196,31 @@ namespace QuantConnect.ToolBox.IEX
             var url = BuildUrlString(symbols);
             var client = new EventSource(LaunchDarkly.EventSource.Configuration.Builder(new Uri(url)).Build());
 
-            Log.Trace($"IEXEventSourceCollection.CreateNewSubscription(): Create subscription for: {string.Join(",", symbols)}");
+            // Add to the dictionary
+            _clientSymbolsDictionary.TryAdd(client, symbols);
+
+            Log.Trace($"IEXEventSourceCollection.CreateNewSubscription(): Creating subscription for: {string.Join(",", symbols)}");
 
             // Set up the handlers
-            client.Opened += (sender, args) => { IsConnected = true; };
+            client.Opened += (sender, args) => { };
+
             client.MessageReceived += _messageAction;
+
             client.Error += (sender, args) =>
             {
-                Log.Trace($"ClientOnError(): EventSource Error Occurred. Details: {args.Exception.Message} ErrorType: {args.Exception.GetType().FullName}");
+                var exception = args.Exception;
+                Log.Trace($"ClientOnError(): EventSource Error Occurred. Details: {exception.Message} " +
+                          $"ErrorType: {exception.GetType().FullName}", true);
             };
+
             client.Closed += (sender, args) =>
             {
-                Log.Trace("ClientOnClosed(): Closing a client");
+                Log.Trace("ClientOnClosed(): Closing a client", true);
             };
 
             // Client start call will block until Stop() is called (!) - runs continuously in a background
             Task.Run(async () => await client.StartAsync());
 
-            // Add to the dictionary
-            _clientSymbolsDictionary.TryAdd(client, symbols);
             return client;
         }
 
