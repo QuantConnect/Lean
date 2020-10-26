@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -140,13 +139,20 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void GetFilePathAndDelete()
         {
-            var key = "ILove";
-            _store.SaveString(key, "Pizza");
-            var path = _store.GetFilePath(key);
+            using (var store = new ObjectStore(new LocalObjectStore()))
+            {
+                store.Initialize("test", 0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
 
-            Assert.IsTrue(File.Exists(path));
-            _store.Delete(key);
-            Assert.IsFalse(File.Exists(path));
+                var key = "ILove";
+                store.SaveString(key, "Pizza");
+                var path = store.GetFilePath(key);
+
+                Assert.IsTrue(File.Exists(path));
+                store.Delete(key);
+
+                Assert.IsFalse(File.Exists(path));
+            }
         }
 
         [TestCase(FileAccess.Read, false)]
@@ -352,7 +358,7 @@ namespace QuantConnect.Tests.Common.Storage
                 Assert.IsTrue(store.Count == 1);
                 Assert.IsTrue(store[0].Key == "a.txt");
 
-                // Create a copy for use using GetFilePath, check that it exists
+                // Get the file path and verify it exists
                 var path = qb.ObjectStore.GetFilePath("a.txt");
                 Assert.IsTrue(File.Exists(path));
             }
@@ -379,6 +385,42 @@ namespace QuantConnect.Tests.Common.Storage
 
             // Write 1 more; should throw
             Assert.IsFalse(_store.SaveString("breaker", "gotem"));
+        }
+
+        [Test]
+        public void DeletedObjectIsNotReloaded()
+        {
+            using (var store = new LocalObjectStore())
+            {
+                store.Initialize("test", 0, 0, "", new Controls());
+                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
+
+                var validData = new byte[1024 * 4];
+                store.SaveBytes("a.txt", validData);
+                Assert.IsTrue(store.ContainsKey("a.txt"));
+
+                store.SaveBytes("b.txt", validData);
+                Assert.IsTrue(store.ContainsKey("b.txt"));
+
+                // Assert the store has our two objects
+                var storedObj = store.GetEnumerator().AsEnumerable().ToList();
+                Assert.IsTrue(storedObj.Count == 2);
+
+                // Delete a.txt and close this store down
+                store.Delete("a.txt");
+                Assert.IsFalse(store.ContainsKey("a.txt"));
+            }
+
+            using (var store = new LocalObjectStore())
+            {
+                // Check that the dir still exists, it had files so it shouldn't have deleted
+                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
+                store.Initialize("test", 0, 0, "", new Controls());
+
+                // Check our files; a should be gone, b should be there
+                Assert.IsFalse(store.ContainsKey("a.txt"));
+                Assert.IsTrue(store.ContainsKey("b.txt"));
+            }
         }
 
         public class TestSettings
