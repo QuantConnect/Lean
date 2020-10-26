@@ -17,48 +17,41 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Util;
 using System;
-using System.Linq;
+using Newtonsoft.Json.Converters;
 
 namespace QuantConnect.Optimizer
 {
-    public class Constraint
+    public class Constraint : Objective
     {
-        [JsonProperty("target")]
-        public string Objective { get; }
-
         [JsonProperty("operator")]
         public ComparisonOperatorTypes Operator { get; }
 
-        [JsonProperty("target-value")]
-        public decimal TargetValue { get; }
-
-        public Constraint(string target, ComparisonOperatorTypes op, decimal? targetValue)
+        public Constraint(string target, ComparisonOperatorTypes @operator, decimal? targetValue) : base(target, targetValue)
         {
-            if (string.IsNullOrEmpty(target))
-            {
-                throw new ArgumentNullException("target", $"Constraint object can't be null or empty");
-            }
-
-            if (!targetValue.HasValue)
-            {
-                throw new ArgumentNullException("targetValue", $"Constraint target is not specified");
-            }
-
-            var _objective = target;
-            if (!_objective.Contains("."))
-            {
-                // default path
-                _objective = $"Statistics.{_objective}";
-            }
-            // escape empty space in json path
-            Objective = string.Join(".", _objective.Split('.').Select(s => $"['{s}']"));
-
-            Operator = op;
-            TargetValue = targetValue.Value;
+            Operator = @operator;
         }
 
-        public bool IsMet(string jsonBacktestResult) => Operator.Compare(
-            JObject.Parse(jsonBacktestResult).SelectToken(Objective).Value<string>().ToNormalizedDecimal(),
-            TargetValue);
+        public bool IsMet(string jsonBacktestResult)
+        {
+            if (string.IsNullOrEmpty(jsonBacktestResult))
+            {
+                throw new ArgumentNullException(nameof(jsonBacktestResult), "Constraint.IsMet: backtest result can not be null or empty.");
+            }
+
+            if (!TargetValue.HasValue)
+            {
+                throw new ArgumentNullException("TargetValue", $"Constraint target value is not specified");
+            }
+
+            var token = JObject.Parse(jsonBacktestResult).SelectToken(Target);
+            if (token == null)
+            {
+                return false;
+            }
+
+            return Operator.Compare(
+                token.Value<string>().ToNormalizedDecimal(),
+                TargetValue.Value);
+        }
     }
 }

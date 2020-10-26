@@ -75,15 +75,13 @@ namespace QuantConnect.Optimizer
                 throw new InvalidOperationException("Cannot start an optimization job with no parameter to optimize");
             }
 
+            if (nodePacket.Criterion?.Target?.IsNullOrEmpty() != true)
+            {
+                throw new InvalidOperationException("Cannot start an optimization job with no target to optimize");
+            }
+
             NodePacket = nodePacket;
-            string targetValue;
-            OptimizationTarget = new Target(nodePacket.Criterion["target"],
-                NodePacket.Criterion["extremum"] == "max"
-                    ? new Maximization() as Extremum
-                    : new Minimization(),
-                NodePacket.Criterion.TryGetValue("target-value", out targetValue) && !string.IsNullOrEmpty(targetValue)
-                    ? targetValue.ToDecimal()
-                    : (decimal?)null);
+            OptimizationTarget = NodePacket.Criterion;
             OptimizationTarget.Reached += (s, e) =>
             {
                 TriggerOnEndEvent(EventArgs.Empty);

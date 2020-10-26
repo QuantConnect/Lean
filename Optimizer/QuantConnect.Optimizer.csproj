@@ -54,6 +54,8 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="ExtremumConverter.cs" />
+    <Compile Include="Objective.cs" />
     <Compile Include="Target.cs" />
     <Compile Include="Constraint.cs" />
     <Compile Include="LeanOptimizer.cs" />

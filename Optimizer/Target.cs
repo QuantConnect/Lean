@@ -13,53 +13,34 @@
  * limitations under the License.
 */
 
-using System;
-using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
 
 namespace QuantConnect.Optimizer
 {
-    public class Target
+    public class Target: Objective
     {
-        [JsonProperty("target")]
-        public string Objective { get; }
-
         /// <summary>
         /// Defines the direction of optimization, i.e. maximization or minimization
         /// </summary>
-        [JsonProperty("extremum")]
+        [JsonProperty("extremum", TypeNameHandling = TypeNameHandling.All)]
         public Extremum Extremum { get; }
 
         /// <summary>
         /// Current value
         /// </summary>
+        [JsonIgnore]
         public decimal? Current { get; private set; }
-
-        /// <summary>
-        /// Target value; if defined and backtest complies with the targets then finish
-        /// </summary>
-        [JsonProperty("target-value")]
-        public decimal? TargetValue { get; }
 
         /// <summary>
         /// Fires when target complies specified value
         /// </summary>
         public event EventHandler Reached;
 
-        public Target(string target, Extremum extremum, decimal? targetValue)
+        public Target(string target, Extremum extremum, decimal? targetValue): base(target, targetValue)
         {
-            var _objective = target;
-            if (!_objective.Contains("."))
-            {
-                // default path
-                _objective = $"Statistics.{_objective}";
-            }
-            // escape empty space in json path
-            Objective = string.Join(".", _objective.Split('.').Select(s => $"['{s}']"));
-
             Extremum = extremum;
-            TargetValue = targetValue;
         }
 
         /// <summary>
@@ -69,14 +50,24 @@ namespace QuantConnect.Optimizer
         {
             if (TargetValue.HasValue)
             {
-                return $"Target: {Objective} TargetValue: {TargetValue.Value} at: {Current}";
+                return $"Target: {Target} TargetValue: {TargetValue.Value} at: {Current}";
             }
-            return $"Target: {Objective} at: {Current}";
+            return $"Target: {Target} at: {Current}";
         }
 
         public bool MoveAhead(string jsonBacktestResult)
         {
-            var computedValue = JObject.Parse(jsonBacktestResult).SelectToken(Objective).Value<string>().ToNormalizedDecimal();
+            if (string.IsNullOrEmpty(jsonBacktestResult))
+            {
+                throw new ArgumentNullException(nameof(jsonBacktestResult), "Target.MoveAhead: backtest result can not be null or empty.");
+            }
+
+            var token = JObject.Parse(jsonBacktestResult).SelectToken(Target);
+            if (token == null)
+            {
+                return false;
+            }
+            var computedValue = token.Value<string>().ToNormalizedDecimal();
             if (!Current.HasValue || Extremum.Better(Current.Value, computedValue))
             {
                 Current = computedValue;

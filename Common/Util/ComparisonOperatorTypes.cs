@@ -13,11 +13,15 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
 namespace QuantConnect.Util
 {
     /// <summary>
     /// Comparison operators
     /// </summary>
+    [JsonConverter(typeof(StringEnumConverter), true)]
     public enum ComparisonOperatorTypes
     {
         /// <summary>

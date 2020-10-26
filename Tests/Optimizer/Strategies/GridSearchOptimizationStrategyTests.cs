@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         private Func<ParameterSet, decimal> _profit = parameterSet => parameterSet.Value.Sum(arg => arg.Value.ToDecimal());
         private Func<ParameterSet, decimal> _drawdown = parameterSet => parameterSet.Value.Sum(arg => arg.Value.ToDecimal()) / 100.0m;
         private Func<string, string, decimal> _parse = (dump, parameter) => JObject.Parse(dump).SelectToken($"Statistics.{parameter}").Value<decimal>();
-        private Func<decimal, decimal, string> _stringify = (profit, drawdown) => $"{{\"Statistics\":{{\"Profit\":{profit.ToStringInvariant()}, \"Drawdown\":{drawdown.ToStringInvariant()}}}}}";
+        private Func<decimal, decimal, string> _stringify = (profit, drawdown) => BacktestResult.Create(profit, drawdown).ToJson();
         private HashSet<OptimizationParameter> _optimizationParameters = new HashSet<OptimizationParameter>
         {
             new OptimizationParameter("ema-slow", 1, 5, 1),
@@ -150,7 +150,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     break;
                 }
             }
-            
+
             Assert.IsTrue(reached);
             Assert.AreEqual(bestSet, parameterSet.Id);
             Assert.AreEqual(_profit(parameterSet), _parse(_strategy.Solution.JsonBacktestResult, "Profit"));

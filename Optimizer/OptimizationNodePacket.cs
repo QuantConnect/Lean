@@ -65,16 +65,10 @@ namespace QuantConnect.Optimizer
         public string OptimizationStrategy = "QuantConnect.Optimizer.GridSearchOptimizationStrategy";
 
         /// <summary>
-        /// Optimization settings
-        /// </summary>
-        [JsonProperty(PropertyName = "optimizationSettings")]
-        public Dictionary<string, string> OptimizationSettings;
-
-        /// <summary>
         /// Objective settings
         /// </summary>
         [JsonProperty(PropertyName = "criterion")]
-        public Dictionary<string, string> Criterion;
+        public Target Criterion;
 
         /// <summary>
         /// Optimization constraints

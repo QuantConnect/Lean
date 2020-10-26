@@ -765,7 +765,12 @@
     <Compile Include="Indicators\EaseOfMovementValueTests.cs" />
     <Compile Include="Indicators\StochasticTests.cs" />
     <Compile Include="Optimizer\ExtremumTests.cs" />
+    <Compile Include="Optimizer\LeanOptimizerTests.cs" />
+    <Compile Include="Optimizer\Models.cs" />
+    <Compile Include="Optimizer\OptimizationNodePacketTests.cs" />
     <Compile Include="Optimizer\Strategies\GridSearchOptimizationStrategyTests.cs" />
+    <Compile Include="Optimizer\ConstraintTests.cs" />
+    <Compile Include="Optimizer\TargetTests.cs" />
     <Compile Include="Research\QuantBookFundamentalTests.cs" />
     <Compile Include="Python\PythonOptionTests.cs" />
     <Compile Include="Report\DrawdownCollectionTests.cs" />
