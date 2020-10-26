@@ -1826,6 +1826,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             var securityType = ConvertSecurityType(symbol.SecurityType, symbol.Underlying?.SecurityType);
             var ibSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
+            var isFutureOption = securityType == IB.SecurityType.FutureOption;
+
             var contract = new Contract
             {
                 Symbol = ibSymbol,
@@ -1876,8 +1878,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
                 else if (spdbContainsSymbol)
                 {
+                    // Let's use the Future option's
                     contract.Multiplier = _symbolPropertiesDatabase
-                        .GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, _algorithm.Portfolio.CashBook.AccountCurrency)
+                        .GetSymbolProperties(
+                            isFutureOption ? symbol.Underlying.ID.Market : symbol.ID.Market,
+                            isFutureOption ? symbol.Underlying : symbol,
+                            isFutureOption ? symbol.Underlying.ID.SecurityType : symbol.ID.SecurityType,
+                            _algorithm.Portfolio.CashBook.AccountCurrency)
                         .ContractMultiplier
                         .ToStringInvariant();
                 }
