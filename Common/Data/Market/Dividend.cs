@@ -78,6 +78,7 @@ namespace QuantConnect.Data.Market
         /// <param name="date">The date</param>
         /// <param name="referencePrice">The previous day's closing price</param>
         /// <param name="priceFactorRatio">The ratio of the price factors, pf_i/pf_i+1</param>
+        /// <param name="decimalPlaces">The number of decimal places to round the dividend's distribution to, defaulting to 2</param>
         public static Dividend Create(Symbol symbol, DateTime date, decimal referencePrice, decimal priceFactorRatio, int decimalPlaces = 2)
         {
             var distribution = ComputeDistribution(referencePrice, priceFactorRatio, decimalPlaces);

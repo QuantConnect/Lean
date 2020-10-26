@@ -229,8 +229,9 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="futureFactorFileRow">The next factor file row in time</param>
         /// <param name="symbol">The symbol to use for the dividend</param>
         /// <param name="exchangeHours">Exchange hours used for resolving the previous trading day</param>
+        /// <param name="decimalPlaces">The number of decimal places to round the dividend's distribution to, defaulting to 2</param>
         /// <returns>A new dividend instance</returns>
-        public Dividend GetDividend(FactorFileRow futureFactorFileRow, Symbol symbol, SecurityExchangeHours exchangeHours, int decimalPlaces)
+        public Dividend GetDividend(FactorFileRow futureFactorFileRow, Symbol symbol, SecurityExchangeHours exchangeHours, int decimalPlaces=2)
         {
             if (futureFactorFileRow.PriceFactor == 0m)
             {
