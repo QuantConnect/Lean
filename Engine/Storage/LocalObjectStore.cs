@@ -344,7 +344,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// Get's a file path for a given key.
         /// Internal use only because it does not guarantee the existence of the file.
         /// </summary>
-        private string PathForKey(string key)
+        protected string PathForKey(string key)
         {
             // We use an encoded filename because certain keys will cause problems with persisting
             // data to a file; we use Base64 because it allow us to use all chars except '?' in our
