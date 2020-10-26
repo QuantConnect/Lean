@@ -289,15 +289,11 @@ namespace QuantConnect.Lean.Engine.Storage
                 );
             }
 
-            // Get the persist lock to stop interval persisting
-            lock (_persistLock)
-            {
-                // Persist to ensure the file is up to date
-                PersistData(this);
+            // Persist to ensure pur files are up to date
+            Persist();
 
-                // Fetch the path to file and return it
-                return PathForKey(key);
-            }
+            // Fetch the path to file and return it
+            return PathForKey(key);
         }
 
         /// <summary>
