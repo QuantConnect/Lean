@@ -1860,9 +1860,29 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.Right = symbol.ID.OptionRight == OptionRight.Call ? IB.RightType.Call : IB.RightType.Put;
                 contract.Strike = Convert.ToDouble(symbol.ID.StrikePrice);
                 contract.Symbol = ibSymbol;
-                contract.Multiplier = _securityProvider.GetSecurity(symbol)?.SymbolProperties.ContractMultiplier.ToString(CultureInfo.InvariantCulture) ?? "100";
-                contract.TradingClass = GetTradingClass(contract, symbol);
 
+                // Let's attempt to source the contract details from multiple locations before defaulting
+                // to "100", which is the default equity contract multiplier.
+                contract.Multiplier = "100";
+
+                var spdbContainsSymbol = _symbolPropertiesDatabase.ContainsKey(symbol.ID.Market, symbol, symbol.Underlying.SecurityType);
+                var security = _securityProvider.GetSecurity(symbol);
+
+                if (security != null || _algorithm.Securities.TryGetValue(symbol, out security))
+                {
+                    contract.Multiplier = security.SymbolProperties
+                        .ContractMultiplier
+                        .ToStringInvariant();
+                }
+                else if (spdbContainsSymbol)
+                {
+                    contract.Multiplier = _symbolPropertiesDatabase
+                        .GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, _algorithm.Portfolio.CashBook.AccountCurrency)
+                        .ContractMultiplier
+                        .ToStringInvariant();
+                }
+
+                contract.TradingClass = GetTradingClass(contract, symbol);
                 contract.IncludeExpired = includeExpired;
             }
             if (symbol.ID.SecurityType == SecurityType.Future)
@@ -2759,11 +2779,21 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var futuresExchanges = _futuresExchanges.Values.Reverse().ToArray();
             Func<string, int> exchangeFilter = exchange => symbol.SecurityType == SecurityType.Future ? Array.IndexOf(futuresExchanges, exchange) : 0;
 
-            // Non-equity Symbols do not undergo mapping, so to get a Symbol representing the asset without expiry information,
-            // we use the SID's Symbol property, since it's guaranteed to never change unlike with equities.
-            var lookupName = symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType != SecurityType.Equity
-                ? symbol.Underlying.ID.Symbol
-                : symbol.Underlying.Value;
+            var lookupName = symbol.Value;
+
+            if (symbol.SecurityType == SecurityType.Option)
+            {
+                if (symbol.Underlying.SecurityType == SecurityType.Equity)
+                {
+                    lookupName = symbol.Underlying.Value;
+                }
+                else
+                {
+                    // Non-equity Symbols do not undergo mapping, so to get a Symbol representing the asset without expiry information,
+                    // we use the SID's Symbol property, since it's guaranteed to never change, whereas equities do.
+                    lookupName = symbol.Underlying.ID.Symbol;
+                }
+            }
 
             // setting up lookup request
             var contract = new Contract
