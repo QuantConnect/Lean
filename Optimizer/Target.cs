@@ -76,7 +76,7 @@ namespace QuantConnect.Optimizer
 
         public bool MoveAhead(string jsonBacktestResult)
         {
-            var computedValue = JObject.Parse(jsonBacktestResult).SelectToken(Objective).Value<string>().ToDecimal();
+            var computedValue = JObject.Parse(jsonBacktestResult).SelectToken(Objective).Value<string>().ToNormalizedDecimal();
             if (!Current.HasValue || Extremum.Better(Current.Value, computedValue))
             {
                 Current = computedValue;

@@ -942,6 +942,26 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Extension method for faster string to normalized decimal conversion, i.e. 20.0% should be parsed into 0.2
+        /// </summary>
+        /// <param name="str">String to be converted to positive decimal value</param>
+        /// <remarks>
+        /// Leading and trailing whitespace chars are ignored
+        /// </remarks>
+        /// <returns>Decimal value of the string</returns>
+        public static decimal ToNormalizedDecimal(this string str)
+        {
+            var trimmed = str.Trim();
+            var value = str.TrimEnd('%').ToDecimal();
+            if (trimmed.EndsWith("%"))
+            {
+                value /= 100;
+            }
+
+            return value;
+        }
+
+        /// <summary>
         /// Extension method for string to decimal conversion where string can represent a number with exponent xe-y
         /// </summary>
         /// <param name="str">String to be converted to decimal value</param>
