@@ -263,19 +263,6 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 _dirty = true;
 
-                try
-                {
-                    var path = PathForKey(key);
-                    if (File.Exists(path))
-                    {
-                        File.Delete(path);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    Log.Error(exception);
-                }
-
                 // if <= 0 we disable periodic persistence and make it synchronous
                 if (Controls.PersistenceIntervalSeconds <= 0)
                 {
@@ -292,7 +279,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         /// <param name="key">The object key</param>
         /// <returns>The path for the file</returns>
-        public string GetFilePath(string key)
+        public virtual string GetFilePath(string key)
         {
             // Ensure we have an object for that key
             if (!ContainsKey(key))
@@ -416,6 +403,17 @@ namespace QuantConnect.Lean.Engine.Storage
         {
             try
             {
+                // Delete any files that are no longer saved in the store
+                foreach (var filepath in Directory.EnumerateFiles(AlgorithmStorageRoot))
+                {
+                    var filename = Path.GetFileName(filepath);
+                    if (!_storage.ContainsKey(Base64ToKey(filename)))
+                    {
+                        File.Delete(filepath);
+                    }
+                }
+
+                // Write all our store data to disk
                 foreach (var kvp in data)
                 {
                     // Get a path for this key and write to it
