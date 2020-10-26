@@ -22,7 +22,7 @@ namespace QuantConnect.Optimizer
 {
     public class Target
     {
-        [JsonProperty("objective")]
+        [JsonProperty("target")]
         public string Objective { get; }
 
         /// <summary>
