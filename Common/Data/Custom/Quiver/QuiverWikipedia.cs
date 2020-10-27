@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -63,14 +63,14 @@ namespace QuantConnect.Data.Custom.Quiver
         /// </summary>
         [ProtoMember(12)]
         [JsonProperty(PropertyName = "Views")]
-        public decimal? Wiki_Views { get; set; }
+        public decimal? PageViews { get; set; }
 
         /// <summary>
         /// The follower count % change over the week prior to the date
         /// </summary>
         [ProtoMember(13)]
         [JsonProperty(PropertyName = "pct_change_week")]
-        public decimal? Wiki_Pct_Change_Week { get; set; }
+        public decimal? WeekPercentChange { get; set; }
 
 
         /// <summary>
@@ -78,7 +78,7 @@ namespace QuantConnect.Data.Custom.Quiver
         /// </summary>
         [ProtoMember(14)]
         [JsonProperty(PropertyName = "pct_change_month")]
-        public decimal? Wiki_Pct_Change_Month { get; set; }
+        public decimal? MonthPercentChange { get; set; }
 
 
 
@@ -100,9 +100,9 @@ namespace QuantConnect.Data.Custom.Quiver
             var csv = csvLine.Split(',');
             Date = Parse.DateTimeExact(csv[0], "M/d/yyyy h:mm:ss tt");
             Ticker = csv[1];
-            Wiki_Views = csv[2].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
-            Wiki_Pct_Change_Week = csv[3].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
-            Wiki_Pct_Change_Month = csv[4].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            PageViews = csv[2].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            WeekPercentChange = csv[3].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            MonthPercentChange = csv[4].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
             Time = Date;
         }
 
@@ -149,9 +149,9 @@ namespace QuantConnect.Data.Custom.Quiver
         public override string ToString()
         {
             return Invariant($"{Ticker}({Date}) :: ") +
-                   Invariant($"Followers: {Wiki_Views} ") +
-                   Invariant($"% Change Week: {Wiki_Pct_Change_Week}") +
-                   Invariant($"% Change Month: {Wiki_Pct_Change_Month}");
+                   Invariant($"Followers: {PageViews} ") +
+                   Invariant($"% Change Week: {WeekPercentChange}") +
+                   Invariant($"% Change Month: {MonthPercentChange}");
         }
 
         /// <summary>
