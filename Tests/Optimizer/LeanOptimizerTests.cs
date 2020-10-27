@@ -14,14 +14,65 @@
  *
 */
 
-using NUnit;
 using NUnit.Framework;
+using QuantConnect.Optimizer;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Optimizer
 {
     [TestFixture]
     public class LeanOptimizerTests
     {
-        
+        [Test]
+        public void Start()
+        {
+            var optimizer = new FakeLeanOptimizer(new OptimizationNodePacket());
+            optimizer.Ended += (s, e) =>
+            {
+                optimizer.DisposeSafely();
+            };
+
+            optimizer.Start();
+        }
+
+        public class FakeLeanOptimizer : LeanOptimizer
+        {
+            private readonly HashSet<string> _backtests = new HashSet<string>();
+
+            public FakeLeanOptimizer(OptimizationNodePacket nodePacket)
+                : base(nodePacket)
+            {
+            }
+
+            protected override string RunLean(ParameterSet parameterSet)
+            {
+                var id = Guid.NewGuid().ToString();
+                _backtests.Add(id);
+
+                Timer timer = null;
+                timer = new Timer(y =>
+                {
+                    try
+                    {
+                        // NewResult(json, id);
+                        timer.Dispose();
+                    }
+                    catch
+                    {
+                    }
+                });
+                timer.Change(100, Timeout.Infinite);
+
+                return id;
+            }
+
+            protected override void AbortLean(string backtestId)
+            {
+                _backtests.Remove(backtestId);
+            }
+        }
     }
 }
