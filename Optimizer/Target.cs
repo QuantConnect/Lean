@@ -55,6 +55,11 @@ namespace QuantConnect.Optimizer
             return $"Target: {Target} at: {Current}";
         }
 
+        /// <summary>
+        /// Check backtest result
+        /// </summary>
+        /// <param name="jsonBacktestResult">Backtest result json</param>
+        /// <returns>true if found a better solution; otherwise false</returns>
         public bool MoveAhead(string jsonBacktestResult)
         {
             if (string.IsNullOrEmpty(jsonBacktestResult))
@@ -71,15 +76,22 @@ namespace QuantConnect.Optimizer
             if (!Current.HasValue || Extremum.Better(Current.Value, computedValue))
             {
                 Current = computedValue;
-                if (IsComplied())
-                {
-                    Reached?.Invoke(this, EventArgs.Empty);
-                }
 
                 return true;
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Try comply target value
+        /// </summary>
+        public void CheckComplience()
+        {
+            if (IsComplied())
+            {
+                Reached?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         private bool IsComplied() => TargetValue.HasValue && Current.HasValue && (TargetValue.Value == Current.Value || Extremum.Better(TargetValue.Value, Current.Value));

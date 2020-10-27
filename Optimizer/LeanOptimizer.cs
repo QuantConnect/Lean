@@ -66,7 +66,7 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Event triggered when the optimization work ended
         /// </summary>
-        public event EventHandler Ended;
+        public event EventHandler<OptimizationResult> Ended;
 
         /// <summary>
         /// Creates a new instance
@@ -150,7 +150,7 @@ namespace QuantConnect.Optimizer
                 Log.Trace($"LeanOptimizer.TriggerOnEndEvent({GetLogDetails()}): Optimization has ended. Result was not reached");
             }
 
-            Ended?.Invoke(this, eventArgs);
+            Ended?.Invoke(this, result);
         }
 
         /// <summary>

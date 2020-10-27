@@ -14,12 +14,12 @@
  *
 */
 
+using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Optimizer;
-using System;
+using QuantConnect.Util;
 using System.Collections.Generic;
 using System.Threading;
-using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Optimizer
 {
@@ -27,52 +27,154 @@ namespace QuantConnect.Tests.Optimizer
     public class LeanOptimizerTests
     {
         [Test]
-        public void Start()
+        public void MaximizeNoTarget()
         {
-            var optimizer = new FakeLeanOptimizer(new OptimizationNodePacket());
-            optimizer.Ended += (s, e) =>
+            var resetEvent = new ManualResetEvent(false);
+            var packet = new OptimizationNodePacket
             {
+                Criterion = new Target("Profit", new Maximization(), null),
+                OptimizationParameters = new HashSet<OptimizationParameter>
+                {
+                    new OptimizationParameter("ema-slow", 1, 10, 1),
+                    new OptimizationParameter("ema-fast", 10, 100, 3)
+                },
+                MaximumConcurrentBacktests = 20
+            };
+            var optimizer = new FakeLeanOptimizer(packet);
+
+            OptimizationResult result = null;
+            optimizer.Ended += (s, solution) =>
+            {
+                result = solution;
                 optimizer.DisposeSafely();
+                resetEvent.Set();
             };
 
             optimizer.Start();
+
+            resetEvent.WaitOne();
+            Assert.NotNull(result);
+            Assert.AreEqual(
+                110,
+                JsonConvert.DeserializeObject<BacktestResult>(result.JsonBacktestResult).Statistics.Profit);
+
+            Assert.AreEqual(10, result.ParameterSet.Value["ema-slow"].ToDecimal());
+            Assert.AreEqual(100, result.ParameterSet.Value["ema-fast"].ToDecimal());
         }
 
-        public class FakeLeanOptimizer : LeanOptimizer
+        [Test]
+        public void MinimizeWithTarget()
         {
-            private readonly HashSet<string> _backtests = new HashSet<string>();
-
-            public FakeLeanOptimizer(OptimizationNodePacket nodePacket)
-                : base(nodePacket)
+            var resetEvent = new ManualResetEvent(false);
+            var packet = new OptimizationNodePacket
             {
-            }
-
-            protected override string RunLean(ParameterSet parameterSet)
-            {
-                var id = Guid.NewGuid().ToString();
-                _backtests.Add(id);
-
-                Timer timer = null;
-                timer = new Timer(y =>
+                Criterion = new Target("Profit", new Minimization(), 20),
+                OptimizationParameters = new HashSet<OptimizationParameter>
                 {
-                    try
-                    {
-                        // NewResult(json, id);
-                        timer.Dispose();
-                    }
-                    catch
-                    {
-                    }
-                });
-                timer.Change(100, Timeout.Infinite);
+                    new OptimizationParameter("ema-slow", 1, 10, 1),
+                    new OptimizationParameter("ema-fast", 10, 100, 3)
+                },
+                MaximumConcurrentBacktests = 20
+            };
+            var optimizer = new FakeLeanOptimizer(packet);
 
-                return id;
-            }
-
-            protected override void AbortLean(string backtestId)
+            OptimizationResult result = null;
+            optimizer.Ended += (s, solution) =>
             {
-                _backtests.Remove(backtestId);
-            }
+                result = solution;
+                optimizer.DisposeSafely();
+                resetEvent.Set();
+            };
+
+            optimizer.Start();
+
+            resetEvent.WaitOne();
+            Assert.NotNull(result);
+            Assert.GreaterOrEqual(
+                20,
+                JsonConvert.DeserializeObject<BacktestResult>(result.JsonBacktestResult).Statistics.Profit);
+        }
+
+        [Test]
+        public void MaximizeWithConstraints()
+        {
+            var resetEvent = new ManualResetEvent(false);
+            var packet = new OptimizationNodePacket
+            {
+                Criterion = new Target("Profit", new Maximization(), null),
+                OptimizationParameters = new HashSet<OptimizationParameter>
+                {
+                    new OptimizationParameter("ema-slow", 1, 10, 1),
+                    new OptimizationParameter("ema-fast", 10, 100, 3)
+                },
+                Constraints = new List<Constraint>
+                {
+                    new Constraint("Drawdown", ComparisonOperatorTypes.LessOrEqual, 0.15m)
+                },
+                MaximumConcurrentBacktests = 20
+            };
+            var optimizer = new FakeLeanOptimizer(packet);
+
+            OptimizationResult result = null;
+            optimizer.Ended += (s, solution) =>
+            {
+                result = solution;
+                optimizer.DisposeSafely();
+                resetEvent.Set();
+            };
+
+            optimizer.Start();
+
+            resetEvent.WaitOne();
+            Assert.NotNull(result);
+            Assert.AreEqual(
+                15,
+                JsonConvert.DeserializeObject<BacktestResult>(result.JsonBacktestResult).Statistics.Profit);
+            Assert.AreEqual(
+                0.15m,
+                JsonConvert.DeserializeObject<BacktestResult>(result.JsonBacktestResult).Statistics.Drawdown);
+
+        }
+
+        [Test]
+        public void MinimizeWithTargetAndConstraints()
+        {
+            var resetEvent = new ManualResetEvent(false);
+            var packet = new OptimizationNodePacket
+            {
+                Criterion = new Target("Profit", new Minimization(), 20),
+                OptimizationParameters = new HashSet<OptimizationParameter>
+                {
+                    new OptimizationParameter("ema-slow", 1, 10, 1),
+                    new OptimizationParameter("ema-fast", 10, 100, 3)
+                },
+                Constraints = new List<Constraint>
+                {
+                    new Constraint("Drawdown", ComparisonOperatorTypes.LessOrEqual, 0.15m)
+                },
+                MaximumConcurrentBacktests = 20
+            };
+            var optimizer = new FakeLeanOptimizer(packet);
+
+            OptimizationResult result = null;
+            optimizer.Ended += (s, solution) =>
+            {
+                result = solution;
+                optimizer.DisposeSafely();
+                resetEvent.Set();
+            };
+
+            optimizer.Start();
+
+            resetEvent.WaitOne();
+            Assert.NotNull(result);
+            Assert.GreaterOrEqual(
+                20,
+                JsonConvert.DeserializeObject<BacktestResult>(result.JsonBacktestResult).Statistics.Profit);
+            Assert.GreaterOrEqual(
+                0.15m,
+                JsonConvert.DeserializeObject<BacktestResult>(result.JsonBacktestResult).Statistics.Drawdown);
+
         }
     }
 }

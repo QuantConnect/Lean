@@ -765,6 +765,7 @@
     <Compile Include="Indicators\EaseOfMovementValueTests.cs" />
     <Compile Include="Indicators\StochasticTests.cs" />
     <Compile Include="Optimizer\ExtremumTests.cs" />
+    <Compile Include="Optimizer\FakeLeanOptimizer.cs" />
     <Compile Include="Optimizer\LeanOptimizerTests.cs" />
     <Compile Include="Optimizer\Models.cs" />
     <Compile Include="Optimizer\OptimizationNodePacketTests.cs" />

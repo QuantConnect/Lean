@@ -47,6 +47,8 @@ namespace QuantConnect.Tests.Optimizer
             };
 
             Assert.IsTrue(target.MoveAhead(BacktestResult.Create(profit: 10m).ToJson()));
+            target.CheckComplience();
+
             Assert.AreEqual(10m, target.Current);
             Assert.IsTrue(reached);
         }
@@ -65,6 +67,7 @@ namespace QuantConnect.Tests.Optimizer
             {
                 Assert.IsTrue(target.MoveAhead(BacktestResult.Create(profit: profit).ToJson()));
                 Assert.AreEqual(profit, target.Current);
+                target.CheckComplience();
             }
             
             Assert.IsTrue(reached);

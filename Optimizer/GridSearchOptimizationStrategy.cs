@@ -95,6 +95,7 @@ namespace QuantConnect.Optimizer
                         if (_target.MoveAhead(result.JsonBacktestResult))
                         {
                             Solution = result;
+                            _target.CheckComplience();
                         }
                     }
 
