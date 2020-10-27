@@ -18,6 +18,7 @@ using System.Linq;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace QuantConnect.Optimizer
 {
@@ -174,7 +175,7 @@ namespace QuantConnect.Optimizer
             {
                 if (!RunningParameterSetForBacktest.TryRemove(backtestId, out parameterSet))
                 {
-                    _failedBacktest++;
+                    Interlocked.Increment(ref _failedBacktest);
                     Log.Error($"LeanOptimizer.NewResult({GetLogDetails()}): Optimization compute job with id '{backtestId}' was not found");
                     return;
                 }
@@ -192,12 +193,12 @@ namespace QuantConnect.Optimizer
             var result = new OptimizationResult(null, parameterSet, backtestId);
             if (string.IsNullOrEmpty(jsonBacktestResult))
             {
-                _failedBacktest++;
+                Interlocked.Increment(ref _failedBacktest);
                 Log.Error($"LeanOptimizer.NewResult({GetLogDetails()}): Got null/empty backtest result for backtest id '{backtestId}'");
             }
             else
             {
-                _completedBacktest++;
+                Interlocked.Increment(ref _completedBacktest);
                 result = new OptimizationResult(jsonBacktestResult, parameterSet, backtestId);
             }
             // always notify the strategy
@@ -302,14 +303,15 @@ namespace QuantConnect.Optimizer
 
         public OptimizationEstimate GetCurrentEstimate()
         {
+            var completedCount = _completedBacktest;
             return new OptimizationEstimate
             {
                 TotalBacktest = Strategy.GetTotalBacktestEstimate(),
-                CompletedBacktest = _completedBacktest,
+                CompletedBacktest = completedCount,
                 FailedBacktest = _failedBacktest,
                 RunningBacktest = RunningParameterSetForBacktest.Count,
                 InQueueBacktest = PendingParameterSet.Count,
-                AverageBacktest = _completedBacktest > 0 ? new TimeSpan((DateTime.UtcNow - _startedAt).Ticks / _completedBacktest) : TimeSpan.Zero
+                AverageBacktest = completedCount > 0 ? new TimeSpan((DateTime.UtcNow - _startedAt).Ticks / completedCount) : TimeSpan.Zero
             };
         }
     }
