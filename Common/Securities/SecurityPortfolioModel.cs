@@ -68,9 +68,9 @@ namespace QuantConnect.Securities
                 }
 
                 // apply the funds using the current settlement model
-                // we dont adjust funds for futures, future options, and CFDs: it is zero upfront payment derivative (margin applies though)
-                if ((security.Type != SecurityType.Option || security.Symbol.Underlying.SecurityType != SecurityType.Future) &&
-                    (security.Type != SecurityType.Future && security.Type != SecurityType.Cfd))
+                // we dont adjust funds for futures and CFDs: it is zero upfront payment derivative (margin applies though)
+                // We do however apply funds for futures options, since they affect our cash balance the moment they are purchased/sold.
+                if (security.Type != SecurityType.Future && security.Type != SecurityType.Cfd)
                 {
                     security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, -fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier);
                 }
@@ -99,8 +99,7 @@ namespace QuantConnect.Securities
                     var lastTradeProfitInAccountCurrency = lastTradeProfit * security.QuoteCurrency.ConversionRate;
 
                     // Reflect account cash adjustment for futures/future options/CFD position
-                    if ((security.Type == SecurityType.Option && security.Symbol.Underlying.SecurityType == SecurityType.Future) ||
-                        security.Type == SecurityType.Future || security.Type == SecurityType.Cfd)
+                    if (security.Type == SecurityType.Future || security.Type == SecurityType.Cfd)
                     {
                         security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, lastTradeProfit);
                     }
