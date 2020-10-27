@@ -2023,7 +2023,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             else if (securityType == SecurityType.Future)
             {
                 var future = algorithm.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute);
-                future.SetFilter(x => x);
+                future.SetFilter(x => x.IncludeWeeklys());
                 exchangeTimeZone = future.Exchange.TimeZone;
             }
             else
