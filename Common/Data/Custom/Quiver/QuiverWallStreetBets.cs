@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -25,14 +25,14 @@ using static QuantConnect.StringExtensions;
 namespace QuantConnect.Data.Custom.Quiver
 {
     /// <summary>
-    /// Twitter follower counts for the specified company
+    /// Mentions of the given company's ticker in the WallStreetBets daily discussion thread
     /// </summary>
     [ProtoContract(SkipConstructor = true)]
     public class QuiverWallStreetBets : BaseData
     {
 
         /// <summary>
-        /// The date of the follower count
+        /// Date of the daily discussion thread
         /// </summary>
         [ProtoMember(10)]
         [JsonProperty(PropertyName = "Date")]
@@ -63,7 +63,7 @@ namespace QuantConnect.Data.Custom.Quiver
         /// </summary>
         [ProtoMember(12)]
         [JsonProperty(PropertyName = "Count")]
-        public int? WallStreetBets_Count { get; set; }
+        public int? Mentions { get; set; }
 
 
 
@@ -85,7 +85,7 @@ namespace QuantConnect.Data.Custom.Quiver
             var csv = csvLine.Split(',');
             Date = Parse.DateTimeExact(csv[0], "M/d/yyyy h:mm:ss tt");
             Ticker = csv[1];
-            WallStreetBets_Count = csv[2].IfNotNullOrEmpty<int?>(s => Parse.Int(s));
+            Mentions = csv[2].IfNotNullOrEmpty<int?>(s => Parse.Int(s));
             Time = Date;
         }
 
@@ -132,7 +132,7 @@ namespace QuantConnect.Data.Custom.Quiver
         public override string ToString()
         {
             return Invariant($"{Ticker}({Date}) :: ") +
-                   Invariant($"WallStreetBets Mentions: {WallStreetBets_Count} ");
+                   Invariant($"WallStreetBets Mentions: {Mentions} ");
         }
 
         /// <summary>
