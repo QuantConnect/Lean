@@ -17,7 +17,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using LaunchDarkly.EventSource;
@@ -36,7 +35,7 @@ namespace QuantConnect.ToolBox.IEX
         private const int SymbolsPerConnectionLimit = 50;
         private readonly string _apiKey;
         private readonly EventHandler<MessageReceivedEventArgs> _messageAction;
-        private static readonly ConcurrentDictionary<EventSource, string[]> _clientSymbolsDictionary = new ConcurrentDictionary<EventSource, string[]>();
+        private static readonly ConcurrentDictionary<EventSource, string[]> ClientSymbolsDictionary = new ConcurrentDictionary<EventSource, string[]>();
         private static readonly CountdownEvent Counter = new CountdownEvent(1);
         private static readonly ManualResetEvent UpdateInProgressEvent = new ManualResetEvent(true);
 
@@ -79,7 +78,7 @@ namespace QuantConnect.ToolBox.IEX
             var remainingSymbols = new List<string>(symbols);
             var clientsToRemove = new List<EventSource>();
 
-            foreach (var kvp in _clientSymbolsDictionary)
+            foreach (var kvp in ClientSymbolsDictionary)
             {
                 var clientSymbols = kvp.Value;
 
@@ -151,10 +150,10 @@ namespace QuantConnect.ToolBox.IEX
 
                 clientsToRemove.DoForEach(i =>
                 {
-                    Log.Trace($"IEXEventSourceCollection.UpdateSubscription(): Remove subscription for: {string.Join(",", _clientSymbolsDictionary[i])}");
+                    Log.Trace($"IEXEventSourceCollection.UpdateSubscription(): Remove subscription for: {string.Join(",", ClientSymbolsDictionary[i])}");
 
                     string[] stub;
-                    _clientSymbolsDictionary.TryRemove(i, out stub);
+                    ClientSymbolsDictionary.TryRemove(i, out stub);
 
                     i.Close();
                     i.Dispose();
@@ -197,7 +196,7 @@ namespace QuantConnect.ToolBox.IEX
             var client = new EventSource(LaunchDarkly.EventSource.Configuration.Builder(new Uri(url)).Build());
 
             // Add to the dictionary
-            _clientSymbolsDictionary.TryAdd(client, symbols);
+            ClientSymbolsDictionary.TryAdd(client, symbols);
 
             Log.Trace($"IEXEventSourceCollection.CreateNewSubscription(): Creating subscription for: {string.Join(",", symbols)}");
 
@@ -227,24 +226,13 @@ namespace QuantConnect.ToolBox.IEX
         private string BuildUrlString(IEnumerable<string> symbols)
         {
             var url = "https://cloud-sse.iexapis.com/stable/stocksUSNoUTP?token=" + _apiKey;
-            url += "&symbols=" + BuildSymbolsQuery(symbols);
+            url += "&symbols=" + string.Join(",", symbols);
             return url;
-        }
-
-        private static string BuildSymbolsQuery(IEnumerable<string> symbols)
-        {
-            return symbols.Aggregate(new StringBuilder(), (sb, symbol) =>
-            {
-                sb.Append(symbol);
-                sb.Append(",");
-                return sb;
-
-            }).ToString().TrimEnd(',');
         }
 
         public void Dispose()
         {
-            foreach (var client in _clientSymbolsDictionary.Keys)
+            foreach (var client in ClientSymbolsDictionary.Keys)
             {
                 client.Close();
                 client.Dispose();

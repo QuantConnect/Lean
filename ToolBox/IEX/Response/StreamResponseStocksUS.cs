@@ -137,18 +137,18 @@ namespace QuantConnect.ToolBox.IEX.Response
         /// <summary>
         /// Refers to the price of the last trade on IEX.
         /// </summary>
-        public decimal IexRealtimePrice { get; set; }
+        public decimal? IexRealtimePrice { get; set; }
 
         /// <summary>
         /// Refers to the size of the last trade on IEX.
         /// </summary>
-        public int IexRealtimeSize { get; set; }
+        public int? IexRealtimeSize { get; set; }
 
         /// <summary>
         /// Refers to the last update time of iexRealtimePrice in milliseconds since midnight Jan 1, 1970 UTC or -1 or 0.
         /// If the value is -1 or 0, IEX has not quoted the symbol in the trading day.
         /// </summary>
-        public long IexLastUpdated { get; set; }
+        public long? IexLastUpdated { get; set; }
 
         /// <summary>
         /// Refers to the 15 minute delayed market price from the SIP during normal market hours 9:30 - 16:00 ET.
@@ -225,7 +225,7 @@ namespace QuantConnect.ToolBox.IEX.Response
         /// <summary>
         /// Refers to shares traded in the stock on IEX.
         /// </summary>
-        public int IexVolume { get; set; }
+        public int? IexVolume { get; set; }
 
         /// <summary>
 		/// Refers to the 30 day average volume.
@@ -235,22 +235,22 @@ namespace QuantConnect.ToolBox.IEX.Response
         /// <summary>
         /// Refers to the best bid price on IEX.
         /// </summary>
-        public decimal IexBidPrice { get; set; }
+        public decimal? IexBidPrice { get; set; }
 
         /// <summary>
         /// Refers to amount of shares on the bid on IEX.
         /// </summary>
-        public int IexBidSize { get; set; }
+        public int? IexBidSize { get; set; }
 
         /// <summary>
         /// Refers to the best ask price on IEX.
         /// </summary>
-        public decimal IexAskPrice { get; set; }
+        public decimal? IexAskPrice { get; set; }
 
         /// <summary>
         /// Refers to amount of shares on the ask on IEX.
         /// </summary>
-        public int IexAskSize { get; set; }
+        public int? IexAskSize { get; set; }
 
         /// <summary>
         /// Refers to IEX previous day open price

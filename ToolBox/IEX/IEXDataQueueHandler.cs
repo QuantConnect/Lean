@@ -55,9 +55,8 @@ namespace QuantConnect.ToolBox.IEX
         private readonly string _apiKey = Config.Get("iex-cloud-api-key");
 
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-        private static DateTime _unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified);
+        private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified);
         private int _dataPointCount;
-        private bool _isDisposing;
 
         private readonly IDataAggregator _aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
             Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
@@ -116,7 +115,7 @@ namespace QuantConnect.ToolBox.IEX
             // Subscription renewal requests may come in dozens and all at relatively same time - we cannot update them one by one when work with SSE
             var clientUpdateThread = new Thread(() =>
             {
-                while (true)
+                while (!_cts.Token.IsCancellationRequested)
                 {
                     _refreshEvent.WaitOne();
                     Thread.Sleep(SubscribeDelay);
@@ -131,11 +130,6 @@ namespace QuantConnect.ToolBox.IEX
                     {
                         Log.Error(e);
                         throw;
-                    }
-
-                    if (_isDisposing)
-                    {
-                        break;
                     }
                 }
 
@@ -169,16 +163,20 @@ namespace QuantConnect.ToolBox.IEX
                     var lastPrice = item.IexRealtimePrice;
                     var lastSize = item.IexRealtimeSize;
 
+                    // Can happen last price or size be null outside of exchange working hours
+                    if (!lastPrice.HasValue || !lastSize.HasValue) return;
+
                     var lastTradeMillis = item.LastTradeTime;
                     var lastUpdateMillis = item.IexLastUpdated;
-                    var lastUpdatedDatetime = _unixEpoch.AddMilliseconds(lastUpdateMillis);
-                    var lastUpdateTimeNewYork = lastUpdatedDatetime.ConvertFromUtc(TimeZones.NewYork);
 
-                    if (lastUpdateMillis == -1)
+                    // There were no trades on this day yet
+                    if (!lastUpdateMillis.HasValue || lastUpdateMillis.Value == -1)
                     {
-                        // there were no trades on this day
                         return;
                     }
+
+                    var lastUpdatedDatetime = UnixEpoch.AddMilliseconds(lastUpdateMillis.Value);
+                    var lastUpdateTimeNewYork = lastUpdatedDatetime.ConvertFromUtc(TimeZones.NewYork);
 
                     // The data stream update logic allows short-term intervals when we can receive
                     // several identical updates per one symbol at a time when replacing event sources.
@@ -189,7 +187,7 @@ namespace QuantConnect.ToolBox.IEX
                         if (value == lastUpdateMillis) return;
                     }
 
-                    _iexLastUpdateTime[symbolString] = lastUpdateMillis;
+                    _iexLastUpdateTime[symbolString] = lastUpdateMillis.Value;
 
                     // The same logic with ticks, if last trade time is not newer than previous, we don't update trade-ticks
                     Tick tradeTick = null;
@@ -202,9 +200,8 @@ namespace QuantConnect.ToolBox.IEX
                                 Symbol = symbol,
                                 Time = lastUpdateTimeNewYork,
                                 TickType = TickType.Trade,
-                                Exchange = "IEX",
-                                Value = lastPrice,
-                                Quantity = lastSize
+                                Value = lastPrice.Value,
+                                Quantity = lastSize.Value
                             };
                         }
                     }
@@ -215,18 +212,18 @@ namespace QuantConnect.ToolBox.IEX
                     if (tradeTick != null)
                         _aggregator.Update(tradeTick);
 
-                    // Always update quotes for a new snapshot, if there is a bid and ask price
-                    if (bidPrice == 0 || askPrice == 0) return;
+                    // Always update quotes for a new snapshot, if there are bid and ask prices available
+                    if (!bidPrice.HasValue || !bidSize.HasValue || bidPrice == 0 || askSize == 0) return;
+                    if (!askPrice.HasValue || !askSize.HasValue || askPrice == 0 || askSize == 0) return;
                     var quoteTick = new Tick()
                     {
                         Symbol = symbol,
                         Time = lastUpdateTimeNewYork,
                         TickType = TickType.Quote,
-                        Exchange = "IEX",
-                        BidSize = bidSize,
-                        BidPrice = bidPrice,
-                        AskSize = askSize,
-                        AskPrice = askPrice,
+                        BidSize = bidSize.Value,
+                        BidPrice = bidPrice.Value,
+                        AskSize = askSize.Value,
+                        AskPrice = askPrice.Value,
                     };
                     _aggregator.Update(quoteTick);
 
@@ -295,7 +292,6 @@ namespace QuantConnect.ToolBox.IEX
             _cts.Cancel();
 
             _clients.Dispose();
-            _isDisposing = true;
 
             Log.Trace("IEXDataQueueHandler.Dispose(): Disconnected from IEX live data");
         }
