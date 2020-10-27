@@ -19,33 +19,41 @@ using QuantConnect.ToolBox.CoinApi;
 
 namespace QuantConnect.Tests.ToolBox
 {
-    [TestFixture, Ignore("These tests require a CoinAPI api key.")]
+    [TestFixture, Explicit("These tests require a CoinAPI api key.")]
     public class CoinApiSymbolMapperTests
     {
-        [Test]
-        public void ReturnsCorrectLeanSymbol()
+        [TestCase("COINBASE_SPOT_BTC_USD", "BTCUSD", Market.GDAX)]
+        [TestCase("COINBASE_SPOT_BCH_USD", "BCHUSD", Market.GDAX)]
+        [TestCase("BITFINEX_SPOT_BTC_USD", "BTCUSD", Market.Bitfinex)]
+        [TestCase("BITFINEX_SPOT_BCHABC_USD", "BCHUSD", Market.Bitfinex)]
+        [TestCase("BITFINEX_SPOT_BCHSV_USD", "BSVUSD", Market.Bitfinex)]
+        [TestCase("BITFINEX_SPOT_ABS_USD", "ABYSSUSD", Market.Bitfinex)]
+        public void ReturnsCorrectLeanSymbol(string coinApiSymbolId, string leanTicker, string market)
         {
-            const string symbolId = "BITFINEX_SPOT_ANIO_USD";
-
             var mapper = new CoinApiSymbolMapper();
 
-            var symbol = mapper.GetLeanSymbol(symbolId, SecurityType.Crypto, string.Empty);
+            var symbol = mapper.GetLeanSymbol(coinApiSymbolId, SecurityType.Crypto, string.Empty);
 
-            Assert.AreEqual("NIOUSD", symbol.Value);
+            Assert.AreEqual(leanTicker, symbol.Value);
             Assert.AreEqual(SecurityType.Crypto, symbol.ID.SecurityType);
-            Assert.AreEqual(Market.Bitfinex, symbol.ID.Market);
+            Assert.AreEqual(market, symbol.ID.Market);
         }
 
-        [Test]
-        public void ReturnsCorrectBrokerageSymbol()
+        [TestCase("BTCUSD", Market.GDAX, "COINBASE_SPOT_BTC_USD")]
+        [TestCase("BCHUSD", Market.GDAX, "COINBASE_SPOT_BCH_USD")]
+        [TestCase("BTCUSD", Market.Bitfinex, "BITFINEX_SPOT_BTC_USD")]
+        [TestCase("BCHUSD", Market.Bitfinex, "BITFINEX_SPOT_BCHABC_USD")]
+        [TestCase("BSVUSD", Market.Bitfinex, "BITFINEX_SPOT_BCHSV_USD")]
+        [TestCase("ABYSSUSD", Market.Bitfinex, "BITFINEX_SPOT_ABS_USD")]
+        public void ReturnsCorrectBrokerageSymbol(string leanTicker, string market, string coinApiSymbolId)
         {
-            var symbol = Symbol.Create("QTMUSD", SecurityType.Crypto, Market.Bitfinex);
-
             var mapper = new CoinApiSymbolMapper();
+
+            var symbol = Symbol.Create(leanTicker, SecurityType.Crypto, market);
 
             var symbolId = mapper.GetBrokerageSymbol(symbol);
 
-            Assert.AreEqual("BITFINEX_SPOT_QTUM_USD", symbolId);
+            Assert.AreEqual(coinApiSymbolId, symbolId);
         }
     }
 }

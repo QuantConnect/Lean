@@ -33,5 +33,15 @@ namespace QuantConnect.ToolBox.CoinApi
 
         [JsonProperty("asset_id_quote")]
         public string AssetIdQuote { get; set; }
+
+        [JsonProperty("price")]
+        public decimal Price { get; set; }
+
+        public bool IsActive => Price > 0;
+
+        public override string ToString()
+        {
+            return SymbolId;
+        }
     }
 }
