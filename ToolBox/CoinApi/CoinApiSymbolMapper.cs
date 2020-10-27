@@ -199,7 +199,10 @@ namespace QuantConnect.ToolBox.CoinApi
             // <Exchange>_SPOT_<BaseCurrency>_<QuoteCurrency>_<ExtraSuffix>
             // Those cases should be ignored for SPOT prices.
             _symbolMap = result
-                .Where(x => x.IsActive && x.SymbolType == "SPOT" && x.SymbolId.Split('_').Length == 4)
+                .Where(x => x.SymbolType == "SPOT" &&
+                    x.SymbolId.Split('_').Length == 4 &&
+                    // exclude Bitfinex BCH pre-2018-fork as for now we don't have historical mapping data
+                    (x.ExchangeId != "BITFINEX" || x.AssetIdBase != "BCH" && x.AssetIdQuote != "BCH"))
                 .ToDictionary(
                     x =>
                     {
