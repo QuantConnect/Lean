@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;

@@ -17,6 +17,7 @@
 using NUnit.Framework;
 using QuantConnect.Optimizer;
 using System;
+using Newtonsoft.Json;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Optimizer
@@ -70,6 +71,18 @@ namespace QuantConnect.Tests.Optimizer
             var target = new Target(targetName, new Minimization(), 100);
 
             Assert.AreEqual("['Statistics'].['Drawdown']", target.Target);
+        }
+
+        [Test]
+        public void FromJson()
+        {
+            var json = "{\"operator\": \"equals\",\"target\": \"pin ocho.Gepetto\",\"target-value\": null}";
+
+            var constraint = (Constraint)JsonConvert.DeserializeObject(json, typeof(Constraint));
+
+            Assert.AreEqual("['pin ocho'].['Gepetto']", constraint.Target);
+            Assert.IsNull(constraint.TargetValue);
+            Assert.AreEqual(ComparisonOperatorTypes.Equals, constraint.Operator);
         }
     }
 }

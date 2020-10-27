@@ -17,7 +17,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Util;
 using System;
-using Newtonsoft.Json.Converters;
 
 namespace QuantConnect.Optimizer
 {

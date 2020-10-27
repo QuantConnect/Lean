@@ -17,6 +17,7 @@
 using NUnit.Framework;
 using QuantConnect.Optimizer;
 using System;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Tests.Optimizer
 {
@@ -98,6 +99,27 @@ namespace QuantConnect.Tests.Optimizer
             var target = new Target(targetName, new Minimization(), 100);
 
             Assert.AreEqual("['Statistics'].['Sharpe Ratio']", target.Target);
+        }
+
+        [TestCase("null")]
+        [TestCase("11")]
+        public void FromJson(string value)
+        {
+            var json = $"{{\"extremum\": \"max\",\"target\": \"pin ocho.Gepetto\",\"target-value\": {value}}}";
+
+            var target = (Target)JsonConvert.DeserializeObject(json, typeof(Target));
+
+            Assert.AreEqual("['pin ocho'].['Gepetto']", target.Target);
+            Assert.AreEqual(typeof(Maximization), target.Extremum.GetType());
+
+            if (value == "null")
+            {
+                Assert.IsNull(target.TargetValue);
+            }
+            else
+            {
+                Assert.AreEqual(11, target.TargetValue);
+            }
         }
     }
 }

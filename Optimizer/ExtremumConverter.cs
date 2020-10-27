@@ -21,6 +21,11 @@ namespace QuantConnect.Optimizer
 {
     public class ExtremumConverter : TypeChangeJsonConverter<Extremum, string>
     {
+        /// <summary>
+        /// Don't populate any property
+        /// </summary>
+        protected override bool PopulateProperties => false;
+
         protected override string Convert(Extremum value)
         {
             return value.GetType() == typeof(Maximization)

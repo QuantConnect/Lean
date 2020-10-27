@@ -85,9 +85,15 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public OptimizationNodePacket() : base(PacketType.OptimizationNode)
+        public OptimizationNodePacket() : this(PacketType.OptimizationNode)
         {
+        }
 
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        protected OptimizationNodePacket(PacketType packetType) : base(packetType)
+        {
         }
     }
 }

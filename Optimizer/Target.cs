@@ -24,7 +24,7 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Defines the direction of optimization, i.e. maximization or minimization
         /// </summary>
-        [JsonProperty("extremum", TypeNameHandling = TypeNameHandling.All)]
+        [JsonProperty("extremum")]
         public Extremum Extremum { get; }
 
         /// <summary>

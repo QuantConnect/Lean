@@ -155,8 +155,11 @@ namespace QuantConnect.Packets
         /// Used when debugging to send status updates
         DebuggingStatus,
 
-        /// Controller -> Optimization Node Packet:
+        /// Optimization Node Packet:
         OptimizationNode,
+
+        /// Optimization Estimate Packet:
+        OptimizationEstimate,
 
         /// Optimization work status update
         OptimizationStatus

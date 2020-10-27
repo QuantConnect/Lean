@@ -14,6 +14,7 @@
 */
 
 using System;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Optimizer
 {
@@ -21,6 +22,7 @@ namespace QuantConnect.Optimizer
     /// Define the way to compare current real-values and the new one (candidates).
     /// It's encapsulated in different abstraction to allow configure the direction of optimization, i.e. max or min.
     /// </summary>
+    [JsonConverter(typeof(ExtremumConverter))]
     public class Extremum
     {
         private Func<decimal, decimal, bool> _comparer;
