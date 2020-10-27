@@ -48,9 +48,9 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
 
         protected readonly JsonSerializerSettings JsonSerializerSettings = new JsonSerializerSettings
         {
-            /// DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-            /// DateFormatString = "yyyy-MM-ddTHH:mm%:ssZ"
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc
         };
+
 
 
         protected QuiverDataDownloader()
@@ -107,9 +107,7 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
 
                         // Responses are in JSON: you need to specify the HTTP header Accept: application/json
                         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                        // Console.WriteLine(client.DefaultRequestHeaders);
                         var response = await client.GetAsync(Uri.EscapeUriString(url));
-                        // Console.WriteLine(response);
                         if (response.StatusCode == HttpStatusCode.NotFound)
                         {
                             Log.Error($"QuiverDataDownloader.HttpRequester(): Files not found at url: {Uri.EscapeUriString(url)}");
@@ -123,7 +121,7 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
 
                         }
 
-                            response.EnsureSuccessStatusCode();
+                        response.EnsureSuccessStatusCode();
 
                         return await response.Content.ReadAsStringAsync();
                     }
@@ -147,6 +145,7 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
         protected void SaveContentToFile(string destinationFolder, string ticker, IEnumerable<string> contents)
         {
             ticker = ticker.ToLowerInvariant();
+            var bkPath = Path.Combine(destinationFolder, $"{ticker}-bk.csv");
             var finalPath = Path.Combine(destinationFolder, $"{ticker}.csv");
             var finalFileExists = File.Exists(finalPath);
 
@@ -164,10 +163,20 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
                 Log.Trace($"QuiverDataDownloader.SaveContentToZipFile(): Writing to file: {finalPath}");
             }
 
-            var finalLines = lines.OrderBy(x => DateTime.ParseExact(x.Split(',').First(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal))
+            var finalLines = lines.OrderBy(x => DateTime.ParseExact(x.Split(',').First(), "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal))
                 .ToList();
 
-            File.WriteAllLines(finalPath, finalLines);
+            var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
+            File.WriteAllLines(tempPath, finalLines);
+            var tempFilePath = new FileInfo(tempPath);
+            if (finalFileExists)
+            {
+                tempFilePath.Replace(finalPath,bkPath);
+            }
+            else
+            {
+                tempFilePath.MoveTo(finalPath);
+            }
         }
 
         /// <summary>
