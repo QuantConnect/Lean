@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -41,14 +41,14 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             var abbv = AddEquity("ABBV", Resolution.Daily).Symbol;
-            var si = AddData<QuiverWikipedia>(abbv).Symbol;
-            var history = History<QuiverWikipedia>(si, 60, Resolution.Daily);
+            var quiverWikiSymbol = AddData<QuiverWikipedia>(abbv).Symbol;
+            var history = History<QuiverWikipedia>(quiverWikiSymbol, 60, Resolution.Daily);
 
-            // var si = AddData<QuiverWallStreetBets>(abbv).Symbol;
-            // var history = History<QuiverWallStreetBets>(si, 60, Resolution.Daily);
+            // var quiverWSBSymbol = AddData<QuiverWallStreetBets>(abbv).Symbol;
+            // var history = History<QuiverWallStreetBets>(quiverWSBSymbol, 60, Resolution.Daily);
 
-            // var si = AddData<QuiverPoliticalBeta>(aapl).Symbol;
-            // var history = History<QuiverPoliticalBeta>(si, 60, Resolution.Daily);
+            // var quiverPBSymbol = AddData<QuiverPoliticalBeta>(aapl).Symbol;
+            // var history = History<QuiverPoliticalBeta>(quiverPBSymbol, 60, Resolution.Daily);
 
             // Count the number of items we get from our history request
             Debug($"We got {history.Count()} items from our history request");
@@ -60,16 +60,19 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice data)
         {
-            Liquidate();
             var points = data.Get<QuiverWikipedia>();
             foreach (var point in points.Values)
             {
                 // Go long in the stock if it has had more than a 5% increase in Wikipedia page views over the last month
                 if (point.Wiki_Pct_Change_Month > 5)
+                {
                     SetHoldings(point.Symbol.Underlying, 1);
+                }
                 // Go short in the stock if it has had more than a 5% decrease in Wikipedia page views over the last month
                 if (point.Wiki_Pct_Change_Month < -5)
+                {
                     SetHoldings(point.Symbol.Underlying, -1);
+                }
             }
 
             // Go long in the stock if it has a positive correlation with Trump's election odds
