@@ -62,6 +62,34 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void FiltersOutWeeklys()
+        {
+            var time = new DateTime(2016, 02, 17, 13, 0, 0);
+            var underlying = new Tick { Value = 10m, Time = time };
+
+            Func<FutureFilterUniverse, FutureFilterUniverse> universeFunc = universe => universe;
+
+            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+                universe => universeFunc(universe as FutureFilterUniverse).ApplyOptionTypesFilter();
+
+            var filter = new FuncSecurityDerivativeFilter(func);
+            var symbols = new[]
+            {
+                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(0)), // 0 Standard!!
+                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(1)), // 1
+                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(2)), // 2
+                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(8)), // 8
+                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(16)), // 16
+                Symbol.CreateFuture("VX", Market.CBOE, time.AddDays(28)), // 28 Standard!!
+            };
+
+            var filtered = filter.Filter(new FutureFilterUniverse(symbols, underlying)).ToList();
+            Assert.AreEqual(2, filtered.Count);
+            Assert.AreEqual(symbols[0], filtered[0]);
+            Assert.AreEqual(symbols[5], filtered[1]);
+        }
+
+        [Test]
         public void FiltersFrontMonth()
         {
             var expiry1 = new DateTime(2016, 12, 02);
