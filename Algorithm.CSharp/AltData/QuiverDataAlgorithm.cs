@@ -64,12 +64,12 @@ namespace QuantConnect.Algorithm.CSharp
             foreach (var point in points.Values)
             {
                 // Go long in the stock if it has had more than a 5% increase in Wikipedia page views over the last month
-                if (point.Wiki_Pct_Change_Month > 5)
+                if (point.WeekPercentChange > 5)
                 {
                     SetHoldings(point.Symbol.Underlying, 1);
                 }
                 // Go short in the stock if it has had more than a 5% decrease in Wikipedia page views over the last month
-                if (point.Wiki_Pct_Change_Month < -5)
+                if (point.MonthPercentChange < -5)
                 {
                     SetHoldings(point.Symbol.Underlying, -1);
                 }
