@@ -366,7 +366,7 @@
     <Compile Include="IEX\IEXEventSourceCollection.cs" />
     <Compile Include="IEX\IEXDataDownloader.cs" />
     <Compile Include="IEX\IEXDownloaderProgram.cs" />
-    <Compile Include="IEX\Response\QuoteSSE.cs" />
+    <Compile Include="IEX\Response\StreamResponseStocksUS.cs" />
     <Compile Include="IQFeedDownloader\IQFeedDataDownloader.cs" />
     <Compile Include="IQFeedDownloader\IQFeedDownloaderProgram.cs" />
     <Compile Include="IQFeed\IQFeedFileHistoryProvider.cs" />

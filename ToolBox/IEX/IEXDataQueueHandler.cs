@@ -148,7 +148,7 @@ namespace QuantConnect.ToolBox.IEX
         {
             try
             {
-                var dataList = JsonConvert.DeserializeObject<List<QuoteSSE>>(json);
+                var dataList = JsonConvert.DeserializeObject<List<StreamResponseStocksUS>>(json);
 
                 foreach (var item in dataList)
                 {
