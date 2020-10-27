@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class QuiverDataAlgorithm : QCAlgorithm
     {
-        private Symbol _abbv = QuantConnect.Symbol.Create("ABBV", SecurityType.Equity, Market.USA);
+        private Symbol _aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
 
 
         /// <summary>
@@ -36,16 +36,16 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2016, 1, 1);
+            SetStartDate(2019, 1, 1);
             SetEndDate(2020, 6, 1);
             SetCash(100000);
 
-            var abbv = AddEquity("ABBV", Resolution.Daily).Symbol;
-            var quiverWikiSymbol = AddData<QuiverWikipedia>(abbv).Symbol;
-            var history = History<QuiverWikipedia>(quiverWikiSymbol, 60, Resolution.Daily);
+            var aapl = AddEquity("AAPL", Resolution.Daily).Symbol;
+            // var quiverWikiSymbol = AddData<QuiverWikipedia>(abbv).Symbol;
+            // var history = History<QuiverWikipedia>(quiverWikiSymbol, 60, Resolution.Daily);
 
-            // var quiverWSBSymbol = AddData<QuiverWallStreetBets>(abbv).Symbol;
-            // var history = History<QuiverWallStreetBets>(quiverWSBSymbol, 60, Resolution.Daily);
+            var quiverWSBSymbol = AddData<QuiverWallStreetBets>(aapl).Symbol;
+            var history = History<QuiverWallStreetBets>(quiverWSBSymbol, 60, Resolution.Daily);
 
             // var quiverPBSymbol = AddData<QuiverPoliticalBeta>(aapl).Symbol;
             // var history = History<QuiverPoliticalBeta>(quiverPBSymbol, 60, Resolution.Daily);
@@ -60,16 +60,16 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice data)
         {
-            var points = data.Get<QuiverWikipedia>();
+            var points = data.Get<QuiverWallStreetBets>();
             foreach (var point in points.Values)
             {
-                // Go long in the stock if it has had more than a 5% increase in Wikipedia page views over the last month
-                if (point.WeekPercentChange > 5)
+                // Go long in the stock if it was mentioned more than 5 times in the WallStreetBets daily discussion
+                if (point.Mentions > 5)
                 {
                     SetHoldings(point.Symbol.Underlying, 1);
                 }
-                // Go short in the stock if it has had more than a 5% decrease in Wikipedia page views over the last month
-                if (point.MonthPercentChange < -5)
+                // Go short in the stock if it was mentioned less than 5 times in the WallStreetBets daily discussion
+                if (point.Mentions < 5)
                 {
                     SetHoldings(point.Symbol.Underlying, -1);
                 }
