@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -62,10 +62,10 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.NotNull(data);
             Assert.AreEqual("ABBV", data.Ticker);
             Assert.AreEqual(new DateTime(2020, 01, 01, 0, 0, 0), data.Date);
-            Assert.AreEqual(3500, data.Wiki_Views);
-            Assert.AreEqual(3.2, data.Wiki_Pct_Change_Week);
-            Assert.AreEqual(6.75, data.Wiki_Pct_Change_Month);
-
+            Assert.AreEqual(3500, data.PageViews);
+            Assert.AreEqual(3.2, data.WeekPercentChange);
+            Assert.AreEqual(6.75, data.MonthPercentChange);
+            Assert.DoesNotThrow(() => { instance.Reader(fakeConfig, data, DateTime.MinValue, false); });
         }
 
 
