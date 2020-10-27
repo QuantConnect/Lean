@@ -50,18 +50,12 @@ namespace QuantConnect.Data.Custom.Quiver
             }
         }
 
-        /// <summary>
-        /// The ticker of the company
-        /// </summary>
-        [ProtoMember(11)]
-        [JsonProperty(PropertyName = "Ticker")]
-        public string Ticker { get; set; }
 
 
         /// <summary>
         /// The follower count on the given date
         /// </summary>
-        [ProtoMember(12)]
+        [ProtoMember(11)]
         [JsonProperty(PropertyName = "Count")]
         public int? Mentions { get; set; }
 
@@ -84,7 +78,7 @@ namespace QuantConnect.Data.Custom.Quiver
             // Date[0], Ticker[1], Followers[2], Pct_Change_Week[3], Pct_Change_Month[4]
             var csv = csvLine.Split(',');
             Date = Parse.DateTimeExact(csv[0], "M/d/yyyy h:mm:ss tt");
-            Ticker = csv[1];
+            Symbol = csv[1];
             Mentions = csv[2].IfNotNullOrEmpty<int?>(s => Parse.Int(s));
             Time = Date;
         }
@@ -131,7 +125,7 @@ namespace QuantConnect.Data.Custom.Quiver
         /// </summary>
         public override string ToString()
         {
-            return Invariant($"{Ticker}({Date}) :: ") +
+            return Invariant($"{Symbol}({Date}) :: ") +
                    Invariant($"WallStreetBets Mentions: {Mentions} ");
         }
 

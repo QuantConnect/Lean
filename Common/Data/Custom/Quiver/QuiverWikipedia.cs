@@ -50,25 +50,18 @@ namespace QuantConnect.Data.Custom.Quiver
             }
         }
 
-        /// <summary>
-        /// The ticker of the company
-        /// </summary>
-        [ProtoMember(11)]
-        [JsonProperty(PropertyName = "Ticker")]
-        public string Ticker { get; set; }
-
 
         /// <summary>
         /// The follower count on the given date
         /// </summary>
-        [ProtoMember(12)]
+        [ProtoMember(11)]
         [JsonProperty(PropertyName = "Views")]
         public decimal? PageViews { get; set; }
 
         /// <summary>
         /// The follower count % change over the week prior to the date
         /// </summary>
-        [ProtoMember(13)]
+        [ProtoMember(12)]
         [JsonProperty(PropertyName = "pct_change_week")]
         public decimal? WeekPercentChange { get; set; }
 
@@ -76,7 +69,7 @@ namespace QuantConnect.Data.Custom.Quiver
         /// <summary>
         /// The follower count % change over the month prior to the date
         /// </summary>
-        [ProtoMember(14)]
+        [ProtoMember(13)]
         [JsonProperty(PropertyName = "pct_change_month")]
         public decimal? MonthPercentChange { get; set; }
 
@@ -99,7 +92,7 @@ namespace QuantConnect.Data.Custom.Quiver
             // Date[0], Ticker[1], Followers[2], Pct_Change_Week[3], Pct_Change_Month[4]
             var csv = csvLine.Split(',');
             Date = Parse.DateTimeExact(csv[0], "M/d/yyyy h:mm:ss tt");
-            Ticker = csv[1];
+            Symbol = csv[1];
             PageViews = csv[2].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
             WeekPercentChange = csv[3].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
             MonthPercentChange = csv[4].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
@@ -144,11 +137,11 @@ namespace QuantConnect.Data.Custom.Quiver
         }
 
         /// <summary>
-        /// Formats a string with the Quiver Twitter information.
+        /// Formats a string with the Quiver Wikipedia information.
         /// </summary>
         public override string ToString()
         {
-            return Invariant($"{Ticker}({Date}) :: ") +
+            return Invariant($"{Symbol}({Date}) :: ") +
                    Invariant($"Followers: {PageViews} ") +
                    Invariant($"% Change Week: {WeekPercentChange}") +
                    Invariant($"% Change Month: {MonthPercentChange}");

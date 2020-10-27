@@ -40,31 +40,23 @@ namespace QuantConnect.Data.Custom.Quiver
         public DateTime Date { get; set; }
 
         /// <summary>
-        /// The ticker of the company
-        /// </summary>
-        [ProtoMember(11)]
-        [JsonProperty(PropertyName = "Ticker")]
-        public string Ticker { get; set; }
-
-
-        /// <summary>
         /// The Representative making the transaction
         /// </summary>
-        [ProtoMember(12)]
+        [ProtoMember(11)]
         [JsonProperty(PropertyName = "Representative")]
         public string Representative { get; set; }
 
         /// <summary>
         /// The type of transaction
         /// </summary>
-        [ProtoMember(13)]
+        [ProtoMember(12)]
         [JsonProperty(PropertyName = "Transaction")]
         public string Transaction { get; set; }
 
         /// <summary>
         /// The amount of the transaction
         /// </summary>
-        [ProtoMember(14)]
+        [ProtoMember(13)]
         [JsonProperty(PropertyName = "Amount")]
         public decimal? Amount { get; set; }
 
@@ -88,7 +80,7 @@ namespace QuantConnect.Data.Custom.Quiver
             // Date[0], Ticker[1], Representative[2], Transaction[3], Amount[4]
             var csv = csvLine.Split(',');
             Date = Parse.DateTimeExact(csv[0], "M/d/yyyy h:mm:ss tt");
-            Ticker = csv[1];
+            Symbol = csv[1];
             Representative = csv[2];
             Transaction = csv[3];
             Amount = csv[4].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
@@ -137,7 +129,7 @@ namespace QuantConnect.Data.Custom.Quiver
         /// </summary>
         public override string ToString()
         {
-            return Invariant($"{Ticker}({Date}) :: ") +
+            return Invariant($"{Symbol}({Date}) :: ") +
                    Invariant($"Representative: {Representative} ") +
                    Invariant($"Transaction: {Transaction}") +
                    Invariant($"Amount: {Amount}");

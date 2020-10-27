@@ -49,23 +49,16 @@ namespace QuantConnect.Data.Custom.Quiver
         }
 
         /// <summary>
-        /// The ticker of the company
-        /// </summary>
-        [ProtoMember(11)]
-        [JsonProperty(PropertyName = "Ticker")]
-        public string Ticker { get; set; }
-
-        /// <summary>
         /// Correlation between daily excess returns and daily changes in Trump election odds
         /// </summary>
-        [ProtoMember(12)]
+        [ProtoMember(11)]
         [JsonProperty(PropertyName = "TrumpBeta")]
         public decimal? TrumpBeta { get; set; }
 
         /// <summary>
         /// Trump's odds of winning the 2020 Presidential election, based on PredictIt betting markets
         /// </summary>
-        [ProtoMember(13)]
+        [ProtoMember(12)]
         [JsonProperty(PropertyName = "TrumpOdds")]
         public decimal? TrumpOdds { get; set; }
 
@@ -87,10 +80,10 @@ namespace QuantConnect.Data.Custom.Quiver
         /// <param name="csvLine">CSV line</param>
         public QuiverPoliticalBeta(string csvLine)
         {
-            // Date[0], Ticker[1], Followers[2], Pct_Change_Week[3], Pct_Change_Month[4]
+            // Date[0], Symbol[1], Followers[2], Pct_Change_Week[3], Pct_Change_Month[4]
             var csv = csvLine.Split(',');
             Date = Parse.DateTimeExact(csv[0], "M/d/yyyy h:mm:ss tt");
-            Ticker = csv[1];
+            Symbol = csv[1];
             TrumpBeta = csv[2].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
             TrumpOdds = csv[3].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
             Time = Date;
@@ -139,7 +132,7 @@ namespace QuantConnect.Data.Custom.Quiver
         /// </summary>
         public override string ToString()
         {
-            return Invariant($"{Ticker}({Date}) :: ") +
+            return Invariant($"{Symbol}({Date}) :: ") +
                    Invariant($"Trump Beta: {TrumpBeta} ") +
                    Invariant($"Trump Election Odds: {TrumpOdds}");
         }

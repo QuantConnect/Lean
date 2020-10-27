@@ -51,31 +51,23 @@ namespace QuantConnect.Data.Custom.Quiver
         }
 
         /// <summary>
-        /// The ticker of the company
-        /// </summary>
-        [ProtoMember(11)]
-        [JsonProperty(PropertyName = "Ticker")]
-        public string Ticker { get; set; }
-
-
-        /// <summary>
         /// The Senator making the transaction
         /// </summary>
-        [ProtoMember(12)]
+        [ProtoMember(11)]
         [JsonProperty(PropertyName = "Senator")]
         public string Senator { get; set; }
 
         /// <summary>
         /// The type of transaction
         /// </summary>
-        [ProtoMember(11)]
+        [ProtoMember(12)]
         [JsonProperty(PropertyName = "Transaction")]
         public string Transaction { get; set; }
 
         /// <summary>
         /// The amount of the transaction
         /// </summary>
-        [ProtoMember(11)]
+        [ProtoMember(13)]
         [JsonProperty(PropertyName = "Amount")]
         public decimal? Amount { get; set; }
 
@@ -96,10 +88,10 @@ namespace QuantConnect.Data.Custom.Quiver
         /// <param name="csvLine">CSV line</param>
         public QuiverSenate(string csvLine)
         {
-            // Date[0], Ticker[1], Followers[2], Pct_Change_Week[3], Pct_Change_Month[4]
+            // Date[0], Symbol[1], Followers[2], Pct_Change_Week[3], Pct_Change_Month[4]
             var csv = csvLine.Split(',');
             Date = Parse.DateTimeExact(csv[0], "M/d/yyyy h:mm:ss tt");
-            Ticker = csv[1];
+            Symbol = csv[1];
             Senator = csv[2];
             Transaction = csv[3];
             Amount = csv[4].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
@@ -148,7 +140,7 @@ namespace QuantConnect.Data.Custom.Quiver
         /// </summary>
         public override string ToString()
         {
-            return Invariant($"{Ticker}({Date}) :: ") +
+            return Invariant($"{Symbol}({Date}) :: ") +
                    Invariant($"Senator: {Senator} ") +
                    Invariant($"Transaction: {Transaction}") +
                    Invariant($"Amount: {Amount}");
