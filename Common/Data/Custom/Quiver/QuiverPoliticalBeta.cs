@@ -65,7 +65,7 @@ namespace QuantConnect.Data.Custom.Quiver
         /// <summary>
         /// Trump's odds of winning the 2020 Presidential election, based on PredictIt betting markets
         /// </summary>
-        [ProtoMember(14)]
+        [ProtoMember(13)]
         [JsonProperty(PropertyName = "TrumpOdds")]
         public decimal? TrumpOdds { get; set; }
 
