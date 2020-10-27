@@ -145,6 +145,7 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
         protected void SaveContentToFile(string destinationFolder, string ticker, IEnumerable<string> contents)
         {
             ticker = ticker.ToLowerInvariant();
+            var bkPath = Path.Combine(destinationFolder+"/bk/", $"{ticker}.csv");
             var finalPath = Path.Combine(destinationFolder, $"{ticker}.csv");
             var finalFileExists = File.Exists(finalPath);
 
@@ -165,7 +166,17 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
             var finalLines = lines.OrderBy(x => DateTime.ParseExact(x.Split(',').First(), "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal))
                 .ToList();
 
-            File.WriteAllLines(finalPath, finalLines);
+            var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
+            File.WriteAllLines(tempPath, finalLines);
+            var tempFilePath = new FileInfo(tempPath);
+            if (finalFileExists)
+            {
+                tempFilePath.Replace(finalPath,bkPath);
+            }
+            else
+            {
+                tempFilePath.MoveTo(finalPath);
+            }
         }
 
         /// <summary>
