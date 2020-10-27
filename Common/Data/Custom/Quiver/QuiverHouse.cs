@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -25,30 +25,19 @@ using static QuantConnect.StringExtensions;
 namespace QuantConnect.Data.Custom.Quiver
 {
     /// <summary>
-    /// Twitter follower counts for the specified company
+    /// Personal stock transactions by U.S. Representatives
     /// </summary>
     [ProtoContract(SkipConstructor = true)]
     public class QuiverHouse : BaseData
     {
 
         /// <summary>
-        /// The date of the follower count
+        /// The date of the transaction
         /// </summary>
         [ProtoMember(10)]
         [JsonProperty(PropertyName = "Date")]
-        private string dateJson { get; set; }
-        [JsonIgnore]
-        public DateTime Date
-        {
-            get
-            {
-                return DateTime.ParseExact(dateJson, "yyyy-MM-dd", null);
-            }
-            set
-            {
-                dateJson = value.ToStringInvariant("yyyy-MM-dd");
-            }
-        }
+        [JsonConverter(typeof(DateTimeJsonConverter), "yyyy-MM-dd")]
+        public DateTime Date { get; set; }
 
         /// <summary>
         /// The ticker of the company
@@ -68,14 +57,14 @@ namespace QuantConnect.Data.Custom.Quiver
         /// <summary>
         /// The type of transaction
         /// </summary>
-        [ProtoMember(11)]
+        [ProtoMember(13)]
         [JsonProperty(PropertyName = "Transaction")]
         public string Transaction { get; set; }
 
         /// <summary>
         /// The amount of the transaction
         /// </summary>
-        [ProtoMember(11)]
+        [ProtoMember(14)]
         [JsonProperty(PropertyName = "Amount")]
         public decimal? Amount { get; set; }
 
@@ -91,12 +80,12 @@ namespace QuantConnect.Data.Custom.Quiver
         }
 
         /// <summary>
-        /// Creates a new instance of QuiverTwitter from a CSV line
+        /// Creates a new instance of QuiverHouse from a CSV line
         /// </summary>
         /// <param name="csvLine">CSV line</param>
         public QuiverHouse(string csvLine)
         {
-            // Date[0], Ticker[1], Followers[2], Pct_Change_Week[3], Pct_Change_Month[4]
+            // Date[0], Ticker[1], Representative[2], Transaction[3], Amount[4]
             var csv = csvLine.Split(',');
             Date = Parse.DateTimeExact(csv[0], "M/d/yyyy h:mm:ss tt");
             Ticker = csv[1];
