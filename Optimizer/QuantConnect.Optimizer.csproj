@@ -56,6 +56,7 @@
     </Compile>
     <Compile Include="ExtremumConverter.cs" />
     <Compile Include="Objective.cs" />
+    <Compile Include="OptimizationEstimate.cs" />
     <Compile Include="Target.cs" />
     <Compile Include="Constraint.cs" />
     <Compile Include="LeanOptimizer.cs" />

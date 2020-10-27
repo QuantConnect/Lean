@@ -34,6 +34,11 @@ namespace QuantConnect.Optimizer
             throw new NotImplementedException();
         }
 
+        public int GetTotalBacktestEstimate()
+        {
+            throw new NotImplementedException();
+        }
+
         public IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args)
         {
             throw new System.NotImplementedException("EulerSearch isn't implemented yet");

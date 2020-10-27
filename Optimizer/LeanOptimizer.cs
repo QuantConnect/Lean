@@ -26,6 +26,9 @@ namespace QuantConnect.Optimizer
     /// </summary>
     public abstract class LeanOptimizer : IDisposable
     {
+        private DateTime _startedAt;
+        private int _completedBacktest;
+        private int _failedBacktest;
         private volatile bool _disposed;
 
         /// <summary>
@@ -75,7 +78,7 @@ namespace QuantConnect.Optimizer
                 throw new InvalidOperationException("Cannot start an optimization job with no parameter to optimize");
             }
 
-            if (nodePacket.Criterion?.Target?.IsNullOrEmpty() != true)
+            if (string.IsNullOrEmpty(nodePacket.Criterion?.Target))
             {
                 throw new InvalidOperationException("Cannot start an optimization job with no target to optimize");
             }
@@ -110,6 +113,8 @@ namespace QuantConnect.Optimizer
         /// </summary>
         public virtual void Start()
         {
+            _startedAt = DateTime.UtcNow;
+
             lock (RunningParameterSetForBacktest)
             {
                 Strategy.PushNewResults(OptimizationResult.Empty);
@@ -169,6 +174,7 @@ namespace QuantConnect.Optimizer
             {
                 if (!RunningParameterSetForBacktest.TryRemove(backtestId, out parameterSet))
                 {
+                    _failedBacktest++;
                     Log.Error($"LeanOptimizer.NewResult({GetLogDetails()}): Optimization compute job with id '{backtestId}' was not found");
                     return;
                 }
@@ -186,10 +192,12 @@ namespace QuantConnect.Optimizer
             var result = new OptimizationResult(null, parameterSet, backtestId);
             if (string.IsNullOrEmpty(jsonBacktestResult))
             {
+                _failedBacktest++;
                 Log.Error($"LeanOptimizer.NewResult({GetLogDetails()}): Got null/empty backtest result for backtest id '{backtestId}'");
             }
             else
             {
+                _completedBacktest++;
                 result = new OptimizationResult(jsonBacktestResult, parameterSet, backtestId);
             }
             // always notify the strategy
@@ -291,5 +299,18 @@ namespace QuantConnect.Optimizer
         /// </summary>
         /// <param name="backtestId">Specified backtest id</param>
         protected abstract void AbortLean(string backtestId);
+
+        public OptimizationEstimate GetCurrentEstimate()
+        {
+            return new OptimizationEstimate
+            {
+                TotalBacktest = Strategy.GetTotalBacktestEstimate(),
+                CompletedBacktest = _completedBacktest,
+                FailedBacktest = _failedBacktest,
+                RunningBacktest = RunningParameterSetForBacktest.Count,
+                InQueueBacktest = PendingParameterSet.Count,
+                AverageBacktest = _completedBacktest > 0 ? new TimeSpan((DateTime.UtcNow - _startedAt).Ticks / _completedBacktest) : TimeSpan.Zero
+            };
+        }
     }
 }

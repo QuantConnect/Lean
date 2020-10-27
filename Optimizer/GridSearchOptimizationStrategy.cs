@@ -109,6 +109,21 @@ namespace QuantConnect.Optimizer
         }
 
         /// <summary>
+        /// Calculate number of parameter sets within grid
+        /// </summary>
+        /// <returns>Number of parameter sets for given optimization parameters</returns>
+        public int GetTotalBacktestEstimate()
+        {
+            int total = 1;
+            foreach (var arg in _args)
+            {
+                total *= (int)Math.Floor((arg.MaxValue - arg.MinValue) / arg.Step) + 1;
+            }
+
+            return total;
+        }
+
+        /// <summary>
         /// Enumerate all possible arrangements
         /// </summary>
         /// <param name="seed">Seeding</param>

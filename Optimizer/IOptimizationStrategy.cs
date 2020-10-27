@@ -46,5 +46,11 @@ namespace QuantConnect.Optimizer
         /// </summary>
         /// <param name="result">Lean compute job result and corresponding parameter set</param>
         void PushNewResults(OptimizationResult result);
+
+        /// <summary>
+        /// Estimates amount of parameter sets that can be run
+        /// </summary>
+        /// <param name="result">Number of parameter sets</param>
+        int GetTotalBacktestEstimate();
     }
 }

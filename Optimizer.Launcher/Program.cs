@@ -14,12 +14,13 @@
 */
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Configuration;
+using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json.Linq;
-using QuantConnect.Util;
+using System.Threading;
 
 namespace QuantConnect.Optimizer.Launcher
 {
@@ -33,13 +34,8 @@ namespace QuantConnect.Optimizer.Launcher
                 {
                     OptimizationId = Guid.NewGuid().ToString(),
                     OptimizationStrategy = Config.Get("optimization-strategy", "QuantConnect.Optimizer.GridSearchOptimizationStrategy"),
-                    Criterion =
-                        JsonConvert.DeserializeObject<Dictionary<string, string>>(Config.Get("optimization-criterion", "{\"target\":\"TotalPerformance.TradeStatistics.TotalProfit\", \"extremum\": \"max\"}")),
-                    Constraints = JArray.Parse(Config.Get("constraints", "[]")).Select(t => new Constraint(
-                            t.Value<string>("target"),
-                            (ComparisonOperatorTypes)Enum.Parse(typeof(ComparisonOperatorTypes), t.Value<string>("operator"), true),
-                            t.Value<decimal>("target-value")
-                        )).ToList().AsReadOnly(),
+                    Criterion = JsonConvert.DeserializeObject<Target>(Config.Get("optimization-criterion", "{\"target\":\"Statistics.TotalProfit\", \"extremum\": \"max\"}")),
+                    Constraints = JsonConvert.DeserializeObject<List<Constraint>>(Config.Get("constraints", "[]")).AsReadOnly(),
                     OptimizationParameters =
                         JsonConvert.DeserializeObject<Dictionary<string, JObject>>(Config.Get("parameters", "{}"))
                         .Select(arg => new OptimizationParameter(
@@ -54,9 +50,17 @@ namespace QuantConnect.Optimizer.Launcher
                 var optimizer = new ConsoleLeanOptimizer(packet);
 
                 optimizer.Start();
+
+                var timer = new Timer((s) =>
+                {
+                    Console.WriteLine(optimizer.GetCurrentEstimate());
+                }, null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30));
+
                 optimizer.Ended += (s, e) =>
                 {
+                    timer.Change(Timeout.Infinite, Timeout.Infinite);
                     optimizer.DisposeSafely();
+                    timer.DisposeSafely();
                 };
             }
             catch (Exception e)

@@ -311,12 +311,26 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 Assert.AreEqual(Math.Floor((param.MaxValue - param.MinValue) / param.Step) + 1, counter);
             }
 
-            private static TestCaseData[] OptimizationParameter2D =>
-            new[]{
-            new TestCaseData(new decimal[,] {{10, 100, 1}, {20, 200, 1}}),
-            new TestCaseData(new decimal[,] {{10.5m, 100.5m, 1.5m}, { 20m, 209.9m, 3.5m}}),
-            new TestCaseData(new decimal[,] {{ -10.5m, 0m, -1.5m }, { -209.9m, -20m, -3.5m } }),
-            new TestCaseData(new decimal[,] {{ 10.5m, 0m, 1.5m }, { 209.9m, -20m, -3.5m } })
+            [TestCase(1, 1, 1)]
+            [TestCase(-10, 0, -1)]
+            [TestCase( 0, -10, -1)]
+            [TestCase(-10, 10.5, -0.5)]
+            [TestCase(10, 100, 1)]
+            [TestCase(10, 100, 500)]
+            public void Estimate1D(decimal min, decimal max, decimal step)
+            {
+                var param = new OptimizationParameter("ema-fast", min, max, step);
+                var set = new HashSet<OptimizationParameter>() { param };
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set);
+                
+                Assert.AreEqual(Math.Floor(Math.Abs(max - min) / Math.Abs(step)) + 1, _strategy.GetTotalBacktestEstimate());
+            }
+
+            private static TestCaseData[] OptimizationParameter2D => new[]{
+                new TestCaseData(new decimal[,] {{10, 100, 1}, {20, 200, 1}}),
+                new TestCaseData(new decimal[,] {{10.5m, 100.5m, 1.5m}, { 20m, 209.9m, 3.5m}}),
+                new TestCaseData(new decimal[,] {{ -10.5m, 0m, -1.5m }, { -209.9m, -20m, -3.5m } }),
+                new TestCaseData(new decimal[,] {{ 10.5m, 0m, 1.5m }, { 209.9m, -20m, -3.5m } })
             };
 
             [Test, TestCaseSource(nameof(OptimizationParameter2D))]
@@ -369,6 +383,25 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 }
 
                 Assert.AreEqual(total, counter);
+            }
+
+            [Test, TestCaseSource(nameof(OptimizationParameter2D))]
+            public void Estimate2D(decimal[,] data)
+            {
+                var args = new HashSet<OptimizationParameter>()
+                {
+                    new OptimizationParameter("ema-fast", data[0,0], data[0,1], data[0,2]),
+                    new OptimizationParameter("ema-slow", data[1,0], data[1,1], data[1,2])
+                };
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args);
+
+                var total = 1m;
+                foreach (var arg in args)
+                {
+                    total *= Math.Floor((arg.MaxValue - arg.MinValue) / arg.Step) + 1;
+                }
+
+                Assert.AreEqual(total, _strategy.GetTotalBacktestEstimate());
             }
 
             [Test]
@@ -428,6 +461,26 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 }
 
                 Assert.AreEqual(total, counter);
+            }
+
+            [Test]
+            public void Estimate3D()
+            {
+                var args = new HashSet<OptimizationParameter>()
+                {
+                    new OptimizationParameter("ema-fast", 10, 100, 1),
+                    new OptimizationParameter("ema-slow", 20, 200, 4),
+                    new OptimizationParameter("ema-custom", 30, 300, 2)
+                };
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), null, args);
+                
+                var total = 1m;
+                foreach (var arg in args)
+                {
+                    total *= (arg.MaxValue - arg.MinValue) / arg.Step + 1;
+                }
+
+                Assert.AreEqual(total, _strategy.GetTotalBacktestEstimate());
             }
 
             [Test]
