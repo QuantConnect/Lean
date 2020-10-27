@@ -264,8 +264,9 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         /// <param name="symbol">The symbol to ues for the dividend and split objects</param>
         /// <param name="exchangeHours">Exchange hours used for resolving the previous trading day</param>
+        /// <param name="decimalPlaces">The number of decimal places to round the dividend's distribution to, defaulting to 2</param>
         /// <returns>All splits and diviends represented by this factor file in chronological order</returns>
-        public List<BaseData> GetSplitsAndDividends(Symbol symbol, SecurityExchangeHours exchangeHours)
+        public List<BaseData> GetSplitsAndDividends(Symbol symbol, SecurityExchangeHours exchangeHours, int decimalPlaces = 2)
         {
             var dividendsAndSplits = new List<BaseData>();
             if (SortedFactorFileData.Count == 0)
@@ -278,7 +279,7 @@ namespace QuantConnect.Data.Auxiliary
             for (var i = SortedFactorFileData.Count - 2; i >= 0; i--)
             {
                 var row = SortedFactorFileData.Values[i];
-                var dividend = row.GetDividend(futureFactorFileRow, symbol, exchangeHours);
+                var dividend = row.GetDividend(futureFactorFileRow, symbol, exchangeHours, decimalPlaces);
                 if (dividend.Distribution != 0m)
                 {
                     dividendsAndSplits.Add(dividend);
