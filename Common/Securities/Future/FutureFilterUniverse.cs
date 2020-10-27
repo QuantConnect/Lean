@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using System.Linq;
 using System.Collections;
+using QuantConnect.Securities.Future;
 using QuantConnect.Util;
 
 namespace QuantConnect.Securities
@@ -28,6 +29,22 @@ namespace QuantConnect.Securities
     /// </summary>
     public class FutureFilterUniverse : IDerivativeSecurityFilterUniverse
     {
+        /// <summary>
+        /// Defines listed futures types
+        /// </summary>
+        public enum Type : int
+        {
+            /// <summary>
+            /// Standard Futures contracts, determined by FuturesExpiryFunctions
+            /// </summary>
+            Standard = 1,
+
+            /// <summary>
+            /// Non-Standard weekly contracts for some Futures
+            /// </summary>
+            Weeklys = 2
+        }
+
         internal IEnumerable<Symbol> _allSymbols;
 
         /// <summary>
@@ -52,6 +69,7 @@ namespace QuantConnect.Securities
         }
 
         internal bool _isDynamic;
+        private Type _type = Type.Standard;
 
         /// <summary>
         /// Constructs FutureFilterUniverse
@@ -184,6 +202,66 @@ namespace QuantConnect.Securities
         public FutureFilterUniverse OnlyApplyFilterAtMarketOpen()
         {
             _isDynamic = false;
+            return this;
+        }
+
+        /// <summary>
+        /// Returns universe, filtered by option type
+        /// </summary>
+        /// <returns></returns>
+        internal FutureFilterUniverse ApplyOptionTypesFilter()
+        {
+            // memoization map for ApplyOptionTypesFilter()
+            var memoizedMap = new Dictionary<DateTime, bool>();
+
+            Func<Symbol, bool> memoizedIsStandardType = symbol =>
+            {
+                var dt = symbol.ID.Date;
+
+                bool result;
+                if (memoizedMap.TryGetValue(dt, out result))
+                    return result;
+                var res = FutureSymbol.IsStandard(symbol);
+                memoizedMap[dt] = res;
+
+                return res;
+            };
+
+            _allSymbols = _allSymbols.Where(x =>
+            {
+                switch (_type)
+                {
+                    case Type.Weeklys:
+                        return !memoizedIsStandardType(x);
+                    case Type.Standard:
+                        return memoizedIsStandardType(x);
+                    case Type.Standard | Type.Weeklys:
+                        return true;
+                    default:
+                        return false;
+                }
+            }).ToList();
+
+            return this;
+        }
+
+        /// <summary>
+        /// Includes universe of weeklys options (if any) into selection
+        /// </summary>
+        /// <returns></returns>
+        public FutureFilterUniverse IncludeWeeklys()
+        {
+            _type |= Type.Weeklys;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets universe of weeklys options (if any) as a selection
+        /// </summary>
+        /// <returns></returns>
+        public FutureFilterUniverse WeeklysOnly()
+        {
+            _type = Type.Weeklys;
             return this;
         }
 
