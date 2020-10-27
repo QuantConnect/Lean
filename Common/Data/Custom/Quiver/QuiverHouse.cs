@@ -21,6 +21,7 @@ using System.IO;
 using NodaTime;
 using ProtoBuf;
 using static QuantConnect.StringExtensions;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Custom.Quiver
 {
@@ -79,11 +80,10 @@ namespace QuantConnect.Data.Custom.Quiver
         {
             // Date[0], Ticker[1], Representative[2], Transaction[3], Amount[4]
             var csv = csvLine.Split(',');
-            Date = Parse.DateTimeExact(csv[0], "M/d/yyyy h:mm:ss tt");
-            Symbol = csv[1];
-            Representative = csv[2];
-            Transaction = csv[3];
-            Amount = csv[4].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            Date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
+            Representative = csv[1];
+            Transaction = csv[2];
+            Amount = csv[3].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
             Time = Date;
         }
 

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Util;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
@@ -36,17 +37,8 @@ namespace QuantConnect.Data.Custom.Quiver
         /// </summary>
         [ProtoMember(10)]
         [JsonProperty(PropertyName = "Date")]
-        private string dateJson { get; set; }
-        [JsonIgnore]
-        public DateTime Date {
-            get {
-                Console.WriteLine(dateJson);
-                return DateTime.ParseExact(dateJson, "yyyy-MM-dd", null);
-                    }
-            set {
-                dateJson = value.ToStringInvariant("yyyy-MM-dd");
-            }
-        }
+        [JsonConverter(typeof(DateTimeJsonConverter), "yyyy-MM-dd")]
+        public DateTime Date { get; set; }
 
         /// <summary>
         /// Correlation between daily excess returns and daily changes in Trump election odds
@@ -82,10 +74,9 @@ namespace QuantConnect.Data.Custom.Quiver
         {
             // Date[0], Symbol[1], Followers[2], Pct_Change_Week[3], Pct_Change_Month[4]
             var csv = csvLine.Split(',');
-            Date = Parse.DateTimeExact(csv[0], "M/d/yyyy h:mm:ss tt");
-            Symbol = csv[1];
-            TrumpBeta = csv[2].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
-            TrumpOdds = csv[3].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            Date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
+            TrumpBeta = csv[1].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            TrumpOdds = csv[2].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
             Time = Date;
         }
 

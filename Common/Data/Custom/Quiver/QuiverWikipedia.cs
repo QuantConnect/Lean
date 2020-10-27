@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Util;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
@@ -36,19 +37,9 @@ namespace QuantConnect.Data.Custom.Quiver
         /// </summary>
         [ProtoMember(10)]
         [JsonProperty(PropertyName = "Date")]
-        private string dateJson { get; set; }
-        [JsonIgnore]
-        public DateTime Date
-        {
-            get
-            {
-                return DateTime.ParseExact(dateJson, "yyyy-MM-dd", null);
-            }
-            set
-            {
-                dateJson = value.ToStringInvariant("yyyy-MM-dd");
-            }
-        }
+        [JsonConverter(typeof(DateTimeJsonConverter), "yyyy-MM-dd")]
+        public DateTime Date { get; set; }
+
 
 
         /// <summary>
@@ -84,18 +75,17 @@ namespace QuantConnect.Data.Custom.Quiver
         }
 
         /// <summary>
-        /// Creates a new instance of QuiverTwitter from a CSV line
+        /// Creates a new instance of QuiverWikipedia from a CSV line
         /// </summary>
         /// <param name="csvLine">CSV line</param>
         public QuiverWikipedia(string csvLine)
         {
-            // Date[0], Ticker[1], Followers[2], Pct_Change_Week[3], Pct_Change_Month[4]
+            // Date[0], Ticker[1], PageViews[2], WeekPercentChange[3], MonthPercentChange[4]
             var csv = csvLine.Split(',');
-            Date = Parse.DateTimeExact(csv[0], "M/d/yyyy h:mm:ss tt");
-            Symbol = csv[1];
-            PageViews = csv[2].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
-            WeekPercentChange = csv[3].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
-            MonthPercentChange = csv[4].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            Date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
+            PageViews = csv[1].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            WeekPercentChange = csv[2].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            MonthPercentChange = csv[3].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
             Time = Date;
         }
 
