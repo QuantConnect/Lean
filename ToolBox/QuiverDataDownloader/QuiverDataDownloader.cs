@@ -46,11 +46,6 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
         /// </summary>
         public RateGate IndexGate { get; }
 
-        protected readonly JsonSerializerSettings JsonSerializerSettings = new JsonSerializerSettings
-        {
-            /// DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-            /// DateFormatString = "yyyy-MM-ddTHH:mm%:ssZ"
-        };
 
 
         protected QuiverDataDownloader()
@@ -107,9 +102,7 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
 
                         // Responses are in JSON: you need to specify the HTTP header Accept: application/json
                         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                        // Console.WriteLine(client.DefaultRequestHeaders);
                         var response = await client.GetAsync(Uri.EscapeUriString(url));
-                        // Console.WriteLine(response);
                         if (response.StatusCode == HttpStatusCode.NotFound)
                         {
                             Log.Error($"QuiverDataDownloader.HttpRequester(): Files not found at url: {Uri.EscapeUriString(url)}");
@@ -123,7 +116,7 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
 
                         }
 
-                            response.EnsureSuccessStatusCode();
+                        response.EnsureSuccessStatusCode();
 
                         return await response.Content.ReadAsStringAsync();
                     }

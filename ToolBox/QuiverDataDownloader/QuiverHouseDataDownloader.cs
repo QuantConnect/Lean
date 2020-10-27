@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -89,8 +89,6 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
                     // Begin processing ticker with a normalized value
                     Log.Trace($"QuiverHouseDataDownloader.Run(): Processing {ticker}");
 
-                    // Makes sure we don't overrun Quiver rate limits accidentally
-                    System.Threading.Thread.Sleep(1);
                     IndexGate.WaitToProceed();
 
                     tasks.Add(
