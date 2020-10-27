@@ -42,7 +42,7 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
         /// <param name="destinationFolder">The folder where the data will be saved</param>
         public QuiverSenateDataDownloader(string destinationFolder)
         {
-            _destinationFolder = Path.Combine(destinationFolder, "senate");
+            _destinationFolder = Path.Combine(destinationFolder, "senatetrading");
             _mapFileResolver = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))
                 .Get(Market.USA);
 
@@ -119,13 +119,12 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
                                     foreach (var kvp in followers)
                                     {
                                         var csvContents = new string[] {
-                                            $"{kvp.Date.ToStringInvariant("M/d/yyyy h:mm:ss tt")}," +
-                                            $"{kvp.Ticker}," +
+                                            $"{kvp.Date.ToStringInvariant("yyyyMMdd")}," +
                                             $"{kvp.Senator}," +
                                             $"{kvp.Transaction}," +
                                             $"{kvp.Amount}"
                                         };
-                                        SaveContentToFile(_destinationFolder, kvp.Ticker, csvContents);
+                                        SaveContentToFile(_destinationFolder, ticker, csvContents);
                                     }
 
                                     var percentageDone = i / count;

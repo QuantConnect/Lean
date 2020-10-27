@@ -46,6 +46,11 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
         /// </summary>
         public RateGate IndexGate { get; }
 
+        protected readonly JsonSerializerSettings JsonSerializerSettings = new JsonSerializerSettings
+        {
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc
+        };
+
 
 
         protected QuiverDataDownloader()
@@ -157,7 +162,7 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
                 Log.Trace($"QuiverDataDownloader.SaveContentToZipFile(): Writing to file: {finalPath}");
             }
 
-            var finalLines = lines.OrderBy(x => DateTime.ParseExact(x.Split(',').First(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal))
+            var finalLines = lines.OrderBy(x => DateTime.ParseExact(x.Split(',').First(), "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal))
                 .ToList();
 
             File.WriteAllLines(finalPath, finalLines);

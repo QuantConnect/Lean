@@ -119,12 +119,11 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
                                     foreach (var kvp in followers)
                                     {
                                         var csvContents = new string[] {
-                                            $"{kvp.Date.ToStringInvariant("M/d/yyyy h:mm:ss tt")}," +
-                                            $"{kvp.Ticker}," +
+                                            $"{kvp.Date.ToStringInvariant("yyyyMMdd")}," +
                                             $"{kvp.TrumpBeta}," +
                                             $"{kvp.TrumpOdds}"
                                         };
-                                        SaveContentToFile(_destinationFolder, kvp.Ticker, csvContents);
+                                        SaveContentToFile(_destinationFolder, ticker, csvContents);
                                     }
 
                                     var percentageDone = i / count;

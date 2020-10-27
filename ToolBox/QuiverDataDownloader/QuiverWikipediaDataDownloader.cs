@@ -90,7 +90,6 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
                     Log.Trace($"QuiverWikipediaDataDownloader.Run(): Processing {ticker}");
 
                     // Makes sure we don't overrun Quiver rate limits accidentally
-                    System.Threading.Thread.Sleep(1);
                     IndexGate.WaitToProceed();
 
                     tasks.Add(
@@ -119,13 +118,12 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
                                     foreach (var kvp in followers)
                                     {
                                         var csvContents = new string[] {
-                                            $"{kvp.Date.ToStringInvariant("M/d/yyyy h:mm:ss tt")}," +
-                                            $"{kvp.Ticker}," +
-                                            $"{kvp.Wiki_Views}," +
-                                            $"{kvp.Wiki_Pct_Change_Week}," +
-                                            $"{kvp.Wiki_Pct_Change_Month}"
+                                            $"{kvp.Date.ToStringInvariant("yyyyMMdd")}," +
+                                            $"{kvp.PageViews}," +
+                                            $"{kvp.WeekPercentChange}," +
+                                            $"{kvp.MonthPercentChange}"
                                         };
-                                        SaveContentToFile(_destinationFolder, kvp.Ticker, csvContents);
+                                        SaveContentToFile(_destinationFolder, ticker, csvContents);
                                     }
 
                                     var percentageDone = i / count;
