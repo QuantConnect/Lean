@@ -85,7 +85,7 @@ namespace QuantConnect.ToolBox.IEX
                 // Need to perform no changes if all client symbols are relevant
                 if (clientSymbols.All(symbols.Contains))
                 {
-                    Log.Trace($"IEXEventSourceCollection.UpdateSubscription(): Leave unchanged subscription for: {string.Join(",", clientSymbols)}");
+                    Log.Debug($"IEXEventSourceCollection.UpdateSubscription(): Leave unchanged subscription for: {string.Join(",", clientSymbols)}");
 
                     // Just remove symbols from remaining collection
                     remainingSymbols.RemoveAll(i => clientSymbols.Contains(i));
@@ -150,7 +150,7 @@ namespace QuantConnect.ToolBox.IEX
 
                 clientsToRemove.DoForEach(i =>
                 {
-                    Log.Trace($"IEXEventSourceCollection.UpdateSubscription(): Remove subscription for: {string.Join(",", ClientSymbolsDictionary[i])}");
+                    Log.Debug($"IEXEventSourceCollection.UpdateSubscription(): Remove subscription for: {string.Join(",", ClientSymbolsDictionary[i])}");
 
                     string[] stub;
                     ClientSymbolsDictionary.TryRemove(i, out stub);
@@ -185,7 +185,7 @@ namespace QuantConnect.ToolBox.IEX
             }
 
             Counter.Signal();
-            Log.Trace($"IEXEventSourceCollection.MessageHandler(): CountdownEvent count: {Counter.CurrentCount}");
+            Log.Debug($"IEXEventSourceCollection.MessageHandler(): CountdownEvent count: {Counter.CurrentCount}");
             tmpClient.MessageReceived -= MessageHandler;  // Remove the handler
         }
 
@@ -198,7 +198,7 @@ namespace QuantConnect.ToolBox.IEX
             // Add to the dictionary
             ClientSymbolsDictionary.TryAdd(client, symbols);
 
-            Log.Trace($"IEXEventSourceCollection.CreateNewSubscription(): Creating subscription for: {string.Join(",", symbols)}");
+            Log.Debug($"IEXEventSourceCollection.CreateNewSubscription(): Creating subscription for: {string.Join(",", symbols)}");
 
             // Set up the handlers
             client.Opened += (sender, args) => { };
@@ -208,17 +208,17 @@ namespace QuantConnect.ToolBox.IEX
             client.Error += (sender, args) =>
             {
                 var exception = args.Exception;
-                Log.Trace($"ClientOnError(): EventSource Error Occurred. Details: {exception.Message} " +
-                          $"ErrorType: {exception.GetType().FullName}", true);
+                Log.Debug($"ClientOnError(): EventSource Error Occurred. Details: {exception.Message} " +
+                          $"ErrorType: {exception.GetType().FullName}");
             };
 
             client.Closed += (sender, args) =>
             {
-                Log.Trace("ClientOnClosed(): Closing a client", true);
+                Log.Debug("ClientOnClosed(): Closing a client");
             };
 
             // Client start call will block until Stop() is called (!) - runs continuously in a background
-            Task.Run(async () => await client.StartAsync());
+            Task.Run(async () => await client.StartAsync().ConfigureAwait(false));
 
             return client;
         }
