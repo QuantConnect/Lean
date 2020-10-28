@@ -37,7 +37,6 @@ namespace QuantConnect.ToolBox.IEX
         private readonly EventHandler<MessageReceivedEventArgs> _messageAction;
         private static readonly ConcurrentDictionary<EventSource, string[]> ClientSymbolsDictionary = new ConcurrentDictionary<EventSource, string[]>();
         private static readonly CountdownEvent Counter = new CountdownEvent(1);
-        private static readonly ManualResetEvent UpdateInProgressEvent = new ManualResetEvent(true);
 
         // IEX API documentation says:
         // "We limit requests to 100 per second per IP measured in milliseconds, so no more than 1 request per 10 milliseconds."
@@ -64,17 +63,8 @@ namespace QuantConnect.ToolBox.IEX
         /// <returns></returns>
         public void UpdateSubscription(string[] symbols)
         {
-            if (!UpdateInProgressEvent.WaitOne(TimeoutToUpdate))
-            {
-                UpdateInProgressEvent.Set();
-                throw new Exception("IEXEventSourceCollection.UpdateSubscription(): " +
-                                    "The last UpdateSubscription was not successful, counter was not signaled on time.");
-            }
+            Log.Debug("IEXEventSourceCollection.UpdateSubscription(): Subscription update started");
 
-            // Block the event until operation completes so if during current execution
-            // the method will be run again, then it waited for the end of the current update
-            UpdateInProgressEvent.Reset();
-            
             var remainingSymbols = new List<string>(symbols);
             var clientsToRemove = new List<EventSource>();
 
@@ -135,42 +125,32 @@ namespace QuantConnect.ToolBox.IEX
             // Called for example when UpdateSubscription is called for the first time
             if (!clientsToRemove.Any())
             {
-                UpdateInProgressEvent.Set();
                 return;
             }
 
-            // If there are clients to remove - wait for the counter to reset to zero and remove
-            Task.Run(() =>
+
+            Counter.Signal();
+            if (!Counter.Wait(TimeoutToUpdate))
             {
-                Counter.Signal();
-                if (!Counter.Wait(TimeoutToUpdate))
-                {
-                    throw new Exception("IEXEventSourceCollection.UpdateSubscription(): Could not update subscription within a timeout");
-                }
+                throw new Exception("IEXEventSourceCollection.UpdateSubscription(): Could not update subscription within a timeout");
+            }
 
-                clientsToRemove.DoForEach(i =>
-                {
-                    Log.Debug($"IEXEventSourceCollection.UpdateSubscription(): Remove subscription for: {string.Join(",", ClientSymbolsDictionary[i])}");
-
-                    string[] stub;
-                    ClientSymbolsDictionary.TryRemove(i, out stub);
-
-                    i.Close();
-                    i.Dispose();
-                });
-
-                // Reset synchronization objects
-                Counter.Reset(1);
-                UpdateInProgressEvent.Set();
-
-                IsConnected = true;
-
-            }).ContinueWith(t =>
+            clientsToRemove.DoForEach(i =>
             {
-                if (t.Exception != null)
-                    throw t.Exception;
+                Log.Debug($"IEXEventSourceCollection.UpdateSubscription(): Remove subscription for: {string.Join(",", ClientSymbolsDictionary[i])}");
 
-            },TaskContinuationOptions.OnlyOnFaulted);
+                string[] stub;
+                ClientSymbolsDictionary.TryRemove(i, out stub);
+
+                i.Close();
+                i.Dispose();
+            });
+
+            // Reset synchronization objects
+            Counter.Reset(1);
+
+            IsConnected = true;
+
         }
 
         // Once we received the first message, decrement the counter
