@@ -253,7 +253,7 @@ namespace QuantConnect.Optimizer
                 return;
             }
 
-            if (NodePacket.MaximumConcurrentBacktests != 0 && RunningParameterSetForBacktest.Count > NodePacket.MaximumConcurrentBacktests)
+            if (NodePacket.MaximumConcurrentBacktests != 0 && RunningParameterSetForBacktest.Count >= NodePacket.MaximumConcurrentBacktests)
             {
                 // we hit the limit on the concurrent backtests
                 PendingParameterSet.Enqueue(parameterSet);

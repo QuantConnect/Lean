@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Optimizer;
@@ -175,6 +176,69 @@ namespace QuantConnect.Tests.Optimizer
                 0.15m,
                 JsonConvert.DeserializeObject<BacktestResult>(result.JsonBacktestResult).Statistics.Drawdown);
 
+        }
+
+        [Test]
+        public void TrackEstimation()
+        {
+            var resetEvent = new ManualResetEvent(false);
+            var packet = new OptimizationNodePacket
+            {
+                Criterion = new Target("Profit", new Minimization(), null),
+                OptimizationParameters = new HashSet<OptimizationParameter>
+                {
+                    new OptimizationParameter("ema-slow", 1, 10, 1),
+                    new OptimizationParameter("ema-fast", 10, 100, 3)
+                },
+                Constraints = new List<Constraint>
+                {
+                    new Constraint("Drawdown", ComparisonOperatorTypes.LessOrEqual, 0.15m)
+                },
+                MaximumConcurrentBacktests = 5
+            };
+            var optimizer = new FakeLeanOptimizer(packet);
+
+            OptimizationEstimate estimate = null;
+            OptimizationResult result = null;
+            optimizer.Ended += (s, solution) =>
+            {
+                result = solution;
+                estimate = optimizer.GetCurrentEstimate();
+                optimizer.DisposeSafely();
+                resetEvent.Set();
+            };
+
+            int totalBacktest = optimizer.GetCurrentEstimate().TotalBacktest;
+            int completedTests = 0;
+            int failed = 0;
+            var timer = new Timer((s) =>
+            {
+                estimate = optimizer.GetCurrentEstimate();
+                Assert.LessOrEqual(estimate.RunningBacktest, packet.MaximumConcurrentBacktests);
+                Assert.LessOrEqual(completedTests, estimate.CompletedBacktest);
+                Assert.LessOrEqual(failed, estimate.FailedBacktest);
+
+                Assert.AreEqual(totalBacktest, estimate.TotalBacktest);
+
+                completedTests = estimate.CompletedBacktest;
+                failed = estimate.FailedBacktest;
+
+                if (completedTests > 0)
+                {
+                    Assert.Greater(estimate.AverageBacktest, TimeSpan.Zero);
+                }
+            }, null, 0, 15);
+
+
+            optimizer.Start();
+
+            resetEvent.WaitOne();
+            timer.Change(Timeout.Infinite, Timeout.Infinite);
+            timer.DisposeSafely();
+
+            Assert.NotZero(estimate.CompletedBacktest);
+            Assert.NotZero(estimate.FailedBacktest);
+            Assert.AreEqual(estimate.CompletedBacktest + estimate.FailedBacktest + estimate.RunningBacktest, totalBacktest);
         }
     }
 }

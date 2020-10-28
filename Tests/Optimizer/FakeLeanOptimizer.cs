@@ -21,7 +21,6 @@ using QuantConnect.Optimizer;
 
 namespace QuantConnect.Tests.Optimizer
 {
-
     public class FakeLeanOptimizer : LeanOptimizer
     {
         private readonly HashSet<string> _backtests = new HashSet<string>();
@@ -35,13 +34,23 @@ namespace QuantConnect.Tests.Optimizer
         {
             var id = Guid.NewGuid().ToString();
             _backtests.Add(id);
-
+            
             Timer timer = null;
             timer = new Timer(y =>
             {
                 try
                 {
-                    NewResult(BacktestResult.Create(parameterSet.Value.Sum(s => s.Value.ToDecimal()), parameterSet.Value.Sum(s => s.Value.ToDecimal()) / 100).ToJson(), id);
+                    var sum = parameterSet.Value.Sum(s => s.Value.ToDecimal());
+                    if (sum != 29)
+                    {
+                        NewResult(BacktestResult.Create(sum, sum / 100).ToJson(), id);
+                    }
+                    else
+                    {
+                        // fail some backtests by passing empty json
+                        NewResult(string.Empty, id);
+                    }
+
                     timer.Dispose();
                 }
                 catch
