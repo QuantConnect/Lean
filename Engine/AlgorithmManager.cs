@@ -1128,7 +1128,7 @@ namespace QuantConnect.Lean.Engine
 
                 // determine the latest possible time we can submit a MOC order
                 var configs = algorithm.SubscriptionManager.SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(security.Symbol);
+                    .GetSubscriptionDataConfigs(security.Symbol).ToList();
 
                 if (configs.Count == 0)
                 {

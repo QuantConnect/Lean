@@ -1629,7 +1629,7 @@ namespace QuantConnect.Algorithm
             // add underlying if not present
             var underlying = option.Symbol.Underlying;
             Security equity;
-            List<SubscriptionDataConfig> underlyingConfigs;
+            IEnumerable<SubscriptionDataConfig> underlyingConfigs;
             if (!Securities.TryGetValue(underlying, out equity))
             {
                 equity = AddEquity(underlying.Value, resolution, underlying.ID.Market, false);
