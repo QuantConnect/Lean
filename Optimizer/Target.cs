@@ -86,7 +86,7 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Try comply target value
         /// </summary>
-        public void CheckComplience()
+        public void CheckCompliance()
         {
             if (IsComplied())
             {
