@@ -164,7 +164,7 @@ namespace QuantConnect.ToolBox.IEX
                     var lastSize = item.IexRealtimeSize;
 
                     // Can happen last price or size be null outside of exchange working hours
-                    if (!lastPrice.HasValue || !lastSize.HasValue) return;
+                    if (!lastPrice.HasValue || !lastSize.HasValue) continue;
 
                     var lastTradeMillis = item.LastTradeTime;
                     var lastUpdateMillis = item.IexLastUpdated;
@@ -172,7 +172,7 @@ namespace QuantConnect.ToolBox.IEX
                     // There were no trades on this day yet
                     if (!lastUpdateMillis.HasValue || lastUpdateMillis.Value == -1)
                     {
-                        return;
+                        continue;
                     }
 
                     var lastUpdatedDatetime = UnixEpoch.AddMilliseconds(lastUpdateMillis.Value);
@@ -184,7 +184,7 @@ namespace QuantConnect.ToolBox.IEX
                     long value;
                     if (_iexLastUpdateTime.TryGetValue(symbolString, out value))
                     {
-                        if (value == lastUpdateMillis) return;
+                        if (value == lastUpdateMillis) continue;
                     }
 
                     _iexLastUpdateTime[symbolString] = lastUpdateMillis.Value;
@@ -213,8 +213,8 @@ namespace QuantConnect.ToolBox.IEX
                         _aggregator.Update(tradeTick);
 
                     // Always update quotes for a new snapshot, if there are bid and ask prices available
-                    if (!bidPrice.HasValue || !bidSize.HasValue || bidPrice == 0 || askSize == 0) return;
-                    if (!askPrice.HasValue || !askSize.HasValue || askPrice == 0 || askSize == 0) return;
+                    if (!bidPrice.HasValue || !bidSize.HasValue || bidPrice == 0 || askSize == 0) continue;
+                    if (!askPrice.HasValue || !askSize.HasValue || askPrice == 0 || askSize == 0) continue;
                     var quoteTick = new Tick()
                     {
                         Symbol = symbol,
@@ -367,48 +367,64 @@ namespace QuantConnect.ToolBox.IEX
             }
 
             Log.Trace("IEXDataQueueHandler.ProcessHistoryRequests(): Submitting request: " +
-                Invariant($"{request.Symbol.SecurityType}-{ticker}: {request.Resolution} {start}->{end}")
-            );
+                Invariant($"{request.Symbol.SecurityType}-{ticker}: {request.Resolution} {start}->{end}"));
 
             var span = end.Date - start.Date;
             var suffixes = new List<string>();
-            if (span.Days < 30 && request.Resolution == Resolution.Minute)
+
+
+            if (request.Resolution == Resolution.Minute)
             {
-                var begin = start;
+                DateTime begin;
+                if (span.Days > 30)
+                {
+                    Log.Trace("ProcessHistoryRequests(): Downloading data for last 30 calendar days." +
+                              "Reason: IEX Currently supporting trailing 30 calendar days of minute bar data");
+                    begin = end.AddDays(-30);
+                }
+                else
+                {
+                    begin = start;
+                }
+
                 while (begin < end)
                 {
                     suffixes.Add("date/" + begin.ToStringInvariant("yyyyMMdd"));
                     begin = begin.AddDays(1);
                 }
             }
-            else if (span.Days < 30)
+
+            if (request.Resolution == Resolution.Daily)
             {
-                suffixes.Add("1m");
+                if (span.Days < 30)
+                {
+                    suffixes.Add("1m");
+                }
+                else if (span.Days < 3 * 30)
+                {
+                    suffixes.Add("3m");
+                }
+                else if (span.Days < 6 * 30)
+                {
+                    suffixes.Add("6m");
+                }
+                else if (span.Days < 12 * 30)
+                {
+                    suffixes.Add("1y");
+                }
+                else if (span.Days < 24 * 30)
+                {
+                    suffixes.Add("2y");
+                }
+                else
+                {
+                    suffixes.Add("5y");
+                }
             }
-            else if (span.Days < 3 * 30)
-            {
-                suffixes.Add("3m");
-            }
-            else if (span.Days < 6 * 30)
-            {
-                suffixes.Add("6m");
-            }
-            else if (span.Days < 12 * 30)
-            {
-                suffixes.Add("1y");
-            }
-            else if (span.Days < 24 * 30)
-            {
-                suffixes.Add("2y");
-            }
-            else
-            {
-                suffixes.Add("5y");
-            }
+            
             // Download and parse data
             using (var client = new WebClient())
             {
-
                 foreach (var suffix in suffixes)
                 {
                     JArray parsedResponse;
@@ -417,40 +433,36 @@ namespace QuantConnect.ToolBox.IEX
                         var response = client.DownloadString("https://cloud.iexapis.com/v1/stock/" + ticker + "/chart/" + suffix + "?token=" + _apiKey);
                         parsedResponse = JArray.Parse(response);
                     }
-                    catch (WebException webExc)
+                    // To find a reason why does web exception occur need to retrieve additional details
+                    catch (WebException we)
                     {
-                        // To find a reason why does web exception occur need to retrieve additional details
-                        if (webExc.Response != null)
-                        {
-                            var response = webExc.Response;
-                            var dataStream = response.GetResponseStream();
-                            if (dataStream != null)
-                            {
-                                var reader = new StreamReader(dataStream);
-                                var details = reader.ReadToEnd();
-                                
-                                throw new Exception(details);
-                            }
-                        }
+                        var dataStream = we.Response?.GetResponseStream();
+                        if (dataStream == null) throw;
 
-                        throw;
+                        var reader = new StreamReader(dataStream);
+                        var details = reader.ReadToEnd();
+                        throw new Exception(details);
                     }
 
+                    // Parse
                     foreach (var item in parsedResponse.Children())
                     {
                         DateTime date;
+                        TimeSpan period;
                         if (item["minute"] != null)
                         {
                             date = DateTime.ParseExact(item["date"].Value<string>(), "yyyy-MM-dd", CultureInfo.InvariantCulture);
                             var mins = TimeSpan.ParseExact(item["minute"].Value<string>(), "hh\\:mm", CultureInfo.InvariantCulture);
                             date += mins;
+                            period = TimeSpan.FromMinutes(1);
                         }
                         else
                         {
                             date = Parse.DateTime(item["date"].Value<string>());
+                            period = TimeSpan.FromDays(1);
                         }
 
-                        if (date.Date < start.Date || date.Date > end.Date)
+                        if (date < start || date > end)
                         {
                             continue;
                         }
@@ -467,7 +479,7 @@ namespace QuantConnect.ToolBox.IEX
                         var close = item["close"].Value<decimal>();
                         var volume = item["volume"].Value<int>();
 
-                        var tradeBar = new TradeBar(date, request.Symbol, open, high, low, close, volume);
+                        var tradeBar = new TradeBar(date, request.Symbol, open, high, low, close, volume, period);
 
                         yield return new Slice(tradeBar.EndTime, new[] {tradeBar});
                     }

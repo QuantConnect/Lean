@@ -23,7 +23,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using HtmlAgilityPack;
-using Newtonsoft.Json;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Configuration;
@@ -33,7 +32,6 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.IEX;
-using QuantConnect.ToolBox.IEX.Response;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -41,7 +39,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [Explicit("Tests are dependent on network and are long")]
     public class IEXDataQueueHandlerTests
     {
-        private string _apiKey = Config.Get("iex-cloud-api-key");
+        private readonly string _apiKey = Config.Get("iex-cloud-api-key");
+
+        [SetUp]
+        public void Setup()
+        {
+            Log.DebuggingEnabled = Config.GetBool("debug-mode");
+        }
 
         private void ProcessFeed(IEnumerator<BaseData> enumerator, Action<BaseData> callback = null)
         {
@@ -321,6 +325,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     if (resolution == Resolution.Tick || resolution == Resolution.Second || resolution == Resolution.Hour)
                     {
+                        Log.Trace($"IEXCouldGetHistory(): Invalid resolution {resolution}");
+
                         Assert.IsNull(slice);
                     }
                     else if (resolution == Resolution.Daily || resolution == Resolution.Minute)
@@ -346,7 +352,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             if (throwsException)
             {
-                Assert.Throws<WebException>(test);
+                Assert.That(test, Throws.Exception);
             }
             else
             {
