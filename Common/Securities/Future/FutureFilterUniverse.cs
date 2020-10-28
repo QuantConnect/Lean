@@ -27,50 +27,8 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Represents futures symbols universe used in filtering.
     /// </summary>
-    public class FutureFilterUniverse : IDerivativeSecurityFilterUniverse
+    public class FutureFilterUniverse : ContractSecurityFilterUniverse<FutureFilterUniverse>
     {
-        /// <summary>
-        /// Defines listed futures types
-        /// </summary>
-        public enum Type : int
-        {
-            /// <summary>
-            /// Standard Futures contracts, determined by FuturesExpiryFunctions
-            /// </summary>
-            Standard = 1,
-
-            /// <summary>
-            /// Non-Standard weekly contracts for some Futures
-            /// </summary>
-            Weeklys = 2
-        }
-
-        internal IEnumerable<Symbol> _allSymbols;
-
-        /// <summary>
-        /// The underlying price data
-        /// </summary>
-        public BaseData Underlying
-        {
-            get { return _underlying; }
-        }
-
-        internal BaseData _underlying;
-
-        /// <summary>
-        /// True if the universe is dynamic and filter needs to be reapplied
-        /// </summary>
-        public bool IsDynamic
-        {
-            get
-            {
-                return _isDynamic;
-            }
-        }
-
-        internal bool _isDynamic;
-        private Type _type = Type.Standard;
-
         /// <summary>
         /// Constructs FutureFilterUniverse
         /// </summary>
@@ -82,84 +40,12 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Returns front month contract
+        /// Determine if the given Future contract symbol is standard
         /// </summary>
         /// <returns></returns>
-        public FutureFilterUniverse FrontMonth()
+        protected override bool IsStandard(Symbol symbol)
         {
-            var ordered = this.OrderBy(x => x.ID.Date).ToList();
-            if (ordered.Count == 0) return this;
-            var frontMonth = ordered.TakeWhile(x => ordered[0].ID.Date == x.ID.Date);
-
-            _allSymbols = frontMonth.ToList();
-            return this;
-        }
-
-        /// <summary>
-        /// Returns a list of back month contracts
-        /// </summary>
-        /// <returns></returns>
-        public FutureFilterUniverse BackMonths()
-        {
-            var ordered = this.OrderBy(x => x.ID.Date).ToList();
-            if (ordered.Count == 0) return this;
-            var backMonths = ordered.SkipWhile(x => ordered[0].ID.Date == x.ID.Date);
-
-            _allSymbols = backMonths.ToList();
-            return this;
-        }
-
-        /// <summary>
-        /// Returns first of back month contracts
-        /// </summary>
-        /// <returns></returns>
-        public FutureFilterUniverse BackMonth()
-        {
-            return BackMonths().FrontMonth();
-        }
-
-        /// <summary>
-        /// Applies filter selecting futures contracts based on a range of expiration dates relative to the current day
-        /// </summary>
-        /// <param name="minExpiry">The minimum time until expiry to include, for example, TimeSpan.FromDays(10)
-        /// would exclude contracts expiring in more than 10 days</param>
-        /// <param name="maxExpiry">The maxmium time until expiry to include, for example, TimeSpan.FromDays(10)
-        /// would exclude contracts expiring in less than 10 days</param>
-        /// <returns></returns>
-        public FutureFilterUniverse Expiration(TimeSpan minExpiry, TimeSpan maxExpiry)
-        {
-            if (_underlying == null)
-            {
-                return this;
-            }
-
-            if (maxExpiry > Time.MaxTimeSpan) maxExpiry = Time.MaxTimeSpan;
-
-            var minExpiryToDate = _underlying.Time.Date + minExpiry;
-            var maxExpiryToDate = _underlying.Time.Date + maxExpiry;
-
-            var filtered =
-                   from symbol in _allSymbols
-                   let contract = symbol.ID
-                   where contract.Date >= minExpiryToDate
-                      && contract.Date <= maxExpiryToDate
-                   select symbol;
-
-            _allSymbols = filtered.ToList();
-            return this;
-        }
-
-        /// <summary>
-        /// Applies filter selecting futures contracts based on a range of expiration dates relative to the current day
-        /// </summary>
-        /// <param name="minExpiryDays">The minimum time, expressed in days, until expiry to include, for example, 10
-        /// would exclude contracts expiring in more than 10 days</param>
-        /// <param name="maxExpiryDays">The maximum time, expressed in days, until expiry to include, for example, 10
-        /// would exclude contracts expiring in less than 10 days</param>
-        /// <returns></returns>
-        public FutureFilterUniverse Expiration(int minExpiryDays, int maxExpiryDays)
-        {
-            return Expiration(TimeSpan.FromDays(minExpiryDays), TimeSpan.FromDays(maxExpiryDays));
+            return FutureSymbol.IsStandard(symbol);
         }
 
         /// <summary>
@@ -171,114 +57,6 @@ namespace QuantConnect.Securities
         {
             var monthHashSet = months.ToHashSet();
             return this.Where(x => monthHashSet.Contains(x.ID.Date.Month));
-        }
-
-        /// <summary>
-        /// Explicitly sets the selected contract symbols for this universe.
-        /// This overrides and and all other methods of selecting symbols assuming it is called last.
-        /// </summary>
-        /// <param name="contracts">The future contract symbol objects to select</param>
-        public FutureFilterUniverse Contracts(IEnumerable<Symbol> contracts)
-        {
-            _allSymbols = contracts.ToList();
-            return this;
-        }
-
-        /// <summary>
-        /// Sets a function used to filter the set of available contract filters. The input to the 'contractSelector'
-        /// function will be the already filtered list if any other filters have already been applied.
-        /// </summary>
-        /// <param name="contractSelector">The future contract symbol objects to select</param>
-        public FutureFilterUniverse Contracts(Func<IEnumerable<Symbol>, IEnumerable<Symbol>> contractSelector)
-        {
-            // force materialization using ToList
-            _allSymbols = contractSelector(_allSymbols).ToList();
-            return this;
-        }
-
-        /// <summary>
-        /// Instructs the engine to only filter options contracts on the first time step of each market day.
-        /// </summary>
-        public FutureFilterUniverse OnlyApplyFilterAtMarketOpen()
-        {
-            _isDynamic = false;
-            return this;
-        }
-
-        /// <summary>
-        /// Returns universe, filtered by option type
-        /// </summary>
-        /// <returns></returns>
-        internal FutureFilterUniverse ApplyOptionTypesFilter()
-        {
-            // memoization map for ApplyOptionTypesFilter()
-            var memoizedMap = new Dictionary<DateTime, bool>();
-
-            Func<Symbol, bool> memoizedIsStandardType = symbol =>
-            {
-                var dt = symbol.ID.Date;
-
-                bool result;
-                if (memoizedMap.TryGetValue(dt, out result))
-                    return result;
-                var res = FutureSymbol.IsStandard(symbol);
-                memoizedMap[dt] = res;
-
-                return res;
-            };
-
-            _allSymbols = _allSymbols.Where(x =>
-            {
-                switch (_type)
-                {
-                    case Type.Weeklys:
-                        return !memoizedIsStandardType(x);
-                    case Type.Standard:
-                        return memoizedIsStandardType(x);
-                    case Type.Standard | Type.Weeklys:
-                        return true;
-                    default:
-                        return false;
-                }
-            }).ToList();
-
-            return this;
-        }
-
-        /// <summary>
-        /// Includes universe of weeklys options (if any) into selection
-        /// </summary>
-        /// <returns></returns>
-        public FutureFilterUniverse IncludeWeeklys()
-        {
-            _type |= Type.Weeklys;
-            return this;
-        }
-
-        /// <summary>
-        /// Sets universe of weeklys options (if any) as a selection
-        /// </summary>
-        /// <returns></returns>
-        public FutureFilterUniverse WeeklysOnly()
-        {
-            _type = Type.Weeklys;
-            return this;
-        }
-
-        /// <summary>
-        /// IEnumerable interface method implementation
-        /// </summary>
-        public IEnumerator<Symbol> GetEnumerator()
-        {
-            return _allSymbols.GetEnumerator();
-        }
-
-        /// <summary>
-        /// IEnumerable interface method implementation
-        /// </summary>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return _allSymbols.GetEnumerator();
         }
     }
 

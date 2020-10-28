@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Common.Securities
             Func<FutureFilterUniverse, FutureFilterUniverse> universeFunc = universe => universe;
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
-                universe => universeFunc(universe as FutureFilterUniverse).ApplyOptionTypesFilter();
+                universe => universeFunc(universe as FutureFilterUniverse).ApplyTypesFilter();
 
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]

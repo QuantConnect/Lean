@@ -458,7 +458,7 @@ namespace QuantConnect.Securities.Option
             {
                 var optionUniverse = universe as OptionFilterUniverse;
                 var result = universeFunc(optionUniverse);
-                return result.ApplyOptionTypesFilter();
+                return result.ApplyTypesFilter();
             });
         }
 
@@ -496,7 +496,7 @@ namespace QuantConnect.Securities.Option
                             $"filter function is not a valid argument, please return either a OptionFilterUniverse or a list of symbols");
                     }
                 }
-                return optionUniverse.ApplyOptionTypesFilter();
+                return optionUniverse.ApplyTypesFilter();
             });
         }
 

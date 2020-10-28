@@ -205,7 +205,7 @@ namespace QuantConnect.Securities.Future
             {
                 var futureUniverse = universe as FutureFilterUniverse;
                 var result = universeFunc(futureUniverse);
-                return result.ApplyOptionTypesFilter();
+                return result.ApplyTypesFilter();
             };
 
             ContractFilter = new FuncSecurityDerivativeFilter(func);
