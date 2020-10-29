@@ -47,7 +47,7 @@ namespace QuantConnect.Optimizer.Launcher
                             arg.Value.Value<decimal>("max"),
                             arg.Value.Value<decimal>("step")))
                         .ToHashSet(),
-                    MaximumConcurrentBacktests = Config.GetInt("maximum-concurrent-backtests", Environment.ProcessorCount)
+                    MaximumConcurrentBacktests = Config.GetInt("maximum-concurrent-backtests", Environment.ProcessorCount / 2)
                 };
 
                 var optimizer = new ConsoleLeanOptimizer(packet);

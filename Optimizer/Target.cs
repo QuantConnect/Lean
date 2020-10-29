@@ -19,6 +19,9 @@ using System;
 
 namespace QuantConnect.Optimizer
 {
+    /// <summary>
+    /// The optimization statistical target
+    /// </summary>
     public class Target: Objective
     {
         /// <summary>
@@ -38,6 +41,9 @@ namespace QuantConnect.Optimizer
         /// </summary>
         public event EventHandler Reached;
 
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
         public Target(string target, Extremum extremum, decimal? targetValue): base(target, targetValue)
         {
             Extremum = extremum;

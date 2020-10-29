@@ -20,6 +20,9 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.Optimizer
 {
+    /// <summary>
+    /// Base class for optimization <see cref="QuantConnect.Optimizer.Target"/> and <see cref="Constraint"/>
+    /// </summary>
     public abstract class Objective
     {
         private readonly Regex _targetTemplate = new Regex("['(.+)']");
@@ -36,7 +39,10 @@ namespace QuantConnect.Optimizer
         [JsonProperty("target-value")]
         public decimal? TargetValue { get; }
 
-        public Objective(string target, decimal? targetValue)
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        protected Objective(string target, decimal? targetValue)
         {
             if (string.IsNullOrEmpty(target))
             {

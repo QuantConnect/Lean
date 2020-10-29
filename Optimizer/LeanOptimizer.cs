@@ -28,14 +28,19 @@ namespace QuantConnect.Optimizer
     /// </summary>
     public abstract class LeanOptimizer : IDisposable
     {
-        private static readonly int OptimizationUpdateInterval = Config.GetInt("optimization-update-interval", 10);
+        private readonly int _optimizationUpdateInterval = Config.GetInt("optimization-update-interval", 10);
 
-        private DateTime _lastUpdate;
-        private volatile bool _started;
         private DateTime _startedAt;
-        private int _completedBacktest;
+        private DateTime _lastUpdate;
         private int _failedBacktest;
+        private int _completedBacktest;
         private volatile bool _disposed;
+        private object _statusLock = new object();
+
+        /// <summary>
+        /// The current optimization status
+        /// </summary>
+        protected OptimizationStatus Status { get; private set; } = OptimizationStatus.New;
 
         /// <summary>
         /// The optimization target
@@ -93,6 +98,7 @@ namespace QuantConnect.Optimizer
             OptimizationTarget = NodePacket.Criterion;
             OptimizationTarget.Reached += (s, e) =>
             {
+                // we've reached the optimization target
                 TriggerOnEndEvent();
             };
 
@@ -130,10 +136,10 @@ namespace QuantConnect.Optimizer
                 {
                     throw new Exception($"LeanOptimizer.Start({GetLogDetails()}): failed to start");
                 }
-                Log.Trace($"LeanOptimizer.Start({GetLogDetails()}): start ended. Waiting on {RunningParameterSetForBacktest.Count} backtests");
+                Log.Trace($"LeanOptimizer.Start({GetLogDetails()}): start ended. Waiting on {RunningParameterSetForBacktest.Count + PendingParameterSet.Count} backtests");
             }
 
-            _started = true;
+            SetOptimizationStatus(OptimizationStatus.Running);
             ProcessUpdate(forceSend:true);
         }
 
@@ -146,12 +152,15 @@ namespace QuantConnect.Optimizer
             {
                 return;
             }
+            SetOptimizationStatus(OptimizationStatus.Ended);
 
             var result = Strategy.Solution;
             if (result != null)
             {
+                var constraint = NodePacket.Constraints != null ? $"Constraints: ({string.Join(",", NodePacket.Constraints)})" : string.Empty;
                 Log.Trace($"LeanOptimizer.TriggerOnEndEvent({GetLogDetails()}): Optimization has ended. " +
-                    $"Result for {OptimizationTarget}: was reached using ParameterSet: ({result.ParameterSet}) backtestId {result.BacktestId}");
+                    $"Result for {OptimizationTarget}: was reached using ParameterSet: ({result.ParameterSet}) backtestId '{result.BacktestId}'. " +
+                    $"{constraint}");
             }
             else
             {
@@ -178,6 +187,7 @@ namespace QuantConnect.Optimizer
         protected virtual void NewResult(string jsonBacktestResult, string backtestId)
         {
             ParameterSet parameterSet;
+            bool finished;
 
             // we take a lock so that there is no race condition with launching Lean adding the new backtest id and receiving the backtest result for that id
             // before it's even in the collection 'ParameterSetForBacktest'
@@ -189,6 +199,8 @@ namespace QuantConnect.Optimizer
                     Log.Error($"LeanOptimizer.NewResult({GetLogDetails()}): Optimization compute job with id '{backtestId}' was not found");
                     return;
                 }
+                // check if we've run out of backtests
+                finished = !RunningParameterSetForBacktest.Any();
             }
 
             // we got a new result if there are any pending parameterSet to run we can now trigger 1
@@ -214,7 +226,8 @@ namespace QuantConnect.Optimizer
             // always notify the strategy
             Strategy.PushNewResults(result);
 
-            if (!RunningParameterSetForBacktest.Any())
+            // strategy could of added more
+            if (finished && !RunningParameterSetForBacktest.Any())
             {
                 TriggerOnEndEvent();
             }
@@ -298,22 +311,37 @@ namespace QuantConnect.Optimizer
         protected abstract void SendUpdate();
 
         /// <summary>
+        /// Sets the current optimization status
+        /// </summary>
+        /// <param name="optimizationStatus">The new optimization status</param>
+        protected void SetOptimizationStatus(OptimizationStatus optimizationStatus)
+        {
+            lock (_statusLock)
+            {
+                // we never come back from an aborted/ended status
+                if (Status != OptimizationStatus.Aborted && Status != OptimizationStatus.Ended)
+                {
+                    Status = optimizationStatus;
+                }
+            }
+        }
+
+        /// <summary>
         /// Will determine if it's right time to trigger an update call
         /// </summary>
         /// <param name="forceSend">True will force send, skipping interval, useful on start and end</param>
         private void ProcessUpdate(bool forceSend = false)
         {
-            if (!forceSend && !_started)
+            if (!forceSend && Status == OptimizationStatus.New)
             {
-                // don't send any update until we finish the Start()
-                // will be creating a bunch of backtests don't want to send partial/multiple updates
+                // don't send any update until we finish the Start(), will be creating a bunch of backtests don't want to send partial/multiple updates
                 return;
             }
 
             try
             {
                 var now = DateTime.UtcNow;
-                if (forceSend || (now - _lastUpdate > TimeSpan.FromSeconds(OptimizationUpdateInterval)))
+                if (forceSend || (now - _lastUpdate > TimeSpan.FromSeconds(_optimizationUpdateInterval)))
                 {
                     _lastUpdate = now;
                     Log.Debug($"LeanOptimizer.ProcessUpdate({GetLogDetails()}): start sending update...");

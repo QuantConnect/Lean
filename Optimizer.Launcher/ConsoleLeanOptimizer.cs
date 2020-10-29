@@ -30,7 +30,7 @@ namespace QuantConnect.Optimizer.Launcher
     {
         private readonly string _leanLocation;
         private readonly string _rootResultDirectory;
-        private readonly bool _closeLeanAutomatically;
+        private readonly string _extraLeanArguments;
         private readonly ConcurrentDictionary<string, Process> _processByBacktestId;
 
         /// <summary>
@@ -48,7 +48,26 @@ namespace QuantConnect.Optimizer.Launcher
             _leanLocation = Configuration.Config.Get("lean-binaries-location",
                 Path.Combine(Directory.GetCurrentDirectory(), "../../../Launcher/bin/Debug/QuantConnect.Lean.Launcher.exe"));
 
-            _closeLeanAutomatically = Configuration.Config.GetBool("close-automatically", true);
+            var closeLeanAutomatically = Configuration.Config.GetBool("close-automatically", true);
+            _extraLeanArguments = $"--close-automatically {closeLeanAutomatically}";
+
+            var algorithmTypeName = Configuration.Config.Get("algorithm-type-name");
+            if (!string.IsNullOrEmpty(algorithmTypeName))
+            {
+                _extraLeanArguments += $" --algorithm-type-name \"{algorithmTypeName}\"";
+            }
+
+            var algorithmLanguage = Configuration.Config.Get("algorithm-language");
+            if (!string.IsNullOrEmpty(algorithmLanguage))
+            {
+                _extraLeanArguments += $" --algorithm-language \"{algorithmLanguage}\"";
+            }
+
+            var algorithmLocation = Configuration.Config.Get("algorithm-location");
+            if (!string.IsNullOrEmpty(algorithmLocation))
+            {
+                _extraLeanArguments += $" --algorithm-location \"{algorithmLocation}\"";
+            }
         }
 
         /// <summary>
@@ -69,7 +88,7 @@ namespace QuantConnect.Optimizer.Launcher
             {
                 FileName = _leanLocation,
                 WorkingDirectory = Directory.GetParent(_leanLocation).FullName,
-                Arguments = $"--results-destination-folder \"{resultDirectory}\" --algorithm-id \"{backtestId}\" --close-automatically {_closeLeanAutomatically} --parameters {parameterSet}",
+                Arguments = $"--results-destination-folder \"{resultDirectory}\" --algorithm-id \"{backtestId}\" --parameters {parameterSet} {_extraLeanArguments}",
                 WindowStyle = ProcessWindowStyle.Minimized
             };
 
@@ -114,10 +133,23 @@ namespace QuantConnect.Optimizer.Launcher
             }
         }
 
+        /// <summary>
+        /// Sends an update of the current optimization status to the user
+        /// </summary>
         protected override void SendUpdate()
         {
-            var estimate = GetCurrentEstimate();
-            Log.Trace($"ConsoleLeanOptimizer.SendUpdate(): {estimate}");
+            // end handler will already log a nice message on end
+            if (Status != OptimizationStatus.Ended && Status != OptimizationStatus.Aborted)
+            {
+                var currentEstimate = GetCurrentEstimate();
+                var message = $"ConsoleLeanOptimizer.SendUpdate(): {currentEstimate}";
+                var currentBestBacktest = Strategy.Solution;
+                if (currentBestBacktest != null)
+                {
+                    message += $". Best id:'{currentBestBacktest.BacktestId}'. {OptimizationTarget}. Parameters ({currentBestBacktest.ParameterSet})";
+                }
+                Log.Trace(message);
+            }
         }
     }
 }

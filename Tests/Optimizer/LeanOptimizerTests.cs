@@ -21,6 +21,7 @@ using QuantConnect.Optimizer;
 using QuantConnect.Util;
 using System.Collections.Generic;
 using System.Threading;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.Optimizer
 {
@@ -181,6 +182,7 @@ namespace QuantConnect.Tests.Optimizer
         [Test]
         public void TrackEstimation()
         {
+            Config.Set("optimization-update-interval", 1);
             OptimizationEstimate estimate = null;
             OptimizationResult result = null;
             var resetEvent = new ManualResetEvent(false);
