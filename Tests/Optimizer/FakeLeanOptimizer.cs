@@ -25,6 +25,8 @@ namespace QuantConnect.Tests.Optimizer
     {
         private readonly HashSet<string> _backtests = new HashSet<string>();
 
+        public event EventHandler Update;
+
         public FakeLeanOptimizer(OptimizationNodePacket nodePacket)
             : base(nodePacket)
         {
@@ -34,7 +36,7 @@ namespace QuantConnect.Tests.Optimizer
         {
             var id = Guid.NewGuid().ToString();
             _backtests.Add(id);
-            
+
             Timer timer = null;
             timer = new Timer(y =>
             {
@@ -69,6 +71,12 @@ namespace QuantConnect.Tests.Optimizer
 
         protected override void SendUpdate()
         {
+            OnUpdate();
+        }
+
+        private void OnUpdate()
+        {
+            Update?.Invoke(this, EventArgs.Empty);
         }
     }
 }

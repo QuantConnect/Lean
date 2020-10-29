@@ -227,9 +227,6 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Disposes of any resources
         /// </summary>
-        /// <summary>
-        /// Disposes of any resources
-        /// </summary>
         public virtual void Dispose()
         {
             if (_disposed)

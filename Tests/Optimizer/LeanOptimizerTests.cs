@@ -181,6 +181,8 @@ namespace QuantConnect.Tests.Optimizer
         [Test]
         public void TrackEstimation()
         {
+            OptimizationEstimate estimate = null;
+            OptimizationResult result = null;
             var resetEvent = new ManualResetEvent(false);
             var packet = new OptimizationNodePacket
             {
@@ -197,21 +199,12 @@ namespace QuantConnect.Tests.Optimizer
                 MaximumConcurrentBacktests = 5
             };
             var optimizer = new FakeLeanOptimizer(packet);
-
-            OptimizationEstimate estimate = null;
-            OptimizationResult result = null;
-            optimizer.Ended += (s, solution) =>
-            {
-                result = solution;
-                estimate = optimizer.GetCurrentEstimate();
-                optimizer.DisposeSafely();
-                resetEvent.Set();
-            };
-
+            // keep stats up-to-date
             int totalBacktest = optimizer.GetCurrentEstimate().TotalBacktest;
+            int totalUpdates = 0;
             int completedTests = 0;
             int failed = 0;
-            var timer = new Timer((s) =>
+            optimizer.Update += (s, e) =>
             {
                 estimate = optimizer.GetCurrentEstimate();
                 Assert.LessOrEqual(estimate.RunningBacktest, packet.MaximumConcurrentBacktests);
@@ -227,17 +220,25 @@ namespace QuantConnect.Tests.Optimizer
                 {
                     Assert.Greater(estimate.AverageBacktest, TimeSpan.Zero);
                 }
-            }, null, 0, 15);
 
+                totalUpdates++;
+            };
+            optimizer.Ended += (s, solution) =>
+            {
+                result = solution;
+                estimate = optimizer.GetCurrentEstimate();
+                optimizer.DisposeSafely();
+                resetEvent.Set();
+            };
 
             optimizer.Start();
 
             resetEvent.WaitOne();
-            timer.Change(Timeout.Infinite, Timeout.Infinite);
-            timer.DisposeSafely();
 
             Assert.NotZero(estimate.CompletedBacktest);
             Assert.NotZero(estimate.FailedBacktest);
+            // we have 2 force updates at least, expect a few more over it.
+            Assert.Greater(totalUpdates, 2);
             Assert.AreEqual(estimate.CompletedBacktest + estimate.FailedBacktest + estimate.RunningBacktest, totalBacktest);
         }
     }
