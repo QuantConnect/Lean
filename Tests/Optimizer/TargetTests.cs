@@ -21,7 +21,7 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.Tests.Optimizer
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class TargetTests
     {
         [Test]

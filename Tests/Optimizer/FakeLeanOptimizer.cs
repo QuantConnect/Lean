@@ -66,5 +66,9 @@ namespace QuantConnect.Tests.Optimizer
         {
             _backtests.Remove(backtestId);
         }
+
+        protected override void SendUpdate()
+        {
+        }
     }
 }

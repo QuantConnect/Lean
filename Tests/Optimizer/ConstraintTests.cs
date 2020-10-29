@@ -22,7 +22,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Optimizer
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class ConstraintTests
     {
         [TestCase(101d)]

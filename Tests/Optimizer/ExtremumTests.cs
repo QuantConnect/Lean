@@ -20,7 +20,7 @@ using QuantConnect.Optimizer;
 
 namespace QuantConnect.Tests.Optimizer
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class ExtremumTests
     {
         [TestCase(0, 10)]

@@ -15,10 +15,11 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using QuantConnect.Util;
 using QuantConnect.Logging;
+using QuantConnect.Configuration;
 using System.Collections.Concurrent;
-using System.Threading;
 
 namespace QuantConnect.Optimizer
 {
@@ -27,6 +28,10 @@ namespace QuantConnect.Optimizer
     /// </summary>
     public abstract class LeanOptimizer : IDisposable
     {
+        private static readonly int OptimizationUpdateInterval = Config.GetInt("optimization-update-interval", 10);
+
+        private DateTime _lastUpdate;
+        private volatile bool _started;
         private DateTime _startedAt;
         private int _completedBacktest;
         private int _failedBacktest;
@@ -88,7 +93,7 @@ namespace QuantConnect.Optimizer
             OptimizationTarget = NodePacket.Criterion;
             OptimizationTarget.Reached += (s, e) =>
             {
-                TriggerOnEndEvent(EventArgs.Empty);
+                TriggerOnEndEvent();
             };
 
             Strategy = (IOptimizationStrategy)Activator.CreateInstance(Type.GetType(NodePacket.OptimizationStrategy));
@@ -127,12 +132,15 @@ namespace QuantConnect.Optimizer
                 }
                 Log.Trace($"LeanOptimizer.Start({GetLogDetails()}): start ended. Waiting on {RunningParameterSetForBacktest.Count} backtests");
             }
+
+            _started = true;
+            ProcessUpdate(forceSend:true);
         }
 
         /// <summary>
         /// Triggers the optimization job end event
         /// </summary>
-        protected virtual void TriggerOnEndEvent(EventArgs eventArgs)
+        protected virtual void TriggerOnEndEvent()
         {
             if (_disposed)
             {
@@ -149,6 +157,8 @@ namespace QuantConnect.Optimizer
             {
                 Log.Trace($"LeanOptimizer.TriggerOnEndEvent({GetLogDetails()}): Optimization has ended. Result was not reached");
             }
+
+            ProcessUpdate(forceSend: true);
 
             Ended?.Invoke(this, result);
         }
@@ -206,7 +216,11 @@ namespace QuantConnect.Optimizer
 
             if (!RunningParameterSetForBacktest.Any())
             {
-                TriggerOnEndEvent(EventArgs.Empty);
+                TriggerOnEndEvent();
+            }
+            else
+            {
+                ProcessUpdate();
             }
         }
 
@@ -246,6 +260,78 @@ namespace QuantConnect.Optimizer
             }
         }
 
+        /// <summary>
+        /// Returns the current optimization status and strategy estimates
+        /// </summary>
+        public OptimizationEstimate GetCurrentEstimate()
+        {
+            var completedCount = _completedBacktest;
+            return new OptimizationEstimate
+            {
+                TotalBacktest = Strategy.GetTotalBacktestEstimate(),
+                CompletedBacktest = completedCount,
+                FailedBacktest = _failedBacktest,
+                RunningBacktest = RunningParameterSetForBacktest.Count,
+                InQueueBacktest = PendingParameterSet.Count,
+                AverageBacktest = completedCount > 0 ? new TimeSpan((DateTime.UtcNow - _startedAt).Ticks / completedCount) : TimeSpan.Zero
+            };
+        }
+
+        /// <summary>
+        /// Helper method to have pretty more informative logs
+        /// </summary>
+        protected string GetLogDetails()
+        {
+            if (NodePacket.UserId == 0)
+            {
+                return $"OID {NodePacket.OptimizationId}";
+            }
+            return $"UI {NodePacket.UserId} PID {NodePacket.ProjectId} OID {NodePacket.OptimizationId}";
+        }
+
+        /// <summary>
+        /// Handles breaking Lean process
+        /// </summary>
+        /// <param name="backtestId">Specified backtest id</param>
+        protected abstract void AbortLean(string backtestId);
+
+        /// <summary>
+        /// Sends an update of the current optimization status to the user
+        /// </summary>
+        protected abstract void SendUpdate();
+
+        /// <summary>
+        /// Will determine if it's right time to trigger an update call
+        /// </summary>
+        /// <param name="forceSend">True will force send, skipping interval, useful on start and end</param>
+        private void ProcessUpdate(bool forceSend = false)
+        {
+            if (!forceSend && !_started)
+            {
+                // don't send any update until we finish the Start()
+                // will be creating a bunch of backtests don't want to send partial/multiple updates
+                return;
+            }
+
+            try
+            {
+                var now = DateTime.UtcNow;
+                if (forceSend || (now - _lastUpdate > TimeSpan.FromSeconds(OptimizationUpdateInterval)))
+                {
+                    _lastUpdate = now;
+                    Log.Debug($"LeanOptimizer.ProcessUpdate({GetLogDetails()}): start sending update...");
+
+                    SendUpdate();
+
+                    Log.Debug($"LeanOptimizer.ProcessUpdate({GetLogDetails()}): finished sending update successfully.");
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to send status update");
+            }
+        }
+
         private void LaunchLeanForParameterSet(ParameterSet parameterSet)
         {
             if (_disposed)
@@ -275,44 +361,14 @@ namespace QuantConnect.Optimizer
                     {
                         Log.Error($"LeanOptimizer.LaunchLeanForParameterSet({GetLogDetails()}): Empty/null optimization compute job could not be placed into the queue");
                     }
+
+                    ProcessUpdate();
                 }
                 catch (Exception ex)
                 {
                     Log.Error($"LeanOptimizer.LaunchLeanForParameterSet({GetLogDetails()}): Error encountered while placing optimization message into the queue: {ex.Message}");
                 }
             }
-        }
-
-        /// <summary>
-        /// Helper method to have pretty more informative logs
-        /// </summary>
-        protected string GetLogDetails()
-        {
-            if (NodePacket.UserId == 0)
-            {
-                return $"OID {NodePacket.OptimizationId}";
-            }
-            return $"UI {NodePacket.UserId} PID {NodePacket.ProjectId} OID {NodePacket.OptimizationId}";
-        }
-
-        /// <summary>
-        /// Handles breaking Lean process
-        /// </summary>
-        /// <param name="backtestId">Specified backtest id</param>
-        protected abstract void AbortLean(string backtestId);
-
-        public OptimizationEstimate GetCurrentEstimate()
-        {
-            var completedCount = _completedBacktest;
-            return new OptimizationEstimate
-            {
-                TotalBacktest = Strategy.GetTotalBacktestEstimate(),
-                CompletedBacktest = completedCount,
-                FailedBacktest = _failedBacktest,
-                RunningBacktest = RunningParameterSetForBacktest.Count,
-                InQueueBacktest = PendingParameterSet.Count,
-                AverageBacktest = completedCount > 0 ? new TimeSpan((DateTime.UtcNow - _startedAt).Ticks / completedCount) : TimeSpan.Zero
-            };
         }
     }
 }

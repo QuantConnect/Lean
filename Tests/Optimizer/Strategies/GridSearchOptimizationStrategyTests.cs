@@ -26,7 +26,7 @@ using Math = System.Math;
 
 namespace QuantConnect.Tests.Optimizer.Strategies
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class GridSearchOptimizationStrategyTests
     {
         private GridSearchOptimizationStrategy _strategy;

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Optimizer.Launcher
 {
@@ -111,6 +112,12 @@ namespace QuantConnect.Optimizer.Launcher
                 process.Kill();
                 process.DisposeSafely();
             }
+        }
+
+        protected override void SendUpdate()
+        {
+            var estimate = GetCurrentEstimate();
+            Log.Trace($"ConsoleLeanOptimizer.SendUpdate(): {estimate}");
         }
     }
 }

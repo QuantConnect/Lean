@@ -69,6 +69,10 @@
       <Project>{0AEB4EA3-28C8-476E-89FD-926F06590B4C}</Project>
       <Name>QuantConnect.Configuration</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
+      <Project>{01911409-86be-4e7d-9947-df714138610d}</Project>
+      <Name>QuantConnect.Logging</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Optimizer\QuantConnect.Optimizer.csproj">
       <Project>{4ecd7df3-a675-4e9e-aca3-2b51c88736ce}</Project>
       <Name>QuantConnect.Optimizer</Name>

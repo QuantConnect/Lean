@@ -20,7 +20,7 @@ using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Optimizer.Launcher
 {
@@ -30,6 +30,9 @@ namespace QuantConnect.Optimizer.Launcher
         {
             try
             {
+                Log.DebuggingEnabled = Config.GetBool("debug-mode");
+                Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+
                 var packet = new OptimizationNodePacket
                 {
                     OptimizationId = Guid.NewGuid().ToString(),
@@ -51,21 +54,14 @@ namespace QuantConnect.Optimizer.Launcher
 
                 optimizer.Start();
 
-                var timer = new Timer((s) =>
-                {
-                    Console.WriteLine(optimizer.GetCurrentEstimate());
-                }, null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30));
-
                 optimizer.Ended += (s, e) =>
                 {
-                    timer.Change(Timeout.Infinite, Timeout.Infinite);
                     optimizer.DisposeSafely();
-                    timer.DisposeSafely();
                 };
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Log.Error(e);
             }
 
             Console.ReadKey();

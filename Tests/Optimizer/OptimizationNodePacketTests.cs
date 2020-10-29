@@ -25,7 +25,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Optimizer
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class OptimizationNodePacketTest
     {
         private static JsonSerializerSettings _jsonSettings = new JsonSerializerSettings() { Culture = CultureInfo.InvariantCulture };
