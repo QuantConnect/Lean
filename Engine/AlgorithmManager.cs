@@ -499,6 +499,7 @@ namespace QuantConnect.Lean.Engine
                         var timeKeeper = algorithm.TimeKeeper;
                         foreach (var update in timeSlice.ConsolidatorUpdateData)
                         {
+                            var localTime = timeKeeper.GetLocalTimeKeeper(update.Target.ExchangeTimeZone).LocalTime;
                             var consolidators = update.Target.Consolidators;
                             foreach (var consolidator in consolidators)
                             {
@@ -512,7 +513,7 @@ namespace QuantConnect.Lean.Engine
                                 }
 
                                 // scan for time after we've pumped all the data through for this consolidator
-                                consolidator.Scan(timeKeeper.GetLocalTimeKeeper(update.Target.ExchangeTimeZone).LocalTime);
+                                consolidator.Scan(localTime);
                             }
                         }
                     }
