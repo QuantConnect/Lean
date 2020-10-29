@@ -54,13 +54,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // Existing orders created in TWS can *only* be cancelled/modified when connected with ClientId = 0
         private const int ClientId = 0;
 
-        // next valid order id for this client
+        // next valid order id (or request id, or ticker id) for this client
         private int _nextValidId;
         private readonly object _nextValidIdLocker = new object();
-
-        // next valid request id for queries
-        private int _nextRequestId;
-        private int _nextTickerId;
 
         private readonly int _port;
         private readonly string _account;
@@ -606,7 +602,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             var manualResetEvent = new ManualResetEvent(false);
 
-            var requestId = GetNextRequestId();
+            var requestId = GetNextId();
 
             _requestInformation[requestId] = $"[Id={requestId}] GetExecutions: " + symbol;
 
@@ -949,7 +945,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (needsNewId)
             {
                 // the order ids are generated for us by the SecurityTransactionManaer
-                var id = GetNextBrokerageOrderId();
+                var id = GetNextId();
                 order.BrokerId.Add(id.ToStringInvariant());
                 ibOrderId = id;
             }
@@ -1042,7 +1038,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             const int timeout = 60; // sec
 
             ContractDetails details = null;
-            var requestId = GetNextRequestId();
+            var requestId = GetNextId();
 
             _requestInformation[requestId] = $"[Id={requestId}] GetContractDetails: {symbol.Value} ({contract})";
 
@@ -1106,7 +1102,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             const int timeout = 60; // sec
 
-            var requestId = GetNextRequestId();
+            var requestId = GetNextId();
 
             _requestInformation[requestId] = $"[Id={requestId}] FindContracts: {ticker} ({contract})";
 
@@ -2233,26 +2229,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Handles the threading issues of creating an IB order ID
+        /// Handles the threading issues of creating an IB OrderId/RequestId/TickerId
         /// </summary>
-        /// <returns>The new IB ID</returns>
-        private int GetNextBrokerageOrderId()
+        /// <returns>The new IB OrderId/RequestId/TickerId</returns>
+        private int GetNextId()
         {
             lock (_nextValidIdLocker)
             {
                 // return the current value and increment
                 return _nextValidId++;
             }
-        }
-
-        private int GetNextRequestId()
-        {
-            return Interlocked.Increment(ref _nextRequestId);
-        }
-
-        private int GetNextTickerId()
-        {
-            return Interlocked.Increment(ref _nextTickerId);
         }
 
         private void HandleBrokerTime(object sender, IB.CurrentTimeUtcEventArgs e)
@@ -2322,7 +2308,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                                 return false;
                             }
 
-                            var id = GetNextTickerId();
+                            var id = GetNextId();
                             var contract = CreateContract(subscribeSymbol, false);
 
                             _requestInformation[id] = $"[Id={id}] Subscribe: {symbol.Value} ({contract})";
@@ -2904,7 +2890,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 var pacing = false;
                 var historyPiece = new List<TradeBar>();
-                var historicalTicker = GetNextTickerId();
+                var historicalTicker = GetNextId();
 
                 _requestInformation[historicalTicker] = $"[Id={historicalTicker}] GetHistory: {request.Symbol.Value} ({contract})";
 
