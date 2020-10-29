@@ -95,8 +95,8 @@ namespace QuantConnect.Research
                     _pandas = Py.Import("pandas");
                 }
 
-                // By default, set start date to end data which is yesterday
-                SetStartDate(EndDate);
+                // Issue #4892 : Set start time relative to TimeZone
+                SetStartDate(DateTime.UtcNow.ConvertFromUtc(TimeZone));
 
                 // Sets PandasConverter
                 SetPandasConverter();
