@@ -399,7 +399,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 {
                     var orderId = Parse.Int(id);
 
-                    _requestInformation[orderId] = "CancelOrder: " + order;
+                    _requestInformation[orderId] = $"[Id={orderId}] CancelOrder: " + order;
 
                     CheckRateLimiting();
 
@@ -608,7 +608,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             var requestId = GetNextRequestId();
 
-            _requestInformation[requestId] = "GetExecutions: " + symbol;
+            _requestInformation[requestId] = $"[Id={requestId}] GetExecutions: " + symbol;
 
             // define our event handlers
             EventHandler<IB.RequestEndEventArgs> clientOnExecutionDataEnd = (sender, args) =>
@@ -963,7 +963,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new ArgumentException("Expected order with populated BrokerId for updating orders.");
             }
 
-            _requestInformation[ibOrderId] = $"IBPlaceOrder: {order.Symbol.Value} ({contract})";
+            _requestInformation[ibOrderId] = $"[Id={ibOrderId}] IBPlaceOrder: {order.Symbol.Value} ({contract})";
 
             CheckRateLimiting();
 
@@ -1044,7 +1044,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             ContractDetails details = null;
             var requestId = GetNextRequestId();
 
-            _requestInformation[requestId] = $"GetContractDetails: {symbol.Value} ({contract})";
+            _requestInformation[requestId] = $"[Id={requestId}] GetContractDetails: {symbol.Value} ({contract})";
 
             var manualResetEvent = new ManualResetEvent(false);
 
@@ -1108,7 +1108,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             var requestId = GetNextRequestId();
 
-            _requestInformation[requestId] = $"FindContracts: {ticker} ({contract})";
+            _requestInformation[requestId] = $"[Id={requestId}] FindContracts: {ticker} ({contract})";
 
             var manualResetEvent = new ManualResetEvent(false);
             var contractDetails = new List<ContractDetails>();
@@ -2325,7 +2325,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             var id = GetNextTickerId();
                             var contract = CreateContract(subscribeSymbol, false);
 
-                            _requestInformation[id] = $"Subscribe: {symbol.Value} ({contract})";
+                            _requestInformation[id] = $"[Id={id}] Subscribe: {symbol.Value} ({contract})";
 
                             CheckRateLimiting();
 
@@ -2906,7 +2906,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var historyPiece = new List<TradeBar>();
                 var historicalTicker = GetNextTickerId();
 
-                _requestInformation[historicalTicker] = $"GetHistory: {request.Symbol.Value} ({contract})";
+                _requestInformation[historicalTicker] = $"[Id={historicalTicker}] GetHistory: {request.Symbol.Value} ({contract})";
 
                 EventHandler<IB.HistoricalDataEventArgs> clientOnHistoricalData = (sender, args) =>
                 {
