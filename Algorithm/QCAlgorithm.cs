@@ -1474,6 +1474,23 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ticker"></param>
+        /// <param name="resolution"></param>
+        /// <param name="market"></param>
+        /// <param name="fillDataForward"></param>
+        /// <param name="leverage"></param>
+        /// <param name="extendedMarketHours"></param>
+        /// <returns></returns>
+        public Future AddContinuousFuture(string ticker, Resolution? resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
+        {
+            var continuousFutureSymbol = QuantConnect.Symbol.Create(ticker, SecurityType.Future, market, $"{ticker}#");
+
+            return (Future)AddSecurity(continuousFutureSymbol, resolution, fillDataForward, leverage, extendedMarketHours);
+        }
+
+        /// <summary>
         /// Set a required SecurityType-symbol and resolution for algorithm
         /// </summary>
         /// <param name="symbol">The security Symbol</param>
@@ -1513,6 +1530,11 @@ namespace QuantConnect.Algorithm
                     if (symbol.SecurityType.IsOption())
                     {
                         universe = new OptionChainUniverse((Option)security, settings, LiveMode);
+                    }
+                    else if(symbol.Value.EndsWith("#"))
+                    {
+                        security.IsTradable = true;
+                        universe = new ContinuousFutureUniverse((Future)security, settings, FutureChainProvider);
                     }
                     else
                     {
