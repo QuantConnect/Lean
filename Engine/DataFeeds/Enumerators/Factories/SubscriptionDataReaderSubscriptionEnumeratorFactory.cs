@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -126,6 +127,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 request.StartTimeLocal,
                 _enablePriceScaling);
 
+            if (request.Security.Symbol.Value.EndsWith("#"))
+            {
+                // We remap the symbol of the data to the continuous contract & TODO: scale -> same for history
+                result = new ContinuousContractEnumerator(result, request.Security.Symbol);
+            }
+
             return result;
         }
 
@@ -166,6 +173,45 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             }
 
             _zipDataCacheProvider?.DisposeSafely();
+        }
+    }
+
+    public class ContinuousContractEnumerator : IEnumerator<BaseData>
+    {
+        private IEnumerator<BaseData> _underlying;
+        private Symbol _continuousContract;
+
+        public BaseData Current { get; private set; }
+
+        object IEnumerator.Current => Current;
+
+        public ContinuousContractEnumerator(IEnumerator<BaseData> underlying, Symbol continuousContract)
+        {
+            _underlying = underlying;
+            _continuousContract = continuousContract;
+        }
+
+        public bool MoveNext()
+        {
+            var result = _underlying.MoveNext();
+
+            if (_underlying.Current != null)
+            {
+                Current = _underlying.Current.Clone(false);
+                Current.Symbol = _continuousContract;
+            }
+
+            return result;
+        }
+
+        public void Reset()
+        {
+            _underlying.Reset();
+        }
+
+        public void Dispose()
+        {
+            _underlying.Dispose();
         }
     }
 }
