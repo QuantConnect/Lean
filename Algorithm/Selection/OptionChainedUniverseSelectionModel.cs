@@ -20,6 +20,7 @@ using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.Selection
 {
@@ -69,8 +70,7 @@ namespace QuantConnect.Algorithm.Selection
                         default(OptionStyle),
                         default(OptionRight),
                         0m,
-                        symbol.ID.Date)
-                    )
+                        SecurityIdentifier.DefaultDate))
                     .ToList();
             };
         }

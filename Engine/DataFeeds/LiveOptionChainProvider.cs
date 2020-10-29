@@ -168,6 +168,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                            optionChainEntry.Call.StrikePrice,
                            futureContractSymbol.ID.Date));
                     }
+
+                    break;
                 }
                 catch (HttpRequestException err)
                 {

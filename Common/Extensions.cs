@@ -50,6 +50,7 @@ using Timer = System.Timers.Timer;
 using static QuantConnect.StringExtensions;
 using Microsoft.IO;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect
@@ -2515,13 +2516,14 @@ namespace QuantConnect
                 // to ensure that the underlying SecurityType is preserved and not
                 // written as SecurityType.Equity.
                 var alias = $"?{underlying.Value}";
+
                 symbol = Symbol.CreateOption(
                     underlying,
                     market,
                     default(OptionStyle),
                     default(OptionRight),
                     0m,
-                    SecurityIdentifier.DefaultDate,//underlying.ID.Date,
+                    SecurityIdentifier.DefaultDate,
                     alias
                 );
             }

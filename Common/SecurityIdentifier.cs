@@ -24,6 +24,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Securities.Future;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 
@@ -566,6 +567,13 @@ namespace QuantConnect
             // normalize input strings
             market = market.ToLowerInvariant();
             symbol = forceSymbolToUpper ? symbol.LazyToUpper() : symbol;
+
+            if (securityType == SecurityType.Option && underlying?.SecurityType == SecurityType.Future)
+            {
+                // Futures options tickers might not match, so we need
+                // to map the provided future Symbol to the actual future option Symbol.
+                symbol = FuturesOptionsSymbolMappings.Map(symbol);
+            }
 
             var marketIdentifier = QuantConnect.Market.Encode(market);
             if (!marketIdentifier.HasValue)

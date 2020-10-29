@@ -425,8 +425,15 @@ namespace QuantConnect.Util
                     return !isHourOrDaily ? Path.Combine(directory, symbol.Value.ToLowerInvariant()) : directory;
 
                 case SecurityType.Option:
-                    // options uses the underlying symbol for pathing
-                    return !isHourOrDaily ? Path.Combine(directory, symbol.Underlying.Value.ToLowerInvariant()) : directory;
+                    // options uses the underlying symbol for pathing.
+                    // For futures options, we use the canonical and option ticker
+                    // since it can differ from the underlying's ticker.
+                    var optionPath = (symbol.Underlying.SecurityType == SecurityType.Future
+                            ? symbol.ID.Symbol
+                            : symbol.Underlying.Value)
+                        .ToLowerInvariant();
+
+                    return !isHourOrDaily ? Path.Combine(directory, optionPath) : directory;
 
                 case SecurityType.Future:
                     return !isHourOrDaily ? Path.Combine(directory, symbol.ID.Symbol.ToLowerInvariant()) : directory;
@@ -499,10 +506,15 @@ namespace QuantConnect.Util
                     return Invariant($"{formattedDate}_{symbol.Value.ToLowerInvariant()}_{resolution.ResolutionToLower()}_{tickType.TickTypeToLower()}.csv");
 
                 case SecurityType.Option:
+                    var optionPath = (symbol.Underlying.SecurityType == SecurityType.Future
+                            ? symbol.ID.Symbol
+                            : symbol.Underlying.Value)
+                        .ToLowerInvariant();
+
                     if (isHourOrDaily)
                     {
                         return string.Join("_",
-                            symbol.Underlying.Value.ToLowerInvariant(), // underlying
+                            optionPath,
                             tickType.TickTypeToLower(),
                             symbol.ID.OptionStyle.ToLower(),
                             symbol.ID.OptionRight.ToLower(),
@@ -513,7 +525,7 @@ namespace QuantConnect.Util
 
                     return string.Join("_",
                         formattedDate,
-                        symbol.Underlying.Value.ToLowerInvariant(),
+                        optionPath,
                         resolution.ResolutionToLower(),
                         tickType.TickTypeToLower(),
                         symbol.ID.OptionStyle.ToLower(),
@@ -583,8 +595,12 @@ namespace QuantConnect.Util
                 case SecurityType.Option:
                     if (isHourOrDaily)
                     {
-                        //               underlying
-                        return $"{symbol.Underlying.Value.ToLowerInvariant()}_{tickTypeString}_{symbol.ID.OptionStyle.ToLower()}.zip";
+                        var optionPath = (symbol.Underlying.SecurityType == SecurityType.Future
+                                ? symbol.ID.Symbol
+                                : symbol.Underlying.Value)
+                            .ToLowerInvariant();
+
+                        return $"{optionPath}_{tickTypeString}_{symbol.ID.OptionStyle.ToLower()}.zip";
                     }
 
                     return $"{formattedDate}_{tickTypeString}_{symbol.ID.OptionStyle.ToLower()}.zip";

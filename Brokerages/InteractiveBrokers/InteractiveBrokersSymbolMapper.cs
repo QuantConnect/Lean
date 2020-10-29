@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -82,12 +83,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case SecurityType.Option:
                     if (symbol.Underlying.SecurityType == SecurityType.Future)
                     {
-                        // Future options case, we handle exactly as a future
-                        // since we're making the assumption that they both
-                        // share the same ticker.
-                        goto case SecurityType.Future;
+                        // We use the underlying Future Symbol since IB doesn't use
+                        // the Futures Options' ticker, but rather uses the underlying's
+                        // Symbol, mapped to the brokerage.
+                        return GetBrokerageRootSymbol(symbol.Underlying.ID.Symbol);
                     }
-                    else if (symbol.Underlying.SecurityType != SecurityType.Equity)
+                    if (symbol.Underlying.SecurityType != SecurityType.Equity)
                     {
                         // Use the SID's Symbol to get a non-changing ticker representing
                         // the Symbol without expiry information.
