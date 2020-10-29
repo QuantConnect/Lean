@@ -83,6 +83,12 @@ namespace QuantConnect.Optimizer
         public HashSet<OptimizationParameter> OptimizationParameters;
 
         /// <summary>
+        /// The user optimization parameters
+        /// </summary>
+        [JsonProperty(PropertyName = "optimization-strategy-settings")]
+        public OptimizationStrategySettings OptimizationStrategySettings;
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         public OptimizationNodePacket() : this(PacketType.OptimizationNode)

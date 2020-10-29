@@ -14,7 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace QuantConnect.Optimizer
 {
@@ -48,19 +50,90 @@ namespace QuantConnect.Optimizer
         public decimal Step { get; }
 
         /// <summary>
+        /// Minimal possible movement for current parameter, should be positive
+        /// </summary>
+        [JsonProperty("min-step")]
+        public decimal MinStep { get; }
+
+        public static OptimizationParameter Build(KeyValuePair<string, JObject> parameterJson)
+        {
+            var parameterName = parameterJson.Key;
+            var parameterSettings = parameterJson.Value;
+            var stepToken = parameterSettings.SelectToken("step");
+            var minStepToken = parameterSettings.SelectToken("min-step");
+
+            OptimizationParameter optimizationParameter = null;
+            if (stepToken != null && minStepToken != null)
+            {
+                optimizationParameter = new OptimizationParameter(
+                    parameterName,
+                    parameterSettings.Value<decimal>("min"),
+                    parameterSettings.Value<decimal>("max"),
+                    stepToken.Value<decimal>(),
+                    minStepToken.Value<decimal>());
+            }
+            else if (stepToken != null)
+            {
+                optimizationParameter = new OptimizationParameter(
+                    parameterName,
+                    parameterSettings.Value<decimal>("min"),
+                    parameterSettings.Value<decimal>("max"),
+                    stepToken.Value<decimal>());
+            }
+
+            return optimizationParameter;
+        }
+
+
+        /// <summary>
         /// Create an instance of <see cref="OptimizationParameter"/> based on configuration
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="min"></param>
-        /// <param name="max"></param>
-        /// <param name="step"></param>
-        public OptimizationParameter(string name, decimal min, decimal max, decimal step)
+        /// <param name="name">parameter name</param>
+        /// <param name="min">minimal value</param>
+        /// <param name="max">maximal value</param>
+        /// <param name="numberOfSegments">maximal value, should be positive</param>
+        public OptimizationParameter(string name, decimal min, decimal max, int numberOfSegments)
         {
             Name = name;
             MinValue = Math.Min(min, max);
             MaxValue = Math.Max(min, max);
+
+            numberOfSegments = numberOfSegments == 0 ? 0 : 1;
+            MinStep = (MaxValue - MinValue) / numberOfSegments;
+            Step = (MaxValue - MinValue) / (10 * numberOfSegments);
+        }
+
+        /// <summary>
+        /// Create an instance of <see cref="OptimizationParameter"/> based on configuration
+        /// </summary>
+        /// <param name="name">parameter name</param>
+        /// <param name="min">minimal value</param>
+        /// <param name="max">maximal value</param>
+        /// <param name="step">movement</param>
+        public OptimizationParameter(string name, decimal min, decimal max, decimal step)
+            : this(name, min, max, step, step)
+        {
+
+        }
+
+        /// <summary>
+        /// Create an instance of <see cref="OptimizationParameter"/> based on configuration
+        /// </summary>
+        /// <param name="name">parameter name</param>
+        /// <param name="min">minimal value</param>
+        /// <param name="max">maximal value</param>
+        /// <param name="step">movement</param>
+        /// <param name="minStep">minimal possible movement</param>
+        public OptimizationParameter(string name, decimal min, decimal max, decimal step, decimal minStep)
+        {
+            Name = name;
+            MinValue = Math.Min(min, max);
+            MaxValue = Math.Max(min, max);
+            MinStep = step != 0
+                ? Math.Abs(minStep)
+                : 1;
             Step = step != 0
-                ? Math.Abs(step)
+                ? Math.Max(Math.Abs(step), MinStep)
                 : 1;
         }
 

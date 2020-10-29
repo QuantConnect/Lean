@@ -9,7 +9,13 @@
   "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
 
   // How we manage solutions and make decision to continue or stop
-  "optimization-strategy": "QuantConnect.Optimizer.GridSearchOptimizationStrategy",
+  "optimization-strategy": "QuantConnect.Optimizer.EulerSearchOptimizationStrategy",
+
+  // on-demand settings required for different optimization strategies
+  "optimization-strategy-settings": {
+    // EulerSearch
+    "default-segment-amount": 10 
+  },
 
   // optimization problem
   "optimization-criterion": {
@@ -46,11 +52,17 @@
       "min": 10,
       "max": 50,
       "step": 10
+      
+      // optional
+      "min-step": 0.5
     },
     "ema-fast": {
       "min": 50,
       "max": 150,
       "step": 50
+
+      // optional
+      "min-step": 0.0001
     }
   }
 }

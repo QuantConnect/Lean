@@ -55,6 +55,8 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="ExtremumConverter.cs" />
+    <Compile Include="OptimizationStrategySettings.cs" />
+    <Compile Include="StepBaseOptimizationStrategy.cs" />
     <Compile Include="Objective.cs" />
     <Compile Include="OptimizationEstimate.cs" />
     <Compile Include="Target.cs" />
@@ -63,7 +65,7 @@
     <Compile Include="Minimization.cs" />
     <Compile Include="Maximization.cs" />
     <Compile Include="Extremum.cs" />
-    <Compile Include="EulerSearch.cs" />
+    <Compile Include="EulerSearchOptimizationStrategy.cs" />
     <Compile Include="IOptimizationStrategy.cs" />
     <Compile Include="GridSearchOptimizationStrategy.cs" />
     <Compile Include="OptimizationEventArgs.cs" />

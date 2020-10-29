@@ -107,7 +107,7 @@ namespace QuantConnect.Optimizer
             RunningParameterSetForBacktest = new ConcurrentDictionary<string, ParameterSet>();
             PendingParameterSet = new ConcurrentQueue<ParameterSet>();
 
-            Strategy.Initialize(OptimizationTarget, nodePacket.Constraints, NodePacket.OptimizationParameters);
+            Strategy.Initialize(OptimizationTarget, nodePacket.Constraints, NodePacket.OptimizationParameters, NodePacket.OptimizationStrategySettings);
 
             Strategy.NewParameterSet += (s, e) =>
             {
@@ -129,7 +129,7 @@ namespace QuantConnect.Optimizer
 
             lock (RunningParameterSetForBacktest)
             {
-                Strategy.PushNewResults(OptimizationResult.Empty);
+                Strategy.PushNewResults(OptimizationResult.Initial);
 
                 // if after we started there are no running parameter sets means we have failed to start
                 if (!RunningParameterSetForBacktest.Any())
@@ -384,7 +384,7 @@ namespace QuantConnect.Optimizer
                     }
                     else
                     {
-                        Log.Error($"LeanOptimizer.LaunchLeanForParameterSet({GetLogDetails()}): Empty/null optimization compute job could not be placed into the queue");
+                        Log.Error($"LeanOptimizer.LaunchLeanForParameterSet({GetLogDetails()}): Initial/null optimization compute job could not be placed into the queue");
                     }
 
                     ProcessUpdate();

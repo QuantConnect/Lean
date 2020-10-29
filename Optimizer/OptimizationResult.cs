@@ -23,7 +23,7 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Corresponds to empty result - zero profit at empty permission set
         /// </summary>
-        public static readonly OptimizationResult Empty = new OptimizationResult();
+        public static readonly OptimizationResult Initial = new OptimizationResult();
 
         /// <summary>
         /// The backtest id that generated this result

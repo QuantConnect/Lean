@@ -33,19 +33,17 @@ namespace QuantConnect.Optimizer.Launcher
                 Log.DebuggingEnabled = Config.GetBool("debug-mode");
                 Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
 
+                var optimizationStrategySettings = Config.Get("optimization-criterion", "{}");
                 var packet = new OptimizationNodePacket
                 {
                     OptimizationId = Guid.NewGuid().ToString(),
                     OptimizationStrategy = Config.Get("optimization-strategy", "QuantConnect.Optimizer.GridSearchOptimizationStrategy"),
+                    OptimizationStrategySettings = JsonConvert.DeserializeObject<OptimizationStrategySettings>(Config.Get("optimization-strategy-settings", "{}")),
                     Criterion = JsonConvert.DeserializeObject<Target>(Config.Get("optimization-criterion", "{\"target\":\"Statistics.TotalProfit\", \"extremum\": \"max\"}")),
                     Constraints = JsonConvert.DeserializeObject<List<Constraint>>(Config.Get("constraints", "[]")).AsReadOnly(),
                     OptimizationParameters =
                         JsonConvert.DeserializeObject<Dictionary<string, JObject>>(Config.Get("parameters", "{}"))
-                        .Select(arg => new OptimizationParameter(
-                            arg.Key,
-                            arg.Value.Value<decimal>("min"),
-                            arg.Value.Value<decimal>("max"),
-                            arg.Value.Value<decimal>("step")))
+                        .Select(OptimizationParameter.Build)
                         .ToHashSet(),
                     MaximumConcurrentBacktests = Config.GetInt("maximum-concurrent-backtests", Environment.ProcessorCount / 2)
                 };

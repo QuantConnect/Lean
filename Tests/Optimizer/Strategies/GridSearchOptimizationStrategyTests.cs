@@ -64,7 +64,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             _strategy.Initialize(
                 new Target("Profit", extremum, null),
                 null,
-                _optimizationParameters);
+                _optimizationParameters,
+                new OptimizationStrategySettings());
             _strategy.NewParameterSet += (s, e) =>
             {
                 var parameterSet = (e as OptimizationEventArgs)?.ParameterSet;
@@ -74,7 +75,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 }
             };
 
-            _strategy.PushNewResults(OptimizationResult.Empty);
+            _strategy.PushNewResults(OptimizationResult.Initial);
 
             Assert.AreEqual(_profit(solution), _parse(_strategy.Solution.JsonBacktestResult, "Profit"));
             foreach (var arg in _strategy.Solution.ParameterSet.Value)
@@ -91,7 +92,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             _strategy.Initialize(
                 new Target("Profit", new Maximization(), null),
                 new List<Constraint> { new Constraint("Drawdown", ComparisonOperatorTypes.Less, new decimal(drawdown)) },
-                _optimizationParameters);
+                _optimizationParameters,
+                new OptimizationStrategySettings());
             _strategy.NewParameterSet += (s, e) =>
             {
                 var parameterSet = (e as OptimizationEventArgs)?.ParameterSet;
@@ -101,7 +103,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 }
             };
 
-            _strategy.PushNewResults(OptimizationResult.Empty);
+            _strategy.PushNewResults(OptimizationResult.Initial);
 
             Assert.AreEqual(_profit(solution), _parse(_strategy.Solution.JsonBacktestResult, "Profit"));
             Assert.AreEqual(_drawdown(solution), _parse(_strategy.Solution.JsonBacktestResult, "Drawdown"));
@@ -130,7 +132,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             _strategy.Initialize(
                 target,
                 null,
-                _optimizationParameters);
+                _optimizationParameters,
+                new OptimizationStrategySettings());
 
             var queue = new Queue<ParameterSet>();
             _strategy.NewParameterSet += (s, e) =>
@@ -138,7 +141,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 queue.Enqueue((e as OptimizationEventArgs)?.ParameterSet);
             };
 
-            _strategy.PushNewResults(OptimizationResult.Empty);
+            _strategy.PushNewResults(OptimizationResult.Initial);
 
             while (queue.Any())
             {
@@ -169,7 +172,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             _strategy.Initialize(
                 new Target("Profit", extremum, null),
                 null,
-                _optimizationParameters);
+                _optimizationParameters,
+                new OptimizationStrategySettings());
             ParameterSet solution = null;
             int i = 0;
             for (var slow = emaSlow.MinValue; slow <= emaSlow.MaxValue; slow += emaSlow.Step)
@@ -209,9 +213,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             {
                 new OptimizationParameter("ema-fast", 10, 100, 1)
             };
-            _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set1);
+            _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set1, new OptimizationStrategySettings());
 
-            _strategy.PushNewResults(OptimizationResult.Empty);
+            _strategy.PushNewResults(OptimizationResult.Initial);
             Assert.Greater(nextId, 1);
 
             var set2 = new HashSet<OptimizationParameter>()
@@ -221,7 +225,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             };
             Assert.Throws<InvalidOperationException>(() =>
             {
-                _strategy.Initialize(new Target("Profit", new Minimization(), null), null, set2);
+                _strategy.Initialize(new Target("Profit", new Minimization(), null), null, set2, new OptimizationStrategySettings());
             });
         }
 
@@ -231,7 +235,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             var strategy = new GridSearchOptimizationStrategy();
             Assert.Throws<InvalidOperationException>(() =>
             {
-                strategy.PushNewResults(OptimizationResult.Empty);
+                strategy.PushNewResults(OptimizationResult.Initial);
             });
         }
 
@@ -258,7 +262,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     new OptimizationParameter("ema-custom", 1, 1, step)
                 };
 
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args);
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new OptimizationStrategySettings());
 
                 _strategy.NewParameterSet += (s, e) =>
                 {
@@ -268,7 +272,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     Assert.AreEqual("1", parameterSet.Value["ema-custom"]);
                 };
 
-                _strategy.PushNewResults(OptimizationResult.Empty);
+                _strategy.PushNewResults(OptimizationResult.Initial);
             }
 
             [TestCase(-10, 0, -1)]
@@ -279,7 +283,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             {
                 var param = new OptimizationParameter("ema-fast", min, max, step);
                 var set = new HashSet<OptimizationParameter>() { param };
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set);
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set, new OptimizationStrategySettings());
                 var counter = 0;
 
                 using (var enumerator = new EnqueueableEnumerator<ParameterSet>())
@@ -289,7 +293,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                         enumerator.Enqueue((e as OptimizationEventArgs)?.ParameterSet);
                     };
 
-                    _strategy.PushNewResults(OptimizationResult.Empty);
+                    _strategy.PushNewResults(OptimizationResult.Initial);
 
                     for (var v = param.MinValue; v <= param.MaxValue; v += param.Step)
                     {
@@ -321,7 +325,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             {
                 var param = new OptimizationParameter("ema-fast", min, max, step);
                 var set = new HashSet<OptimizationParameter>() { param };
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set);
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set, new OptimizationStrategySettings());
                 
                 Assert.AreEqual(Math.Floor(Math.Abs(max - min) / Math.Abs(step)) + 1, _strategy.GetTotalBacktestEstimate());
             }
@@ -341,7 +345,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     new OptimizationParameter("ema-fast", data[0,0], data[0,1], data[0,2]),
                     new OptimizationParameter("ema-slow", data[1,0], data[1,1], data[1,2])
                 };
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args);
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new OptimizationStrategySettings());
                 var counter = 0;
                 using (var enumerator = new EnqueueableEnumerator<ParameterSet>())
                 {
@@ -350,7 +354,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                         enumerator.Enqueue((e as OptimizationEventArgs)?.ParameterSet);
                     };
 
-                    _strategy.PushNewResults(OptimizationResult.Empty);
+                    _strategy.PushNewResults(OptimizationResult.Initial);
 
                     var fastParam = args.First(arg => arg.Name == "ema-fast");
                     var slowParam = args.First(arg => arg.Name == "ema-slow");
@@ -393,7 +397,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     new OptimizationParameter("ema-fast", data[0,0], data[0,1], data[0,2]),
                     new OptimizationParameter("ema-slow", data[1,0], data[1,1], data[1,2])
                 };
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args);
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new OptimizationStrategySettings());
 
                 var total = 1m;
                 foreach (var arg in args)
@@ -413,7 +417,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     new OptimizationParameter("ema-slow", 20, 200, 4),
                     new OptimizationParameter("ema-custom", 30, 300, 2)
                 };
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), null, args);
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), null, args, new OptimizationStrategySettings());
                 var counter = 0;
 
                 using (var enumerator = new EnqueueableEnumerator<ParameterSet>())
@@ -423,7 +427,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                         enumerator.Enqueue((e as OptimizationEventArgs)?.ParameterSet);
                     };
 
-                    _strategy.PushNewResults(OptimizationResult.Empty);
+                    _strategy.PushNewResults(OptimizationResult.Initial);
 
                     var fastParam = args.First(arg => arg.Name == "ema-fast");
                     var slowParam = args.First(arg => arg.Name == "ema-slow");
@@ -472,7 +476,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     new OptimizationParameter("ema-slow", 20, 200, 4),
                     new OptimizationParameter("ema-custom", 30, 300, 2)
                 };
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), null, args);
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), null, args, new OptimizationStrategySettings());
                 
                 var total = 1m;
                 foreach (var arg in args)
@@ -493,7 +497,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 {
                     args.Add(new OptimizationParameter($"ema-{i}", 10, 100, 1));
                 }
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args);
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new OptimizationStrategySettings());
 
                 var counter = 0;
                 _strategy.NewParameterSet += (s, e) =>
@@ -508,7 +512,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                 Assert.Throws<Exception>(() =>
                 {
-                    _strategy.PushNewResults(OptimizationResult.Empty);
+                    _strategy.PushNewResults(OptimizationResult.Initial);
                 });
 
                 Assert.AreEqual(10000, counter);
@@ -524,7 +528,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 {
                     new OptimizationParameter("ema-fast", 10, 100, 1)
                 };
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), null, set);
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), null, set, new OptimizationStrategySettings());
 
                 _strategy.NewParameterSet += (s, e) =>
                 {
@@ -532,11 +536,11 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 };
 
                 last = nextId;
-                _strategy.PushNewResults(OptimizationResult.Empty);
+                _strategy.PushNewResults(OptimizationResult.Initial);
                 Assert.Greater(nextId, last);
 
                 last = nextId;
-                _strategy.PushNewResults(OptimizationResult.Empty);
+                _strategy.PushNewResults(OptimizationResult.Initial);
                 Assert.Greater(nextId, last);
             }
         }
