@@ -31,6 +31,9 @@ ENV PYTHONPATH=${WORK}:${PYTHONPATH}
 
 RUN find ${WORK} -type f -not -name '*.py*' -not -name '*.xml' -not -name '*.exe.config' -not -name '*.exe' -not -name '*.so' -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -not -name 'decimal.py' -delete
 
+#Copy Python startup script for Python Notebooks to ipython profile
+RUN cp ${WORK}start.py /root/.ipython/profile_default/startup
+
 #Create initialize script
 RUN echo "if [ ! -d \"${WORK}Notebooks\" ]; then mkdir ${WORK}Notebooks; fi && \
     if [ ! -f \"${WORK}Notebooks/config.json\" ]; then echo '{ \"data-folder\": \"/home/Data/\", \
