@@ -53,6 +53,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             DateTime startTime,
             bool enablePriceScaling = true)
         {
+            if (config.SecurityType == SecurityType.Future)
+            {
+                return rawDataEnumerator;
+            }
+
             var lazyFactorFile =
                 new Lazy<FactorFile>(() => SubscriptionUtils.GetFactorFileToUse(config, factorFileProvider));
 

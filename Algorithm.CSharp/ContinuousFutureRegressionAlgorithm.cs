@@ -38,10 +38,10 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2013, 1, 1);
-            SetEndDate(2013, 3, 1);
-            SetCash(1000000);
+            SetEndDate(2013, 6, 1);
 
-            _continuousFuture = AddContinuousFuture("CL", Resolution.Minute, Market.NYMEX, false, 1, extendedMarketHours: false);
+            _continuousFuture = AddFuture("ES");
+            _continuousFuture.SetFilter(0, 0);
         }
 
         /// <summary>
@@ -50,13 +50,15 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (_lastDateLog.Date != Time.Date)
+            if (_lastDateLog.Month != Time.Month)
             {
                 _lastDateLog = Time;
 
                 var quotes = data.Get<QuoteBar>();
                 if (quotes.ContainsKey(_continuousFuture.Symbol))
                 {
+                    //Log($"{Time}-{_continuousFuture.Underlying.Symbol}-V1- {quotes[_continuousFuture.Symbol]}");
+                    //Log($"{Time}-{_continuousFuture.Underlying.Symbol}-V2- {Securities[_continuousFuture.Symbol].GetLastData()}");
                     Log($"{Time}-V1- {quotes[_continuousFuture.Symbol]}");
                     Log($"{Time}-V2- {Securities[_continuousFuture.Symbol].GetLastData()}");
                 }
@@ -70,13 +72,13 @@ namespace QuantConnect.Algorithm.CSharp
                     // This works because we set this contract as tradable, even if it's a canonical security
                     Buy(_continuousFuture.Symbol, 1);
 
-                    Buy(_continuousFuture.Underlying.Symbol, 1); // this works too -> 
+                    //Buy(_continuousFuture.Underlying.Symbol, 1); // this works too -> 
                 }
 
                 // TODO: internally, once we have the start and end date we could use the 'ContinuousFutureUniverse.SelectSymbols(eachDay, null)' or similar to get the symbol for that date
                 // and create the sub history requests for each contract.
                 // Could do this at the QCAlgorithm side so that we don't need to change the history provider at all, but will mean direct access to the history provider wont work
-                var response = History(new[] { _continuousFuture.Symbol }, 10000);
+                //var response = History(new[] { _continuousFuture.Symbol }, 10000);
             }
         }
 
