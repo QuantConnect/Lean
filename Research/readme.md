@@ -53,8 +53,8 @@ Both of our setup scripts for Python & C# include a instantiated `Api` object un
 
 In `config.json` add the following entries with your respective values
 ```
-job-user-id: 12345 // Your id here
-api-access-token: "token13432" // Your api token here
+job-user-id: 12345, // Your id here
+api-access-token: "token13432", // Your api token here
 ```
 
 Once this has been done, you may restart your kernel and begin to use the `api` variable. 
@@ -75,7 +75,8 @@ For most users this will not be necessary, simply use `docker pull quantconnect/
 
 <br>
 
-# Running Jupyter Locally (Not Recommended)
+# Running Jupyter Locally 
+Note: we recommend using the above approach with our Docker container, where the setup and evironment is tested and fixed.
 
 Before we enable Jupyter support, follow [Lean installation](https://github.com/QuantConnect/Lean#installation-instructions)
 and [Python installation](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#quantconnect-python-algorithm-project) to get LEAN running Python algorithms in your machine. 
