@@ -62,7 +62,6 @@ namespace QuantConnect.Algorithm.CSharp
             futureSP500.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
             futureGold.SetFilter(0, 182);
 
-            futureSP500.Continuous.RollStyle=;
 
             var benchmark = AddEquity("SPY");
             SetBenchmark(benchmark.Symbol);

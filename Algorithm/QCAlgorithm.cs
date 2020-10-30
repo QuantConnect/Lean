@@ -45,6 +45,7 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Algorithm.Selection;
+using QuantConnect.Data.Market;
 using QuantConnect.Storage;
 using Index = QuantConnect.Securities.Index.Index;
 
@@ -1531,13 +1532,19 @@ namespace QuantConnect.Algorithm
                     {
                         universe = new OptionChainUniverse((Option)security, settings, LiveMode);
                     }
-                    else if(symbol.Value.EndsWith("#"))
-                    {
-                        security.IsTradable = true;
-                        universe = new ContinuousFutureUniverse((Future)security, settings, FutureChainProvider);
-                    }
                     else
                     {
+                        security.IsTradable = true;
+                        //universe = new ContinuousFutureUniverse((Future)security, settings, FutureChainProvider);
+                        //AddUniverse(universe);
+                        var continuousConfigs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
+                            resolution,
+                            fillDataForward,
+                            extendedMarketHours,
+                            isFilteredSubscription: false,
+                            subscriptionDataTypes: new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(typeof(QuoteBar), TickType.Quote)});
+                        AddToUserDefinedUniverse(security, continuousConfigs);
+
                         universe = new FuturesChainUniverse((Future)security, settings);
                     }
 
