@@ -46,9 +46,9 @@ namespace QuantConnect.Tests.Optimizer
                 },
                 OptimizationParameters = new HashSet<OptimizationParameter>()
                 {
-                    new OptimizationParameter("ema-slow", 1, 100, 1),
-                    new OptimizationParameter("ema-fast", -10, 0, 0.5m),
-                    new OptimizationParameter("ema-medium", -10, 0, -0.5m),
+                    new OptimizationStepParameter("ema-slow", 1, 100, 1),
+                    new OptimizationStepParameter("ema-fast", -10, 0, 0.5m),
+                    new OptimizationStepParameter("ema-medium", -10, 0, -0.5m),
                 },
                 MaximumConcurrentBacktests = 10
             };
@@ -64,15 +64,15 @@ namespace QuantConnect.Tests.Optimizer
             Assert.AreEqual(optimizationNodePacket.CompileId, result.CompileId);
 
             // assert optimization parameters
-            foreach (var expected in optimizationNodePacket.OptimizationParameters)
+            foreach (var expected in optimizationNodePacket.OptimizationParameters.OfType<OptimizationStepParameter>())
             {
-                var actual = result.OptimizationParameters.FirstOrDefault(s => s.Name == expected.Name);
+                var actual = result.OptimizationParameters.FirstOrDefault(s => s.Name == expected.Name) as OptimizationStepParameter;
                 Assert.NotNull(actual);
                 Assert.AreEqual(expected.MinValue, actual.MinValue);
                 Assert.AreEqual(expected.MaxValue, actual.MaxValue);
                 Assert.AreEqual(expected.Step, actual.Step);
             }
-            
+
             // assert target
             Assert.AreEqual(optimizationNodePacket.Criterion.Target, result.Criterion.Target);
             Assert.AreEqual(optimizationNodePacket.Criterion.Extremum.GetType(), result.Criterion.Extremum.GetType());
@@ -94,7 +94,7 @@ namespace QuantConnect.Tests.Optimizer
         [Test]
         public void FromJson()
         {
-            var json = "{\"optimizationParameters\": [{\"Name\":\"sleep-ms\",\"min\":0,\"max\":0,\"Step\":1}," +
+            var json = "{\"OptimizationStepParameters\": [{\"Name\":\"sleep-ms\",\"min\":0,\"max\":0,\"Step\":1}," +
                        "{\"Name\":\"total-trades\",\"min\":0,\"max\":2,\"Step\":1}]," +
                        "\"criterion\": {\"extremum\" : \"min\",\"target\": \"Statistics.Sharpe Ratio\",\"target-value\": 10}," +
                        "\"constraints\": [{\"target\": \"Statistics.Sharpe Ratio\",\"operator\": \"equals\",\"target-value\": 11}]}";

@@ -55,6 +55,9 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="ExtremumConverter.cs" />
+    <Compile Include="OptimizationArrayParameter.cs" />
+    <Compile Include="OptimizationStepParameter.cs" />
+    <Compile Include="OptimizationParameterConverter.cs" />
     <Compile Include="OptimizationStrategySettings.cs" />
     <Compile Include="StepBaseOptimizationStrategy.cs" />
     <Compile Include="Objective.cs" />

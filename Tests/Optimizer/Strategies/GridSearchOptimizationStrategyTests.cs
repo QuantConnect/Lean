@@ -23,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Math = System.Math;
+using OptimizationParameter = QuantConnect.Optimizer.OptimizationParameter;
 
 namespace QuantConnect.Tests.Optimizer.Strategies
 {
@@ -36,8 +37,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         private Func<decimal, decimal, string> _stringify = (profit, drawdown) => BacktestResult.Create(profit, drawdown).ToJson();
         private HashSet<OptimizationParameter> _optimizationParameters = new HashSet<OptimizationParameter>
         {
-            new OptimizationParameter("ema-slow", 1, 5, 1),
-            new OptimizationParameter("ema-fast", 3, 6, 2)
+            new OptimizationStepParameter("ema-slow", 1, 5, 1),
+            new OptimizationStepParameter("ema-fast", 3, 6, 2)
         };
 
         [SetUp]
@@ -166,8 +167,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         [Test, TestCaseSource(nameof(StrategySettings))]
         public void FindBestNoConstraints(Extremum extremum, int bestSet)
         {
-            var emaSlow = _optimizationParameters.First(s => s.Name == "ema-slow");
-            var emaFast = _optimizationParameters.First(s => s.Name == "ema-fast");
+            var emaSlow = _optimizationParameters.First(s => s.Name == "ema-slow") as OptimizationStepParameter;
+            var emaFast = _optimizationParameters.First(s => s.Name == "ema-fast") as OptimizationStepParameter;
 
             _strategy.Initialize(
                 new Target("Profit", extremum, null),
@@ -211,7 +212,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
             var set1 = new HashSet<OptimizationParameter>()
             {
-                new OptimizationParameter("ema-fast", 10, 100, 1)
+                new OptimizationStepParameter("ema-fast", 10, 100, 1)
             };
             _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set1, new OptimizationStrategySettings());
 
@@ -220,8 +221,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
             var set2 = new HashSet<OptimizationParameter>()
             {
-                new OptimizationParameter("ema-fast", 10, 100, 1),
-                new OptimizationParameter("ema-slow", 10, 100, 2)
+                new OptimizationStepParameter("ema-fast", 10, 100, 1),
+                new OptimizationStepParameter("ema-slow", 10, 100, 2)
             };
             Assert.Throws<InvalidOperationException>(() =>
             {
@@ -257,9 +258,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             {
                 var args = new HashSet<OptimizationParameter>()
                 {
-                    new OptimizationParameter("ema-fast", 0, 0, step),
-                    new OptimizationParameter("ema-slow", 0, 0, step),
-                    new OptimizationParameter("ema-custom", 1, 1, step)
+                    new OptimizationStepParameter("ema-fast", 0, 0, step),
+                    new OptimizationStepParameter("ema-slow", 0, 0, step),
+                    new OptimizationStepParameter("ema-custom", 1, 1, step)
                 };
 
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new OptimizationStrategySettings());
@@ -281,7 +282,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             [TestCase(10, 100, 500)]
             public void Step1D(decimal min, decimal max, decimal step)
             {
-                var param = new OptimizationParameter("ema-fast", min, max, step);
+                var param = new OptimizationStepParameter("ema-fast", min, max, step);
                 var set = new HashSet<OptimizationParameter>() { param };
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set, new OptimizationStrategySettings());
                 var counter = 0;
@@ -323,27 +324,27 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             [TestCase(10, 100, 500)]
             public void Estimate1D(decimal min, decimal max, decimal step)
             {
-                var param = new OptimizationParameter("ema-fast", min, max, step);
+                var param = new OptimizationStepParameter("ema-fast", min, max, step);
                 var set = new HashSet<OptimizationParameter>() { param };
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set, new OptimizationStrategySettings());
                 
                 Assert.AreEqual(Math.Floor(Math.Abs(max - min) / Math.Abs(step)) + 1, _strategy.GetTotalBacktestEstimate());
             }
 
-            private static TestCaseData[] OptimizationParameter2D => new[]{
+            private static TestCaseData[] OptimizationStepParameter2D => new[]{
                 new TestCaseData(new decimal[,] {{10, 100, 1}, {20, 200, 1}}),
                 new TestCaseData(new decimal[,] {{10.5m, 100.5m, 1.5m}, { 20m, 209.9m, 3.5m}}),
                 new TestCaseData(new decimal[,] {{ -10.5m, 0m, -1.5m }, { -209.9m, -20m, -3.5m } }),
                 new TestCaseData(new decimal[,] {{ 10.5m, 0m, 1.5m }, { 209.9m, -20m, -3.5m } })
             };
 
-            [Test, TestCaseSource(nameof(OptimizationParameter2D))]
+            [Test, TestCaseSource(nameof(OptimizationStepParameter2D))]
             public void Step2D(decimal[,] data)
             {
                 var args = new HashSet<OptimizationParameter>()
                 {
-                    new OptimizationParameter("ema-fast", data[0,0], data[0,1], data[0,2]),
-                    new OptimizationParameter("ema-slow", data[1,0], data[1,1], data[1,2])
+                    new OptimizationStepParameter("ema-fast", data[0,0], data[0,1], data[0,2]),
+                    new OptimizationStepParameter("ema-slow", data[1,0], data[1,1], data[1,2])
                 };
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new OptimizationStrategySettings());
                 var counter = 0;
@@ -356,8 +357,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                     _strategy.PushNewResults(OptimizationResult.Initial);
 
-                    var fastParam = args.First(arg => arg.Name == "ema-fast");
-                    var slowParam = args.First(arg => arg.Name == "ema-slow");
+                    var fastParam = args.First(arg => arg.Name == "ema-fast") as OptimizationStepParameter;
+                    var slowParam = args.First(arg => arg.Name == "ema-slow") as OptimizationStepParameter;
                     for (var fast = fastParam.MinValue; fast <= fastParam.MaxValue; fast += fastParam.Step)
                     {
                         for (var slow = slowParam.MinValue; slow <= slowParam.MaxValue; slow += slowParam.Step)
@@ -381,7 +382,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 Assert.Greater(counter, 0);
 
                 var total = 1m;
-                foreach (var arg in args)
+                foreach (var arg in args.Cast<OptimizationStepParameter>())
                 {
                     total *= Math.Floor((arg.MaxValue - arg.MinValue) / arg.Step) + 1;
                 }
@@ -389,18 +390,18 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 Assert.AreEqual(total, counter);
             }
 
-            [Test, TestCaseSource(nameof(OptimizationParameter2D))]
+            [Test, TestCaseSource(nameof(OptimizationStepParameter2D))]
             public void Estimate2D(decimal[,] data)
             {
                 var args = new HashSet<OptimizationParameter>()
                 {
-                    new OptimizationParameter("ema-fast", data[0,0], data[0,1], data[0,2]),
-                    new OptimizationParameter("ema-slow", data[1,0], data[1,1], data[1,2])
+                    new OptimizationStepParameter("ema-fast", data[0,0], data[0,1], data[0,2]),
+                    new OptimizationStepParameter("ema-slow", data[1,0], data[1,1], data[1,2])
                 };
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new OptimizationStrategySettings());
 
                 var total = 1m;
-                foreach (var arg in args)
+                foreach (var arg in args.Cast<OptimizationStepParameter>())
                 {
                     total *= Math.Floor((arg.MaxValue - arg.MinValue) / arg.Step) + 1;
                 }
@@ -413,9 +414,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             {
                 var args = new HashSet<OptimizationParameter>()
                 {
-                    new OptimizationParameter("ema-fast", 10, 100, 1),
-                    new OptimizationParameter("ema-slow", 20, 200, 4),
-                    new OptimizationParameter("ema-custom", 30, 300, 2)
+                    new OptimizationStepParameter("ema-fast", 10, 100, 1),
+                    new OptimizationStepParameter("ema-slow", 20, 200, 4),
+                    new OptimizationStepParameter("ema-custom", 30, 300, 2)
                 };
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), null, args, new OptimizationStrategySettings());
                 var counter = 0;
@@ -429,9 +430,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                     _strategy.PushNewResults(OptimizationResult.Initial);
 
-                    var fastParam = args.First(arg => arg.Name == "ema-fast");
-                    var slowParam = args.First(arg => arg.Name == "ema-slow");
-                    var customParam = args.First(arg => arg.Name == "ema-custom");
+                    var fastParam = args.First(arg => arg.Name == "ema-fast") as OptimizationStepParameter;
+                    var slowParam = args.First(arg => arg.Name == "ema-slow") as OptimizationStepParameter;
+                    var customParam = args.First(arg => arg.Name == "ema-custom") as OptimizationStepParameter;
                     for (var fast = fastParam.MinValue; fast <= fastParam.MaxValue; fast += fastParam.Step)
                     {
                         for (var slow = slowParam.MinValue; slow <= slowParam.MaxValue; slow += slowParam.Step)
@@ -459,7 +460,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 Assert.Greater(counter, 0);
 
                 var total = 1m;
-                foreach (var arg in args)
+                foreach (var arg in args.Cast<OptimizationStepParameter>())
                 {
                     total *= (arg.MaxValue - arg.MinValue) / arg.Step + 1;
                 }
@@ -472,14 +473,14 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             {
                 var args = new HashSet<OptimizationParameter>()
                 {
-                    new OptimizationParameter("ema-fast", 10, 100, 1),
-                    new OptimizationParameter("ema-slow", 20, 200, 4),
-                    new OptimizationParameter("ema-custom", 30, 300, 2)
+                    new OptimizationStepParameter("ema-fast", 10, 100, 1),
+                    new OptimizationStepParameter("ema-slow", 20, 200, 4),
+                    new OptimizationStepParameter("ema-custom", 30, 300, 2)
                 };
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), null, args, new OptimizationStrategySettings());
                 
                 var total = 1m;
-                foreach (var arg in args)
+                foreach (var arg in args.Cast<OptimizationStepParameter>())
                 {
                     total *= (arg.MaxValue - arg.MinValue) / arg.Step + 1;
                 }
@@ -495,7 +496,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                 for (int i = 0; i < depth; i++)
                 {
-                    args.Add(new OptimizationParameter($"ema-{i}", 10, 100, 1));
+                    args.Add(new OptimizationStepParameter($"ema-{i}", 10, 100, 1));
                 }
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new OptimizationStrategySettings());
 
@@ -526,7 +527,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                 var set = new HashSet<OptimizationParameter>()
                 {
-                    new OptimizationParameter("ema-fast", 10, 100, 1)
+                    new OptimizationStepParameter("ema-fast", 10, 100, 1)
                 };
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), null, set, new OptimizationStrategySettings());
 

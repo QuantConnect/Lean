@@ -42,8 +42,8 @@ namespace QuantConnect.Optimizer.Launcher
                     Criterion = JsonConvert.DeserializeObject<Target>(Config.Get("optimization-criterion", "{\"target\":\"Statistics.TotalProfit\", \"extremum\": \"max\"}")),
                     Constraints = JsonConvert.DeserializeObject<List<Constraint>>(Config.Get("constraints", "[]")).AsReadOnly(),
                     OptimizationParameters =
-                        JsonConvert.DeserializeObject<Dictionary<string, JObject>>(Config.Get("parameters", "{}"))
-                        .Select(OptimizationParameter.Build)
+                        JsonConvert.DeserializeObject<Dictionary<string, OptimizationParameter>>(Config.Get("parameters", "{}"))
+                        .Select(s => s.Value)
                         .ToHashSet(),
                     MaximumConcurrentBacktests = Config.GetInt("maximum-concurrent-backtests", Environment.ProcessorCount / 2)
                 };

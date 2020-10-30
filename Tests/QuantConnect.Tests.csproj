@@ -769,6 +769,7 @@
     <Compile Include="Optimizer\LeanOptimizerTests.cs" />
     <Compile Include="Optimizer\Models.cs" />
     <Compile Include="Optimizer\OptimizationNodePacketTests.cs" />
+    <Compile Include="Optimizer\OptimizationParameterTests.cs" />
     <Compile Include="Optimizer\Strategies\GridSearchOptimizationStrategyTests.cs" />
     <Compile Include="Optimizer\ConstraintTests.cs" />
     <Compile Include="Optimizer\TargetTests.cs" />

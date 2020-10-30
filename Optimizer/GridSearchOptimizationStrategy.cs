@@ -65,7 +65,7 @@ namespace QuantConnect.Optimizer
         public override int GetTotalBacktestEstimate()
         {
             int total = 1;
-            foreach (var arg in OptimizationParameters)
+            foreach (var arg in OptimizationParameters.Cast<OptimizationStepParameter>())
             {
                 total *= (int)Math.Floor((arg.MaxValue - arg.MinValue) / arg.Step) + 1;
             }

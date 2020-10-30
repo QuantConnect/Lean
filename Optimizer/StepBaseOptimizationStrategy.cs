@@ -135,7 +135,7 @@ namespace QuantConnect.Optimizer
         {
             if (args.Count == 1)
             {
-                var d = args.Dequeue();
+                var d = args.Dequeue() as OptimizationStepParameter;
                 for (var value = d.MinValue; value <= d.MaxValue; value += d.Step)
                 {
                     yield return new Dictionary<string, decimal>()
@@ -146,7 +146,7 @@ namespace QuantConnect.Optimizer
                 yield break;
             }
 
-            var d2 = args.Dequeue();
+            var d2 = args.Dequeue() as OptimizationStepParameter;
             for (var value = d2.MinValue; value <= d2.MaxValue; value += d2.Step)
             {
                 foreach (var inner in Recursive(seed, new Queue<OptimizationParameter>(args)))

@@ -51,7 +51,7 @@
     "ema-slow": {
       "min": 10,
       "max": 50,
-      "step": 10
+      "step": 10,
       
       // optional
       "min-step": 0.5
@@ -59,7 +59,7 @@
     "ema-fast": {
       "min": 50,
       "max": 150,
-      "step": 50
+      "step": 50,
 
       // optional
       "min-step": 0.0001
