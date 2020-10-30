@@ -959,7 +959,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new ArgumentException("Expected order with populated BrokerId for updating orders.");
             }
 
-            _requestInformation[ibOrderId] = $"[Id={ibOrderId}] IBPlaceOrder: {order.Symbol.Value} ({contract})";
+            _requestInformation[ibOrderId] = $"[Id={ibOrderId}] IBPlaceOrder: {order.Symbol.Value} ({GetContractDescription(contract)} )";
 
             CheckRateLimiting();
 
@@ -976,7 +976,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private static string GetUniqueKey(Contract contract)
         {
-            return $"{contract} {contract.LastTradeDateOrContractMonth.ToStringInvariant()} {contract.Strike.ToStringInvariant()} {contract.Right}";
+            return $"{contract.ToString().ToUpperInvariant()} {contract.LastTradeDateOrContractMonth.ToStringInvariant()} {contract.Strike.ToStringInvariant()} {contract.Right}";
+        }
+
+        private static string GetContractDescription(Contract contract)
+        {
+            return $"{contract} {contract.PrimaryExch ?? string.Empty} {contract.LastTradeDateOrContractMonth.ToStringInvariant()} {contract.Strike.ToStringInvariant()} {contract.Right}";
         }
 
         private string GetPrimaryExchange(Contract contract, Symbol symbol)
@@ -1037,8 +1042,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             const int timeout = 60; // sec
 
-            ContractDetails details = null;
             var requestId = GetNextId();
+
+            var contractDetailsList = new List<ContractDetails>();
+
+            Log.Trace($"InteractiveBrokersBrokerage.GetContractDetails(): {symbol.Value} ({contract})");
 
             _requestInformation[requestId] = $"[Id={requestId}] GetContractDetails: {symbol.Value} ({contract})";
 
@@ -1048,12 +1056,26 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             EventHandler<IB.ContractDetailsEventArgs> clientOnContractDetails = (sender, args) =>
             {
                 // ignore other requests
-                if (args.RequestId != requestId) return;
-                details = args.ContractDetails;
-                var uniqueKey = GetUniqueKey(contract);
+                if (args.RequestId != requestId)
+                {
+                    return;
+                }
+
+                var details = args.ContractDetails;
+                contractDetailsList.Add(details);
+
+                var uniqueKey = GetUniqueKey(details.Contract);
                 _contractDetails.TryAdd(uniqueKey, details);
-                manualResetEvent.Set();
-                Log.Trace("InteractiveBrokersBrokerage.GetContractDetails(): clientOnContractDetails event: " + uniqueKey);
+
+                Log.Trace($"InteractiveBrokersBrokerage.GetContractDetails(): clientOnContractDetails event: {uniqueKey}");
+            };
+
+            EventHandler<IB.RequestEndEventArgs> clientOnContractDetailsEnd = (sender, args) =>
+            {
+                if (args.RequestId == requestId)
+                {
+                    manualResetEvent.Set();
+                }
             };
 
             EventHandler<IB.ErrorEventArgs> clientOnError = (sender, args) =>
@@ -1065,6 +1087,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             };
 
             _client.ContractDetails += clientOnContractDetails;
+            _client.ContractDetailsEnd += clientOnContractDetailsEnd;
             _client.Error += clientOnError;
 
             CheckRateLimiting();
@@ -1079,9 +1102,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // be sure to remove our event handlers
             _client.Error -= clientOnError;
+            _client.ContractDetailsEnd -= clientOnContractDetailsEnd;
             _client.ContractDetails -= clientOnContractDetails;
 
-            return details;
+            Log.Trace($"InteractiveBrokersBrokerage.GetContractDetails(): contracts found: {contractDetailsList.Count}");
+
+            return contractDetailsList.FirstOrDefault();
         }
 
         private string GetFuturesContractExchange(Contract contract, string ticker)
@@ -1104,7 +1130,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             var requestId = GetNextId();
 
-            _requestInformation[requestId] = $"[Id={requestId}] FindContracts: {ticker} ({contract})";
+            _requestInformation[requestId] = $"[Id={requestId}] FindContracts: {ticker} ({GetContractDescription(contract)})";
 
             var manualResetEvent = new ManualResetEvent(false);
             var contractDetails = new List<ContractDetails>();
@@ -2103,7 +2129,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 default:
                     throw new NotSupportedException(
-                        $"An existing position or open order for an unsupported security type was found: {contract}. " +
+                        $"An existing position or open order for an unsupported security type was found: {GetContractDescription(contract)}. " +
                         "Please manually close the position or cancel the order before restarting the algorithm.");
             }
         }
@@ -2311,7 +2337,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             var id = GetNextId();
                             var contract = CreateContract(subscribeSymbol, false);
 
-                            _requestInformation[id] = $"[Id={id}] Subscribe: {symbol.Value} ({contract})";
+                            _requestInformation[id] = $"[Id={id}] Subscribe: {symbol.Value} ({GetContractDescription(contract)})";
 
                             CheckRateLimiting();
 
@@ -2331,7 +2357,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             _subscribedSymbols[symbol] = id;
                             _subscribedTickers[id] = new SubscriptionEntry { Symbol = subscribeSymbol };
 
-                            Log.Trace($"InteractiveBrokersBrokerage.Subscribe(): Subscribe Processed: {symbol.Value} ({contract}) # {id}");
+                            Log.Trace($"InteractiveBrokersBrokerage.Subscribe(): Subscribe Processed: {symbol.Value} ({GetContractDescription(contract)}) # {id}");
                             return true;
                         }
                     }
@@ -2819,7 +2845,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var startTime = request.Resolution == Resolution.Daily ? request.StartTimeUtc.Date : request.StartTimeUtc;
             var endTime = request.Resolution == Resolution.Daily ? request.EndTimeUtc.Date : request.EndTimeUtc;
 
-            Log.Trace($"InteractiveBrokersBrokerage::GetHistory(): Submitting request: {request.Symbol.Value} ({contract}): {request.Resolution}/{request.TickType} {startTime} UTC -> {endTime} UTC");
+            Log.Trace($"InteractiveBrokersBrokerage::GetHistory(): Submitting request: {request.Symbol.Value} ({GetContractDescription(contract)}): {request.Resolution}/{request.TickType} {startTime} UTC -> {endTime} UTC");
 
             DateTimeZone exchangeTimeZone;
             if (!_symbolExchangeTimeZones.TryGetValue(request.Symbol, out exchangeTimeZone))
@@ -2864,7 +2890,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 yield return bar;
             }
 
-            Log.Trace($"InteractiveBrokersBrokerage::GetHistory(): Download completed: {request.Symbol.Value} ({contract})");
+            Log.Trace($"InteractiveBrokersBrokerage::GetHistory(): Download completed: {request.Symbol.Value} ({GetContractDescription(contract)})");
         }
 
         private IEnumerable<TradeBar> GetHistory(
@@ -2892,7 +2918,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var historyPiece = new List<TradeBar>();
                 var historicalTicker = GetNextId();
 
-                _requestInformation[historicalTicker] = $"[Id={historicalTicker}] GetHistory: {request.Symbol.Value} ({contract})";
+                _requestInformation[historicalTicker] = $"[Id={historicalTicker}] GetHistory: {request.Symbol.Value} ({GetContractDescription(contract)})";
 
                 EventHandler<IB.HistoricalDataEventArgs> clientOnHistoricalData = (sender, args) =>
                 {
