@@ -2833,7 +2833,7 @@ namespace QuantConnect
             switch (symbol.ID.SecurityType)
             {
                 case SecurityType.Future:
-                    return symbol.ID.Date;
+                    return symbol.ID.Date == SecurityIdentifier.DefaultDate ? Time.EndOfTime : symbol.ID.Date;
                 case SecurityType.Option:
                     return OptionSymbol.GetLastDayOfTrading(symbol);
                 case SecurityType.FutureOption:
