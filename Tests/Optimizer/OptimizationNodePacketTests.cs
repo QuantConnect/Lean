@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Optimizer
                 },
                 OptimizationParameters = new HashSet<OptimizationParameter>()
                 {
-                    new OptimizationStepParameter("ema-slow", 1, 100, 1),
+                    new OptimizationStepParameter("ema-slow", 1, 100, 1m),
                     new OptimizationStepParameter("ema-fast", -10, 0, 0.5m),
                     new OptimizationStepParameter("ema-medium", -10, 0, -0.5m),
                 },
@@ -94,7 +94,7 @@ namespace QuantConnect.Tests.Optimizer
         [Test]
         public void FromJson()
         {
-            var json = "{\"OptimizationStepParameters\": [{\"Name\":\"sleep-ms\",\"min\":0,\"max\":0,\"Step\":1}," +
+            var json = "{\"OptimizationParameters\": [{\"Name\":\"sleep-ms\",\"min\":0,\"max\":0,\"Step\":1}," +
                        "{\"Name\":\"total-trades\",\"min\":0,\"max\":2,\"Step\":1}]," +
                        "\"criterion\": {\"extremum\" : \"min\",\"target\": \"Statistics.Sharpe Ratio\",\"target-value\": 10}," +
                        "\"constraints\": [{\"target\": \"Statistics.Sharpe Ratio\",\"operator\": \"equals\",\"target-value\": 11}]}";

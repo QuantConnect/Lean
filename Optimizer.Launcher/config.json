@@ -47,16 +47,18 @@
   //"maximum-concurrent-backtests": 10,
 
   // optimization parameters
-  "parameters": {
-    "ema-slow": {
+  "parameters": [
+    {
+      "name": "ema-slow",
       "min": 10,
       "max": 50,
       "step": 10,
-      
+
       // optional
       "min-step": 0.5
     },
-    "ema-fast": {
+    {
+      "name": "ema-fast",
       "min": 50,
       "max": 150,
       "step": 50,
@@ -64,5 +66,5 @@
       // optional
       "min-step": 0.0001
     }
-  }
+  ]
 }

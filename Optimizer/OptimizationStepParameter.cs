@@ -49,53 +49,6 @@ namespace QuantConnect.Optimizer
         [JsonProperty("min-step")]
         public decimal MinStep { get; }
 
-        //public static OptimizationParameter Build(KeyValuePair<string, JObject> parameterJson)
-        //{
-        //    var parameterName = parameterJson.Key;
-        //    var parameterSettings = parameterJson.Value;
-        //    var stepToken = parameterSettings.SelectToken("step");
-        //    var minStepToken = parameterSettings.SelectToken("min-step");
-
-        //    OptimizationParameter optimizationParameter = null;
-        //    if (stepToken != null && minStepToken != null)
-        //    {
-        //        optimizationParameter = new OptimizationParameter(
-        //            parameterName,
-        //            parameterSettings.Value<decimal>("min"),
-        //            parameterSettings.Value<decimal>("max"),
-        //            stepToken.Value<decimal>(),
-        //            minStepToken.Value<decimal>());
-        //    }
-        //    else if (stepToken != null)
-        //    {
-        //        optimizationParameter = new OptimizationParameter(
-        //            parameterName,
-        //            parameterSettings.Value<decimal>("min"),
-        //            parameterSettings.Value<decimal>("max"),
-        //            stepToken.Value<decimal>());
-        //    }
-
-        //    return optimizationParameter;
-        //}
-
-
-        /// <summary>
-        /// Create an instance of <see cref="OptimizationParameter"/> based on configuration
-        /// </summary>
-        /// <param name="name">parameter name</param>
-        /// <param name="min">minimal value</param>
-        /// <param name="max">maximal value</param>
-        /// <param name="numberOfSegments">maximal value, should be positive</param>
-        public OptimizationStepParameter(string name, decimal min, decimal max, int numberOfSegments) : base(name)
-        {
-            MinValue = Math.Min(min, max);
-            MaxValue = Math.Max(min, max);
-
-            numberOfSegments = numberOfSegments == 0 ? 0 : 1;
-            MinStep = (MaxValue - MinValue) / numberOfSegments;
-            Step = (MaxValue - MinValue) / (10 * numberOfSegments);
-        }
-
         /// <summary>
         /// Create an instance of <see cref="OptimizationParameter"/> based on configuration
         /// </summary>

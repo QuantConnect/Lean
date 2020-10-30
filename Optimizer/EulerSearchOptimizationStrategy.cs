@@ -26,7 +26,6 @@ namespace QuantConnect.Optimizer
     public class EulerSearchOptimizationStrategy : StepBaseOptimizationStrategy
     {
         private object _locker = new object();
-        private readonly decimal eps = 0.001m;
         private readonly HashSet<ParameterSet> _runningParameterSet = new HashSet<ParameterSet>();
         private int _segmentsAmount = 4;
 
@@ -68,7 +67,7 @@ namespace QuantConnect.Optimizer
                     return;
                 }
 
-                if (Target.Current.HasValue && OptimizationParameters.OfType<OptimizationStepParameter>().Any(s => s.Step > eps))
+                if (Target.Current.HasValue && OptimizationParameters.OfType<OptimizationStepParameter>().Any(s => s.Step > s.MinStep))
                 {
                     var boundaries = new HashSet<OptimizationParameter>();
                     var parameterSet = Solution.ParameterSet;

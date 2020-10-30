@@ -106,8 +106,8 @@ namespace QuantConnect.Tests.Optimizer
                 Criterion = new Target("Profit", new Maximization(), null),
                 OptimizationParameters = new HashSet<OptimizationParameter>
                 {
-                    new OptimizationStepParameter("ema-slow", 1, 10, 1),
-                    new OptimizationStepParameter("ema-fast", 10, 100, 3)
+                    new OptimizationStepParameter("ema-slow", 1, 10, 1m),
+                    new OptimizationStepParameter("ema-fast", 10, 100, 3m)
                 },
                 Constraints = new List<Constraint>
                 {

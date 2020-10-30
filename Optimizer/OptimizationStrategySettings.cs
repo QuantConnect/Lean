@@ -26,6 +26,6 @@ namespace QuantConnect.Optimizer
         /// For Euler strategy defines the default number of segments for the next step
         /// </summary>
         [JsonProperty("default-segment-amount")]
-        public int DefaultSegmentAmount { get; }
+        public int DefaultSegmentAmount { get; set; }
     }
 }

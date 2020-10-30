@@ -16,6 +16,7 @@
 
 
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Optimizer;
@@ -26,61 +27,230 @@ namespace QuantConnect.Tests.Optimizer
     public class OptimizationParameterTests
     {
         [TestFixture]
-        public class Step
+        public class StepParameter
         {
             private static TestCaseData[] OptimizationParameters => new[]
             {
-                new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100, 1m))
+                new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100, 1m)),
+                new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100, 1m, 0.0005m))
             };
 
             [Test, TestCaseSource(nameof(OptimizationParameters))]
             public void Serialize(OptimizationStepParameter parameterSet)
             {
                 var json = JsonConvert.SerializeObject(parameterSet);
-                var optimizationParameters = JsonConvert.DeserializeObject<Dictionary<string, OptimizationParameter>>(json);
+                var optimizationParameter = JsonConvert.DeserializeObject<OptimizationParameter>(json) as OptimizationStepParameter;
+
+                Assert.NotNull(optimizationParameter);
+                Assert.AreEqual(parameterSet.Name, optimizationParameter.Name);
+                Assert.AreEqual(parameterSet.MinValue, optimizationParameter.MinValue);
+                Assert.AreEqual(parameterSet.MaxValue, optimizationParameter.MaxValue);
+                Assert.AreEqual(parameterSet.Step, optimizationParameter.Step);
+                Assert.AreEqual(parameterSet.MinStep, optimizationParameter.MinStep);
+            }
+
+            [Test, TestCaseSource(nameof(OptimizationParameters))]
+            public void SerializeCollection(OptimizationStepParameter parameterSet)
+            {
+                var json = JsonConvert.SerializeObject(new[] { parameterSet as OptimizationParameter });
+                var optimizationParameters = JsonConvert.DeserializeObject<List<OptimizationParameter>>(json);
 
                 Assert.AreEqual(1, optimizationParameters.Count);
-                Assert.Contains(parameterSet.Name, optimizationParameters.Keys);
 
-                var parsed = optimizationParameters[parameterSet.Name] as OptimizationStepParameter;
+                var parsed = optimizationParameters[0] as OptimizationStepParameter;
                 Assert.NotNull(parsed);
                 Assert.AreEqual(parameterSet.Name, parsed.Name);
                 Assert.AreEqual(parameterSet.MinValue, parsed.MinValue);
                 Assert.AreEqual(parameterSet.MaxValue, parsed.MaxValue);
                 Assert.AreEqual(parameterSet.Step, parsed.Step);
+                Assert.AreEqual(parameterSet.MinStep, parsed.MinStep);
 
             }
 
             [Test]
-            public void Deserialize()
+            public void DeserializeSingle()
             {
-                var json = @"{
-                    ""ema-slow"": {
-                        ""min"": 10,
-                        ""max"": 50,
-                        ""step"": 10,
-                        
-                        // optional
-                        ""min-step"": 0.5
-                    },
-                    ""ema-fast"": {
+                var json = @"
+                    {
+                        ""name"":""ema-fast"",
                         ""min"": 50,
                         ""max"": 150,
                         ""step"": 50,
+                    }";
 
-                        // optional
-                        ""min-step"": 0.0001
-                    }
-                }";
+                var optimizationParameter = JsonConvert.DeserializeObject<OptimizationParameter>(json) as OptimizationStepParameter;
 
-                var optimizationParameters = JsonConvert.DeserializeObject<Dictionary<string, OptimizationParameter>>(json);
+                Assert.NotNull(optimizationParameter);
+                Assert.AreEqual("ema-fast", optimizationParameter.Name);
+                Assert.AreEqual(50, optimizationParameter.MinValue);
+                Assert.AreEqual(150, optimizationParameter.MaxValue);
+                Assert.AreEqual(50, optimizationParameter.Step);
+                Assert.AreEqual(50, optimizationParameter.MinStep);
+            }
+
+            [Test]
+            public void DeserializeSingleCaseInsensitive()
+            {
+                var json = @"
+                    {
+                        ""Name"":""ema-fast"",
+                        ""mIn"": 50,
+                        ""maX"": 150,
+                        ""STEP"": 50,
+                    }";
+
+                var optimizationParameter = JsonConvert.DeserializeObject<OptimizationParameter>(json) as OptimizationStepParameter;
+
+                Assert.NotNull(optimizationParameter);
+                Assert.AreEqual("ema-fast", optimizationParameter.Name);
+                Assert.AreEqual(50, optimizationParameter.MinValue);
+                Assert.AreEqual(150, optimizationParameter.MaxValue);
+                Assert.AreEqual(50, optimizationParameter.Step);
+            }
+
+            [Test]
+            public void DeserializeSingleWithOptional()
+            {
+                var json = @"
+                    {
+                        ""name"":""ema-fast"",
+                        ""min"": 50,
+                        ""max"": 150,
+                        ""step"": 50,
+                        ""min-step"": 0.001
+                    }";
+
+                var optimizationParameter = JsonConvert.DeserializeObject<OptimizationParameter>(json) as OptimizationStepParameter;
+
+                Assert.NotNull(optimizationParameter);
+                Assert.AreEqual("ema-fast", optimizationParameter.Name);
+                Assert.AreEqual(50, optimizationParameter.MinValue);
+                Assert.AreEqual(150, optimizationParameter.MaxValue);
+                Assert.AreEqual(50, optimizationParameter.Step);
+                Assert.AreEqual(0.001, optimizationParameter.MinStep);
+            }
+
+            [Test]
+            public void DeserializeCollection()
+            {
+                var json = @"[
+                    {
+                        ""name"":""ema-fast"",
+                        ""min"": 50,
+                        ""max"": 150,
+                        ""step"": 50,
+                    },{
+                        ""name"":""ema-slow"",
+                        ""min"": 50,
+                        ""max"": 250,
+                        ""step"": 10,
+                    }]";
+
+                var optimizationParameters = JsonConvert.DeserializeObject<List<OptimizationParameter>>(json)
+                    .OfType<OptimizationStepParameter>()
+                    .ToList();
 
                 Assert.AreEqual(2, optimizationParameters.Count);
-                foreach (var entry in optimizationParameters)
-                {
-                    Assert.IsInstanceOf<OptimizationStepParameter>(entry.Value);
-                    Assert.AreEqual(entry.Key, entry.Value.Name);
-                }
+                
+                Assert.AreEqual("ema-fast", optimizationParameters[0].Name);
+                Assert.AreEqual(50, optimizationParameters[0].MinValue);
+                Assert.AreEqual(150, optimizationParameters[0].MaxValue);
+                Assert.AreEqual(50, optimizationParameters[0].Step);
+                Assert.AreEqual("ema-slow", optimizationParameters[1].Name);
+                Assert.AreEqual(50, optimizationParameters[1].MinValue);
+                Assert.AreEqual(250, optimizationParameters[1].MaxValue);
+                Assert.AreEqual(10, optimizationParameters[1].Step);
+            }
+        }
+
+        [TestFixture]
+        public class ArrayParameter
+        {
+            private static TestCaseData[] OptimizationParameters => new[]
+            {
+                new TestCaseData(new OptimizationArrayParameter("ema-fast", new[]{"1", "2", "3"}))
+            };
+
+            [Test, TestCaseSource(nameof(OptimizationParameters))]
+            public void Serialize(OptimizationArrayParameter parameterSet)
+            {
+                var json = JsonConvert.SerializeObject(parameterSet);
+                var optimizationParameter = JsonConvert.DeserializeObject<OptimizationParameter>(json) as OptimizationArrayParameter;
+
+                Assert.NotNull(optimizationParameter);
+                Assert.AreEqual(parameterSet.Name, optimizationParameter.Name);
+                Assert.AreEqual(parameterSet.Values, optimizationParameter.Values);
+            }
+
+            [Test, TestCaseSource(nameof(OptimizationParameters))]
+            public void SerializeCollection(OptimizationArrayParameter parameterSet)
+            {
+                var json = JsonConvert.SerializeObject(new[] { parameterSet as OptimizationParameter });
+                var optimizationParameters = JsonConvert.DeserializeObject<List<OptimizationParameter>>(json);
+
+                Assert.AreEqual(1, optimizationParameters.Count);
+
+                var parsed = optimizationParameters[0] as OptimizationArrayParameter;
+                Assert.NotNull(parsed);
+                Assert.AreEqual(parameterSet.Name, parsed.Name);
+                Assert.AreEqual(parameterSet.Values, parsed.Values);
+
+            }
+
+            [Test]
+            public void DeserializeSingle()
+            {
+                var json = @"
+                    {
+                        ""name"":""ema-fast"",
+                        ""values"": [""a"",""b"",""c"",""d""]
+                    }";
+
+                var optimizationParameter = JsonConvert.DeserializeObject<OptimizationParameter>(json) as OptimizationArrayParameter;
+
+                Assert.NotNull(optimizationParameter);
+                Assert.AreEqual("ema-fast", optimizationParameter.Name);
+                Assert.AreEqual(new[] { "a", "b", "c", "d" }, optimizationParameter.Values);
+            }
+
+            [Test]
+            public void DeserializeSingleCaseInsenssitive()
+            {
+                var json = @"
+                    {
+                        ""name"":""ema-fast"",
+                        ""VALUES"": [""a"",""b"",""c"",""d""]
+                    }";
+
+                var optimizationParameter = JsonConvert.DeserializeObject<OptimizationParameter>(json) as OptimizationArrayParameter;
+
+                Assert.NotNull(optimizationParameter);
+                Assert.AreEqual("ema-fast", optimizationParameter.Name);
+                Assert.AreEqual(new[] { "a", "b", "c", "d" }, optimizationParameter.Values);
+            }
+
+            [Test]
+            public void DeserializeCollection()
+            {
+                var json = @"[
+                    {
+                        ""name"":""ema-fast"",
+                        ""values"": [""a"",""b"",""c"",""d""]
+                    },{
+                        ""name"":""ema-slow"",
+                        ""values"": [""1"",""2"",""3"",""4""]
+                    }]";
+
+                var optimizationParameters = JsonConvert.DeserializeObject<List<OptimizationParameter>>(json)
+                    .OfType<OptimizationArrayParameter>()
+                    .ToList();
+
+                Assert.AreEqual(2, optimizationParameters.Count);
+
+                Assert.AreEqual("ema-fast", optimizationParameters[0].Name);
+                Assert.AreEqual(new[] { "a", "b", "c", "d" }, optimizationParameters[0].Values);
+                Assert.AreEqual("ema-slow", optimizationParameters[1].Name);
+                Assert.AreEqual(new[] { "1", "2", "3", "4" }, optimizationParameters[1].Values);
             }
         }
     }

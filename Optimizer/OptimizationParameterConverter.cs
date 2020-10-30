@@ -14,12 +14,9 @@
 */
 
 using Newtonsoft.Json;
-using System;
-using System.CodeDom;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer
 {
@@ -28,48 +25,11 @@ namespace QuantConnect.Optimizer
     /// </summary>
     public class OptimizationParameterConverter : JsonConverter
     {
+        public override bool CanWrite => false;
+
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var optimizationParameter = value as OptimizationParameter;
-            if (ReferenceEquals(optimizationParameter, null))
-            {
-                writer.WriteNull(); 
-                return;
-            }
-
-            var master = new JObject();
-
-            var type = value.GetType();
-            var namProperty = type.GetProperties().FirstOrDefault(s =>
-                string.Equals(s.Name, "name", StringComparison.OrdinalIgnoreCase));
-
-            if (namProperty != null)
-            {
-                var name = namProperty.GetValue(value, null);
-                if (name != null)
-                {
-                    var jo = new JObject();
-                    master.Add(Convert.ToString(name), jo);
-
-                    foreach (var property in type.GetProperties())
-                    {
-                        if (property.CanRead && !string.Equals(property.Name, "name", StringComparison.OrdinalIgnoreCase))
-                        {
-                            var attribute = property.GetCustomAttribute<JsonPropertyAttribute>();
-                            var propertyName = attribute != null
-                                ? attribute.PropertyName
-                                : property.Name;
-                            var propertyValue = property.GetValue(value, null);
-                            if (propertyValue != null)
-                            {
-                                jo.Add(propertyName, JToken.FromObject(propertyValue, serializer));
-                            }
-                        }
-                    }
-
-                    master.WriteTo(writer);
-                }
-            }
+            throw new NotImplementedException("Not necessary because we use standard serializer");
         }
 
         public override object ReadJson(
@@ -79,25 +39,53 @@ namespace QuantConnect.Optimizer
             JsonSerializer serializer
             )
         {
-            var parameterName = reader.Path;
-            JToken token;
-            switch (reader.TokenType)
+            JObject token = JObject.Load(reader);
+            var parameterName = token.GetValue("name", StringComparison.OrdinalIgnoreCase)?.Value<string>();
+            if (string.IsNullOrEmpty(parameterName))
             {
-                case JsonToken.StartArray:
-                    token = JToken.Load(reader);
-                    List<string> items = token.ToObject<List<string>>();
-                    return new OptimizationArrayParameter(parameterName,
-                        items);
-                case JsonToken.StartObject:
-                    token = JToken.Load(reader);
-                    return new OptimizationStepParameter(parameterName,
-                        token.Value<decimal>("min"),
-                        token.Value<decimal>("max"),
-                        token.Value<decimal>("step"));
-                default:
-                    throw new ArgumentException(
-                        $"Optimization parameters of type {reader.TokenType} are not currently supported.");
+                throw new ArgumentException("Optimization parameter name is not specified.");
             }
+
+            JToken main;
+            if (token.TryGetValue("values", StringComparison.OrdinalIgnoreCase, out main))
+            {
+                return new OptimizationArrayParameter(parameterName,
+                    main.ToObject<List<string>>());
+            }
+            if (token.TryGetValue("step", StringComparison.OrdinalIgnoreCase, out main))
+            {
+                JToken minToken;
+                JToken maxToken;
+
+                if (!token.TryGetValue("min", StringComparison.OrdinalIgnoreCase, out minToken))
+                {
+                    throw new ArgumentException("Required optimization parameter property value 'min' is not specified");
+                }
+
+                if (!token.TryGetValue("max", StringComparison.OrdinalIgnoreCase, out maxToken))
+                {
+                    throw new ArgumentException("Required optimization parameter property value 'max' is not specified");
+                }
+                var minStepToken = token.GetValue("min-step", StringComparison.OrdinalIgnoreCase)?.Value<decimal>();
+                if (!minStepToken.HasValue)
+                {
+                    return new OptimizationStepParameter(parameterName,
+                        minToken.Value<decimal>(),
+                        maxToken.Value<decimal>(),
+                        main.Value<decimal>());
+                }
+                else
+                {
+                    return new OptimizationStepParameter(parameterName,
+                        minToken.Value<decimal>(),
+                        maxToken.Value<decimal>(),
+                        main.Value<decimal>(),
+                        minStepToken.Value);
+                }
+            }
+
+            throw new ArgumentException(
+                    "Optimization parameter are not currently supported.");
         }
 
         public override bool CanConvert(Type objectType) => typeof(OptimizationParameter).IsAssignableFrom(objectType);
