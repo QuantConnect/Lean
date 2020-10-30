@@ -35,11 +35,6 @@ from QuantConnect.Data import *
 from QuantConnect.Research import *
 from QuantConnect.Indicators import *
 
-# PythonNet work directory is the root of lean, need to point config to the right location
-import os
-currentDirectory = os.getcwd()
-Config.SetConfigurationFile("{0}/Launcher/config.json".format(currentDirectory))
-
 # Start an instance of an API class
 api = Api()
 api.Initialize(Config.GetInt("job-user-id", 1), 
