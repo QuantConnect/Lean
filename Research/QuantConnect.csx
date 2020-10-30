@@ -82,7 +82,7 @@ using QuantConnect.Securities.Interfaces;
 using QuantConnect.Configuration;
 
 // Loads up a connection to our API for use in the research environment
-public Api api = new Api();
+Api api = new Api();
 api.Initialize(Config.GetInt("job-user-id", 1), 
     Config.Get("api-access-token", "default"),
     Config.Get("data-folder"));
