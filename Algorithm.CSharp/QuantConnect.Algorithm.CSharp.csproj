@@ -400,6 +400,7 @@
     <Compile Include="Benchmarks\CoarseFineUniverseSelectionBenchmark.cs" />
     <Compile Include="Benchmarks\IndicatorRibbonBenchmark.cs" />
     <Compile Include="ZeroFeeRegressionAlgorithm.cs" />
+    <Compile Include="ZerodhaTestAlgorithm.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm.Framework\QuantConnect.Algorithm.Framework.csproj">

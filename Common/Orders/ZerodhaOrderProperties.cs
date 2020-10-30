@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,17 +13,17 @@
  * limitations under the License.
 */
 
-using System;
+
 using QuantConnect.Interfaces;
 
-namespace QuantConnect.Brokerages.Zerodha
+namespace QuantConnect.Orders
 {
+
     /// <summary>
-    /// ZerodhaBrokerage Brokerage - IHistoryProvider implementation
+    /// Contains additional properties and settings for an order submitted to Zerodha Brokerage
     /// </summary>
-    public partial class ZerodhaBrokerage : IHistoryProvider
+    public class ZerodhaOrderProperties : OrderProperties
     {
-        #region IHistoryProvider implementation
-        #endregion
+        
     }
 }
