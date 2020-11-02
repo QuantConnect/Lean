@@ -15,10 +15,14 @@
 */
 
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Accord.Math;
+using LaunchDarkly.EventSource;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Configuration;
@@ -28,6 +32,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.IEX;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -178,7 +183,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Thread.Sleep(20000);
 
-            iex.Unsubscribe(configs.First(c => string.Equals(c.Symbol.Value, "MBLY")));
+            iex.Unsubscribe(Enumerable.First(configs, c => string.Equals(c.Symbol.Value, "MBLY")));
 
             Console.WriteLine("Unsubscribing");
             Thread.Sleep(2000);
@@ -205,7 +210,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
-        public void IEXEventSourceCollectionSubscribes()
+        public void IEXEventSourceCollectionCanSubscribeManyTimes()
         {
             // Send few consecutive requests to subscribe to a large amount of symbols (after the first request to change the subscription)
             // and make sure no exception will be thrown - if event-source-collection can't subscribe to all it throws after timeout 
@@ -232,6 +237,59 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             });
         }
 
+        [Test]
+        public void IEXEventSourceCollectionSubscriptionThoroughTest()
+        {
+            using (var mockedEventsSource = new MockedIEXEventSourceCollection((o, args) => { }, _apiKey))
+            {
+                // -- 1 -- SUBSCRIBE FOR THE FIRST TIME --
+                var amount1 = 210;
+                var symbols1 = HardCodedSymbolsSNP.Take(amount1).ToArray();
+
+                mockedEventsSource.UpdateSubscription(symbols1);
+
+                var subscribed = mockedEventsSource.GetAllSubscribedSymbols().ToArray();
+                Assert.AreEqual(amount1, subscribed.Count());
+                Assert.IsTrue(subscribed.All(i => symbols1.Contains(i)));
+
+                Assert.AreEqual(5, mockedEventsSource.CreateNewSubscriptionCalledTimes);
+                Assert.AreEqual(0, mockedEventsSource.RemoveOldClientCalledTimes);
+
+                // Signal can be obtained
+                mockedEventsSource.TestCounter.Signal();
+                Assert.AreEqual(0, mockedEventsSource.TestCounter.CurrentCount);
+                mockedEventsSource.TestCounter.Reset(1);
+
+                // -- 2 -- SUBSCRIBE FOR THE SECOND TIME -- UPDATES SUBSCRIPTION --
+                mockedEventsSource.Reset();
+                var oldDict = mockedEventsSource.GetClientSymbolsDictCopy();
+
+                // Remove 3 elements with a step 50
+                var symbols2 = symbols1.RemoveAt(51).RemoveAt(101).RemoveAt(151);
+                mockedEventsSource.UpdateSubscription(symbols2);
+
+                // We removed three symbols, so three subscription became invalid
+                Assert.AreEqual(3, mockedEventsSource.RemoveOldClientCalledTimes);
+                // Two of old subscriptions were good, 3 new ones to be initiated to replace removed 
+                Assert.AreEqual(3, mockedEventsSource.CreateNewSubscriptionCalledTimes);
+
+                subscribed = mockedEventsSource.GetAllSubscribedSymbols().ToArray();
+                Assert.AreEqual(symbols2.Length, subscribed.Length);
+                Assert.IsTrue(subscribed.All(i => symbols2.Contains(i)));
+
+                mockedEventsSource.TestCounter.Signal();
+                Assert.AreEqual(0, mockedEventsSource.TestCounter.CurrentCount);
+                mockedEventsSource.TestCounter.Reset(1);
+
+                // Removed subscriptions had a symbol that was not in current subscription
+                mockedEventsSource.RemovedClients.DoForEach(removed =>
+                {
+                    var oldSubscrSymbols = oldDict[removed];
+                    Assert.IsFalse(oldSubscrSymbols.All(s => symbols2.Contains(s)));
+                });
+            }
+        }
+
         private SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
         {
             return new SubscriptionDataConfig(
@@ -243,6 +301,52 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 true,
                 true,
                 false);
+        }
+
+        public class MockedIEXEventSourceCollection : IEXEventSourceCollection
+        {
+            public CountdownEvent TestCounter => Counter;
+            public int CreateNewSubscriptionCalledTimes;
+            public int RemoveOldClientCalledTimes;
+            public List<EventSource> RemovedClients = new List<EventSource>();
+
+            public MockedIEXEventSourceCollection(EventHandler<MessageReceivedEventArgs> messageAction, string apiKey)
+                : base(messageAction, apiKey)
+            {
+            }
+
+            protected override EventSource CreateNewSubscription(string[] symbols)
+            {
+                CreateNewSubscriptionCalledTimes++;
+                // Decrement the counter
+                Counter.Signal();
+                return CreateNewClient(symbols);
+            }
+
+            protected override void RemoveOldClient(EventSource oldClient)
+            {
+                RemoveOldClientCalledTimes++;
+                RemovedClients.Add(oldClient);
+                // Call base class to remove from inner dictionary and dispose
+                base.RemoveOldClient(oldClient);
+            }
+
+            public IEnumerable<string> GetAllSubscribedSymbols()
+            {
+                return ClientSymbolsDictionary.Values.SelectMany(x => x);
+            }
+
+            public ConcurrentDictionary<EventSource, string[]> GetClientSymbolsDictCopy()
+            {
+                return new ConcurrentDictionary<EventSource, string[]>(ClientSymbolsDictionary);
+            }
+
+            public void Reset()
+            {
+                CreateNewSubscriptionCalledTimes = 0;
+                RemoveOldClientCalledTimes = 0;
+                RemovedClients.Clear();
+            }
         }
 
 
