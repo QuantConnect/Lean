@@ -416,6 +416,7 @@
     <Compile Include="Securities\ContractSecurityFilterUniverse.cs" />
     <Compile Include="Securities\Future\FutureSymbol.cs" />
     <Compile Include="Securities\Future\API\CMEOptionChainQuotes.cs" />
+    <Compile Include="Securities\Future\API\CMEOptionChainSettlements.cs" />
     <Compile Include="Securities\Future\API\CMEOptionsCategoryList.cs" />
     <Compile Include="Securities\Future\API\CMEProductSlateV2.cs" />
     <Compile Include="Securities\Future\FuturesOptionsGlobexSymbol.cs" />
@@ -905,6 +906,7 @@
     <Compile Include="Util\SeriesJsonConverter.cs" />
     <Compile Include="Util\StreamReaderEnumerable.cs" />
     <Compile Include="Util\StreamReaderExtensions.cs" />
+    <Compile Include="Util\StringDecimalJsonConverter.cs" />
     <Compile Include="Util\TypeChangeJsonConverter.cs" />
     <Compile Include="Util\LinqExtensions.cs" />
     <Compile Include="Util\MemoizingEnumerable.cs" />

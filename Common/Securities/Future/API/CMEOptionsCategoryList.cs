@@ -19,9 +19,10 @@ using Newtonsoft.Json;
 namespace QuantConnect.Securities.Future
 {
     /// <summary>
-    /// CME options category list API call root response
+    /// CME options trades, dates, and expiration list API call root response
     /// </summary>
-    public class CMEOptionsCategoryListEntry
+    /// <remarks>Returned as a List of this class</remarks>
+    public class CMEOptionsTradeDatesAndExpiration
     {
         /// <summary>
         /// Describes the type of future option this entry is
@@ -42,6 +43,12 @@ namespace QuantConnect.Securities.Future
         /// </summary>
         [JsonProperty("optionType")]
         public string OptionType { get; private set; }
+
+        /// <summary>
+        /// Product ID of the option
+        /// </summary>
+        [JsonProperty("productId")]
+        public int ProductId { get; private set; }
 
         /// <summary>
         /// Is Daily option
@@ -65,14 +72,14 @@ namespace QuantConnect.Securities.Future
         /// Expirations of the future option
         /// </summary>
         [JsonProperty("expirations")]
-        public Dictionary<string, CMEOptionsCategoryExpiration> Expirations { get; private set; }
+        public List<CMEOptionsExpiration> Expirations { get; private set; }
     }
 
     /// <summary>
     /// Future options Expiration entries. These are useful because we can derive the
     /// future chain from this data, since FOP and FUT share a 1-1 expiry code.
     /// </summary>
-    public class CMEOptionsCategoryExpiration
+    public class CMEOptionsExpiration
     {
         /// <summary>
         /// Date of expiry
@@ -87,9 +94,43 @@ namespace QuantConnect.Securities.Future
         public int ProductId { get; private set; }
 
         /// <summary>
+        /// Contract ID of the asset
+        /// </summary>
+        /// <remarks>Used to search settlements for the option chain</remarks>
+        [JsonProperty("contractId")]
+        public string ContractId { get; private set; }
+
+        /// <summary>
         /// Contract month code formatted as [FUTURE_MONTH_LETTER(1)][YEAR(1)]
         /// </summary>
         [JsonProperty("expiration")]
-        public string Expiration { get; private set; }
+        public CMEOptionExpirationEntry Expiration { get; private set; }
+    }
+
+    public class CMEOptionExpirationEntry
+    {
+        /// <summary>
+        /// Month of expiry
+        /// </summary>
+        [JsonProperty("month")]
+        public int Month { get; private set; }
+
+        /// <summary>
+        /// Year of expiry
+        /// </summary>
+        [JsonProperty("year")]
+        public int Year { get; private set; }
+
+        /// <summary>
+        /// Expiration code (two letter)
+        /// </summary>
+        [JsonProperty("code")]
+        public string Code { get; private set; }
+
+        /// <summary>
+        /// Expiration code (three letter)
+        /// </summary>
+        [JsonProperty("twoDigitsCode")]
+        public string TwoDigitsCode { get; private set; }
     }
 }

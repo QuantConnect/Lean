@@ -426,10 +426,11 @@ namespace QuantConnect.Util
 
                 case SecurityType.Option:
                     // options uses the underlying symbol for pathing.
-                    // For futures options, we use the canonical and option ticker
-                    // since it can differ from the underlying's ticker.
+                    // For futures options, we use the canonical option ticker plus the underlying's expiry
+                    // since it can differ from the underlying's ticker. We differ from normal futures
+                    // because the option chain can be extraordinarily large compared to equity option chains.
                     var optionPath = (symbol.Underlying.SecurityType == SecurityType.Future
-                            ? symbol.ID.Symbol
+                            ? symbol.ID.Symbol + string.Concat(symbol.Underlying.Value.Skip(symbol.Underlying.ID.Symbol.Length))
                             : symbol.Underlying.Value)
                         .ToLowerInvariant();
 
@@ -507,7 +508,7 @@ namespace QuantConnect.Util
 
                 case SecurityType.Option:
                     var optionPath = (symbol.Underlying.SecurityType == SecurityType.Future
-                            ? symbol.ID.Symbol
+                            ? symbol.ID.Symbol + string.Concat(symbol.Underlying.Value.Skip(symbol.Underlying.ID.Symbol.Length))
                             : symbol.Underlying.Value)
                         .ToLowerInvariant();
 
@@ -596,7 +597,7 @@ namespace QuantConnect.Util
                     if (isHourOrDaily)
                     {
                         var optionPath = (symbol.Underlying.SecurityType == SecurityType.Future
-                                ? symbol.ID.Symbol
+                                ? symbol.ID.Symbol + string.Concat(symbol.Underlying.Value.Skip(symbol.Underlying.ID.Symbol.Length))
                                 : symbol.Underlying.Value)
                             .ToLowerInvariant();
 

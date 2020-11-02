@@ -15,15 +15,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Runtime.Remoting.Activation;
 using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using QuantConnect.Util;
 
@@ -42,11 +41,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private const string CMESymbolReplace = "{{SYMBOL}}";
         private const string CMEProductCodeReplace = "{{PRODUCT_CODE}}";
+        private const string CMEContractCodeReplace = "{{CONTRACT_CODE}}";
         private const string CMEProductExpirationReplace = "{{PRODUCT_EXPIRATION}}";
+        private const string CMEDateTimeReplace = "{{DT_REPLACE}}";
 
         private const string CMEProductSlateURL = "https://www.cmegroup.com/CmeWS/mvc/ProductSlate/V2/List?pageNumber=1&sortAsc=false&sortField=rank&searchString=" + CMESymbolReplace + "&pageSize=5";
-        private const string CMEOptionsCategoryListURL = "https://www.cmegroup.com/CmeWS/mvc/Options/Categories/List/" + CMEProductCodeReplace + "/G?optionTypeFilter=&_=";
-        private const string CMEOptionChainURL = "https://www.cmegroup.com/CmeWS/mvc/Quotes/Option/" + CMEProductCodeReplace + "/G/" + CMEProductExpirationReplace + "/ALL?_=";
+        private const string CMEOptionsTradeDateAndExpirations = "https://www.cmegroup.com/CmeWS/mvc/Settlements/Options/TradeDateAndExpirations/" + CMEProductCodeReplace;
+        private const string CMEOptionChainURL = "https://www.cmegroup.com/CmeWS/mvc/Settlements/Options/Settlements/" + CMEProductCodeReplace + "/OOF?monthYear=" + CMEContractCodeReplace + "&optionProductId=" + CMEProductCodeReplace + "&optionExpiration=" + CMEProductCodeReplace + "-" + CMEProductExpirationReplace + "&tradeDate=" + CMEDateTimeReplace + "&pageSize=500&_=";
 
         private const int MaxDownloadAttempts = 5;
 
@@ -110,46 +111,64 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         .Single();
 
 
-                    var categoryListUrl = CMEOptionsCategoryListURL.Replace(CMEProductCodeReplace, futureProductId.ToStringInvariant())
-                        + Math.Floor((DateTime.UtcNow - _epoch).TotalMilliseconds).ToStringInvariant();
+                    var optionsTradesAndExpiries = CMEOptionsTradeDateAndExpirations.Replace(CMEProductCodeReplace, futureProductId.ToStringInvariant());
 
                     _rateGate.WaitToProceed();
 
-                    var categoryListResponse = _client.GetAsync(categoryListUrl).SynchronouslyAwaitTaskResult();
-                    categoryListResponse.EnsureSuccessStatusCode();
+                    var optionsTradesAndExpiriesResponse = _client.GetAsync(optionsTradesAndExpiries).SynchronouslyAwaitTaskResult();
+                    optionsTradesAndExpiriesResponse.EnsureSuccessStatusCode();
 
-                    var categoryList = JsonConvert.DeserializeObject<Dictionary<int, CMEOptionsCategoryListEntry>>(categoryListResponse.Content
+                    var tradesAndExpiriesResponse = JsonConvert.DeserializeObject<List<CMEOptionsTradeDatesAndExpiration>>(optionsTradesAndExpiriesResponse.Content
                         .ReadAsStringAsync()
                         .SynchronouslyAwaitTaskResult());
 
                     // For now, only support American options on CME
-                    var optionProductId = categoryList
-                        .Where(kvp => !kvp.Value.Daily && !kvp.Value.Weekly && !kvp.Value.Sto && kvp.Value.OptionType == "AME")
-                        .Select(x => x.Key)
-                        .FirstOrDefault();
+                    var selectedOption = tradesAndExpiriesResponse
+                        .FirstOrDefault(x => !x.Daily && !x.Weekly && !x.Sto && x.OptionType == "AME");
 
-                    if (optionProductId == default(int))
+                    if (selectedOption == null)
                     {
                         Log.Error($"LiveOptionChainProvider.GetFutureOptionContractList(): Found no matching future options for contract {futureContractSymbol}");
                         yield break;
                     }
 
                     // Gather the month code and the year's last number to query the next API, which expects an expiration as `<MONTH_CODE><YEAR_LAST_NUMBER>`
-                    var futureContractMonthCode = futureContractSymbol.Value[futureContractSymbol.Value.Length - 3].ToStringInvariant() + futureContractSymbol.Value[futureContractSymbol.Value.Length - 1].ToStringInvariant();
+                    var futureContractExpiration = selectedOption.Expirations
+                        .FirstOrDefault(x => x.Expiration.Year == futureContractSymbol.ID.Date.Year && x.Expiration.Month == futureContractSymbol.ID.Date.Month);
+
+                    if (futureContractExpiration == null)
+                    {
+                        Log.Error($"LiveOptionChainProvider.GetFutureOptionContractList(): Found no future options with matching expiry year and month for contract {futureContractSymbol}");
+                        yield break;
+                    }
+
+                    var futureContractMonthCode = futureContractExpiration.Expiration.Code;
+                    var futureContractId = futureContractExpiration.ContractId;
 
                     _rateGate.WaitToProceed();
 
-                    var optionChainQuotesResponseResult = _client.GetAsync(CMEOptionChainURL.Replace(CMEProductCodeReplace, optionProductId.ToStringInvariant())
+                    var mhdbEntry = MarketHoursDatabase.FromDataFolder()
+                        .GetExchangeHours(futureContractSymbol.ID.Market, futureContractSymbol, futureContractSymbol.SecurityType);
+                    // We want at least yesterday's trading day, not today since settlement hasn't occurred yet.
+                    var lastTradeDate = mhdbEntry.GetPreviousTradingDay(DateTime.UtcNow.AddDays(-1).ConvertFromUtc(mhdbEntry.TimeZone));
+
+                    // Subtract one day from now for settlement API since settlement may not be available for today yet
+                    var optionChainQuotesResponseResult = _client.GetAsync(CMEOptionChainURL.Replace(CMEProductCodeReplace, selectedOption.ProductId.ToStringInvariant())
+                        .Replace(CMEContractCodeReplace, futureContractId)
                         .Replace(CMEProductExpirationReplace, futureContractMonthCode)
+                        .Replace(CMEDateTimeReplace, lastTradeDate.ToStringInvariant("MM/dd/yyyy"))
                         + Math.Floor((DateTime.UtcNow - _epoch).TotalMilliseconds).ToStringInvariant());
 
                     optionChainQuotesResponseResult.Result.EnsureSuccessStatusCode();
 
-                    var futureOptionChain = JsonConvert.DeserializeObject<CMEOptionChainQuotes>(optionChainQuotesResponseResult.Result.Content
+                    var futureOptionChain = JsonConvert.DeserializeObject<CMEOptionChainSettlements>(optionChainQuotesResponseResult.Result.Content
                         .ReadAsStringAsync()
-                        .SynchronouslyAwaitTaskResult());
+                        .SynchronouslyAwaitTaskResult())
+                        .Settlements
+                        .Where(s => s.StrikePrice != default(decimal))
+                        .DistinctBy(s => s.StrikePrice);
 
-                    foreach (var optionChainEntry in futureOptionChain.OptionContractQuotes)
+                    foreach (var optionChainEntry in futureOptionChain)
                     {
                         // Calls and puts share the same strike, create two symbols per each to avoid iterating twice.
                         symbols.Add(Symbol.CreateOption(
@@ -157,7 +176,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             futureContractSymbol.ID.Market,
                             OptionStyle.American,
                             OptionRight.Call,
-                            optionChainEntry.Call.StrikePrice,
+                            optionChainEntry.StrikePrice,
                             futureContractSymbol.ID.Date));
 
                        symbols.Add(Symbol.CreateOption(
@@ -165,11 +184,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                            futureContractSymbol.ID.Market,
                            OptionStyle.American,
                            OptionRight.Put,
-                           optionChainEntry.Call.StrikePrice,
+                           optionChainEntry.StrikePrice,
                            futureContractSymbol.ID.Date));
                     }
-
-                    break;
                 }
                 catch (HttpRequestException err)
                 {
