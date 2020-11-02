@@ -556,6 +556,7 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(thursdayBeforeGoodFriday, OptionSymbol.GetLastDayOfTrading(symbol));
         }
 
+        [TestCase("ES", "ES")]
         [TestCase("GC", "OG")]
         [TestCase("ZT", "OZT")]
         public void FutureOptionsWithDifferentUnderlyingGlobexTickersAreMapped(string futureTicker, string expectedFutureOptionTicker)

@@ -168,6 +168,18 @@ namespace QuantConnect
             else
             {
                 var sym = underlyingSymbol.Value;
+                if (sid.Symbol != underlyingSymbol.ID.Symbol)
+                {
+                    // If we have changed the SID and it does not match the underlying,
+                    // we've mapped a future into another Symbol. We want to have a value
+                    // representing the mapped ticker, not of the underlying.
+                    // e.g. we want:
+                    //     OG  C3200...|GC18Z20
+                    // NOT
+                    //     GC  C3200...|GC18Z20
+                    sym = sid.Symbol;
+                }
+
                 if (sym.Length > 5) sym += " ";
 
                 alias = alias ?? SymbolRepresentation.GenerateOptionTickerOSI(sym, sid.OptionRight, sid.StrikePrice, sid.Date);
