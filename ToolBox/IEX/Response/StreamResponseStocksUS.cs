@@ -16,8 +16,8 @@
 
 namespace QuantConnect.ToolBox.IEX.Response
 {
-	public class StreamResponseStocksUS
-	{
+    public class StreamResponseStocksUS
+    {
         /// <summary>
         /// Refers to the stock ticker.
         /// </summary>
@@ -50,10 +50,10 @@ namespace QuantConnect.ToolBox.IEX.Response
         /// </summary>
         public long? OpenTime { get; set; }
 
-		/// <summary>
-		/// This will represent a human readable description of the source of open.
-		/// </summary>
-		public string OpenSource { get; set; }
+        /// <summary>
+        /// This will represent a human readable description of the source of open.
+        /// </summary>
+        public string OpenSource { get; set; }
 
         /// <summary>
         /// Refers to the 15-minute delayed official close price from the SIP. For Nasdaq-listed stocks, if you do not have UTP authorization,
@@ -66,50 +66,50 @@ namespace QuantConnect.ToolBox.IEX.Response
         /// </summary>
         public long? CloseTime { get; set; }
 
-		/// <summary>
-		/// This will represent a human readable description of the source of close.
-		/// </summary>
-		public string CloseSource { get; set; }
+        /// <summary>
+        /// This will represent a human readable description of the source of close.
+        /// </summary>
+        public string CloseSource { get; set; }
 
         /// <summary>
         /// Refers to the market-wide highest price from the SIP. 15 minute delayed during normal market hours 9:30 - 16:00 (null before 9:45 and weekends).
         /// </summary>
         public decimal High { get; set; }
 
-		/// <summary>
-		/// Refers to the official listing exchange time for the high from the SIP. 15 minute delayed
-		/// </summary>
-		public long? HighTime { get; set; }
+        /// <summary>
+        /// Refers to the official listing exchange time for the high from the SIP. 15 minute delayed
+        /// </summary>
+        public long? HighTime { get; set; }
 
-		/// <summary>
-		/// This will represent a human readable description of the source of high.
-		/// </summary>
-		public string HighSource { get; set; }
+        /// <summary>
+        /// This will represent a human readable description of the source of high.
+        /// </summary>
+        public string HighSource { get; set; }
 
         /// <summary>
         /// Refers to the market-wide lowest price from the SIP. 15 minute delayed during normal market hours 9:30 - 16:00 (null before 9:45 and weekends).
         /// </summary>
         public decimal Low { get; set; }
 
-		/// <summary>
-		/// Refers to the official listing exchange time for the low from the SIP. 15 minute delayed
-		/// </summary>
-		public long LowTime { get; set; }
-
-		/// <summary>
-		/// This will represent a human readable description of the source of low.
-		/// </summary>
-		public string LowSource { get; set; }
+        /// <summary>
+        /// Refers to the official listing exchange time for the low from the SIP. 15 minute delayed
+        /// </summary>
+        public long LowTime { get; set; }
 
         /// <summary>
-		/// Refers to the latest relevant price of the security which is derived from multiple sources. We first look for an IEX real
-		/// time price. If an IEX real time price is older than 15 minutes, 15 minute delayed market price is used. If a 15 minute
-		/// delayed price is not available, we will use the current day close price. If a current day close price is not available,
-		/// we will use the last available closing price (listed below as previousClose) IEX real time price represents trades
-		/// on IEX only. Trades occur across over a dozen exchanges, so the last IEX price can be used to indicate the overall market price.
-		/// This will not included pre or post market prices
-		/// </summary>
-		public decimal LatestPrice { get; set; }
+        /// This will represent a human readable description of the source of low.
+        /// </summary>
+        public string LowSource { get; set; }
+
+        /// <summary>
+        /// Refers to the latest relevant price of the security which is derived from multiple sources. We first look for an IEX real
+        /// time price. If an IEX real time price is older than 15 minutes, 15 minute delayed market price is used. If a 15 minute
+        /// delayed price is not available, we will use the current day close price. If a current day close price is not available,
+        /// we will use the last available closing price (listed below as previousClose) IEX real time price represents trades
+        /// on IEX only. Trades occur across over a dozen exchanges, so the last IEX price can be used to indicate the overall market price.
+        /// This will not included pre or post market prices
+        /// </summary>
+        public decimal LatestPrice { get; set; }
 
         /// <summary>
         /// This will represent a human readable description of the source of latestPrice.
@@ -123,10 +123,10 @@ namespace QuantConnect.ToolBox.IEX.Response
         /// </summary>
         public string LatestTime { get; set; }
 
-		/// <summary>
-		/// Refers to the machine readable epoch timestamp of when latestPrice was last updated. Represented in milliseconds since midnight Jan 1, 1970.
-		/// </summary>
-		public long LatestUpdate { get; set; }
+        /// <summary>
+        /// Refers to the machine readable epoch timestamp of when latestPrice was last updated. Represented in milliseconds since midnight Jan 1, 1970.
+        /// </summary>
+        public long LatestUpdate { get; set; }
 
         /// <summary>
         /// Refers to the latest total market volume of the stock across all markets. This will be the most recent volume of the stock during trading hours,
@@ -206,16 +206,16 @@ namespace QuantConnect.ToolBox.IEX.Response
         /// </summary>
         public decimal Change { get; set; }
 
-		/// <summary>
-		/// Refers to the percent change in price between latestPrice and previousClose. For example, a 5% change would be represented as 0.05.
-		/// You can use the query string parameter displayPercent to return this field multiplied by 100. So, 5% change would be represented as 5.
-		/// </summary>
-		public decimal ChangePercent { get; set; }
+        /// <summary>
+        /// Refers to the percent change in price between latestPrice and previousClose. For example, a 5% change would be represented as 0.05.
+        /// You can use the query string parameter displayPercent to return this field multiplied by 100. So, 5% change would be represented as 5.
+        /// </summary>
+        public decimal ChangePercent { get; set; }
 
-		/// <summary>
-		/// Total volume for the stock, but only updated after market open. To get premarket volume, use latestVolume
-		/// </summary>
-		public long Volume { get; set; }
+        /// <summary>
+        /// Total volume for the stock, but only updated after market open. To get premarket volume, use latestVolume
+        /// </summary>
+        public long Volume { get; set; }
 
         /// <summary>
         /// Refers to IEX’s percentage of the market in the stock.
@@ -228,9 +228,9 @@ namespace QuantConnect.ToolBox.IEX.Response
         public int? IexVolume { get; set; }
 
         /// <summary>
-		/// Refers to the 30 day average volume.
-		/// </summary>
-		public int AvgTotalVolume { get; set; }
+        /// Refers to the 30 day average volume.
+        /// </summary>
+        public int AvgTotalVolume { get; set; }
 
         /// <summary>
         /// Refers to the best bid price on IEX.
@@ -287,15 +287,15 @@ namespace QuantConnect.ToolBox.IEX.Response
         /// </summary>
         public decimal Week52High { get; set; }
 
-		/// <summary>
-		/// Refers to the adjusted 52 week low.
-		/// </summary>
-		public decimal Week52Low { get; set; }
+        /// <summary>
+        /// Refers to the adjusted 52 week low.
+        /// </summary>
+        public decimal Week52Low { get; set; }
 
-		/// <summary>
-		/// Refers to the price change percentage from start of year to previous close.
-		/// </summary>
-		public decimal YtdChange { get; set; }
+        /// <summary>
+        /// Refers to the price change percentage from start of year to previous close.
+        /// </summary>
+        public decimal YtdChange { get; set; }
 
         /// <summary>
         /// Epoch timestamp in milliseconds of the last market hours trade excluding the closing auction trade.
@@ -308,8 +308,8 @@ namespace QuantConnect.ToolBox.IEX.Response
         /// <returns></returns>
         public override string ToString()
         {
-			return $"{Symbol},{LatestTime},{LatestPrice},{LatestVolume}";
-		}
-			
-	}
+            return $"{Symbol},{LatestTime},{LatestPrice},{LatestVolume}";
+        }
+
+    }
 }
