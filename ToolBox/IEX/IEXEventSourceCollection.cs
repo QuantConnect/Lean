@@ -31,12 +31,12 @@ namespace QuantConnect.ToolBox.IEX
     /// </summary>
     public class IEXEventSourceCollection : IDisposable
     {
-        private static readonly TimeSpan TimeoutToUpdate = TimeSpan.FromSeconds(10);
+        private static readonly TimeSpan TimeoutToUpdate = TimeSpan.FromSeconds(30);
         private const int SymbolsPerConnectionLimit = 50;
         private readonly string _apiKey;
         private readonly EventHandler<MessageReceivedEventArgs> _messageAction;
-        private static readonly ConcurrentDictionary<EventSource, string[]> ClientSymbolsDictionary = new ConcurrentDictionary<EventSource, string[]>();
-        private static readonly CountdownEvent Counter = new CountdownEvent(1);
+        private readonly ConcurrentDictionary<EventSource, string[]> _clientSymbolsDictionary = new ConcurrentDictionary<EventSource, string[]>();
+        private readonly CountdownEvent _counter = new CountdownEvent(1);
 
         // IEX API documentation says:
         // "We limit requests to 100 per second per IP measured in milliseconds, so no more than 1 request per 10 milliseconds."
@@ -68,7 +68,7 @@ namespace QuantConnect.ToolBox.IEX
             var remainingSymbols = new List<string>(symbols);
             var clientsToRemove = new List<EventSource>();
 
-            foreach (var kvp in ClientSymbolsDictionary)
+            foreach (var kvp in _clientSymbolsDictionary)
             {
                 var clientSymbols = kvp.Value;
 
@@ -77,15 +77,15 @@ namespace QuantConnect.ToolBox.IEX
                 {
                     Log.Debug($"IEXEventSourceCollection.UpdateSubscription(): Leave unchanged subscription for: {string.Join(",", clientSymbols)}");
 
-                    // Just remove symbols from remaining collection
+                    // Just remove symbols from collection of remaining
                     remainingSymbols.RemoveAll(i => clientSymbols.Contains(i));
-
                     continue;
                 }
 
-                // Client has to be replaced
                 clientsToRemove.Add(kvp.Key);
             }
+
+            Log.Debug($"IEXEventSourceCollection.UpdateSubscription(): {clientsToRemove.Count} old clients to remove");
 
             if (!remainingSymbols.Any())
             {
@@ -96,7 +96,7 @@ namespace QuantConnect.ToolBox.IEX
             var packagedSymbolsList = new List<string[]>();
             do
             {
-                Counter.AddCount();
+                _counter.AddCount();  // Increment
 
                 if (remainingSymbols.Count > SymbolsPerConnectionLimit)
                 {
@@ -117,56 +117,32 @@ namespace QuantConnect.ToolBox.IEX
             packagedSymbolsList.DoForEach(package =>
             {
                 _rateGate.WaitToProceed();
-                var client = CreateNewSubscription(package);
-                // This message handler should be called once only
-                client.MessageReceived += MessageHandler;
+
+                Log.Debug($"IEXEventSourceCollection.CreateNewSubscription(): Creating new subscription for: {string.Join(",", package)}");
+                CreateNewSubscription(package);
             });
 
-            // Called for example when UpdateSubscription is called for the first time
-            if (!clientsToRemove.Any())
-            {
-                return;
-            }
-
-
-            Counter.Signal();
-            if (!Counter.Wait(TimeoutToUpdate))
+            _counter.Signal();
+            if (!_counter.Wait(TimeoutToUpdate))
             {
                 throw new Exception("IEXEventSourceCollection.UpdateSubscription(): Could not update subscription within a timeout");
             }
 
             clientsToRemove.DoForEach(i =>
             {
-                Log.Debug($"IEXEventSourceCollection.UpdateSubscription(): Remove subscription for: {string.Join(",", ClientSymbolsDictionary[i])}");
+                Log.Debug($"IEXEventSourceCollection.UpdateSubscription(): Remove subscription for: {string.Join(",", _clientSymbolsDictionary[i])}");
 
                 string[] stub;
-                ClientSymbolsDictionary.TryRemove(i, out stub);
+                _clientSymbolsDictionary.TryRemove(i, out stub);
 
                 i.Close();
                 i.Dispose();
             });
 
-            // Reset synchronization objects
-            Counter.Reset(1);
+            // Reset counter
+            _counter.Reset(1);
 
             IsConnected = true;
-
-        }
-
-        // Once we received the first message, decrement the counter
-        // We will remove old clients once the counter is set to 'zero' -
-        // i.e. when we can make sure that all new streams are receiving data and can replace the old ones
-        private static void MessageHandler(object sender, MessageReceivedEventArgs args)
-        {
-            var tmpClient = sender as EventSource;
-            if (tmpClient == null)
-            {
-                throw new InvalidCastException("Invalid cast in IEXEventSourceCollection.MessageHandler()");
-            }
-
-            Counter.Signal();
-            Log.Debug($"IEXEventSourceCollection.MessageHandler(): CountdownEvent count: {Counter.CurrentCount}");
-            tmpClient.MessageReceived -= MessageHandler;  // Remove the handler
         }
 
         private EventSource CreateNewSubscription(string[] symbols)
@@ -176,12 +152,14 @@ namespace QuantConnect.ToolBox.IEX
             var client = new EventSource(LaunchDarkly.EventSource.Configuration.Builder(new Uri(url)).Build());
 
             // Add to the dictionary
-            ClientSymbolsDictionary.TryAdd(client, symbols);
-
-            Log.Debug($"IEXEventSourceCollection.CreateNewSubscription(): Creating subscription for: {string.Join(",", symbols)}");
+            _clientSymbolsDictionary.TryAdd(client, symbols);
 
             // Set up the handlers
-            client.Opened += (sender, args) => { };
+            client.Opened += (sender, args) =>
+            {
+                _counter.Signal();   // Decrement
+                Log.Debug($"ClientOnOpened(): Counter count after decrement: {_counter.CurrentCount}");
+            };
 
             client.MessageReceived += _messageAction;
 
@@ -212,7 +190,7 @@ namespace QuantConnect.ToolBox.IEX
 
         public void Dispose()
         {
-            foreach (var client in ClientSymbolsDictionary.Keys)
+            foreach (var client in _clientSymbolsDictionary.Keys)
             {
                 client.Close();
                 client.Dispose();
