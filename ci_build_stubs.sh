@@ -73,7 +73,7 @@ function publish_stubs {
     TWINE_USERNAME="__token__" \
     TWINE_PASSWORD="$PYPI_API_TOKEN" \
     TWINE_REPOSITORY="$PYPI_REPO" \
-    twine upload "$STUBS_DIR/dist/*"
+    twine upload "$STUBS_DIR/dist/*" &>/dev/null
 
     if [ $? -ne 0 ]; then
         echo "PyPI publishing failed"
