@@ -560,7 +560,7 @@ namespace QuantConnect.Brokerages.GDAX
             }
             catch (Exception exception)
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, exception.Message));
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, exception.Message));
             }
 
             Log.Trace("GDAXBrokerage.FillMonitorAction(): task ended");
