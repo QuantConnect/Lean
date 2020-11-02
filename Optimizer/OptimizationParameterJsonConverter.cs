@@ -17,13 +17,14 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Optimizer
 {
     /// <summary>
     /// Override <see cref="OptimizationParameter"/> deserialization method
     /// </summary>
-    public class OptimizationParameterConverter : JsonConverter
+    public class OptimizationParameterJsonConverter : JsonConverter
     {
         public override bool CanWrite => false;
 

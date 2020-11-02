@@ -57,7 +57,7 @@
     <Compile Include="ExtremumConverter.cs" />
     <Compile Include="OptimizationArrayParameter.cs" />
     <Compile Include="OptimizationStepParameter.cs" />
-    <Compile Include="OptimizationParameterConverter.cs" />
+    <Compile Include="OptimizationParameterJsonConverter.cs" />
     <Compile Include="OptimizationStrategySettings.cs" />
     <Compile Include="StepBaseOptimizationStrategy.cs" />
     <Compile Include="Objective.cs" />

@@ -41,13 +41,25 @@ namespace QuantConnect.Optimizer
         /// Movement, should be positive
         /// </summary>
         [JsonProperty("step")]
-        public decimal Step { get; }
+        public decimal? Step { get; }
 
         /// <summary>
         /// Minimal possible movement for current parameter, should be positive
         /// </summary>
         [JsonProperty("min-step")]
-        public decimal MinStep { get; }
+        public decimal? MinStep { get; }
+
+        /// <summary>
+        /// Create an instance of <see cref="OptimizationParameter"/> based on configuration
+        /// </summary>
+        /// <param name="name">parameter name</param>
+        /// <param name="min">minimal value</param>
+        /// <param name="max">maximal value</param>
+        public OptimizationStepParameter(string name, decimal min, decimal max)
+            : this(name, min, max, null, null)
+        {
+
+        }
 
         /// <summary>
         /// Create an instance of <see cref="OptimizationParameter"/> based on configuration
@@ -56,7 +68,7 @@ namespace QuantConnect.Optimizer
         /// <param name="min">minimal value</param>
         /// <param name="max">maximal value</param>
         /// <param name="step">movement</param>
-        public OptimizationStepParameter(string name, decimal min, decimal max, decimal step)
+        public OptimizationStepParameter(string name, decimal min, decimal max, decimal? step)
             : this(name, min, max, step, step)
         {
 
@@ -70,11 +82,11 @@ namespace QuantConnect.Optimizer
         /// <param name="max">maximal value</param>
         /// <param name="step">movement</param>
         /// <param name="minStep">minimal possible movement</param>
-        public OptimizationStepParameter(string name, decimal min, decimal max, decimal step, decimal minStep) : base(name)
+        public OptimizationStepParameter(string name, decimal min, decimal max, decimal? step, decimal? minStep) : base(name)
         {
             MinValue = Math.Min(min, max);
             MaxValue = Math.Max(min, max);
-            MinStep = step != 0
+            MinStep = minStep != 0
                 ? Math.Abs(minStep)
                 : 1;
             Step = step != 0

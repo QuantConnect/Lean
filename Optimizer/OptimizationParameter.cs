@@ -23,7 +23,7 @@ namespace QuantConnect.Optimizer
     /// <summary>
     /// Defines the optimization parameter meta information
     /// </summary>
-    [JsonConverter(typeof(OptimizationParameterConverter))]
+    [JsonConverter(typeof(OptimizationParameterJsonConverter))]
     public abstract class OptimizationParameter
     {
         /// <summary>
