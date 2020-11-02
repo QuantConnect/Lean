@@ -15,14 +15,10 @@
 */
 
 using System;
-using System.Net;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
-using HtmlAgilityPack;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Configuration;
@@ -40,6 +36,41 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     public class IEXDataQueueHandlerTests
     {
         private readonly string _apiKey = Config.Get("iex-cloud-api-key");
+
+        private static readonly string[] HardCodedSymbolsSNP = {
+            "AAPL", "MSFT", "AMZN", "FB", "GOOGL", "GOOG", "BRK.B", "JNJ", "PG", "NVDA", "V", "JPM", "HD", "UNH", "MA", "VZ", 
+            "PYPL", "NFLX", "ADBE", "DIS", "CRM", "CMCSA", "PFE", "WMT", "MRK", "T", "INTC", "TMO", "ABT", "KO", "PEP", "BAC", 
+            "COST", "MCD", "NKE", "CSCO", "DHR", "NEE", "QCOM", "ABBV", "AVGO", "XOM", "ACN", "MDT", "TXN", "CVX", "BMY", 
+            "AMGN", "LOW", "UNP", "HON", "LIN", "UPS", "PM", "ORCL", "LLY", "SBUX", "AMT", "NOW", "IBM", "AMD", "MMM", "WFC", 
+            "C", "LMT", "CHTR", "BLK", "INTU", "CAT", "RTX", "ISRG", "BA", "SPGI", "FIS", "TGT", "ZTS", "MDLZ", "PLD", "GILD", 
+            "CVS", "DE", "ANTM", "MS", "MO", "ADP", "D", "DUK", "BDX", "SYK", "BKNG", "CCI", "EQIX", "CL", "GS", "FDX", "GE", 
+            "TMUS", "TJX", "SO", "APD", "ATVI", "CB", "CI", "SCHW", "CSX", "AXP", "REGN", "SHW", "ITW", "TFC", "MU", "AMAT", 
+            "VRTX", "ICE", "CME", "ADSK", "FISV", "PGR", "DG", "NSC", "HUM", "USB", "MMC", "LRCX", "EL", "NEM", "BSX", "GPN", 
+            "PNC", "ECL", "ILMN", "EW", "NOC", "KMB", "AEP", "GM", "ADI", "AON", "DD", "MCO", "WM", "ETN", "TWTR", "DLR", 
+            "BAX", "EXC", "BIIB", "CTSH", "EMR", "ROP", "IDXX", "XEL", "SRE", "EA", "GIS", "LHX", "PSA", "CMG", "DOW", "CNC", 
+            "APH", "COF", "SNPS", "HCA", "SBAC", "EBAY", "ORLY", "CMI", "DXCM", "TEL", "TT", "JCI", "A", "WEC", "KLAC", "COP", 
+            "ALGN", "TRV", "ROST", "CDNS", "F", "GD", "PPG", "INFO", "XLNX", "PEG", "ES", "TROW", "IQV", "PCAR", "BLL", "VRSK", 
+            "MSCI", "MET", "YUM", "MNST", "SYY", "CTAS", "BK", "ADM", "CARR", "STZ", "ALL", "MSI", "ZBH", "AWK", "ROK", "AIG", 
+            "MCHP", "PH", "APTV", "ANSS", "ED", "AZO", "SWK", "PAYX", "CLX", "ALXN", "TDG", "BBY", "RMD", "FCX", "KR", "PRU", 
+            "MAR", "OTIS", "FAST", "GLW", "HPQ", "SWKS", "CTVA", "WBA", "MTD", "HLT", "WLTW", "DTE", "LUV", "KMI", "MCK", "WMB", 
+            "WELL", "CPRT", "AFL", "DHI", "MKC", "AME", "VFC", "DLTR", "CERN", "EIX", "CHD", "PPL", "FRC", "WY", "FTV", "MKTX", 
+            "STT", "HSY", "WST", "ETR", "PSX", "O", "SLB", "AEE", "EOG", "LEN", "DAL", "DFS", "AJG", "KEYS", "KHC", "SPG", 
+            "AMP", "VRSN", "LH", "AVB", "VMC", "MXIM", "MPC", "LYB", "FLT", "RSG", "PAYC", "HOLX", "TTWO", "ODFL", "CMS", 
+            "ARE", "CDW", "IP", "FE", "CAG", "CBRE", "TSN", "EFX", "AMCR", "KSU", "FITB", "MLM", "DGX", "NTRS", "INCY", "DOV", 
+            "FTNT", "VIAC", "COO", "EQR", "ETSY", "BR", "GWW", "LVS", "K", "VAR", "ZBRA", "XYL", "TYL", "AKAM", "TSCO", "VLO", 
+            "EXR", "STE", "TFX", "EXPD", "DPZ", "PEAK", "QRVO", "VTR", "TER", "CTLT", "SIVB", "GRMN", "KMX", "NUE", "POOL", 
+            "PKI", "MAS", "CTXS", "WAT", "TIF", "NDAQ", "NVR", "HIG", "DRE", "ABC", "SYF", "HRL", "OKE", "PXD", "CE", "FMC", 
+            "CAH", "LNT", "GPC", "IR", "EXPE", "ESS", "AES", "MAA", "MTB", "RF", "BF.B", "EVRG", "SJM", "IEX", "KEY", "URI", 
+            "J", "NLOK", "BIO", "CHRW", "DRI", "CNP", "WHR", "AVY", "ULTA", "ABMD", "CFG", "TDY", "JKHY", "FBHS", "EMN", "WDC", 
+            "PHM", "HPE", "ANET", "ATO", "IFF", "LDOS", "PKG", "CINF", "HAS", "STX", "WAB", "IT", "HBAN", "HAL", "JBHT", 
+            "HES", "BXP", "AAP", "PFG", "ALB", "OMC", "NTAP", "XRAY", "UAL", "RCL", "WRK", "CPB", "LW", "RJF", "PNW", "BKR", 
+            "ALLE", "HSIC", "LKQ", "FOXA", "UDR", "MGM", "BWA", "PWR", "CBOE", "WU", "WRB", "SNA", "NI", "CXO", "PNR", 
+            "ROL", "LUMN", "UHS", "L", "RE", "FFIV", "TXT", "GL", "NRG", "OXY", "AIZ", "IRM", "HST", "MYL", "LB", "COG", 
+            "AOS", "IPG", "LYV", "WYNN", "CCL", "HWM", "IPGP", "JNPR", "DVA", "NWL", "MOS", "TPR", "DISH", "SEE", "TAP", 
+            "LNC", "CMA", "HII", "PRGO", "HBI", "CF", "RHI", "REG", "MHK", "AAL", "DISCK", "LEG", "ZION", "IVZ", "BEN", "NWSA", 
+            "NLSN", "FRT", "VNO", "DXC", "FLIR", "AIV", "PBCT", "ALK", "PVH", "KIM", "FANG", "FOX", "NCLH", "GPS", "VNT", "FLS", 
+            "UNM", "RL", "XRX", "DVN", "MRO", "DISCA", "NOV", "APA", "SLG", "HFC", "UAA", "UA", "FTI", "NWS"
+        };
 
         [SetUp]
         public void Setup()
@@ -161,9 +192,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void IEXCouldSubscribeMoreThan100Symbols()
         {
-            var symbols = GetSnpStocksArray().Select(i => i.Symbol).ToArray();
-
-            var configs = symbols.Select(s =>
+            var configs = HardCodedSymbolsSNP.Select(s =>
                 GetSubscriptionDataConfig<TradeBar>(Symbol.Create(s, SecurityType.Equity, Market.USA),
                     Resolution.Second)).ToArray();
             
@@ -178,8 +207,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void IEXEventSourceCollectionSubscribes()
         {
-            var snpShares = GetSnpStocksArray();
-
             // Send few consecutive requests to subscribe to a large amount of symbols (after the first request to change the subscription)
             // and make sure no exception will be thrown - if event-source-collection can't subscribe to all it throws after timeout 
             Assert.DoesNotThrow(() =>
@@ -189,11 +216,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     var rnd = new Random();
                     for (var i = 0; i < 5; i++)
                     {
-                        // Shuffle and select first random amount of symbol in range from 300 to 500 (snp symbols count)
-                        var shuffled = snpShares.OrderBy(n => Guid.NewGuid()).ToArray();
+                        // Shuffle and select first random amount of symbol
+                        // in range from 300 to 500 (snp symbols count)
+                        var shuffled = HardCodedSymbolsSNP
+                            .OrderBy(n => Guid.NewGuid())
+                            .ToArray();
+
                         var selected = shuffled
                             .Take(rnd.Next(300, shuffled.Length))
-                            .Select(data => data.Symbol)
                             .ToArray();
 
                         events.UpdateSubscription(selected);
@@ -213,52 +243,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 true,
                 true,
                 false);
-        }
-
-        /// <summary>
-        /// Retrieves list of companies that constitute SNP index from slick-charts-dot-com
-        /// </summary>
-        /// <returns></returns>
-        public static SnpComponentData[] GetSnpStocksArray()
-        {
-            var web = new HtmlWeb();
-            var doc = web.Load(@"https://www.slickcharts.com/sp500");
-
-            // This query does the following:
-            // fetches the html data that represents a table for S&P components
-            // then parses all the rows, handles it as cell string array and creates ComponentData.
-            // see: https://stackoverflow.com/questions/13005098/parsing-html-table-in-c-sharp
-
-            var table = doc.DocumentNode
-                .SelectSingleNode("//table[@class='table table-hover table-borderless table-sm']")
-                .Descendants("tr")
-                .Skip(1)
-                // Here we take cells extract inner text as string and apply HtmlDecode to it
-                // as there may be companies that have ampersand sign in naming ( 'S&P Global Inc.')
-                // which is displayed differently in html :
-                // https://stackoverflow.com/questions/122641/how-can-i-decode-html-characters-in-c
-                .Select(row => row.Elements("td").Select(htmlNode => HttpUtility.HtmlDecode(htmlNode.InnerText)).ToArray())
-                .Select(cells => new SnpComponentData
-                {
-                    Position = int.Parse(cells[0], CultureInfo.InvariantCulture),
-                    Name = cells[1],
-                    Symbol = cells[2],
-                    Weight = decimal.Parse(cells[3], CultureInfo.InvariantCulture)
-                })
-                .ToArray();
-
-            return table;
-        }
-
-        /// <summary>
-        /// Class representing the stock data that can be obtained from SlickCharts
-        /// </summary>
-        public class SnpComponentData
-        {
-            public int Position { get; set; }
-            public string Name { get; set; }
-            public string Symbol { get; set; }
-            public decimal Weight { get; set; }
         }
 
 
