@@ -1110,20 +1110,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return contractDetailsList.FirstOrDefault();
         }
 
-        private string GetFuturesContractExchange(Contract contract, string ticker)
-        {
-            // searching for available contracts on different exchanges
-            var contractDetails = FindContracts(contract, ticker);
-
-            var exchanges = _futuresExchanges.Values.Reverse().ToArray();
-
-            // sorting list of available contracts by exchange priority, taking the top 1
-            return contractDetails
-                    .Select(details => details.Contract.Exchange)
-                    .OrderByDescending(e => Array.IndexOf(exchanges, e))
-                    .FirstOrDefault();
-        }
-
         public IEnumerable<ContractDetails> FindContracts(Contract contract, string ticker)
         {
             const int timeout = 60; // sec
@@ -1874,6 +1860,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.Exchange = _futuresExchanges.ContainsKey(symbol.ID.Market) ?
                                         _futuresExchanges[symbol.ID.Market] :
                                         symbol.ID.Market;
+
+                var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, contract.Symbol, SecurityType.Future, Currencies.USD);
+                contract.Multiplier = Convert.ToInt32(symbolProperties.ContractMultiplier).ToStringInvariant();
 
                 contract.IncludeExpired = includeExpired;
             }
@@ -2751,6 +2740,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             else if (securityType == SecurityType.Future)
             {
+                string market;
+                if (_symbolPropertiesDatabase.TryGetMarket(contract.Symbol, securityType, out market))
+                {
+                    var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, contract.Symbol, securityType, Currencies.USD);
+                    contract.Multiplier = Convert.ToInt32(symbolProperties.ContractMultiplier).ToStringInvariant();
+                }
+
                 // processing request
                 var results = FindContracts(contract, contract.Symbol);
 
