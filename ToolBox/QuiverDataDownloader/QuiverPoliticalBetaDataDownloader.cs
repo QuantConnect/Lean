@@ -34,7 +34,6 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
     public class QuiverPoliticalBetaDataDownloader : QuiverDataDownloader
     {
         private readonly string _destinationFolder;
-        private readonly MapFileResolver _mapFileResolver;
 
         /// <summary>
         /// Creates a new instance of <see cref="QuiverPoliticalBetaDataDownloader"/>
@@ -43,8 +42,6 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
         public QuiverPoliticalBetaDataDownloader(string destinationFolder)
         {
             _destinationFolder = Path.Combine(destinationFolder, "politicalbeta");
-            _mapFileResolver = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))
-                .Get(Market.USA);
 
             Directory.CreateDirectory(_destinationFolder);
         }

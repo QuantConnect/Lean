@@ -34,7 +34,7 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
     public class QuiverWikipediaDataDownloader : QuiverDataDownloader
     {
         private readonly string _destinationFolder;
-        private readonly MapFileResolver _mapFileResolver;
+
 
         /// <summary>
         /// Creates a new instance of <see cref="QuiverWikipediaDataDownloader"/>
@@ -43,8 +43,7 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
         public QuiverWikipediaDataDownloader(string destinationFolder)
         {
             _destinationFolder = Path.Combine(destinationFolder, "wikipedia");
-            _mapFileResolver = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))
-                .Get(Market.USA);
+
 
             Directory.CreateDirectory(_destinationFolder);
         }

@@ -145,7 +145,7 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
         protected void SaveContentToFile(string destinationFolder, string ticker, IEnumerable<string> contents)
         {
             ticker = ticker.ToLowerInvariant();
-            var bkPath = Path.Combine(destinationFolder+"/bk/", $"{ticker}.csv");
+            var bkPath = Path.Combine(destinationFolder, $"{ticker}-bk.csv");
             var finalPath = Path.Combine(destinationFolder, $"{ticker}.csv");
             var finalFileExists = File.Exists(finalPath);
 
@@ -177,6 +177,8 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
             {
                 tempFilePath.MoveTo(finalPath);
             }
+            var bkFilePath = new FileInfo(bkPath);
+            bkFilePath.Delete();
         }
 
         /// <summary>
