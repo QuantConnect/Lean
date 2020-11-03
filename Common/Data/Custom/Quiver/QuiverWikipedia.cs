@@ -26,7 +26,7 @@ using static QuantConnect.StringExtensions;
 namespace QuantConnect.Data.Custom.Quiver
 {
     /// <summary>
-    /// Twitter follower counts for the specified company
+    /// Wikipedia Page Views for the specified company
     /// </summary>
     [ProtoContract(SkipConstructor = true)]
     public class QuiverWikipedia : BaseData
@@ -43,14 +43,15 @@ namespace QuantConnect.Data.Custom.Quiver
 
 
         /// <summary>
-        /// The follower count on the given date
+        /// The company's Wikipedia Page Views on the given date
         /// </summary>
         [ProtoMember(11)]
         [JsonProperty(PropertyName = "Views")]
         public decimal? PageViews { get; set; }
 
         /// <summary>
-        /// The follower count % change over the week prior to the date
+        /// The view count % change over the week prior to the date.
+        /// Represented as a whole number (e.g. 100% = 100.0)
         /// </summary>
         [ProtoMember(12)]
         [JsonProperty(PropertyName = "pct_change_week")]
@@ -58,7 +59,8 @@ namespace QuantConnect.Data.Custom.Quiver
 
 
         /// <summary>
-        /// The follower count % change over the month prior to the date
+        /// The view count % change over the month prior to the date
+        /// Represented as a whole number (e.g. 100% = 100.0)
         /// </summary>
         [ProtoMember(13)]
         [JsonProperty(PropertyName = "pct_change_month")]
