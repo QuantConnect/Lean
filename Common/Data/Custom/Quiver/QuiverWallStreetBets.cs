@@ -47,7 +47,7 @@ namespace QuantConnect.Data.Custom.Quiver
         /// </summary>
         [ProtoMember(11)]
         [JsonProperty(PropertyName = "Count")]
-        public int? Mentions { get; set; }
+        public int Mentions { get; set; }
 
 
 
@@ -68,7 +68,7 @@ namespace QuantConnect.Data.Custom.Quiver
             // Date[0], Ticker[1], Followers[2], Pct_Change_Week[3], Pct_Change_Month[4]
             var csv = csvLine.Split(',');
             Date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
-            Mentions = csv[1].IfNotNullOrEmpty<int?>(s => Parse.Int(s));
+            Mentions = Parse.Int(csv[1]);
             Time = Date;
         }
 
