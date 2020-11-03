@@ -150,5 +150,10 @@ namespace QuantConnect.Python
                 return (_model.GetPrices(asset, direction) as PyObject).GetAndDispose<Prices>();
             }
         }
+
+        internal Prices GetPricesInternal(Security asset, OrderDirection direction)
+        {
+            return GetPrices(asset, direction);
+        }
     }
 }
