@@ -1861,7 +1861,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                                         _futuresExchanges[symbol.ID.Market] :
                                         symbol.ID.Market;
 
-                var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, contract.Symbol, SecurityType.Future, Currencies.USD);
+                var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
+                    symbol.ID.Market,
+                    symbol.ID.Symbol,
+                    SecurityType.Future,
+                    Currencies.USD);
+
                 contract.Multiplier = Convert.ToInt32(symbolProperties.ContractMultiplier).ToStringInvariant();
 
                 contract.IncludeExpired = includeExpired;
@@ -2741,9 +2746,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             else if (securityType == SecurityType.Future)
             {
                 string market;
-                if (_symbolPropertiesDatabase.TryGetMarket(contract.Symbol, securityType, out market))
+                if (_symbolPropertiesDatabase.TryGetMarket(lookupName, securityType, out market))
                 {
-                    var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, contract.Symbol, securityType, Currencies.USD);
+                    var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
+                        market,
+                        lookupName,
+                        securityType,
+                        Currencies.USD);
+
                     contract.Multiplier = Convert.ToInt32(symbolProperties.ContractMultiplier).ToStringInvariant();
                 }
 
