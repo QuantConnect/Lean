@@ -13,27 +13,37 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Optimizer.Parameters
 {
     /// <summary>
-    /// Defines the optimization parameter meta information
+    /// Enumerates all possible values for specific optimization parameter
     /// </summary>
-    public class OptimizationArrayParameter : OptimizationParameter
+    public abstract class OptimizationParameterEnumerator<T> : IEnumerator<string>  where T: OptimizationParameter
     {
-        /// <summary>
-        /// Minimum value of optimization parameter, applicable for boundary conditions
-        /// </summary>
-        [JsonProperty("values")]
-        public IList<string> Values { get; }
+        protected T OptimizationParameter;
+        protected int Index = -1;
 
-        public OptimizationArrayParameter(string name, IList<string> values) : base(name)
+        protected OptimizationParameterEnumerator(T optimizationParameter)
         {
-            Values = values;
+            OptimizationParameter = optimizationParameter;
         }
 
-        public override IEnumerator<string> GetEnumerator() => new OptimizationArrayParameterEnumerator(this);
+        public abstract string Current { get; }
+    
+        object IEnumerator.Current => Current;
+
+        public void Dispose() { }
+
+        public abstract bool MoveNext();
+
+        public void Reset()
+        {
+            Index = -1;
+        }
     }
 }

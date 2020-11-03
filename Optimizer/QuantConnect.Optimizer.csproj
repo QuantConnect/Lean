@@ -56,6 +56,9 @@
     </Compile>
     <Compile Include="Objectives\ExtremumJsonConverter.cs" />
     <Compile Include="Parameters\OptimizationArrayParameter.cs" />
+    <Compile Include="Parameters\OptimizationParameter.cs" />
+    <Compile Include="Parameters\OptimizationArrayParameterEnumerator.cs" />
+    <Compile Include="Parameters\OptimizationStepParameterEnumerator.cs" />
     <Compile Include="Parameters\OptimizationStepParameter.cs" />
     <Compile Include="Parameters\OptimizationParameterJsonConverter.cs" />
     <Compile Include="Strategies\OptimizationStrategySettings.cs" />
@@ -73,7 +76,7 @@
     <Compile Include="Strategies\GridSearchOptimizationStrategy.cs" />
     <Compile Include="OptimizationEventArgs.cs" />
     <Compile Include="OptimizationNodePacket.cs" />
-    <Compile Include="Parameters\OptimizationParameter.cs" />
+    <Compile Include="Parameters\OptimizationParameterEnumerator.cs" />
     <Compile Include="OptimizationResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Parameters\ParameterSet.cs" />

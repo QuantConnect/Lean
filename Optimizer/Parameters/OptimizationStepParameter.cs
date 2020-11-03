@@ -15,6 +15,8 @@
 
 using Newtonsoft.Json;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer.Parameters
 {
@@ -105,5 +107,7 @@ namespace QuantConnect.Optimizer.Parameters
             Step = Math.Abs(MaxValue - MinValue) / defaultSegmentAmount;
             MinStep = Step / 10;
         }
+
+        public override IEnumerator<string> GetEnumerator() => new OptimizationStepParameterEnumerator(this);
     }
 }

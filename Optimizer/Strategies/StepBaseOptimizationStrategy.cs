@@ -147,22 +147,22 @@ namespace QuantConnect.Optimizer.Strategies
             if (args.Count == 1)
             {
                 var d = args.Dequeue() as OptimizationStepParameter;
-                for (var value = d.MinValue; value <= d.MaxValue; value += d.Step.Value)
+                foreach (var value in d)
                 {
                     yield return new Dictionary<string, decimal>()
                     {
-                        {d.Name, value}
+                        {d.Name, value.ToDecimal()}
                     };
                 }
                 yield break;
             }
 
             var d2 = args.Dequeue() as OptimizationStepParameter;
-            for (var value = d2.MinValue; value <= d2.MaxValue; value += d2.Step.Value)
+            foreach (var value in d2)
             {
                 foreach (var inner in Recursive(seed, new Queue<OptimizationParameter>(args)))
                 {
-                    inner.Add(d2.Name, value);
+                    inner.Add(d2.Name, value.ToDecimal());
 
                     yield return inner;
                 }

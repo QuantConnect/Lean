@@ -13,10 +13,9 @@
  * limitations under the License.
 */
 
-using System;
+using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace QuantConnect.Optimizer.Parameters
 {
@@ -24,7 +23,7 @@ namespace QuantConnect.Optimizer.Parameters
     /// Defines the optimization parameter meta information
     /// </summary>
     [JsonConverter(typeof(OptimizationParameterJsonConverter))]
-    public abstract class OptimizationParameter
+    public abstract class OptimizationParameter : IEnumerable<string>
     {
         /// <summary>
         /// Name of optimization parameter
@@ -40,6 +39,15 @@ namespace QuantConnect.Optimizer.Parameters
         {
             Name = name;
         }
+
+        /// <summary>
+        /// Return Enumerator for current optimization parameter.
+        /// We moved the enumeration into separate class in order to avoid having within the parameter
+        /// </summary>
+        /// <returns></returns>
+        public abstract IEnumerator<string> GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <summary>
         /// Indicates whether the current object is equal to another object of the same type.

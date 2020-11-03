@@ -17,6 +17,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using Newtonsoft.Json.Serialization;
 
 namespace QuantConnect.Optimizer.Parameters
 {
@@ -25,11 +27,24 @@ namespace QuantConnect.Optimizer.Parameters
     /// </summary>
     public class OptimizationParameterJsonConverter : JsonConverter
     {
-        public override bool CanWrite => false;
-
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException("Not necessary because we use standard serializer");
+            JObject jo = new JObject();
+            Type type = value.GetType();
+
+            foreach (PropertyInfo prop in type.GetProperties())
+            {
+                if (prop.CanRead)
+                {
+                    var attribute = prop.GetCustomAttribute<JsonPropertyAttribute>();
+                    object propVal = prop.GetValue(value, null);
+                    if (propVal != null)
+                    {
+                        jo.Add(attribute.PropertyName ?? prop.Name, JToken.FromObject(propVal, serializer));
+                    }
+                }
+            }
+            jo.WriteTo(writer);
         }
 
         public override object ReadJson(

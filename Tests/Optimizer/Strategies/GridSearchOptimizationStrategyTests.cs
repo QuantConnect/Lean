@@ -270,9 +270,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 _strategy.NewParameterSet += (s, e) =>
                 {
                     var parameterSet = (e as OptimizationEventArgs).ParameterSet;
-                    Assert.AreEqual("0", parameterSet.Value["ema-fast"]);
-                    Assert.AreEqual("0", parameterSet.Value["ema-slow"]);
-                    Assert.AreEqual("1", parameterSet.Value["ema-custom"]);
+                    Assert.AreEqual(0, parameterSet.Value["ema-fast"].ToDecimal());
+                    Assert.AreEqual(0, parameterSet.Value["ema-slow"].ToDecimal());
+                    Assert.AreEqual(1, parameterSet.Value["ema-custom"].ToDecimal());
                 };
 
                 _strategy.PushNewResults(OptimizationResult.Initial);
@@ -308,7 +308,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                         Assert.IsNotNull(suggestion);
                         Assert.IsTrue(suggestion.Value.All(s => set.Any(arg => arg.Name == s.Key)));
                         Assert.AreEqual(1, suggestion.Value.Count);
-                        Assert.AreEqual(v.ToStringInvariant(), suggestion.Value["ema-fast"]);
+                        Assert.AreEqual(v, suggestion.Value["ema-fast"].ToDecimal());
                     }
 
                     Assert.AreEqual(0, enumerator.Count);
@@ -373,8 +373,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                             Assert.IsNotNull(suggestion);
                             Assert.IsTrue(suggestion.Value.All(s => args.Any(arg => arg.Name == s.Key)));
                             Assert.AreEqual(2, suggestion.Value.Count);
-                            Assert.AreEqual(fast.ToStringInvariant(), suggestion.Value["ema-fast"]);
-                            Assert.AreEqual(slow.ToStringInvariant(), suggestion.Value["ema-slow"]);
+                            Assert.AreEqual(fast, suggestion.Value["ema-fast"].ToDecimal());
+                            Assert.AreEqual(slow, suggestion.Value["ema-slow"].ToDecimal());
                         }
                     }
 
