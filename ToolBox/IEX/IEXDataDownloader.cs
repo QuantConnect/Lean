@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;

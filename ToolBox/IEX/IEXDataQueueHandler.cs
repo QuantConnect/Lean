@@ -27,7 +27,6 @@ using System.Threading;
 using QuantConnect.Interfaces;
 using NodaTime;
 using System.Globalization;
-using System.IO;
 using static QuantConnect.StringExtensions;
 using QuantConnect.Util;
 using System.Linq;
@@ -382,12 +381,6 @@ namespace QuantConnect.ToolBox.IEX
             if (request.Resolution != Resolution.Daily && request.Resolution != Resolution.Minute)
             {
                 Log.Error("IEXDataQueueHandler.GetHistory(): History calls for IEX only support daily & minute resolution.");
-                yield break;
-            }
-
-            if (start <= DateTime.Today.AddYears(-5))
-            {
-                Log.Error("IEXDataQueueHandler.GetHistory(): History calls for IEX only support a maximum of 5 years history.");
                 yield break;
             }
 

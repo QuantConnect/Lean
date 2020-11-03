@@ -352,30 +352,32 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 return new[]
                 {
                     // valid parameters
-                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(15), true, false),
-                    new TestCaseData(Symbols.SPY, Resolution.Minute, TimeSpan.FromDays(3), true, false),
+                    new TestCaseData(Symbols.SPY, Resolution.Daily, typeof(TradeBar), TimeSpan.FromDays(15), true, false),
+                    new TestCaseData(Symbols.SPY, Resolution.Minute, typeof(TradeBar), TimeSpan.FromDays(3), true, false),
 
                     // invalid resolution == empty result.
-                    new TestCaseData(Symbols.SPY, Resolution.Tick, TimeSpan.FromSeconds(15), false, false),
-                    new TestCaseData(Symbols.SPY, Resolution.Second, Time.OneMinute, false, false),
-                    new TestCaseData(Symbols.SPY, Resolution.Hour, Time.OneDay, false, false),
+                    new TestCaseData(Symbols.SPY, Resolution.Tick, typeof(TradeBar), TimeSpan.FromSeconds(15), false, false),
+                    new TestCaseData(Symbols.SPY, Resolution.Second, typeof(TradeBar), Time.OneMinute, false, false),
+                    new TestCaseData(Symbols.SPY, Resolution.Hour, typeof(TradeBar), Time.OneDay, false, false),
 
                     // invalid period == empty result
-                    new TestCaseData(Symbols.SPY, Resolution.Minute, TimeSpan.FromDays(45), false, false), // beyond 30 days
-                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(-15), false, false), // date in future
-                    new TestCaseData(Symbols.SPY, Resolution.Daily, TimeSpan.FromDays(365*5.5), false, false), // beyond 5 years
+                    new TestCaseData(Symbols.SPY, Resolution.Minute, typeof(TradeBar), TimeSpan.FromDays(45), false, false), // beyond 30 days
+                    new TestCaseData(Symbols.SPY, Resolution.Daily, typeof(TradeBar), TimeSpan.FromDays(-15), false, false), // date in future
 
-                    // invalid symbol: XYZ -> not found WebException
-                    new TestCaseData(Symbol.Create("XYZ", SecurityType.Equity, Market.FXCM), Resolution.Daily, TimeSpan.FromDays(15), false, true),
+                    // invalid data type = empty result
+                    new TestCaseData(Symbols.SPY, Resolution.Daily, typeof(QuoteBar), TimeSpan.FromDays(15), false, false),
+
+                    // invalid symbol: XYZ -> not found Exception
+                    new TestCaseData(Symbol.Create("XYZ", SecurityType.Equity, Market.FXCM), Resolution.Daily, typeof(TradeBar), TimeSpan.FromDays(15), false, true),
 
                     // invalid security type, no exception, empty result
-                    new TestCaseData(Symbols.EURUSD, Resolution.Daily, TimeSpan.FromDays(15), false, false)
+                    new TestCaseData(Symbols.EURUSD, Resolution.Daily, typeof(TradeBar), TimeSpan.FromDays(15), false, false)
                 };
             }
         }
 
         [Test, TestCaseSource(nameof(TestParameters))]
-        public void IEXCouldGetHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool received, bool throwsException)
+        public void IEXCouldGetHistory(Symbol symbol, Resolution resolution, Type dataType, TimeSpan period, bool received, bool throwsException)
         {
             TestDelegate test = () =>
             {
@@ -386,46 +388,32 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     new HistoryRequest(now.Add(-period),
                                        now,
-                                       typeof(QuoteBar),
+                                       dataType,
                                        symbol,
                                        resolution,
-                                       SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                                       DateTimeZone.Utc,
-                                       Resolution.Minute,
-                                       false,
+                                       SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                                       TimeZones.NewYork,
+                                       resolution,
+                                       true,
                                        false,
                                        DataNormalizationMode.Adjusted,
-                                       TickType.Quote)
+                                       TickType.Trade)
                 };
 
-                var history = historyProvider.GetHistory(requests, TimeZones.Utc);
-
-                foreach (var slice in history)
-                {
-                    if (resolution == Resolution.Tick || resolution == Resolution.Second || resolution == Resolution.Hour)
-                    {
-                        Log.Trace($"IEXCouldGetHistory(): Invalid resolution {resolution}");
-
-                        Assert.IsNull(slice);
-                    }
-                    else if (resolution == Resolution.Daily || resolution == Resolution.Minute)
-                    {
-                        Assert.IsNotNull(slice);
-
-                        var bar = slice.Bars[symbol];
-
-                        Log.Trace("{0}: {1} - O={2}, H={3}, L={4}, C={5}: {6}, {7}", bar.Time, bar.Symbol, bar.Open, bar.High, bar.Low, bar.Close, resolution, period);
-                    }
-                }
-
+                var slices = historyProvider.GetHistory(requests, TimeZones.Utc).ToArray();
                 Log.Trace("Data points retrieved: " + historyProvider.DataPointCount);
+
                 if (received)
                 {
-                    Assert.IsTrue(historyProvider.DataPointCount > 0);
+                    // Slices not empty
+                    Assert.IsNotEmpty(slices);
+
+                    // And are ordered by time
+                    Assert.That(slices, Is.Ordered.By("Time"));
                 }
                 else
                 {
-                    Assert.IsTrue(historyProvider.DataPointCount == 0);
+                    Assert.IsEmpty(slices);
                 }
             };
 
