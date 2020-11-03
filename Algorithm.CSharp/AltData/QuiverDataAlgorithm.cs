@@ -41,16 +41,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             var aapl = AddEquity("AAPL", Resolution.Daily).Symbol;
-            // var quiverWikiSymbol = AddData<QuiverWikipedia>(abbv).Symbol;
-            // var history = History<QuiverWikipedia>(quiverWikiSymbol, 60, Resolution.Daily);
-
             var quiverWSBSymbol = AddData<QuiverWallStreetBets>(aapl).Symbol;
             var history = History<QuiverWallStreetBets>(quiverWSBSymbol, 60, Resolution.Daily);
 
-            // var quiverPBSymbol = AddData<QuiverPoliticalBeta>(aapl).Symbol;
-            // var history = History<QuiverPoliticalBeta>(quiverPBSymbol, 60, Resolution.Daily);
-
-            // Count the number of items we get from our history request
             Debug($"We got {history.Count()} items from our history request");
 
 
