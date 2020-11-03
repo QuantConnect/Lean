@@ -22,9 +22,14 @@ using NodaTime;
 using ProtoBuf;
 using static QuantConnect.StringExtensions;
 using QuantConnect.Util;
+using Newtonsoft.Json.Converters;
 
 namespace QuantConnect.Data.Custom.Quiver
 {
+    public enum TransactionValue{
+        Purchase,
+        Sale
+    }
     /// <summary>
     /// Personal stock transactions by U.S. Representatives
     /// </summary>
@@ -52,7 +57,8 @@ namespace QuantConnect.Data.Custom.Quiver
         /// </summary>
         [ProtoMember(12)]
         [JsonProperty(PropertyName = "Transaction")]
-        public string Transaction { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public TransactionValue Transaction { get; set; }
 
         /// <summary>
         /// The amount of the transaction
@@ -60,10 +66,6 @@ namespace QuantConnect.Data.Custom.Quiver
         [ProtoMember(13)]
         [JsonProperty(PropertyName = "Amount")]
         public decimal? Amount { get; set; }
-
-
-
-
 
         /// <summary>
         /// Required for successful Json.NET deserialization
@@ -82,7 +84,7 @@ namespace QuantConnect.Data.Custom.Quiver
             var csv = csvLine.Split(',');
             Date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
             Representative = csv[1];
-            Transaction = csv[2];
+            Transaction = (TransactionValue)Enum.Parse(typeof(TransactionValue), csv[2], true);
             Amount = csv[3].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
             Time = Date;
         }
