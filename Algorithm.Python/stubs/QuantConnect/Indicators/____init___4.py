@@ -12,7 +12,7 @@ import datetime
 
 
 
-class HeikinAshi(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class HeikinAshi(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     This indicator computes the Heikin-Ashi bar (HA)
                 The Heikin-Ashi bar is calculated using the following formulas:
@@ -54,7 +54,7 @@ class HeikinAshi(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.I
 
 
 
-class HullMovingAverage(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class HullMovingAverage(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     Produces a Hull Moving Average as explained at http://www.alanhull.com/hull-moving-average/
                 and derived from the instructions for the Excel VBA code at http://finance4traders.blogspot.com/2009/06/how-to-calculate-hull-moving-average.html
@@ -82,7 +82,7 @@ class HullMovingAverage(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint
 
 
 
-class IchimokuKinkoHyo(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class IchimokuKinkoHyo(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     This indicator computes the Ichimoku Kinko Hyo indicator. It consists of the following main indicators:
                 Tenkan-sen: (Highest High + Lowest Low) / 2 for the specific period (normally 9)
@@ -143,7 +143,7 @@ class IchimokuKinkoHyo(QuantConnect.Indicators.BarIndicator, QuantConnect.Indica
 
 
 
-class Identity(QuantConnect.Indicators.Indicator, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class Identity(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     Represents an indicator that is a ready after ingesting a single sample and
                     always returns the same value as it is given.
@@ -163,7 +163,7 @@ class IIndicatorWarmUpPeriodProvider:
 
 
 
-class IndicatorBase(System.object, System.IComparable, QuantConnect.Indicators.IIndicator[T], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[T]]):
+class IndicatorBase(System.object, QuantConnect.Indicators.IIndicator[T], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[T]]):
     # no doc
     @typing.overload
     def CompareTo(self, other: QuantConnect.Indicators.IIndicator[QuantConnect.Indicators.T]) -> int:

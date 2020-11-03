@@ -257,7 +257,7 @@ class IndicatorUpdatedHandler(System.MulticastDelegate, System.Runtime.Serializa
         pass
 
 
-class IntradayVwap(QuantConnect.Indicators.IndicatorBase[BaseData], System.IComparable, QuantConnect.Indicators.IIndicator[BaseData], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[BaseData]]):
+class IntradayVwap(QuantConnect.Indicators.IndicatorBase[BaseData], QuantConnect.Indicators.IIndicator[BaseData], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[BaseData]]):
     """
     Defines the canonical intraday VWAP indicator
     

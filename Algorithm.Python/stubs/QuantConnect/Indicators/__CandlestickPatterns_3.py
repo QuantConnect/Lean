@@ -5,7 +5,7 @@ import datetime
 
 
 
-class MorningDojiStar(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class MorningDojiStar(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Morning Doji Star candlestick pattern
     
@@ -35,7 +35,7 @@ class MorningDojiStar(QuantConnect.Indicators.CandlestickPatterns.CandlestickPat
 
 
 
-class MorningStar(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class MorningStar(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Morning Star candlestick pattern
     
@@ -65,7 +65,7 @@ class MorningStar(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern
 
 
 
-class OnNeck(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class OnNeck(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     On-Neck candlestick pattern indicator
     
@@ -90,7 +90,7 @@ class OnNeck(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, Sys
 
 
 
-class Piercing(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class Piercing(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Piercing candlestick pattern
     
@@ -115,7 +115,7 @@ class Piercing(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, S
 
 
 
-class RickshawMan(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class RickshawMan(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Rickshaw Man candlestick pattern
     
@@ -140,7 +140,7 @@ class RickshawMan(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern
 
 
 
-class RiseFallThreeMethods(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class RiseFallThreeMethods(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Rising/Falling Three Methods candlestick pattern
     
@@ -165,7 +165,7 @@ class RiseFallThreeMethods(QuantConnect.Indicators.CandlestickPatterns.Candlesti
 
 
 
-class SeparatingLines(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class SeparatingLines(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Separating Lines candlestick pattern indicator
     
@@ -190,7 +190,7 @@ class SeparatingLines(QuantConnect.Indicators.CandlestickPatterns.CandlestickPat
 
 
 
-class ShootingStar(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class ShootingStar(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Shooting Star candlestick pattern
     
@@ -215,7 +215,7 @@ class ShootingStar(QuantConnect.Indicators.CandlestickPatterns.CandlestickPatter
 
 
 
-class ShortLineCandle(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class ShortLineCandle(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Short Line Candle candlestick pattern indicator
     
@@ -240,7 +240,7 @@ class ShortLineCandle(QuantConnect.Indicators.CandlestickPatterns.CandlestickPat
 
 
 
-class SpinningTop(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class SpinningTop(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Spinning Top candlestick pattern indicator
     
@@ -265,7 +265,7 @@ class SpinningTop(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern
 
 
 
-class StalledPattern(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class StalledPattern(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Stalled Pattern candlestick pattern
     
@@ -290,7 +290,7 @@ class StalledPattern(QuantConnect.Indicators.CandlestickPatterns.CandlestickPatt
 
 
 
-class StickSandwich(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class StickSandwich(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Stick Sandwich candlestick pattern indicator
     
@@ -315,7 +315,7 @@ class StickSandwich(QuantConnect.Indicators.CandlestickPatterns.CandlestickPatte
 
 
 
-class Takuri(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class Takuri(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Takuri (Dragonfly Doji with very long lower shadow) candlestick pattern indicator
     

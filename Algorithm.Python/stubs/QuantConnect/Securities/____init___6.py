@@ -230,7 +230,7 @@ class SecurityInitializer(System.object):
     __all__: list
 
 
-class SecurityManager(QuantConnect.ExtendedDictionary[Security], System.Collections.IEnumerable, QuantConnect.Interfaces.IExtendedDictionary[Symbol, Security], System.Collections.Generic.ICollection[KeyValuePair[Symbol, Security]], System.Collections.Generic.IDictionary[Symbol, Security], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, Security]], System.Collections.Specialized.INotifyCollectionChanged):
+class SecurityManager(QuantConnect.ExtendedDictionary[Security], System.Collections.IEnumerable, System.Collections.Generic.ICollection[KeyValuePair[Symbol, Security]], System.Collections.Generic.IDictionary[Symbol, Security], QuantConnect.Interfaces.IExtendedDictionary[Symbol, Security], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, Security]], System.Collections.Specialized.INotifyCollectionChanged):
     """
     Enumerable security management class for grouping security objects into an array and providing any common properties.
     
@@ -312,7 +312,7 @@ class SecurityManager(QuantConnect.ExtendedDictionary[Security], System.Collecti
     Item: indexer#
 
 
-class SecurityPortfolioManager(QuantConnect.ExtendedDictionary[SecurityHolding], System.Collections.IEnumerable, QuantConnect.Interfaces.IExtendedDictionary[Symbol, SecurityHolding], System.Collections.Generic.ICollection[KeyValuePair[Symbol, SecurityHolding]], System.Collections.Generic.IDictionary[Symbol, SecurityHolding], QuantConnect.Securities.ISecurityProvider, System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, SecurityHolding]]):
+class SecurityPortfolioManager(QuantConnect.ExtendedDictionary[SecurityHolding], System.Collections.IEnumerable, System.Collections.Generic.ICollection[KeyValuePair[Symbol, SecurityHolding]], System.Collections.Generic.IDictionary[Symbol, SecurityHolding], QuantConnect.Interfaces.IExtendedDictionary[Symbol, SecurityHolding], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, SecurityHolding]], QuantConnect.Securities.ISecurityProvider):
     """
     Portfolio manager class groups popular properties and makes them accessible through one interface.
                 It also provide indexing by the vehicle symbol to get the Security.Holding objects.

@@ -17,7 +17,7 @@ import typing
 # no functions
 # classes
 
-class ObjectStore(System.object, System.IDisposable, System.Collections.IEnumerable, QuantConnect.Interfaces.IObjectStore, System.Collections.Generic.IEnumerable[KeyValuePair[str, Array[Byte]]]):
+class ObjectStore(System.object, System.IDisposable, System.Collections.IEnumerable, System.Collections.Generic.IEnumerable[KeyValuePair[str, Array[Byte]]], QuantConnect.Interfaces.IObjectStore):
     """
     Helper class for easier access to QuantConnect.Interfaces.IObjectStore methods
     

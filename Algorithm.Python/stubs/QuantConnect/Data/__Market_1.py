@@ -10,7 +10,7 @@ import QuantConnect
 import datetime
 
 
-class FuturesChain(QuantConnect.Data.BaseData, System.Collections.IEnumerable, System.Collections.Generic.IEnumerable[FuturesContract], QuantConnect.Data.IBaseData):
+class FuturesChain(QuantConnect.Data.BaseData, System.Collections.IEnumerable, QuantConnect.Data.IBaseData, System.Collections.Generic.IEnumerable[FuturesContract]):
     """
     Represents an entire chain of futures contracts for a single underlying
                 This type is System.Collections.Generic.IEnumerable
@@ -79,7 +79,7 @@ class FuturesChain(QuantConnect.Data.BaseData, System.Collections.IEnumerable, S
 
 
 
-class FuturesChains(QuantConnect.Data.Market.DataDictionary[FuturesChain], System.Collections.IEnumerable, QuantConnect.Interfaces.IExtendedDictionary[Symbol, FuturesChain], System.Collections.Generic.ICollection[KeyValuePair[Symbol, FuturesChain]], System.Collections.Generic.IDictionary[Symbol, FuturesChain], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, FuturesChain]]):
+class FuturesChains(QuantConnect.Data.Market.DataDictionary[FuturesChain], System.Collections.IEnumerable, System.Collections.Generic.ICollection[KeyValuePair[Symbol, FuturesChain]], System.Collections.Generic.IDictionary[Symbol, FuturesChain], QuantConnect.Interfaces.IExtendedDictionary[Symbol, FuturesChain], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, FuturesChain]]):
     """
     Collection of QuantConnect.Data.Market.FuturesChain keyed by canonical futures symbol
     
@@ -137,7 +137,7 @@ class FuturesContract(System.object):
 
 
 
-class FuturesContracts(QuantConnect.Data.Market.DataDictionary[FuturesContract], System.Collections.IEnumerable, QuantConnect.Interfaces.IExtendedDictionary[Symbol, FuturesContract], System.Collections.Generic.ICollection[KeyValuePair[Symbol, FuturesContract]], System.Collections.Generic.IDictionary[Symbol, FuturesContract], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, FuturesContract]]):
+class FuturesContracts(QuantConnect.Data.Market.DataDictionary[FuturesContract], System.Collections.IEnumerable, System.Collections.Generic.ICollection[KeyValuePair[Symbol, FuturesContract]], System.Collections.Generic.IDictionary[Symbol, FuturesContract], QuantConnect.Interfaces.IExtendedDictionary[Symbol, FuturesContract], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, FuturesContract]]):
     """
     Collection of QuantConnect.Data.Market.FuturesContract keyed by futures symbol
     
@@ -213,7 +213,7 @@ class IBar:
 
 
 
-class IBaseDataBar(QuantConnect.Data.Market.IBar, QuantConnect.Data.IBaseData):
+class IBaseDataBar(QuantConnect.Data.IBaseData, QuantConnect.Data.Market.IBar):
     """ Represents a type that is both a bar and base data """
 
 class Tick(QuantConnect.Data.BaseData, QuantConnect.Data.IBaseData):
@@ -270,6 +270,9 @@ class Tick(QuantConnect.Data.BaseData, QuantConnect.Data.IBaseData):
         pass
 
     def Reader(self, *args) -> QuantConnect.Data.BaseData:
+        pass
+
+    def SetValue(self) -> None:
         pass
 
     def ToString(self) -> str:

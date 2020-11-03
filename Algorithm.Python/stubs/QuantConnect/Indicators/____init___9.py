@@ -12,7 +12,7 @@ import datetime
 
 
 
-class RollingWindow(System.object, QuantConnect.Indicators.IReadOnlyWindow[T], System.Collections.IEnumerable, System.Collections.Generic.IEnumerable[T]):
+class RollingWindow(System.object, System.Collections.IEnumerable, QuantConnect.Indicators.IReadOnlyWindow[T], System.Collections.Generic.IEnumerable[T]):
     """ RollingWindow[T](size: int) """
     def Add(self, item: QuantConnect.Indicators.T) -> None:
         pass
@@ -40,7 +40,7 @@ class RollingWindow(System.object, QuantConnect.Indicators.IReadOnlyWindow[T], S
     Item: indexer#
 
 
-class SchaffTrendCycle(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class SchaffTrendCycle(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     This indicator creates the Schaff Trend Cycle
     
@@ -67,7 +67,7 @@ class SchaffTrendCycle(QuantConnect.Indicators.Indicator, QuantConnect.Indicator
 
 
 
-class SimpleMovingAverage(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class SimpleMovingAverage(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     Represents the traditional simple moving average indicator (SMA)
     
@@ -96,7 +96,7 @@ class SimpleMovingAverage(QuantConnect.Indicators.WindowIndicator[IndicatorDataP
 
 
 
-class Variance(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class Variance(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     This indicator computes the n-period population variance.
     
@@ -121,7 +121,7 @@ class Variance(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint], Quan
 
 
 
-class StandardDeviation(QuantConnect.Indicators.Variance, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class StandardDeviation(QuantConnect.Indicators.Variance, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     This indicator computes the n-period population standard deviation.
     
@@ -140,7 +140,7 @@ class StandardDeviation(QuantConnect.Indicators.Variance, QuantConnect.Indicator
         pass
 
 
-class Stochastic(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class Stochastic(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     This indicator computes the Slow Stochastics %K and %D. The Fast Stochastics %K is is computed by 
                 (Current Close Price - Lowest Price of given Period) / (Highest Price of given Period - Lowest Price of given Period)
@@ -176,7 +176,7 @@ class Stochastic(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.I
 
 
 
-class Sum(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class Sum(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     Represents an indicator capable of tracking the sum for the given period
     
@@ -201,7 +201,7 @@ class Sum(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint], QuantConn
 
 
 
-class SwissArmyKnife(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class SwissArmyKnife(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     Swiss Army Knife indicator by John Ehlers
     
@@ -242,7 +242,7 @@ class SwissArmyKnifeTool(System.Enum, System.IConvertible, System.IFormattable, 
     TwoPoleHighPass: 'SwissArmyKnifeTool'
 
 
-class T3MovingAverage(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class T3MovingAverage(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     This indicator computes the T3 Moving Average (T3).
                 The T3 Moving Average is calculated with the following formula:
@@ -274,7 +274,7 @@ class T3MovingAverage(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint],
 
 
 
-class TriangularMovingAverage(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class TriangularMovingAverage(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     This indicator computes the Triangular Moving Average (TRIMA). 
                 The Triangular Moving Average is calculated with the following formula:

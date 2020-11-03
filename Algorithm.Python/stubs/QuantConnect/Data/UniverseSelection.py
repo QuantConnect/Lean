@@ -112,6 +112,10 @@ class CoarseFundamental(QuantConnect.Data.BaseData, QuantConnect.Data.IBaseData)
     def Reader(self, *args) -> QuantConnect.Data.BaseData:
         pass
 
+    @staticmethod
+    def ToRow(coarse: QuantConnect.Data.UniverseSelection.CoarseFundamental) -> str:
+        pass
+
     AdjustedPrice: float
 
     DollarVolume: float
@@ -187,6 +191,8 @@ class Universe(System.object, System.IDisposable):
 
 
     Member: type
+    SelectionChanged: BoundEvent
+    SelectionEventArgs: type
     Unchanged: UnchangedUniverse
     UnchangedUniverse: type
 

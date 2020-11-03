@@ -12,7 +12,7 @@ import datetime
 
 
 
-class DonchianChannel(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class DonchianChannel(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     This indicator computes the upper and lower band of the Donchian Channel.
                 The upper band is computed by finding the highest high over the given period.
@@ -57,7 +57,7 @@ class DonchianChannel(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicat
 
 
 
-class DoubleExponentialMovingAverage(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class DoubleExponentialMovingAverage(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     This indicator computes the Double Exponential Moving Average (DEMA).
                 The Double Exponential Moving Average is calculated with the following formula:
@@ -89,7 +89,7 @@ class DoubleExponentialMovingAverage(QuantConnect.Indicators.IndicatorBase[Indic
 
 
 
-class EaseOfMovementValue(QuantConnect.Indicators.TradeBarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[TradeBar]]):
+class EaseOfMovementValue(QuantConnect.Indicators.TradeBarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[TradeBar]]):
     """
     This indicator computes the n-period Ease of Movement Value using the following:
                 MID = (high_1 + low_1)/2 - (high_0 + low_0)/2 
@@ -122,7 +122,7 @@ class EaseOfMovementValue(QuantConnect.Indicators.TradeBarIndicator, QuantConnec
 
 
 
-class ExponentialMovingAverage(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class ExponentialMovingAverage(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     Represents the traditional exponential moving average indicator (EMA)
     
@@ -160,7 +160,7 @@ class ExponentialMovingAverage(QuantConnect.Indicators.Indicator, QuantConnect.I
 
 
 
-class FilteredIdentity(QuantConnect.Indicators.IndicatorBase[IBaseData], System.IComparable, QuantConnect.Indicators.IIndicator[IBaseData], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseData]]):
+class FilteredIdentity(QuantConnect.Indicators.IndicatorBase[IBaseData], QuantConnect.Indicators.IIndicator[IBaseData], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseData]]):
     """
     Represents an indicator that is a ready after ingesting a single sample and
                 always returns the same value as it is given if it passes a filter condition
@@ -174,7 +174,7 @@ class FilteredIdentity(QuantConnect.Indicators.IndicatorBase[IBaseData], System.
 
 
 
-class FisherTransform(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class FisherTransform(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     The Fisher transform is a mathematical process which is used to convert any data set to a modified
                  data set whose Probability Distribution Function is approximately Gaussian. Once the Fisher transform
@@ -215,7 +215,7 @@ class FisherTransform(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicat
 
 
 
-class FractalAdaptiveMovingAverage(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class FractalAdaptiveMovingAverage(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     The Fractal Adaptive Moving Average (FRAMA) by John Ehlers
     
@@ -247,7 +247,7 @@ class FractalAdaptiveMovingAverage(QuantConnect.Indicators.BarIndicator, QuantCo
 
 
 
-class FunctionalIndicator(QuantConnect.Indicators.IndicatorBase[T], System.IComparable, QuantConnect.Indicators.IIndicator[T], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[T]]):
+class FunctionalIndicator(QuantConnect.Indicators.IndicatorBase[T], QuantConnect.Indicators.IIndicator[T], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[T]]):
     """
     FunctionalIndicator[T](name: str, computeNextValue: Func[T, Decimal], isReady: Func[IndicatorBase[T], bool])
     FunctionalIndicator[T](name: str, computeNextValue: Func[T, Decimal], isReady: Func[IndicatorBase[T], bool], reset: Action)

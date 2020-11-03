@@ -35,7 +35,7 @@ class FactorFile(System.object, System.Collections.IEnumerable, System.Collectio
     def GetSplitFactor(self, searchDate: datetime.datetime) -> float:
         pass
 
-    def GetSplitsAndDividends(self, symbol: QuantConnect.Symbol, exchangeHours: QuantConnect.Securities.SecurityExchangeHours) -> typing.List[QuantConnect.Data.BaseData]:
+    def GetSplitsAndDividends(self, symbol: QuantConnect.Symbol, exchangeHours: QuantConnect.Securities.SecurityExchangeHours, decimalPlaces: int) -> typing.List[QuantConnect.Data.BaseData]:
         pass
 
     def HasDividendEventOnNextTradingDay(self, date: datetime.datetime, priceFactorRatio: float) -> bool:
@@ -92,7 +92,7 @@ class FactorFileRow(System.object):
     def Apply(self, *args) -> QuantConnect.Data.Auxiliary.FactorFileRow:
         pass
 
-    def GetDividend(self, futureFactorFileRow: QuantConnect.Data.Auxiliary.FactorFileRow, symbol: QuantConnect.Symbol, exchangeHours: QuantConnect.Securities.SecurityExchangeHours) -> QuantConnect.Data.Market.Dividend:
+    def GetDividend(self, futureFactorFileRow: QuantConnect.Data.Auxiliary.FactorFileRow, symbol: QuantConnect.Symbol, exchangeHours: QuantConnect.Securities.SecurityExchangeHours, decimalPlaces: int) -> QuantConnect.Data.Market.Dividend:
         pass
 
     def GetSplit(self, futureFactorFileRow: QuantConnect.Data.Auxiliary.FactorFileRow, symbol: QuantConnect.Symbol, exchangeHours: QuantConnect.Securities.SecurityExchangeHours) -> QuantConnect.Data.Market.Split:

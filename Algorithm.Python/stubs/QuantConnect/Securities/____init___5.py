@@ -115,9 +115,6 @@ class Security(System.object, QuantConnect.Interfaces.ISecurityPrice):
     def SetMarketPrice(self, data: QuantConnect.Data.BaseData) -> None:
         pass
 
-    def SetRealTimePrice(self, data: QuantConnect.Data.BaseData) -> None:
-        pass
-
     @typing.overload
     def SetSlippageModel(self, slippageModel: QuantConnect.Orders.Slippage.ISlippageModel) -> None:
         pass

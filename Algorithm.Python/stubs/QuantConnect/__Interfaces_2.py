@@ -1,4 +1,3 @@
-from .__Interfaces_3 import *
 import typing
 import System.Threading
 import System.IO
@@ -22,24 +21,10 @@ import QuantConnect.Data
 import QuantConnect.Brokerages
 import QuantConnect.Benchmarks
 import QuantConnect.Api
-import QuantConnect.API
 import QuantConnect
 import Python.Runtime
 import NodaTime
 import datetime
-
-
-
-class IDataQueueUniverseProvider:
-    """
-    This interface allows interested parties to lookup or enumerate the available symbols. Data source exposes it if this feature is available.
-                Availability of a symbol doesn't imply that it is possible to trade it. This is a data source specific interface, not broker specific.
-    """
-    def CanAdvanceTime(self, securityType: QuantConnect.SecurityType) -> bool:
-        pass
-
-    def LookupSymbols(self, lookupName: str, securityType: QuantConnect.SecurityType, includeExpired: bool, securityCurrency: str, securityExchange: str) -> typing.List[QuantConnect.Symbol]:
-        pass
 
 
 class IDownloadProvider:
@@ -348,3 +333,16 @@ class ITradeBuilder:
         pass
 
     ClosedTrades: typing.List[QuantConnect.Statistics.Trade]
+
+
+
+class ObjectStoreErrorRaisedEventArgs(System.EventArgs):
+    """
+    Event arguments for the QuantConnect.Interfaces.IObjectStore.ErrorRaised event
+    
+    ObjectStoreErrorRaisedEventArgs(error: Exception)
+    """
+    def __init__(self, error: System.Exception) -> QuantConnect.Interfaces.ObjectStoreErrorRaisedEventArgs:
+        pass
+
+    Error: System.Exception

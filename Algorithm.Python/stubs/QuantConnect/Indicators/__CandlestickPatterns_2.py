@@ -5,7 +5,7 @@ import datetime
 
 
 
-class HikkakeModified(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class HikkakeModified(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Hikkake Modified candlestick pattern
     
@@ -30,7 +30,7 @@ class HikkakeModified(QuantConnect.Indicators.CandlestickPatterns.CandlestickPat
 
 
 
-class HomingPigeon(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class HomingPigeon(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Homing Pigeon candlestick pattern indicator
     
@@ -55,7 +55,7 @@ class HomingPigeon(QuantConnect.Indicators.CandlestickPatterns.CandlestickPatter
 
 
 
-class IdenticalThreeCrows(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class IdenticalThreeCrows(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Identical Three Crows candlestick pattern
     
@@ -80,7 +80,7 @@ class IdenticalThreeCrows(QuantConnect.Indicators.CandlestickPatterns.Candlestic
 
 
 
-class InNeck(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class InNeck(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     In-Neck candlestick pattern indicator
     
@@ -105,7 +105,7 @@ class InNeck(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, Sys
 
 
 
-class InvertedHammer(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class InvertedHammer(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Inverted Hammer candlestick pattern indicator
     
@@ -130,7 +130,7 @@ class InvertedHammer(QuantConnect.Indicators.CandlestickPatterns.CandlestickPatt
 
 
 
-class Kicking(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class Kicking(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Kicking candlestick pattern
     
@@ -155,7 +155,7 @@ class Kicking(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, Sy
 
 
 
-class KickingByLength(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class KickingByLength(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Kicking (bull/bear determined by the longer marubozu) candlestick pattern
     
@@ -180,7 +180,7 @@ class KickingByLength(QuantConnect.Indicators.CandlestickPatterns.CandlestickPat
 
 
 
-class LadderBottom(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class LadderBottom(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Ladder Bottom candlestick pattern indicator
     
@@ -205,7 +205,7 @@ class LadderBottom(QuantConnect.Indicators.CandlestickPatterns.CandlestickPatter
 
 
 
-class LongLeggedDoji(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class LongLeggedDoji(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Long Legged Doji candlestick pattern indicator
     
@@ -230,7 +230,7 @@ class LongLeggedDoji(QuantConnect.Indicators.CandlestickPatterns.CandlestickPatt
 
 
 
-class LongLineCandle(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class LongLineCandle(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Long Line Candle candlestick pattern indicator
     
@@ -255,7 +255,7 @@ class LongLineCandle(QuantConnect.Indicators.CandlestickPatterns.CandlestickPatt
 
 
 
-class Marubozu(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class Marubozu(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Marubozu candlestick pattern indicator
     
@@ -280,7 +280,7 @@ class Marubozu(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, S
 
 
 
-class MatchingLow(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class MatchingLow(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Matching Low candlestick pattern indicator
     
@@ -305,7 +305,7 @@ class MatchingLow(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern
 
 
 
-class MatHold(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class MatHold(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Mat Hold candlestick pattern
     

@@ -17,6 +17,7 @@ import QuantConnect.Scheduling
 import QuantConnect.Packets
 import QuantConnect.Orders
 import QuantConnect.Interfaces
+import QuantConnect.Data.UniverseSelection
 import QuantConnect.Data.Market
 import QuantConnect.Data
 import QuantConnect.Algorithm.Framework.Portfolio
@@ -96,13 +97,13 @@ class IIsolatorLimitResultProvider:
         pass
 
 
-class InvalidConfigurationDetectedEventArgs(System.EventArgs):
+class InvalidConfigurationDetectedEventArgs(QuantConnect.DataProviderEventArgs):
     """
     Event arguments for the QuantConnect.Interfaces.IDataProviderEvents.InvalidConfigurationDetected event
     
-    InvalidConfigurationDetectedEventArgs(message: str)
+    InvalidConfigurationDetectedEventArgs(symbol: Symbol, message: str)
     """
-    def __init__(self, message: str) -> QuantConnect.InvalidConfigurationDetectedEventArgs:
+    def __init__(self, symbol: QuantConnect.Symbol, message: str) -> QuantConnect.InvalidConfigurationDetectedEventArgs:
         pass
 
     Message: str
@@ -272,7 +273,7 @@ class MarketDataType(System.Enum, System.IConvertible, System.IFormattable, Syst
     TradeBar: 'MarketDataType'
 
 
-class NewTradableDateEventArgs(System.EventArgs):
+class NewTradableDateEventArgs(QuantConnect.DataProviderEventArgs):
     """
     Event arguments for the NewTradableDate event
     
@@ -285,17 +286,15 @@ class NewTradableDateEventArgs(System.EventArgs):
 
     LastBaseData: QuantConnect.Data.BaseData
 
-    Symbol: QuantConnect.Symbol
 
 
-
-class NumericalPrecisionLimitedEventArgs(System.EventArgs):
+class NumericalPrecisionLimitedEventArgs(QuantConnect.DataProviderEventArgs):
     """
     Event arguments for the QuantConnect.Interfaces.IDataProviderEvents.NumericalPrecisionLimited event
     
-    NumericalPrecisionLimitedEventArgs(message: str)
+    NumericalPrecisionLimitedEventArgs(symbol: Symbol, message: str)
     """
-    def __init__(self, message: str) -> QuantConnect.NumericalPrecisionLimitedEventArgs:
+    def __init__(self, symbol: QuantConnect.Symbol, message: str) -> QuantConnect.NumericalPrecisionLimitedEventArgs:
         pass
 
     Message: str

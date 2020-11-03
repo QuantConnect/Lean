@@ -30,7 +30,7 @@ class Tiingo(System.object):
     __all__: list
 
 
-class TiingoPrice(QuantConnect.Data.Market.TradeBar, QuantConnect.Data.Market.IBar, QuantConnect.Data.Market.IBaseDataBar, QuantConnect.Data.IBaseData):
+class TiingoPrice(QuantConnect.Data.Market.TradeBar, QuantConnect.Data.IBaseData, QuantConnect.Data.Market.IBar, QuantConnect.Data.Market.IBaseDataBar):
     """
     Tiingo daily price data
                 https://api.tiingo.com/docs/tiingo/daily
@@ -107,7 +107,7 @@ class TiingoPrice(QuantConnect.Data.Market.TradeBar, QuantConnect.Data.Market.IB
 
 
 
-class TiingoDailyData(QuantConnect.Data.Custom.Tiingo.TiingoPrice, QuantConnect.Data.Market.IBar, QuantConnect.Data.Market.IBaseDataBar, QuantConnect.Data.IBaseData):
+class TiingoDailyData(QuantConnect.Data.Custom.Tiingo.TiingoPrice, QuantConnect.Data.IBaseData, QuantConnect.Data.Market.IBar, QuantConnect.Data.Market.IBaseDataBar):
     """
     Tiingo daily price data
                 https://api.tiingo.com/docs/tiingo/daily

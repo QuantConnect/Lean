@@ -149,8 +149,17 @@ class UniverseSettings(System.object):
     Defines settings required when adding a subscription
     
     UniverseSettings(resolution: Resolution, leverage: Decimal, fillForward: bool, extendedMarketHours: bool, minimumTimeInUniverse: TimeSpan, dataNormalizationMode: DataNormalizationMode)
+    UniverseSettings(universeSettings: UniverseSettings)
     """
+    @typing.overload
     def __init__(self, resolution: QuantConnect.Resolution, leverage: float, fillForward: bool, extendedMarketHours: bool, minimumTimeInUniverse: datetime.timedelta, dataNormalizationMode: QuantConnect.DataNormalizationMode) -> QuantConnect.Data.UniverseSelection.UniverseSettings:
+        pass
+
+    @typing.overload
+    def __init__(self, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings) -> QuantConnect.Data.UniverseSelection.UniverseSettings:
+        pass
+
+    def __init__(self, *args) -> QuantConnect.Data.UniverseSelection.UniverseSettings:
         pass
 
     DataNormalizationMode: QuantConnect.DataNormalizationMode

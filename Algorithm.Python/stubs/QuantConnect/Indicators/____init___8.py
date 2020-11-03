@@ -29,7 +29,7 @@ class MovingAverageTypeExtensions(System.object):
     __all__: list
 
 
-class NormalizedAverageTrueRange(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class NormalizedAverageTrueRange(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     This indicator computes the Normalized Average True Range (NATR).
                 The Normalized Average True Range is calculated with the following formula:
@@ -58,7 +58,7 @@ class NormalizedAverageTrueRange(QuantConnect.Indicators.BarIndicator, QuantConn
 
 
 
-class OnBalanceVolume(QuantConnect.Indicators.TradeBarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[TradeBar]]):
+class OnBalanceVolume(QuantConnect.Indicators.TradeBarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[TradeBar]]):
     """
     This indicator computes the On Balance Volume (OBV). 
                 The On Balance Volume is calculated by determining the price of the current close price and previous close price.
@@ -89,7 +89,7 @@ class OnBalanceVolume(QuantConnect.Indicators.TradeBarIndicator, QuantConnect.In
 
 
 
-class ParabolicStopAndReverse(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class ParabolicStopAndReverse(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Parabolic SAR Indicator 
                 Based on TA-Lib implementation
@@ -117,7 +117,7 @@ class ParabolicStopAndReverse(QuantConnect.Indicators.BarIndicator, QuantConnect
 
 
 
-class PercentagePriceOscillator(QuantConnect.Indicators.AbsolutePriceOscillator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class PercentagePriceOscillator(QuantConnect.Indicators.AbsolutePriceOscillator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     This indicator computes the Percentage Price Oscillator (PPO)
                 The Percentage Price Oscillator is calculated using the following formula:
@@ -138,7 +138,7 @@ class PercentagePriceOscillator(QuantConnect.Indicators.AbsolutePriceOscillator,
         pass
 
 
-class PythonIndicator(QuantConnect.Indicators.IndicatorBase[IBaseData], System.IComparable, QuantConnect.Indicators.IIndicator[IBaseData], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseData]]):
+class PythonIndicator(QuantConnect.Indicators.IndicatorBase[IBaseData], QuantConnect.Indicators.IIndicator[IBaseData], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseData]]):
     """
     Provides a wrapper for QuantConnect.Indicators.IndicatorBase implementations written in python
     
@@ -168,7 +168,7 @@ class PythonIndicator(QuantConnect.Indicators.IndicatorBase[IBaseData], System.I
 
 
 
-class RateOfChangeRatio(QuantConnect.Indicators.RateOfChange, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class RateOfChangeRatio(QuantConnect.Indicators.RateOfChange, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     This indicator computes the Rate Of Change Ratio (ROCR). 
                 The Rate Of Change Ratio is calculated with the following formula:
@@ -189,7 +189,7 @@ class RateOfChangeRatio(QuantConnect.Indicators.RateOfChange, QuantConnect.Indic
         pass
 
 
-class RegressionChannel(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class RegressionChannel(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     The Regression Channel indicator extends the QuantConnect.Indicators.LeastSquaresMovingAverage
                 with the inclusion of two (upper and lower) channel lines that are distanced from
@@ -229,7 +229,7 @@ class RegressionChannel(QuantConnect.Indicators.Indicator, QuantConnect.Indicato
 
 
 
-class RelativeStrengthIndex(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class RelativeStrengthIndex(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     Represents the  Relative Strength Index (RSI) developed by K. Welles Wilder.
                 You can optionally specified a different moving average type to be used in the computation

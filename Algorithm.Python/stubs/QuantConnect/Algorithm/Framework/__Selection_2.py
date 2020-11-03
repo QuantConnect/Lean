@@ -53,7 +53,7 @@ class OpenInterestFutureUniverseSelectionModel(QuantConnect.Algorithm.Framework.
     
     OpenInterestFutureUniverseSelectionModel(algorithm: IAlgorithm, futureChainSymbolSelector: Func[DateTime, IEnumerable[Symbol]], chainContractsLookupLimit: Nullable[int], resultsLimit: Nullable[int])
     """
-    def FilterByOpenInterest(self, contracts: System.Collections.Generic.IReadOnlyDictionary[QuantConnect.Symbol, QuantConnect.Securities.SecurityExchangeHours]) -> typing.List[QuantConnect.Symbol]:
+    def FilterByOpenInterest(self, contracts: System.Collections.Generic.IReadOnlyDictionary[QuantConnect.Symbol, QuantConnect.Securities.Entry]) -> typing.List[QuantConnect.Symbol]:
         pass
 
     def __init__(self, algorithm: QuantConnect.Interfaces.IAlgorithm, futureChainSymbolSelector: typing.Callable[[datetime.datetime], typing.List[QuantConnect.Symbol]], chainContractsLookupLimit: typing.Optional[int], resultsLimit: typing.Optional[int]) -> QuantConnect.Algorithm.Framework.Selection.OpenInterestFutureUniverseSelectionModel:

@@ -56,7 +56,7 @@ class IOptionPriceModel:
         pass
 
 
-class Option(QuantConnect.Securities.Security, QuantConnect.Interfaces.IOptionPrice, QuantConnect.Securities.IDerivativeSecurity, QuantConnect.Interfaces.ISecurityPrice):
+class Option(QuantConnect.Securities.Security, QuantConnect.Securities.IDerivativeSecurity, QuantConnect.Interfaces.IOptionPrice, QuantConnect.Interfaces.ISecurityPrice):
     """
     Option Security Object Implementation for Option Assets
     
@@ -69,7 +69,15 @@ class Option(QuantConnect.Securities.Security, QuantConnect.Interfaces.IOptionPr
     def GetAggregateExerciseAmount(self) -> float:
         pass
 
-    def GetExerciseQuantity(self, quantity: float) -> float:
+    @typing.overload
+    def GetExerciseQuantity(self) -> float:
+        pass
+
+    @typing.overload
+    def GetExerciseQuantity(self, exerciseOrderQuantity: float) -> float:
+        pass
+
+    def GetExerciseQuantity(self, *args) -> float:
         pass
 
     def GetIntrinsicValue(self, underlyingPrice: float) -> float:
@@ -252,57 +260,3 @@ class OptionPriceModelResult(System.object):
     ImpliedVolatility: float
 
     TheoreticalPrice: float
-
-
-
-class OptionPriceModels(System.object):
-    """ Static class contains definitions of major option pricing models that can be used in LEAN """
-    @staticmethod
-    def AdditiveEquiprobabilities() -> QuantConnect.Securities.Option.IOptionPriceModel:
-        pass
-
-    @staticmethod
-    def BaroneAdesiWhaley() -> QuantConnect.Securities.Option.IOptionPriceModel:
-        pass
-
-    @staticmethod
-    def BinomialCoxRossRubinstein() -> QuantConnect.Securities.Option.IOptionPriceModel:
-        pass
-
-    @staticmethod
-    def BinomialJarrowRudd() -> QuantConnect.Securities.Option.IOptionPriceModel:
-        pass
-
-    @staticmethod
-    def BinomialJoshi() -> QuantConnect.Securities.Option.IOptionPriceModel:
-        pass
-
-    @staticmethod
-    def BinomialLeisenReimer() -> QuantConnect.Securities.Option.IOptionPriceModel:
-        pass
-
-    @staticmethod
-    def BinomialTian() -> QuantConnect.Securities.Option.IOptionPriceModel:
-        pass
-
-    @staticmethod
-    def BinomialTrigeorgis() -> QuantConnect.Securities.Option.IOptionPriceModel:
-        pass
-
-    @staticmethod
-    def BjerksundStensland() -> QuantConnect.Securities.Option.IOptionPriceModel:
-        pass
-
-    @staticmethod
-    def BlackScholes() -> QuantConnect.Securities.Option.IOptionPriceModel:
-        pass
-
-    @staticmethod
-    def CrankNicolsonFD() -> QuantConnect.Securities.Option.IOptionPriceModel:
-        pass
-
-    @staticmethod
-    def Integral() -> QuantConnect.Securities.Option.IOptionPriceModel:
-        pass
-
-    __all__: list

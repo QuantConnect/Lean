@@ -29,6 +29,19 @@ class OrderProperties(System.object, QuantConnect.Interfaces.IOrderProperties):
 
 
 
+class BinanceOrderProperties(QuantConnect.Orders.OrderProperties, QuantConnect.Interfaces.IOrderProperties):
+    """
+    Contains additional properties and settings for an order submitted to Binance brokerage
+    
+    BinanceOrderProperties()
+    """
+    def Clone(self) -> QuantConnect.Interfaces.IOrderProperties:
+        pass
+
+    PostOnly: bool
+
+
+
 class BitfinexOrderProperties(QuantConnect.Orders.OrderProperties, QuantConnect.Interfaces.IOrderProperties):
     """
     Contains additional properties and settings for an order submitted to Bitfinex brokerage

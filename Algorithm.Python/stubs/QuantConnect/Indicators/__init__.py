@@ -21,7 +21,7 @@ def IIndicator(*args, **kwargs): # real signature unknown
 
 # classes
 
-class Indicator(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class Indicator(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     Represents a type capable of ingesting a piece of data and producing a new piece of data.
                 Indicators can be used to filter and transform data into a new, more informative form.
@@ -30,7 +30,7 @@ class Indicator(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], Syste
         pass
 
 
-class MovingAverageConvergenceDivergence(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class MovingAverageConvergenceDivergence(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     This indicator creates two moving averages defined on a base indicator and produces the difference
                 between the fast and slow averages.
@@ -66,7 +66,7 @@ class MovingAverageConvergenceDivergence(QuantConnect.Indicators.Indicator, Quan
 
 
 
-class AbsolutePriceOscillator(QuantConnect.Indicators.MovingAverageConvergenceDivergence, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class AbsolutePriceOscillator(QuantConnect.Indicators.MovingAverageConvergenceDivergence, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     This indicator computes the Absolute Price Oscillator (APO)
                 The Absolute Price Oscillator is calculated using the following formula:
@@ -87,7 +87,7 @@ class AbsolutePriceOscillator(QuantConnect.Indicators.MovingAverageConvergenceDi
         pass
 
 
-class AccelerationBands(QuantConnect.Indicators.IndicatorBase[IBaseDataBar], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class AccelerationBands(QuantConnect.Indicators.IndicatorBase[IBaseDataBar], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     The Acceleration Bands created by Price Headley plots upper and lower envelope bands around a moving average.
     
@@ -127,7 +127,7 @@ class AccelerationBands(QuantConnect.Indicators.IndicatorBase[IBaseDataBar], Qua
 
 
 
-class TradeBarIndicator(QuantConnect.Indicators.IndicatorBase[TradeBar], System.IComparable, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[TradeBar]]):
+class TradeBarIndicator(QuantConnect.Indicators.IndicatorBase[TradeBar], QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[TradeBar]]):
     """
     The TradeBarIndicator is an indicator that accepts TradeBar data as its input.
                 
@@ -137,7 +137,7 @@ class TradeBarIndicator(QuantConnect.Indicators.IndicatorBase[TradeBar], System.
         pass
 
 
-class AccumulationDistribution(QuantConnect.Indicators.TradeBarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[TradeBar]]):
+class AccumulationDistribution(QuantConnect.Indicators.TradeBarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[TradeBar]]):
     """
     This indicator computes the Accumulation/Distribution (AD)
                 The Accumulation/Distribution is calculated using the following formula:
@@ -163,7 +163,7 @@ class AccumulationDistribution(QuantConnect.Indicators.TradeBarIndicator, QuantC
 
 
 
-class AccumulationDistributionOscillator(QuantConnect.Indicators.TradeBarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[TradeBar]]):
+class AccumulationDistributionOscillator(QuantConnect.Indicators.TradeBarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[TradeBar]]):
     """
     This indicator computes the Accumulation/Distribution Oscillator (ADOSC)
                 The Accumulation/Distribution Oscillator is calculated using the following formula:
@@ -192,7 +192,7 @@ class AccumulationDistributionOscillator(QuantConnect.Indicators.TradeBarIndicat
 
 
 
-class AdvanceDeclineIndicator(QuantConnect.Indicators.TradeBarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[TradeBar]]):
+class AdvanceDeclineIndicator(QuantConnect.Indicators.TradeBarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[TradeBar]]):
     """
     The advance-decline indicator compares the number of stocks 
                 that closed higher against the number of stocks 
@@ -218,7 +218,7 @@ class AdvanceDeclineIndicator(QuantConnect.Indicators.TradeBarIndicator, QuantCo
 
 
 
-class AdvanceDeclineRatio(QuantConnect.Indicators.AdvanceDeclineIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[TradeBar]]):
+class AdvanceDeclineRatio(QuantConnect.Indicators.AdvanceDeclineIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[TradeBar]]):
     """
     The advance-decline ratio (ADR) compares the number of stocks 
                 that closed higher against the number of stocks 
@@ -230,7 +230,7 @@ class AdvanceDeclineRatio(QuantConnect.Indicators.AdvanceDeclineIndicator, Quant
         pass
 
 
-class AdvanceDeclineVolumeRatio(QuantConnect.Indicators.AdvanceDeclineIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[TradeBar]]):
+class AdvanceDeclineVolumeRatio(QuantConnect.Indicators.AdvanceDeclineIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[TradeBar]]):
     """
     The Advance Decline Volume Ratio is a Breadth indicator calculated as ratio of 
                 summary volume of advancing stocks to summary volume of declining stocks. 

@@ -12,6 +12,60 @@ import Python.Runtime
 import datetime
 
 
+
+class OptionPriceModels(System.object):
+    """ Static class contains definitions of major option pricing models that can be used in LEAN """
+    @staticmethod
+    def AdditiveEquiprobabilities() -> QuantConnect.Securities.Option.IOptionPriceModel:
+        pass
+
+    @staticmethod
+    def BaroneAdesiWhaley() -> QuantConnect.Securities.Option.IOptionPriceModel:
+        pass
+
+    @staticmethod
+    def BinomialCoxRossRubinstein() -> QuantConnect.Securities.Option.IOptionPriceModel:
+        pass
+
+    @staticmethod
+    def BinomialJarrowRudd() -> QuantConnect.Securities.Option.IOptionPriceModel:
+        pass
+
+    @staticmethod
+    def BinomialJoshi() -> QuantConnect.Securities.Option.IOptionPriceModel:
+        pass
+
+    @staticmethod
+    def BinomialLeisenReimer() -> QuantConnect.Securities.Option.IOptionPriceModel:
+        pass
+
+    @staticmethod
+    def BinomialTian() -> QuantConnect.Securities.Option.IOptionPriceModel:
+        pass
+
+    @staticmethod
+    def BinomialTrigeorgis() -> QuantConnect.Securities.Option.IOptionPriceModel:
+        pass
+
+    @staticmethod
+    def BjerksundStensland() -> QuantConnect.Securities.Option.IOptionPriceModel:
+        pass
+
+    @staticmethod
+    def BlackScholes() -> QuantConnect.Securities.Option.IOptionPriceModel:
+        pass
+
+    @staticmethod
+    def CrankNicolsonFD() -> QuantConnect.Securities.Option.IOptionPriceModel:
+        pass
+
+    @staticmethod
+    def Integral() -> QuantConnect.Securities.Option.IOptionPriceModel:
+        pass
+
+    __all__: list
+
+
 class OptionStrategies(System.object):
     # no doc
     @staticmethod

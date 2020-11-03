@@ -15,6 +15,23 @@ import QuantConnect
 import datetime
 
 
+class DefaultBrokerageMessageHandler(System.object, QuantConnect.Brokerages.IBrokerageMessageHandler):
+    """
+    Provides a default implementation o QuantConnect.Brokerages.IBrokerageMessageHandler that will forward
+                messages as follows:
+                Information -> IResultHandler.Debug
+                Warning     -> IResultHandler.Error && IApi.SendUserEmail
+                Error       -> IResultHandler.Error && IAlgorithm.RunTimeError
+    
+    DefaultBrokerageMessageHandler(algorithm: IAlgorithm, job: AlgorithmNodePacket, api: IApi, initialDelay: Nullable[TimeSpan], openThreshold: Nullable[TimeSpan])
+    """
+    def Handle(self, message: QuantConnect.Brokerages.BrokerageMessageEvent) -> None:
+        pass
+
+    def __init__(self, algorithm: QuantConnect.Interfaces.IAlgorithm, job: QuantConnect.Packets.AlgorithmNodePacket, api: QuantConnect.Interfaces.IApi, initialDelay: typing.Optional[datetime.timedelta], openThreshold: typing.Optional[datetime.timedelta]) -> QuantConnect.Brokerages.DefaultBrokerageMessageHandler:
+        pass
+
+
 class DowngradeErrorCodeToWarningBrokerageMessageHandler(System.object, QuantConnect.Brokerages.IBrokerageMessageHandler):
     """
     Provides an implementation of QuantConnect.Brokerages.IBrokerageMessageHandler that converts specified error codes into warnings
@@ -233,34 +250,3 @@ class OandaBrokerageModel(QuantConnect.Brokerages.DefaultBrokerageModel, QuantCo
 
 
     DefaultMarketMap: ReadOnlyDictionary[SecurityType, str]
-
-
-class TradierBrokerageModel(QuantConnect.Brokerages.DefaultBrokerageModel, QuantConnect.Brokerages.IBrokerageModel):
-    """
-    Provides tradier specific properties
-    
-    TradierBrokerageModel(accountType: AccountType)
-    """
-    def ApplySplit(self, tickets: typing.List[QuantConnect.Orders.OrderTicket], split: QuantConnect.Data.Market.Split) -> None:
-        pass
-
-    def CanExecuteOrder(self, security: QuantConnect.Securities.Security, order: QuantConnect.Orders.Order) -> bool:
-        pass
-
-    def CanSubmitOrder(self, security: QuantConnect.Securities.Security, order: QuantConnect.Orders.Order, message: QuantConnect.Brokerages.BrokerageMessageEvent) -> bool:
-        pass
-
-    def CanUpdateOrder(self, security: QuantConnect.Securities.Security, order: QuantConnect.Orders.Order, request: QuantConnect.Orders.UpdateOrderRequest, message: QuantConnect.Brokerages.BrokerageMessageEvent) -> bool:
-        pass
-
-    def GetFeeModel(self, security: QuantConnect.Securities.Security) -> QuantConnect.Orders.Fees.IFeeModel:
-        pass
-
-    def GetFillModel(self, security: QuantConnect.Securities.Security) -> QuantConnect.Orders.Fills.IFillModel:
-        pass
-
-    def GetSlippageModel(self, security: QuantConnect.Securities.Security) -> QuantConnect.Orders.Slippage.ISlippageModel:
-        pass
-
-    def __init__(self, accountType: QuantConnect.AccountType) -> QuantConnect.Brokerages.TradierBrokerageModel:
-        pass

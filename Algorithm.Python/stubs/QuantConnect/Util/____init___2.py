@@ -125,6 +125,10 @@ class PythonUtil(System.object):
     PythonUtil()
     """
     @staticmethod
+    def ConvertToSymbols(input: Python.Runtime.PyObject) -> typing.List[QuantConnect.Symbol]:
+        pass
+
+    @staticmethod
     def PythonExceptionStackParser(value: str) -> str:
         pass
 

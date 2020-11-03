@@ -12,7 +12,7 @@ import datetime
 
 
 
-class BollingerBands(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class BollingerBands(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     This indicator creates a moving average (middle band) with an upper band and lower band
                 fixed at k standard deviations above and below the moving average.
@@ -56,7 +56,7 @@ class BollingerBands(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.
 
 
 
-class ChandeMomentumOscillator(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class ChandeMomentumOscillator(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     This indicator computes the Chande Momentum Oscillator (CMO).
                 CMO calculation is mostly identical to RSI.
@@ -87,7 +87,7 @@ class ChandeMomentumOscillator(QuantConnect.Indicators.WindowIndicator[Indicator
 
 
 
-class CommodityChannelIndex(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class CommodityChannelIndex(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Represents the traditional commodity channel index (CCI)
                 
@@ -129,7 +129,7 @@ class CommodityChannelIndex(QuantConnect.Indicators.BarIndicator, QuantConnect.I
 
 
 
-class CompositeIndicator(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class CompositeIndicator(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     CompositeIndicator[T](name: str, left: IndicatorBase[T], right: IndicatorBase[T], composer: IndicatorComposer)
     CompositeIndicator[T](left: IndicatorBase[T], right: IndicatorBase[T], composer: IndicatorComposer)
@@ -158,7 +158,7 @@ class CompositeIndicator(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoin
     IndicatorComposer: type
 
 
-class ConstantIndicator(QuantConnect.Indicators.IndicatorBase[T], System.IComparable, QuantConnect.Indicators.IIndicator[T], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[T]]):
+class ConstantIndicator(QuantConnect.Indicators.IndicatorBase[T], QuantConnect.Indicators.IIndicator[T], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[T]]):
     """ ConstantIndicator[T](name: str, value: Decimal) """
     def Reset(self) -> None:
         pass
@@ -170,7 +170,7 @@ class ConstantIndicator(QuantConnect.Indicators.IndicatorBase[T], System.ICompar
 
 
 
-class CoppockCurve(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class CoppockCurve(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     A momentum indicator developed by Edwin “Sedge” Coppock in October 1965.
                 The goal of this indicator is to identify long-term buying opportunities in the S&P500 and Dow Industrials.
@@ -204,7 +204,7 @@ class CoppockCurve(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], Qu
 
 
 
-class Delay(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class Delay(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     An indicator that delays its input for a certain period
     
@@ -228,7 +228,7 @@ class Delay(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint], QuantCo
 
 
 
-class DetrendedPriceOscillator(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class DetrendedPriceOscillator(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     The Detrended Price Oscillator is an indicator designed to remove trend from price
                 and make it easier to identify cycles.

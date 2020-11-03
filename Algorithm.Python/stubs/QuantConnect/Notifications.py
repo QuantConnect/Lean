@@ -6,8 +6,10 @@
 
 # imports
 import datetime
+import Python.Runtime
 import QuantConnect.Notifications
 import System.Collections.Concurrent
+import System.Collections.Generic
 import typing
 
 # no functions
@@ -23,13 +25,14 @@ class NotificationEmail(QuantConnect.Notifications.Notification):
     """
     Email notification data.
     
-    NotificationEmail(address: str, subject: str, message: str, data: str)
+    NotificationEmail(address: str, subject: str, message: str, data: str, headers: Dictionary[str, str])
     """
-    def __init__(self, address: str, subject: str, message: str, data: str) -> QuantConnect.Notifications.NotificationEmail:
+    def __init__(self, address: str, subject: str, message: str, data: str, headers: System.Collections.Generic.Dictionary[str, str]) -> QuantConnect.Notifications.NotificationEmail:
         pass
 
     Address: str
     Data: str
+    Headers: System.Collections.Generic.Dictionary[str, str]
     Message: str
     Subject: str
 
@@ -39,7 +42,15 @@ class NotificationManager(System.object):
     
     NotificationManager(liveMode: bool)
     """
-    def Email(self, address: str, subject: str, message: str, data: str) -> bool:
+    @typing.overload
+    def Email(self, address: str, subject: str, message: str, data: str, headers: Python.Runtime.PyObject) -> bool:
+        pass
+
+    @typing.overload
+    def Email(self, address: str, subject: str, message: str, data: str, headers: System.Collections.Generic.Dictionary[str, str]) -> bool:
+        pass
+
+    def Email(self, *args) -> bool:
         pass
 
     def Sms(self, phoneNumber: str, message: str) -> bool:

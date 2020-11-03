@@ -11,7 +11,7 @@ import Python.Runtime
 import datetime
 
 
-class ArmsIndex(QuantConnect.Indicators.TradeBarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[TradeBar]]):
+class ArmsIndex(QuantConnect.Indicators.TradeBarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[TradeBar]]):
     """
     The Arms Index, also called the Short-Term Trading Index (TRIN) 
                 is a technical analysis indicator that compares the number of advancing 
@@ -41,7 +41,7 @@ class ArmsIndex(QuantConnect.Indicators.TradeBarIndicator, QuantConnect.Indicato
 
 
 
-class ArnaudLegouxMovingAverage(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class ArnaudLegouxMovingAverage(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     Smooth and high sensitive moving Average. This moving average reduce lag of the information
                 but still being smooth to reduce noises.
@@ -77,7 +77,7 @@ class ArnaudLegouxMovingAverage(QuantConnect.Indicators.WindowIndicator[Indicato
 
 
 
-class BarIndicator(QuantConnect.Indicators.IndicatorBase[IBaseDataBar], System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class BarIndicator(QuantConnect.Indicators.IndicatorBase[IBaseDataBar], QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     The BarIndicator is an indicator that accepts IBaseDataBar data as its input.
                 
@@ -87,7 +87,7 @@ class BarIndicator(QuantConnect.Indicators.IndicatorBase[IBaseDataBar], System.I
         pass
 
 
-class AroonOscillator(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class AroonOscillator(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     The Aroon Oscillator is the difference between AroonUp and AroonDown. The value of this
                 indicator fluctuates between -100 and +100. An upward trend bias is present when the oscillator
@@ -121,7 +121,7 @@ class AroonOscillator(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicat
 
 
 
-class AverageDirectionalIndex(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class AverageDirectionalIndex(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     This indicator computes Average Directional Index which measures trend strength without regard to trend direction.
                 Firstly, it calculates the Directional Movement and the True Range value, and then the values are accumulated and smoothed
@@ -158,7 +158,7 @@ class AverageDirectionalIndex(QuantConnect.Indicators.BarIndicator, QuantConnect
 
 
 
-class AverageDirectionalMovementIndexRating(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class AverageDirectionalMovementIndexRating(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     This indicator computes the Average Directional Movement Index Rating (ADXR). 
                 The Average Directional Movement Index Rating is calculated with the following formula:
@@ -189,7 +189,7 @@ class AverageDirectionalMovementIndexRating(QuantConnect.Indicators.BarIndicator
 
 
 
-class AverageTrueRange(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class AverageTrueRange(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     The AverageTrueRange indicator is a measure of volatility introduced by Welles Wilder in his
                  book: New Concepts in Technical Trading Systems. This indicator computes the TrueRange and then
@@ -229,7 +229,7 @@ class AverageTrueRange(QuantConnect.Indicators.BarIndicator, QuantConnect.Indica
 
 
 
-class BalanceOfPower(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class BalanceOfPower(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     This indicator computes the Balance Of Power (BOP).
                 The Balance Of Power is calculated with the following formula:

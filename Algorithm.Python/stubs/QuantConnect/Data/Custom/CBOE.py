@@ -15,7 +15,7 @@ import typing
 # no functions
 # classes
 
-class CBOE(QuantConnect.Data.Market.TradeBar, QuantConnect.Data.Market.IBar, QuantConnect.Data.Market.IBaseDataBar, QuantConnect.Data.IBaseData):
+class CBOE(QuantConnect.Data.Market.TradeBar, QuantConnect.Data.IBaseData, QuantConnect.Data.Market.IBar, QuantConnect.Data.Market.IBaseDataBar):
     """ CBOE() """
     def DefaultResolution(self) -> QuantConnect.Resolution:
         pass

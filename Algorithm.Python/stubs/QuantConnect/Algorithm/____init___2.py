@@ -215,130 +215,141 @@ class QCAlgorithm(System.MarshalByRefObject, QuantConnect.Interfaces.IAccountCur
         pass
 
     @typing.overload
-    def AddUniverse(self, pyObject: Python.Runtime.PyObject) -> None:
+    def AddUniverse(self, pyObject: Python.Runtime.PyObject) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, pyObject: Python.Runtime.PyObject, pyfine: Python.Runtime.PyObject) -> None:
+    def AddUniverse(self, pyObject: Python.Runtime.PyObject, pyfine: Python.Runtime.PyObject) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, name: str, resolution: QuantConnect.Resolution, pySelector: Python.Runtime.PyObject) -> None:
+    def AddUniverse(self, name: str, resolution: QuantConnect.Resolution, pySelector: Python.Runtime.PyObject) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, name: str, pySelector: Python.Runtime.PyObject) -> None:
+    def AddUniverse(self, name: str, pySelector: Python.Runtime.PyObject) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, pySelector: Python.Runtime.PyObject) -> None:
+    def AddUniverse(self, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, pySelector: Python.Runtime.PyObject) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, T: Python.Runtime.PyObject, name: str, selector: Python.Runtime.PyObject) -> None:
+    def AddUniverse(self, T: Python.Runtime.PyObject, name: str, selector: Python.Runtime.PyObject) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, T: Python.Runtime.PyObject, name: str, resolution: QuantConnect.Resolution, selector: Python.Runtime.PyObject) -> None:
+    def AddUniverse(self, T: Python.Runtime.PyObject, name: str, resolution: QuantConnect.Resolution, selector: Python.Runtime.PyObject) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, T: Python.Runtime.PyObject, name: str, resolution: QuantConnect.Resolution, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: Python.Runtime.PyObject) -> None:
+    def AddUniverse(self, T: Python.Runtime.PyObject, name: str, resolution: QuantConnect.Resolution, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: Python.Runtime.PyObject) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, T: Python.Runtime.PyObject, name: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: Python.Runtime.PyObject) -> None:
+    def AddUniverse(self, T: Python.Runtime.PyObject, name: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: Python.Runtime.PyObject) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, T: Python.Runtime.PyObject, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, selector: Python.Runtime.PyObject) -> None:
+    def AddUniverse(self, T: Python.Runtime.PyObject, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, selector: Python.Runtime.PyObject) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, T: Python.Runtime.PyObject, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: Python.Runtime.PyObject) -> None:
+    def AddUniverse(self, T: Python.Runtime.PyObject, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: Python.Runtime.PyObject) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, dataType: type, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, pySelector: Python.Runtime.PyObject) -> None:
+    def AddUniverse(self, dataType: type, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, pySelector: Python.Runtime.PyObject) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, universe: QuantConnect.Data.UniverseSelection.Universe) -> None:
+    def AddUniverse(self, universe: QuantConnect.Data.UniverseSelection.Universe) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, name: str, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[QuantConnect.Symbol]]) -> None:
+    def AddUniverse(self, name: str, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[QuantConnect.Symbol]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, name: str, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[str]]) -> None:
+    def AddUniverse(self, name: str, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[str]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, name: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[QuantConnect.Symbol]]) -> None:
+    def AddUniverse(self, name: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[QuantConnect.Symbol]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, name: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[str]]) -> None:
+    def AddUniverse(self, name: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[str]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, name: str, resolution: QuantConnect.Resolution, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[QuantConnect.Symbol]]) -> None:
+    def AddUniverse(self, name: str, resolution: QuantConnect.Resolution, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[QuantConnect.Symbol]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, name: str, resolution: QuantConnect.Resolution, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[str]]) -> None:
+    def AddUniverse(self, name: str, resolution: QuantConnect.Resolution, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[str]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, name: str, resolution: QuantConnect.Resolution, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[QuantConnect.Symbol]]) -> None:
+    def AddUniverse(self, name: str, resolution: QuantConnect.Resolution, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[QuantConnect.Symbol]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, name: str, resolution: QuantConnect.Resolution, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[str]]) -> None:
+    def AddUniverse(self, name: str, resolution: QuantConnect.Resolution, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[str]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[QuantConnect.Symbol]]) -> None:
+    def AddUniverse(self, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[QuantConnect.Symbol]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[str]]) -> None:
+    def AddUniverse(self, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[str]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[QuantConnect.Symbol]]) -> None:
+    def AddUniverse(self, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[QuantConnect.Symbol]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[str]]) -> None:
+    def AddUniverse(self, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: typing.Callable[[typing.List[QuantConnect.Algorithm.T]], typing.List[str]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, selector: typing.Callable[[typing.List[QuantConnect.Data.UniverseSelection.CoarseFundamental]], typing.List[QuantConnect.Symbol]]) -> None:
+    def AddUniverse(self, selector: typing.Callable[[typing.List[QuantConnect.Data.UniverseSelection.CoarseFundamental]], typing.List[QuantConnect.Symbol]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, coarseSelector: typing.Callable[[typing.List[QuantConnect.Data.UniverseSelection.CoarseFundamental]], typing.List[QuantConnect.Symbol]], fineSelector: typing.Callable[[typing.List[QuantConnect.Data.Fundamental.FineFundamental]], typing.List[QuantConnect.Symbol]]) -> None:
+    def AddUniverse(self, coarseSelector: typing.Callable[[typing.List[QuantConnect.Data.UniverseSelection.CoarseFundamental]], typing.List[QuantConnect.Symbol]], fineSelector: typing.Callable[[typing.List[QuantConnect.Data.Fundamental.FineFundamental]], typing.List[QuantConnect.Symbol]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, universe: QuantConnect.Data.UniverseSelection.Universe, fineSelector: typing.Callable[[typing.List[QuantConnect.Data.Fundamental.FineFundamental]], typing.List[QuantConnect.Symbol]]) -> None:
+    def AddUniverse(self, universe: QuantConnect.Data.UniverseSelection.Universe, fineSelector: typing.Callable[[typing.List[QuantConnect.Data.Fundamental.FineFundamental]], typing.List[QuantConnect.Symbol]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, name: str, selector: typing.Callable[[datetime.datetime], typing.List[str]]) -> None:
+    def AddUniverse(self, name: str, selector: typing.Callable[[datetime.datetime], typing.List[str]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, name: str, resolution: QuantConnect.Resolution, selector: typing.Callable[[datetime.datetime], typing.List[str]]) -> None:
+    def AddUniverse(self, name: str, resolution: QuantConnect.Resolution, selector: typing.Callable[[datetime.datetime], typing.List[str]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
     @typing.overload
-    def AddUniverse(self, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: typing.Callable[[datetime.datetime], typing.List[str]]) -> None:
+    def AddUniverse(self, securityType: QuantConnect.SecurityType, name: str, resolution: QuantConnect.Resolution, market: str, universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings, selector: typing.Callable[[datetime.datetime], typing.List[str]]) -> QuantConnect.Data.UniverseSelection.Universe:
         pass
 
-    def AddUniverse(self, *args) -> None:
+    def AddUniverse(self, *args) -> QuantConnect.Data.UniverseSelection.Universe:
+        pass
+
+    @typing.overload
+    def AddUniverseOptions(self, universe: Python.Runtime.PyObject, optionFilter: Python.Runtime.PyObject) -> None:
+        pass
+
+    @typing.overload
+    def AddUniverseOptions(self, universe: QuantConnect.Data.UniverseSelection.Universe, optionFilter: typing.Callable[[QuantConnect.Securities.OptionFilterUniverse], QuantConnect.Securities.OptionFilterUniverse]) -> None:
+        pass
+
+    def AddUniverseOptions(self, *args) -> None:
         pass
 
     @typing.overload
@@ -1220,6 +1231,9 @@ class QCAlgorithm(System.MarshalByRefObject, QuantConnect.Interfaces.IAccountCur
         pass
 
     def RegisterIndicator(self, *args) -> None:
+        pass
+
+    def RemoveOptionContract(self, symbol: QuantConnect.Symbol) -> bool:
         pass
 
     def RemoveSecurity(self, symbol: QuantConnect.Symbol) -> bool:

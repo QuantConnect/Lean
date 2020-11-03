@@ -17,6 +17,7 @@ import QuantConnect.Scheduling
 import QuantConnect.Packets
 import QuantConnect.Orders
 import QuantConnect.Interfaces
+import QuantConnect.Data.UniverseSelection
 import QuantConnect.Data.Market
 import QuantConnect.Data
 import QuantConnect.Algorithm.Framework.Portfolio
@@ -54,6 +55,10 @@ class Extensions(System.object):
         pass
 
     def AddOrUpdate(self, *args) -> QuantConnect.TValue:
+        pass
+
+    @staticmethod
+    def Adjust(data: QuantConnect.Data.BaseData, scale: float) -> QuantConnect.Data.BaseData:
         pass
 
     @staticmethod
@@ -115,6 +120,10 @@ class Extensions(System.object):
         pass
 
     @staticmethod
+    def CreateOptionChain(algorithm: QuantConnect.Interfaces.IAlgorithm, symbol: QuantConnect.Symbol, filter: typing.Callable[[QuantConnect.Securities.OptionFilterUniverse], QuantConnect.Securities.OptionFilterUniverse], universeSettings: QuantConnect.Data.UniverseSelection.UniverseSettings) -> QuantConnect.Data.UniverseSelection.OptionChainUniverse:
+        pass
+
+    @staticmethod
     def CreateType(pyObject: Python.Runtime.PyObject) -> type:
         pass
 
@@ -151,6 +160,10 @@ class Extensions(System.object):
         pass
 
     @staticmethod
+    def GetExerciseDirection(right: QuantConnect.OptionRight, isShort: bool) -> QuantConnect.Orders.OrderDirection:
+        pass
+
+    @staticmethod
     def GetExtension(str: str) -> str:
         pass
 
@@ -160,6 +173,14 @@ class Extensions(System.object):
 
     @staticmethod
     def GetMD5Hash(stream: System.IO.Stream) -> typing.List[bytes]:
+        pass
+
+    @staticmethod
+    def GetNormalizedPrice(config: QuantConnect.Data.SubscriptionDataConfig, price: float) -> float:
+        pass
+
+    @staticmethod
+    def GetOrderDirection(quantity: float) -> QuantConnect.Orders.OrderDirection:
         pass
 
     @staticmethod
@@ -220,7 +241,16 @@ class Extensions(System.object):
         pass
 
     @staticmethod
+    @typing.overload
     def Normalize(input: float) -> float:
+        pass
+
+    @staticmethod
+    @typing.overload
+    def Normalize(data: QuantConnect.Data.BaseData, config: QuantConnect.Data.SubscriptionDataConfig) -> QuantConnect.Data.BaseData:
+        pass
+
+    def Normalize(self, *args) -> QuantConnect.Data.BaseData:
         pass
 
     @staticmethod
@@ -308,6 +338,10 @@ class Extensions(System.object):
         pass
 
     @staticmethod
+    def Scale(data: QuantConnect.Data.BaseData, factor: typing.Callable[[float], float]) -> QuantConnect.Data.BaseData:
+        pass
+
+    @staticmethod
     def SecurityTypeToLower(securityType: QuantConnect.SecurityType) -> str:
         pass
 
@@ -360,6 +394,10 @@ class Extensions(System.object):
         pass
 
     @staticmethod
+    def ToHexString(source: typing.List[bytes]) -> str:
+        pass
+
+    @staticmethod
     def ToHigherResolutionEquivalent(timeSpan: datetime.timedelta, requireExactMatch: bool) -> QuantConnect.Resolution:
         pass
 
@@ -385,6 +423,10 @@ class Extensions(System.object):
 
     @staticmethod
     def ToPyList(enumerable: System.Collections.IEnumerable) -> Python.Runtime.PyList:
+        pass
+
+    @staticmethod
+    def ToQueryString(pairs: System.Collections.Generic.IDictionary[str, object]) -> str:
         pass
 
     @staticmethod

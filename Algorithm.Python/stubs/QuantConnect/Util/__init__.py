@@ -27,7 +27,7 @@ def Ref(*args, **kwargs): # real signature unknown
 
 # classes
 
-class BusyBlockingCollection(System.object, System.IDisposable, QuantConnect.Interfaces.IBusyCollection[T]):
+class BusyBlockingCollection(System.object, QuantConnect.Interfaces.IBusyCollection[T], System.IDisposable):
     """
     BusyBlockingCollection[T]()
     BusyBlockingCollection[T](boundedCapacity: int)
@@ -79,7 +79,7 @@ class BusyBlockingCollection(System.object, System.IDisposable, QuantConnect.Int
 
 
 
-class BusyCollection(System.object, System.IDisposable, QuantConnect.Interfaces.IBusyCollection[T]):
+class BusyCollection(System.object, QuantConnect.Interfaces.IBusyCollection[T], System.IDisposable):
     """ BusyCollection[T]() """
     @typing.overload
     def Add(self, item: QuantConnect.Util.T) -> None:
@@ -163,6 +163,9 @@ class Composer(System.object):
     def GetExportedValues(self) -> typing.List[QuantConnect.Util.T]:
         pass
 
+    def GetPart(self) -> QuantConnect.Util.T:
+        pass
+
     def Reset(self) -> None:
         pass
 
@@ -174,7 +177,7 @@ class Composer(System.object):
 
 class ConcurrentSet(System.object, System.Collections.IEnumerable, System.Collections.Generic.ISet[T], System.Collections.Generic.ICollection[T], System.Collections.Generic.IEnumerable[T]):
     """ ConcurrentSet[T]() """
-    def Add(self, item: QuantConnect.Util.T) -> None:
+    def Add(self, item: QuantConnect.Util.T) -> bool:
         pass
 
     def Clear(self) -> None:
@@ -348,167 +351,3 @@ class FixedSizeQueue(System.Collections.Generic.Queue[T], System.Collections.Gen
         pass
 
     Limit: int
-
-
-
-class FuncTextWriter(System.IO.TextWriter, System.IDisposable):
-    """
-    Provides an implementation of System.IO.TextWriter that redirects Write(string) and WriteLine(string)
-    
-    FuncTextWriter(writer: Action[str])
-    """
-    def Dispose(self) -> None:
-        pass
-
-    @typing.overload
-    def Write(self, value: str) -> None:
-        pass
-
-    @typing.overload
-    def Write(self, value: str) -> None:
-        pass
-
-    @typing.overload
-    def Write(self, buffer: typing.List[str]) -> None:
-        pass
-
-    @typing.overload
-    def Write(self, buffer: typing.List[str], index: int, count: int) -> None:
-        pass
-
-    @typing.overload
-    def Write(self, value: bool) -> None:
-        pass
-
-    @typing.overload
-    def Write(self, value: int) -> None:
-        pass
-
-    @typing.overload
-    def Write(self, value: int) -> None:
-        pass
-
-    @typing.overload
-    def Write(self, value: int) -> None:
-        pass
-
-    @typing.overload
-    def Write(self, value: int) -> None:
-        pass
-
-    @typing.overload
-    def Write(self, value: float) -> None:
-        pass
-
-    @typing.overload
-    def Write(self, value: float) -> None:
-        pass
-
-    @typing.overload
-    def Write(self, value: float) -> None:
-        pass
-
-    @typing.overload
-    def Write(self, value: object) -> None:
-        pass
-
-    @typing.overload
-    def Write(self, format: str, arg0: object) -> None:
-        pass
-
-    @typing.overload
-    def Write(self, format: str, arg0: object, arg1: object) -> None:
-        pass
-
-    @typing.overload
-    def Write(self, format: str, arg0: object, arg1: object, arg2: object) -> None:
-        pass
-
-    @typing.overload
-    def Write(self, format: str, arg: typing.List[object]) -> None:
-        pass
-
-    def Write(self, *args) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self, value: str) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self, value: str) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self, buffer: typing.List[str]) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self, buffer: typing.List[str], index: int, count: int) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self, value: bool) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self, value: int) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self, value: int) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self, value: int) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self, value: int) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self, value: float) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self, value: float) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self, value: float) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self, value: object) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self, format: str, arg0: object) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self, format: str, arg0: object, arg1: object) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self, format: str, arg0: object, arg1: object, arg2: object) -> None:
-        pass
-
-    @typing.overload
-    def WriteLine(self, format: str, arg: typing.List[object]) -> None:
-        pass
-
-    def WriteLine(self, *args) -> None:
-        pass
-
-    def __init__(self, writer: typing.Callable[[str], None]) -> QuantConnect.Util.FuncTextWriter:
-        pass
-
-    Encoding: System.Text.Encoding
-
-    CoreNewLine: typing.List[str]

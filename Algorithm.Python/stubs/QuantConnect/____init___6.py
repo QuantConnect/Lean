@@ -16,6 +16,7 @@ import QuantConnect.Scheduling
 import QuantConnect.Packets
 import QuantConnect.Orders
 import QuantConnect.Interfaces
+import QuantConnect.Data.UniverseSelection
 import QuantConnect.Data.Market
 import QuantConnect.Data
 import QuantConnect.Algorithm.Framework.Portfolio

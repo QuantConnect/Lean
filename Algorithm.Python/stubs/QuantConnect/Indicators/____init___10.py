@@ -12,7 +12,7 @@ import datetime
 
 
 
-class TripleExponentialMovingAverage(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class TripleExponentialMovingAverage(QuantConnect.Indicators.IndicatorBase[IndicatorDataPoint], QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     This indicator computes the Triple Exponential Moving Average (TEMA). 
                 The Triple Exponential Moving Average is calculated with the following formula:
@@ -44,7 +44,7 @@ class TripleExponentialMovingAverage(QuantConnect.Indicators.IndicatorBase[Indic
 
 
 
-class Trix(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class Trix(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     This indicator computes the TRIX (1-period ROC of a Triple EMA)
                 The TRIX is calculated as explained here:
@@ -73,7 +73,7 @@ class Trix(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicator
 
 
 
-class TrueRange(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class TrueRange(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     This indicator computes the True Range (TR).
                 The True Range is the greatest of the following values:
@@ -101,7 +101,7 @@ class TrueRange(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.II
 
 
 
-class UltimateOscillator(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class UltimateOscillator(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     This indicator computes the Ultimate Oscillator (ULTOSC)
                 The Ultimate Oscillator is calculated as explained here:
@@ -130,7 +130,7 @@ class UltimateOscillator(QuantConnect.Indicators.BarIndicator, QuantConnect.Indi
 
 
 
-class VolumeWeightedAveragePriceIndicator(QuantConnect.Indicators.TradeBarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[TradeBar]]):
+class VolumeWeightedAveragePriceIndicator(QuantConnect.Indicators.TradeBarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[TradeBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[TradeBar]]):
     """
     Volume Weighted Average Price (VWAP) Indicator:
                 It is calculated by adding up the dollars traded for every transaction (price multiplied
@@ -159,7 +159,7 @@ class VolumeWeightedAveragePriceIndicator(QuantConnect.Indicators.TradeBarIndica
 
 
 
-class WilderMovingAverage(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class WilderMovingAverage(QuantConnect.Indicators.Indicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     Represents the moving average indicator defined by Welles Wilder in his book:
                 New Concepts in Technical Trading Systems.
@@ -187,7 +187,7 @@ class WilderMovingAverage(QuantConnect.Indicators.Indicator, QuantConnect.Indica
 
 
 
-class WilliamsPercentR(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class WilliamsPercentR(QuantConnect.Indicators.BarIndicator, QuantConnect.Indicators.IIndicatorWarmUpPeriodProvider, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Williams %R, or just %R, is the current closing price in relation to the high and low of
                 the past N days (for a given N). The value of this indicator fluctuates between -100 and 0.
@@ -221,7 +221,7 @@ class WilliamsPercentR(QuantConnect.Indicators.BarIndicator, QuantConnect.Indica
 
 
 
-class WindowIdentity(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint], System.IComparable, QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IndicatorDataPoint]]):
+class WindowIdentity(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator[IndicatorDataPoint], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IndicatorDataPoint]]):
     """
     Represents an indicator that is a ready after ingesting enough samples (# samples > period) 
                 and always returns the same value as it is given.
@@ -244,7 +244,7 @@ class WindowIdentity(QuantConnect.Indicators.WindowIndicator[IndicatorDataPoint]
 
 
 
-class WindowIndicator(QuantConnect.Indicators.IndicatorBase[T], System.IComparable, QuantConnect.Indicators.IIndicator[T], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[T]]):
+class WindowIndicator(QuantConnect.Indicators.IndicatorBase[T], QuantConnect.Indicators.IIndicator[T], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[T]]):
     # no doc
     def Reset(self) -> None:
         pass

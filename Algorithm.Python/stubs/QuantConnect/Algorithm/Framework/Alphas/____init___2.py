@@ -37,7 +37,7 @@ class InsightType(System.Enum, System.IConvertible, System.IFormattable, System.
     Volatility: 'InsightType'
 
 
-class MacdAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel):
+class MacdAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel):
     """
     Defines a custom alpha model that uses MACD crossovers. The MACD signal line is
                 used to generate up/down insights if it's stronger than the bounce threshold.
@@ -55,7 +55,7 @@ class MacdAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantCo
         pass
 
 
-class NullAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel):
+class NullAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel):
     """
     Provides a null implementation of an alpha model
     
@@ -65,7 +65,7 @@ class NullAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantCo
         pass
 
 
-class PearsonCorrelationPairsTradingAlphaModel(QuantConnect.Algorithm.Framework.Alphas.BasePairsTradingAlphaModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel):
+class PearsonCorrelationPairsTradingAlphaModel(QuantConnect.Algorithm.Framework.Alphas.BasePairsTradingAlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel):
     """
     This alpha model is designed to rank every pair combination by its pearson correlation
                 and trade the pair with the hightest correlation
@@ -83,7 +83,7 @@ class PearsonCorrelationPairsTradingAlphaModel(QuantConnect.Algorithm.Framework.
         pass
 
 
-class RsiAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel):
+class RsiAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel):
     """
     Uses Wilder's RSI to create insights. Using default settings, a cross over below 30 or above 70 will
                 trigger a new insight.

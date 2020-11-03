@@ -35,6 +35,22 @@ class AlphaStreamsFeeModel(QuantConnect.Orders.Fees.FeeModel, QuantConnect.Order
         pass
 
 
+class BinanceFeeModel(QuantConnect.Orders.Fees.FeeModel, QuantConnect.Orders.Fees.IFeeModel):
+    """
+    Provides an implementation of QuantConnect.Orders.Fees.FeeModel that models Binance order fees
+    
+    BinanceFeeModel(mFee: Decimal, tFee: Decimal)
+    """
+    def GetOrderFee(self, parameters: QuantConnect.Orders.Fees.OrderFeeParameters) -> QuantConnect.Orders.Fees.OrderFee:
+        pass
+
+    def __init__(self, mFee: float, tFee: float) -> QuantConnect.Orders.Fees.BinanceFeeModel:
+        pass
+
+    MakerTier1Fee: Decimal
+    TakerTier1Fee: Decimal
+
+
 class BitfinexFeeModel(QuantConnect.Orders.Fees.FeeModel, QuantConnect.Orders.Fees.IFeeModel):
     """
     Provides an implementation of QuantConnect.Orders.Fees.FeeModel that models Bitfinex order fees
@@ -125,6 +141,9 @@ class OrderFee(System.object):
     
     OrderFee(orderFee: CashAmount)
     """
+    def ApplyToPortfolio(self, portfolio: QuantConnect.Securities.SecurityPortfolioManager, fill: QuantConnect.Orders.OrderEvent) -> None:
+        pass
+
     def ToString(self) -> str:
         pass
 
@@ -135,6 +154,19 @@ class OrderFee(System.object):
 
 
     Zero: 'OrderFee'
+
+
+class ModifiedFillQuantityOrderFee(QuantConnect.Orders.Fees.OrderFee):
+    """
+    An order fee where the fee quantity has already been subtracted from the filled quantity
+    
+    ModifiedFillQuantityOrderFee(orderFee: CashAmount)
+    """
+    def ApplyToPortfolio(self, portfolio: QuantConnect.Securities.SecurityPortfolioManager, fill: QuantConnect.Orders.OrderEvent) -> None:
+        pass
+
+    def __init__(self, orderFee: QuantConnect.Securities.CashAmount) -> QuantConnect.Orders.Fees.ModifiedFillQuantityOrderFee:
+        pass
 
 
 class OrderFeeParameters(System.object):

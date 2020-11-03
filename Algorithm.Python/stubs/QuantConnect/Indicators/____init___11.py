@@ -26,7 +26,7 @@ class IReadOnlyWindow(System.Collections.IEnumerable, System.Collections.Generic
     Item: indexer#
 
 
-class RollingWindow(System.object, QuantConnect.Indicators.IReadOnlyWindow[T], System.Collections.IEnumerable, System.Collections.Generic.IEnumerable[T]):
+class RollingWindow(System.object, System.Collections.IEnumerable, QuantConnect.Indicators.IReadOnlyWindow[T], System.Collections.Generic.IEnumerable[T]):
     """ RollingWindow[T](size: int) """
     def Add(self, item: QuantConnect.Indicators.T) -> None:
         pass

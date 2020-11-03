@@ -5,7 +5,7 @@ import datetime
 
 
 
-class TasukiGap(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class TasukiGap(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Tasuki Gap candlestick pattern indicator
     
@@ -30,7 +30,7 @@ class TasukiGap(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, 
 
 
 
-class ThreeBlackCrows(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class ThreeBlackCrows(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Three Black Crows candlestick pattern
     
@@ -55,7 +55,7 @@ class ThreeBlackCrows(QuantConnect.Indicators.CandlestickPatterns.CandlestickPat
 
 
 
-class ThreeInside(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class ThreeInside(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Three Inside Up/Down candlestick pattern
     
@@ -80,7 +80,7 @@ class ThreeInside(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern
 
 
 
-class ThreeLineStrike(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class ThreeLineStrike(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Three Line Strike candlestick pattern
     
@@ -105,7 +105,7 @@ class ThreeLineStrike(QuantConnect.Indicators.CandlestickPatterns.CandlestickPat
 
 
 
-class ThreeOutside(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class ThreeOutside(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Three Outside Up/Down candlestick pattern
     
@@ -127,7 +127,7 @@ class ThreeOutside(QuantConnect.Indicators.CandlestickPatterns.CandlestickPatter
 
 
 
-class ThreeStarsInSouth(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class ThreeStarsInSouth(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Three Stars In The South candlestick pattern
     
@@ -152,7 +152,7 @@ class ThreeStarsInSouth(QuantConnect.Indicators.CandlestickPatterns.CandlestickP
 
 
 
-class ThreeWhiteSoldiers(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class ThreeWhiteSoldiers(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Three Advancing White Soldiers candlestick pattern
     
@@ -177,7 +177,7 @@ class ThreeWhiteSoldiers(QuantConnect.Indicators.CandlestickPatterns.Candlestick
 
 
 
-class Thrusting(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class Thrusting(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Thrusting candlestick pattern indicator
     
@@ -202,7 +202,7 @@ class Thrusting(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, 
 
 
 
-class Tristar(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class Tristar(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Tristar candlestick pattern indicator
     
@@ -227,7 +227,7 @@ class Tristar(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, Sy
 
 
 
-class TwoCrows(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class TwoCrows(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Two Crows candlestick pattern indicator
     
@@ -252,7 +252,7 @@ class TwoCrows(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, S
 
 
 
-class UniqueThreeRiver(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class UniqueThreeRiver(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Unique Three River candlestick pattern
     
@@ -277,7 +277,7 @@ class UniqueThreeRiver(QuantConnect.Indicators.CandlestickPatterns.CandlestickPa
 
 
 
-class UpDownGapThreeMethods(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class UpDownGapThreeMethods(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Up/Down Gap Three Methods candlestick pattern
     
@@ -299,7 +299,7 @@ class UpDownGapThreeMethods(QuantConnect.Indicators.CandlestickPatterns.Candlest
 
 
 
-class UpsideGapTwoCrows(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class UpsideGapTwoCrows(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Upside Gap Two Crows candlestick pattern
     

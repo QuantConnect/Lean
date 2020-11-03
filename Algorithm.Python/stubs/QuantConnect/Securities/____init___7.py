@@ -251,6 +251,9 @@ class SymbolPropertiesDatabase(System.object):
     def GetSymbolProperties(self, *args) -> QuantConnect.Securities.SymbolProperties:
         pass
 
+    def GetSymbolPropertiesList(self, market: str, securityType: QuantConnect.SecurityType) -> typing.List[System.Collections.Generic.KeyValuePair[QuantConnect.Securities.SecurityDatabaseKey, QuantConnect.Securities.SymbolProperties]]:
+        pass
+
     def TryGetMarket(self, symbol: str, securityType: QuantConnect.SecurityType, market: str) -> bool:
         pass
 

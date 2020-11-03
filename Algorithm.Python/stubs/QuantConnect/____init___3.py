@@ -17,6 +17,7 @@ import QuantConnect.Scheduling
 import QuantConnect.Packets
 import QuantConnect.Orders
 import QuantConnect.Interfaces
+import QuantConnect.Data.UniverseSelection
 import QuantConnect.Data.Market
 import QuantConnect.Data
 import QuantConnect.Algorithm.Framework.Portfolio
@@ -51,13 +52,13 @@ class Period(System.Enum, System.IConvertible, System.IFormattable, System.IComp
     TwoMinutes: 'Period'
 
 
-class ReaderErrorDetectedEventArgs(System.EventArgs):
+class ReaderErrorDetectedEventArgs(QuantConnect.DataProviderEventArgs):
     """
     Event arguments for the QuantConnect.Interfaces.IDataProviderEvents.ReaderErrorDetected event
     
-    ReaderErrorDetectedEventArgs(message: str, stackTrace: str)
+    ReaderErrorDetectedEventArgs(symbol: Symbol, message: str, stackTrace: str)
     """
-    def __init__(self, message: str, stackTrace: str) -> QuantConnect.ReaderErrorDetectedEventArgs:
+    def __init__(self, symbol: QuantConnect.Symbol, message: str, stackTrace: str) -> QuantConnect.ReaderErrorDetectedEventArgs:
         pass
 
     Message: str

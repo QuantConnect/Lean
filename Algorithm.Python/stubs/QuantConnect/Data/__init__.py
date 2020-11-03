@@ -5,6 +5,7 @@ import System.Linq.Expressions
 import System.IO
 import System.Dynamic
 import System.Collections.Generic
+import System.Collections.Concurrent
 import System
 import QuantConnect.Securities
 import QuantConnect.Packets
@@ -122,6 +123,53 @@ class BaseData(System.object, QuantConnect.Data.IBaseData):
     MinuteResolution: List[Resolution]
 
 
+class Channel(System.object):
+    """
+    Represents a subscription channel
+    
+    Channel(channelName: str, symbol: Symbol)
+    """
+    @typing.overload
+    def Equals(self, other: QuantConnect.Data.Channel) -> bool:
+        pass
+
+    @typing.overload
+    def Equals(self, obj: object) -> bool:
+        pass
+
+    def Equals(self, *args) -> bool:
+        pass
+
+    def GetHashCode(self) -> int:
+        pass
+
+    def __init__(self, channelName: str, symbol: QuantConnect.Symbol) -> QuantConnect.Data.Channel:
+        pass
+
+    Name: str
+
+    Symbol: QuantConnect.Symbol
+
+
+    Single: str
+
+
+class DataQueueHandlerSubscriptionManager(System.object):
+    """ Count number of subscribers for each channel (Symbol, Socket) pair """
+    def GetSubscribedSymbols(self) -> typing.List[QuantConnect.Symbol]:
+        pass
+
+    def IsSubscribed(self, symbol: QuantConnect.Symbol, tickType: QuantConnect.TickType) -> bool:
+        pass
+
+    def Subscribe(self, dataConfig: QuantConnect.Data.SubscriptionDataConfig) -> None:
+        pass
+
+    def Unsubscribe(self, dataConfig: QuantConnect.Data.SubscriptionDataConfig) -> None:
+        pass
+
+    SubscribersByChannel: System.Collections.Concurrent.ConcurrentDictionary[QuantConnect.Data.Channel, int]
+
 class DynamicData(QuantConnect.Data.BaseData, System.Dynamic.IDynamicMetaObjectProvider, QuantConnect.Data.IBaseData):
     """ Dynamic Data Class: Accept flexible data, adapting to the columns provided by source. """
     @typing.overload
@@ -150,6 +198,34 @@ class DynamicData(QuantConnect.Data.BaseData, System.Dynamic.IDynamicMetaObjectP
     def SetProperty(self, name: str, value: object) -> object:
         pass
 
+
+class EventBasedDataQueueHandlerSubscriptionManager(QuantConnect.Data.DataQueueHandlerSubscriptionManager):
+    """
+    Overrides QuantConnect.Data.DataQueueHandlerSubscriptionManager methods using events
+    
+    EventBasedDataQueueHandlerSubscriptionManager()
+    EventBasedDataQueueHandlerSubscriptionManager(getChannelName: Func[TickType, str])
+    """
+    def Subscribe(self, dataConfig: QuantConnect.Data.SubscriptionDataConfig) -> None:
+        pass
+
+    def Unsubscribe(self, dataConfig: QuantConnect.Data.SubscriptionDataConfig) -> None:
+        pass
+
+    @typing.overload
+    def __init__(self) -> QuantConnect.Data.EventBasedDataQueueHandlerSubscriptionManager:
+        pass
+
+    @typing.overload
+    def __init__(self, getChannelName: typing.Callable[[QuantConnect.TickType], str]) -> QuantConnect.Data.EventBasedDataQueueHandlerSubscriptionManager:
+        pass
+
+    def __init__(self, *args) -> QuantConnect.Data.EventBasedDataQueueHandlerSubscriptionManager:
+        pass
+
+    SubscribeImpl: typing.Callable[[typing.List[QuantConnect.Symbol], QuantConnect.TickType], bool]
+    SubscribersByChannel: System.Collections.Concurrent.ConcurrentDictionary[QuantConnect.Data.Channel, int]
+    UnsubscribeImpl: typing.Callable[[typing.List[QuantConnect.Symbol], QuantConnect.TickType], bool]
 
 class FileFormat(System.Enum, System.IConvertible, System.IFormattable, System.IComparable):
     """
@@ -226,64 +302,3 @@ class HistoryProviderInitializeParameters(System.object):
     ParallelHistoryRequestsEnabled: bool
 
     StatusUpdateAction: typing.Callable[[int], None]
-
-
-
-class HistoryRequest(System.object):
-    """
-    Represents a request for historical data
-    
-    HistoryRequest(startTimeUtc: DateTime, endTimeUtc: DateTime, dataType: Type, symbol: Symbol, resolution: Resolution, exchangeHours: SecurityExchangeHours, dataTimeZone: DateTimeZone, fillForwardResolution: Nullable[Resolution], includeExtendedMarketHours: bool, isCustomData: bool, dataNormalizationMode: DataNormalizationMode, tickType: TickType)
-    HistoryRequest(config: SubscriptionDataConfig, hours: SecurityExchangeHours, startTimeUtc: DateTime, endTimeUtc: DateTime)
-    """
-    @typing.overload
-    def __init__(self, startTimeUtc: datetime.datetime, endTimeUtc: datetime.datetime, dataType: type, symbol: QuantConnect.Symbol, resolution: QuantConnect.Resolution, exchangeHours: QuantConnect.Securities.SecurityExchangeHours, dataTimeZone: NodaTime.DateTimeZone, fillForwardResolution: typing.Optional[QuantConnect.Resolution], includeExtendedMarketHours: bool, isCustomData: bool, dataNormalizationMode: QuantConnect.DataNormalizationMode, tickType: QuantConnect.TickType) -> QuantConnect.Data.HistoryRequest:
-        pass
-
-    @typing.overload
-    def __init__(self, config: QuantConnect.Data.SubscriptionDataConfig, hours: QuantConnect.Securities.SecurityExchangeHours, startTimeUtc: datetime.datetime, endTimeUtc: datetime.datetime) -> QuantConnect.Data.HistoryRequest:
-        pass
-
-    def __init__(self, *args) -> QuantConnect.Data.HistoryRequest:
-        pass
-
-    DataNormalizationMode: QuantConnect.DataNormalizationMode
-
-    DataTimeZone: NodaTime.DateTimeZone
-
-    DataType: type
-
-    EndTimeUtc: datetime.datetime
-
-    ExchangeHours: QuantConnect.Securities.SecurityExchangeHours
-
-    FillForwardResolution: typing.Optional[QuantConnect.Resolution]
-
-    IncludeExtendedMarketHours: bool
-
-    IsCustomData: bool
-
-    Resolution: QuantConnect.Resolution
-
-    StartTimeUtc: datetime.datetime
-
-    Symbol: QuantConnect.Symbol
-
-    TickType: QuantConnect.TickType
-
-
-
-class HistoryRequestFactory(System.object):
-    """
-    Helper class used to create new QuantConnect.Data.HistoryRequest
-    
-    HistoryRequestFactory(algorithm: IAlgorithm)
-    """
-    def CreateHistoryRequest(self, subscription: QuantConnect.Data.SubscriptionDataConfig, startAlgoTz: datetime.datetime, endAlgoTz: datetime.datetime, exchangeHours: QuantConnect.Securities.SecurityExchangeHours, resolution: typing.Optional[QuantConnect.Resolution]) -> QuantConnect.Data.HistoryRequest:
-        pass
-
-    def GetStartTimeAlgoTz(self, symbol: QuantConnect.Symbol, periods: int, resolution: QuantConnect.Resolution, exchange: QuantConnect.Securities.SecurityExchangeHours) -> datetime.datetime:
-        pass
-
-    def __init__(self, algorithm: QuantConnect.Interfaces.IAlgorithm) -> QuantConnect.Data.HistoryRequestFactory:
-        pass

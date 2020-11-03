@@ -65,7 +65,7 @@ class BarDirection(System.Enum, System.IConvertible, System.IFormattable, System
     Rising: 'BarDirection'
 
 
-class DataDictionary(QuantConnect.ExtendedDictionary[T], System.Collections.IEnumerable, QuantConnect.Interfaces.IExtendedDictionary[Symbol, T], System.Collections.Generic.ICollection[KeyValuePair[Symbol, T]], System.Collections.Generic.IDictionary[Symbol, T], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, T]]):
+class DataDictionary(QuantConnect.ExtendedDictionary[T], System.Collections.IEnumerable, System.Collections.Generic.ICollection[KeyValuePair[Symbol, T]], System.Collections.Generic.IDictionary[Symbol, T], QuantConnect.Interfaces.IExtendedDictionary[Symbol, T], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, T]]):
     """
     DataDictionary[T]()
     DataDictionary[T](data: IEnumerable[T], keySelector: Func[T, Symbol])
@@ -219,7 +219,7 @@ class Delisting(QuantConnect.Data.BaseData, QuantConnect.Data.IBaseData):
 
 
 
-class Delistings(QuantConnect.Data.Market.DataDictionary[Delisting], System.Collections.IEnumerable, QuantConnect.Interfaces.IExtendedDictionary[Symbol, Delisting], System.Collections.Generic.ICollection[KeyValuePair[Symbol, Delisting]], System.Collections.Generic.IDictionary[Symbol, Delisting], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, Delisting]]):
+class Delistings(QuantConnect.Data.Market.DataDictionary[Delisting], System.Collections.IEnumerable, System.Collections.Generic.ICollection[KeyValuePair[Symbol, Delisting]], System.Collections.Generic.IDictionary[Symbol, Delisting], QuantConnect.Interfaces.IExtendedDictionary[Symbol, Delisting], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, Delisting]]):
     """
     Collections of QuantConnect.Data.Market.Delisting keyed by QuantConnect.Symbol
     
@@ -264,7 +264,7 @@ class Dividend(QuantConnect.Data.BaseData, QuantConnect.Data.IBaseData):
         pass
 
     @staticmethod
-    def Create(symbol: QuantConnect.Symbol, date: datetime.datetime, referencePrice: float, priceFactorRatio: float) -> QuantConnect.Data.Market.Dividend:
+    def Create(symbol: QuantConnect.Symbol, date: datetime.datetime, referencePrice: float, priceFactorRatio: float, decimalPlaces: int) -> QuantConnect.Data.Market.Dividend:
         pass
 
     @typing.overload
@@ -313,7 +313,7 @@ class Dividend(QuantConnect.Data.BaseData, QuantConnect.Data.IBaseData):
 
 
 
-class Dividends(QuantConnect.Data.Market.DataDictionary[Dividend], System.Collections.IEnumerable, QuantConnect.Interfaces.IExtendedDictionary[Symbol, Dividend], System.Collections.Generic.ICollection[KeyValuePair[Symbol, Dividend]], System.Collections.Generic.IDictionary[Symbol, Dividend], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, Dividend]]):
+class Dividends(QuantConnect.Data.Market.DataDictionary[Dividend], System.Collections.IEnumerable, System.Collections.Generic.ICollection[KeyValuePair[Symbol, Dividend]], System.Collections.Generic.IDictionary[Symbol, Dividend], QuantConnect.Interfaces.IExtendedDictionary[Symbol, Dividend], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, Dividend]]):
     """
     Collection of dividends keyed by QuantConnect.Symbol
     

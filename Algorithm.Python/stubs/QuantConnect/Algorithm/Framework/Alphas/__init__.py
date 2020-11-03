@@ -17,7 +17,7 @@ import datetime
 # no functions
 # classes
 
-class AlphaModel(System.object, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel):
+class AlphaModel(System.object, QuantConnect.Algorithm.Framework.Alphas.INamedModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel):
     """
     Provides a base class for alpha models.
     
@@ -42,7 +42,7 @@ class AlphaModelExtensions(System.object):
     __all__: list
 
 
-class AlphaModelPythonWrapper(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel):
+class AlphaModelPythonWrapper(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel):
     """
     Provides an implementation of QuantConnect.Algorithm.Framework.Alphas.IAlphaModel that wraps a Python.Runtime.PyObject object
     
@@ -61,7 +61,7 @@ class AlphaModelPythonWrapper(QuantConnect.Algorithm.Framework.Alphas.AlphaModel
 
 
 
-class BasePairsTradingAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel):
+class BasePairsTradingAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel):
     """
     This alpha model is designed to accept every possible pair combination
                 from securities selected by the universe selection model
@@ -85,7 +85,7 @@ class BasePairsTradingAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaMo
 
 
 
-class CompositeAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel):
+class CompositeAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel):
     """
     Provides an implementation of QuantConnect.Algorithm.Framework.Alphas.IAlphaModel that combines multiple alpha
                 models into a single alpha model and properly sets each insights 'SourceModel' property.
@@ -127,7 +127,7 @@ class CompositeAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, Qu
         pass
 
 
-class ConstantAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel):
+class ConstantAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel):
     """
     Provides an implementation of QuantConnect.Algorithm.Framework.Alphas.IAlphaModel that always returns the same insight for each security
     
@@ -152,7 +152,7 @@ class ConstantAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, Qua
         pass
 
 
-class EmaCrossAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel):
+class EmaCrossAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel):
     """
     Alpha model that uses an EMA cross to create insights
     
@@ -183,7 +183,7 @@ class GeneratedInsightsCollection(System.object):
 
 
 
-class HistoricalReturnsAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel):
+class HistoricalReturnsAlphaModel(QuantConnect.Algorithm.Framework.Alphas.AlphaModel, QuantConnect.Algorithm.Framework.Alphas.INamedModel, QuantConnect.Algorithm.Framework.INotifiedSecurityChanges, QuantConnect.Algorithm.Framework.Alphas.IAlphaModel):
     """
     Alpha model that uses historical returns to create insights
     

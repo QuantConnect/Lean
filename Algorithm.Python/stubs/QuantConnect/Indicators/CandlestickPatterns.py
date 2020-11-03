@@ -6,13 +6,13 @@ import datetime
 # no functions
 # classes
 
-class CandlestickPattern(QuantConnect.Indicators.WindowIndicator[IBaseDataBar], System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class CandlestickPattern(QuantConnect.Indicators.WindowIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """ Abstract base class for a candlestick pattern indicator """
     def __init__(self, *args): #cannot find CLR constructor
         pass
 
 
-class AbandonedBaby(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class AbandonedBaby(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Abandoned Baby candlestick pattern
     
@@ -42,7 +42,7 @@ class AbandonedBaby(QuantConnect.Indicators.CandlestickPatterns.CandlestickPatte
 
 
 
-class AdvanceBlock(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class AdvanceBlock(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Advance Block candlestick pattern
     
@@ -67,7 +67,7 @@ class AdvanceBlock(QuantConnect.Indicators.CandlestickPatterns.CandlestickPatter
 
 
 
-class BeltHold(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class BeltHold(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Belt-hold candlestick pattern indicator
     
@@ -92,7 +92,7 @@ class BeltHold(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, S
 
 
 
-class Breakaway(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class Breakaway(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Breakaway candlestick pattern indicator
     
@@ -190,7 +190,7 @@ class CandleSettingType(System.Enum, System.IConvertible, System.IFormattable, S
     ShadowVeryShort: 'CandleSettingType'
 
 
-class ClosingMarubozu(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class ClosingMarubozu(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Closing Marubozu candlestick pattern indicator
     
@@ -215,7 +215,7 @@ class ClosingMarubozu(QuantConnect.Indicators.CandlestickPatterns.CandlestickPat
 
 
 
-class ConcealedBabySwallow(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class ConcealedBabySwallow(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Concealed Baby Swallow candlestick pattern
     
@@ -240,7 +240,7 @@ class ConcealedBabySwallow(QuantConnect.Indicators.CandlestickPatterns.Candlesti
 
 
 
-class Counterattack(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class Counterattack(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Counterattack candlestick pattern
     
@@ -265,7 +265,7 @@ class Counterattack(QuantConnect.Indicators.CandlestickPatterns.CandlestickPatte
 
 
 
-class DarkCloudCover(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class DarkCloudCover(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Dark Cloud Cover candlestick pattern
     
@@ -295,7 +295,7 @@ class DarkCloudCover(QuantConnect.Indicators.CandlestickPatterns.CandlestickPatt
 
 
 
-class Doji(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, System.IComparable, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable[IIndicator[IBaseDataBar]]):
+class Doji(QuantConnect.Indicators.CandlestickPatterns.CandlestickPattern, QuantConnect.Indicators.IIndicator[IBaseDataBar], QuantConnect.Indicators.IIndicator, System.IComparable, System.IComparable[IIndicator[IBaseDataBar]]):
     """
     Doji candlestick pattern indicator
     

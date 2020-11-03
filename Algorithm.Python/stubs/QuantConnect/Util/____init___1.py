@@ -20,6 +20,170 @@ import Newtonsoft.Json
 import datetime
 
 
+
+class FuncTextWriter(System.IO.TextWriter, System.IDisposable):
+    """
+    Provides an implementation of System.IO.TextWriter that redirects Write(string) and WriteLine(string)
+    
+    FuncTextWriter(writer: Action[str])
+    """
+    def Dispose(self) -> None:
+        pass
+
+    @typing.overload
+    def Write(self, value: str) -> None:
+        pass
+
+    @typing.overload
+    def Write(self, value: str) -> None:
+        pass
+
+    @typing.overload
+    def Write(self, buffer: typing.List[str]) -> None:
+        pass
+
+    @typing.overload
+    def Write(self, buffer: typing.List[str], index: int, count: int) -> None:
+        pass
+
+    @typing.overload
+    def Write(self, value: bool) -> None:
+        pass
+
+    @typing.overload
+    def Write(self, value: int) -> None:
+        pass
+
+    @typing.overload
+    def Write(self, value: int) -> None:
+        pass
+
+    @typing.overload
+    def Write(self, value: int) -> None:
+        pass
+
+    @typing.overload
+    def Write(self, value: int) -> None:
+        pass
+
+    @typing.overload
+    def Write(self, value: float) -> None:
+        pass
+
+    @typing.overload
+    def Write(self, value: float) -> None:
+        pass
+
+    @typing.overload
+    def Write(self, value: float) -> None:
+        pass
+
+    @typing.overload
+    def Write(self, value: object) -> None:
+        pass
+
+    @typing.overload
+    def Write(self, format: str, arg0: object) -> None:
+        pass
+
+    @typing.overload
+    def Write(self, format: str, arg0: object, arg1: object) -> None:
+        pass
+
+    @typing.overload
+    def Write(self, format: str, arg0: object, arg1: object, arg2: object) -> None:
+        pass
+
+    @typing.overload
+    def Write(self, format: str, arg: typing.List[object]) -> None:
+        pass
+
+    def Write(self, *args) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self, value: str) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self, value: str) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self, buffer: typing.List[str]) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self, buffer: typing.List[str], index: int, count: int) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self, value: bool) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self, value: int) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self, value: int) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self, value: int) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self, value: int) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self, value: float) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self, value: float) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self, value: float) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self, value: object) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self, format: str, arg0: object) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self, format: str, arg0: object, arg1: object) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self, format: str, arg0: object, arg1: object, arg2: object) -> None:
+        pass
+
+    @typing.overload
+    def WriteLine(self, format: str, arg: typing.List[object]) -> None:
+        pass
+
+    def WriteLine(self, *args) -> None:
+        pass
+
+    def __init__(self, writer: typing.Callable[[str], None]) -> QuantConnect.Util.FuncTextWriter:
+        pass
+
+    Encoding: System.Text.Encoding
+
+    CoreNewLine: typing.List[str]
+
+
 class IReadOnlyRef:
     # no doc
     Value: QuantConnect.Util.T

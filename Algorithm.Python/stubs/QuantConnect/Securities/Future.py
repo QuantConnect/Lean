@@ -175,11 +175,15 @@ class FuturesExpiryUtilityFunctions(System.object):
         pass
 
     @staticmethod
+    def GetDatesFromDateTimeList(dateTimeList: typing.List[datetime.datetime]) -> typing.List[datetime.datetime]:
+        pass
+
+    @staticmethod
     def LastThursday(time: datetime.datetime) -> datetime.datetime:
         pass
 
     @staticmethod
-    def LastWeekday(time: datetime.datetime, dayofWeek: System.DayOfWeek) -> datetime.datetime:
+    def LastWeekday(time: datetime.datetime, dayOfWeek: System.DayOfWeek) -> datetime.datetime:
         pass
 
     @staticmethod
@@ -191,7 +195,7 @@ class FuturesExpiryUtilityFunctions(System.object):
         pass
 
     @staticmethod
-    def NthBusinessDay(time: datetime.datetime, nthBusinessDay: int, additionalHolidays: typing.List[datetime.datetime]) -> datetime.datetime:
+    def NthBusinessDay(time: datetime.datetime, nthBusinessDay: int, holidayList: typing.List[datetime.datetime]) -> datetime.datetime:
         pass
 
     @staticmethod
@@ -203,7 +207,7 @@ class FuturesExpiryUtilityFunctions(System.object):
         pass
 
     @staticmethod
-    def NthWeekday(time: datetime.datetime, n: int, dayofWeek: System.DayOfWeek) -> datetime.datetime:
+    def NthWeekday(time: datetime.datetime, n: int, dayOfWeek: System.DayOfWeek) -> datetime.datetime:
         pass
 
     @staticmethod

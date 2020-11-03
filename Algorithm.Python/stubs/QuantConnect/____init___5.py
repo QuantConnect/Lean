@@ -17,6 +17,7 @@ import QuantConnect.Scheduling
 import QuantConnect.Packets
 import QuantConnect.Orders
 import QuantConnect.Interfaces
+import QuantConnect.Data.UniverseSelection
 import QuantConnect.Data.Market
 import QuantConnect.Data
 import QuantConnect.Algorithm.Framework.Portfolio
@@ -111,7 +112,7 @@ class Time(System.object):
         pass
 
     @staticmethod
-    def GetStartTimeForTradeBars(exchangeHours: QuantConnect.Securities.SecurityExchangeHours, end: datetime.datetime, barSize: datetime.timedelta, barCount: int, extendedMarketHours: bool) -> datetime.datetime:
+    def GetStartTimeForTradeBars(exchangeHours: QuantConnect.Securities.SecurityExchangeHours, end: datetime.datetime, barSize: datetime.timedelta, barCount: int, extendedMarketHours: bool, dataTimeZone: NodaTime.DateTimeZone) -> datetime.datetime:
         pass
 
     @staticmethod

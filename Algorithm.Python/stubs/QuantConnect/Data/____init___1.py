@@ -5,6 +5,7 @@ import System.Linq.Expressions
 import System.IO
 import System.Dynamic
 import System.Collections.Generic
+import System.Collections.Concurrent
 import System
 import QuantConnect.Securities
 import QuantConnect.Packets
@@ -17,6 +18,67 @@ import QuantConnect
 import Python.Runtime
 import NodaTime
 import datetime
+
+
+
+class HistoryRequest(System.object):
+    """
+    Represents a request for historical data
+    
+    HistoryRequest(startTimeUtc: DateTime, endTimeUtc: DateTime, dataType: Type, symbol: Symbol, resolution: Resolution, exchangeHours: SecurityExchangeHours, dataTimeZone: DateTimeZone, fillForwardResolution: Nullable[Resolution], includeExtendedMarketHours: bool, isCustomData: bool, dataNormalizationMode: DataNormalizationMode, tickType: TickType)
+    HistoryRequest(config: SubscriptionDataConfig, hours: SecurityExchangeHours, startTimeUtc: DateTime, endTimeUtc: DateTime)
+    """
+    @typing.overload
+    def __init__(self, startTimeUtc: datetime.datetime, endTimeUtc: datetime.datetime, dataType: type, symbol: QuantConnect.Symbol, resolution: QuantConnect.Resolution, exchangeHours: QuantConnect.Securities.SecurityExchangeHours, dataTimeZone: NodaTime.DateTimeZone, fillForwardResolution: typing.Optional[QuantConnect.Resolution], includeExtendedMarketHours: bool, isCustomData: bool, dataNormalizationMode: QuantConnect.DataNormalizationMode, tickType: QuantConnect.TickType) -> QuantConnect.Data.HistoryRequest:
+        pass
+
+    @typing.overload
+    def __init__(self, config: QuantConnect.Data.SubscriptionDataConfig, hours: QuantConnect.Securities.SecurityExchangeHours, startTimeUtc: datetime.datetime, endTimeUtc: datetime.datetime) -> QuantConnect.Data.HistoryRequest:
+        pass
+
+    def __init__(self, *args) -> QuantConnect.Data.HistoryRequest:
+        pass
+
+    DataNormalizationMode: QuantConnect.DataNormalizationMode
+
+    DataTimeZone: NodaTime.DateTimeZone
+
+    DataType: type
+
+    EndTimeUtc: datetime.datetime
+
+    ExchangeHours: QuantConnect.Securities.SecurityExchangeHours
+
+    FillForwardResolution: typing.Optional[QuantConnect.Resolution]
+
+    IncludeExtendedMarketHours: bool
+
+    IsCustomData: bool
+
+    Resolution: QuantConnect.Resolution
+
+    StartTimeUtc: datetime.datetime
+
+    Symbol: QuantConnect.Symbol
+
+    TickType: QuantConnect.TickType
+
+
+
+class HistoryRequestFactory(System.object):
+    """
+    Helper class used to create new QuantConnect.Data.HistoryRequest
+    
+    HistoryRequestFactory(algorithm: IAlgorithm)
+    """
+    def CreateHistoryRequest(self, subscription: QuantConnect.Data.SubscriptionDataConfig, startAlgoTz: datetime.datetime, endAlgoTz: datetime.datetime, exchangeHours: QuantConnect.Securities.SecurityExchangeHours, resolution: typing.Optional[QuantConnect.Resolution]) -> QuantConnect.Data.HistoryRequest:
+        pass
+
+    def GetStartTimeAlgoTz(self, symbol: QuantConnect.Symbol, periods: int, resolution: QuantConnect.Resolution, exchange: QuantConnect.Securities.SecurityExchangeHours, dataTimeZone: NodaTime.DateTimeZone) -> datetime.datetime:
+        pass
+
+    def __init__(self, algorithm: QuantConnect.Interfaces.IAlgorithm) -> QuantConnect.Data.HistoryRequestFactory:
+        pass
 
 
 class IBaseData:
@@ -244,64 +306,3 @@ class SliceExtensions(System.object):
         pass
 
     __all__: list
-
-
-class SubscriptionDataConfig(System.object, System.IEquatable[SubscriptionDataConfig]):
-    """
-    Subscription data required including the type of data.
-    
-    SubscriptionDataConfig(objectType: Type, symbol: Symbol, resolution: Resolution, dataTimeZone: DateTimeZone, exchangeTimeZone: DateTimeZone, fillForward: bool, extendedHours: bool, isInternalFeed: bool, isCustom: bool, tickType: Nullable[TickType], isFilteredSubscription: bool, dataNormalizationMode: DataNormalizationMode)
-    SubscriptionDataConfig(config: SubscriptionDataConfig, objectType: Type, symbol: Symbol, resolution: Nullable[Resolution], dataTimeZone: DateTimeZone, exchangeTimeZone: DateTimeZone, fillForward: Nullable[bool], extendedHours: Nullable[bool], isInternalFeed: Nullable[bool], isCustom: Nullable[bool], tickType: Nullable[TickType], isFilteredSubscription: Nullable[bool], dataNormalizationMode: Nullable[DataNormalizationMode])
-    """
-    @typing.overload
-    def Equals(self, other: QuantConnect.Data.SubscriptionDataConfig) -> bool:
-        pass
-
-    @typing.overload
-    def Equals(self, obj: object) -> bool:
-        pass
-
-    def Equals(self, *args) -> bool:
-        pass
-
-    def GetHashCode(self) -> int:
-        pass
-
-    def GetNormalizedPrice(self, price: float) -> float:
-        pass
-
-    def ToString(self) -> str:
-        pass
-
-    @typing.overload
-    def __init__(self, objectType: type, symbol: QuantConnect.Symbol, resolution: QuantConnect.Resolution, dataTimeZone: NodaTime.DateTimeZone, exchangeTimeZone: NodaTime.DateTimeZone, fillForward: bool, extendedHours: bool, isInternalFeed: bool, isCustom: bool, tickType: typing.Optional[QuantConnect.TickType], isFilteredSubscription: bool, dataNormalizationMode: QuantConnect.DataNormalizationMode) -> QuantConnect.Data.SubscriptionDataConfig:
-        pass
-
-    @typing.overload
-    def __init__(self, config: QuantConnect.Data.SubscriptionDataConfig, objectType: type, symbol: QuantConnect.Symbol, resolution: typing.Optional[QuantConnect.Resolution], dataTimeZone: NodaTime.DateTimeZone, exchangeTimeZone: NodaTime.DateTimeZone, fillForward: typing.Optional[bool], extendedHours: typing.Optional[bool], isInternalFeed: typing.Optional[bool], isCustom: typing.Optional[bool], tickType: typing.Optional[QuantConnect.TickType], isFilteredSubscription: typing.Optional[bool], dataNormalizationMode: typing.Optional[QuantConnect.DataNormalizationMode]) -> QuantConnect.Data.SubscriptionDataConfig:
-        pass
-
-    def __init__(self, *args) -> QuantConnect.Data.SubscriptionDataConfig:
-        pass
-
-    MappedSymbol: str
-
-    Symbol: QuantConnect.Symbol
-
-    Consolidators: System.Collections.Generic.ISet[QuantConnect.Data.Consolidators.IDataConsolidator]
-    DataNormalizationMode: QuantConnect.DataNormalizationMode
-    DataTimeZone: NodaTime.DateTimeZone
-    ExchangeTimeZone: NodaTime.DateTimeZone
-    ExtendedMarketHours: bool
-    FillDataForward: bool
-    Increment: datetime.timedelta
-    IsCustomData: bool
-    IsFilteredSubscription: bool
-    IsInternalFeed: bool
-    Market: str
-    PriceScaleFactor: float
-    Resolution: QuantConnect.Resolution
-    SecurityType: QuantConnect.SecurityType
-    SumOfDividends: float
-    TickType: QuantConnect.TickType
-    Type: type

@@ -94,6 +94,10 @@ class OptionFilterUniverse(System.object, System.Collections.IEnumerable, QuantC
         pass
 
     @typing.overload
+    def Contracts(self, contracts: Python.Runtime.PyObject) -> QuantConnect.Securities.OptionFilterUniverse:
+        pass
+
+    @typing.overload
     def Contracts(self, contracts: typing.List[QuantConnect.Symbol]) -> QuantConnect.Securities.OptionFilterUniverse:
         pass
 
@@ -170,6 +174,10 @@ class OptionFilterUniverseEx(System.object):
 
     @staticmethod
     def Where(universe: QuantConnect.Securities.OptionFilterUniverse, predicate: typing.Callable[[QuantConnect.Symbol], bool]) -> QuantConnect.Securities.OptionFilterUniverse:
+        pass
+
+    @staticmethod
+    def WhereContains(universe: QuantConnect.Securities.OptionFilterUniverse, filterList: typing.List[QuantConnect.Symbol]) -> QuantConnect.Securities.OptionFilterUniverse:
         pass
 
     __all__: list

@@ -209,7 +209,15 @@ class Cash(System.object):
     def SetAmount(self, amount: float) -> None:
         pass
 
+    @typing.overload
     def ToString(self) -> str:
+        pass
+
+    @typing.overload
+    def ToString(self, accountCurrency: str) -> str:
+        pass
+
+    def ToString(self, *args) -> str:
         pass
 
     def Update(self, data: QuantConnect.Data.BaseData) -> None:
@@ -263,7 +271,7 @@ class ICurrencyConverter:
 
 
 
-class CashBook(System.object, System.Collections.IEnumerable, QuantConnect.Securities.ICurrencyConverter, System.Collections.Generic.ICollection[KeyValuePair[str, Cash]], System.Collections.Generic.IDictionary[str, Cash], System.Collections.Generic.IEnumerable[KeyValuePair[str, Cash]]):
+class CashBook(System.object, System.Collections.IEnumerable, System.Collections.Generic.ICollection[KeyValuePair[str, Cash]], QuantConnect.Securities.ICurrencyConverter, System.Collections.Generic.IDictionary[str, Cash], System.Collections.Generic.IEnumerable[KeyValuePair[str, Cash]]):
     """
     Provides a means of keeping track of the different cash holdings of an algorithm
     

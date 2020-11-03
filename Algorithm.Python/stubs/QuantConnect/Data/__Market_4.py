@@ -9,7 +9,7 @@ import QuantConnect
 import datetime
 
 
-class TradeBar(QuantConnect.Data.BaseData, QuantConnect.Data.Market.IBar, QuantConnect.Data.Market.IBaseDataBar, QuantConnect.Data.IBaseData):
+class TradeBar(QuantConnect.Data.BaseData, QuantConnect.Data.IBaseData, QuantConnect.Data.Market.IBar, QuantConnect.Data.Market.IBaseDataBar):
     """
     TradeBar class for second and minute resolution data:
                 An OHLC implementation of the QuantConnect BaseData class with parameters for candles.
@@ -214,7 +214,7 @@ class TradeBar(QuantConnect.Data.BaseData, QuantConnect.Data.Market.IBar, QuantC
 
 
 
-class TradeBars(QuantConnect.Data.Market.DataDictionary[TradeBar], System.Collections.IEnumerable, QuantConnect.Interfaces.IExtendedDictionary[Symbol, TradeBar], System.Collections.Generic.ICollection[KeyValuePair[Symbol, TradeBar]], System.Collections.Generic.IDictionary[Symbol, TradeBar], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, TradeBar]]):
+class TradeBars(QuantConnect.Data.Market.DataDictionary[TradeBar], System.Collections.IEnumerable, System.Collections.Generic.ICollection[KeyValuePair[Symbol, TradeBar]], System.Collections.Generic.IDictionary[Symbol, TradeBar], QuantConnect.Interfaces.IExtendedDictionary[Symbol, TradeBar], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, TradeBar]]):
     """
     Collection of TradeBars to create a data type for generic data handler:
     

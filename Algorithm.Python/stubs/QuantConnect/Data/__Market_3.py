@@ -11,7 +11,7 @@ import datetime
 
 
 
-class QuoteBars(QuantConnect.Data.Market.DataDictionary[QuoteBar], System.Collections.IEnumerable, QuantConnect.Interfaces.IExtendedDictionary[Symbol, QuoteBar], System.Collections.Generic.ICollection[KeyValuePair[Symbol, QuoteBar]], System.Collections.Generic.IDictionary[Symbol, QuoteBar], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, QuoteBar]]):
+class QuoteBars(QuantConnect.Data.Market.DataDictionary[QuoteBar], System.Collections.IEnumerable, System.Collections.Generic.ICollection[KeyValuePair[Symbol, QuoteBar]], System.Collections.Generic.IDictionary[Symbol, QuoteBar], QuantConnect.Interfaces.IExtendedDictionary[Symbol, QuoteBar], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, QuoteBar]]):
     """
     Collection of QuantConnect.Data.Market.QuoteBar keyed by symbol
     
@@ -33,7 +33,7 @@ class QuoteBars(QuantConnect.Data.Market.DataDictionary[QuoteBar], System.Collec
     Item: indexer#
 
 
-class RenkoBar(QuantConnect.Data.BaseData, QuantConnect.Data.Market.IBar, QuantConnect.Data.Market.IBaseDataBar, QuantConnect.Data.IBaseData):
+class RenkoBar(QuantConnect.Data.BaseData, QuantConnect.Data.IBaseData, QuantConnect.Data.Market.IBar, QuantConnect.Data.Market.IBaseDataBar):
     """
     Represents a bar sectioned not by time, but by some amount of movement in a value (for example, Closing price moving in $10 bar sizes)
     
@@ -209,7 +209,7 @@ class Split(QuantConnect.Data.BaseData, QuantConnect.Data.IBaseData):
 
 
 
-class Splits(QuantConnect.Data.Market.DataDictionary[Split], System.Collections.IEnumerable, QuantConnect.Interfaces.IExtendedDictionary[Symbol, Split], System.Collections.Generic.ICollection[KeyValuePair[Symbol, Split]], System.Collections.Generic.IDictionary[Symbol, Split], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, Split]]):
+class Splits(QuantConnect.Data.Market.DataDictionary[Split], System.Collections.IEnumerable, System.Collections.Generic.ICollection[KeyValuePair[Symbol, Split]], System.Collections.Generic.IDictionary[Symbol, Split], QuantConnect.Interfaces.IExtendedDictionary[Symbol, Split], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, Split]]):
     """
     Collection of splits keyed by QuantConnect.Symbol
     
@@ -267,7 +267,7 @@ class SymbolChangedEvent(QuantConnect.Data.BaseData, QuantConnect.Data.IBaseData
 
 
 
-class SymbolChangedEvents(QuantConnect.Data.Market.DataDictionary[SymbolChangedEvent], System.Collections.IEnumerable, QuantConnect.Interfaces.IExtendedDictionary[Symbol, SymbolChangedEvent], System.Collections.Generic.ICollection[KeyValuePair[Symbol, SymbolChangedEvent]], System.Collections.Generic.IDictionary[Symbol, SymbolChangedEvent], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, SymbolChangedEvent]]):
+class SymbolChangedEvents(QuantConnect.Data.Market.DataDictionary[SymbolChangedEvent], System.Collections.IEnumerable, System.Collections.Generic.ICollection[KeyValuePair[Symbol, SymbolChangedEvent]], System.Collections.Generic.IDictionary[Symbol, SymbolChangedEvent], QuantConnect.Interfaces.IExtendedDictionary[Symbol, SymbolChangedEvent], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, SymbolChangedEvent]]):
     """
     Collection of QuantConnect.Data.Market.SymbolChangedEvent keyed by the original, requested symbol
     
@@ -289,7 +289,7 @@ class SymbolChangedEvents(QuantConnect.Data.Market.DataDictionary[SymbolChangedE
     Item: indexer#
 
 
-class Ticks(QuantConnect.Data.Market.DataDictionary[List[Tick]], System.Collections.IEnumerable, QuantConnect.Interfaces.IExtendedDictionary[Symbol, List[Tick]], System.Collections.Generic.ICollection[KeyValuePair[Symbol, List[Tick]]], System.Collections.Generic.IDictionary[Symbol, List[Tick]], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, List[Tick]]]):
+class Ticks(QuantConnect.Data.Market.DataDictionary[List[Tick]], System.Collections.IEnumerable, System.Collections.Generic.ICollection[KeyValuePair[Symbol, List[Tick]]], System.Collections.Generic.IDictionary[Symbol, List[Tick]], QuantConnect.Interfaces.IExtendedDictionary[Symbol, List[Tick]], System.Collections.Generic.IEnumerable[KeyValuePair[Symbol, List[Tick]]]):
     """
     Ticks collection which implements an IDictionary-string-list of ticks. This way users can iterate over the string indexed ticks of the requested symbol.
     
