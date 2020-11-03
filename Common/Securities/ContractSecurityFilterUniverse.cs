@@ -155,7 +155,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Refreshes this filter universe
         /// </summary>
-        /// <param name="allSymbols">All the options contract symbols</param>
+        /// <param name="allSymbols">All the contract symbols for the Universe</param>
         /// <param name="underlying">The current underlying last data point</param>
         public virtual void Refresh(IEnumerable<Symbol> allSymbols, BaseData underlying)
         {
