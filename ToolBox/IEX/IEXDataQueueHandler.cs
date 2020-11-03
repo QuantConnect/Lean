@@ -33,6 +33,8 @@ using QuantConnect.Util;
 using System.Linq;
 using System.Net;
 using Newtonsoft.Json;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.ToolBox.IEX.Response;
 
 namespace QuantConnect.ToolBox.IEX
@@ -41,7 +43,7 @@ namespace QuantConnect.ToolBox.IEX
     /// IEX live data handler.
     /// See more at https://iexcloud.io/docs/api/
     /// </summary>
-    public class IEXDataQueueHandler : HistoryProviderBase, IDataQueueHandler
+    public class IEXDataQueueHandler : SynchronizingHistoryProvider, IDataQueueHandler
     {
         private static readonly TimeSpan SubscribeDelay = TimeSpan.FromMilliseconds(1500);
         private readonly IEXEventSourceCollection _clients;
@@ -57,6 +59,7 @@ namespace QuantConnect.ToolBox.IEX
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified);
         private int _dataPointCount;
+        private static bool invalidHistDataTypeWarningFired;
 
         private readonly IDataAggregator _aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
             Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
@@ -213,8 +216,16 @@ namespace QuantConnect.ToolBox.IEX
                         _aggregator.Update(tradeTick);
 
                     // Always update quotes for a new snapshot, if there are bid and ask prices available
-                    if (!bidPrice.HasValue || !bidSize.HasValue || bidPrice == 0 || askSize == 0) continue;
-                    if (!askPrice.HasValue || !askSize.HasValue || askPrice == 0 || askSize == 0) continue;
+                    if (!bidPrice.HasValue || !bidSize.HasValue || bidPrice == 0 || askSize == 0)
+                    {
+                        continue;
+                    }
+
+                    if (!askPrice.HasValue || !askSize.HasValue || askPrice == 0 || askSize == 0)
+                    {
+                        continue;
+                    }
+
                     var quoteTick = new Tick()
                     {
                         Symbol = symbol,
@@ -293,7 +304,7 @@ namespace QuantConnect.ToolBox.IEX
 
             _clients.Dispose();
 
-            Log.Trace("IEXDataQueueHandler.Dispose(): Disconnected from IEX live data");
+            Log.Trace("IEXDataQueueHandler.Dispose(): Disconnected from IEX data provider");
         }
 
         ~IEXDataQueueHandler()
@@ -327,22 +338,35 @@ namespace QuantConnect.ToolBox.IEX
             if (string.IsNullOrWhiteSpace(_apiKey))
             {
                 Log.Error("IEXDataQueueHandler.GetHistory(): History calls for IEX require an API key.");
-                yield break;
+                return Enumerable.Empty<Slice>();
             }
 
-            foreach (var request in requests)
+            // Create subscription objects from the configs
+            var subscriptions = new List<Subscription>();
+            requests.DoForEach(request =>
             {
-                foreach (var slice in ProcessHistoryRequests(request))
+                // IEX does return historical TradeBar - give one time warning if inconsistent data type was requested
+                if (request.DataType != typeof(TradeBar) && !invalidHistDataTypeWarningFired)
                 {
-                    yield return slice;
+                    Log.Error($"IEXDataQueueHandler.GetHistory(): Not supported data type - {request.DataType.Name}. " +
+                        "Currently available support only for historical of type - TradeBar");
+                    invalidHistDataTypeWarningFired = true;
+                    return;
                 }
-            }
+
+                var history = ProcessHistoryRequests(request);
+                var subscription = CreateSubscription(request, history);
+                subscriptions.Add(subscription);
+            });
+
+            var result = subscriptions.Any() ? CreateSliceEnumerableFromSubscriptions(subscriptions, sliceTimeZone) : Enumerable.Empty<Slice>();
+            return result;
         }
 
         /// <summary>
         /// Populate request data
         /// </summary>
-        private IEnumerable<Slice> ProcessHistoryRequests(Data.HistoryRequest request)
+        private IEnumerable<BaseData> ProcessHistoryRequests(Data.HistoryRequest request)
         {
             var ticker = request.Symbol.ID.Symbol;
             var start = request.StartTimeUtc.ConvertFromUtc(TimeZones.NewYork);
@@ -369,75 +393,65 @@ namespace QuantConnect.ToolBox.IEX
             Log.Trace("IEXDataQueueHandler.ProcessHistoryRequests(): Submitting request: " +
                 Invariant($"{request.Symbol.SecurityType}-{ticker}: {request.Resolution} {start}->{end}"));
 
+            const string baseUrl = "https://cloud.iexapis.com/stable/stock";
             var span = end.Date - start.Date;
-            var suffixes = new List<string>();
+            var urls = new List<string>();
+            var begin = start;
 
-
-            if (request.Resolution == Resolution.Minute)
+            switch (request.Resolution)
             {
-                DateTime begin;
-                if (span.Days > 30)
+                case Resolution.Minute:
                 {
-                    Log.Trace("ProcessHistoryRequests(): Downloading data for last 30 calendar days." +
-                              "Reason: IEX Currently supporting trailing 30 calendar days of minute bar data");
-                    begin = end.AddDays(-30);
-                }
-                else
-                {
-                    begin = start;
-                }
+                    if (span.Days > 30)
+                    {
+                        Log.Trace("ProcessHistoryRequests(): Downloading data for last 30 calendar days." +
+                            "Reason: IEX Currently supporting trailing 30 calendar days of minute bar data");
+                        begin = end.AddDays(-30);
+                    }
 
-                while (begin < end)
+                    while (begin < end)
+                    {
+                        var url =
+                            $"{baseUrl}/{ticker}/chart/date/{begin.ToStringInvariant("yyyyMMdd")}?token={_apiKey}";
+                        urls.Add(url);
+                        begin = begin.AddDays(1);
+                    }
+
+                    break;
+                }
+                case Resolution.Daily:
                 {
-                    suffixes.Add("date/" + begin.ToStringInvariant("yyyyMMdd"));
-                    begin = begin.AddDays(1);
+                    while (begin < end)
+                    {
+                        var url =
+                            $"{baseUrl}/{ticker}/chart/date/{begin.ToStringInvariant("yyyyMMdd")}?chartByDay=true&token={_apiKey}";
+                        urls.Add(url);
+                        begin = begin.AddDays(1);
+                    }
+
+                    break;
                 }
             }
 
-            if (request.Resolution == Resolution.Daily)
-            {
-                if (span.Days < 30)
-                {
-                    suffixes.Add("1m");
-                }
-                else if (span.Days < 3 * 30)
-                {
-                    suffixes.Add("3m");
-                }
-                else if (span.Days < 6 * 30)
-                {
-                    suffixes.Add("6m");
-                }
-                else if (span.Days < 12 * 30)
-                {
-                    suffixes.Add("1y");
-                }
-                else if (span.Days < 24 * 30)
-                {
-                    suffixes.Add("2y");
-                }
-                else
-                {
-                    suffixes.Add("5y");
-                }
-            }
-            
             // Download and parse data
             using (var client = new WebClient())
             {
-                foreach (var suffix in suffixes)
+                foreach (var url in urls)
                 {
                     JArray parsedResponse;
                     try
                     {
-                        var response = client.DownloadString("https://cloud.iexapis.com/v1/stock/" + ticker + "/chart/" + suffix + "?token=" + _apiKey);
+                        var response = client.DownloadString(url);
                         parsedResponse = JArray.Parse(response);
                     }
                     // To find a reason why does web exception occur need to retrieve additional details
                     catch (WebException we)
                     {
                         var dataStream = we.Response?.GetResponseStream();
-                        if (dataStream == null) throw;
+                        if (dataStream == null)
+                        {
+                            throw;
+                        }
 
                         var reader = new StreamReader(dataStream);
                         var details = reader.ReadToEnd();
@@ -480,8 +494,9 @@ namespace QuantConnect.ToolBox.IEX
                         var volume = item["volume"].Value<int>();
 
                         var tradeBar = new TradeBar(date, request.Symbol, open, high, low, close, volume, period);
+                        Log.Trace($"T1: {tradeBar.Time} T2: {tradeBar.EndTime} {tradeBar}");
 
-                        yield return new Slice(tradeBar.EndTime, new[] {tradeBar});
+                        yield return tradeBar;
                     }
                 }
             }

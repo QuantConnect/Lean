@@ -262,7 +262,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                 // -- 2 -- SUBSCRIBE FOR THE SECOND TIME -- UPDATES SUBSCRIPTION --
                 mockedEventsSource.Reset();
-                var oldDict = mockedEventsSource.GetClientSymbolsDictCopy();
 
                 // Remove 3 elements with a step 50
                 var symbols2 = symbols1.RemoveAt(51).RemoveAt(101).RemoveAt(151);
@@ -335,11 +334,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 return ClientSymbolsDictionary.Values.SelectMany(x => x);
             }
 
-            public ConcurrentDictionary<EventSource, string[]> GetClientSymbolsDictCopy()
-            {
-                return new ConcurrentDictionary<EventSource, string[]>(ClientSymbolsDictionary);
-            }
-
             public void Reset()
             {
                 CreateNewSubscriptionCalledTimes = 0;
@@ -386,8 +380,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             TestDelegate test = () =>
             {
                 var historyProvider = new IEXDataQueueHandler();
-                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, new DataPermissionManager()));
-
                 var now = DateTime.UtcNow;
 
                 var requests = new[]

@@ -55,16 +55,16 @@ namespace QuantConnect.ToolBox.IEX
             var historyRequests = new[] {
                 new HistoryRequest(startUtc,
                                    endUtc,
-                                   typeof(QuoteBar),
+                                   typeof(TradeBar),
                                    symbol,
                                    resolution,
-                                   SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard),
-                                   DateTimeZone.Utc,
+                                   SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                                   TimeZones.NewYork,
                                    resolution,
-                                   false,
+                                   true,
                                    false,
                                    DataNormalizationMode.Adjusted,
-                                   TickType.Quote)
+                                   TickType.Trade)
             };
 
             foreach (var slice in _handler.GetHistory(historyRequests, TimeZones.EasternStandard))
