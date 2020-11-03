@@ -282,10 +282,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 mockedEventsSource.TestCounter.Reset(1);
 
                 // Removed subscriptions had a symbol that was not in current subscription
-                mockedEventsSource.RemovedClients.DoForEach(removed =>
+                mockedEventsSource.RemovedClientSymbols.DoForEach(removed =>
                 {
-                    var oldSubscrSymbols = oldDict[removed];
-                    Assert.IsFalse(oldSubscrSymbols.All(s => symbols2.Contains(s)));
+                    Assert.IsFalse(removed.All(s => symbols2.Contains(s)));
                 });
             }
         }
@@ -308,7 +307,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             public CountdownEvent TestCounter => Counter;
             public int CreateNewSubscriptionCalledTimes;
             public int RemoveOldClientCalledTimes;
-            public List<EventSource> RemovedClients = new List<EventSource>();
+            public List<string[]> RemovedClientSymbols = new List<string[]>();
 
             public MockedIEXEventSourceCollection(EventHandler<MessageReceivedEventArgs> messageAction, string apiKey)
                 : base(messageAction, apiKey)
@@ -326,7 +325,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             protected override void RemoveOldClient(EventSource oldClient)
             {
                 RemoveOldClientCalledTimes++;
-                RemovedClients.Add(oldClient);
+                RemovedClientSymbols.Add(ClientSymbolsDictionary[oldClient]);
                 // Call base class to remove from inner dictionary and dispose
                 base.RemoveOldClient(oldClient);
             }
@@ -345,7 +344,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 CreateNewSubscriptionCalledTimes = 0;
                 RemoveOldClientCalledTimes = 0;
-                RemovedClients.Clear();
+                RemovedClientSymbols.Clear();
             }
         }
 
