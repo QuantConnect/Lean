@@ -2162,7 +2162,7 @@ namespace QuantConnect.Algorithm
             where T : class, IBaseData
         {
             IDataConsolidator consolidator;
-            if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).Any())
+            if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).Count > 0)
             {
                 consolidator = Consolidate(symbol, period, handler);
             }

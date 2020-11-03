@@ -99,7 +99,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             foreach (var addedSecurity in changes.AddedSecurities)
             {
-                var subscriptions = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(addedSecurity.Symbol).ToList();
+                var subscriptions = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(addedSecurity.Symbol);
                 if (addedSecurity.Symbol == _symbol)
                 {
                     if (!(subscriptions.Count == 2 &&

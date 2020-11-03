@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Common.Data
                 SubscriptionDataConfigs.Add(config);
             }
         }
-        public IEnumerable<SubscriptionDataConfig> GetSubscriptionDataConfigs(Symbol symbol, bool includeInternalConfigs = false)
+        public List<SubscriptionDataConfig> GetSubscriptionDataConfigs(Symbol symbol, bool includeInternalConfigs = false)
         {
             return SubscriptionDataConfigs;
         }

@@ -78,7 +78,7 @@ namespace QuantConnect.Util
                     }
                     var aggregate = new AggregateCatalog(catalogs);
                     _compositionContainer = new CompositionContainer(aggregate);
-                    return _compositionContainer.Catalog.Parts;
+                    return _compositionContainer.Catalog.Parts.ToList();
                 }
                 catch (Exception exception)
                 {
@@ -88,7 +88,7 @@ namespace QuantConnect.Util
                         Log.Error(exception);
                     }
                 }
-                return Enumerable.Empty<ComposablePartDefinition>();
+                return new List<ComposablePartDefinition>();
             });
 
             // for performance we will load our assemblies and keep their exported types
@@ -132,7 +132,7 @@ namespace QuantConnect.Util
 
         private CompositionContainer _compositionContainer;
         private readonly List<Type> _exportedTypes = new List<Type>();
-        private readonly Task<IEnumerable<ComposablePartDefinition>> _composableParts;
+        private readonly Task<List<ComposablePartDefinition>> _composableParts;
         private readonly object _exportedValuesLockObject = new object();
         private readonly Dictionary<Type, IEnumerable> _exportedValues = new Dictionary<Type, IEnumerable>();
 
@@ -323,7 +323,7 @@ namespace QuantConnect.Util
                     {
                         _composableParts.Wait();
                     }
-                    values = _compositionContainer.GetExportedValues<T>();
+                    values = _compositionContainer.GetExportedValues<T>().ToList();
                     _exportedValues[typeof (T)] = values;
                     return values.OfType<T>();
                 }

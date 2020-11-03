@@ -551,10 +551,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Gets a list of all registered <see cref="SubscriptionDataConfig"/> for a given <see cref="Symbol"/>
         /// </summary>
         /// <remarks>Will not return internal subscriptions by default</remarks>
-        public IEnumerable<SubscriptionDataConfig> GetSubscriptionDataConfigs(Symbol symbol, bool includeInternalConfigs = false)
+        public List<SubscriptionDataConfig> GetSubscriptionDataConfigs(Symbol symbol, bool includeInternalConfigs = false)
         {
             return SubscriptionManagerSubscriptions.Where(x => x.Symbol == symbol
-                                                               && (includeInternalConfigs || !x.IsInternalFeed));
+                                                               && (includeInternalConfigs || !x.IsInternalFeed)).ToList();
         }
 
         #endregion

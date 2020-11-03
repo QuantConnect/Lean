@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Linq;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
@@ -76,7 +75,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var sameConfig = dataManager.SubscriptionManagerGetOrAdd(config);
             Assert.IsTrue(ReferenceEquals(sameConfig, config));
-            Assert.AreEqual(1, dataManager.GetSubscriptionDataConfigs(config.Symbol).Count());
+            Assert.AreEqual(1, dataManager.GetSubscriptionDataConfigs(config.Symbol).Count);
 
             var otherInstance = new SubscriptionDataConfig(config.Type,
                 config.Symbol,
@@ -89,7 +88,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             sameConfig = dataManager.SubscriptionManagerGetOrAdd(otherInstance);
             Assert.IsTrue(ReferenceEquals(sameConfig, config));
-            Assert.AreEqual(1, dataManager.GetSubscriptionDataConfigs(config.Symbol).Count());
+            Assert.AreEqual(1, dataManager.GetSubscriptionDataConfigs(config.Symbol).Count);
 
             dataManager.RemoveAllSubscriptions();
         }
@@ -121,7 +120,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 false);
 
             Assert.IsTrue(ReferenceEquals(dataManager.SubscriptionManagerGetOrAdd(config), config));
-            Assert.AreEqual(1, dataManager.GetSubscriptionDataConfigs(config.Symbol).Count());
+            Assert.AreEqual(1, dataManager.GetSubscriptionDataConfigs(config.Symbol).Count);
 
             // we didn't add any subscription yet
             Assert.IsFalse(dataManager.RemoveSubscription(config));
@@ -145,7 +144,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Assert.IsTrue(dataManager.AddSubscription(request));
             Assert.IsTrue(dataManager.RemoveSubscription(config));
-            Assert.AreEqual(0, dataManager.GetSubscriptionDataConfigs(config.Symbol).Count());
+            Assert.AreEqual(0, dataManager.GetSubscriptionDataConfigs(config.Symbol).Count);
 
             dataManager.RemoveAllSubscriptions();
         }
@@ -205,13 +204,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             // Universe A: removes the subscription
             Assert.IsTrue(dataManager.RemoveSubscription(config));
-            Assert.AreEqual(0, dataManager.GetSubscriptionDataConfigs(config.Symbol).Count());
+            Assert.AreEqual(0, dataManager.GetSubscriptionDataConfigs(config.Symbol).Count);
 
             // Universe B: adds the subscription
             Assert.IsTrue(dataManager.AddSubscription(request));
 
             // the config should be present
-            Assert.AreEqual(1, dataManager.GetSubscriptionDataConfigs(config.Symbol).Count());
+            Assert.AreEqual(1, dataManager.GetSubscriptionDataConfigs(config.Symbol).Count);
 
             dataManager.RemoveAllSubscriptions();
         }
