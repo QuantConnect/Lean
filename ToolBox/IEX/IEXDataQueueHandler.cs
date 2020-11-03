@@ -32,6 +32,7 @@ using static QuantConnect.StringExtensions;
 using QuantConnect.Util;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
@@ -392,6 +393,7 @@ namespace QuantConnect.ToolBox.IEX
 
             Log.Trace("IEXDataQueueHandler.ProcessHistoryRequests(): Submitting request: " +
                 Invariant($"{request.Symbol.SecurityType}-{ticker}: {request.Resolution} {start}->{end}"));
+            Log.Trace("IEXDataQueueHandler.ProcessHistoryRequests(): Please wait..");
 
             const string baseUrl = "https://cloud.iexapis.com/stable/stock";
             var span = end.Date - start.Date;
@@ -434,70 +436,59 @@ namespace QuantConnect.ToolBox.IEX
             }
 
             // Download and parse data
-            using (var client = new WebClient())
+            var requests = new List<Task<string>>();
+
+            urls.DoForEach(url =>
             {
-                foreach (var url in urls)
+                using (var client = new WebClient())
                 {
-                    JArray parsedResponse;
-                    try
+                    requests.Add(client.DownloadStringTaskAsync(new Uri(url)));
+                }
+            });
+
+            var responses = Task.WhenAll(requests).Result;
+
+            foreach (var response in responses)
+            {
+                var parsedResponse = JArray.Parse(response);
+
+                // Parse
+                foreach (var item in parsedResponse.Children())
+                {
+                    DateTime date;
+                    TimeSpan period;
+                    if (item["minute"] != null)
                     {
-                        var response = client.DownloadString(url);
-                        parsedResponse = JArray.Parse(response);
+                        date = DateTime.ParseExact(item["date"].Value<string>(), "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                        var minutes = TimeSpan.ParseExact(item["minute"].Value<string>(), "hh\\:mm", CultureInfo.InvariantCulture);
+                        date += minutes;
+                        period = TimeSpan.FromMinutes(1);
                     }
-                    // To find a reason why does web exception occur need to retrieve additional details
-                    catch (WebException we)
+                    else
                     {
-                        var dataStream = we.Response?.GetResponseStream();
-                        if (dataStream == null)
-                        {
-                            throw;
-                        }
-
-                        var reader = new StreamReader(dataStream);
-                        var details = reader.ReadToEnd();
-                        throw new Exception(details);
+                        date = Parse.DateTime(item["date"].Value<string>());
+                        period = TimeSpan.FromDays(1);
                     }
 
-                    // Parse
-                    foreach (var item in parsedResponse.Children())
+                    if (date < start || date > end)
                     {
-                        DateTime date;
-                        TimeSpan period;
-                        if (item["minute"] != null)
-                        {
-                            date = DateTime.ParseExact(item["date"].Value<string>(), "yyyy-MM-dd", CultureInfo.InvariantCulture);
-                            var mins = TimeSpan.ParseExact(item["minute"].Value<string>(), "hh\\:mm", CultureInfo.InvariantCulture);
-                            date += mins;
-                            period = TimeSpan.FromMinutes(1);
-                        }
-                        else
-                        {
-                            date = Parse.DateTime(item["date"].Value<string>());
-                            period = TimeSpan.FromDays(1);
-                        }
-
-                        if (date < start || date > end)
-                        {
-                            continue;
-                        }
-
-                        Interlocked.Increment(ref _dataPointCount);
-
-                        if (item["open"].Type == JTokenType.Null)
-                        {
-                            continue;
-                        }
-                        var open = item["open"].Value<decimal>();
-                        var high = item["high"].Value<decimal>();
-                        var low = item["low"].Value<decimal>();
-                        var close = item["close"].Value<decimal>();
-                        var volume = item["volume"].Value<int>();
-
-                        var tradeBar = new TradeBar(date, request.Symbol, open, high, low, close, volume, period);
-                        Log.Trace($"T1: {tradeBar.Time} T2: {tradeBar.EndTime} {tradeBar}");
-
-                        yield return tradeBar;
+                        continue;
                     }
+
+                    Interlocked.Increment(ref _dataPointCount);
+
+                    if (item["open"].Type == JTokenType.Null)
+                    {
+                        continue;
+                    }
+                    var open = item["open"].Value<decimal>();
+                    var high = item["high"].Value<decimal>();
+                    var low = item["low"].Value<decimal>();
+                    var close = item["close"].Value<decimal>();
+                    var volume = item["volume"].Value<int>();
+
+                    var tradeBar = new TradeBar(date, request.Symbol, open, high, low, close, volume, period);
+                    yield return tradeBar;
                 }
             }
         }
