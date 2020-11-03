@@ -31,9 +31,10 @@ namespace QuantConnect.Securities
     where T: ContractSecurityFilterUniverse<T>
     {
         /// <summary>
-        /// Defines listed contract types
+        /// Defines listed contract types with Flags attribute
         /// </summary>
-        public enum Type : int
+        [Flags]
+        protected enum ContractExpirationType : int
         {
             /// <summary>
             /// Standard contracts
@@ -43,10 +44,36 @@ namespace QuantConnect.Securities
             /// <summary>
             /// Non standard weekly contracts
             /// </summary>
-            Weeklys = 2
+            Weekly = 2
         }
 
-        internal IEnumerable<Symbol> _allSymbols;
+        /// <summary>
+        /// Expiration Types allowed through the filter
+        /// Standards only by default
+        /// </summary>
+        protected ContractExpirationType Type = ContractExpirationType.Standard;
+
+        /// <summary>
+        /// The underlying price data
+        /// </summary>
+        protected BaseData UnderlyingInternal;
+
+        /// <summary>
+        /// All Symbols in this filter
+        /// Marked internal for use by extensions
+        /// </summary>
+        internal IEnumerable<Symbol> AllSymbols;
+
+        /// <summary>
+        /// Mark this filter dynamic for regular reapplying
+        /// Marked internal for use by extensions
+        /// </summary>
+        internal bool IsDynamicInternal;
+
+        /// <summary>
+        /// True if the universe is dynamic and filter needs to be reapplied
+        /// </summary>
+        public bool IsDynamic => IsDynamicInternal;
 
         /// <summary>
         /// The underlying price data
@@ -56,21 +83,10 @@ namespace QuantConnect.Securities
             get
             {
                 // underlying value changes over time, so accessing it makes universe dynamic
-                _isDynamic = true;
-                return _underlying;
+                IsDynamicInternal = true;
+                return UnderlyingInternal;
             }
         }
-
-        protected BaseData _underlying;
-
-        /// <summary>
-        /// True if the universe is dynamic and filter needs to be reapplied
-        /// </summary>
-        public bool IsDynamic => _isDynamic;
-
-        //TODO: Naming Conventions
-        internal bool _isDynamic;
-        protected Type _type = Type.Standard;
 
         /// <summary>
         /// Constructs ContractSecurityFilterUniverse
@@ -84,36 +100,22 @@ namespace QuantConnect.Securities
         /// </summary>
         protected ContractSecurityFilterUniverse(IEnumerable<Symbol> allSymbols, BaseData underlying)
         {
-            _allSymbols = allSymbols;
-            _underlying = underlying;
-            _type = Type.Standard;
-            _isDynamic = false;
+            AllSymbols = allSymbols;
+            UnderlyingInternal = underlying;
+            Type = ContractExpirationType.Standard;
+            IsDynamicInternal = false;
         }
 
         /// <summary>
-        /// Includes universe of non-standard weeklys contracts (if any) into selection
+        /// Function to determine if the given symbol is a standard contract
         /// </summary>
-        /// <returns></returns>
-        public T IncludeWeeklys()
-        {
-            _type |= Type.Weeklys;
-            return (T) this;
-        }
-
-        /// <summary>
-        /// Sets universe of weeklys contracts (if any) as a selection
-        /// </summary>
-        /// <returns></returns>
-        public T WeeklysOnly()
-        {
-            _type = Type.Weeklys;
-            return (T) this;
-        }
+        /// <returns>True if standard type</returns>
+        protected abstract bool IsStandard(Symbol symbol);
 
         /// <summary>
         /// Returns universe, filtered by contract type
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Universe with filter applied</returns>
         internal T ApplyTypesFilter()
         {
             // memoization map for ApplyTypesFilter()
@@ -132,15 +134,15 @@ namespace QuantConnect.Securities
                 return res;
             };
 
-            _allSymbols = _allSymbols.Where(x =>
+            AllSymbols = AllSymbols.Where(x =>
             {
-                switch (_type)
+                switch (Type)
                 {
-                    case Type.Weeklys:
+                    case ContractExpirationType.Weekly:
                         return !memoizedIsStandardType(x);
-                    case Type.Standard:
+                    case ContractExpirationType.Standard:
                         return memoizedIsStandardType(x);
-                    case Type.Standard | Type.Weeklys:
+                    case ContractExpirationType.Standard | ContractExpirationType.Weekly:
                         return true;
                     default:
                         return false;
@@ -151,43 +153,81 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Function to determine if the given symbol is a standard contract
+        /// Refreshes this filter universe
         /// </summary>
-        /// <returns>True if standard type</returns>
-        protected abstract bool IsStandard(Symbol symbol);
+        /// <param name="allSymbols">All the options contract symbols</param>
+        /// <param name="underlying">The current underlying last data point</param>
+        public virtual void Refresh(IEnumerable<Symbol> allSymbols, BaseData underlying)
+        {
+            AllSymbols = allSymbols;
+            UnderlyingInternal = underlying;
+            Type = ContractExpirationType.Standard;
+            IsDynamicInternal = false;
+        }
+
+        /// <summary>
+        /// Sets universe of standard contracts (if any) as selection
+        /// Contracts by default are standards; only needed to switch back if changed
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public T StandardsOnly()
+        {
+            Type = ContractExpirationType.Standard;
+            return (T)this;
+        }
+
+        /// <summary>
+        /// Includes universe of non-standard weeklys contracts (if any) into selection
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public T IncludeWeeklys()
+        {
+            Type |= ContractExpirationType.Weekly;
+            return (T)this;
+        }
+
+        /// <summary>
+        /// Sets universe of weeklys contracts (if any) as selection
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public T WeeklysOnly()
+        {
+            Type = ContractExpirationType.Weekly;
+            return (T)this;
+        }
 
         /// <summary>
         /// Returns front month contract
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Universe with filter applied</returns>
         public virtual T FrontMonth()
         {
             var ordered = this.OrderBy(x => x.ID.Date).ToList();
             if (ordered.Count == 0) return (T) this;
             var frontMonth = ordered.TakeWhile(x => ordered[0].ID.Date == x.ID.Date);
 
-            _allSymbols = frontMonth.ToList();
+            AllSymbols = frontMonth.ToList();
             return (T) this;
         }
 
         /// <summary>
         /// Returns a list of back month contracts
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Universe with filter applied</returns>
         public virtual T BackMonths()
         {
             var ordered = this.OrderBy(x => x.ID.Date).ToList();
             if (ordered.Count == 0) return (T) this;
             var backMonths = ordered.SkipWhile(x => ordered[0].ID.Date == x.ID.Date);
 
-            _allSymbols = backMonths.ToList();
+            AllSymbols = backMonths.ToList();
             return (T) this;
         }
 
         /// <summary>
         /// Returns first of back month contracts
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Universe with filter applied</returns>
         public T BackMonth()
         {
             return BackMonths().FrontMonth();
@@ -200,20 +240,20 @@ namespace QuantConnect.Securities
         /// would exclude contracts expiring in more than 10 days</param>
         /// <param name="maxExpiry">The maximum time until expiry to include, for example, TimeSpan.FromDays(10)
         /// would exclude contracts expiring in less than 10 days</param>
-        /// <returns></returns>
+        /// <returns>Universe with filter applied</returns>
         public virtual T Expiration(TimeSpan minExpiry, TimeSpan maxExpiry)
         {
-            if (_underlying == null)
+            if (UnderlyingInternal == null)
             {
                 return (T) this;
             }
 
             if (maxExpiry > Time.MaxTimeSpan) maxExpiry = Time.MaxTimeSpan;
 
-            var minExpiryToDate = _underlying.Time.Date + minExpiry;
-            var maxExpiryToDate = _underlying.Time.Date + maxExpiry;
+            var minExpiryToDate = UnderlyingInternal.Time.Date + minExpiry;
+            var maxExpiryToDate = UnderlyingInternal.Time.Date + maxExpiry;
 
-            _allSymbols = _allSymbols
+            AllSymbols = AllSymbols
                 .Where(symbol => symbol.ID.Date >= minExpiryToDate && symbol.ID.Date <= maxExpiryToDate)
                 .ToList();
 
@@ -227,7 +267,7 @@ namespace QuantConnect.Securities
         /// would exclude contracts expiring in more than 10 days</param>
         /// <param name="maxExpiryDays">The maximum time, expressed in days, until expiry to include, for example, 10
         /// would exclude contracts expiring in less than 10 days</param>
-        /// <returns></returns>
+        /// <returns>Universe with filter applied</returns>
         public T Expiration(int minExpiryDays, int maxExpiryDays)
         {
             return Expiration(TimeSpan.FromDays(minExpiryDays), TimeSpan.FromDays(maxExpiryDays));
@@ -238,9 +278,10 @@ namespace QuantConnect.Securities
         /// This overrides and and all other methods of selecting symbols assuming it is called last.
         /// </summary>
         /// <param name="contracts">The option contract symbol objects to select</param>
+        /// <returns>Universe with filter applied</returns>
         public T Contracts(PyObject contracts)
         {
-            _allSymbols = contracts.ConvertToSymbolEnumerable();
+            AllSymbols = contracts.ConvertToSymbolEnumerable();
             return (T) this;
         }
 
@@ -249,9 +290,10 @@ namespace QuantConnect.Securities
         /// This overrides and and all other methods of selecting symbols assuming it is called last.
         /// </summary>
         /// <param name="contracts">The option contract symbol objects to select</param>
+        /// <returns>Universe with filter applied</returns>
         public T Contracts(IEnumerable<Symbol> contracts)
         {
-            _allSymbols = contracts.ToList();
+            AllSymbols = contracts.ToList();
             return (T) this;
         }
 
@@ -260,28 +302,31 @@ namespace QuantConnect.Securities
         /// function will be the already filtered list if any other filters have already been applied.
         /// </summary>
         /// <param name="contractSelector">The option contract symbol objects to select</param>
+        /// <returns>Universe with filter applied</returns>
         public T Contracts(Func<IEnumerable<Symbol>, IEnumerable<Symbol>> contractSelector)
         {
             // force materialization using ToList
-            _allSymbols = contractSelector(_allSymbols).ToList();
+            AllSymbols = contractSelector(AllSymbols).ToList();
             return (T) this;
         }
 
         /// <summary>
         /// Instructs the engine to only filter contracts on the first time step of each market day.
         /// </summary>
+        /// <returns>Universe with filter applied</returns>
         public T OnlyApplyFilterAtMarketOpen()
         {
-            _isDynamic = false;
+            IsDynamicInternal = false;
             return (T) this;
         }
 
         /// <summary>
         /// IEnumerable interface method implementation
         /// </summary>
+        /// <returns>IEnumerator of Symbols in Universe</returns>
         public IEnumerator<Symbol> GetEnumerator()
         {
-            return _allSymbols.GetEnumerator();
+            return AllSymbols.GetEnumerator();
         }
 
         /// <summary>
@@ -289,7 +334,7 @@ namespace QuantConnect.Securities
         /// </summary>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return _allSymbols.GetEnumerator();
+            return AllSymbols.GetEnumerator();
         }
     }
 }

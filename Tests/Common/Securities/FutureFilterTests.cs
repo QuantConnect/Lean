@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void FiltersOutWeeklys()
+        public void FiltersOutWeeklysByDefault()
         {
             var time = new DateTime(2016, 02, 17, 13, 0, 0);
             var underlying = new Tick { Value = 10m, Time = time };
@@ -268,9 +268,10 @@ namespace QuantConnect.Tests.Common.Securities
                 Symbol.CreateFuture("VX", Market.USA, time.AddDays(0)), // There is no Expiry function for VX on Market.USA
             };
 
-            // Since this is a unidentifiable symbol for our expiry functions it will return false and be filtered out
+            // Since this is a unidentifiable symbol for our expiry functions it will return true and be passed through
             var filtered = filter.Filter(new FutureFilterUniverse(symbols, underlying)).ToList();
-            Assert.AreEqual(0, filtered.Count);
+            Assert.AreEqual(1, filtered.Count);
+            Assert.AreEqual(symbols[0], filtered[0]);
         }
     }
 }

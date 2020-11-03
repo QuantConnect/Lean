@@ -24,34 +24,27 @@ namespace QuantConnect.Securities.Future
     public static class FutureSymbol
     {
         /// <summary>
-        /// Returns true if the option is a standard contract that expires 3rd Friday of the month
+        /// Determine if a given Futures contract is a standard contract.
         /// </summary>
         /// <param name="symbol">Future symbol</param>
-        /// <returns></returns>
+        /// <returns>True if symbol expiration matches standard expiration</returns>
         public static bool IsStandard(Symbol symbol)
         {
-            var date = symbol.ID.Date;
-            var symbolToCheck = symbol.HasUnderlying ? symbol.Underlying : symbol;
+            var contractExpirationDate = symbol.ID.Date;
 
             try
             {
                 // Use our FutureExpiryFunctions to determine standard contracts dates.
-                var expiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(symbolToCheck);
-                var standardDate = expiryFunction(date);
+                var expiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(symbol);
+                var standardExpirationDate = expiryFunction(contractExpirationDate);
 
-                // If the date on this symbol and the nearest standard date are equal then it is a standard contract
-                if (date == standardDate)
-                {
-                    return true;
-                }
-
-                // Date is non-standard, return false
-                return false;
+                // Return true if the dates match
+                return contractExpirationDate == standardExpirationDate;
             }
             catch
             {
-                Log.Error($"Could not find standard date for {symbolToCheck}, will be classified as weekly (non-standard)");
-                return false;
+                Log.Error($"Could not find standard date for {symbol}, will be classified as standard");
+                return true;
             }
         }
 
@@ -59,7 +52,7 @@ namespace QuantConnect.Securities.Future
         /// Returns true if the future contract is a weekly contract
         /// </summary>
         /// <param name="symbol">Future symbol</param>
-        /// <returns></returns>
+        /// <returns>True if symbol is non-standard contract</returns>
         public static bool IsWeekly(Symbol symbol)
         {
             return !IsStandard(symbol);
