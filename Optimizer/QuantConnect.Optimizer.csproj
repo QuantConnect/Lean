@@ -54,29 +54,29 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="ExtremumConverter.cs" />
-    <Compile Include="OptimizationArrayParameter.cs" />
-    <Compile Include="OptimizationStepParameter.cs" />
-    <Compile Include="OptimizationParameterJsonConverter.cs" />
-    <Compile Include="OptimizationStrategySettings.cs" />
-    <Compile Include="StepBaseOptimizationStrategy.cs" />
-    <Compile Include="Objective.cs" />
+    <Compile Include="Objectives\ExtremumJsonConverter.cs" />
+    <Compile Include="Parameters\OptimizationArrayParameter.cs" />
+    <Compile Include="Parameters\OptimizationStepParameter.cs" />
+    <Compile Include="Parameters\OptimizationParameterJsonConverter.cs" />
+    <Compile Include="Strategies\OptimizationStrategySettings.cs" />
+    <Compile Include="Strategies\StepBaseOptimizationStrategy.cs" />
+    <Compile Include="Objectives\Objective.cs" />
     <Compile Include="OptimizationEstimate.cs" />
-    <Compile Include="Target.cs" />
-    <Compile Include="Constraint.cs" />
+    <Compile Include="Objectives\Target.cs" />
+    <Compile Include="Objectives\Constraint.cs" />
     <Compile Include="LeanOptimizer.cs" />
-    <Compile Include="Minimization.cs" />
-    <Compile Include="Maximization.cs" />
-    <Compile Include="Extremum.cs" />
-    <Compile Include="EulerSearchOptimizationStrategy.cs" />
-    <Compile Include="IOptimizationStrategy.cs" />
-    <Compile Include="GridSearchOptimizationStrategy.cs" />
+    <Compile Include="Objectives\Minimization.cs" />
+    <Compile Include="Objectives\Maximization.cs" />
+    <Compile Include="Objectives\Extremum.cs" />
+    <Compile Include="Strategies\EulerSearchOptimizationStrategy.cs" />
+    <Compile Include="Strategies\IOptimizationStrategy.cs" />
+    <Compile Include="Strategies\GridSearchOptimizationStrategy.cs" />
     <Compile Include="OptimizationEventArgs.cs" />
     <Compile Include="OptimizationNodePacket.cs" />
-    <Compile Include="OptimizationParameter.cs" />
+    <Compile Include="Parameters\OptimizationParameter.cs" />
     <Compile Include="OptimizationResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ParameterSet.cs" />
+    <Compile Include="Parameters\ParameterSet.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -96,5 +96,6 @@
       <Name>QuantConnect.Logging</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

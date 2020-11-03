@@ -13,12 +13,10 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System;
 
-namespace QuantConnect.Optimizer
+namespace QuantConnect.Optimizer.Parameters
 {
     /// <summary>
     /// Defines the optimization parameter meta information
@@ -41,13 +39,13 @@ namespace QuantConnect.Optimizer
         /// Movement, should be positive
         /// </summary>
         [JsonProperty("step")]
-        public decimal? Step { get; }
+        public decimal? Step { get; private set; }
 
         /// <summary>
         /// Minimal possible movement for current parameter, should be positive
         /// </summary>
         [JsonProperty("min-step")]
-        public decimal? MinStep { get; }
+        public decimal? MinStep { get; private set; }
 
         /// <summary>
         /// Create an instance of <see cref="OptimizationParameter"/> based on configuration
@@ -56,9 +54,10 @@ namespace QuantConnect.Optimizer
         /// <param name="min">minimal value</param>
         /// <param name="max">maximal value</param>
         public OptimizationStepParameter(string name, decimal min, decimal max)
-            : this(name, min, max, null, null)
+            : base(name)
         {
-
+            MinValue = Math.Min(min, max);
+            MaxValue = Math.Max(min, max);
         }
 
         /// <summary>
@@ -68,7 +67,7 @@ namespace QuantConnect.Optimizer
         /// <param name="min">minimal value</param>
         /// <param name="max">maximal value</param>
         /// <param name="step">movement</param>
-        public OptimizationStepParameter(string name, decimal min, decimal max, decimal? step)
+        public OptimizationStepParameter(string name, decimal min, decimal max, decimal step)
             : this(name, min, max, step, step)
         {
 
@@ -82,16 +81,29 @@ namespace QuantConnect.Optimizer
         /// <param name="max">maximal value</param>
         /// <param name="step">movement</param>
         /// <param name="minStep">minimal possible movement</param>
-        public OptimizationStepParameter(string name, decimal min, decimal max, decimal? step, decimal? minStep) : base(name)
+        public OptimizationStepParameter(string name, decimal min, decimal max, decimal step, decimal minStep) : this(name, min, max)
         {
-            MinValue = Math.Min(min, max);
-            MaxValue = Math.Max(min, max);
             MinStep = minStep != 0
                 ? Math.Abs(minStep)
                 : 1;
             Step = step != 0
-                ? Math.Max(Math.Abs(step), MinStep)
+                ? Math.Max(Math.Abs(step), MinStep.Value)
                 : 1;
+        }
+
+        /// <summary>
+        /// Calculate step and min step values based on default number of fragments
+        /// </summary>
+        /// <param name="defaultSegmentAmount"></param>
+        public void CalculateStep(int defaultSegmentAmount)
+        {
+            if (defaultSegmentAmount < 1)
+            {
+                throw new ArgumentException(nameof(defaultSegmentAmount), $"Number of segments should be positive number, but specified '{defaultSegmentAmount}'");
+            }
+
+            Step = Math.Abs(MaxValue - MinValue) / defaultSegmentAmount;
+            MinStep = Step / 10;
         }
     }
 }

@@ -22,6 +22,8 @@ using QuantConnect.Util;
 using System.Collections.Generic;
 using System.Threading;
 using QuantConnect.Configuration;
+using QuantConnect.Optimizer.Objectives;
+using QuantConnect.Optimizer.Parameters;
 
 namespace QuantConnect.Tests.Optimizer
 {

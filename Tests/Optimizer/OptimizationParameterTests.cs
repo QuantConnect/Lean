@@ -20,6 +20,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Optimizer;
+using QuantConnect.Optimizer.Parameters;
 
 namespace QuantConnect.Tests.Optimizer
 {
@@ -64,7 +65,6 @@ namespace QuantConnect.Tests.Optimizer
                 Assert.AreEqual(parameterSet.MaxValue, parsed.MaxValue);
                 Assert.AreEqual(parameterSet.Step, parsed.Step);
                 Assert.AreEqual(parameterSet.MinStep, parsed.MinStep);
-
             }
 
             [Test]

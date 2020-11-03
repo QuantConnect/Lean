@@ -14,9 +14,9 @@
 */
 
 
-using System;
 using NUnit.Framework;
-using QuantConnect.Optimizer;
+using QuantConnect.Optimizer.Objectives;
+using System;
 
 namespace QuantConnect.Tests.Optimizer
 {

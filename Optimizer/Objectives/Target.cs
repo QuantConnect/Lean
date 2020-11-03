@@ -17,7 +17,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 
-namespace QuantConnect.Optimizer
+namespace QuantConnect.Optimizer.Objectives
 {
     /// <summary>
     /// The optimization statistical target

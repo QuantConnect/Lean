@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using QuantConnect.Optimizer;
+using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 

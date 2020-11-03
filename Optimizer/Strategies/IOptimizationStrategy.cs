@@ -15,8 +15,10 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Optimizer.Objectives;
+using QuantConnect.Optimizer.Parameters;
 
-namespace QuantConnect.Optimizer
+namespace QuantConnect.Optimizer.Strategies
 {
     /// <summary>
     /// Defines the optimization settings, direction, solution and exit, i.e. optimization strategy

@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Optimizer;
+using QuantConnect.Optimizer.Parameters;
 
 namespace QuantConnect.Tests.Optimizer
 {

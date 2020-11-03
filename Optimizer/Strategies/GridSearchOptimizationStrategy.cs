@@ -15,8 +15,9 @@
 
 using System;
 using System.Linq;
+using QuantConnect.Optimizer.Parameters;
 
-namespace QuantConnect.Optimizer
+namespace QuantConnect.Optimizer.Strategies
 {
     /// <summary>
     /// Find the best solution in first generation
@@ -67,7 +68,7 @@ namespace QuantConnect.Optimizer
             int total = 1;
             foreach (var arg in OptimizationParameters.Cast<OptimizationStepParameter>())
             {
-                total *= (int)Math.Floor((arg.MaxValue - arg.MinValue) / arg.Step) + 1;
+                total *= (int)Math.Floor((arg.MaxValue - arg.MinValue) / arg.Step.Value) + 1;
             }
 
             return total;

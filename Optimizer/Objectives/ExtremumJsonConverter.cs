@@ -16,9 +16,9 @@
 using System;
 using QuantConnect.Util;
 
-namespace QuantConnect.Optimizer
+namespace QuantConnect.Optimizer.Objectives
 {
-    public class ExtremumConverter : TypeChangeJsonConverter<Extremum, string>
+    public class ExtremumJsonConverter : TypeChangeJsonConverter<Extremum, string>
     {
         /// <summary>
         /// Don't populate any property
@@ -39,7 +39,7 @@ namespace QuantConnect.Optimizer
                 case "max": return new Maximization();
                 case "min": return new Minimization();
                 default:
-                    throw new InvalidOperationException("ExtremumConverter.Convert: could not recognize target direction");
+                    throw new InvalidOperationException("ExtremumJsonConverter.Convert: could not recognize target direction");
             }
         }
     }

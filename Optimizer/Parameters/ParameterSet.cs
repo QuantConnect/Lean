@@ -17,7 +17,7 @@ using System.Linq;
 using QuantConnect.Util;
 using System.Collections.Generic;
 
-namespace QuantConnect.Optimizer
+namespace QuantConnect.Optimizer.Parameters
 {
     /// <summary>
     /// Represents the single combination of optimization parameters

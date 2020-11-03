@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using QuantConnect.Optimizer.Parameters;
 using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Optimizer.Launcher

@@ -16,8 +16,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Optimizer.Objectives;
+using QuantConnect.Optimizer.Parameters;
 
-namespace QuantConnect.Optimizer
+namespace QuantConnect.Optimizer.Strategies
 {
     /// <summary>
     /// Base class for any optimization built on top of brute force optimization method
@@ -74,7 +76,16 @@ namespace QuantConnect.Optimizer
             Target = target;
             Constraints = constraints;
             OptimizationParameters = parameters;
-            Settings = Settings;
+            Settings = settings;
+
+            foreach (var optimizationParameter in OptimizationParameters.OfType<OptimizationStepParameter>())
+            {
+                if (!optimizationParameter.Step.HasValue)
+                {
+                    optimizationParameter.CalculateStep(Settings.DefaultSegmentAmount);
+                }
+            }
+
             Initialized = true;
         }
 
@@ -136,7 +147,7 @@ namespace QuantConnect.Optimizer
             if (args.Count == 1)
             {
                 var d = args.Dequeue() as OptimizationStepParameter;
-                for (var value = d.MinValue; value <= d.MaxValue; value += d.Step)
+                for (var value = d.MinValue; value <= d.MaxValue; value += d.Step.Value)
                 {
                     yield return new Dictionary<string, decimal>()
                     {
@@ -147,7 +158,7 @@ namespace QuantConnect.Optimizer
             }
 
             var d2 = args.Dequeue() as OptimizationStepParameter;
-            for (var value = d2.MinValue; value <= d2.MaxValue; value += d2.Step)
+            for (var value = d2.MinValue; value <= d2.MaxValue; value += d2.Step.Value)
             {
                 foreach (var inner in Recursive(seed, new Queue<OptimizationParameter>(args)))
                 {

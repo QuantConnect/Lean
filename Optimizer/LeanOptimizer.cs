@@ -20,6 +20,9 @@ using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Configuration;
 using System.Collections.Concurrent;
+using QuantConnect.Optimizer.Objectives;
+using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Optimizer.Strategies;
 
 namespace QuantConnect.Optimizer
 {

@@ -18,7 +18,7 @@ using Newtonsoft.Json.Linq;
 using QuantConnect.Util;
 using System;
 
-namespace QuantConnect.Optimizer
+namespace QuantConnect.Optimizer.Objectives
 {
     /// <summary>
     /// A backtest optimization constraint.

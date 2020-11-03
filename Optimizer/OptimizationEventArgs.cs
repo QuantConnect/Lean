@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Optimizer.Parameters;
 
 namespace QuantConnect.Optimizer
 {

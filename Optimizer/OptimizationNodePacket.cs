@@ -15,6 +15,9 @@
 
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using QuantConnect.Optimizer.Objectives;
+using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Optimizer.Strategies;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Optimizer
@@ -62,7 +65,7 @@ namespace QuantConnect.Optimizer
         /// Optimization strategy name
         /// </summary>
         [JsonProperty(PropertyName = "optimizationStrategy")]
-        public string OptimizationStrategy = "QuantConnect.Optimizer.GridSearchOptimizationStrategy";
+        public string OptimizationStrategy = "QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy";
 
         /// <summary>
         /// Objective settings

@@ -18,6 +18,7 @@ using NUnit.Framework;
 using QuantConnect.Optimizer;
 using System;
 using Newtonsoft.Json;
+using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Optimizer

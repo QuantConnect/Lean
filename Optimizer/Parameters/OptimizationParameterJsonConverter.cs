@@ -17,9 +17,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using QuantConnect.Configuration;
 
-namespace QuantConnect.Optimizer
+namespace QuantConnect.Optimizer.Parameters
 {
     /// <summary>
     /// Override <see cref="OptimizationParameter"/> deserialization method
@@ -48,45 +47,52 @@ namespace QuantConnect.Optimizer
             }
 
             JToken main;
+            JToken minToken;
+            JToken maxToken;
+            OptimizationParameter optimizationParameter = null;
             if (token.TryGetValue("values", StringComparison.OrdinalIgnoreCase, out main))
             {
-                return new OptimizationArrayParameter(parameterName,
+                optimizationParameter = new OptimizationArrayParameter(parameterName,
                     main.ToObject<List<string>>());
             }
-            if (token.TryGetValue("step", StringComparison.OrdinalIgnoreCase, out main))
+            if (token.TryGetValue("min", StringComparison.OrdinalIgnoreCase, out minToken) &&
+                token.TryGetValue("max", StringComparison.OrdinalIgnoreCase, out maxToken))
             {
-                JToken minToken;
-                JToken maxToken;
-
-                if (!token.TryGetValue("min", StringComparison.OrdinalIgnoreCase, out minToken))
-                {
-                    throw new ArgumentException("Required optimization parameter property value 'min' is not specified");
-                }
-
-                if (!token.TryGetValue("max", StringComparison.OrdinalIgnoreCase, out maxToken))
-                {
-                    throw new ArgumentException("Required optimization parameter property value 'max' is not specified");
-                }
+                var stepToken = token.GetValue("step", StringComparison.OrdinalIgnoreCase)?.Value<decimal>();
                 var minStepToken = token.GetValue("min-step", StringComparison.OrdinalIgnoreCase)?.Value<decimal>();
-                if (!minStepToken.HasValue)
+                if (stepToken.HasValue)
                 {
-                    return new OptimizationStepParameter(parameterName,
-                        minToken.Value<decimal>(),
-                        maxToken.Value<decimal>(),
-                        main.Value<decimal>());
+                    if (minStepToken.HasValue)
+                    {
+                        optimizationParameter = new OptimizationStepParameter(parameterName,
+                            minToken.Value<decimal>(),
+                            maxToken.Value<decimal>(),
+                            stepToken.Value,
+                            minStepToken.Value);
+                    }
+                    else
+                    {
+                        optimizationParameter = new OptimizationStepParameter(parameterName,
+                            minToken.Value<decimal>(),
+                            maxToken.Value<decimal>(),
+                            stepToken.Value);
+                    }
                 }
                 else
                 {
-                    return new OptimizationStepParameter(parameterName,
+                    optimizationParameter = new OptimizationStepParameter(parameterName,
                         minToken.Value<decimal>(),
-                        maxToken.Value<decimal>(),
-                        main.Value<decimal>(),
-                        minStepToken.Value);
+                        maxToken.Value<decimal>());
                 }
             }
 
-            throw new ArgumentException(
+            if (optimizationParameter == null)
+            {
+                throw new ArgumentException(
                     "Optimization parameter are not currently supported.");
+            }
+
+            return optimizationParameter;
         }
 
         public override bool CanConvert(Type objectType) => typeof(OptimizationParameter).IsAssignableFrom(objectType);

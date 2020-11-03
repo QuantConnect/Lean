@@ -18,7 +18,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace QuantConnect.Optimizer
+namespace QuantConnect.Optimizer.Parameters
 {
     /// <summary>
     /// Defines the optimization parameter meta information

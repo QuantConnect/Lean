@@ -9,7 +9,7 @@
   "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
 
   // How we manage solutions and make decision to continue or stop
-  "optimization-strategy": "QuantConnect.Optimizer.EulerSearchOptimizationStrategy",
+  "optimization-strategy": "QuantConnect.Optimizer.Strategies.EulerSearchOptimizationStrategy",
 
   // on-demand settings required for different optimization strategies
   "optimization-strategy-settings": {
@@ -51,11 +51,7 @@
     {
       "name": "ema-slow",
       "min": 10,
-      "max": 50,
-      "step": 10,
-
-      // optional
-      "min-step": 0.5
+      "max": 50
     },
     {
       "name": "ema-fast",

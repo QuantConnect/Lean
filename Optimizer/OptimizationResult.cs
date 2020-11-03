@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using QuantConnect.Optimizer.Parameters;
+
 namespace QuantConnect.Optimizer
 {
     /// <summary>

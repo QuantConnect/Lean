@@ -13,19 +13,19 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
-
-namespace QuantConnect.Optimizer
+namespace QuantConnect.Optimizer.Objectives
 {
     /// <summary>
-    /// Defines the specific optimization strategy settings
+    /// Defines standard maximization strategy, i.e. right operand is less than left
     /// </summary>
-    public class OptimizationStrategySettings
+    public class Minimization : Extremum
     {
         /// <summary>
-        /// For Euler strategy defines the default number of segments for the next step
+        /// Creates an instance of <see cref="Minimization"/>
         /// </summary>
-        [JsonProperty("default-segment-amount")]
-        public int DefaultSegmentAmount { get; set; }
+        public Minimization() : base((v1, v2) => v1 > v2)
+        {
+
+        }
     }
 }

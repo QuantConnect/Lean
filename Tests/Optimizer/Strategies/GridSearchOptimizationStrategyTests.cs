@@ -22,8 +22,10 @@ using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Optimizer.Objectives;
+using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Optimizer.Strategies;
 using Math = System.Math;
-using OptimizationParameter = QuantConnect.Optimizer.OptimizationParameter;
 
 namespace QuantConnect.Tests.Optimizer.Strategies
 {
@@ -177,9 +179,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 new OptimizationStrategySettings());
             ParameterSet solution = null;
             int i = 0;
-            for (var slow = emaSlow.MinValue; slow <= emaSlow.MaxValue; slow += emaSlow.Step)
+            for (var slow = emaSlow.MinValue; slow <= emaSlow.MaxValue; slow += emaSlow.Step.Value)
             {
-                for (var fast = emaFast.MinValue; fast <= emaFast.MaxValue; fast += emaFast.Step)
+                for (var fast = emaFast.MinValue; fast <= emaFast.MaxValue; fast += emaFast.Step.Value)
                 {
                     var parameterSet = new ParameterSet(++i, new Dictionary<string, string>
                     {
@@ -296,7 +298,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                     _strategy.PushNewResults(OptimizationResult.Initial);
 
-                    for (var v = param.MinValue; v <= param.MaxValue; v += param.Step)
+                    for (var v = param.MinValue; v <= param.MaxValue; v += param.Step.Value)
                     {
                         counter++;
                         Assert.IsTrue(enumerator.MoveNext());
@@ -313,7 +315,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 }
 
                 Assert.Greater(counter, 0);
-                Assert.AreEqual(Math.Floor((param.MaxValue - param.MinValue) / param.Step) + 1, counter);
+                Assert.AreEqual(Math.Floor((param.MaxValue - param.MinValue) / param.Step.Value) + 1, counter);
             }
 
             [TestCase(1, 1, 1)]
@@ -359,9 +361,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                     var fastParam = args.First(arg => arg.Name == "ema-fast") as OptimizationStepParameter;
                     var slowParam = args.First(arg => arg.Name == "ema-slow") as OptimizationStepParameter;
-                    for (var fast = fastParam.MinValue; fast <= fastParam.MaxValue; fast += fastParam.Step)
+                    for (var fast = fastParam.MinValue; fast <= fastParam.MaxValue; fast += fastParam.Step.Value)
                     {
-                        for (var slow = slowParam.MinValue; slow <= slowParam.MaxValue; slow += slowParam.Step)
+                        for (var slow = slowParam.MinValue; slow <= slowParam.MaxValue; slow += slowParam.Step.Value)
                         {
                             counter++;
                             Assert.IsTrue(enumerator.MoveNext());
@@ -384,7 +386,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 var total = 1m;
                 foreach (var arg in args.Cast<OptimizationStepParameter>())
                 {
-                    total *= Math.Floor((arg.MaxValue - arg.MinValue) / arg.Step) + 1;
+                    total *= Math.Floor((arg.MaxValue - arg.MinValue) / arg.Step.Value) + 1;
                 }
 
                 Assert.AreEqual(total, counter);
@@ -403,7 +405,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 var total = 1m;
                 foreach (var arg in args.Cast<OptimizationStepParameter>())
                 {
-                    total *= Math.Floor((arg.MaxValue - arg.MinValue) / arg.Step) + 1;
+                    total *= Math.Floor((arg.MaxValue - arg.MinValue) / arg.Step.Value) + 1;
                 }
 
                 Assert.AreEqual(total, _strategy.GetTotalBacktestEstimate());
@@ -433,11 +435,11 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     var fastParam = args.First(arg => arg.Name == "ema-fast") as OptimizationStepParameter;
                     var slowParam = args.First(arg => arg.Name == "ema-slow") as OptimizationStepParameter;
                     var customParam = args.First(arg => arg.Name == "ema-custom") as OptimizationStepParameter;
-                    for (var fast = fastParam.MinValue; fast <= fastParam.MaxValue; fast += fastParam.Step)
+                    for (var fast = fastParam.MinValue; fast <= fastParam.MaxValue; fast += fastParam.Step.Value)
                     {
-                        for (var slow = slowParam.MinValue; slow <= slowParam.MaxValue; slow += slowParam.Step)
+                        for (var slow = slowParam.MinValue; slow <= slowParam.MaxValue; slow += slowParam.Step.Value)
                         {
-                            for (var custom = customParam.MinValue; custom <= customParam.MaxValue; custom += customParam.Step)
+                            for (var custom = customParam.MinValue; custom <= customParam.MaxValue; custom += customParam.Step.Value)
                             {
                                 counter++;
                                 Assert.IsTrue(enumerator.MoveNext());
@@ -462,7 +464,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 var total = 1m;
                 foreach (var arg in args.Cast<OptimizationStepParameter>())
                 {
-                    total *= (arg.MaxValue - arg.MinValue) / arg.Step + 1;
+                    total *= (arg.MaxValue - arg.MinValue) / arg.Step.Value + 1;
                 }
 
                 Assert.AreEqual(total, counter);
@@ -482,7 +484,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 var total = 1m;
                 foreach (var arg in args.Cast<OptimizationStepParameter>())
                 {
-                    total *= (arg.MaxValue - arg.MinValue) / arg.Step + 1;
+                    total *= (arg.MaxValue - arg.MinValue) / arg.Step.Value + 1;
                 }
 
                 Assert.AreEqual(total, _strategy.GetTotalBacktestEstimate());

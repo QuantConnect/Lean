@@ -21,6 +21,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Logging;
+using QuantConnect.Optimizer.Objectives;
+using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Optimizer.Strategies;
 
 namespace QuantConnect.Optimizer.Launcher
 {

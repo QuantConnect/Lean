@@ -17,8 +17,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Logging;
+using QuantConnect.Optimizer.Objectives;
+using QuantConnect.Optimizer.Parameters;
 
-namespace QuantConnect.Optimizer
+namespace QuantConnect.Optimizer.Strategies
 {
     /// <summary>
     /// Advanced brute-force strategy with search in-depth for best solution on previous step
@@ -75,14 +77,14 @@ namespace QuantConnect.Optimizer
                     {
                         if (optimizationParameter.Step > optimizationParameter.MinStep)
                         {
-                            var newStep = optimizationParameter.Step / _segmentsAmount;
+                            var newStep = optimizationParameter.Step.Value / _segmentsAmount;
                             var parameter = parameterSet.Value.First(s => s.Key == optimizationParameter.Name);
                             boundaries.Add(new OptimizationStepParameter(
                                 optimizationParameter.Name,
                                 Math.Max(optimizationParameter.MinValue, parameter.Value.ToDecimal() - newStep),
                                 Math.Min(optimizationParameter.MaxValue, parameter.Value.ToDecimal() + newStep),
                                 newStep,
-                                optimizationParameter.MinStep));
+                                optimizationParameter.MinStep.Value));
                         }
                         else
                         {

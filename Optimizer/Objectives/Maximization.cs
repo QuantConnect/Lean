@@ -13,7 +13,7 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Optimizer
+namespace QuantConnect.Optimizer.Objectives
 {
     /// <summary>
     /// Defines standard maximization strategy, i.e. right operand is great than left

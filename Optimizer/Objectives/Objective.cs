@@ -18,7 +18,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
-namespace QuantConnect.Optimizer
+namespace QuantConnect.Optimizer.Objectives
 {
     /// <summary>
     /// Base class for optimization <see cref="QuantConnect.Optimizer.Target"/> and <see cref="Constraint"/>
