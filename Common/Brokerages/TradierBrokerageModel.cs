@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
@@ -157,16 +156,6 @@ namespace QuantConnect.Brokerages
             {
                 base.ApplySplit(tickets, split);
             }
-        }
-
-        /// <summary>
-        /// Gets a new fill model that represents this brokerage's fill behavior
-        /// </summary>
-        /// <param name="security">The security to get fill model for</param>
-        /// <returns>The new fill model for this brokerage</returns>
-        public override IFillModel GetFillModel(Security security)
-        {
-            return new ImmediateFillModel();
         }
 
         /// <summary>
