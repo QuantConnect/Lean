@@ -60,12 +60,10 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var data = JsonConvert.DeserializeObject<QuiverWikipedia>(content, _jsonSerializerSettings);
 
             Assert.NotNull(data);
-            Assert.AreEqual("ABBV", data.Ticker);
             Assert.AreEqual(new DateTime(2020, 01, 01, 0, 0, 0), data.Date);
             Assert.AreEqual(3500, data.PageViews);
             Assert.AreEqual(3.2, data.WeekPercentChange);
             Assert.AreEqual(6.75, data.MonthPercentChange);
-            Assert.DoesNotThrow(() => { instance.Reader(fakeConfig, data, DateTime.MinValue, false); });
         }
 
 
@@ -87,6 +85,17 @@ namespace QuantConnect.Tests.Common.Data.Custom
             );
 
             Assert.DoesNotThrow(() => { instance.Reader(fakeConfig, data, DateTime.MinValue, false); });
+
+            Assert.DoesNotThrow(() =>
+            {
+                new QuiverWikipedia(data);
+            });
+            var testCase = new QuiverWikipedia(data);
+            Assert.AreEqual(new DateTime(2016, 11, 14, 0, 0, 0), testCase.Time);
+            Assert.IsTrue(testCase.PageViews.HasValue);
+            Assert.IsTrue(testCase.WeekPercentChange.HasValue);
+            Assert.IsTrue(testCase.MonthPercentChange.HasValue);
+
         }
 
         [Test, Ignore("Requires Quiver Wikipedia data")]
@@ -96,7 +105,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
 
             var config = new SubscriptionDataConfig(
                 typeof(QuiverWikipedia),
-                Symbol.Create("AAPL.R", SecurityType.Base, QuantConnect.Market.USA),
+                Symbol.Create("AAPL", SecurityType.Base, QuantConnect.Market.USA),
                 Resolution.Daily,
                 DateTimeZone.Utc,
                 DateTimeZone.Utc,
