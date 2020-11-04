@@ -147,31 +147,31 @@ namespace QuantConnect.Optimizer.Strategies
             {
                 yield return new ParameterSet(
                     ++_i,
-                    step.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToStringInvariant()));
+                    step.ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
             }
         }
 
-        private IEnumerable<Dictionary<string, decimal>> Recursive(ParameterSet seed, Queue<OptimizationParameter> args)
+        private IEnumerable<Dictionary<string, string>> Recursive(ParameterSet seed, Queue<OptimizationParameter> args)
         {
             if (args.Count == 1)
             {
-                var d = args.Dequeue() as OptimizationStepParameter;
-                foreach (var value in d)
+                var optimizationParameterLast = args.Dequeue();
+                foreach (var value in optimizationParameterLast)
                 {
-                    yield return new Dictionary<string, decimal>()
+                    yield return new Dictionary<string, string>()
                     {
-                        {d.Name, value.ToDecimal()}
+                        {optimizationParameterLast.Name, value}
                     };
                 }
                 yield break;
             }
 
-            var d2 = args.Dequeue() as OptimizationStepParameter;
-            foreach (var value in d2)
+            var optimizationParameter = args.Dequeue();
+            foreach (var value in optimizationParameter)
             {
                 foreach (var inner in Recursive(seed, new Queue<OptimizationParameter>(args)))
                 {
-                    inner.Add(d2.Name, value.ToDecimal());
+                    inner.Add(optimizationParameter.Name, value);
 
                     yield return inner;
                 }

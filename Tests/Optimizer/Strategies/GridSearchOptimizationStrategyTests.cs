@@ -14,234 +14,22 @@
  *
 */
 
-using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Optimizer;
-using QuantConnect.Util;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Optimizer.Strategies;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Math = System.Math;
 
 namespace QuantConnect.Tests.Optimizer.Strategies
 {
     [TestFixture, Parallelizable(ParallelScope.Fixtures)]
-    public class GridSearchOptimizationStrategyTests
+    public class GridSearchOptimizationStrategyTests : OptimizationStrategyTests
     {
-        private GridSearchOptimizationStrategy _strategy;
-        private Func<ParameterSet, decimal> _profit = parameterSet => parameterSet.Value.Sum(arg => arg.Value.ToDecimal());
-        private Func<ParameterSet, decimal> _drawdown = parameterSet => parameterSet.Value.Sum(arg => arg.Value.ToDecimal()) / 100.0m;
-        private Func<string, string, decimal> _parse = (dump, parameter) => JObject.Parse(dump).SelectToken($"Statistics.{parameter}").Value<decimal>();
-        private Func<decimal, decimal, string> _stringify = (profit, drawdown) => BacktestResult.Create(profit, drawdown).ToJson();
-        private HashSet<OptimizationParameter> _optimizationParameters = new HashSet<OptimizationParameter>
-        {
-            new OptimizationStepParameter("ema-slow", 1, 5, 1),
-            new OptimizationStepParameter("ema-fast", 3, 6, 2)
-        };
-
-        [SetUp]
-        public void Init()
-        {
-            _strategy = new GridSearchOptimizationStrategy();
-            _strategy.NewParameterSet += (s, e) =>
-            {
-                var parameterSet = (e as OptimizationEventArgs)?.ParameterSet;
-                _strategy.PushNewResults(new OptimizationResult(_stringify(_profit(parameterSet), _drawdown(parameterSet)), parameterSet, ""));
-            };
-        }
-
-        private static TestCaseData[] StrategySettings => new[]
-        {
-            new TestCaseData(new Maximization(), 10),
-            new TestCaseData(new Minimization(), 1)
-        };
-
-        [Test, TestCaseSource(nameof(StrategySettings))]
-        public void StepInsideNoTargetNoConstraints(Extremum extremum, int bestSet)
-        {
-            ParameterSet solution = null;
-            _strategy.Initialize(
-                new Target("Profit", extremum, null),
-                null,
-                _optimizationParameters,
-                new OptimizationStrategySettings());
-            _strategy.NewParameterSet += (s, e) =>
-            {
-                var parameterSet = (e as OptimizationEventArgs)?.ParameterSet;
-                if (parameterSet.Id == bestSet)
-                {
-                    solution = parameterSet;
-                }
-            };
-
-            _strategy.PushNewResults(OptimizationResult.Initial);
-
-            Assert.AreEqual(_profit(solution), _parse(_strategy.Solution.JsonBacktestResult, "Profit"));
-            foreach (var arg in _strategy.Solution.ParameterSet.Value)
-            {
-                Assert.AreEqual(solution.Value[arg.Key], arg.Value);
-            }
-        }
-
-        [TestCase(1, 0.05)]
-        [TestCase(3, 0.06)]
-        public void StepInsideWithConstraints(int bestSet, double drawdown)
-        {
-            ParameterSet solution = null;
-            _strategy.Initialize(
-                new Target("Profit", new Maximization(), null),
-                new List<Constraint> { new Constraint("Drawdown", ComparisonOperatorTypes.Less, new decimal(drawdown)) },
-                _optimizationParameters,
-                new OptimizationStrategySettings());
-            _strategy.NewParameterSet += (s, e) =>
-            {
-                var parameterSet = (e as OptimizationEventArgs)?.ParameterSet;
-                if (parameterSet.Id == bestSet)
-                {
-                    solution = parameterSet;
-                }
-            };
-
-            _strategy.PushNewResults(OptimizationResult.Initial);
-
-            Assert.AreEqual(_profit(solution), _parse(_strategy.Solution.JsonBacktestResult, "Profit"));
-            Assert.AreEqual(_drawdown(solution), _parse(_strategy.Solution.JsonBacktestResult, "Drawdown"));
-            foreach (var arg in _strategy.Solution.ParameterSet.Value)
-            {
-                Assert.AreEqual(solution.Value[arg.Key], arg.Value);
-            }
-        }
-
-        [TestCase(1, 0)]
-        [TestCase(1, 4)]
-        [TestCase(2, 5)]
-        [TestCase(6, 8)]
-        public void StepInsideWithTarget(int bestSet, double targetValue)
-        {
-            bool reached = false;
-            ParameterSet parameterSet = null;
-            var target = new Target("Profit", new Maximization(), new decimal(targetValue));
-            target.Reached += (s, e) =>
-            {
-                reached = true;
-            };
-
-            _strategy = new GridSearchOptimizationStrategy();
-
-            _strategy.Initialize(
-                target,
-                null,
-                _optimizationParameters,
-                new OptimizationStrategySettings());
-
-            var queue = new Queue<ParameterSet>();
-            _strategy.NewParameterSet += (s, e) =>
-            {
-                queue.Enqueue((e as OptimizationEventArgs)?.ParameterSet);
-            };
-
-            _strategy.PushNewResults(OptimizationResult.Initial);
-
-            while (queue.Any())
-            {
-                parameterSet = queue.Dequeue();
-                var newResult = new OptimizationResult(_stringify(_profit(parameterSet), _drawdown(parameterSet)), parameterSet, "");
-                _strategy.PushNewResults(newResult);
-                if (reached)
-                {
-                    break;
-                }
-            }
-
-            Assert.IsTrue(reached);
-            Assert.AreEqual(bestSet, parameterSet.Id);
-            Assert.AreEqual(_profit(parameterSet), _parse(_strategy.Solution.JsonBacktestResult, "Profit"));
-            foreach (var arg in _strategy.Solution.ParameterSet.Value)
-            {
-                Assert.AreEqual(parameterSet.Value[arg.Key], arg.Value);
-            }
-        }
-
-        [Test, TestCaseSource(nameof(StrategySettings))]
-        public void FindBestNoConstraints(Extremum extremum, int bestSet)
-        {
-            var emaSlow = _optimizationParameters.First(s => s.Name == "ema-slow") as OptimizationStepParameter;
-            var emaFast = _optimizationParameters.First(s => s.Name == "ema-fast") as OptimizationStepParameter;
-
-            _strategy.Initialize(
-                new Target("Profit", extremum, null),
-                null,
-                _optimizationParameters,
-                new OptimizationStrategySettings());
-            ParameterSet solution = null;
-            int i = 0;
-            for (var slow = emaSlow.MinValue; slow <= emaSlow.MaxValue; slow += emaSlow.Step.Value)
-            {
-                for (var fast = emaFast.MinValue; fast <= emaFast.MaxValue; fast += emaFast.Step.Value)
-                {
-                    var parameterSet = new ParameterSet(++i, new Dictionary<string, string>
-                    {
-                        {emaSlow.Name, slow.ToStringInvariant()},
-                        {emaFast.Name, fast.ToStringInvariant()}
-                    });
-                    _strategy.PushNewResults(new OptimizationResult(_stringify(_profit(parameterSet), _drawdown(parameterSet)), parameterSet, ""));
-                    if (parameterSet.Id == bestSet)
-                    {
-                        solution = parameterSet;
-                    }
-                }
-            }
-
-            Assert.AreEqual(_profit(solution), _parse(_strategy.Solution.JsonBacktestResult, "Profit"));
-            foreach (var arg in _strategy.Solution.ParameterSet.Value)
-            {
-                Assert.AreEqual(solution?.Value[arg.Key], arg.Value);
-            }
-        }
-
-        [Test]
-        public void ThrowOnReinitialization()
-        {
-            int nextId = 1;
-            _strategy.NewParameterSet += (s, e) =>
-            {
-                Assert.AreEqual(nextId++, (e as OptimizationEventArgs).ParameterSet.Id);
-            };
-
-            var set1 = new HashSet<OptimizationParameter>()
-            {
-                new OptimizationStepParameter("ema-fast", 10, 100, 1)
-            };
-            _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set1, new OptimizationStrategySettings());
-
-            _strategy.PushNewResults(OptimizationResult.Initial);
-            Assert.Greater(nextId, 1);
-
-            var set2 = new HashSet<OptimizationParameter>()
-            {
-                new OptimizationStepParameter("ema-fast", 10, 100, 1),
-                new OptimizationStepParameter("ema-slow", 10, 100, 2)
-            };
-            Assert.Throws<InvalidOperationException>(() =>
-            {
-                _strategy.Initialize(new Target("Profit", new Minimization(), null), null, set2, new OptimizationStrategySettings());
-            });
-        }
-
-        [Test]
-        public void ThrowIfNotInitialized()
-        {
-            var strategy = new GridSearchOptimizationStrategy();
-            Assert.Throws<InvalidOperationException>(() =>
-            {
-                strategy.PushNewResults(OptimizationResult.Initial);
-            });
-        }
-
         [TestFixture]
         public class GridSearchTests
         {
@@ -298,7 +86,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                     _strategy.PushNewResults(OptimizationResult.Initial);
 
-                    for (var v = param.MinValue; v <= param.MaxValue; v += param.Step.Value)
+                    foreach (var value in param)
                     {
                         counter++;
                         Assert.IsTrue(enumerator.MoveNext());
@@ -308,7 +96,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                         Assert.IsNotNull(suggestion);
                         Assert.IsTrue(suggestion.Value.All(s => set.Any(arg => arg.Name == s.Key)));
                         Assert.AreEqual(1, suggestion.Value.Count);
-                        Assert.AreEqual(v, suggestion.Value["ema-fast"].ToDecimal());
+                        Assert.AreEqual(value, suggestion.Value["ema-fast"]);
                     }
 
                     Assert.AreEqual(0, enumerator.Count);
@@ -320,7 +108,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
             [TestCase(1, 1, 1)]
             [TestCase(-10, 0, -1)]
-            [TestCase( 0, -10, -1)]
+            [TestCase(0, -10, -1)]
             [TestCase(-10, 10.5, -0.5)]
             [TestCase(10, 100, 1)]
             [TestCase(10, 100, 500)]
@@ -329,7 +117,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 var param = new OptimizationStepParameter("ema-fast", min, max, step);
                 var set = new HashSet<OptimizationParameter>() { param };
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set, new OptimizationStrategySettings());
-                
+
                 Assert.AreEqual(Math.Floor(Math.Abs(max - min) / Math.Abs(step)) + 1, _strategy.GetTotalBacktestEstimate());
             }
 
@@ -359,11 +147,11 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                     _strategy.PushNewResults(OptimizationResult.Initial);
 
-                    var fastParam = args.First(arg => arg.Name == "ema-fast") as OptimizationStepParameter;
-                    var slowParam = args.First(arg => arg.Name == "ema-slow") as OptimizationStepParameter;
-                    for (var fast = fastParam.MinValue; fast <= fastParam.MaxValue; fast += fastParam.Step.Value)
+                    var fastParam = args.First(arg => arg.Name == "ema-fast");
+                    var slowParam = args.First(arg => arg.Name == "ema-slow");
+                    foreach (var fast in fastParam)
                     {
-                        for (var slow = slowParam.MinValue; slow <= slowParam.MaxValue; slow += slowParam.Step.Value)
+                        foreach (var slow in slowParam)
                         {
                             counter++;
                             Assert.IsTrue(enumerator.MoveNext());
@@ -373,8 +161,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                             Assert.IsNotNull(suggestion);
                             Assert.IsTrue(suggestion.Value.All(s => args.Any(arg => arg.Name == s.Key)));
                             Assert.AreEqual(2, suggestion.Value.Count);
-                            Assert.AreEqual(fast, suggestion.Value["ema-fast"].ToDecimal());
-                            Assert.AreEqual(slow, suggestion.Value["ema-slow"].ToDecimal());
+                            Assert.AreEqual(fast, suggestion.Value["ema-fast"]);
+                            Assert.AreEqual(slow, suggestion.Value["ema-slow"]);
                         }
                     }
 
@@ -432,14 +220,14 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                     _strategy.PushNewResults(OptimizationResult.Initial);
 
-                    var fastParam = args.First(arg => arg.Name == "ema-fast") as OptimizationStepParameter;
-                    var slowParam = args.First(arg => arg.Name == "ema-slow") as OptimizationStepParameter;
-                    var customParam = args.First(arg => arg.Name == "ema-custom") as OptimizationStepParameter;
-                    for (var fast = fastParam.MinValue; fast <= fastParam.MaxValue; fast += fastParam.Step.Value)
+                    var fastParam = args.First(arg => arg.Name == "ema-fast");
+                    var slowParam = args.First(arg => arg.Name == "ema-slow");
+                    var customParam = args.First(arg => arg.Name == "ema-custom");
+                    foreach (var fast in fastParam)
                     {
-                        for (var slow = slowParam.MinValue; slow <= slowParam.MaxValue; slow += slowParam.Step.Value)
+                        foreach (var slow in slowParam)
                         {
-                            for (var custom = customParam.MinValue; custom <= customParam.MaxValue; custom += customParam.Step.Value)
+                            foreach (var custom in customParam)
                             {
                                 counter++;
                                 Assert.IsTrue(enumerator.MoveNext());
@@ -449,9 +237,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                                 Assert.IsNotNull(suggestion);
                                 Assert.IsTrue(suggestion.Value.All(s => args.Any(arg => arg.Name == s.Key)));
                                 Assert.AreEqual(3, suggestion.Value.Count());
-                                Assert.AreEqual(fast.ToStringInvariant(), suggestion.Value["ema-fast"]);
-                                Assert.AreEqual(slow.ToStringInvariant(), suggestion.Value["ema-slow"]);
-                                Assert.AreEqual(custom.ToStringInvariant(), suggestion.Value["ema-custom"]);
+                                Assert.AreEqual(fast, suggestion.Value["ema-fast"]);
+                                Assert.AreEqual(slow, suggestion.Value["ema-slow"]);
+                                Assert.AreEqual(custom, suggestion.Value["ema-custom"]);
                             }
                         }
                     }
@@ -480,7 +268,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     new OptimizationStepParameter("ema-custom", 30, 300, 2)
                 };
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), null, args, new OptimizationStrategySettings());
-                
+
                 var total = 1m;
                 foreach (var arg in args.Cast<OptimizationStepParameter>())
                 {
@@ -546,6 +334,74 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 _strategy.PushNewResults(OptimizationResult.Initial);
                 Assert.Greater(nextId, last);
             }
+        }
+
+        protected override IOptimizationStrategy CreateStrategy()
+        {
+            return new GridSearchOptimizationStrategy();
+        }
+
+        private static TestCaseData[] StrategySettings => new[]
+        {
+            new TestCaseData(new Maximization(), OptimizationStepParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "5"}, { "ema-fast" , "5"} })),
+            new TestCaseData(new Minimization(), OptimizationStepParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"} })),
+            new TestCaseData(new Maximization(), OptimizationArrayParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "5"}, { "ema-fast" , "5"} })),
+            new TestCaseData(new Minimization(), OptimizationArrayParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"} })),
+            new TestCaseData(new Maximization(), OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "5"}, { "ema-fast" , "5"} })),
+            new TestCaseData(new Minimization(), OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"} }))
+        };
+
+        [Test, TestCaseSource(nameof(StrategySettings))]
+        public override void StepInsideNoTargetNoConstraints(Extremum extremum, HashSet<OptimizationParameter> optimizationParameters, ParameterSet solution)
+        {
+            base.StepInsideNoTargetNoConstraints(extremum, optimizationParameters, solution);
+        }
+
+        private static TestCaseData[] OptimizeWithConstraint => new[]
+        {
+            new TestCaseData(0.05m, OptimizationStepParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"} })),
+            new TestCaseData(0.06m, OptimizationStepParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "2"}, { "ema-fast" , "3"} })),
+            new TestCaseData(0.05m, OptimizationArrayParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"} })),
+            new TestCaseData(0.06m, OptimizationArrayParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "2"}, { "ema-fast" , "3"} })),
+            new TestCaseData(0.05m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"} })),
+            new TestCaseData(0.06m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "2"}, { "ema-fast" , "3"} }))
+        };
+        [Test, TestCaseSource(nameof(OptimizeWithConstraint))]
+        public override void StepInsideWithConstraints(decimal drawdown, HashSet<OptimizationParameter> optimizationParameters, ParameterSet solution)
+        {
+            base.StepInsideWithConstraints(drawdown, optimizationParameters, solution);
+        }
+
+        private static TestCaseData[] OptimizeWithTarget => new[]
+        {
+            new TestCaseData(0m, OptimizationStepParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"} })),
+            new TestCaseData(4m, OptimizationStepParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"} })),
+            new TestCaseData(5m, OptimizationStepParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "5"} })),
+            new TestCaseData(8m, OptimizationStepParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "3"}, { "ema-fast" , "5"} })),
+            new TestCaseData(0m, OptimizationArrayParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"} })),
+            new TestCaseData(5m, OptimizationArrayParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "5"} })),
+            new TestCaseData(8m, OptimizationArrayParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "3"}, { "ema-fast" , "5"} })),
+            new TestCaseData(0m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"} })),
+            new TestCaseData(5m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "5"} })),
+            new TestCaseData(8m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "3"}, { "ema-fast" , "5"} }))
+        };
+        [Test, TestCaseSource(nameof(OptimizeWithTarget))]
+        public override void StepInsideWithTarget(decimal targetValue, HashSet<OptimizationParameter> optimizationParameters, ParameterSet solution)
+        {
+            base.StepInsideWithTarget(targetValue, optimizationParameters, solution);
+        }
+
+        private static TestCaseData[] OptimizeWithTargetNotReached => new[]
+        {
+            new TestCaseData(15m, OptimizationStepParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "5"}, { "ema-fast" , "5"} })),
+            new TestCaseData(155m, OptimizationArrayParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "5"}, { "ema-fast" , "5"} })),
+            new TestCaseData(155m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "5"}, { "ema-fast" , "5"} }))
+        };
+
+        [Test, TestCaseSource(nameof(OptimizeWithTargetNotReached))]
+        public override void TargetNotReached(decimal targetValue, HashSet<OptimizationParameter> optimizationParameters, ParameterSet solution)
+        {
+            base.TargetNotReached(targetValue, optimizationParameters, solution);
         }
     }
 }

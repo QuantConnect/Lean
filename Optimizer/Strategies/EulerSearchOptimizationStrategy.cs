@@ -73,18 +73,19 @@ namespace QuantConnect.Optimizer.Strategies
                 {
                     var boundaries = new HashSet<OptimizationParameter>();
                     var parameterSet = Solution.ParameterSet;
-                    foreach (var optimizationParameter in OptimizationParameters.OfType<OptimizationStepParameter>())
+                    foreach (var optimizationParameter in OptimizationParameters)
                     {
-                        if (optimizationParameter.Step > optimizationParameter.MinStep)
+                        var optimizationStepParameter = optimizationParameter as OptimizationStepParameter;
+                        if (optimizationStepParameter != null && optimizationStepParameter.Step > optimizationStepParameter.MinStep)
                         {
-                            var newStep = optimizationParameter.Step.Value / _segmentsAmount;
+                            var newStep = optimizationStepParameter.Step.Value / _segmentsAmount;
                             var parameter = parameterSet.Value.First(s => s.Key == optimizationParameter.Name);
                             boundaries.Add(new OptimizationStepParameter(
                                 optimizationParameter.Name,
-                                Math.Max(optimizationParameter.MinValue, parameter.Value.ToDecimal() - newStep),
-                                Math.Min(optimizationParameter.MaxValue, parameter.Value.ToDecimal() + newStep),
+                                Math.Max(optimizationStepParameter.MinValue, parameter.Value.ToDecimal() - newStep),
+                                Math.Min(optimizationStepParameter.MaxValue, parameter.Value.ToDecimal() + newStep),
                                 newStep,
-                                optimizationParameter.MinStep.Value));
+                                optimizationStepParameter.MinStep.Value));
                         }
                         else
                         {
