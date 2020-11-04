@@ -385,25 +385,19 @@ namespace QuantConnect.ToolBox.IEX
             }
 
             Log.Trace("IEXDataQueueHandler.ProcessHistoryRequests(): Submitting request: " +
-                Invariant($"{request.Symbol.SecurityType}-{ticker}: {request.Resolution} {start}->{end}"));
-            Log.Trace("IEXDataQueueHandler.ProcessHistoryRequests(): Please wait..");
+                Invariant($"{request.Symbol.SecurityType}-{ticker}: {request.Resolution} {start}->{end}") +
+                ". Please wait..");
 
             const string baseUrl = "https://cloud.iexapis.com/stable/stock";
-            var span = end.Date - start.Date;
+            var now = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork);
+            var span = now - start;
             var urls = new List<string>();
-            var begin = start;
 
             switch (request.Resolution)
             {
                 case Resolution.Minute:
                 {
-                    if (span.Days > 30)
-                    {
-                        Log.Trace("ProcessHistoryRequests(): Downloading data for last 30 calendar days." +
-                            "Reason: IEX Currently supporting trailing 30 calendar days of minute bar data");
-                        begin = end.AddDays(-30);
-                    }
-
+                    var begin = start;
                     while (begin < end)
                     {
                         var url =
@@ -416,13 +410,39 @@ namespace QuantConnect.ToolBox.IEX
                 }
                 case Resolution.Daily:
                 {
-                    while (begin < end)
+                    string suffix;
+                    if (span.Days < 30)
                     {
-                        var url =
-                            $"{baseUrl}/{ticker}/chart/date/{begin.ToStringInvariant("yyyyMMdd")}?chartByDay=true&token={_apiKey}";
-                        urls.Add(url);
-                        begin = begin.AddDays(1);
+                        suffix = "1m";
                     }
+                    else if (span.Days < 3 * 30)
+                    {
+                        suffix = "3m";
+                    }
+                    else if (span.Days < 6 * 30)
+                    {
+                        suffix = "6m";
+                    }
+                    else if (span.Days < 12 * 30)
+                    {
+                        suffix = "1y";
+                    }
+                    else if (span.Days < 24 * 30)
+                    {
+                        suffix = "2y";
+                    }
+                    else if (span.Days < 60 * 30)
+                    {
+                        suffix = "5y";
+                    }
+                    else
+                    {
+                        suffix = "max";   // max is 15 years
+                    }
+
+                    var url =
+                        $"{baseUrl}/{ticker}/chart/{suffix}?token={_apiKey}";
+                    urls.Add(url);
 
                     break;
                 }
