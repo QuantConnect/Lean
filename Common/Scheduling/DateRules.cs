@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using NodaTime;
 using QuantConnect.Securities;
@@ -30,6 +31,7 @@ namespace QuantConnect.Scheduling
     {
         private readonly DateTimeZone _timeZone;
         private readonly SecurityManager _securities;
+        private readonly string _format = "+#;-#;''";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DateRules"/> helper class
@@ -124,10 +126,12 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Specifies an event should fire on the first of each month
         /// </summary>
-        /// <returns>A date rule that fires on the first of each month</returns>
-        public IDateRule MonthStart()
+        /// <param name="daysOffset"> The amount of days to offset the schedule by; must
+        /// be between 0 and 15. Use MonthEnd for unreachable dates</param>
+        /// <returns>A date rule that fires on the first of each month + offset</returns>
+        public IDateRule MonthStart(int daysOffset = 0)
         {
-            return new FuncDateRule("MonthStart", (start, end) => MonthStartIterator(null, start, end));
+            return MonthStart(null, daysOffset);
         }
 
         /// <summary>
@@ -136,19 +140,34 @@ namespace QuantConnect.Scheduling
         /// </summary>
         /// <param name="symbol">The symbol whose exchange is used to determine the first
         /// tradeable date of the month</param>
-        /// <returns>A date rule that fires on the first tradeable date for the specified security each month</returns>
-        public IDateRule MonthStart(Symbol symbol)
+        /// <param name="daysOffset"> The amount of days to offset the schedule by; must
+        /// be between 0 and 15. Use MonthEnd for unreachable dates</param>
+        /// <returns>A date rule that fires on the first tradeable date + offset for the
+        /// specified security each month</returns>
+        public IDateRule MonthStart(Symbol symbol, int daysOffset = 0)
         {
-            return new FuncDateRule($"{symbol.Value}: MonthStart", (start, end) => MonthStartIterator(GetSecurity(symbol), start, end));
+            // Check that our offset is allowed
+            if (daysOffset < 0 || 15 < daysOffset)
+            {
+                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.MonthStart() : Offset must be between 0 and 15");
+            }
+
+            // Get the symbol security, define our name, and return the new DateRule
+            var security = symbol == null ? null : GetSecurity(symbol);
+            var offsetString = daysOffset.ToString(_format, CultureInfo.InvariantCulture);
+            var name = symbol == null ? $"MonthStart{offsetString}" : $"{symbol.Value}: MonthStart{offsetString}";
+            return new FuncDateRule(name, (start, end) => MonthStartIterator(security, start, end, daysOffset));
         }
 
         /// <summary>
         /// Specifies an event should fire on the last of each month
         /// </summary>
-        /// <returns>A date rule that fires on the last of each month</returns>
-        public IDateRule MonthEnd()
+        /// <param name="daysOffset"> The amount of days to offset the schedule by; must
+        /// be between -15 and 0. Use MonthStart for unreachable dates</param>
+        /// <returns>A date rule that fires on the last of each month + offset</returns>
+        public IDateRule MonthEnd(int daysOffset = 0)
         {
-            return new FuncDateRule("MonthEnd", (start, end) => MonthEndIterator(null, start, end));
+            return MonthEnd(null, daysOffset);
         }
 
         /// <summary>
@@ -157,52 +176,90 @@ namespace QuantConnect.Scheduling
         /// </summary>
         /// <param name="symbol">The symbol whose exchange is used to determine the last
         /// tradeable date of the month</param>
+        /// <param name="daysOffset"> The amount of days to offset the schedule by; must
+        /// be between -15 and 0. Use MonthStart for unreachable dates</param>
         /// <returns>A date rule that fires on the last tradeable date for the specified security each month</returns>
-        public IDateRule MonthEnd(Symbol symbol)
+        public IDateRule MonthEnd(Symbol symbol, int daysOffset = 0)
         {
-            return new FuncDateRule($"{symbol.Value}: MonthEnd", (start, end) => MonthEndIterator(GetSecurity(symbol), start, end));
+            // Check that our offset is allowed
+            if (daysOffset < -15 || 0 < daysOffset)
+            {
+                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.MonthEnd() : Offset must be between -15 and 0");
+            }
+
+            // Get the symbol security, define our name, and return the new DateRule
+            var security = symbol == null ? null : GetSecurity(symbol);
+            var offsetString = daysOffset.ToString(_format, CultureInfo.InvariantCulture);
+            var name = symbol == null ? $"MonthEnd{offsetString}" : $"{symbol.Value}: MonthEnd{offsetString}";
+            return new FuncDateRule(name, (start, end) => MonthEndIterator(security, start, end, daysOffset));
         }
 
         /// <summary>
-        /// Specifies an event should fire on Monday each week
+        /// Specifies an event should fire on Monday each week; can be offset
         /// </summary>
+        /// <param name="daysOffset"> The amount of days to offset monday by; because offset 0 = monday value must be between -1 and 5 </param>
         /// <returns>A date rule that fires on Monday each week</returns>
-        public IDateRule WeekStart()
+        public IDateRule WeekStart(int daysOffset = 0)
         {
-            return new FuncDateRule("WeekStart", (start, end) => WeekStartIterator(null, start, end));
+            return WeekStart(null, daysOffset);
         }
 
         /// <summary>
         /// Specifies an event should fire on the first tradeable date for the specified
-        /// symbol of each week
+        /// symbol of each week; First day is defined by Monday, schedule will adjust according to tradeable days
+        /// and offset
         /// </summary>
         /// <param name="symbol">The symbol whose exchange is used to determine the first
         /// tradeable date of the week</param>
+        /// <param name="daysOffset"> The amount of days to offset monday by; must be between -1 and 5 </param>
         /// <returns>A date rule that fires on the first tradeable date for the specified security each week</returns>
-        public IDateRule WeekStart(Symbol symbol)
+        public IDateRule WeekStart(Symbol symbol, int daysOffset = 0)
         {
-            return new FuncDateRule($"{symbol.Value}: WeekStart", (start, end) => WeekStartIterator(GetSecurity(symbol), start, end));
+            // Check that our offset is allowed
+            if (daysOffset < -1 || 5 < daysOffset)
+            {
+                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.WeekStart() : Offset must be between -1 and 5");
+            }
+
+            // Get the symbol security, define our name, and return the new DateRule
+            var security = symbol == null ? null : GetSecurity(symbol);
+            var offsetString = daysOffset.ToString(_format, CultureInfo.InvariantCulture);
+            var name = symbol == null ? $"WeekStart{offsetString}" : $"{symbol.Value}: WeekStart{offsetString}";
+            return new FuncDateRule(name, (start, end) => WeekStartIterator(security, start, end, daysOffset));
         }
 
         /// <summary>
-        /// Specifies an event should fire on Friday each week
+        /// Specifies an event should fire on Friday; can be offset
         /// </summary>
+        /// <param name="daysOffset"> The amount of days to offset Friday by; must be between -5 and 1 </param>
         /// <returns>A date rule that fires on Friday each week</returns>
-        public IDateRule WeekEnd()
+        public IDateRule WeekEnd(int daysOffset = 0)
         {
-            return new FuncDateRule("WeekEnd", (start, end) => WeekEndIterator(null, start, end));
+            return WeekEnd(null, daysOffset);
         }
 
         /// <summary>
         /// Specifies an event should fire on the last tradeable date for the specified
-        /// symbol of each week
+        /// symbol of each week; last day is defined by Friday, schedule will adjust according to tradable days
+        /// and offset
         /// </summary>
         /// <param name="symbol">The symbol whose exchange is used to determine the last
         /// tradeable date of the week</param>
+        /// <param name="daysOffset"> The amount of days to offset Friday by; must be between -5 and 1 </param>
         /// <returns>A date rule that fires on the last tradeable date for the specified security each week</returns>
-        public IDateRule WeekEnd(Symbol symbol)
+        public IDateRule WeekEnd(Symbol symbol, int daysOffset = 0)
         {
-            return new FuncDateRule($"{symbol.Value}: WeekEnd", (start, end) => WeekEndIterator(GetSecurity(symbol), start, end));
+            // Check that our offset is allowed
+            if (daysOffset < -5 || 1 < daysOffset)
+            {
+                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.WeekStart() : Offset must be between -1 and 5");
+            }
+
+            // Get the symbol security, define our name, and return the new DateRule
+            var security = symbol == null ? null : GetSecurity(symbol);
+            var offsetString = daysOffset.ToString(_format, CultureInfo.InvariantCulture);
+            var name = symbol == null ? $"WeekEnd{offsetString}" : $"{symbol.Value}: WeekEnd{offsetString}";
+            return new FuncDateRule(name, (start, end) => WeekEndIterator(security, start, end, daysOffset));
         }
 
         /// <summary>
@@ -220,46 +277,48 @@ namespace QuantConnect.Scheduling
             return security;
         }
 
-        private static IEnumerable<DateTime> MonthStartIterator(Security security, DateTime start, DateTime end)
+        private static IEnumerable<DateTime> MonthStartIterator(Security security, DateTime start, DateTime end, int offset = 0)
         {
-            if (security == null)
-            {
-                foreach (var date in Time.EachDay(start, end))
-                {
-                    // fire on the first of each month
-                    if (date.Day == 1) yield return date;
-                }
-                yield break;
-            }
+            // Day of each month we trigger, 1st + offset
+            var scheduledDayOfMonth = 1 + offset;
 
-            // start a month back so we can properly resolve the first event (we may have passed it)
-            var aMonthBeforeStart = start.AddMonths(-1);
-            int lastMonth = aMonthBeforeStart.Month;
-            foreach (var date in Time.EachTradeableDay(security, aMonthBeforeStart, end))
+            foreach (var date in Time.EachDay(start, end))
             {
-                if (date.Month != lastMonth)
+                // On the day we expect to trigger the event lets find the appropriate day
+                if (date.Day == scheduledDayOfMonth)
                 {
-                    if (date >= start)
+                    if (security == null)
                     {
-                        // only emit if the date is on or after the start
-                        // the date may be before here because we backed up a month
-                        // to properly resolve the first tradeable date
+                        // fire on the scheduled day of each month
                         yield return date;
                     }
-                    lastMonth = date.Month;
+                    else
+                    {
+                        // find next date when market is open
+                        var currentDate = date;
+                        while (!security.Exchange.Hours.IsDateOpen(currentDate))
+                        {
+                            currentDate = currentDate.AddDays(1);
+                        }
+                        yield return currentDate;
+                    }
                 }
             }
         }
 
-        private static IEnumerable<DateTime> MonthEndIterator(Security security, DateTime start, DateTime end)
+        private static IEnumerable<DateTime> MonthEndIterator(Security security, DateTime start, DateTime end, int offset = 0)
         {
             foreach (var date in Time.EachDay(start, end))
             {
-                if (date.Day == DateTime.DaysInMonth(date.Year, date.Month))
+                //Determine the last day of the month for this month, adjust with offset
+                var scheduledDayOfMonth = DateTime.DaysInMonth(date.Year, date.Month) + offset;
+
+                // On the day we expect to trigger the event lets find the appropriate day
+                if (date.Day == scheduledDayOfMonth)
                 {
                     if (security == null)
                     {
-                        // fire on the last of each month
+                        // fire on the scheduled day of each month
                         yield return date;
                     }
                     else
@@ -276,24 +335,25 @@ namespace QuantConnect.Scheduling
             }
         }
 
-        private static IEnumerable<DateTime> WeekStartIterator(Security security, DateTime start, DateTime end)
+        private static IEnumerable<DateTime> WeekStartIterator(Security security, DateTime start, DateTime end, int offset = 0)
         {
             var skippedMarketClosedDay = false;
+            var scheduledDayOfWeek = DayOfWeek.Monday + offset;
 
             foreach (var date in Time.EachDay(start, end))
             {
                 if (security == null)
                 {
-                    // fire on Monday
-                    if (date.DayOfWeek == DayOfWeek.Monday)
+                    // fire on scheduled day of the week
+                    if (date.DayOfWeek == scheduledDayOfWeek)
                     {
                         yield return date;
                     }
                 }
                 else
                 {
-                    // skip Mondays and following days when market is closed
-                    if (date.DayOfWeek == DayOfWeek.Monday || skippedMarketClosedDay)
+                    // skip scheduled days and following days when market is closed
+                    if (date.DayOfWeek == scheduledDayOfWeek || skippedMarketClosedDay)
                     {
                         if (security.Exchange.Hours.IsDateOpen(date))
                         {
@@ -309,15 +369,17 @@ namespace QuantConnect.Scheduling
             }
         }
 
-        private static IEnumerable<DateTime> WeekEndIterator(Security security, DateTime start, DateTime end)
+        private static IEnumerable<DateTime> WeekEndIterator(Security security, DateTime start, DateTime end, int offset = 0)
         {
+            var scheduledDayOfWeek = DayOfWeek.Friday + offset;
+
             foreach (var date in Time.EachDay(start, end))
             {
-                if (date.DayOfWeek == DayOfWeek.Friday)
+                if (date.DayOfWeek == scheduledDayOfWeek)
                 {
                     if (security == null)
                     {
-                        // fire on Friday
+                        // fire on scheduled day of the week
                         yield return date;
                     }
                     else

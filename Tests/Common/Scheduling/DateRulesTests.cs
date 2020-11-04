@@ -103,6 +103,23 @@ namespace QuantConnect.Tests.Common.Scheduling
         }
 
         [Test]
+        public void StartOfMonthNoSymbolWithOffset()
+        {
+            var rules = GetDateRules();
+            var rule = rules.MonthStart(5);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+
+            int count = 0;
+            foreach (var date in dates)
+            {
+                count++;
+                Assert.AreEqual(new DateTime(2000, count, 6), date);
+                Assert.AreEqual(6, date.Day);
+            }
+            Assert.AreEqual(12, count);
+        }
+
+        [Test]
         public void StartOfMonthWithSymbol()
         {
             var rules = GetDateRules();
@@ -143,6 +160,27 @@ namespace QuantConnect.Tests.Common.Scheduling
         }
 
         [Test]
+        public void StartOfMonthWithSymbolWithOffset()
+        {
+            var rules = GetDateRules();
+            var rule = rules.MonthStart(Symbols.SPY, 5);
+            var dates = rule.GetDates(new DateTime(2000, 01, 04), new DateTime(2000, 12, 31));
+
+            int count = 0;
+            foreach (var date in dates)
+            {
+                count++;
+                Assert.AreNotEqual(DayOfWeek.Saturday, date.DayOfWeek);
+                Assert.AreNotEqual(DayOfWeek.Sunday, date.DayOfWeek);
+
+                //1st + 5 = 6th; Possible weekend means between 6th and 8th
+                Assert.IsTrue(date.Day <= 8);
+                Assert.IsTrue(date.Day >= 6);
+            }
+            Assert.AreEqual(12, count);
+        }
+
+        [Test]
         public void EndOfMonthNoSymbol()
         {
             var rules = GetDateRules();
@@ -156,6 +194,22 @@ namespace QuantConnect.Tests.Common.Scheduling
                 Assert.AreEqual(DateTime.DaysInMonth(date.Year, date.Month), date.Day);
             }
 
+            Assert.AreEqual(12, count);
+        }
+
+        [Test]
+        public void EndOfMonthNoSymbolWithOffset()
+        {
+            var rules = GetDateRules();
+            var rule = rules.MonthEnd(-5);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+
+            int count = 0;
+            foreach (var date in dates)
+            {
+                count++;
+                Assert.AreEqual(DateTime.DaysInMonth(date.Year, date.Month) - 5, date.Day);
+            }
             Assert.AreEqual(12, count);
         }
 
@@ -180,6 +234,27 @@ namespace QuantConnect.Tests.Common.Scheduling
         }
 
         [Test]
+        public void EndOfMonthWithSymbolWithOffset()
+        {
+            var rules = GetDateRules();
+            var rule = rules.MonthEnd(Symbols.SPY, -5);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+
+            int count = 0;
+            foreach (var date in dates)
+            {
+                count++;
+                Assert.AreNotEqual(DayOfWeek.Saturday, date.DayOfWeek);
+                Assert.AreNotEqual(DayOfWeek.Sunday, date.DayOfWeek);
+
+                // 28th - 5 = 23rd; 31 - 5 = 27th; Must be between
+                Assert.IsTrue(date.Day >= 23);
+                Assert.IsTrue(date.Day <= 27);
+            }
+            Assert.AreEqual(12, count);
+        }
+
+        [Test]
         public void StartOfWeekNoSymbol()
         {
             var rules = GetDateRules();
@@ -191,6 +266,24 @@ namespace QuantConnect.Tests.Common.Scheduling
             {
                 count++;
                 Assert.AreEqual(DayOfWeek.Monday, date.DayOfWeek);
+            }
+
+            Assert.AreEqual(52, count);
+        }
+
+        [Test]
+        public void StartOfWeekNoSymbolWithOffset()
+        {
+            var rules = GetDateRules();
+            var rule = rules.WeekStart(2);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+
+            int count = 0;
+            foreach (var date in dates)
+            {
+                count++;
+                // Monday offset by 2 days, so Wednesday
+                Assert.AreEqual(DayOfWeek.Wednesday, date.DayOfWeek);
             }
 
             Assert.AreEqual(52, count);
@@ -215,6 +308,25 @@ namespace QuantConnect.Tests.Common.Scheduling
         }
 
         [Test]
+        public void StartOfWeekWithSymbolWithOffset()
+        {
+            var rules = GetDateRules();
+            var rule = rules.WeekStart(Symbols.SPY, 2);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+
+            int count = 0;
+            foreach (var date in dates)
+            {
+                count++;
+                // Offset monday by two days so Wednesday
+                Assert.IsTrue(date.DayOfWeek == DayOfWeek.Wednesday);
+                Console.WriteLine(date + " " + date.DayOfWeek);
+            }
+
+            Assert.AreEqual(52, count);
+        }
+
+        [Test]
         public void EndOfWeekNoSymbol()
         {
             var rules = GetDateRules();
@@ -232,6 +344,24 @@ namespace QuantConnect.Tests.Common.Scheduling
         }
 
         [Test]
+        public void EndOfWeekNoSymbolWithOffset()
+        {
+            var rules = GetDateRules();
+            var rule = rules.WeekEnd(-4);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+
+            int count = 0;
+            foreach (var date in dates)
+            {
+                count++;
+                // Friday - 4 = Monday
+                Assert.AreEqual(DayOfWeek.Monday, date.DayOfWeek);
+            }
+
+            Assert.AreEqual(52, count);
+        }
+
+        [Test]
         public void EndOfWeekWithSymbol()
         {
             var rules = GetDateRules();
@@ -243,10 +373,61 @@ namespace QuantConnect.Tests.Common.Scheduling
             {
                 count++;
                 Assert.IsTrue(date.DayOfWeek == DayOfWeek.Friday || date.DayOfWeek == DayOfWeek.Thursday);
-                Console.WriteLine(date + " " + date.DayOfWeek);
             }
 
             Assert.AreEqual(52, count);
+        }
+
+        [Test]
+        public void EndOfWeekWithSymbolWithOffset()
+        {
+            var rules = GetDateRules();
+            var rule = rules.WeekEnd(Symbols.SPY, -2);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+
+            int count = 0;
+            foreach (var date in dates)
+            {
+                count++;
+
+                // Friday - 2 = Wednesday
+                Assert.IsTrue(date.DayOfWeek == DayOfWeek.Wednesday);
+            }
+
+            Assert.AreEqual(52, count);
+        }
+
+        [Test]
+        public void DateRulesExpectedNames()
+        {
+            var rules = GetDateRules();
+            IDateRule rule;
+
+            // WeekEnd Rules
+            rule = rules.WeekEnd();
+            Assert.AreEqual("WeekEnd", rule.Name);
+
+            rule = rules.WeekEnd(1);
+            Assert.AreEqual("WeekEnd+1", rule.Name);
+
+            rule = rules.WeekEnd(Symbols.SPY);
+            Assert.AreEqual("SPY: WeekEnd", rule.Name);
+
+            rule = rules.WeekEnd(Symbols.SPY, -2);
+            Assert.AreEqual("SPY: WeekEnd-2", rule.Name);
+
+            // WeekStart rules
+            rule = rules.WeekStart();
+            Assert.AreEqual("WeekStart", rule.Name);
+
+            rule = rules.WeekStart(1);
+            Assert.AreEqual("WeekStart+1", rule.Name);
+
+            rule = rules.WeekStart(Symbols.SPY);
+            Assert.AreEqual("SPY: WeekStart", rule.Name);
+
+            rule = rules.WeekStart(Symbols.SPY, 3);
+            Assert.AreEqual("SPY: WeekStart+3", rule.Name);
         }
 
         private static DateRules GetDateRules()
