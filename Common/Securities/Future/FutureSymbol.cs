@@ -39,7 +39,7 @@ namespace QuantConnect.Securities.Future
                 var standardExpirationDate = expiryFunction(contractExpirationDate);
 
                 // Return true if the dates match
-                return contractExpirationDate == standardExpirationDate;
+                return contractExpirationDate.Date == standardExpirationDate.Date;
             }
             catch
             {
