@@ -172,13 +172,14 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
             if (finalFileExists)
             {
                 tempFilePath.Replace(finalPath,bkPath);
+                var bkFilePath = new FileInfo(bkPath);
+                bkFilePath.Delete();
             }
             else
             {
                 tempFilePath.MoveTo(finalPath);
             }
-            var bkFilePath = new FileInfo(bkPath);
-            bkFilePath.Delete();
+
         }
 
         /// <summary>
