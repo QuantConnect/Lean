@@ -98,12 +98,12 @@ namespace QuantConnect.Data.Custom.Quiver
         }
 
         /// <summary>
-        /// Creates a new instance of QuiverHouse from a CSV line
+        /// Creates a new instance of QuiverCongress from a CSV line
         /// </summary>
         /// <param name="csvLine">CSV line</param>
         public QuiverCongress(string csvLine)
         {
-            // Date[0], Ticker[1], Representative[2], Transaction[3], Amount[4]
+            // ReportDate[0], TransactionDate[1], Representative[2], Transaction[3], Amount[4],House[5]
             var csv = csvLine.Split(',');
             Date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
             TransactionDate = Parse.DateTimeExact(csv[1], "yyyyMMdd");
@@ -145,7 +145,7 @@ namespace QuantConnect.Data.Custom.Quiver
         /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            return new QuiverHouse(line)
+            return new QuiverCongress(line)
             {
                 Symbol = config.Symbol
             };
@@ -157,7 +157,6 @@ namespace QuantConnect.Data.Custom.Quiver
         public override string ToString()
         {
             return Invariant($"{Symbol}({Date}) :: ") +
-                   Invariant($"Report Date: {Date} ") +
                    Invariant($"Transaction Date: {TransactionDate} ") +
                    Invariant($"Representative: {Representative} ") +
                    Invariant($"House: {House} ") +
