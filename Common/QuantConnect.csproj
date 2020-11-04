@@ -400,6 +400,8 @@
     <Compile Include="Securities\BuyingPowerModel.cs" />
     <Compile Include="Securities\BuyingPowerModelExtensions.cs" />
     <Compile Include="Securities\BuyingPowerParameters.cs" />
+    <Compile Include="Securities\ContractSecurityFilterUniverse.cs" />
+    <Compile Include="Securities\Future\FutureSymbol.cs" />
     <Compile Include="Securities\GetMaximumOrderQuantityForDeltaBuyingPowerParameters.cs" />
     <Compile Include="Securities\RegisteredSecurityDataTypesProvider.cs" />
     <Compile Include="Securities\ErrorCurrencyConverter.cs" />
