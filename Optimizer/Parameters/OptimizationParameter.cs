@@ -47,6 +47,12 @@ namespace QuantConnect.Optimizer.Parameters
         /// <returns></returns>
         public abstract IEnumerator<string> GetEnumerator();
 
+        /// <summary>
+        /// Calculate number of point for optimization parameter
+        /// </summary>
+        /// <returns>returns number of data points</returns>
+        public abstract int Estimate();
+
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <summary>

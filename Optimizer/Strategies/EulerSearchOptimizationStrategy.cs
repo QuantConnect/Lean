@@ -110,15 +110,6 @@ namespace QuantConnect.Optimizer.Strategies
         }
 
         /// <summary>
-        /// Calculate number of parameter sets within grid
-        /// </summary>
-        /// <returns>Number of parameter sets for given optimization parameters</returns>
-        public override int GetTotalBacktestEstimate()
-        {
-            return 100;
-        }
-
-        /// <summary>
         /// Handles new parameter set
         /// </summary>
         /// <param name="parameterSet">New parameter set</param>

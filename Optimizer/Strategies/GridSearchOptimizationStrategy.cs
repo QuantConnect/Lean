@@ -58,20 +58,5 @@ namespace QuantConnect.Optimizer.Strategies
                 }
             }
         }
-
-        /// <summary>
-        /// Calculate number of parameter sets within grid
-        /// </summary>
-        /// <returns>Number of parameter sets for given optimization parameters</returns>
-        public override int GetTotalBacktestEstimate()
-        {
-            int total = 1;
-            foreach (var arg in OptimizationParameters.Cast<OptimizationStepParameter>())
-            {
-                total *= (int)Math.Floor((arg.MaxValue - arg.MinValue) / arg.Step.Value) + 1;
-            }
-
-            return total;
-        }
     }
 }

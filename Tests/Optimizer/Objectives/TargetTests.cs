@@ -14,13 +14,12 @@
  *
 */
 
-using NUnit.Framework;
-using QuantConnect.Optimizer;
-using System;
 using Newtonsoft.Json;
+using NUnit.Framework;
 using QuantConnect.Optimizer.Objectives;
+using System;
 
-namespace QuantConnect.Tests.Optimizer
+namespace QuantConnect.Tests.Optimizer.Objectives
 {
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class TargetTests
@@ -124,6 +123,20 @@ namespace QuantConnect.Tests.Optimizer
             {
                 Assert.AreEqual(11, target.TargetValue);
             }
+        }
+
+        [Test]
+        public void RoundTrip()
+        {
+            var origin = new Target("['Statistics'].['Drawdown']", new Maximization(), 100);
+
+            var json = JsonConvert.SerializeObject(origin);
+            var actual = JsonConvert.DeserializeObject<Target>(json);
+
+            Assert.NotNull(actual);
+            Assert.AreEqual(origin.Target, actual.Target);
+            Assert.AreEqual(origin.Extremum.GetType(), actual.Extremum.GetType());
+            Assert.AreEqual(origin.TargetValue, actual.TargetValue);
         }
     }
 }

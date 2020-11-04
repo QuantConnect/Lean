@@ -15,26 +15,100 @@
 */
 
 
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using Newtonsoft.Json;
 using NUnit.Framework;
-using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Parameters;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace QuantConnect.Tests.Optimizer
+namespace QuantConnect.Tests.Optimizer.Parameters
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class OptimizationParameterTests
     {
         [TestFixture]
         public class StepParameter
         {
+            private static TestCaseData[] SegmentBasedOptimizationParameters => new[]
+            {
+                new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100), 10),
+                new TestCaseData(new OptimizationStepParameter("ema-fast", 10, -100), 5),
+                new TestCaseData(new OptimizationStepParameter("ema-fast", -1, -100), 4)
+            };
+
             private static TestCaseData[] OptimizationParameters => new[]
             {
                 new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100, 1m)),
                 new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100, 1m, 0.0005m))
             };
+
+            [TestCase(5)]
+            [TestCase(-5)]
+            [TestCase(0.5)]
+            [TestCase(-0.5)]
+            public void StepShouldBePositiveAlways(double step)
+            {
+                var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, new decimal(step));
+
+                Assert.NotNull(optimizationParameter.Step);
+                Assert.Positive(optimizationParameter.Step.Value);
+                Assert.AreEqual(optimizationParameter.Step, optimizationParameter.MinStep);
+                Assert.AreEqual(Math.Abs(step), optimizationParameter.Step);
+            }
+
+            [TestCase(1, 0.1)]
+            [TestCase(5, -0.1)]
+            [TestCase(-0.1, -0.1)]
+            [TestCase(0.5, -10)]
+            public void StepShouldBeGreatOrEqualThanMinStep(decimal step, decimal minStep)
+            {
+                var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, step, minStep);
+
+                var actual = Math.Max(Math.Abs(step), Math.Abs(minStep));
+                Assert.AreEqual(actual, optimizationParameter.Step);
+            }
+
+            [TestCase(0, 0)]
+            [TestCase(0.5, 0)]
+            [TestCase(2, 0)]
+            public void PreventZero(decimal step, decimal minStep)
+            {
+                var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, step, minStep);
+
+                var actual = Math.Max(Math.Abs(step), Math.Abs(minStep));
+                actual = actual == 0 ? 1 : actual;
+
+                Assert.AreEqual(actual, optimizationParameter.Step);
+                Assert.AreEqual(actual, optimizationParameter.MinStep);
+            }
+
+            [Test, TestCaseSource(nameof(SegmentBasedOptimizationParameters))]
+            public void CalculateStep(OptimizationStepParameter optimizationParameter, int numberOfSegments)
+            {
+                Assert.IsNull(optimizationParameter.Step);
+                Assert.IsNull(optimizationParameter.MinStep);
+
+                optimizationParameter.CalculateStep(numberOfSegments);
+                var actual = Math.Abs(optimizationParameter.MaxValue - optimizationParameter.MinValue) /
+                    numberOfSegments;
+                Assert.AreEqual(actual, optimizationParameter.Step);
+                Assert.AreEqual(actual / 10, optimizationParameter.MinStep);
+            }
+
+            [TestCase(0)]
+            [TestCase(-1)]
+            public void ThrowExceptionIfNonPositive(int numberOfSegments)
+            {
+                var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100);
+                Assert.IsNull(optimizationParameter.Step);
+                Assert.IsNull(optimizationParameter.MinStep);
+
+                Assert.Throws<ArgumentException>(() =>
+                {
+                    optimizationParameter.CalculateStep(numberOfSegments);
+                });
+            }
 
             [Test, TestCaseSource(nameof(OptimizationParameters))]
             public void Serialize(OptimizationStepParameter parameterSet)
@@ -151,7 +225,7 @@ namespace QuantConnect.Tests.Optimizer
                     .ToList();
 
                 Assert.AreEqual(2, optimizationParameters.Count);
-                
+
                 Assert.AreEqual("ema-fast", optimizationParameters[0].Name);
                 Assert.AreEqual(50, optimizationParameters[0].MinValue);
                 Assert.AreEqual(150, optimizationParameters[0].MaxValue);
@@ -160,6 +234,31 @@ namespace QuantConnect.Tests.Optimizer
                 Assert.AreEqual(50, optimizationParameters[1].MinValue);
                 Assert.AreEqual(250, optimizationParameters[1].MaxValue);
                 Assert.AreEqual(10, optimizationParameters[1].Step);
+            }
+
+
+            private static TestCaseData[] OptimizationParametersEstimations => new[]
+            {
+                new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100, 1), 100),
+                new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100, 50), 2),
+                new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 1, 0), 1),
+                new TestCaseData(new OptimizationStepParameter("ema-fast", 1, -2, 1), 4)
+            };
+
+            [Test, TestCaseSource(nameof(OptimizationParametersEstimations))]
+            public void Estimate(OptimizationStepParameter optimizationParameter, int estimation)
+            {
+                Assert.AreEqual(estimation, optimizationParameter.Estimate());
+            }
+
+            [Test]
+            public void ThrowIfEstimateNoStep()
+            {
+                var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100);
+                Assert.Throws<InvalidOperationException>(() =>
+                {
+                    optimizationParameter.Estimate();
+                });
             }
         }
 
@@ -251,6 +350,33 @@ namespace QuantConnect.Tests.Optimizer
                 Assert.AreEqual(new[] { "a", "b", "c", "d" }, optimizationParameters[0].Values);
                 Assert.AreEqual("ema-slow", optimizationParameters[1].Name);
                 Assert.AreEqual(new[] { "1", "2", "3", "4" }, optimizationParameters[1].Values);
+            }
+
+            private static TestCaseData[] OptimizationParametersEstimations => new[]
+            {
+                new TestCaseData(new OptimizationArrayParameter("ema-fast", new[] {"1", "2","3"}), 3),
+                new TestCaseData(new OptimizationArrayParameter("ema-fast", new[] {"a","b","c","d"}), 4)
+            };
+
+            [Test, TestCaseSource(nameof(OptimizationParametersEstimations))]
+            public void Estimate(OptimizationArrayParameter optimizationParameter, int estimation)
+            {
+                Assert.AreEqual(estimation, optimizationParameter.Estimate());
+            }
+
+            private static TestCaseData[] OptimizationParametersEmptyEstimations => new[]
+            {
+                new TestCaseData(new OptimizationArrayParameter("ema-fast", null)),
+                new TestCaseData(new OptimizationArrayParameter("ema-fast", new string[0]))
+            };
+
+            [Test, TestCaseSource(nameof(OptimizationParametersEmptyEstimations))]
+            public void ThrowIfEstimateNullOrEmpty(OptimizationArrayParameter optimizationParameter)
+            {
+                Assert.Throws<InvalidOperationException>(() =>
+                {
+                    optimizationParameter.Estimate();
+                });
             }
         }
     }

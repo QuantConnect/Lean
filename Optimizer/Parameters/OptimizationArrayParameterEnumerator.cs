@@ -22,10 +22,18 @@ namespace QuantConnect.Optimizer.Parameters
     /// </summary>
     public class OptimizationArrayParameterEnumerator : OptimizationParameterEnumerator<OptimizationArrayParameter>
     {
+        /// <summary>
+        /// Creates an instance of <see cref="OptimizationArrayParameterEnumerator"/>
+        /// </summary>
+        /// <param name="optimizationParameter">Array-based optimization parameter</param>
         public OptimizationArrayParameterEnumerator(OptimizationArrayParameter optimizationParameter) : base(optimizationParameter)
         {
         }
 
+        /// <summary>
+        /// Gets the element in the collection at the current position of the enumerator.
+        /// </summary>
+        /// <returns>The element in the collection at the current position of the enumerator.</returns>
         public override string Current
         {
             get
@@ -37,9 +45,14 @@ namespace QuantConnect.Optimizer.Parameters
             }
         }
 
+        /// <summary>
+        /// Advances the enumerator to the next element of the collection.
+        /// </summary>
+        /// <returns> true if the enumerator was successfully advanced to the next element; false if the enumerator has passed the end of the collection.</returns>
+        /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created.</exception>
         public override bool MoveNext()
         {
-            if (Index < OptimizationParameter.Values.Count)
+            if ((Index + 1) < OptimizationParameter.Values.Count)
             {
                 Index++;
                 return true;

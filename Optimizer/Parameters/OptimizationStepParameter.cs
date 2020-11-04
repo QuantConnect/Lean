@@ -85,12 +85,17 @@ namespace QuantConnect.Optimizer.Parameters
         /// <param name="minStep">minimal possible movement</param>
         public OptimizationStepParameter(string name, decimal min, decimal max, decimal step, decimal minStep) : this(name, min, max)
         {
-            MinStep = minStep != 0
-                ? Math.Abs(minStep)
+            var absStep = Math.Abs(step);
+            var absMinStep = Math.Abs(minStep);
+            var actual = Math.Max(absStep, absMinStep);
+            
+            Step = actual != 0 
+                ? actual 
                 : 1;
-            Step = step != 0
-                ? Math.Max(Math.Abs(step), MinStep.Value)
-                : 1;
+
+            MinStep = absMinStep != 0
+                ? absMinStep
+                : Step;
         }
 
         /// <summary>
@@ -109,5 +114,18 @@ namespace QuantConnect.Optimizer.Parameters
         }
 
         public override IEnumerator<string> GetEnumerator() => new OptimizationStepParameterEnumerator(this);
+
+        /// <summary>
+        /// Calculates number od data points for step based optimization parameter based on min/max and step values
+        /// </summary>
+        /// <returns></returns>
+        public override int Estimate()
+        {
+            if (!Step.HasValue)
+            {
+                throw new InvalidOperationException("Optimization parameter cannot be estimated due to step value is not initialized");
+            }
+            return (int) Math.Floor((MaxValue - MinValue) / Step.Value) + 1;
+        }
     }
 }

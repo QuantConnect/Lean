@@ -99,7 +99,16 @@ namespace QuantConnect.Optimizer.Strategies
         /// Calculate number of parameter sets within grid
         /// </summary>
         /// <returns>Number of parameter sets for given optimization parameters</returns>
-        public abstract int GetTotalBacktestEstimate();
+        public int GetTotalBacktestEstimate()
+        {
+            int total = 1;
+            foreach (var arg in OptimizationParameters)
+            {
+                total *= arg.Estimate();
+            }
+
+            return total;
+        }
 
         /// <summary>
         /// Handles new parameter set

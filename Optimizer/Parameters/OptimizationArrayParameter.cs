@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 
@@ -35,5 +36,18 @@ namespace QuantConnect.Optimizer.Parameters
         }
 
         public override IEnumerator<string> GetEnumerator() => new OptimizationArrayParameterEnumerator(this);
+
+        /// <summary>
+        /// Calculates number od data points for step based optimization parameter based on min/max and step values
+        /// </summary>
+        /// <returns></returns>
+        public override int Estimate()
+        {
+            if (Values == null || Values.Count == 0)
+            {
+                throw new InvalidOperationException("Optimization parameter cannot be estimated due to values are not initialized properly");
+            }
+            return Values.Count;
+        }
     }
 }

@@ -17,12 +17,55 @@
 using NUnit.Framework;
 using QuantConnect.Optimizer.Objectives;
 using System;
+using Newtonsoft.Json;
 
-namespace QuantConnect.Tests.Optimizer
+namespace QuantConnect.Tests.Optimizer.Objectives
 {
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class ExtremumTests
     {
+        private static TestCaseData[] Extremums => new TestCaseData[]
+        {
+            new TestCaseData(new Maximization()),
+            new TestCaseData(new Minimization())
+        };
+
+
+        [TestCase("\"max\"")]
+        [TestCase("\"min\"")]
+        [TestCase("\"Max\"")]
+        [TestCase("\"miN\"")]
+        public void Deserialize(string extremum)
+        {
+            var actual = JsonConvert.DeserializeObject<Extremum>(extremum);
+            Extremum expected = extremum.Equals("\"max\"", StringComparison.OrdinalIgnoreCase)
+                ? new Maximization() as Extremum
+                : new Minimization();
+
+            Assert.NotNull(actual);
+            Assert.AreEqual(expected.GetType(), actual.GetType());
+        }
+
+        [TestCase("\"\"")]
+        [TestCase("\"n/a\"")]
+        public void ThrowsIfNotRecognized(string extremum)
+        {
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                JsonConvert.DeserializeObject<Extremum>(extremum);
+            });
+        }
+
+        [Test, TestCaseSource(nameof(Extremums))]
+        public void Serialize(Extremum extremum)
+        {
+            var json = JsonConvert.SerializeObject(extremum);
+
+            var actual = JsonConvert.DeserializeObject<Extremum>(json);
+            Assert.NotNull(actual);
+            Assert.AreEqual(extremum.GetType(), actual.GetType());
+        }
+
         [TestCase(0, 10)]
         [TestCase(10, 10)]
         [TestCase(10, 0)]
