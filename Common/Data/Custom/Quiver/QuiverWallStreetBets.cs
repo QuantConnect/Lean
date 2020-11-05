@@ -43,7 +43,7 @@ namespace QuantConnect.Data.Custom.Quiver
 
 
         /// <summary>
-        /// The follower count on the given date
+        /// The number of mentions on the given date
         /// </summary>
         [ProtoMember(11)]
         [JsonProperty(PropertyName = "Count")]
@@ -60,12 +60,12 @@ namespace QuantConnect.Data.Custom.Quiver
         }
 
         /// <summary>
-        /// Creates a new instance of QuiverTwitter from a CSV line
+        /// Creates a new instance of QuiverWallStreetBets from a CSV line
         /// </summary>
         /// <param name="csvLine">CSV line</param>
         public QuiverWallStreetBets(string csvLine)
         {
-            // Date[0], Ticker[1], Followers[2], Pct_Change_Week[3], Pct_Change_Month[4]
+            // Date[0], Mentions[1]
             var csv = csvLine.Split(',');
             Date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
             Mentions = Parse.Int(csv[1]);
@@ -110,7 +110,7 @@ namespace QuantConnect.Data.Custom.Quiver
         }
 
         /// <summary>
-        /// Formats a string with the Quiver Twitter information.
+        /// Formats a string with the Quiver WallStreetBets information.
         /// </summary>
         public override string ToString()
         {

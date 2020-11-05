@@ -33,7 +33,7 @@ namespace QuantConnect.Data.Custom.Quiver
     {
 
         /// <summary>
-        /// The date of the follower count
+        /// The date of the Page View count
         /// </summary>
         [ProtoMember(10)]
         [JsonProperty(PropertyName = "Date")]
