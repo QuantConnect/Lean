@@ -337,33 +337,27 @@ namespace QuantConnect.Scheduling
 
         private static IEnumerable<DateTime> WeekStartIterator(Security security, DateTime start, DateTime end, int offset = 0)
         {
-            var skippedMarketClosedDay = false;
             var scheduledDayOfWeek = DayOfWeek.Monday + offset;
 
             foreach (var date in Time.EachDay(start, end))
             {
-                if (security == null)
+                // On the day we expect to trigger the event lets find the appropriate day
+                if (date.DayOfWeek == scheduledDayOfWeek)
                 {
-                    // fire on scheduled day of the week
-                    if (date.DayOfWeek == scheduledDayOfWeek)
+                    if (security == null)
                     {
+                        // fire on scheduled day of the week
                         yield return date;
                     }
-                }
-                else
-                {
-                    // skip scheduled days and following days when market is closed
-                    if (date.DayOfWeek == scheduledDayOfWeek || skippedMarketClosedDay)
+                    else
                     {
-                        if (security.Exchange.Hours.IsDateOpen(date))
+                        // find next date when market is open
+                        var currentDate = date;
+                        while (!security.Exchange.Hours.IsDateOpen(currentDate))
                         {
-                            skippedMarketClosedDay = false;
-                            yield return date;
+                            currentDate = currentDate.AddDays(1);
                         }
-                        else
-                        {
-                            skippedMarketClosedDay = true;
-                        }
+                        yield return currentDate;
                     }
                 }
             }
@@ -375,6 +369,7 @@ namespace QuantConnect.Scheduling
 
             foreach (var date in Time.EachDay(start, end))
             {
+                // On the day we expect to trigger the event lets find the appropriate day
                 if (date.DayOfWeek == scheduledDayOfWeek)
                 {
                     if (security == null)
