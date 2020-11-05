@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Securities.Future
 {
@@ -55,6 +56,9 @@ namespace QuantConnect.Securities.Future
             { "RB", "OB" },
         };
 
+        private static Dictionary<string, string> _futureOptionsToFutureGLOBEX = _futureToFutureOptionsGLOBEX
+            .ToDictionary(kvp => kvp.Value, kvp => kvp.Key); 
+        
         /// <summary>
         /// Returns the futures options ticker for the given futures ticker.
         /// </summary>
@@ -68,6 +72,24 @@ namespace QuantConnect.Securities.Future
             if (!_futureToFutureOptionsGLOBEX.TryGetValue(futureTicker, out result))
             {
                 return futureTicker;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Maps a futures options ticker to its underlying future's ticker
+        /// </summary>
+        /// <param name="futureOptionTicker">Future option ticker to map to the underlying</param>
+        /// <returns>Future ticker</returns>
+        public static string MapFromOption(string futureOptionTicker)
+        {
+            futureOptionTicker = futureOptionTicker.ToUpperInvariant();
+
+            string result;
+            if (!_futureOptionsToFutureGLOBEX.TryGetValue(futureOptionTicker, out result))
+            {
+                return futureOptionTicker;
             }
 
             return result;

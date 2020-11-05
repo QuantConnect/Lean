@@ -205,19 +205,32 @@ namespace QuantConnect.Util
                     break;
 
                 case SecurityType.Option:
+                    var hasUnderlyingEquity = data.Symbol.SecurityType == SecurityType.Equity;
                     switch (resolution)
                     {
                         case Resolution.Tick:
                             var tick = (Tick)data;
                             if (tick.TickType == TickType.Trade)
                             {
+                                if (hasUnderlyingEquity)
+                                {
+                                    return ToCsv(milliseconds,
+                                        Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
+                                }
+                                
                                 return ToCsv(milliseconds,
-                                    Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
+                                    tick.LastPrice, tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
                             }
                             if (tick.TickType == TickType.Quote)
                             {
+                                if (hasUnderlyingEquity)
+                                {
+                                    return ToCsv(milliseconds,
+                                        Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
+                                }
+                                
                                 return ToCsv(milliseconds,
-                                    Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
+                                    tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
                             }
                             if (tick.TickType == TickType.OpenInterest)
                             {
@@ -231,15 +244,28 @@ namespace QuantConnect.Util
                             var quoteBar = data as QuoteBar;
                             if (quoteBar != null)
                             {
+                                if (hasUnderlyingEquity)
+                                {
+                                    return ToCsv(milliseconds,
+                                        ToScaledCsv(quoteBar.Bid), quoteBar.LastBidSize,
+                                        ToScaledCsv(quoteBar.Ask), quoteBar.LastAskSize);
+                                }
+                                
                                 return ToCsv(milliseconds,
-                                    ToScaledCsv(quoteBar.Bid), quoteBar.LastBidSize,
-                                    ToScaledCsv(quoteBar.Ask), quoteBar.LastAskSize);
+                                    ToNonScaledCsv(quoteBar.Bid), quoteBar.LastBidSize,
+                                    ToNonScaledCsv(quoteBar.Ask), quoteBar.LastAskSize);
                             }
                             var tradeBar = data as TradeBar;
                             if (tradeBar != null)
                             {
+                                if (hasUnderlyingEquity)
+                                {
+                                    return ToCsv(milliseconds,
+                                        Scale(tradeBar.Open), Scale(tradeBar.High), Scale(tradeBar.Low), Scale(tradeBar.Close), tradeBar.Volume);
+                                }
+                                
                                 return ToCsv(milliseconds,
-                                    Scale(tradeBar.Open), Scale(tradeBar.High), Scale(tradeBar.Low), Scale(tradeBar.Close), tradeBar.Volume);
+                                    tradeBar.Open, tradeBar.High, tradeBar.Low, tradeBar.Close, tradeBar.Volume);
                             }
                             var openInterest = data as OpenInterest;
                             if (openInterest != null)
@@ -254,14 +280,26 @@ namespace QuantConnect.Util
                             var bigQuoteBar = data as QuoteBar;
                             if (bigQuoteBar != null)
                             {
+                                if (hasUnderlyingEquity)
+                                {
+                                    return ToCsv(longTime,
+                                        ToScaledCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
+                                        ToScaledCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
+                                }
+                                
                                 return ToCsv(longTime,
-                                    ToScaledCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
-                                    ToScaledCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
+                                    ToNonScaledCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
+                                    ToNonScaledCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
                             }
                             var bigTradeBar = data as TradeBar;
                             if (bigTradeBar != null)
                             {
-                                return ToCsv(longTime, ToScaledCsv(bigTradeBar), bigTradeBar.Volume);
+                                if (hasUnderlyingEquity)
+                                {
+                                    return ToCsv(longTime, ToScaledCsv(bigTradeBar), bigTradeBar.Volume);
+                                }
+                                
+                                return ToCsv(longTime, ToNonScaledCsv(bigTradeBar), bigTradeBar.Volume);
                             }
                             var bigOpenInterest = data as OpenInterest;
                             if (bigOpenInterest != null)
@@ -411,7 +449,10 @@ namespace QuantConnect.Util
         public static string GenerateRelativeZipFileDirectory(Symbol symbol, Resolution resolution)
         {
             var isHourOrDaily = resolution == Resolution.Hour || resolution == Resolution.Daily;
-            var securityType = symbol.ID.SecurityType.SecurityTypeToLower();
+            var securityType = symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType == SecurityType.Future
+                ? SecurityType.Future.SecurityTypeToLower() + SecurityType.Option.SecurityTypeToLower()
+                : symbol.SecurityType.SecurityTypeToLower();
+            
             var market = symbol.ID.Market.ToLowerInvariant();
             var res = resolution.ResolutionToLower();
             var directory = Path.Combine(securityType, market, res);
@@ -430,7 +471,7 @@ namespace QuantConnect.Util
                     // since it can differ from the underlying's ticker. We differ from normal futures
                     // because the option chain can be extraordinarily large compared to equity option chains.
                     var optionPath = (symbol.Underlying.SecurityType == SecurityType.Future
-                            ? symbol.ID.Symbol + string.Concat(symbol.Underlying.Value.Skip(symbol.Underlying.ID.Symbol.Length))
+                            ? Path.Combine(symbol.ID.Symbol, symbol.Underlying.ID.Date.ToStringInvariant(DateFormat.EightCharacter))
                             : symbol.Underlying.Value)
                         .ToLowerInvariant();
 
@@ -507,8 +548,9 @@ namespace QuantConnect.Util
                     return Invariant($"{formattedDate}_{symbol.Value.ToLowerInvariant()}_{resolution.ResolutionToLower()}_{tickType.TickTypeToLower()}.csv");
 
                 case SecurityType.Option:
+                    // We want the future option ticker as the lookup name inside the ZIP file
                     var optionPath = (symbol.Underlying.SecurityType == SecurityType.Future
-                            ? symbol.ID.Symbol + string.Concat(symbol.Underlying.Value.Skip(symbol.Underlying.ID.Symbol.Length))
+                            ? symbol.ID.Symbol
                             : symbol.Underlying.Value)
                         .ToLowerInvariant();
 
@@ -597,7 +639,7 @@ namespace QuantConnect.Util
                     if (isHourOrDaily)
                     {
                         var optionPath = (symbol.Underlying.SecurityType == SecurityType.Future
-                                ? symbol.ID.Symbol + string.Concat(symbol.Underlying.Value.Skip(symbol.Underlying.ID.Symbol.Length))
+                                ? symbol.ID.Symbol
                                 : symbol.Underlying.Value)
                             .ToLowerInvariant();
 
