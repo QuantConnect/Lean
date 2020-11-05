@@ -195,7 +195,7 @@ namespace QuantConnect.ToolBox.IEX
                     // Check if there is a kvp entry for a symbol
                     var isInDictionary = _iexLastTradeTime.TryGetValue(symbolString, out value);
 
-                    if (lastPrice.HasValue && lastSize.HasValue)
+                    if (lastPrice.HasValue && lastSize.HasValue && lastPrice != 0 && lastSize != 0)
                     {
                         // We should update if :
                         // 1) there is an entry and last trade time is different from time in dictionary OR
@@ -522,7 +522,7 @@ namespace QuantConnect.ToolBox.IEX
                     }
 
                     var tradeBar = new TradeBar(date, request.Symbol, open, high, low, close, volume, period);
-                    Log.Trace($"time: {tradeBar.Time} {tradeBar}");
+
                     yield return tradeBar;
                 }
             }
