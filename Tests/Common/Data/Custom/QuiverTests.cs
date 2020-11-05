@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
         [Test]
         public void QuiverWikipediaReaderDoesNotThrow()
         {
-            var data = "11/14/2016 12:00:00 AM,ABBV,1599,-1.9018404908,-9.4050991501";
+            var data = "20201110,ABBV,1599,-1.9018404908,-9.4050991501";
             var instance = new QuiverWikipedia();
 
             var fakeConfig = new SubscriptionDataConfig(
