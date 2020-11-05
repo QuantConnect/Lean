@@ -23,7 +23,6 @@ using ProtoBuf;
 using static QuantConnect.StringExtensions;
 using QuantConnect.Util;
 using Newtonsoft.Json.Converters;
-using QuantConnect.Orders;
 
 namespace QuantConnect.Data.Custom.Quiver
 { 
@@ -64,7 +63,7 @@ namespace QuantConnect.Data.Custom.Quiver
         [ProtoMember(13)]
         [JsonProperty(PropertyName = "Transaction")]
         [JsonConverter(typeof(StringEnumConverter))]
-        public OrderDirection Transaction { get; set; }
+        public TransactionDirection Transaction { get; set; }
 
         /// <summary>
         /// The amount of the transaction (in USD)
@@ -99,7 +98,7 @@ namespace QuantConnect.Data.Custom.Quiver
             Date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
             TransactionDate = Parse.DateTimeExact(csv[1], "yyyyMMdd");
             Representative = csv[2];
-            Transaction = (OrderDirection)Enum.Parse(typeof(OrderDirection), csv[3], true);
+            Transaction = (TransactionDirection)Enum.Parse(typeof(TransactionDirection), csv[3], true);
             Amount = csv[4].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
             House = (Congress)Enum.Parse(typeof(Congress), csv[5], true);
             Time = Date;
