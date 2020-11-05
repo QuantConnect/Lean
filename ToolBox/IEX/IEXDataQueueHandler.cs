@@ -45,21 +45,20 @@ namespace QuantConnect.ToolBox.IEX
     /// </summary>
     public class IEXDataQueueHandler : SynchronizingHistoryProvider, IDataQueueHandler
     {
+        private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified);
         private static readonly TimeSpan SubscribeDelay = TimeSpan.FromMilliseconds(1500);
+        private static bool invalidHistDataTypeWarningFired;
+
         private readonly IEXEventSourceCollection _clients;
         private readonly ManualResetEvent _refreshEvent = new ManualResetEvent(false);
+        private readonly string _apiKey = Config.Get("iex-cloud-api-key");
 
         private readonly ConcurrentDictionary<string, Symbol> _symbols = new ConcurrentDictionary<string, Symbol>(StringComparer.InvariantCultureIgnoreCase);
         private readonly ConcurrentDictionary<string, long> _iexLastUpdateTime = new ConcurrentDictionary<string, long>();
         private readonly ConcurrentDictionary<string, long> _iexLastTradeTime = new ConcurrentDictionary<string, long>();
 
-        // only required for history requests to IEX Cloud
-        private readonly string _apiKey = Config.Get("iex-cloud-api-key");
-
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-        private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified);
         private int _dataPointCount;
-        private static bool invalidHistDataTypeWarningFired;
 
         private readonly IDataAggregator _aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
             Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
@@ -81,7 +80,7 @@ namespace QuantConnect.ToolBox.IEX
                 {
                     if (!_symbols.TryAdd(symbol.Value, symbol))
                     {
-                        throw new Exception($"Invalid logic, SubscriptionManager tries to subscribe to existing symbol : {symbol.Value}");
+                        throw new InvalidOperationException($"Invalid logic, SubscriptionManager tried to subscribe to existing symbol : {symbol.Value}");
                     }
                 });
 
@@ -103,7 +102,8 @@ namespace QuantConnect.ToolBox.IEX
 
             if (string.IsNullOrWhiteSpace(_apiKey))
             {
-                throw new Exception("The IEX API key was not provided.");
+                throw new ArgumentException("Could not read IEX API key from config.json. " +
+                    "Please make sure to add \"iex-cloud-api-key\" to your configuration file");
             }
 
             // Set the sse-clients collection
@@ -141,7 +141,7 @@ namespace QuantConnect.ToolBox.IEX
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void ProcessJsonObject(string json)
+        private void ProcessJsonObject(string json)
         {
             try
             {
@@ -166,13 +166,10 @@ namespace QuantConnect.ToolBox.IEX
                     var lastPrice = item.IexRealtimePrice;
                     var lastSize = item.IexRealtimeSize;
 
-                    // Can happen last price or size be null outside of exchange working hours
-                    if (!lastPrice.HasValue || !lastSize.HasValue) continue;
-
                     var lastTradeMillis = item.LastTradeTime;
                     var lastUpdateMillis = item.IexLastUpdated;
 
-                    // There were no trades on this day yet
+                    // There were no updates on this day yet
                     if (!lastUpdateMillis.HasValue || lastUpdateMillis.Value == -1)
                     {
                         continue;
@@ -183,22 +180,29 @@ namespace QuantConnect.ToolBox.IEX
 
                     // The data stream update logic allows short-term intervals when we can receive
                     // several identical updates per one symbol at a time when replacing event sources.
-                    // So we always check if we could already get a snapshot with such time-stamp
+                    // So we always check could we already get a snapshot with such a time stamp
                     long value;
                     if (_iexLastUpdateTime.TryGetValue(symbolString, out value))
                     {
-                        if (value == lastUpdateMillis) continue;
+                        if (value == lastUpdateMillis)
+                        {
+                            continue;
+                        }
                     }
 
                     _iexLastUpdateTime[symbolString] = lastUpdateMillis.Value;
 
-                    // The same logic with ticks, if last trade time is not newer than previous, we don't update trade-ticks
-                    Tick tradeTick = null;
-                    if (_iexLastTradeTime.TryGetValue(symbolString, out value))
+                    // Check if there is a kvp entry for a symbol
+                    var isInDictionary = _iexLastTradeTime.TryGetValue(symbolString, out value);
+
+                    if (lastPrice.HasValue && lastSize.HasValue)
                     {
-                        if (value != lastTradeMillis)
+                        // We should update if :
+                        // 1) there is an entry and last trade time is different from time in dictionary OR
+                        // 2) not in dictionary - means the first trade case
+                        if (isInDictionary && value != lastTradeMillis || !isInDictionary)
                         {
-                            tradeTick = new Tick()
+                            var tradeTick = new Tick()
                             {
                                 Symbol = symbol,
                                 Time = lastUpdateTimeNewYork,
@@ -206,17 +210,16 @@ namespace QuantConnect.ToolBox.IEX
                                 Value = lastPrice.Value,
                                 Quantity = lastSize.Value
                             };
+
+                            _aggregator.Update(tradeTick);
+
+                            // Update with new value
+                            _iexLastTradeTime[symbolString] = lastTradeMillis;
                         }
                     }
 
-                    // Update with new value
-                    _iexLastTradeTime[symbolString] = lastTradeMillis; 
-
-                    if (tradeTick != null)
-                        _aggregator.Update(tradeTick);
-
                     // Always update quotes for a new snapshot, if there are bid and ask prices available
-                    if (!bidPrice.HasValue || !bidSize.HasValue || bidPrice == 0 || askSize == 0)
+                    if (!bidPrice.HasValue || !bidSize.HasValue || bidPrice == 0 || bidSize == 0)
                     {
                         continue;
                     }
@@ -453,10 +456,13 @@ namespace QuantConnect.ToolBox.IEX
 
             urls.DoForEach(url =>
             {
-                using (var client = new WebClient())
+                requests.Add(Task.Run(async () =>
                 {
-                    requests.Add(client.DownloadStringTaskAsync(new Uri(url)));
-                }
+                    using (var client = new WebClient())
+                    {
+                        return await client.DownloadStringTaskAsync(new Uri(url)).ConfigureAwait(false);
+                    }
+                }));
             });
 
             var responses = Task.WhenAll(requests).Result;
@@ -494,13 +500,29 @@ namespace QuantConnect.ToolBox.IEX
                     {
                         continue;
                     }
-                    var open = item["open"].Value<decimal>();
-                    var high = item["high"].Value<decimal>();
-                    var low = item["low"].Value<decimal>();
-                    var close = item["close"].Value<decimal>();
-                    var volume = item["volume"].Value<int>();
+
+                    decimal open, high, low, close, volume;
+
+                    if (request.Resolution == Resolution.Daily &&
+                        request.DataNormalizationMode == DataNormalizationMode.Raw)
+                    {
+                        open = item["uOpen"].Value<decimal>();
+                        high = item["uHigh"].Value<decimal>();
+                        low = item["uLow"].Value<decimal>();
+                        close = item["uClose"].Value<decimal>();
+                        volume = item["uVolume"].Value<int>();
+                    }
+                    else
+                    {
+                        open = item["open"].Value<decimal>();
+                        high = item["high"].Value<decimal>();
+                        low = item["low"].Value<decimal>();
+                        close = item["close"].Value<decimal>();
+                        volume = item["volume"].Value<int>();
+                    }
 
                     var tradeBar = new TradeBar(date, request.Symbol, open, high, low, close, volume, period);
+                    Log.Trace($"time: {tradeBar.Time} {tradeBar}");
                     yield return tradeBar;
                 }
             }

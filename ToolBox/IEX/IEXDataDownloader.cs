@@ -62,7 +62,7 @@ namespace QuantConnect.ToolBox.IEX
                                    resolution,
                                    true,
                                    false,
-                                   DataNormalizationMode.Adjusted,
+                                   DataNormalizationMode.Raw,
                                    TickType.Trade)
             };
 

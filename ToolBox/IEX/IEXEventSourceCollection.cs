@@ -199,7 +199,7 @@ namespace QuantConnect.ToolBox.IEX
             foreach (var client in ClientSymbolsDictionary.Keys)
             {
                 client.Close();
-                client.Dispose();
+                client.DisposeSafely();
             }
 
             IsConnected = false;

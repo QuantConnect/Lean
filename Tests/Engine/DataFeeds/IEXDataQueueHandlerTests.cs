@@ -392,7 +392,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                                        resolution,
                                        true,
                                        false,
-                                       DataNormalizationMode.Adjusted,
+                                       DataNormalizationMode.Raw,
                                        TickType.Trade)
                 };
 
