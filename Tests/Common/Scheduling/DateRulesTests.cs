@@ -326,6 +326,29 @@ namespace QuantConnect.Tests.Common.Scheduling
             Assert.AreEqual(52, count);
         }
 
+        [TestCase(-1)] // Monday - 1 = Sunday
+        [TestCase(5)] // Monday + 5 = Saturday
+        public void StartOfWeekWithSymbolWithOffsetToWeekend(int offset)
+        {
+            var rules = GetDateRules();
+            var rule = rules.WeekStart(Symbols.SPY, offset);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 3, 31));
+
+            int count = 0;
+            foreach (var date in dates)
+            {
+                count++;
+
+                // Both test cases are non-tradable days for Spy
+                // We expect it to find another available day later in the week that is tradable,
+                // meaning Monday in this set of dates
+                // Also allow Tuesday because of some holidays where monday is not tradable.
+                Assert.IsTrue(date.DayOfWeek == DayOfWeek.Monday || date.DayOfWeek == DayOfWeek.Tuesday);
+            }
+
+            Assert.AreEqual(13, count);
+        }
+
         [Test]
         public void EndOfWeekNoSymbol()
         {
@@ -395,6 +418,28 @@ namespace QuantConnect.Tests.Common.Scheduling
             }
 
             Assert.AreEqual(52, count);
+        }
+
+        [TestCase(1)] // Friday + 1 = Saturday
+        [TestCase(-5)] // Friday - 5 = Sunday
+        public void EndOfWeekWithSymbolWithOffsetToWeekend(int offset)
+        {
+            var rules = GetDateRules();
+            var rule = rules.WeekEnd(Symbols.SPY, offset);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 3, 31));
+
+            int count = 0;
+            foreach (var date in dates)
+            {
+                count++;
+
+                // Both test cases are non-tradable days for Spy
+                // We expect it to find a previous day in the week that is tradable, meaning
+                // Friday in this set of dates
+                Assert.IsTrue(date.DayOfWeek == DayOfWeek.Friday);
+            }
+
+            Assert.AreEqual(13, count);
         }
 
         [Test]
