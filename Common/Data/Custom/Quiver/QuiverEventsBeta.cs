@@ -107,7 +107,7 @@ namespace QuantConnect.Data.Custom.Quiver
         /// <param name="csvLine">CSV line</param>
         public QuiverEventsBeta(string csvLine)
         {
-            // Date[0], Symbol[1], Followers[2], Pct_Change_Week[3], Pct_Change_Month[4]
+            // Date[0], EventName[1], FirstEventName[2], SecondEventName[3], FirstEventBeta[4], SecondEventBeta[5], FirstEventOdds[6], SecondEventOdds[7]
             var csv = csvLine.Split(',');
             Date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
             EventName = csv[1];
