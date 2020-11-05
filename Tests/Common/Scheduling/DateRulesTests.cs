@@ -201,7 +201,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void EndOfMonthNoSymbolWithOffset()
         {
             var rules = GetDateRules();
-            var rule = rules.MonthEnd(-5);
+            var rule = rules.MonthEnd(5);
             var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
 
             int count = 0;
@@ -237,7 +237,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void EndOfMonthWithSymbolWithOffset()
         {
             var rules = GetDateRules();
-            var rule = rules.MonthEnd(Symbols.SPY, -5);
+            var rule = rules.MonthEnd(Symbols.SPY, 5);
             var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
 
             int count = 0;
@@ -326,8 +326,8 @@ namespace QuantConnect.Tests.Common.Scheduling
             Assert.AreEqual(52, count);
         }
 
-        [TestCase(-1)] // Monday - 1 = Sunday
         [TestCase(5)] // Monday + 5 = Saturday
+        [TestCase(6)] // Monday + 6 = Sunday
         public void StartOfWeekWithSymbolWithOffsetToWeekend(int offset)
         {
             var rules = GetDateRules();
@@ -370,7 +370,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void EndOfWeekNoSymbolWithOffset()
         {
             var rules = GetDateRules();
-            var rule = rules.WeekEnd(-4);
+            var rule = rules.WeekEnd(4);
             var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
 
             int count = 0;
@@ -405,7 +405,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void EndOfWeekWithSymbolWithOffset()
         {
             var rules = GetDateRules();
-            var rule = rules.WeekEnd(Symbols.SPY, -2);
+            var rule = rules.WeekEnd(Symbols.SPY, 2);
             var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
 
             int count = 0;
@@ -420,8 +420,8 @@ namespace QuantConnect.Tests.Common.Scheduling
             Assert.AreEqual(52, count);
         }
 
-        [TestCase(1)] // Friday + 1 = Saturday
-        [TestCase(-5)] // Friday - 5 = Sunday
+        [TestCase(5)] // Friday - 5 = Sunday
+        [TestCase(6)] // Friday - 6 = Saturday
         public void EndOfWeekWithSymbolWithOffsetToWeekend(int offset)
         {
             var rules = GetDateRules();
@@ -453,12 +453,12 @@ namespace QuantConnect.Tests.Common.Scheduling
             Assert.AreEqual("WeekEnd", rule.Name);
 
             rule = rules.WeekEnd(1);
-            Assert.AreEqual("WeekEnd+1", rule.Name);
+            Assert.AreEqual("WeekEnd-1", rule.Name);
 
             rule = rules.WeekEnd(Symbols.SPY);
             Assert.AreEqual("SPY: WeekEnd", rule.Name);
 
-            rule = rules.WeekEnd(Symbols.SPY, -2);
+            rule = rules.WeekEnd(Symbols.SPY, 2);
             Assert.AreEqual("SPY: WeekEnd-2", rule.Name);
 
             // WeekStart rules

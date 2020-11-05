@@ -123,10 +123,9 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
-        /// Specifies an event should fire on the first of each month
+        /// Specifies an event should fire on the first of each month + offset
         /// </summary>
-        /// <param name="daysOffset"> The amount of days to offset the schedule by; must
-        /// be between 0 and 15. Use MonthEnd for unreachable dates</param>
+        /// <param name="daysOffset"> The amount of days to offset the schedule by; must be between 0 and 30.</param>
         /// <returns>A date rule that fires on the first of each month + offset</returns>
         public IDateRule MonthStart(int daysOffset = 0)
         {
@@ -134,21 +133,18 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
-        /// Specifies an event should fire on the first tradable date for the specified
-        /// symbol of each month
+        /// Specifies an event should fire on the first tradable date + offset for the specified symbol of each month
         /// </summary>
-        /// <param name="symbol">The symbol whose exchange is used to determine the first
-        /// tradable date of the month</param>
-        /// <param name="daysOffset"> The amount of days to offset the schedule by; must
-        /// be between 0 and 15. Use MonthEnd for unreachable dates</param>
+        /// <param name="symbol">The symbol whose exchange is used to determine the first tradable date of the month</param>
+        /// <param name="daysOffset"> The amount of days to offset the schedule by; must be between 0 and 30</param>
         /// <returns>A date rule that fires on the first tradable date + offset for the
         /// specified security each month</returns>
         public IDateRule MonthStart(Symbol symbol, int daysOffset = 0)
         {
             // Check that our offset is allowed
-            if (daysOffset < 0 || 15 < daysOffset)
+            if (daysOffset < 0 || 30 < daysOffset)
             {
-                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.MonthStart() : Offset must be between 0 and 15");
+                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.MonthStart() : Offset must be between 0 and 30");
             }
 
             // Create the new DateRule and return it
@@ -158,39 +154,35 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Specifies an event should fire on the last of each month
         /// </summary>
-        /// <param name="daysOffset"> The amount of days to offset the schedule by; must
-        /// be between -15 and 0. Use MonthStart for unreachable dates</param>
-        /// <returns>A date rule that fires on the last of each month + offset</returns>
+        /// <param name="daysOffset"> The amount of days to offset the schedule by; must be between 0 and 30</param>
+        /// <returns>A date rule that fires on the last of each month - offset</returns>
         public IDateRule MonthEnd(int daysOffset = 0)
         {
             return MonthEnd(null, daysOffset);
         }
 
         /// <summary>
-        /// Specifies an event should fire on the last tradable date for the specified
-        /// symbol of each month
+        /// Specifies an event should fire on the last tradable date - offset for the specified symbol of each month
         /// </summary>
-        /// <param name="symbol">The symbol whose exchange is used to determine the last
-        /// tradable date of the month</param>
-        /// <param name="daysOffset"> The amount of days to offset the schedule by; must
-        /// be between -15 and 0. Use MonthStart for unreachable dates</param>
-        /// <returns>A date rule that fires on the last tradable date + offset for the specified security each month</returns>
+        /// <param name="symbol">The symbol whose exchange is used to determine the last tradable date of the month</param>
+        /// <param name="daysOffset">The amount of days to offset the schedule by; must be between 0 and 30.</param>
+        /// <returns>A date rule that fires on the last tradable date - offset for the specified security each month</returns>
         public IDateRule MonthEnd(Symbol symbol, int daysOffset = 0)
         {
             // Check that our offset is allowed
-            if (daysOffset < -15 || 0 < daysOffset)
+            if (daysOffset < 0 || 30 < daysOffset)
             {
-                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.MonthEnd() : Offset must be between -15 and 0");
+                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.MonthEnd() : Offset must be between 0 and 30");
             }
 
             // Create the new DateRule and return it
-            return new FuncDateRule(GetName(symbol, "MonthEnd", daysOffset), (start, end) => MonthIterator(GetSecurity(symbol), start, end, daysOffset, false));
+            return new FuncDateRule(GetName(symbol, "MonthEnd", -daysOffset), (start, end) => MonthIterator(GetSecurity(symbol), start, end, daysOffset, false));
         }
 
         /// <summary>
-        /// Specifies an event should fire on Monday each week; can be offset
+        /// Specifies an event should fire on Monday + offset each week
         /// </summary>
-        /// <param name="daysOffset"> The amount of days to offset monday by; because offset 0 = monday value must be between -1 and 5 </param>
+        /// <param name="daysOffset">The amount of days to offset monday by; must be between 0 and 6</param>
         /// <returns>A date rule that fires on Monday + offset each week</returns>
         public IDateRule WeekStart(int daysOffset = 0)
         {
@@ -198,20 +190,19 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
-        /// Specifies an event should fire on the first tradable date for the specified
-        /// symbol of each week; First day is defined by Monday, schedule will adjust according to tradable days
-        /// and offset
+        /// Specifies an event should fire on the first tradable date + offset for the specified
+        /// symbol each week; Default first day is monday, offset can adjust to any day in the week
         /// </summary>
         /// <param name="symbol">The symbol whose exchange is used to determine the first
         /// tradeable date of the week</param>
-        /// <param name="daysOffset"> The amount of days to offset monday by; must be between -1 and 5 </param>
+        /// <param name="daysOffset">The amount of days to offset monday by; must be between 0 and 6</param>
         /// <returns>A date rule that fires on the first tradable date + offset for the specified security each week</returns>
         public IDateRule WeekStart(Symbol symbol, int daysOffset = 0)
         {
             // Check that our offset is allowed
-            if (daysOffset < -1 || 5 < daysOffset)
+            if (daysOffset < 0 || 6 < daysOffset)
             {
-                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.WeekStart() : Offset must be between -1 and 5");
+                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.WeekStart() : Offset must be between 0 and 6");
             }
 
             // Create the new DateRule and return it
@@ -219,9 +210,9 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
-        /// Specifies an event should fire on Friday; can be offset
+        /// Specifies an event should fire on Friday - offset
         /// </summary>
-        /// <param name="daysOffset"> The amount of days to offset Friday by; must be between -5 and 1 </param>
+        /// <param name="daysOffset"> The amount of days to offset Friday by; must be between 0 and 6 </param>
         /// <returns>A date rule that fires on Friday each week</returns>
         public IDateRule WeekEnd(int daysOffset = 0)
         {
@@ -230,23 +221,22 @@ namespace QuantConnect.Scheduling
 
         /// <summary>
         /// Specifies an event should fire on the last tradable date for the specified
-        /// symbol of each week; last day is defined by Friday, schedule will adjust according to tradable days
-        /// and offset
+        /// symbol of each week; Default last day is Friday, offset can adjust to any day in the week
         /// </summary>
         /// <param name="symbol">The symbol whose exchange is used to determine the last
         /// tradable date of the week</param>
-        /// <param name="daysOffset"> The amount of days to offset Friday by; must be between -5 and 1 </param>
-        /// <returns>A date rule that fires on the last tradable + offset date for the specified security each week</returns>
+        /// <param name="daysOffset"> The amount of days to offset Friday by; must be between 0 and 6 </param>
+        /// <returns>A date rule that fires on the last tradable - offset date for the specified security each week</returns>
         public IDateRule WeekEnd(Symbol symbol, int daysOffset = 0)
         {
             // Check that our offset is allowed
-            if (daysOffset < -5 || 1 < daysOffset)
+            if (daysOffset < 0 || 6 < daysOffset)
             {
-                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.WeekStart() : Offset must be between -1 and 5");
+                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.WeekStart() : Offset must be between 0 and 6");
             }
 
             // Create the new DateRule and return it
-            return new FuncDateRule(GetName(symbol, "WeekEnd", daysOffset), (start, end) => WeekIterator(GetSecurity(symbol), start, end, daysOffset, false));
+            return new FuncDateRule(GetName(symbol, "WeekEnd", -daysOffset), (start, end) => WeekIterator(GetSecurity(symbol), start, end, daysOffset, false));
         }
 
         /// <summary>
@@ -283,9 +273,13 @@ namespace QuantConnect.Scheduling
         {
             foreach (var date in Time.EachDay(start, end))
             {
-                // For MonthStart we are searching forward so dates is : 1st + offset
-                // For MonthEnd we are searching backward so date is : Last of the Month + offset
-                var scheduledDayOfMonth = searchForward ? 1 + offset : DateTime.DaysInMonth(date.Year, date.Month) + offset;
+
+                var daysInMonth = DateTime.DaysInMonth(date.Year, date.Month);
+                var scheduledDayOfMonth = searchForward ?
+                    // For MonthStart we are searching forward so date is 1 + offset; restricted by length of month
+                    1 + offset > daysInMonth ? daysInMonth : 1 + offset
+                    // For MonthEnd we are searching backward so date is daysInMonth - offset; restricted by the 1st
+                    : daysInMonth - offset < 1 ? 1 : daysInMonth - offset;
 
                 // On the day we expect to trigger the event lets find the appropriate day
                 if (date.Day == scheduledDayOfMonth)
@@ -297,11 +291,11 @@ namespace QuantConnect.Scheduling
                     }
                     else
                     {
-                        // find the next appropriate date when market is open
+                        // find a date when market is open
                         var currentDate = date;
                         while (!security.Exchange.Hours.IsDateOpen(currentDate))
                         {
-                            // Search in the appropriate direction
+                            // Search in the right direction
                             currentDate = currentDate.AddDays(searchForward ? 1 : -1);
                         }
                         yield return currentDate;
@@ -312,9 +306,11 @@ namespace QuantConnect.Scheduling
 
         private static IEnumerable<DateTime> WeekIterator(Security security, DateTime start, DateTime end, int offset, bool searchForward)
         {
-            // For WeekStart we are searching forward so day of the week is : Monday + offset
-            // For WeekEnd we are searching backward so day of the week is : Friday + offset
-            var scheduledDayOfWeek = searchForward ? DayOfWeek.Monday + offset : DayOfWeek.Friday + offset;
+            var scheduledDayOfWeek = searchForward ?
+                // For WeekStart we are searching forward so day of the week is : Monday (1) + offset
+                (DayOfWeek)((1 + offset) % 7) // Math to wrap enum around for Sunday case
+                // For WeekEnd we are searching backward so day of the week is : Friday - offset
+                : offset == 6 ? DayOfWeek.Saturday : DayOfWeek.Friday - offset;
 
             foreach (var date in Time.EachDay(start, end))
             {
@@ -328,11 +324,11 @@ namespace QuantConnect.Scheduling
                     }
                     else
                     {
-                        // find the next appropriate date when market is open
+                        // find a date when market is open
                         var currentDate = date;
                         while (!security.Exchange.Hours.IsDateOpen(currentDate))
                         {
-                            // Search in the appropriate direction
+                            // Search in the right direction
                             currentDate = currentDate.AddDays(searchForward ? 1 : -1);
                         }
                         yield return currentDate;
