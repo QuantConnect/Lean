@@ -45,13 +45,11 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Exchange we are executing on. String short code expanded in the MarketCodes.US global dictionary
         /// </summary>
-        [ProtoMember(12)]
         public string Exchange = "";
 
         /// <summary>
         /// Sale condition for the tick.
         /// </summary>
-        [ProtoMember(13)]
         public string SaleCondition = "";
 
         /// <summary>
