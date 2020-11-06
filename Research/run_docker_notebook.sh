@@ -19,6 +19,19 @@ DEFAULT_IMAGE=quantconnect/research:latest
 DEFAULT_DATA_DIR=../Data
 DEFAULT_NOTEBOOK_DIR=./Notebooks/
 
+yes_or_no() {
+  while true; do
+    read -p "$* [y/n]: " yn
+    case $yn in
+    [Yy]*) return 0 ;;
+    [Nn]*)
+      echo "Aborted"
+      return 1
+      ;;
+    esac
+  done
+}
+
 # realpath polyfill, notably absent macOS and some debian distros
 absolute_path() {
   echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"
@@ -61,6 +74,24 @@ fi
 
 if [ ! -d "$NOTEBOOK_DIR" ]; then
     mkdir $NOTEBOOK_DIR
+fi
+
+SUDO=""
+
+# verify if user has docker permissions
+if ! touch /var/run/docker.sock &>/dev/null; then
+  sudo -v
+  SUDO="sudo"
+  COMMAND="$SUDO $COMMAND"
+fi
+
+#Check if the container is running already
+if [ "$($SUDO docker container inspect -f '{{.State.Running}}' $CONTAINER_NAME)" == "true" ]; then
+  yes_or_no "A Lean container is already running. Stop and recreate with this configuration?" &&
+    ($SUDO docker stop $CONTAINER_NAME && docker container rm $CONTAINER_NAME)
+elif $SUDO docker ps -a | grep -q $CONTAINER_NAME; then
+  yes_or_no "A Lean container is halted and will be removed. Continue?" &&
+    $SUDO docker rm $CONTAINER_NAME
 fi
 
 echo "Starting docker container; container id is:"
