@@ -66,33 +66,28 @@ namespace QuantConnect.Data.Custom.Quiver
         /// </summary>
         [ProtoMember(14)]
         [JsonProperty(PropertyName = "FirstEventBeta")]
-        public decimal? FirstEventBeta { get; set; }
+        public decimal FirstEventBeta { get; set; }
 
         /// <summary>
         /// Odds of the first event happening, based on betting markets
         /// </summary>
         [ProtoMember(15)]
         [JsonProperty(PropertyName = "FirstEventOdds")]
-        public decimal? FirstEventOdds { get; set; }
+        public decimal FirstEventOdds { get; set; }
 
         /// <summary>
         /// Correlation between daily excess returns and daily changes in second event odds
         /// </summary>
         [ProtoMember(16)]
         [JsonProperty(PropertyName = "SecondEventBeta")]
-        public decimal? SecondEventBeta { get; set; }
+        public decimal SecondEventBeta { get; set; }
 
         /// <summary>
         /// Odds of the second event happening, based on betting markets
         /// </summary>
         [ProtoMember(17)]
         [JsonProperty(PropertyName = "SecondEventOdds")]
-        public decimal? SecondEventOdds { get; set; }
-
-
-
-
-
+        public decimal SecondEventOdds { get; set; }
 
         /// <summary>
         /// Required for successful Json.NET deserialization
@@ -113,10 +108,10 @@ namespace QuantConnect.Data.Custom.Quiver
             EventName = csv[1];
             FirstEventName = csv[2];
             SecondEventName = csv[3];
-            FirstEventBeta = csv[4].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
-            SecondEventBeta = csv[5].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
-            FirstEventOdds = csv[6].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
-            SecondEventOdds = csv[7].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            FirstEventBeta = csv[4].IfNotNullOrEmpty<decimal>(s => Parse.Decimal(s));
+            SecondEventBeta = csv[5].IfNotNullOrEmpty<decimal>(s => Parse.Decimal(s));
+            FirstEventOdds = csv[6].IfNotNullOrEmpty<decimal>(s => Parse.Decimal(s));
+            SecondEventOdds = csv[7].IfNotNullOrEmpty<decimal>(s => Parse.Decimal(s));
             Time = Date;
         }
 

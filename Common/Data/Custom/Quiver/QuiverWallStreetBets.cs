@@ -31,7 +31,6 @@ namespace QuantConnect.Data.Custom.Quiver
     [ProtoContract(SkipConstructor = true)]
     public class QuiverWallStreetBets : BaseData
     {
-
         /// <summary>
         /// Date of the daily discussion thread
         /// </summary>
@@ -40,17 +39,12 @@ namespace QuantConnect.Data.Custom.Quiver
         [JsonConverter(typeof(DateTimeJsonConverter), "yyyy-MM-dd")]
         public DateTime Date { get; set; }
 
-
-
         /// <summary>
         /// The number of mentions on the given date
         /// </summary>
         [ProtoMember(11)]
         [JsonProperty(PropertyName = "Count")]
         public int Mentions { get; set; }
-
-
-
 
         /// <summary>
         /// Required for successful Json.NET deserialization

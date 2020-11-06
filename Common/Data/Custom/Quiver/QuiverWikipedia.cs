@@ -31,7 +31,6 @@ namespace QuantConnect.Data.Custom.Quiver
     [ProtoContract(SkipConstructor = true)]
     public class QuiverWikipedia : BaseData
     {
-
         /// <summary>
         /// The date of the Page View count
         /// </summary>
@@ -39,8 +38,6 @@ namespace QuantConnect.Data.Custom.Quiver
         [JsonProperty(PropertyName = "Date")]
         [JsonConverter(typeof(DateTimeJsonConverter), "yyyy-MM-dd")]
         public DateTime Date { get; set; }
-
-
 
         /// <summary>
         /// The company's Wikipedia Page Views on the given date
@@ -57,7 +54,6 @@ namespace QuantConnect.Data.Custom.Quiver
         [JsonProperty(PropertyName = "pct_change_week")]
         public decimal? WeekPercentChange { get; set; }
 
-
         /// <summary>
         /// The view count % change over the month prior to the date
         /// Represented as a whole number (e.g. 100% = 100.0)
@@ -65,9 +61,6 @@ namespace QuantConnect.Data.Custom.Quiver
         [ProtoMember(13)]
         [JsonProperty(PropertyName = "pct_change_month")]
         public decimal? MonthPercentChange { get; set; }
-
-
-
 
         /// <summary>
         /// Required for successful Json.NET deserialization

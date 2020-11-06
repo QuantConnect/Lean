@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,23 +13,24 @@
  * limitations under the License.
 */
 
-using System.Runtime.Serialization;
+using QuantConnect.Orders;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Custom.Quiver
 {
     /// <summary>
-    /// United States of America Legislative Branch House of Congress
+    /// Converts Quiver Quantitative <see cref="TransactionDirection"/> to <see cref="OrderDirection"/>
     /// </summary>
-    public enum Congress
+    public class TransactionDirectionJsonConverter : TypeChangeJsonConverter<OrderDirection, string>
     {
-        /// <summary>
-        /// The United States Senate
-        /// </summary>
-        Senate,
+        protected override string Convert(OrderDirection value)
+        {
+            return value == OrderDirection.Buy ? "purchase" : "sale";
+        }
 
-        /// <summary>
-        /// The United States House of Representatives
-        /// </summary>
-        Representatives
+        protected override OrderDirection Convert(string value)
+        {
+            return value.ToLowerInvariant() == "purchase" ? OrderDirection.Buy : OrderDirection.Sell;
+        }
     }
 }

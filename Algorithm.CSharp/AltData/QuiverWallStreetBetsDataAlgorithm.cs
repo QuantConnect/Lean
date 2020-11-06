@@ -22,14 +22,13 @@ using QuantConnect.Data.UniverseSelection;
 
 
 namespace QuantConnect.Algorithm.CSharp
-{ 
+{
     /// <summary>
     /// Quiver Quantitative is a provider of alternative data.
     /// </summary>
     public class QuiverWallStreetBetsDataAlgorithm : QCAlgorithm
     {
         private Symbol _aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -45,11 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             var history = History<QuiverWallStreetBets>(quiverWSBSymbol, 60, Resolution.Daily);
 
             Debug($"We got {history.Count()} items from our history request");
-
-
-
         }
-
 
         public override void OnData(Slice data)
         {
@@ -67,17 +62,6 @@ namespace QuantConnect.Algorithm.CSharp
                     SetHoldings(point.Symbol.Underlying, -1);
                 }
             }
-
-            // Go long in the stock if it has a positive correlation with Trump's election odds
-            // var points = data.Get<QuiverPoliticalBeta>();
-            // foreach (var point in points.Values)
-            // {
-            //     if (point.TrumpBeta > 0)
-            //         SetHoldings(point.Symbol.Underlying, 1);
-            //     if (point.TrumpBeta < 0)
-            //        SetHoldings(point.Symbol.Underlying, -1);
-            // }
-
         }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)

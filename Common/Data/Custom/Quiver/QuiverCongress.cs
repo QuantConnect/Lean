@@ -23,9 +23,10 @@ using ProtoBuf;
 using static QuantConnect.StringExtensions;
 using QuantConnect.Util;
 using Newtonsoft.Json.Converters;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Data.Custom.Quiver
-{ 
+{
 
     /// <summary>
     /// Personal stock transactions by U.S. Representatives
@@ -33,7 +34,6 @@ namespace QuantConnect.Data.Custom.Quiver
     [ProtoContract(SkipConstructor = true)]
     public class QuiverCongress : BaseData
     {
-
         /// <summary>
         /// The date the transaction was reported
         /// </summary>
@@ -62,8 +62,8 @@ namespace QuantConnect.Data.Custom.Quiver
         /// </summary>
         [ProtoMember(13)]
         [JsonProperty(PropertyName = "Transaction")]
-        [JsonConverter(typeof(StringEnumConverter))]
-        public TransactionDirection Transaction { get; set; }
+        [JsonConverter(typeof(TransactionDirectionJsonConverter))]
+        public OrderDirection Transaction { get; set; }
 
         /// <summary>
         /// The amount of the transaction (in USD)
@@ -98,7 +98,8 @@ namespace QuantConnect.Data.Custom.Quiver
             Date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
             TransactionDate = Parse.DateTimeExact(csv[1], "yyyyMMdd");
             Representative = csv[2];
-            Transaction = (TransactionDirection)Enum.Parse(typeof(TransactionDirection), csv[3], true);
+            var transaction = (TransactionDirection)Enum.Parse(typeof(TransactionDirection), csv[3], true);
+            Transaction = transaction == TransactionDirection.Purchase ? OrderDirection.Buy : OrderDirection.Sell;
             Amount = csv[4].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
             House = (Congress)Enum.Parse(typeof(Congress), csv[5], true);
             Time = Date;

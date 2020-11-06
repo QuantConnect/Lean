@@ -24,6 +24,7 @@ using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.Common.Data.Custom
 {
@@ -48,7 +49,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
         }
 
         [Test]
-        public void DeserializeQuiverWikipediaSuccessfully()
+        public void DeserializeQuiverWikipedia()
         {
             var content = "{" +
                           "\"Date\":\"2020-01-01\"," +
@@ -66,11 +67,25 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual(6.75, data.MonthPercentChange);
         }
 
+        [Test]
+        public void DeserializeQuiverCongressJson()
+        {
+            // This information is not factual and is only used for testing purposes
+            var content = "{ \"ReportDate\": \"2020-01-01\", \"TransactionDate\": \"2019-12-23\", \"Representative\": \"Cory Gardner\", \"Transaction\": \"Purchase\", \"Amount\": 100, \"House\": \"Senate\" }";
+            var data = JsonConvert.DeserializeObject<QuiverCongress>(content, _jsonSerializerSettings);
+
+            Assert.AreEqual(new DateTime(2020, 1, 1), data.Date);
+            Assert.AreEqual(new DateTime(2019, 12, 23), data.TransactionDate);
+            Assert.AreEqual("Cory Gardner", data.Representative);
+            Assert.AreEqual(OrderDirection.Buy, data.Transaction);
+            Assert.AreEqual(100m, data.Amount);
+            Assert.AreEqual(Congress.Senate, data.House);
+        }
 
         [Test]
-        public void QuiverWikipediaReaderDoesNotThrow()
+        public void QuiverWikipediaReader()
         {
-            var data = "20201110,ABBV,1599,-1.9018404908,-9.4050991501";
+            var data = "20201110,1599,-1.9018404908,-9.4050991501";
             var instance = new QuiverWikipedia();
 
             var fakeConfig = new SubscriptionDataConfig(
@@ -91,11 +106,14 @@ namespace QuantConnect.Tests.Common.Data.Custom
                 new QuiverWikipedia(data);
             });
             var testCase = new QuiverWikipedia(data);
-            Assert.AreEqual(new DateTime(2016, 11, 14, 0, 0, 0), testCase.Time);
+            Assert.AreEqual(new DateTime(2020, 11, 10, 0, 0, 0), testCase.Time);
             Assert.IsTrue(testCase.PageViews.HasValue);
             Assert.IsTrue(testCase.WeekPercentChange.HasValue);
             Assert.IsTrue(testCase.MonthPercentChange.HasValue);
 
+            Assert.AreEqual(testCase.PageViews, 1599);
+            Assert.AreEqual(testCase.WeekPercentChange.Value, -1.9018404908m);
+            Assert.AreEqual(testCase.MonthPercentChange.Value, -9.4050991501m);
         }
 
         [Test, Ignore("Requires Quiver Wikipedia data")]
