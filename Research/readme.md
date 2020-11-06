@@ -21,11 +21,11 @@ From a terminal launch the run_docker_notebook.bat/.sh script; there are a few o
 
  2. Using the **docker.cfg** to store args for repeated use; any blank entries will resort to default values! ex: `./run_docker_notebook.bat docker.cfg`
   
-        image=
-        data_dir=
-        notebook_dir=
+         IMAGE=quantconnect/lean:latest
+         DATA_DIR=
+         NOTEBOOK_DIR=
 
- 3. Inline arguments; anything you don't enter will use the default args! ex: `./run_docker.bat image=quantconnect/research:latest`
+ 3. Inline arguments; anything you don't enter will use the default args! ex: `./run_docker.bat IMAGE=quantconnect/research:latest`
       *    Accepted args for inline include all listed in the file **docker.cfg**
 
 Once the docker image starts, the script will attempt to open your browser to the Jupyter notebook web app, if this fails open your browser and go to `localhost:8888`

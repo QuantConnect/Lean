@@ -1,5 +1,4 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
 # QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
@@ -13,12 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-full_path=$(realpath $0)
-current_dir=$(dirname $full_path)
-default_image=quantconnect/research:latest
-parent=$(dirname $current_dir)
-default_data_dir=$parent/Data
-default_notebook_dir=$current_dir/Notebooks/
+# allow script to be called from anywhere
+cd "$(dirname "$0")/" || exit
+
+DEFAULT_IMAGE=quantconnect/research:latest
+DEFAULT_DATA_DIR=../Data
+DEFAULT_NOTEBOOK_DIR=./Notebooks/
+
+# realpath polyfill, notably absent macOS and some debian distros
+absolute_path() {
+  echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"
+}
 
 #If arg is a file process the key values
 if [ -f "$1" ]; then
@@ -33,40 +37,37 @@ elif [ ! -z "$*" ]; then
     done
 #Else query user for settings
 else
-    read -p "Enter docker image [default: $default_image]: " image
-    read -p "Enter absolute path to Data folder [default: $default_data_dir]: " data_dir
-    read -p "Enter absolute path to store notebooks [default: $default_notebook_dir]: " notebook_dir
+    read -p "Enter docker image [default: $DEFAULT_IMAGE]: " IMAGE
+    read -p "Enter absolute path to Data folder [default: $DEFAULT_DATA_DIR]: " DATA_DIR
+    read -p "Enter absolute path to store notebooks [default: $DEFAULT_NOTEBOOK_DIR]: " NOTEBOOK_DIR
 fi
 
 #Have to reset IFS for cfg files to work properly
 IFS=" "
 
-if [ -z "$image" ]; then
-    image=$default_image
-fi
+# fall back to defaults on empty input without
+DATA_DIR=${DATA_DIR:-$DEFAULT_DATA_DIR}
+NOTEBOOK_DIR=${NOTEBOOK_DIR:-$DEFAULT_NOTEBOOK_DIR}
+IMAGE=${IMAGE:-$DEFAULT_IMAGE}
 
-if [ -z "$data_dir" ]; then
-    data_dir=$default_data_dir
-fi
+# convert to absolute paths
+DATA_DIR=$(absolute_path "${DATA_DIR}")
+NOTEBOOK_DIR=$(absolute_path "${NOTEBOOK_DIR}")
 
-if [ ! -d "$data_dir" ]; then
-    echo "Data directory $data_dir does not exist"
+if [ ! -d "$DATA_DIR" ]; then
+    echo "Data directory $DATA_DIR does not exist"
     exit 1
 fi
 
-if [ -z "$notebook_dir" ]; then
-    notebook_dir=$default_notebook_dir
-fi
-
-if [ ! -d "$notebook_dir" ]; then
-    mkdir $notebook_dir
+if [ ! -d "$NOTEBOOK_DIR" ]; then
+    mkdir $NOTEBOOK_DIR
 fi
 
 echo "Starting docker container; container id is:"
 sudo docker run -d --rm -p 8888:8888 \
-    --mount type=bind,source=$data_dir,target=/home/Data,readonly \
-    --mount type=bind,source=$notebook_dir,target=/Lean/Launcher/bin/Debug/Notebooks \
-    $image
+    --mount type=bind,source=$DATA_DIR,target=/home/Data,readonly \
+    --mount type=bind,source=$NOTEBOOK_DIR,target=/Lean/Launcher/bin/Debug/Notebooks \
+    $IMAGE
 
 echo "Docker container started; will wait 2 seconds before opening web browser."
 sleep 2s
