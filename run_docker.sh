@@ -56,10 +56,10 @@ elif [ -n "$*" ]; then
 # Else query user for settings
 else
   read -p "Docker image [default: $DEFAULT_IMAGE]: " IMAGE
-  read -p "Path to Lean config.json [default: $DEFAULT_CONFIG]: " CONFIG_PATH_INPUT
-  read -p "Path to Data directory [default: $DEFAULT_DATA_DIR]: " DATA_DIR_INPUT
-  read -p "Path to Results directory [default: $DEFAULT_RESULTS_DIR]: " RESULTS_DIR_INPUT
-  read -p "Path to Python directory [default: $DEFAULT_PYTHON_DIR]: " PYTHON_DIR_INPUT
+  read -p "Path to Lean config.json [default: $DEFAULT_CONFIG]: " CONFIG_PATH
+  read -p "Path to Data directory [default: $DEFAULT_DATA_DIR]: " DATA_DIR
+  read -p "Path to Results directory [default: $DEFAULT_RESULTS_DIR]: " RESULTS_DIR
+  read -p "Path to Python directory [default: $DEFAULT_PYTHON_DIR]: " PYTHON_DIR
   read -p "Would you like to debug C#? (Requires mono debugger attachment) [default: N]: " DEBUGGING
 fi
 
@@ -67,17 +67,19 @@ fi
 IFS=" "
 
 # fall back to defaults on empty input without
-CONFIG_PATH=${CONFIG_PATH_INPUT:-$DEFAULT_CONFIG}
-DATA_DIR=${DATA_DIR_INPUT:-$DEFAULT_DATA_DIR}
-RESULTS_DIR=${RESULTS_DIR_INPUT:-$DEFAULT_RESULTS_DIR}
+CONFIG_PATH=${CONFIG_PATH:-$DEFAULT_CONFIG}
+DATA_DIR=${DATA_DIR:-$DEFAULT_DATA_DIR}
+RESULTS_DIR=${RESULTS_DIR:-$DEFAULT_RESULTS_DIR}
 IMAGE=${IMAGE:-$DEFAULT_IMAGE}
-PYTHON_DIR=${PYTHON_DIR_INPUT:-$DEFAULT_PYTHON_DIR}
+PYTHON_DIR=${PYTHON_DIR:-$DEFAULT_PYTHON_DIR}
 
 # convert to absolute paths
 CONFIG_PATH=$(absolute_path "${CONFIG_PATH}")
-PYTHON_DIR=$(absolute_path "${PYTHON_DIR_INPUT}")
-DATA_DIR=$(absolute_path "${DATA_DIR_INPUT}")
-RESULTS_DIR=$(absolute_path "${RESULTS_DIR_INPUT}")
+PYTHON_DIR=$(absolute_path "${PYTHON_DIR}")
+DATA_DIR=$(absolute_path "${DATA_DIR}")
+RESULTS_DIR=$(absolute_path "${RESULTS_DIR}")
+CSHARP_DLL=$(absolute_path "${CSHARP_DLL}")
+CSHARP_PDB=$(absolute_path "${CSHARP_PDB}")
 
 if [ ! -f "$CONFIG_PATH" ]; then
   echo "Lean config file $CONFIG_PATH does not exist"
@@ -90,8 +92,8 @@ if [ ! -d "$DATA_DIR" ]; then
 fi
 
 if [ ! -d "$RESULTS_DIR" ]; then
-  echo "Results directory $RESULTS_DIR does not exist"
-  exit 1
+  echo "Results directory $RESULTS_DIR does not exist; creating it now"
+  mkdir $RESULTS_DIR
 fi
 
 #First part of the docker COMMAND that is static, then we build the rest
