@@ -271,3 +271,6 @@ QuantConnect.Lean.sln.DotSettings*
 
 #User notebook files
 Research/Notebooks
+
+#Docker result files
+Results/
