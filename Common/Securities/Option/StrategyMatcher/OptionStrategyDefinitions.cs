@@ -41,76 +41,76 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             = OptionStrategyDefinition.Create("Bear Call Spread",
                 OptionStrategyDefinition.CallLeg(-1),
                 OptionStrategyDefinition.CallLeg(+1, (legs, p) => p.Strike <= legs[0].Strike,
-                    (legs, p) => p.Expiration == legs[0].Expiration)
+                                                     (legs, p) => p.Expiration == legs[0].Expiration)
             );
 
         public static OptionStrategyDefinition BearPutSpread { get; }
             = OptionStrategyDefinition.Create("Bear Put Spread",
                 OptionStrategyDefinition.PutLeg(1),
                 OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike >= legs[0].Strike,
-                    (legs, p) => p.Expiration == legs[0].Expiration)
+                                                    (legs, p) => p.Expiration == legs[0].Expiration)
             );
 
         public static OptionStrategyDefinition BullCallSpread { get; }
             = OptionStrategyDefinition.Create("Bull Call Spread",
                 OptionStrategyDefinition.CallLeg(+1),
                 OptionStrategyDefinition.CallLeg(-1, (legs, p) => p.Strike <= legs[0].Strike,
-                    (legs, p) => p.Expiration == legs[0].Expiration)
+                                                     (legs, p) => p.Expiration == legs[0].Expiration)
             );
 
         public static OptionStrategyDefinition BullPutSpread { get; }
             = OptionStrategyDefinition.Create("Bull Put Spread",
                 OptionStrategyDefinition.PutLeg(-1),
                 OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike <= legs[0].Strike,
-                    (legs, p) => p.Expiration == legs[0].Expiration)
+                                                    (legs, p) => p.Expiration == legs[0].Expiration)
             );
 
         public static OptionStrategyDefinition Straddle { get; }
             = OptionStrategyDefinition.Create("Straddle",
                 OptionStrategyDefinition.CallLeg(+1),
                 OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike == legs[0].Strike,
-                    (legs, p) => p.Expiration == legs[0].Expiration)
+                                                    (legs, p) => p.Expiration == legs[0].Expiration)
             );
 
         public static OptionStrategyDefinition Strangle { get; }
             = OptionStrategyDefinition.Create("Strangle",
                 OptionStrategyDefinition.CallLeg(+1),
                 OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike <= legs[0].Strike,
-                    (legs, p) => p.Expiration == legs[0].Expiration)
+                                                    (legs, p) => p.Expiration == legs[0].Expiration)
             );
 
         public static OptionStrategyDefinition CallButterfly { get; }
             = OptionStrategyDefinition.Create("Call Butterfly",
                 OptionStrategyDefinition.CallLeg(+1),
                 OptionStrategyDefinition.CallLeg(-2, (legs, p) => p.Strike >= legs[0].Strike,
-                    (legs, p) => p.Expiration == legs[0].Expiration),
+                                                     (legs, p) => p.Expiration == legs[0].Expiration),
                 OptionStrategyDefinition.CallLeg(+1, (legs, p) => p.Strike >= legs[1].Strike,
-                    (legs, p) => p.Expiration == legs[0].Expiration,
-                    (legs, p) => p.Strike - legs[1].Strike == legs[1].Strike - legs[0].Strike)
+                                                     (legs, p) => p.Expiration == legs[0].Expiration,
+                                                     (legs, p) => p.Strike - legs[1].Strike == legs[1].Strike - legs[0].Strike)
             );
 
         public static OptionStrategyDefinition PutButterfly { get; }
             = OptionStrategyDefinition.Create("Put Butterfly",
                 OptionStrategyDefinition.PutLeg(+1),
                 OptionStrategyDefinition.PutLeg(-2, (legs, p) => p.Strike >= legs[0].Strike,
-                    (legs, p) => p.Expiration == legs[0].Expiration),
+                                                    (legs, p) => p.Expiration == legs[0].Expiration),
                 OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike >= legs[1].Strike,
-                    (legs, p) => p.Expiration == legs[0].Expiration,
-                    (legs, p) => p.Strike - legs[1].Strike == legs[1].Strike - legs[0].Strike)
+                                                    (legs, p) => p.Expiration == legs[0].Expiration,
+                                                    (legs, p) => p.Strike - legs[1].Strike == legs[1].Strike - legs[0].Strike)
             );
 
         public static OptionStrategyDefinition CallCalendarSpread { get; }
             = OptionStrategyDefinition.Create("Call Calendar Spread",
                 OptionStrategyDefinition.CallLeg(+1),
                 OptionStrategyDefinition.CallLeg(+1, (legs, p) => p.Strike == legs[0].Strike,
-                    (legs, p) => p.Expiration <= legs[0].Expiration)
+                                                     (legs, p) => p.Expiration <= legs[0].Expiration)
             );
 
         public static OptionStrategyDefinition PutCalendarSpread { get; }
             = OptionStrategyDefinition.Create("Put Calendar Spread",
                 OptionStrategyDefinition.PutLeg(+1),
                 OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike == legs[0].Strike,
-                    (legs, p) => p.Expiration <= legs[0].Expiration)
+                                                    (legs, p) => p.Expiration <= legs[0].Expiration)
             );
     }
 }

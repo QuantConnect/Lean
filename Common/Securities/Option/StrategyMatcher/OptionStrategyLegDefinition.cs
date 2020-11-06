@@ -56,16 +56,17 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Yields all possible matches for this leg definition held within the collection of <paramref name="positions"/>
         /// </summary>
+        /// <param name="options">Strategy matcher options guiding matching behaviors</param>
         /// <param name="legs">The preceding legs already matched for the parent strategy definition</param>
         /// <param name="positions">The remaining, unmatched positions available to be matched against</param>
         /// <returns>An enumerable of potential matches</returns>
         public IEnumerable<OptionStrategyLegDefinitionMatch> Match(
+            OptionStrategyMatcherOptions options,
             IReadOnlyList<OptionPosition> legs,
             OptionPositionCollection positions
             )
         {
-            // TODO : Pass OptionStrategyMatcherOptions in and respect applicable options
-            foreach (var position in Filter(legs, positions, false))
+            foreach (var position in options.Enumerate(Filter(legs, positions, false)))
             {
                 var multiplier = position.Quantity / Quantity;
                 if (multiplier != 0)

@@ -94,9 +94,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// taking the first entry matched. If not match is found, then false is returned and <paramref name="match"/>
         /// will be null.
         /// </summary>
-        public bool TryMatchOnce(OptionPositionCollection positions, out OptionStrategyDefinitionMatch match)
+        public bool TryMatchOnce(OptionStrategyMatcherOptions options, OptionPositionCollection positions, out OptionStrategyDefinitionMatch match)
         {
-            match = Match(positions).FirstOrDefault();
+            match = Match(options, positions).FirstOrDefault();
             return match != null;
         }
 
@@ -106,6 +106,19 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// matches to accept. This allows the matcher to prioritize matching certain positions over others.
         /// </summary>
         public IEnumerable<OptionStrategyDefinitionMatch> Match(OptionPositionCollection positions)
+        {
+            return Match(OptionStrategyMatcherOptions.ForDefinitions(this), positions);
+        }
+
+        /// <summary>
+        /// Determines all possible matches for this definition using the provided <paramref name="positions"/>.
+        /// This includes OVERLAPPING matches. It's up to the actual matcher to make decisions based on which
+        /// matches to accept. This allows the matcher to prioritize matching certain positions over others.
+        /// </summary>
+        public IEnumerable<OptionStrategyDefinitionMatch> Match(
+            OptionStrategyMatcherOptions options,
+            OptionPositionCollection positions
+            )
         {
             // TODO : Pass OptionStrategyMatcherOptions in and respect applicable options
             if (positions.Count < LegCount)
@@ -132,7 +145,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
 
             // TODO : Consider add OptionStrategyLegDefinition for underlying for consistency purposes.
             //        Might want to enforce that it's always the first leg definition as well for easier slicing.
-            return Match(
+            return Match(options,
                 ImmutableList<OptionStrategyLegDefinitionMatch>.Empty,
                 ImmutableList<OptionPosition>.Empty,
                 positions,
@@ -141,28 +154,32 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         }
 
         private IEnumerable<OptionStrategyDefinitionMatch> Match(
+            OptionStrategyMatcherOptions options,
             ImmutableList<OptionStrategyLegDefinitionMatch> legMatches,
             ImmutableList<OptionPosition> legPositions,
             OptionPositionCollection positions,
             int multiplier
             )
         {
-            if (legPositions.Count == Legs.Count)
+            var nextLegIndex = legPositions.Count;
+            if (nextLegIndex == Legs.Count)
             {
-                if (legPositions.Count > 0)
+                if (nextLegIndex > 0)
                 {
                     yield return new OptionStrategyDefinitionMatch(this, legMatches, multiplier);
                 }
             }
-            else if (positions.Count >= LegCount - legPositions.Count)
+            else if (positions.Count >= LegCount - nextLegIndex)
             {
-                // grab the next leg definition and perform the match
-                foreach (var legMatch in Legs[legPositions.Count].Match(legPositions, positions))
+                // grab the next leg definition and perform the match, restricting total to configured maximum per leg
+                var nextLeg = Legs[nextLegIndex];
+                var maxLegMatch = options.GetMaximumLegMatches(nextLegIndex);
+                foreach (var legMatch in nextLeg.Match(options, legPositions, positions).Take(maxLegMatch))
                 {
                     // add match to the match we're constructing and deduct matched position from positions collection
                     // we track the min multiplier in line so when we're done, we have the total number of matches for
                     // the matched set of positions in this 'thread' (OptionStrategy.Quantity)
-                    foreach (var definitionMatch in Match(
+                    foreach (var definitionMatch in Match(options,
                         legMatches.Add(legMatch),
                         legPositions.Add(legMatch.Position),
                         positions - legMatch.Position,
