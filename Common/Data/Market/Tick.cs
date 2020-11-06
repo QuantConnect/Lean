@@ -17,6 +17,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
+using Newtonsoft.Json;
 using ProtoBuf;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -47,6 +48,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Exchange we are executing on. String short code expanded in the MarketCodes.US global dictionary
         /// </summary>
+        [ProtoMember(12)]
         public string Exchange = "";
 
         /// <summary>
@@ -57,6 +59,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// For performance parsed sale condition for the tick.
         /// </summary>
+        [JsonIgnore]
         public uint ParsedSaleCondition
         {
             get

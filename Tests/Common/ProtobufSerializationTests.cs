@@ -212,7 +212,7 @@ namespace QuantConnect.Tests.Common
                     Assert.AreEqual(time + TimeSpan.FromMilliseconds(i), result.Time);
                     Assert.AreEqual(i, result.Quantity);
                     Assert.AreEqual(MarketDataType.Tick, result.DataType);
-                    Assert.IsNull(result.Exchange);
+                    Assert.AreEqual("Pinocho", result.Exchange);
                     Assert.IsNull(result.SaleCondition);
                     Assert.AreEqual(TickType.Quote, result.TickType);
                     Assert.AreEqual(time + TimeSpan.FromMilliseconds(i), result.EndTime);
@@ -255,7 +255,7 @@ namespace QuantConnect.Tests.Common
                 Assert.AreEqual(tick.Time, result.Time);
                 Assert.AreEqual(tick.Quantity, result.Quantity);
                 Assert.AreEqual(tick.DataType, result.DataType);
-                Assert.IsNull(result.Exchange);
+                Assert.AreEqual("Pinocho", result.Exchange);
                 Assert.IsNull(result.SaleCondition);
                 Assert.AreEqual(tick.TickType, result.TickType);
                 Assert.AreEqual(tick.EndTime, result.EndTime);
