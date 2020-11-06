@@ -25,7 +25,6 @@ namespace QuantConnect.Optimizer.Launcher
 {
     /// <summary>
     /// Optimizer implementation that launches Lean as a local process
-    /// TODO: review object store location, believe it's being shared, when the algos end they all try to delete the directory
     /// </summary>
     public class ConsoleLeanOptimizer : LeanOptimizer
     {
