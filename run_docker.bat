@@ -36,7 +36,7 @@ if not "%*"=="" (
         if NOT x%%b==x call :arg_loop %%b
     )
 ) else (
-    set /p IMAGE="Enter docker IMAGE [default: %DEFAULT_IMAGE%]: "
+    set /p IMAGE="Enter docker image [default: %DEFAULT_IMAGE%]: "
     set /p CONFIG_FILE="Enter absolute path to Lean config file [default: %DEFAULT_CONFIG_FILE%]: "
     set /p DATA_DIR="Enter absolute path to Data folder [default: %DEFAULT_DATA_DIR%]: "
     set /p RESULTS_DIR="Enter absolute path to store results [default: %DEFAULT_RESULTS_DIR%]: "
