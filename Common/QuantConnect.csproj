@@ -417,6 +417,9 @@
     <Compile Include="Securities\GetMaximumOrderQuantityForDeltaBuyingPowerParameters.cs" />
     <Compile Include="Securities\Option\StrategyMatcher\ConstantOptionStrategyLegPredicateReferenceValue.cs" />
     <Compile Include="Securities\Option\StrategyMatcher\IOptionStrategyLegPredicateReferenceValue.cs" />
+    <Compile Include="Securities\Option\StrategyMatcher\OptionStrategyDefinition.cs" />
+    <Compile Include="Securities\Option\StrategyMatcher\OptionStrategyDefinitionMatch.cs" />
+    <Compile Include="Securities\Option\StrategyMatcher\OptionStrategyDefinitions.cs" />
     <Compile Include="Securities\Option\StrategyMatcher\OptionStrategyLegDefinitionMatch.cs" />
     <Compile Include="Securities\Option\StrategyMatcher\OptionStrategyLegPredicateReferenceValue.cs" />
     <Compile Include="Securities\Option\StrategyMatcher\OptionPosition.cs" />

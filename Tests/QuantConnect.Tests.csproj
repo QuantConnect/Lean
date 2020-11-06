@@ -416,6 +416,7 @@
     <Compile Include="Common\Securities\Options\StrategyMatcher\Option.cs" />
     <Compile Include="Common\Securities\Options\StrategyMatcher\OptionPositionCollectionTests.cs" />
     <Compile Include="Common\Securities\Options\StrategyMatcher\OptionPositionTests.cs" />
+    <Compile Include="Common\Securities\Options\StrategyMatcher\OptionStrategyDefinitionTests.cs" />
     <Compile Include="Common\Securities\Options\StrategyMatcher\OptionStrategyLegDefinitionMatchTests.cs" />
     <Compile Include="Common\Securities\Options\StrategyMatcher\OptionStrategyLegPredicateTests.cs" />
     <Compile Include="Common\Securities\TestDefaultMarginCallModel.cs" />
