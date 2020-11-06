@@ -142,7 +142,7 @@ fi
 
 if [ "$($SUDO docker container inspect -f '{{.State.Running}}' $CONTAINER_NAME)" == "true" ]; then
   yes_or_no "A Lean container is already running. Stop and recreate with this configuration?" &&
-    ($SUDO docker stop $CONTAINER_NAME && docker container rm $CONTAINER_NAME)
+    ($SUDO docker stop $CONTAINER_NAME))
 elif $SUDO docker ps -a | grep -q $CONTAINER_NAME; then
   yes_or_no "A Lean container is halted and will be removed. Continue?" &&
     $SUDO docker rm $CONTAINER_NAME
