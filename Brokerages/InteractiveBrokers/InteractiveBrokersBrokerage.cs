@@ -939,9 +939,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="exchange">The exchange to send the order to, defaults to "Smart" to use IB's smart routing</param>
         private void IBPlaceOrder(Order order, bool needsNewId, string exchange = null)
         {
-            // MOO/MOC require directed option orders
+            // MOO/MOC require directed option orders.
+            // We resolve non-equity markets in the `CreateContract` method.
             if (exchange == null &&
                 order.Symbol.SecurityType == SecurityType.Option &&
+                order.Symbol.Underlying.SecurityType == SecurityType.Equity &&
                 (order.Type == OrderType.MarketOnOpen || order.Type == OrderType.MarketOnClose))
             {
                 exchange = Market.CBOE.ToUpperInvariant();
