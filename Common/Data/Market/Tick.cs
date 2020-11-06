@@ -17,6 +17,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
+using Newtonsoft.Json;
 using ProtoBuf;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -30,6 +31,8 @@ namespace QuantConnect.Data.Market
     [ProtoContract(SkipConstructor = true)]
     public class Tick : BaseData
     {
+        private uint? _parsedSaleCondition;
+
         /// <summary>
         /// Type of the Tick: Trade or Quote.
         /// </summary>
@@ -51,8 +54,27 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Sale condition for the tick.
         /// </summary>
-        [ProtoMember(13)]
         public string SaleCondition = "";
+
+        /// <summary>
+        /// For performance parsed sale condition for the tick.
+        /// </summary>
+        [JsonIgnore]
+        public uint ParsedSaleCondition
+        {
+            get
+            {
+                if (!_parsedSaleCondition.HasValue)
+                {
+                    _parsedSaleCondition = uint.Parse(SaleCondition, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                }
+                return _parsedSaleCondition.Value;
+            }
+            set
+            {
+                _parsedSaleCondition = value;
+            }
+        }
 
         /// <summary>
         /// Bool whether this is a suspicious tick
