@@ -33,8 +33,10 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using QuantConnect.Indicators;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Securities;
 using QuantConnect.ToolBox.IEX.Response;
 
 namespace QuantConnect.ToolBox.IEX
@@ -47,18 +49,21 @@ namespace QuantConnect.ToolBox.IEX
     {
         private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified);
         private static readonly TimeSpan SubscribeDelay = TimeSpan.FromMilliseconds(1500);
-        private static bool invalidHistDataTypeWarningFired;
+        private static bool _invalidHistDataTypeWarningFired;
 
         private readonly IEXEventSourceCollection _clients;
         private readonly ManualResetEvent _refreshEvent = new ManualResetEvent(false);
+        private readonly ManualResetEvent _newTradeEvent = new ManualResetEvent(false);
         private readonly string _apiKey = Config.Get("iex-cloud-api-key");
+        private readonly SecurityExchangeHours _exchangeHours;
 
         private readonly ConcurrentDictionary<string, Symbol> _symbols = new ConcurrentDictionary<string, Symbol>(StringComparer.InvariantCultureIgnoreCase);
-        private readonly ConcurrentDictionary<string, long> _iexLastUpdateTime = new ConcurrentDictionary<string, long>();
         private readonly ConcurrentDictionary<string, long> _iexLastTradeTime = new ConcurrentDictionary<string, long>();
+        private readonly ConcurrentQueue<long> _tradeMillisDiffQueue = new ConcurrentQueue<long>();
 
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private int _dataPointCount;
+        private long _averageTimeDifference;
 
         private readonly IDataAggregator _aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
             Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
@@ -107,7 +112,7 @@ namespace QuantConnect.ToolBox.IEX
             }
 
             // Set the sse-clients collection
-            _clients = new IEXEventSourceCollection( ((o, args) =>
+            _clients = new IEXEventSourceCollection(((o, args) =>
             {
                 var message = args.Message.Data;
                 ProcessJsonObject(message);
@@ -136,8 +141,40 @@ namespace QuantConnect.ToolBox.IEX
                     }
                 }
 
-            }) {IsBackground = true};
+            })
+            { IsBackground = true };
             clientUpdateThread.Start();
+
+            var equity = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+
+            _exchangeHours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(equity.ID.Market, equity, equity.SecurityType);
+
+
+            // This thead is running to monitor the time difference between iex time stamp and local time
+            var timeReferenceCalculationThread = new Thread(() =>
+            {
+                // Calculate average on last 50 values
+                var window = new RollingWindow<long>(50);
+
+                while (!_cts.Token.IsCancellationRequested)
+                {
+                    _newTradeEvent.WaitOne();
+
+                    long output;
+                    while (_tradeMillisDiffQueue.TryDequeue(out output))
+                    {
+                        window.Add(output);
+                        var sum = window.Sum();
+                        _averageTimeDifference = sum / window.Count;
+                    }
+
+                    _refreshEvent.Reset();
+                }
+            })
+            { IsBackground = true };
+            timeReferenceCalculationThread.Start();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -166,46 +203,35 @@ namespace QuantConnect.ToolBox.IEX
                     var lastPrice = item.IexRealtimePrice;
                     var lastSize = item.IexRealtimeSize;
 
-                    var lastTradeMillis = item.LastTradeTime;
-                    var lastUpdateMillis = item.IexLastUpdated;
+                    // IEX-LAST-UPDATED -
+                    // Refers to the last update time of iexRealtimePrice in milliseconds since midnight Jan 1, 1970 UTC or -1 or 0.
+                    // If the value is -1 or 0, IEX has not quoted the symbol in the trading day.
+                    var lastTradeMillis = item.IexLastUpdated ?? 0;
 
-                    // There were no updates on this day yet
-                    if (!lastUpdateMillis.HasValue || lastUpdateMillis.Value == -1)
+                    if (lastTradeMillis > 0)
                     {
-                        continue;
-                    }
-
-                    var lastUpdatedDatetime = UnixEpoch.AddMilliseconds(lastUpdateMillis.Value);
-                    var lastUpdateTimeNewYork = lastUpdatedDatetime.ConvertFromUtc(TimeZones.NewYork);
-
-                    // The data stream update logic allows short-term intervals when we can receive
-                    // several identical updates per one symbol at a time when replacing event sources.
-                    // So we always check could we already get a snapshot with such a time stamp
-                    long value;
-                    if (_iexLastUpdateTime.TryGetValue(symbolString, out value))
-                    {
-                        if (value == lastUpdateMillis)
+                        // If there is a last trade time but no last price or size - this is an error
+                        if (!lastPrice.HasValue || !lastSize.HasValue || lastPrice == 0 && lastSize == 0)
                         {
-                            continue;
+                            throw new InvalidOperationException("ProcessJsonObject(): Invalid price & size.");
                         }
-                    }
 
-                    _iexLastUpdateTime[symbolString] = lastUpdateMillis.Value;
+                        // Check if there is a kvp entry for a symbol
+                        long value;
+                        var isInDictionary = _iexLastTradeTime.TryGetValue(symbolString, out value);
 
-                    // Check if there is a kvp entry for a symbol
-                    var isInDictionary = _iexLastTradeTime.TryGetValue(symbolString, out value);
-
-                    if (lastPrice.HasValue && lastSize.HasValue && lastPrice != 0 && lastSize != 0)
-                    {
-                        // We should update if :
-                        // 1) there is an entry and last trade time is different from time in dictionary OR
-                        // 2) not in dictionary - means the first trade case
+                        // We should update if:
+                        // - there exist an entry for a symbol and new trade time is different from time in dictionary
+                        // - not in dictionary, means the first trade case
                         if (isInDictionary && value != lastTradeMillis || !isInDictionary)
                         {
+                            var lastTradeDateTime = UnixEpoch.AddMilliseconds(lastTradeMillis);
+                            var lastTradeTimeNewYork = lastTradeDateTime.ConvertFromUtc(TimeZones.NewYork);
+
                             var tradeTick = new Tick()
                             {
                                 Symbol = symbol,
-                                Time = lastUpdateTimeNewYork,
+                                Time = lastTradeTimeNewYork,
                                 TickType = TickType.Trade,
                                 Value = lastPrice.Value,
                                 Quantity = lastSize.Value
@@ -213,8 +239,15 @@ namespace QuantConnect.ToolBox.IEX
 
                             _aggregator.Update(tradeTick);
 
-                            // Update with new value
                             _iexLastTradeTime[symbolString] = lastTradeMillis;
+
+                            // During exchange open hours calculate average difference between local and trade time and enqueue that value
+                            if (_exchangeHours.IsOpen(lastTradeTimeNewYork, false))
+                            {
+                                var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                                _tradeMillisDiffQueue.Enqueue(now - lastTradeMillis);
+                                _newTradeEvent.Set();
+                            }
                         }
                     }
 
@@ -232,7 +265,7 @@ namespace QuantConnect.ToolBox.IEX
                     var quoteTick = new Tick()
                     {
                         Symbol = symbol,
-                        Time = lastUpdateTimeNewYork,
+                        Time = GetIexAdjustedLocalDateTime(),
                         TickType = TickType.Quote,
                         BidSize = bidSize.Value,
                         BidPrice = bidPrice.Value,
@@ -240,13 +273,25 @@ namespace QuantConnect.ToolBox.IEX
                         AskPrice = askPrice.Value,
                     };
                     _aggregator.Update(quoteTick);
-
                 }
             }
             catch (Exception err)
             {
                 Log.Error("IEXDataQueueHandler.ProcessJsonObject(): " + err.Message);
             }
+        }
+
+        // Since we don't have a stamp for quote updates we
+        // calculate the average delay between trade tick data time stamp and local time, and
+        // assuming that delay in average is the same for quote updates -
+        // just assign the local machine time adjusted for this average
+        private DateTime GetIexAdjustedLocalDateTime()
+        {
+            var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            var adjustedNowDateTime = UnixEpoch.AddMilliseconds(now - _averageTimeDifference);
+            var result = adjustedNowDateTime.ConvertFromUtc(TimeZones.NewYork);
+
+            return result;
         }
 
         /// <summary>
@@ -349,11 +394,11 @@ namespace QuantConnect.ToolBox.IEX
             requests.DoForEach(request =>
             {
                 // IEX does return historical TradeBar - give one time warning if inconsistent data type was requested
-                if (request.DataType != typeof(TradeBar) && !invalidHistDataTypeWarningFired)
+                if (request.DataType != typeof(TradeBar) && !_invalidHistDataTypeWarningFired)
                 {
                     Log.Error($"IEXDataQueueHandler.GetHistory(): Not supported data type - {request.DataType.Name}. " +
                         "Currently available support only for historical of type - TradeBar");
-                    invalidHistDataTypeWarningFired = true;
+                    _invalidHistDataTypeWarningFired = true;
                     return;
                 }
 
