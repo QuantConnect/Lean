@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
@@ -159,25 +160,22 @@ namespace QuantConnect.Tests.Common.Scheduling
             Assert.AreEqual(11, count);
         }
 
-        [Test]
-        public void StartOfMonthWithSymbolWithOffset()
+        [TestCase(Symbols.SymbolsKey.SPY, new[] { 10, 8, 8, 10, 8, 8 })]
+        public void StartOfMonthWithSymbolWithOffset(Symbols.SymbolsKey symbolKey, int[] expectedDays)
         {
             var rules = GetDateRules();
-            var rule = rules.MonthStart(Symbols.SPY, 5);
-            var dates = rule.GetDates(new DateTime(2000, 01, 04), new DateTime(2000, 12, 31));
+            var rule = rules.MonthStart(Symbols.Lookup(symbolKey), 5);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 6, 30)).ToList();
 
-            int count = 0;
-            foreach (var date in dates)
+            // Assert we have as many dates as expected
+            Assert.AreEqual(expectedDays.Length, dates.Count);
+
+            // Verify the days match up
+            var datesAndExpectedDays = dates.Zip(expectedDays, (date, expectedDay) => new {date, expectedDay});
+            foreach (var pair in datesAndExpectedDays)
             {
-                count++;
-                Assert.AreNotEqual(DayOfWeek.Saturday, date.DayOfWeek);
-                Assert.AreNotEqual(DayOfWeek.Sunday, date.DayOfWeek);
-
-                //1st + 5 = 6th; Possible weekend means between 6th and 8th
-                Assert.IsTrue(date.Day <= 8);
-                Assert.IsTrue(date.Day >= 6);
+                Assert.AreEqual(pair.expectedDay, pair.date.Day);
             }
-            Assert.AreEqual(12, count);
         }
 
         [Test]
@@ -233,25 +231,22 @@ namespace QuantConnect.Tests.Common.Scheduling
             Assert.AreEqual(12, count);
         }
 
-        [Test]
-        public void EndOfMonthWithSymbolWithOffset()
+        [TestCase(Symbols.SymbolsKey.SPY, new[] { 24, 22, 24, 20, 23, 23 })] // This case contains two Holidays 4/21 & 5/29
+        public void EndOfMonthWithSymbolWithOffset(Symbols.SymbolsKey symbolKey, int[] expectedDays)
         {
             var rules = GetDateRules();
-            var rule = rules.MonthEnd(Symbols.SPY, 5);
-            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+            var rule = rules.MonthEnd(Symbols.Lookup(symbolKey), 5);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 6, 30)).ToList();
 
-            int count = 0;
-            foreach (var date in dates)
+            // Assert we have as many dates as expected
+            Assert.AreEqual(expectedDays.Length, dates.Count);
+
+            // Verify the days match up
+            var datesAndExpectedDays = dates.Zip(expectedDays, (date, expectedDay) => new { date, expectedDay });
+            foreach (var pair in datesAndExpectedDays)
             {
-                count++;
-                Assert.AreNotEqual(DayOfWeek.Saturday, date.DayOfWeek);
-                Assert.AreNotEqual(DayOfWeek.Sunday, date.DayOfWeek);
-
-                // 28th - 5 = 23rd; 31 - 5 = 27th; Must be between
-                Assert.IsTrue(date.Day >= 23);
-                Assert.IsTrue(date.Day <= 27);
+                Assert.AreEqual(pair.expectedDay, pair.date.Day);
             }
-            Assert.AreEqual(12, count);
         }
 
         [Test]
@@ -328,25 +323,12 @@ namespace QuantConnect.Tests.Common.Scheduling
 
         [TestCase(5)] // Monday + 5 = Saturday
         [TestCase(6)] // Monday + 6 = Sunday
-        public void StartOfWeekWithSymbolWithOffsetToWeekend(int offset)
+        public void StartOfWeekWithSymbolOffsetToNonTradableDay(int offset)
         {
             var rules = GetDateRules();
-            var rule = rules.WeekStart(Symbols.SPY, offset);
-            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 3, 31));
 
-            int count = 0;
-            foreach (var date in dates)
-            {
-                count++;
-
-                // Both test cases are non-tradable days for Spy
-                // We expect it to find another available day later in the week that is tradable,
-                // meaning Monday in this set of dates
-                // Also allow Tuesday because of some holidays where monday is not tradable.
-                Assert.IsTrue(date.DayOfWeek == DayOfWeek.Monday || date.DayOfWeek == DayOfWeek.Tuesday);
-            }
-
-            Assert.AreEqual(13, count);
+            // We expect it to throw because Spy does not trade on the weekends
+            Assert.Throws<ArgumentOutOfRangeException>(() => rules.WeekStart(Symbols.SPY, offset));
         }
 
         [Test]
@@ -422,24 +404,12 @@ namespace QuantConnect.Tests.Common.Scheduling
 
         [TestCase(5)] // Friday - 5 = Sunday
         [TestCase(6)] // Friday - 6 = Saturday
-        public void EndOfWeekWithSymbolWithOffsetToWeekend(int offset)
+        public void EndOfWeekWithSymbolOffsetToNonTradableDay(int offset)
         {
             var rules = GetDateRules();
-            var rule = rules.WeekEnd(Symbols.SPY, offset);
-            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 3, 31));
 
-            int count = 0;
-            foreach (var date in dates)
-            {
-                count++;
-
-                // Both test cases are non-tradable days for Spy
-                // We expect it to find a previous day in the week that is tradable, meaning
-                // Friday in this set of dates
-                Assert.IsTrue(date.DayOfWeek == DayOfWeek.Friday);
-            }
-
-            Assert.AreEqual(13, count);
+            // We expect it to throw because Spy does not trade on the weekends
+            Assert.Throws<ArgumentOutOfRangeException>(() => rules.WeekEnd(Symbols.SPY, offset));
         }
 
         [Test]
