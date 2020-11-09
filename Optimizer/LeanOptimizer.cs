@@ -135,7 +135,7 @@ namespace QuantConnect.Optimizer
                 Strategy.PushNewResults(OptimizationResult.Initial);
 
                 // if after we started there are no running parameter sets means we have failed to start
-                if (!RunningParameterSetForBacktest.Any())
+                if (RunningParameterSetForBacktest.Count == 0)
                 {
                     throw new Exception($"LeanOptimizer.Start({GetLogDetails()}): failed to start");
                 }
@@ -143,7 +143,7 @@ namespace QuantConnect.Optimizer
             }
 
             SetOptimizationStatus(OptimizationStatus.Running);
-            ProcessUpdate(forceSend:true);
+            ProcessUpdate(forceSend: true);
         }
 
         /// <summary>
@@ -189,54 +189,55 @@ namespace QuantConnect.Optimizer
         /// <param name="backtestId">The associated backtest id</param>
         protected virtual void NewResult(string jsonBacktestResult, string backtestId)
         {
-            ParameterSet parameterSet;
-            bool finished;
-
-            // we take a lock so that there is no race condition with launching Lean adding the new backtest id and receiving the backtest result for that id
-            // before it's even in the collection 'ParameterSetForBacktest'
             lock (RunningParameterSetForBacktest)
             {
+                ParameterSet parameterSet;
+
+                // we take a lock so that there is no race condition with launching Lean adding the new backtest id and receiving the backtest result for that id
+                // before it's even in the collection 'ParameterSetForBacktest'
+
                 if (!RunningParameterSetForBacktest.TryRemove(backtestId, out parameterSet))
                 {
                     Interlocked.Increment(ref _failedBacktest);
-                    Log.Error($"LeanOptimizer.NewResult({GetLogDetails()}): Optimization compute job with id '{backtestId}' was not found");
+                    Log.Error(
+                        $"LeanOptimizer.NewResult({GetLogDetails()}): Optimization compute job with id '{backtestId}' was not found");
                     return;
                 }
-                // check if we've run out of backtests
-                finished = !RunningParameterSetForBacktest.Any();
-            }
 
-            // we got a new result if there are any pending parameterSet to run we can now trigger 1
-            // we do this before 'Strategy.PushNewResults' so FIFO is respected
-            if (PendingParameterSet.Count > 0)
-            {
-                ParameterSet pendingParameterSet;
-                PendingParameterSet.TryDequeue(out pendingParameterSet);
-                LaunchLeanForParameterSet(pendingParameterSet);
-            }
+                // we got a new result if there are any pending parameterSet to run we can now trigger 1
+                // we do this before 'Strategy.PushNewResults' so FIFO is respected
+                if (PendingParameterSet.Count > 0)
+                {
+                    ParameterSet pendingParameterSet;
+                    PendingParameterSet.TryDequeue(out pendingParameterSet);
+                    LaunchLeanForParameterSet(pendingParameterSet);
+                }
 
-            var result = new OptimizationResult(null, parameterSet, backtestId);
-            if (string.IsNullOrEmpty(jsonBacktestResult))
-            {
-                Interlocked.Increment(ref _failedBacktest);
-                Log.Error($"LeanOptimizer.NewResult({GetLogDetails()}): Got null/empty backtest result for backtest id '{backtestId}'");
-            }
-            else
-            {
-                Interlocked.Increment(ref _completedBacktest);
-                result = new OptimizationResult(jsonBacktestResult, parameterSet, backtestId);
-            }
-            // always notify the strategy
-            Strategy.PushNewResults(result);
+                var result = new OptimizationResult(null, parameterSet, backtestId);
+                if (string.IsNullOrEmpty(jsonBacktestResult))
+                {
+                    Interlocked.Increment(ref _failedBacktest);
+                    Log.Error(
+                        $"LeanOptimizer.NewResult({GetLogDetails()}): Got null/empty backtest result for backtest id '{backtestId}'");
+                }
+                else
+                {
+                    Interlocked.Increment(ref _completedBacktest);
+                    result = new OptimizationResult(jsonBacktestResult, parameterSet, backtestId);
+                }
 
-            // strategy could of added more
-            if (finished && !RunningParameterSetForBacktest.Any())
-            {
-                TriggerOnEndEvent();
-            }
-            else
-            {
-                ProcessUpdate();
+                // always notify the strategy
+                Strategy.PushNewResults(result);
+
+                // strategy could of added more
+                if (RunningParameterSetForBacktest.Count == 0)
+                {
+                    TriggerOnEndEvent();
+                }
+                else
+                {
+                    ProcessUpdate();
+                }
             }
         }
 
