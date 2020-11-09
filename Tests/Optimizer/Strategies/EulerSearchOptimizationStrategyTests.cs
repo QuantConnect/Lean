@@ -73,6 +73,19 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 Assert.AreEqual(Math.Ceiling(Math.Log((double)(param.Step / param.MinStep), _defaultSegmentAmount)), depth);
             }
 
+            [Test]
+            public void ThrowIfNoSettingsPassed()
+            {
+                Assert.Throws<ArgumentNullException>(() =>
+                {
+                    _strategy.Initialize(
+                        new Target("Profit", new Maximization(), null),
+                        new List<Constraint>(),
+                        new HashSet<OptimizationParameter> { new OptimizationStepParameter("ema-fast", 10, 100, 10, 0.1m) },
+                        null);
+                });
+            }
+
             [TestCase(5)]
             [TestCase(10)]
             public void Reduce(int amountOfSegments)

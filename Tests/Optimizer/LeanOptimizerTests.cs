@@ -24,25 +24,31 @@ using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Optimizer.Strategies;
 
 namespace QuantConnect.Tests.Optimizer
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Children)]
     public class LeanOptimizerTests
     {
-        [Test]
-        public void MaximizeNoTarget()
+        [TestCase("QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy")]
+        [TestCase("QuantConnect.Optimizer.Strategies.EulerSearchOptimizationStrategy")]
+        public void MaximizeNoTarget(string strategyName)
         {
             var resetEvent = new ManualResetEvent(false);
             var packet = new OptimizationNodePacket
             {
-                Criterion = new Target("Profit", new Maximization(), null),
+                OptimizationStrategy = strategyName,
+                Criterion = new Target("Profit",
+                    new Maximization(),
+                    null),
                 OptimizationParameters = new HashSet<OptimizationParameter>
                 {
                     new OptimizationStepParameter("ema-slow", 1, 10, 1),
                     new OptimizationStepParameter("ema-fast", 10, 100, 3)
                 },
-                MaximumConcurrentBacktests = 20
+                MaximumConcurrentBacktests = 20,
+                OptimizationStrategySettings = new OptimizationStrategySettings { DefaultSegmentAmount = 10 }
             };
             var optimizer = new FakeLeanOptimizer(packet);
 
@@ -66,19 +72,22 @@ namespace QuantConnect.Tests.Optimizer
             Assert.AreEqual(100, result.ParameterSet.Value["ema-fast"].ToDecimal());
         }
 
-        [Test]
-        public void MinimizeWithTarget()
+        [TestCase("QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy")]
+        [TestCase("QuantConnect.Optimizer.Strategies.EulerSearchOptimizationStrategy")]
+        public void MinimizeWithTarget(string strategyName)
         {
             var resetEvent = new ManualResetEvent(false);
             var packet = new OptimizationNodePacket
             {
+                OptimizationStrategy = strategyName,
                 Criterion = new Target("Profit", new Minimization(), 20),
                 OptimizationParameters = new HashSet<OptimizationParameter>
                 {
                     new OptimizationStepParameter("ema-slow", 1, 10, 1),
                     new OptimizationStepParameter("ema-fast", 10, 100, 3)
                 },
-                MaximumConcurrentBacktests = 20
+                MaximumConcurrentBacktests = 20,
+                OptimizationStrategySettings = new OptimizationStrategySettings { DefaultSegmentAmount = 10 }
             };
             var optimizer = new FakeLeanOptimizer(packet);
 
@@ -100,7 +109,7 @@ namespace QuantConnect.Tests.Optimizer
         }
 
         [Test]
-        public void MaximizeWithConstraints()
+        public void MaximizeGridWithConstraints()
         {
             var resetEvent = new ManualResetEvent(false);
             var packet = new OptimizationNodePacket
@@ -116,6 +125,49 @@ namespace QuantConnect.Tests.Optimizer
                     new Constraint("Drawdown", ComparisonOperatorTypes.LessOrEqual, 0.15m)
                 },
                 MaximumConcurrentBacktests = 20
+            };
+            var optimizer = new FakeLeanOptimizer(packet);
+
+            OptimizationResult result = null;
+            optimizer.Ended += (s, solution) =>
+            {
+                result = solution;
+                optimizer.DisposeSafely();
+                resetEvent.Set();
+            };
+
+            optimizer.Start();
+
+            resetEvent.WaitOne();
+            Assert.NotNull(result);
+            Assert.AreEqual(
+                15,
+                JsonConvert.DeserializeObject<BacktestResult>(result.JsonBacktestResult).Statistics.Profit);
+            Assert.AreEqual(
+                0.15m,
+                JsonConvert.DeserializeObject<BacktestResult>(result.JsonBacktestResult).Statistics.Drawdown);
+
+        }
+
+        [Test]
+        public void MaximizeEulerWithConstraints()
+        {
+            var resetEvent = new ManualResetEvent(false);
+            var packet = new OptimizationNodePacket
+            {
+                OptimizationStrategy = "QuantConnect.Optimizer.Strategies.EulerSearchOptimizationStrategy",
+                Criterion = new Target("Profit", new Maximization(), null),
+                OptimizationParameters = new HashSet<OptimizationParameter>
+                {
+                    new OptimizationArrayParameter("ema-slow", new []{"1", "2", "3", "4", "10"}),
+                    new OptimizationStepParameter("ema-fast", 10, 100, 10m, 0.1m)
+                },
+                Constraints = new List<Constraint>
+                {
+                    new Constraint("Drawdown", ComparisonOperatorTypes.LessOrEqual, 0.15m)
+                },
+                MaximumConcurrentBacktests = 20,
+                OptimizationStrategySettings = new OptimizationStrategySettings { DefaultSegmentAmount = 10 }
             };
             var optimizer = new FakeLeanOptimizer(packet);
 

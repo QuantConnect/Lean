@@ -33,6 +33,11 @@ namespace QuantConnect.Optimizer.Strategies
 
         public override void Initialize(Target target, IReadOnlyList<Constraint> constraints, HashSet<OptimizationParameter> parameters, OptimizationStrategySettings settings)
         {
+            if (settings == null)
+            {
+                throw new ArgumentNullException(
+                    "EulerSearchOptimizationStrategy.Initialize: Optimizations Strategy settings are required for this strategy");
+            }
             _segmentsAmount = settings.DefaultSegmentAmount;
             base.Initialize(target, constraints, parameters, settings);
         }
