@@ -161,6 +161,8 @@ namespace QuantConnect.Tests.Common.Scheduling
         }
 
         [TestCase(Symbols.SymbolsKey.SPY, new[] { 10, 8, 8, 10, 8, 8 })]
+        [TestCase(Symbols.SymbolsKey.BTCUSD, new[] { 6, 6, 6, 6, 6, 6 })]
+        [TestCase(Symbols.SymbolsKey.EURUSD, new[] { 7, 7, 7, 7, 7, 7 })]
         public void StartOfMonthWithSymbolWithOffset(Symbols.SymbolsKey symbolKey, int[] expectedDays)
         {
             var rules = GetDateRules();
@@ -232,6 +234,8 @@ namespace QuantConnect.Tests.Common.Scheduling
         }
 
         [TestCase(Symbols.SymbolsKey.SPY, new[] { 24, 22, 24, 20, 23, 23 })] // This case contains two Holidays 4/21 & 5/29
+        [TestCase(Symbols.SymbolsKey.BTCUSD, new[] { 26, 24, 26, 25, 26, 25 })]
+        [TestCase(Symbols.SymbolsKey.EURUSD, new[] { 25, 23, 26, 24, 25, 25 })]
         public void EndOfMonthWithSymbolWithOffset(Symbols.SymbolsKey symbolKey, int[] expectedDays)
         {
             var rules = GetDateRules();
@@ -449,6 +453,8 @@ namespace QuantConnect.Tests.Common.Scheduling
         {
             var timeKeeper = new TimeKeeper(DateTime.Today, new List<DateTimeZone>());
             var manager = new SecurityManager(timeKeeper);
+
+            // Add SPY for Equity testing
             var securityExchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
             manager.Add(
@@ -463,6 +469,39 @@ namespace QuantConnect.Tests.Common.Scheduling
                     new SecurityCache()
                 )
             );
+
+            // Add BTC for Crypto testing
+            securityExchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Bitfinex, Symbols.BTCUSD, SecurityType.Crypto);
+            config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCUSD, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
+            manager.Add(
+                Symbols.BTCUSD,
+                new Security(
+                    securityExchangeHours,
+                    config,
+                    new Cash(Currencies.USD, 0, 1m),
+                    SymbolProperties.GetDefault(Currencies.USD),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
+                )
+            );
+
+            // Add EURUSD for Forex testing
+            securityExchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.FXCM, Symbols.EURUSD, SecurityType.Forex);
+            config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURUSD, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
+            manager.Add(
+                Symbols.EURUSD,
+                new Security(
+                    securityExchangeHours,
+                    config,
+                    new Cash(Currencies.USD, 0, 1m),
+                    SymbolProperties.GetDefault(Currencies.USD),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
+                )
+            );
+
             var rules = new DateRules(manager, TimeZones.NewYork);
             return rules;
         }
