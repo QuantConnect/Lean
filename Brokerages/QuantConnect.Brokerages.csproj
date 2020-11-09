@@ -350,6 +350,7 @@
     <Compile Include="Bitfinex\BitfinexBrokerageFactory.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerage.Utility.cs" />
     <Compile Include="Bitfinex\BitfinexSubscriptionManager.cs" />
+    <Compile Include="Bitfinex\BitfinexWebSocketChannels.cs" />
     <Compile Include="Bitfinex\BitfinexWebSocketWrapper.cs" />
     <Compile Include="Bitfinex\BitfinexSymbolMapper.cs" />
     <Compile Include="Bitfinex\Messages\Messages.cs" />
