@@ -105,7 +105,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         protected static HashSet<OptimizationParameter> OptimizationMixedParameters = new HashSet<OptimizationParameter>
         {
             new OptimizationArrayParameter("ema-slow", new[]{"1", "2", "3", "4", "5"}),
-            new OptimizationStepParameter("ema-fast", 3, 6, 2,0.1m)
+            new OptimizationStepParameter("ema-fast", 3, 6.75m, 2,0.1m)
         };
 
         public virtual void StepInsideNoTargetNoConstraints(Extremum extremum, HashSet<OptimizationParameter> optimizationParameters, ParameterSet solution)

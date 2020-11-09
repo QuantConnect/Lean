@@ -78,12 +78,13 @@ namespace QuantConnect.Optimizer.Strategies
                         var optimizationStepParameter = optimizationParameter as OptimizationStepParameter;
                         if (optimizationStepParameter != null && optimizationStepParameter.Step > optimizationStepParameter.MinStep)
                         {
-                            var newStep = optimizationStepParameter.Step.Value / _segmentsAmount;
+                            var newStep = Math.Max(optimizationStepParameter.MinStep.Value, optimizationStepParameter.Step.Value / _segmentsAmount);
+                            var fractal = newStep * ((decimal)_segmentsAmount/ 2);
                             var parameter = parameterSet.Value.First(s => s.Key == optimizationParameter.Name);
                             boundaries.Add(new OptimizationStepParameter(
                                 optimizationParameter.Name,
-                                Math.Max(optimizationStepParameter.MinValue, parameter.Value.ToDecimal() - newStep),
-                                Math.Min(optimizationStepParameter.MaxValue, parameter.Value.ToDecimal() + newStep),
+                                Math.Max(optimizationStepParameter.MinValue, parameter.Value.ToDecimal() - fractal),
+                                Math.Min(optimizationStepParameter.MaxValue, parameter.Value.ToDecimal() + fractal),
                                 newStep,
                                 optimizationStepParameter.MinStep.Value));
                         }
@@ -99,9 +100,6 @@ namespace QuantConnect.Optimizer.Strategies
                 {
                     return;
                 }
-
-                //SendMessage on new grid?
-                Log.Trace($"EulerSearch");
 
                 foreach (var parameterSet in Step(result.ParameterSet, OptimizationParameters))
                 {
