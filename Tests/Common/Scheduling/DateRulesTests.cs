@@ -270,19 +270,24 @@ namespace QuantConnect.Tests.Common.Scheduling
             Assert.AreEqual(52, count);
         }
 
-        [Test]
-        public void StartOfWeekNoSymbolWithOffset()
+        [TestCase(0, DayOfWeek.Monday)]
+        [TestCase(1, DayOfWeek.Tuesday)]
+        [TestCase (2, DayOfWeek.Wednesday)]
+        [TestCase(3, DayOfWeek.Thursday)]
+        [TestCase(4, DayOfWeek.Friday)]
+        [TestCase(5, DayOfWeek.Saturday)]
+        [TestCase(6, DayOfWeek.Sunday)]
+        public void StartOfWeekNoSymbolWithOffset(int offset, DayOfWeek expectedDayOfWeek)
         {
             var rules = GetDateRules();
-            var rule = rules.WeekStart(2);
+            var rule = rules.WeekStart(offset);
             var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
 
             int count = 0;
             foreach (var date in dates)
             {
                 count++;
-                // Monday offset by 2 days, so Wednesday
-                Assert.AreEqual(DayOfWeek.Wednesday, date.DayOfWeek);
+                Assert.AreEqual(expectedDayOfWeek, date.DayOfWeek);
             }
 
             Assert.AreEqual(52, count);
@@ -317,8 +322,8 @@ namespace QuantConnect.Tests.Common.Scheduling
             foreach (var date in dates)
             {
                 count++;
-                // Offset monday by two days so Wednesday
-                Assert.IsTrue(date.DayOfWeek == DayOfWeek.Wednesday);
+                // Monday + 2 = Wednesday; Include Thursday for 1/17 Holiday
+                Assert.IsTrue(date.DayOfWeek == DayOfWeek.Wednesday || date.DayOfWeek == DayOfWeek.Thursday);
                 Console.WriteLine(date + " " + date.DayOfWeek);
             }
 
@@ -352,19 +357,24 @@ namespace QuantConnect.Tests.Common.Scheduling
             Assert.AreEqual(52, count);
         }
 
-        [Test]
-        public void EndOfWeekNoSymbolWithOffset()
+        [TestCase(0, DayOfWeek.Friday)]
+        [TestCase(1, DayOfWeek.Thursday)]
+        [TestCase(2, DayOfWeek.Wednesday)]
+        [TestCase(3, DayOfWeek.Tuesday)]
+        [TestCase(4, DayOfWeek.Monday)]
+        [TestCase(5, DayOfWeek.Sunday)]
+        [TestCase(6, DayOfWeek.Saturday)]
+        public void EndOfWeekNoSymbolWithOffset(int offset, DayOfWeek expectedDayOfWeek)
         {
             var rules = GetDateRules();
-            var rule = rules.WeekEnd(4);
+            var rule = rules.WeekEnd(offset);
             var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
 
             int count = 0;
             foreach (var date in dates)
             {
                 count++;
-                // Friday - 4 = Monday
-                Assert.AreEqual(DayOfWeek.Monday, date.DayOfWeek);
+                Assert.AreEqual(expectedDayOfWeek, date.DayOfWeek);
             }
 
             Assert.AreEqual(52, count);
@@ -399,8 +409,8 @@ namespace QuantConnect.Tests.Common.Scheduling
             {
                 count++;
 
-                // Friday - 2 = Wednesday
-                Assert.IsTrue(date.DayOfWeek == DayOfWeek.Wednesday);
+                // Friday - 2 = Wednesday; Also include Tuesday for holiday on 4/21
+                Assert.IsTrue(date.DayOfWeek == DayOfWeek.Wednesday || date.DayOfWeek == DayOfWeek.Tuesday);
             }
 
             Assert.AreEqual(52, count);

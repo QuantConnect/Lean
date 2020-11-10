@@ -144,7 +144,7 @@ namespace QuantConnect.Scheduling
             // Check that our offset is allowed
             if (daysOffset < 0 || 30 < daysOffset)
             {
-                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.MonthStart() : Offset must be between 0 and 30");
+                throw new ArgumentOutOfRangeException(nameof(daysOffset), "DateRules.MonthStart() : Offset must be between 0 and 30");
             }
 
             // Create the new DateRule and return it
@@ -172,7 +172,7 @@ namespace QuantConnect.Scheduling
             // Check that our offset is allowed
             if (daysOffset < 0 || 30 < daysOffset)
             {
-                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.MonthEnd() : Offset must be between 0 and 30");
+                throw new ArgumentOutOfRangeException(nameof(daysOffset), "DateRules.MonthEnd() : Offset must be between 0 and 30");
             }
 
             // Create the new DateRule and return it
@@ -189,13 +189,10 @@ namespace QuantConnect.Scheduling
             // Check that our offset is allowed
             if (daysOffset < 0 || 6 < daysOffset)
             {
-                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.WeekStart() : Offset must be between 0 and 6");
+                throw new ArgumentOutOfRangeException(nameof(daysOffset), "DateRules.WeekStart() : Offset must be between 0 and 6");
             }
 
-            // Determine our day with Monday being our default
-            var scheduledDayOfWeek = daysOffset == 6 ? DayOfWeek.Sunday : DayOfWeek.Monday + daysOffset;
-
-            return new FuncDateRule(GetName(null, "WeekStart", daysOffset), (start, end) => WeekIterator(null, start, end, scheduledDayOfWeek, true));
+            return new FuncDateRule(GetName(null, "WeekStart", daysOffset), (start, end) => WeekIterator(null, start, end, daysOffset, true));
         }
 
         /// <summary>
@@ -210,21 +207,19 @@ namespace QuantConnect.Scheduling
         public IDateRule WeekStart(Symbol symbol, int daysOffset = 0)
         {
             var security = GetSecurity(symbol);
-            var tradableDays = security.Exchange.Hours.MarketHours.Values
+            var tradingDays = security.Exchange.Hours.MarketHours.Values
                 .Where(x => x.IsClosedAllDay == false).OrderBy(x => x.DayOfWeek).ToList();
 
-            // We can't offset further than there are trading days in a week
-            if (daysOffset > tradableDays.Count - 1)
+            // Limit offsets to securities weekly schedule
+            if (daysOffset > tradingDays.Count - 1)
             {
                 throw new ArgumentOutOfRangeException(nameof(daysOffset),
-                    $"DateRules.WeekStart() : {tradableDays.First().DayOfWeek}+{daysOffset} is out of range for {security.Symbol}'s schedule," +
-                    $" please use an offset between 0 - {tradableDays.Count - 1}; Schedule : {string.Join(", ", tradableDays.Select(x => x.DayOfWeek))}");
+                    $"DateRules.WeekStart() : {tradingDays.First().DayOfWeek}+{daysOffset} is out of range for {security.Symbol}'s schedule," +
+                    $" please use an offset between 0 - {tradingDays.Count - 1}; Schedule : {string.Join(", ", tradingDays.Select(x => x.DayOfWeek))}");
             }
 
-            var scheduledDayOfWeek = tradableDays[daysOffset].DayOfWeek;
-
             // Create the new DateRule and return it
-            return new FuncDateRule(GetName(symbol, "WeekStart", daysOffset), (start, end) => WeekIterator(security, start, end, scheduledDayOfWeek, true));
+            return new FuncDateRule(GetName(symbol, "WeekStart", daysOffset), (start, end) => WeekIterator(security, start, end, daysOffset, true));
         }
 
         /// <summary>
@@ -237,13 +232,10 @@ namespace QuantConnect.Scheduling
             // Check that our offset is allowed
             if (daysOffset < 0 || 6 < daysOffset)
             {
-                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.WeekStart() : Offset must be between 0 and 6");
+                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.WeekEnd() : Offset must be between 0 and 6");
             }
 
-            // Determine our day with Friday being our default
-            var scheduledDayOfWeek = daysOffset == 6 ? DayOfWeek.Saturday : DayOfWeek.Friday - daysOffset;
-
-            return new FuncDateRule(GetName(null, "WeekEnd", -daysOffset), (start, end) => WeekIterator(null, start, end, scheduledDayOfWeek, true));
+            return new FuncDateRule(GetName(null, "WeekEnd", -daysOffset), (start, end) => WeekIterator(null, start, end, daysOffset, false));
         }
 
         /// <summary>
@@ -256,21 +248,19 @@ namespace QuantConnect.Scheduling
         public IDateRule WeekEnd(Symbol symbol, int daysOffset = 0)
         {
             var security = GetSecurity(symbol);
-            var tradableDays = security.Exchange.Hours.MarketHours.Values
+            var tradingDays = security.Exchange.Hours.MarketHours.Values
                 .Where(x => x.IsClosedAllDay == false).OrderBy(x => x.DayOfWeek).ToList();
 
-            // We can't offset further than there are trading days in a week
-            if (daysOffset > tradableDays.Count - 1)
+            // Limit offsets to securities weekly schedule
+            if (daysOffset > tradingDays.Count - 1)
             {
                 throw new ArgumentOutOfRangeException(nameof(daysOffset),
-                    $"DateRules.WeekEnd() : {tradableDays.Last().DayOfWeek}-{daysOffset} is out of range for {security.Symbol}'s schedule," +
-                    $" please use an offset between 0 - {tradableDays.Count - 1}; Schedule : {string.Join(", ", tradableDays.Select(x => x.DayOfWeek))}");
+                    $"DateRules.WeekEnd() : {tradingDays.Last().DayOfWeek}-{daysOffset} is out of range for {security.Symbol}'s schedule," +
+                    $" please use an offset between 0 - {tradingDays.Count - 1}; Schedule : {string.Join(", ", tradingDays.Select(x => x.DayOfWeek))}");
             }
 
-            var scheduledDayOfWeek = tradableDays[(tradableDays.Count - 1) - daysOffset].DayOfWeek;
-
             // Create the new DateRule and return it
-            return new FuncDateRule(GetName(symbol, "WeekEnd", -daysOffset), (start, end) => WeekIterator(security, start, end, scheduledDayOfWeek, false));
+            return new FuncDateRule(GetName(symbol, "WeekEnd", -daysOffset), (start, end) => WeekIterator(security, start, end, daysOffset, false));
         }
 
         /// <summary>
@@ -310,25 +300,59 @@ namespace QuantConnect.Scheduling
             return name;
         }
 
+
         /// <summary>
         /// Get the closest trading day to a given DateTime for a given <see cref="SecurityExchangeHours"/>.
         /// </summary>
         /// <param name="securityExchangeHours"><see cref="SecurityExchangeHours"/> object with schedule for this Security</param>
-        /// <param name="day">The day to base our search from</param>
+        /// <param name="baseDay">The day to base our search from</param>
+        /// <param name="offset">Amount to offset the schedule by tradable days</param>
         /// <param name="searchForward">Search into the future for the closest day if true; into the past if false</param>
+        /// <param name="boundary">The boundary DateTime on the resulting day</param>
         /// <returns></returns>
-        private static DateTime GetClosestTradingDay(SecurityExchangeHours securityExchangeHours, DateTime day, bool searchForward)
+        private static DateTime GetScheduledDay(SecurityExchangeHours securityExchangeHours, DateTime baseDay, int offset, bool searchForward, DateTime? boundary = null)
         {
-            // If the day given is tradable just return the day
-            if (securityExchangeHours.IsDateOpen(day))
+            // By default the scheduled date is the given day
+            var scheduledDate = baseDay;
+
+            // If its not open on this day find the next trading day by searching in the given direction
+            if (!securityExchangeHours.IsDateOpen(scheduledDate))
             {
-                return day;
+                scheduledDate = searchForward
+                    ? securityExchangeHours.GetNextTradingDay(scheduledDate)
+                    : securityExchangeHours.GetPreviousTradingDay(scheduledDate);
             }
 
-            // Otherwise return the next trading day by searching in the correct direction
-            return searchForward
-                ? securityExchangeHours.GetNextTradingDay(day)
-                : securityExchangeHours.GetPreviousTradingDay(day);
+            // Offset the scheduled day accordingly
+            for (var i = 0; i < offset; i++)
+            {
+                scheduledDate = searchForward
+                    ? securityExchangeHours.GetNextTradingDay(scheduledDate)
+                    : securityExchangeHours.GetPreviousTradingDay(scheduledDate);
+            }
+
+            // If there is a boundary ensure we enforce it
+            if (boundary.HasValue)
+            {
+                if (searchForward)
+                {
+                    // If the resulting date is after this boundary we revert to the last tradable day before boundary
+                    if (scheduledDate > boundary)
+                    {
+                        scheduledDate = GetScheduledDay(securityExchangeHours, (DateTime)boundary, 0, false);
+                    }
+                }
+                else
+                {
+                    // If the resulting date is before this boundary we revert to the first tradable day after boundary
+                    if (scheduledDate < boundary)
+                    {
+                        scheduledDate = GetScheduledDay(securityExchangeHours, (DateTime)boundary, 0, true);
+                    }
+                }
+            }
+
+            return scheduledDate;
         }
 
         private static IEnumerable<DateTime> MonthIterator(Security security, DateTime start, DateTime end, int offset, bool searchForward)
@@ -336,77 +360,68 @@ namespace QuantConnect.Scheduling
             // Get our schedule for this security's exchange
             var securitySchedule = security == null ? SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork) : security.Exchange.Hours;
 
-            // variables for monthly date calculations
-            DateTime scheduledDateOfMonth = start;
-            var calculateDayOfMonth = true;
-
             foreach (var date in Time.EachDay(start, end))
             {
                 var daysInMonth = DateTime.DaysInMonth(date.Year, date.Month);
+                DateTime baseDate;
+                DateTime boundaryDate;
 
-                // Once a month we must calculate the scheduled day for this monthly date rule
-                if (calculateDayOfMonth)
+                // Determine our base date and boundary for schedule
+                if (searchForward)
                 {
-                    // Default schedule search forward is the 1st, search backward is the last day of month
-                    scheduledDateOfMonth = searchForward 
-                        ? new DateTime(date.Year, date.Month, 1) 
-                        : new DateTime(date.Year, date.Month, daysInMonth);
-
-                    // Verify our default day is tradable; we expect the offset to be off of a tradable day
-                    scheduledDateOfMonth = GetClosestTradingDay(securitySchedule, scheduledDateOfMonth, searchForward);
-
-                    // Offset the scheduled day accordingly
-                    for (int i = 0; i < offset; i++)
-                    {
-                        scheduledDateOfMonth = searchForward
-                            ? securitySchedule.GetNextTradingDay(scheduledDateOfMonth)
-                            : securitySchedule.GetPreviousTradingDay(scheduledDateOfMonth);
-                    }
-
-                    // Enforce edges of month after offset
-                    // If the resulting date is before this month we revert to the first tradable day of the month
-                    if (scheduledDateOfMonth.Month < date.Month)
-                    {
-                        scheduledDateOfMonth = GetClosestTradingDay(securitySchedule, new DateTime(date.Year, date.Month, 1), true);
-                    }
-
-                    // If the resulting date is after this month we revert to the last tradable day of the month
-                    if (scheduledDateOfMonth.Month > date.Month)
-                    {
-                        scheduledDateOfMonth = GetClosestTradingDay(securitySchedule, new DateTime(date.Year, date.Month, daysInMonth), false);
-                    }
-
-                    calculateDayOfMonth = false;
+                    // Search forward baseDate is the 1st with boundary at end of month
+                    baseDate = new DateTime(date.Year, date.Month, 1);
+                    boundaryDate = new DateTime(date.Year, date.Month, daysInMonth);
+                }
+                else
+                {
+                    // Search backward baseDate is the last day of month with boundary on first
+                    baseDate = new DateTime(date.Year, date.Month, daysInMonth);
+                    boundaryDate = new DateTime(date.Year, date.Month, 1);
                 }
 
-                // On the day we expect to trigger the event return our closest trading day
-                if (date == scheduledDateOfMonth)
+                // On the day we determined fetch the appropriate day for the schedule
+                if (date == baseDate)
                 {
-                    yield return GetClosestTradingDay(securitySchedule, date, searchForward);
-                }
-
-                // On the last day of each month reset this flag so we can calculate the new
-                // scheduled day for the next month.
-                if (date.Day == daysInMonth)
-                {
-                    calculateDayOfMonth = true;
+                    // Get our scheduled day
+                    yield return GetScheduledDay(securitySchedule, baseDate, offset, searchForward, boundaryDate);
                 }
             }
         }
 
-        private static IEnumerable<DateTime> WeekIterator(Security security, DateTime start, DateTime end, DayOfWeek scheduledDayOfWeek, bool searchForward)
+        private static IEnumerable<DateTime> WeekIterator(Security security, DateTime start, DateTime end, int offset, bool searchForward)
         {
             // Get our schedule for this security's exchange
             var securitySchedule = security == null ? SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork) : security.Exchange.Hours;
 
-            // For every date between start and end on our scheduled day of the week
-            foreach (var date in Time.EachDay(start, end).Where(x => x.DayOfWeek == scheduledDayOfWeek))
+            // Determine the weekly base day and boundary to schedule off of
+            DayOfWeek weeklyBaseDay;
+            DayOfWeek weeklyBoundaryDay;
+            if (security == null)
             {
-                // On the day we expect to trigger the event return our closest trading day
-                if (date.DayOfWeek == scheduledDayOfWeek)
-                {
-                    yield return GetClosestTradingDay(securitySchedule, date, searchForward);
-                }
+                // Defaults for no security
+                // Search forward Monday is default, with boundary being the following Sunday
+                // Search backward Friday is default, with boundary being the previous Saturday
+                weeklyBaseDay = searchForward ? DayOfWeek.Monday : DayOfWeek.Friday;
+                weeklyBoundaryDay = searchForward ? DayOfWeek.Saturday + 1 : DayOfWeek.Sunday - 1;
+            }
+            else
+            {
+                // Fetch the securities schedule 
+                var weeklySchedule = securitySchedule.MarketHours.Values
+                    .Where(x => x.IsClosedAllDay == false).OrderBy(x => x.DayOfWeek).ToList();
+
+                // Determine our weekly base day and boundary for this security
+                weeklyBaseDay = searchForward ? weeklySchedule.First().DayOfWeek : weeklySchedule.Last().DayOfWeek;
+                weeklyBoundaryDay = searchForward ? weeklySchedule.Last().DayOfWeek : weeklySchedule.First().DayOfWeek;
+            }
+
+            // For every date between start and end on our weekly base day
+            foreach (var date in Time.EachDay(start, end).Where(x => x.DayOfWeek == weeklyBaseDay))
+            {
+                // Determine the scheduled day for this weekly date rule
+                var boundary = date.AddDays(weeklyBoundaryDay - weeklyBaseDay);
+                yield return GetScheduledDay(securitySchedule, date, offset, searchForward, boundary);
             }
         }
     }
