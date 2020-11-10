@@ -295,9 +295,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             foreach (var item in GetSortedReferenceDateIntervals(previous, fillForwardResolution, _dataResolution))
             {
                 // add interval in utc to avoid daylight savings from swallowing it, see GH 3707
-                var potentialUtc = _offsetProvider.ConvertToUtc(item.ReferenceDateTime) + item.Interval;
+                //var potentialUtc = _offsetProvider.ConvertToUtc(item.ReferenceDateTime) + item.Interval;
+                var potentialUtc = _offsetProvider.ConvertToUtc(item.ReferenceDateTime);
                 var potentialInTimeZone = _offsetProvider.ConvertFromUtc(potentialUtc);
-                var potentialBarEndTime = RoundDown(potentialInTimeZone, item.Interval);
+                //var potentialBarEndTime = RoundDown(potentialInTimeZone, item.Interval);
+                var potentialBarEndTime = RoundDown(potentialInTimeZone, item.Interval) + item.Interval;
                 // apply the same timezone to next and potential bars because incoming next.EndTime can swallow one hour
                 var nextEndTime = next.EndTime - daylightMovement;
                 if (potentialBarEndTime < nextEndTime)
