@@ -415,7 +415,6 @@
     <Compile Include="Securities\BuyingPowerParameters.cs" />
     <Compile Include="Securities\ContractSecurityFilterUniverse.cs" />
     <Compile Include="Securities\Future\FutureSymbol.cs" />
-    <Compile Include="Securities\Future\API\CMEOptionChainQuotes.cs" />
     <Compile Include="Securities\Future\API\CMEOptionChainSettlements.cs" />
     <Compile Include="Securities\Future\API\CMEOptionsCategoryList.cs" />
     <Compile Include="Securities\Future\API\CMEProductSlateV2.cs" />

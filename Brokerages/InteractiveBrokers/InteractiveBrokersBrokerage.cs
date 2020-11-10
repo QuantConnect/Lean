@@ -2831,12 +2831,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             else if (symbol.SecurityType == SecurityType.Future)
             {
                 string market;
-                if (_symbolPropertiesDatabase.TryGetMarket(lookupName, securityType, out market))
+                if (_symbolPropertiesDatabase.TryGetMarket(lookupName, symbol.SecurityType, out market))
                 {
                     var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
                         market,
                         lookupName,
-                        securityType,
+                        symbol.SecurityType,
                         Currencies.USD);
 
                     contract.Multiplier = Convert.ToInt32(symbolProperties.ContractMultiplier).ToStringInvariant();
