@@ -623,7 +623,7 @@ namespace QuantConnect.Brokerages.Zerodha
             var list = new List<CashAmount>();
             var response = _kite.GetMargins();
             decimal amt = Convert.ToDecimal(response.Equity.Available, CultureInfo.InvariantCulture);
-            list.Add(new CashAmount(amt, Currencies.USD));
+            list.Add(new CashAmount(amt, Currencies.INR));
             return list;
         }
 

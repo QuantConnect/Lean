@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Orders.Fills;
-using QuantConnect.Orders.Slippage;
+using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using static QuantConnect.StringExtensions;
+
 
 namespace QuantConnect.Brokerages
 {
@@ -106,6 +108,7 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
+            message = null;
              return true;
         }
 

@@ -666,7 +666,6 @@
     <Compile Include="Tradier\UserProfile.cs" />
     <Compile Include="Zerodha\Constants.cs" />
     <Compile Include="Zerodha\ZerodhaSymbolMapper.cs" />
-    <Compile Include="Zerodha\ZerodhaWebSocketClientWrapper.cs" />
     <Compile Include="Zerodha\ExceptionMessages.cs" />
     <Compile Include="Zerodha\TextFieldParser.cs" />
     <Compile Include="Zerodha\Structures.cs" />
@@ -678,6 +677,7 @@
     <Compile Include="Zerodha\ZerodhaBrokerage.HistoryProvider.cs" />
     <Compile Include="Zerodha\Utils.cs" />
     <Compile Include="Zerodha\Exceptions.cs" />
+    <Compile Include="Zerodha\ZerodhaWebSocketClientWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Binance\BinanceBrokerage.Messaging.cs" />
