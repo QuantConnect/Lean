@@ -59,7 +59,7 @@ fi
 #Have to reset IFS for cfg files to work properly
 IFS=" "
 
-# fall back to defaults on empty input without
+# fall back to defaults on empty input
 DATA_DIR=${DATA_DIR:-$DEFAULT_DATA_DIR}
 NOTEBOOK_DIR=${NOTEBOOK_DIR:-$DEFAULT_NOTEBOOK_DIR}
 IMAGE=${IMAGE:-$DEFAULT_IMAGE}
@@ -97,8 +97,8 @@ fi
 
 echo "Starting docker container; container id is:"
 sudo docker run -d --rm -p 8888:8888 \
-    --mount type=bind,source=$DATA_DIR,target=/home/Data,readonly \
-    --mount type=bind,source=$NOTEBOOK_DIR,target=/Lean/Launcher/bin/Debug/Notebooks \
+    -v $DATA_DIR:/home/Data,ro\
+    -v $NOTEBOOK_DIR:/Lean/Launcher/bin/Debug/Notebooks  \
     --name $CONTAINER_NAME \
     $IMAGE
 

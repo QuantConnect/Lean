@@ -56,7 +56,7 @@ elif [ -n "$*" ]; then
 # Else query user for settings
 else
   read -p "Docker image [default: $DEFAULT_IMAGE]: " IMAGE
-  read -p "Path to Lean config.json [default: $DEFAULT_CONFIG]: " CONFIG_PATH
+  read -p "Path to Lean config.json [default: $DEFAULT_CONFIG]: " CONFIG_FILE
   read -p "Path to Data directory [default: $DEFAULT_DATA_DIR]: " DATA_DIR
   read -p "Path to Results directory [default: $DEFAULT_RESULTS_DIR]: " RESULTS_DIR
   read -p "Path to Python directory [default: $DEFAULT_PYTHON_DIR]: " PYTHON_DIR
@@ -67,22 +67,22 @@ fi
 IFS=" "
 
 # fall back to defaults on empty input without
-CONFIG_PATH=${CONFIG_PATH:-$DEFAULT_CONFIG}
+CONFIG_FILE=${CONFIG_FILE:-$DEFAULT_CONFIG}
 DATA_DIR=${DATA_DIR:-$DEFAULT_DATA_DIR}
 RESULTS_DIR=${RESULTS_DIR:-$DEFAULT_RESULTS_DIR}
 IMAGE=${IMAGE:-$DEFAULT_IMAGE}
 PYTHON_DIR=${PYTHON_DIR:-$DEFAULT_PYTHON_DIR}
 
 # convert to absolute paths
-CONFIG_PATH=$(absolute_path "${CONFIG_PATH}")
+CONFIG_FILE=$(absolute_path "${CONFIG_FILE}")
 PYTHON_DIR=$(absolute_path "${PYTHON_DIR}")
 DATA_DIR=$(absolute_path "${DATA_DIR}")
 RESULTS_DIR=$(absolute_path "${RESULTS_DIR}")
 CSHARP_DLL=$(absolute_path "${CSHARP_DLL}")
 CSHARP_PDB=$(absolute_path "${CSHARP_PDB}")
 
-if [ ! -f "$CONFIG_PATH" ]; then
-  echo "Lean config file $CONFIG_PATH does not exist"
+if [ ! -f "$CONFIG_FILE" ]; then
+  echo "Lean config file $CONFIG_FILE does not exist"
   exit 1
 fi
 
@@ -97,7 +97,8 @@ if [ ! -d "$RESULTS_DIR" ]; then
 fi
 
 #First part of the docker COMMAND that is static, then we build the rest
-COMMAND="docker run --rm -v $CONFIG_PATH:/Lean/Launcher/config.json:ro \
+COMMAND="docker run --rm \
+    --mount type=bind,source=$CONFIG_FILE,target=/Lean/Launcher/config.json,readonly^
     -v $DATA_DIR:/Data:ro \
     -v $RESULTS_DIR:/Results \
     --name $CONTAINER_NAME \
@@ -142,7 +143,7 @@ fi
 
 if [ "$($SUDO docker container inspect -f '{{.State.Running}}' $CONTAINER_NAME)" == "true" ]; then
   yes_or_no "A Lean container is already running. Stop and recreate with this configuration?" &&
-    ($SUDO docker stop $CONTAINER_NAME))
+    $SUDO docker stop $CONTAINER_NAME
 elif $SUDO docker ps -a | grep -q $CONTAINER_NAME; then
   yes_or_no "A Lean container is halted and will be removed. Continue?" &&
     $SUDO docker rm $CONTAINER_NAME

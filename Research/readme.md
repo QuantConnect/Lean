@@ -21,7 +21,7 @@ From a terminal launch the run_docker_notebook.bat/.sh script; there are a few o
 
  2. Using the **docker.cfg** to store args for repeated use; any blank entries will resort to default values! ex: `./run_docker_notebook.bat docker.cfg`
   
-         IMAGE=quantconnect/lean:latest
+         IMAGE=quantconnect/research:latest
          DATA_DIR=
          NOTEBOOK_DIR=
 

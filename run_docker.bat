@@ -16,11 +16,12 @@ REM limitations under the License.
 set CURRENT_DIR=%~dp0
 set DEFAULT_IMAGE=quantconnect/lean:latest
 set DEFAULT_DATA_DIR=%CURRENT_DIR%Data\
-set DEFAULT_RESULTS_DIR=%CURRENT_DIR%\Results
+set DEFAULT_RESULTS_DIR=%CURRENT_DIR%Results
 set DEFAULT_CONFIG_FILE=%CURRENT_DIR%Launcher\config.json
 set DEFAULT_PYTHON_DIR=%CURRENT_DIR%Algorithm.Python\
 set CSHARP_DLL=%CURRENT_DIR%Launcher\bin\Debug\QuantConnect.Algorithm.CSharp.dll
 set CSHARP_PDB=%CURRENT_DIR%Launcher\bin\Debug\QuantConnect.Algorithm.CSharp.pdb
+set CONTAINER_NAME=LeanEngine
 
 REM If the arg is a file load in the params from the file (run_docker.cfg)
 if exist "%~1" (
@@ -40,6 +41,7 @@ if not "%*"=="" (
     set /p CONFIG_FILE="Enter absolute path to Lean config file [default: %DEFAULT_CONFIG_FILE%]: "
     set /p DATA_DIR="Enter absolute path to Data folder [default: %DEFAULT_DATA_DIR%]: "
     set /p RESULTS_DIR="Enter absolute path to store results [default: %DEFAULT_RESULTS_DIR%]: "
+    set /p PYTHON_DIR="Enter absolute path to Python directory [default: %DEFAULT_PYTHON_DIR%]: "
     set /p DEBUGGING="Would you like to debug C#? (Requires mono debugger attachment) [default: N]: "	
 )
 
@@ -81,10 +83,11 @@ if not exist "%RESULTS_DIR%" (
 )
 
 REM First part of the docker COMMAND that is static, then we build the rest
-set COMMAND=docker run --rm --mount type=bind,source=%CONFIG_FILE%,target=/Lean/Launcher/config.json,readonly^
-    --mount type=bind,source=%DATA_DIR%,target=/Data,readonly^
-    --mount type=bind,source=%RESULTS_DIR%,target=/Results^
-    --name LeanEngine^
+set COMMAND=docker run --rm^
+    --mount type=bind,source=%CONFIG_FILE%,target=/Lean/Launcher/config.json,readonly^
+    -v %DATA_DIR%:/Data:ro^
+    -v %RESULTS_DIR%:/Results^
+    --name %CONTAINER_NAME%^
     -p 5678:5678
 
 REM If DOCKER_PARAMS exist, add them to docker COMMAND
@@ -105,7 +108,7 @@ REM If python algorithms are present, mount them
 if not exist "%PYTHON_DIR%" (
     echo No Python Algorithm location found at '%PYTHON_DIR%'; no Python files will be mounted
 ) else (
-    set COMMAND=%COMMAND% --mount type=bind,source=%PYTHON_DIR%,target=/Lean/Algorithm.Python
+    set COMMAND=%COMMAND% -v %PYTHON_DIR%:/Lean/Algorithm.Python
 )
 
 REM If DEBUGGING is set then set the entrypoint to run mono with a debugger server

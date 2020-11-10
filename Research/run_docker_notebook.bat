@@ -17,6 +17,7 @@ set current_dir=%~dp0
 set DEFAULT_IMAGE=quantconnect/research:latest
 set DEFAULT_DATA_DIR=%current_dir%..\Data\
 set DEFAULT_NOTEBOOK_DIR=%current_dir%Notebooks\
+set CONTAINER_NAME=LeanResearch
 set WORK_DIR=/Lean/Launcher/bin/Debug/
 
 REM If the arg is a file load in the params from the file (run_docker.cfg)
@@ -63,8 +64,9 @@ if not exist "%DATA_DIR%" (
 
 echo Starting docker container; container id is:
  docker run -d --rm -p 8888:8888^
-    --mount type=bind,source=%DATA_DIR%,target=/home/Data,readonly^
-    --mount type=bind,source=%NOTEBOOK_DIR%,target=/Lean/Launcher/bin/Debug/Notebooks^
+    -v %DATA_DIR%:/home/Data,ro^
+    -v %NOTEBOOK_DIR%:/Lean/Launcher/bin/Debug/Notebooks^
+    --name %CONTAINER_NAME%^
     %IMAGE%
 
 echo Docker container started; will wait 2 seconds before opening web browser.
