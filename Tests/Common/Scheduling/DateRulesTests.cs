@@ -311,23 +311,24 @@ namespace QuantConnect.Tests.Common.Scheduling
             Assert.AreEqual(52, count);
         }
 
-        [Test]
-        public void StartOfWeekWithSymbolWithOffset()
+        [TestCase(Symbols.SymbolsKey.SPY, new[] { 5, 12, 20, 26 })] // Set contains holiday on 1/17
+        [TestCase(Symbols.SymbolsKey.BTCUSD, new[] { 4, 11, 18, 25 })]
+        [TestCase(Symbols.SymbolsKey.EURUSD, new[] { 4, 11, 18, 25 })]
+        public void StartOfWeekWithSymbolWithOffset(Symbols.SymbolsKey symbolKey, int[] expectedDays)
         {
             var rules = GetDateRules();
-            var rule = rules.WeekStart(Symbols.SPY, 2);
-            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+            var rule = rules.WeekStart(Symbols.Lookup(symbolKey), 2);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 1, 31)).ToList();
 
-            int count = 0;
-            foreach (var date in dates)
+            // Assert we have as many dates as expected
+            Assert.AreEqual(expectedDays.Length, dates.Count);
+
+            // Verify the days match up
+            var datesAndExpectedDays = dates.Zip(expectedDays, (date, expectedDay) => new { date, expectedDay });
+            foreach (var pair in datesAndExpectedDays)
             {
-                count++;
-                // Monday + 2 = Wednesday; Include Thursday for 1/17 Holiday
-                Assert.IsTrue(date.DayOfWeek == DayOfWeek.Wednesday || date.DayOfWeek == DayOfWeek.Thursday);
-                Console.WriteLine(date + " " + date.DayOfWeek);
+                Assert.AreEqual(pair.expectedDay, pair.date.Day);
             }
-
-            Assert.AreEqual(52, count);
         }
 
         [TestCase(5)] // Monday + 5 = Saturday
@@ -397,23 +398,24 @@ namespace QuantConnect.Tests.Common.Scheduling
             Assert.AreEqual(52, count);
         }
 
-        [Test]
-        public void EndOfWeekWithSymbolWithOffset()
+        [TestCase(Symbols.SymbolsKey.SPY, new[] { 5, 12, 19, 26 })]
+        [TestCase(Symbols.SymbolsKey.BTCUSD, new[] { 6, 13, 20, 27 })]
+        [TestCase(Symbols.SymbolsKey.EURUSD, new[] { 5, 12, 19, 26 })]
+        public void EndOfWeekWithSymbolWithOffset(Symbols.SymbolsKey symbolKey, int[] expectedDays)
         {
             var rules = GetDateRules();
-            var rule = rules.WeekEnd(Symbols.SPY, 2);
-            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+            var rule = rules.WeekEnd(Symbols.Lookup(symbolKey), 2);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 1, 31)).ToList();
 
-            int count = 0;
-            foreach (var date in dates)
+            // Assert we have as many dates as expected
+            Assert.AreEqual(expectedDays.Length, dates.Count);
+
+            // Verify the days match up
+            var datesAndExpectedDays = dates.Zip(expectedDays, (date, expectedDay) => new { date, expectedDay });
+            foreach (var pair in datesAndExpectedDays)
             {
-                count++;
-
-                // Friday - 2 = Wednesday; Also include Tuesday for holiday on 4/21
-                Assert.IsTrue(date.DayOfWeek == DayOfWeek.Wednesday || date.DayOfWeek == DayOfWeek.Tuesday);
+                Assert.AreEqual(pair.expectedDay, pair.date.Day);
             }
-
-            Assert.AreEqual(52, count);
         }
 
         [TestCase(5)] // Friday - 5 = Sunday

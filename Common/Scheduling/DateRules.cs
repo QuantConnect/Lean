@@ -334,21 +334,18 @@ namespace QuantConnect.Scheduling
             // If there is a boundary ensure we enforce it
             if (boundary.HasValue)
             {
-                if (searchForward)
+                // If we are searching forward and the resulting date is after this boundary we
+                // revert to the last tradable day equal to or less than boundary
+                if (searchForward && scheduledDate > boundary)
                 {
-                    // If the resulting date is after this boundary we revert to the last tradable day before boundary
-                    if (scheduledDate > boundary)
-                    {
-                        scheduledDate = GetScheduledDay(securityExchangeHours, (DateTime)boundary, 0, false);
-                    }
+                    scheduledDate = GetScheduledDay(securityExchangeHours, (DateTime)boundary, 0, false);
                 }
-                else
+
+                // If we are searching backward and the resulting date is after this boundary we
+                // revert to the last tradable day equal to or greater than boundary
+                if (!searchForward && scheduledDate < boundary)
                 {
-                    // If the resulting date is before this boundary we revert to the first tradable day after boundary
-                    if (scheduledDate < boundary)
-                    {
-                        scheduledDate = GetScheduledDay(securityExchangeHours, (DateTime)boundary, 0, true);
-                    }
+                    scheduledDate = GetScheduledDay(securityExchangeHours, (DateTime)boundary, 0, true);
                 }
             }
 
@@ -363,28 +360,22 @@ namespace QuantConnect.Scheduling
             foreach (var date in Time.EachDay(start, end))
             {
                 var daysInMonth = DateTime.DaysInMonth(date.Year, date.Month);
-                DateTime baseDate;
-                DateTime boundaryDate;
 
-                // Determine our base date and boundary for schedule
-                if (searchForward)
-                {
-                    // Search forward baseDate is the 1st with boundary at end of month
-                    baseDate = new DateTime(date.Year, date.Month, 1);
-                    boundaryDate = new DateTime(date.Year, date.Month, daysInMonth);
-                }
-                else
-                {
-                    // Search backward baseDate is the last day of month with boundary on first
-                    baseDate = new DateTime(date.Year, date.Month, daysInMonth);
-                    boundaryDate = new DateTime(date.Year, date.Month, 1);
-                }
+                // Searching forward the first of the month is baseDay, with boundary being the last
+                // Searching backward the last of the month is baseDay, with boundary being the first
+                var baseDate = searchForward? new DateTime(date.Year, date.Month, 1) : new DateTime(date.Year, date.Month, daysInMonth);
+                var boundaryDate = searchForward ? new DateTime(date.Year, date.Month, daysInMonth) : new DateTime(date.Year, date.Month, 1);
 
-                // On the day we determined fetch the appropriate day for the schedule
+                // Determine the scheduled day for this month
                 if (date == baseDate)
                 {
-                    // Get our scheduled day
-                    yield return GetScheduledDay(securitySchedule, baseDate, offset, searchForward, boundaryDate);
+                    var scheduledDay = GetScheduledDay(securitySchedule, baseDate, offset, searchForward, boundaryDate);
+
+                    // Ensure the date is within our schedules range
+                    if (scheduledDay >= start && scheduledDay <= end)
+                    {
+                        yield return scheduledDay;
+                    }
                 }
             }
         }
@@ -399,9 +390,8 @@ namespace QuantConnect.Scheduling
             DayOfWeek weeklyBoundaryDay;
             if (security == null)
             {
-                // Defaults for no security
-                // Search forward Monday is default, with boundary being the following Sunday
-                // Search backward Friday is default, with boundary being the previous Saturday
+                // Searching forward Monday is baseDay, with boundary being the following Sunday
+                // Searching backward Friday is baseDay, with boundary being the previous Saturday
                 weeklyBaseDay = searchForward ? DayOfWeek.Monday : DayOfWeek.Friday;
                 weeklyBoundaryDay = searchForward ? DayOfWeek.Saturday + 1 : DayOfWeek.Sunday - 1;
             }
@@ -416,12 +406,17 @@ namespace QuantConnect.Scheduling
                 weeklyBoundaryDay = searchForward ? weeklySchedule.Last().DayOfWeek : weeklySchedule.First().DayOfWeek;
             }
 
-            // For every date between start and end on our weekly base day
+            // Determine the schedule for each week in this range
             foreach (var date in Time.EachDay(start, end).Where(x => x.DayOfWeek == weeklyBaseDay))
             {
-                // Determine the scheduled day for this weekly date rule
                 var boundary = date.AddDays(weeklyBoundaryDay - weeklyBaseDay);
-                yield return GetScheduledDay(securitySchedule, date, offset, searchForward, boundary);
+                var scheduledDay = GetScheduledDay(securitySchedule, date, offset, searchForward, boundary);
+
+                // Ensure the date is within our schedules range
+                if (scheduledDay >= start && scheduledDay <= end)
+                {
+                    yield return scheduledDay;
+                }
             }
         }
     }
