@@ -257,9 +257,9 @@ namespace QuantConnect.Scheduling
         {
             var security = GetSecurity(symbol);
             var tradableDays = security.Exchange.Hours.MarketHours.Values
-                .Where(x => x.IsClosedAllDay == false).ToList();
+                .Where(x => x.IsClosedAllDay == false).OrderBy(x => x.DayOfWeek).ToList();
 
-            // We can't offset further than there are trading days
+            // We can't offset further than there are trading days in a week
             if (daysOffset > tradableDays.Count - 1)
             {
                 throw new ArgumentOutOfRangeException(nameof(daysOffset),
