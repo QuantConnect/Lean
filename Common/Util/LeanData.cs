@@ -205,7 +205,7 @@ namespace QuantConnect.Util
                     break;
 
                 case SecurityType.Option:
-                    var hasUnderlyingEquity = data.Symbol.SecurityType == SecurityType.Equity;
+                    var hasUnderlyingEquity = data.Symbol.Underlying.SecurityType == SecurityType.Equity;
                     switch (resolution)
                     {
                         case Resolution.Tick:
@@ -217,7 +217,7 @@ namespace QuantConnect.Util
                                     return ToCsv(milliseconds,
                                         Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
                                 }
-                                
+
                                 return ToCsv(milliseconds,
                                     tick.LastPrice, tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
                             }
@@ -228,7 +228,7 @@ namespace QuantConnect.Util
                                     return ToCsv(milliseconds,
                                         Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
                                 }
-                                
+
                                 return ToCsv(milliseconds,
                                     tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
                             }
@@ -250,7 +250,7 @@ namespace QuantConnect.Util
                                         ToScaledCsv(quoteBar.Bid), quoteBar.LastBidSize,
                                         ToScaledCsv(quoteBar.Ask), quoteBar.LastAskSize);
                                 }
-                                
+
                                 return ToCsv(milliseconds,
                                     ToNonScaledCsv(quoteBar.Bid), quoteBar.LastBidSize,
                                     ToNonScaledCsv(quoteBar.Ask), quoteBar.LastAskSize);
@@ -263,7 +263,7 @@ namespace QuantConnect.Util
                                     return ToCsv(milliseconds,
                                         Scale(tradeBar.Open), Scale(tradeBar.High), Scale(tradeBar.Low), Scale(tradeBar.Close), tradeBar.Volume);
                                 }
-                                
+
                                 return ToCsv(milliseconds,
                                     tradeBar.Open, tradeBar.High, tradeBar.Low, tradeBar.Close, tradeBar.Volume);
                             }
@@ -286,7 +286,7 @@ namespace QuantConnect.Util
                                         ToScaledCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
                                         ToScaledCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
                                 }
-                                
+
                                 return ToCsv(longTime,
                                     ToNonScaledCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
                                     ToNonScaledCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
@@ -298,7 +298,7 @@ namespace QuantConnect.Util
                                 {
                                     return ToCsv(longTime, ToScaledCsv(bigTradeBar), bigTradeBar.Volume);
                                 }
-                                
+
                                 return ToCsv(longTime, ToNonScaledCsv(bigTradeBar), bigTradeBar.Volume);
                             }
                             var bigOpenInterest = data as OpenInterest;
@@ -452,7 +452,7 @@ namespace QuantConnect.Util
             var securityType = symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType == SecurityType.Future
                 ? SecurityType.Future.SecurityTypeToLower() + SecurityType.Option.SecurityTypeToLower()
                 : symbol.SecurityType.SecurityTypeToLower();
-            
+
             var market = symbol.ID.Market.ToLowerInvariant();
             var res = resolution.ResolutionToLower();
             var directory = Path.Combine(securityType, market, res);

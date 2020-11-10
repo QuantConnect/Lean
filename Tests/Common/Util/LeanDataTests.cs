@@ -392,14 +392,14 @@ namespace QuantConnect.Tests.Common.Util
                 OptionStyle.American,
                 OptionRight.Put,
                 4200m,
-                new DateTime(2021, 3, 19));
+                new DateTime(2021, 3, 18));
 
             var optionZipFilePath = LeanData.GenerateZipFilePath(Globals.DataFolder, optionSymbol, new DateTime(2020, 9, 22), Resolution.Minute, TickType.Quote)
                 .Replace(Path.DirectorySeparatorChar, '/');
             var optionEntryFilePath = LeanData.GenerateZipEntryName(optionSymbol, new DateTime(2020, 9, 22), Resolution.Minute, TickType.Quote);
 
-            Assert.AreEqual($"../../../Data/option/cme/minute/{expectedFutureOptionTicker.ToLowerInvariant()}19h21/20200922_quote_american.zip", optionZipFilePath);
-            Assert.AreEqual($"20200922_{expectedFutureOptionTicker.ToLowerInvariant()}19h21_minute_quote_american_put_42000000_20210319.csv", optionEntryFilePath);
+            Assert.AreEqual($"../../../Data/futureoption/cme/minute/{expectedFutureOptionTicker.ToLowerInvariant()}/{underlying.ID.Date:yyyyMMdd}/20200922_quote_american.zip", optionZipFilePath);
+            Assert.AreEqual($"20200922_{expectedFutureOptionTicker.ToLowerInvariant()}_minute_quote_american_put_42000000_{optionSymbol.ID.Date:yyyyMMdd}.csv", optionEntryFilePath);
         }
 
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
