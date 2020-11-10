@@ -41,10 +41,6 @@ namespace QuantConnect.Brokerages.Zerodha
     {
         #region Declarations
         /// <summary>
-        /// The list of queued ticks
-        /// </summary>
-        public List<Data.Market.Tick> Ticks = new List<Data.Market.Tick>();
-        /// <summary>
         /// The websockets client instance
         /// </summary>
         protected ZerodhaWebSocketClientWrapper WebSocket;
@@ -680,43 +676,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
         #endregion
 
-        #region IDataQueueHandler
-        /// <summary>
-        /// Get the next ticks from the live trading data queue
-        /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public IEnumerable<BaseData> GetNextTicks()
-        {
-            lock (TickLocker)
-            {
-                Data.Market.Tick[] copy = Ticks.ToArray();
-                Ticks.Clear();
-                return copy;
-            }
-        }
-
-        /// <summary>
-        /// Adds the specified symbols to the subscription
-        /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
-        {
-            Subscribe(symbols);
-        }
-
-
-        /// <summary>
-        /// Removes the specified symbols to the subscription
-        /// </summary>
-        /// <param name="job">Job we're processing.</param>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
-        {
-            Unsubscribe(symbols);
-        }
-
-        #endregion
+       
 
         #region IHistoryProvider implementation
         /// <summary>
@@ -963,7 +923,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
         private void OnError(object sender, WebSocketError e)
         {
-            Log.Error($"BitfinexSubscriptionManager.OnError(): Message: {e.Message} Exception: {e.Exception}");
+            Log.Error($"ZerodhaSubscriptionManager.OnError(): Message: {e.Message} Exception: {e.Exception}");
         }
 
         private void OnMessage(object sender, MessageData e)

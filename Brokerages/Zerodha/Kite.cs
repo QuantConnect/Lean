@@ -32,8 +32,6 @@ namespace QuantConnect.Brokerages.Zerodha
         // Default root API endpoint. It's possible to
         // override this by passing the `Root` parameter during initialisation.
         private string _root = "https://api.kite.trade";
-        private string _login = "https://kite.trade/connect/login";
-
         private string _apiKey;
         private string _accessToken;
         private bool _enableLogging;
@@ -145,15 +143,6 @@ namespace QuantConnect.Brokerages.Zerodha
         }
 
         /// <summary>
-        /// Get the remote login url to which a user should be redirected to initiate the login flow.
-        /// </summary>
-        /// <returns>Login url to authenticate the user.</returns>
-        public string GetLoginURL()
-        {
-            return String.Format(CultureInfo.InvariantCulture, "{0}?api_key={1}&v=3", _login, _apiKey);
-        }
-
-        /// <summary>
         /// Do the token exchange with the `RequestToken` obtained after the login flow,
 		/// and retrieve the `AccessToken` required for all subsequent requests.The
         /// response contains not just the `AccessToken`, but metadata for
@@ -237,22 +226,6 @@ namespace QuantConnect.Brokerages.Zerodha
 
             return new Profile(profileData);
         }
-
-        ///// <summary>
-        ///// Margin data for intraday trading
-        ///// </summary>
-        ///// <param name="Segment">Tradingsymbols under this segment will be returned</param>
-        ///// <returns>List of margins of intruments</returns>
-        //public List<InstrumentMargin> GetInstrumentsMargins(string Segment)
-        //{
-        //    var instrumentsMarginsData = Get("instrument.margins", new Dictionary<string, dynamic> { { "segment", Segment } });
-
-        //    List<InstrumentMargin> instrumentsMargins = new List<InstrumentMargin>();
-        //    foreach (Dictionary<string, dynamic> item in instrumentsMarginsData["data"])
-        //        instrumentsMargins.Add(new InstrumentMargin(item));
-
-        //    return instrumentsMargins;
-        //}
 
         /// <summary>
         /// Get account balance and cash margin details for all segments.
@@ -440,8 +413,10 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>List of order objects.</returns>
         public List<Order> GetOrderHistory(string OrderId)
         {
-            var param = new Dictionary<string, dynamic>();
-            param.Add("order_id", OrderId);
+            var param = new Dictionary<string, dynamic>
+            {
+                { "order_id", OrderId }
+            };
 
             var orderData = Get("orders.history", param);
 
@@ -463,10 +438,12 @@ namespace QuantConnect.Brokerages.Zerodha
         public List<Trade> GetOrderTrades(string OrderId = null)
         {
             Dictionary<string, dynamic> tradesdata;
-            if (!String.IsNullOrEmpty(OrderId))
+            if (!string.IsNullOrEmpty(OrderId))
             {
-                var param = new Dictionary<string, dynamic>();
-                param.Add("order_id", OrderId);
+                var param = new Dictionary<string, dynamic>
+                {
+                    { "order_id", OrderId }
+                };
                 tradesdata = Get("orders.trades", param);
             }
             else
@@ -575,8 +552,10 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>Dictionary of all Quote objects with keys as in InstrumentId</returns>
         public Dictionary<string, Quote> GetQuote(string[] InstrumentId)
         {
-            var param = new Dictionary<string, dynamic>();
-            param.Add("i", InstrumentId);
+            var param = new Dictionary<string, dynamic>
+            {
+                { "i", InstrumentId }
+            };
             Dictionary<string, dynamic> quoteData = Get("market.quote", param)["data"];
 
             Dictionary<string, Quote> quotes = new Dictionary<string, Quote>();
@@ -593,8 +572,10 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>Dictionary of all OHLC objects with keys as in InstrumentId</returns>
         public Dictionary<string, OHLC> GetOHLC(string[] InstrumentId)
         {
-            var param = new Dictionary<string, dynamic>();
-            param.Add("i", InstrumentId);
+            var param = new Dictionary<string, dynamic>
+            {
+                { "i", InstrumentId }
+            };
             Dictionary<string, dynamic> ohlcData = Get("market.ohlc", param)["data"];
 
             Dictionary<string, OHLC> ohlcs = new Dictionary<string, OHLC>();
@@ -611,8 +592,10 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>Dictionary with InstrumentId as key and LTP as value.</returns>
         public Dictionary<string, LTP> GetLTP(string[] InstrumentId)
         {
-            var param = new Dictionary<string, dynamic>();
-            param.Add("i", InstrumentId);
+            var param = new Dictionary<string, dynamic>
+            {
+                { "i", InstrumentId }
+            };
             Dictionary<string, dynamic> ltpData = Get("market.ltp", param)["data"];
 
             Dictionary<string, LTP> ltps = new Dictionary<string, LTP>();
@@ -640,14 +623,15 @@ namespace QuantConnect.Brokerages.Zerodha
             bool Continuous = false,
             bool OI = false)
         {
-            var param = new Dictionary<string, dynamic>();
-
-            param.Add("instrument_token", InstrumentToken);
-            param.Add("from", FromDate.ToStringInvariant("yyyy-MM-dd HH:mm:ss"));
-            param.Add("to", ToDate.ToStringInvariant("yyyy-MM-dd HH:mm:ss"));
-            param.Add("interval", Interval);
-            param.Add("continuous", Continuous ? "1" : "0");
-            param.Add("oi", OI ? "1" : "0");
+            var param = new Dictionary<string, dynamic>
+            {
+                { "instrument_token", InstrumentToken },
+                { "from", FromDate.ToStringInvariant("yyyy-MM-dd HH:mm:ss") },
+                { "to", ToDate.ToStringInvariant("yyyy-MM-dd HH:mm:ss") },
+                { "interval", Interval },
+                { "continuous", Continuous ? "1" : "0" },
+                { "oi", OI ? "1" : "0" }
+            };
 
             var historicalData = Get("market.historical", param);
 
@@ -667,10 +651,11 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>List of trigger ranges for given instrument ids for given transaction type.</returns>
         public Dictionary<string, TrigerRange> GetTriggerRange(string[] InstrumentId, string TrasactionType)
         {
-            var param = new Dictionary<string, dynamic>();
-
-            param.Add("i", InstrumentId);
-            param.Add("transaction_type", TrasactionType.ToLowerInvariant());
+            var param = new Dictionary<string, dynamic>
+            {
+                { "i", InstrumentId },
+                { "transaction_type", TrasactionType.ToLowerInvariant() }
+            };
 
             var triggerdata = Get("market.trigger_range", param)["data"];
 
@@ -707,8 +692,10 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>GTT info</returns>
         public GTT GetGTT(int GTTId)
         {
-            var param = new Dictionary<string, dynamic>();
-            param.Add("id", GTTId.ToStringInvariant());
+            var param = new Dictionary<string, dynamic>
+            {
+                { "id", GTTId.ToStringInvariant() }
+            };
 
             var gttdata = Get("gtt.info", param);
 
@@ -722,31 +709,37 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>Json response in the form of nested string dictionary.</returns>
         public Dictionary<string, dynamic> PlaceGTT(GTTParams gttParams)
         {
-            var condition = new Dictionary<string, dynamic>();
-            condition.Add("exchange", gttParams.Exchange);
-            condition.Add("tradingsymbol", gttParams.TradingSymbol);
-            condition.Add("trigger_values", gttParams.TriggerPrices);
-            condition.Add("last_price", gttParams.LastPrice);
-            condition.Add("instrument_token", gttParams.InstrumentToken);
+            var condition = new Dictionary<string, dynamic>
+            {
+                { "exchange", gttParams.Exchange },
+                { "tradingsymbol", gttParams.TradingSymbol },
+                { "trigger_values", gttParams.TriggerPrices },
+                { "last_price", gttParams.LastPrice },
+                { "instrument_token", gttParams.InstrumentToken }
+            };
 
             var ordersParam = new List<Dictionary<string, dynamic>>();
             foreach (var o in gttParams.Orders)
             {
-                var order = new Dictionary<string, dynamic>();
-                order["exchange"] = gttParams.Exchange;
-                order["tradingsymbol"] = gttParams.TradingSymbol;
-                order["transaction_type"] = o.TransactionType;
-                order["quantity"] = o.Quantity;
-                order["price"] = o.Price;
-                order["order_type"] = o.OrderType;
-                order["product"] = o.Product;
+                var order = new Dictionary<string, dynamic>
+                {
+                    ["exchange"] = gttParams.Exchange,
+                    ["tradingsymbol"] = gttParams.TradingSymbol,
+                    ["transaction_type"] = o.TransactionType,
+                    ["quantity"] = o.Quantity,
+                    ["price"] = o.Price,
+                    ["order_type"] = o.OrderType,
+                    ["product"] = o.Product
+                };
                 ordersParam.Add(order);
             }
 
-            var parms = new Dictionary<string, dynamic>();
-            parms.Add("condition", Utils.JsonSerialize(condition));
-            parms.Add("orders", Utils.JsonSerialize(ordersParam));
-            parms.Add("type", gttParams.TriggerType);
+            var parms = new Dictionary<string, dynamic>
+            {
+                { "condition", Utils.JsonSerialize(condition) },
+                { "orders", Utils.JsonSerialize(ordersParam) },
+                { "type", gttParams.TriggerType }
+            };
 
             return Post("gtt.place", parms);
         }
@@ -759,32 +752,38 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>Json response in the form of nested string dictionary.</returns>
         public Dictionary<string, dynamic> ModifyGTT(int GTTId, GTTParams gttParams)
         {
-            var condition = new Dictionary<string, dynamic>();
-            condition.Add("exchange", gttParams.Exchange);
-            condition.Add("tradingsymbol", gttParams.TradingSymbol);
-            condition.Add("trigger_values", gttParams.TriggerPrices);
-            condition.Add("last_price", gttParams.LastPrice);
-            condition.Add("instrument_token", gttParams.InstrumentToken);
+            var condition = new Dictionary<string, dynamic>
+            {
+                { "exchange", gttParams.Exchange },
+                { "tradingsymbol", gttParams.TradingSymbol },
+                { "trigger_values", gttParams.TriggerPrices },
+                { "last_price", gttParams.LastPrice },
+                { "instrument_token", gttParams.InstrumentToken }
+            };
 
             var ordersParam = new List<Dictionary<string, dynamic>>();
             foreach (var o in gttParams.Orders)
             {
-                var order = new Dictionary<string, dynamic>();
-                order["exchange"] = gttParams.Exchange;
-                order["tradingsymbol"] = gttParams.TradingSymbol;
-                order["transaction_type"] = o.TransactionType;
-                order["quantity"] = o.Quantity;
-                order["price"] = o.Price;
-                order["order_type"] = o.OrderType;
-                order["product"] = o.Product;
+                var order = new Dictionary<string, dynamic>
+                {
+                    ["exchange"] = gttParams.Exchange,
+                    ["tradingsymbol"] = gttParams.TradingSymbol,
+                    ["transaction_type"] = o.TransactionType,
+                    ["quantity"] = o.Quantity,
+                    ["price"] = o.Price,
+                    ["order_type"] = o.OrderType,
+                    ["product"] = o.Product
+                };
                 ordersParam.Add(order);
             }
 
-            var parms = new Dictionary<string, dynamic>();
-            parms.Add("condition", Utils.JsonSerialize(condition));
-            parms.Add("orders", Utils.JsonSerialize(ordersParam));
-            parms.Add("type", gttParams.TriggerType);
-            parms.Add("id", GTTId.ToStringInvariant());
+            var parms = new Dictionary<string, dynamic>
+            {
+                { "condition", Utils.JsonSerialize(condition) },
+                { "orders", Utils.JsonSerialize(ordersParam) },
+                { "type", gttParams.TriggerType },
+                { "id", GTTId.ToStringInvariant() }
+            };
 
             return Put("gtt.modify", parms);
         }
@@ -796,8 +795,10 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>Json response in the form of nested string dictionary.</returns>
         public Dictionary<string, dynamic> CancelGTT(int GTTId)
         {
-            var parms = new Dictionary<string, dynamic>();
-            parms.Add("id", GTTId.ToStringInvariant());
+            var parms = new Dictionary<string, dynamic>
+            {
+                { "id", GTTId.ToStringInvariant() }
+            };
 
             return Delete("gtt.delete", parms);
         }
