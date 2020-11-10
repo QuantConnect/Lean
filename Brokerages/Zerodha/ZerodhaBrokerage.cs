@@ -31,12 +31,14 @@ using System.Threading;
 using QuantConnect.Orders;
 using QuantConnect.Brokerages.Zerodha.Messages;
 using Newtonsoft.Json.Linq;
+using Tick = QuantConnect.Data.Market.Tick;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
     /// <summary>
     /// Zerodha Brokerage implementation
     /// </summary>
+    [BrokerageFactory(typeof(ZerodhaBrokerageFactory))]
     public partial class ZerodhaBrokerage : Brokerage, IDataQueueHandler, IHistoryProvider
     {
         #region Declarations
@@ -107,10 +109,11 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
-        public ZerodhaBrokerage(string apiKey, string apiSecret, string requestToken, IAlgorithm algorithm)
+        public ZerodhaBrokerage(string apiKey, string apiSecret, string requestToken, IAlgorithm algorithm, IDataAggregator aggregator)
             : base("Zerodha")
         {
             _algorithm = algorithm;
+            _aggregator = aggregator;
             _kite = new Kite(apiKey);
             _apiKey = apiKey;
             var user = _kite.GenerateSession(requestToken,apiSecret);
@@ -449,6 +452,11 @@ namespace QuantConnect.Brokerages.Zerodha
 
             UnlockStream();
             return true;
+        }
+
+        public void EmitTick(Tick tick)
+        {
+            _aggregator.Update(tick);
         }
 
         /// <summary>

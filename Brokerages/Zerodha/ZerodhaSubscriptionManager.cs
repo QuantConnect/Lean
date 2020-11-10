@@ -215,47 +215,10 @@ namespace QuantConnect.Brokerages.Zerodha
             Log.Error($"ZerodhaSubscriptionManager.OnError(): Message: {e.Message} Exception: {e.Exception}");
         }
 
-        //ConcurrentDictionary<string, QuoteUpdate> quotes = new ConcurrentDictionary<string, QuoteUpdate>();
 
         private void OnMessage(object sender, MessageData e)
         {
-            //try
-            //{
-            //    var token = JToken.Parse(e.Message);
-            //    if (token is JObject)
-            //    {
-            //        var raw = token.ToObject<QuoteUpdate>();
-            //        if (raw.response.streaming_type.ToLowerInvariant() == "quote")
-            //        {
-            //            if (!quotes.TryGetValue(raw.response.data.sym, out var existing))
-            //            {
-            //                existing = raw;
-            //                quotes[raw.response.data.sym] = raw;
-            //            }
-
-            //            var upd = raw.response.data;
-            //            var sym = _subscriptionsById[raw.response.data.sym];
-
-            //            EmitQuoteTick(sym, upd.bPr, upd.bSz, upd.aPr, upd.aSz);
-
-            //            if (existing.response.data.vol == raw.response.data.vol)
-            //            {
-            //                return;
-            //            }
-
-            //            EmitTradeTick(sym, upd.lTrdT, upd.ltp, upd.ltq);
-            //        }
-            //        else
-            //        {
-            //            Log.Trace($"ZerodhaSubscriptionManager.OnMessage(): Unexpected message format: {e.Message}");
-            //        }
-            //    }
-            //}
-            //catch (Exception exception)
-            //{
-            //    _brokerage.OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Message} Exception: {exception}"));
-            //    throw;
-            //}
+           
             _timerTick = _interval;
             if (e.MessageType == WebSocketMessageType.Binary)
             {
@@ -468,7 +431,7 @@ namespace QuantConnect.Brokerages.Zerodha
             {
                 lock (_brokerage.TickLocker)
                 {
-                    _brokerage.Ticks.Add(new Data.Market.Tick
+                    _brokerage.EmitTick(new Data.Market.Tick
                     {
                         Value = price,
                         Time = time,
@@ -489,7 +452,7 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             lock (_brokerage.TickLocker)
             {
-                _brokerage.Ticks.Add(new Data.Market.Tick
+                _brokerage.EmitTick(new Data.Market.Tick
                 {
                     AskPrice = askPrice,
                     BidPrice = bidPrice,
