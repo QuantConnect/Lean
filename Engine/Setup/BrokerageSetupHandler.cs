@@ -195,7 +195,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     return false;
                 }
 
-                var message = $"{brokerage.Name} account base currency: {brokerage.AccountBaseCurrency}";
+                var message = $"{brokerage.Name} account base currency: {brokerage.AccountBaseCurrency ?? algorithm.AccountCurrency}";
 
                 Log.Trace($"BrokerageSetupHandler.Setup(): {message}");
 
