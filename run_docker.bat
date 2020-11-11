@@ -124,6 +124,8 @@ if /I "%DEBUGGING%" == "Y" (
 )
 
 REM Run built docker COMMAND
+echo "Launching LeanEngine with command: "
+echo "%COMMAND%"
 %COMMAND%
 
 :script_EXIT

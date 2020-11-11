@@ -63,7 +63,7 @@ Reference our examples mentioned above for practical uses of this object.
 <br>
 
 ## Shutting Down the Notebook Lab
-When you are done with the research environment be sure to stop the container with either **Docker's dashboard** or through the **Docker CLI**.
+When you are done with the research environment be sure to stop the container with either **Docker's dashboard** or through the **Docker CLI** with `docker kill LeanResearch`.
 
 <br>
 
