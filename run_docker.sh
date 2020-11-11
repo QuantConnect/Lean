@@ -98,7 +98,7 @@ fi
 
 #First part of the docker COMMAND that is static, then we build the rest
 COMMAND="docker run --rm \
-    --mount type=bind,source=$CONFIG_FILE,target=/Lean/Launcher/config.json,readonly^
+    --mount type=bind,source=$CONFIG_FILE,target=/Lean/Launcher/config.json,readonly \
     -v $DATA_DIR:/Data:ro \
     -v $RESULTS_DIR:/Results \
     --name $CONTAINER_NAME \
