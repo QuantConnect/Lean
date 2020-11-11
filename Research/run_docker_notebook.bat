@@ -37,6 +37,7 @@ if not "%*"=="" (
     set /p IMAGE="Enter docker image [default: %DEFAULT_IMAGE%]: "
     set /p DATA_DIR="Enter absolute path to Data folder [default: %DEFAULT_DATA_DIR%]: "
     set /p NOTEBOOK_DIR="Enter absolute path to store notebooks [default: %DEFAULT_NOTEBOOK_DIR%]: "
+    set /p UPDATE="Would you like to check for updates on the Docker image? [default: Y]: "	
 )
 
 :verify
@@ -47,6 +48,10 @@ if "%IMAGE%" == "" (
 
 if "%NOTEBOOK_DIR%" == "" (
     set NOTEBOOK_DIR=%DEFAULT_NOTEBOOK_DIR%
+)
+
+if "%UPDATE%" == "" (
+    set UPDATE=Y
 )
 
 if not exist "%NOTEBOOK_DIR%" (
@@ -60,6 +65,12 @@ if "%DATA_DIR%" == "" (
 if not exist "%DATA_DIR%" (
     echo Data directory '%DATA_DIR%' does not exist
     goto script_exit
+)
+
+REM Pull the image if we want to update
+if /I "%UPDATE%" == "Y" (
+    echo Updating Docker Image
+    docker pull %image%
 )
 
 echo Starting docker container; container id is:

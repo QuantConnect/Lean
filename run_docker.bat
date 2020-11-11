@@ -42,7 +42,8 @@ if not "%*"=="" (
     set /p DATA_DIR="Enter absolute path to Data folder [default: %DEFAULT_DATA_DIR%]: "
     set /p RESULTS_DIR="Enter absolute path to store results [default: %DEFAULT_RESULTS_DIR%]: "
     set /p PYTHON_DIR="Enter absolute path to Python directory [default: %DEFAULT_PYTHON_DIR%]: "
-    set /p DEBUGGING="Would you like to debug C#? (Requires mono debugger attachment) [default: N]: "	
+    set /p DEBUGGING="Would you like to debug C#? (Requires mono debugger attachment) [default: N]: "
+    set /p UPDATE="Would you like to check for updates on the Docker image? [default: Y]: "	
 )
 
 :build_COMMAND
@@ -57,6 +58,10 @@ if "%CONFIG_FILE%" == "" (
 
 if "%PYTHON_DIR%" == "" (
     set PYTHON_DIR=%DEFAULT_PYTHON_DIR%
+)
+
+if "%UPDATE%" == "" (
+    set UPDATE=Y
 )
 
 if not exist "%CONFIG_FILE%" (
@@ -121,6 +126,12 @@ if /I "%DEBUGGING%" == "Y" (
     echo Docker container starting, attach to Mono process at localhost:55555 to begin
 ) else (
     set COMMAND=%COMMAND% %IMAGE% --data-folder /Data --results-destination-folder /Results --config /Lean/Launcher/config.json
+)
+
+REM Pull the image if we want to update
+if /I "%UPDATE%" == "Y" (
+    echo Updating Docker Image
+    docker pull %image%
 )
 
 REM Run built docker COMMAND

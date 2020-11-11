@@ -38,33 +38,35 @@ absolute_path() {
   echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"
 }
 
-#If arg is a file process the key values
+# If arg is a file process the key values
 if [ -f "$1" ]; then
     IFS="="
     while read -r key value; do
         eval "$key='$value'"
     done < $1
-#If there are in line args, process them
+# If there are in line args, process them
 elif [ ! -z "$*" ]; then
     for arg in "$@"; do
         eval "$arg"
     done
-#Else query user for settings
+# Else query user for settings
 else
     read -p "Enter docker image [default: $DEFAULT_IMAGE]: " IMAGE
     read -p "Enter absolute path to Data folder [default: $DEFAULT_DATA_DIR]: " DATA_DIR
     read -p "Enter absolute path to store notebooks [default: $DEFAULT_NOTEBOOK_DIR]: " NOTEBOOK_DIR
+    read -p "Would you like to update the Docker Image? [default: Y]: " UPDATE
 fi
 
-#Have to reset IFS for cfg files to work properly
+# Have to reset IFS for cfg files to work properly
 IFS=" "
 
-# fall back to defaults on empty input
+# Fall back to defaults on empty input
 DATA_DIR=${DATA_DIR:-$DEFAULT_DATA_DIR}
 NOTEBOOK_DIR=${NOTEBOOK_DIR:-$DEFAULT_NOTEBOOK_DIR}
 IMAGE=${IMAGE:-$DEFAULT_IMAGE}
+UPDATE=${UPDATE:-Y}
 
-# convert to absolute paths
+# Convert to absolute paths
 DATA_DIR=$(absolute_path "${DATA_DIR}")
 NOTEBOOK_DIR=$(absolute_path "${NOTEBOOK_DIR}")
 
@@ -79,20 +81,26 @@ fi
 
 SUDO=""
 
-# verify if user has docker permissions
+# Verify if user has docker permissions
 if ! touch /var/run/docker.sock &>/dev/null; then
   sudo -v
   SUDO="sudo"
   COMMAND="$SUDO $COMMAND"
 fi
 
-#Check if the container is running already
+# Check if the container is running already
 if [ "$($SUDO docker container inspect -f '{{.State.Running}}' $CONTAINER_NAME)" == "true" ]; then
   yes_or_no "A Lean container is already running. Stop and recreate with this configuration?" &&
     ($SUDO docker stop $CONTAINER_NAME)
 elif $SUDO docker ps -a | grep -q $CONTAINER_NAME; then
   yes_or_no "A Lean container is halted and will be removed. Continue?" &&
     $SUDO docker rm $CONTAINER_NAME
+fi
+
+# Pull the image if we want to update 
+if [[ "$UPDATE" == "y" ]]; then
+  echo "Pulling Docker image: $IMAGE"
+  $SUDO docker pull $IMAGE
 fi
 
 echo "Starting docker container; container id is:"

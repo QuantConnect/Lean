@@ -37,7 +37,7 @@ yes_or_no() {
   done
 }
 
-# realpath polyfill, notably absent macOS and some debian distros
+# Realpath polyfill, notably absent macOS and some debian distros
 absolute_path() {
   echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"
 }
@@ -48,7 +48,7 @@ if [ -f "$1" ]; then
   while read -r key value; do
     eval "$key='$value'"
   done <"$1"
-#If there are in line args, process them
+# If there are in line args, process them
 elif [ -n "$*" ]; then
   for arg in "$@"; do
     eval "$arg"
@@ -61,19 +61,21 @@ else
   read -p "Path to Results directory [default: $DEFAULT_RESULTS_DIR]: " RESULTS_DIR
   read -p "Path to Python directory [default: $DEFAULT_PYTHON_DIR]: " PYTHON_DIR
   read -p "Would you like to debug C#? (Requires mono debugger attachment) [default: N]: " DEBUGGING
+  read -p "Would you like to update the Docker Image? [default: Y]: " UPDATE
 fi
 
-#Have to reset IFS for cfg files to work properly
+# Have to reset IFS for cfg files to work properly
 IFS=" "
 
-# fall back to defaults on empty input without
+# Fall back to defaults on empty input without
 CONFIG_FILE=${CONFIG_FILE:-$DEFAULT_CONFIG}
 DATA_DIR=${DATA_DIR:-$DEFAULT_DATA_DIR}
 RESULTS_DIR=${RESULTS_DIR:-$DEFAULT_RESULTS_DIR}
 IMAGE=${IMAGE:-$DEFAULT_IMAGE}
 PYTHON_DIR=${PYTHON_DIR:-$DEFAULT_PYTHON_DIR}
+UPDATE=${UPDATE:-Y}
 
-# convert to absolute paths
+# Convert to absolute paths
 CONFIG_FILE=$(absolute_path "${CONFIG_FILE}")
 PYTHON_DIR=$(absolute_path "${PYTHON_DIR}")
 DATA_DIR=$(absolute_path "${DATA_DIR}")
@@ -96,7 +98,7 @@ if [ ! -d "$RESULTS_DIR" ]; then
   mkdir $RESULTS_DIR
 fi
 
-#First part of the docker COMMAND that is static, then we build the rest
+# First part of the docker COMMAND that is static, then we build the rest
 COMMAND="docker run --rm \
     --mount type=bind,source=$CONFIG_FILE,target=/Lean/Launcher/config.json,readonly \
     -v $DATA_DIR:/Data:ro \
@@ -104,7 +106,7 @@ COMMAND="docker run --rm \
     --name $CONTAINER_NAME \
     -p 5678:5678 "
 
-#If the csharp dll and pdb are present, mount them
+# If the csharp dll and pdb are present, mount them
 if [ ! -f "$CSHARP_DLL" ]; then
   echo "Csharp file at '$CSHARP_DLL' does not exist; no CSharp files will be mounted"
 else
@@ -112,14 +114,14 @@ else
     --mount type=bind,source=$CSHARP_PDB,target=/Lean/Launcher/bin/Debug/QuantConnect.Algorithm.CSharp.pdb "
 fi
 
-#If python algorithms are present, mount them
+# If python algorithms are present, mount them
 if [ ! -d "$PYTHON_DIR" ]; then
   echo "No Python Algorithm location found at '$PYTHON_DIR'; no Python files will be mounted"
 else
   COMMAND+="-v $PYTHON_DIR:/Lean/Algorithm.Python "
 fi
 
-#If DEBUGGING is set then set the entrypoint to run mono with a debugger server
+# If DEBUGGING is set then set the entrypoint to run mono with a debugger server
 shopt -s nocasematch
 if [[ "$DEBUGGING" == "y" ]]; then
   COMMAND+="-p 55555:55555 \
@@ -134,7 +136,7 @@ fi
 
 SUDO=""
 
-# verify if user has docker permissions
+# Verify if user has docker permissions
 if ! touch /var/run/docker.sock &>/dev/null; then
   sudo -v
   SUDO="sudo"
@@ -147,6 +149,12 @@ if [ "$($SUDO docker container inspect -f '{{.State.Running}}' $CONTAINER_NAME)"
 elif $SUDO docker ps -a | grep -q $CONTAINER_NAME; then
   yes_or_no "A Lean container is halted and will be removed. Continue?" &&
     $SUDO docker rm $CONTAINER_NAME
+fi
+
+# Pull the image if we want to update
+if [[ "$UPDATE" == "y" ]]; then
+  echo "Pulling Docker image: $IMAGE"
+  $SUDO docker pull $IMAGE
 fi
 
 echo -e "Launching LeanEngine with command: "
