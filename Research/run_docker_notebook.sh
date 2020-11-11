@@ -1,5 +1,4 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
 # QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
@@ -13,60 +12,103 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-full_path=$(realpath $0)
-current_dir=$(dirname $full_path)
-default_image=quantconnect/research:latest
-parent=$(dirname $current_dir)
-default_data_dir=$parent/Data
-default_notebook_dir=$current_dir/Notebooks/
+# allow script to be called from anywhere
+cd "$(dirname "$0")/" || exit
 
-#If arg is a file process the key values
+DEFAULT_IMAGE=quantconnect/research:latest
+DEFAULT_DATA_DIR=../Data
+DEFAULT_NOTEBOOK_DIR=./Notebooks/
+CONTAINER_NAME=LeanResearch
+
+yes_or_no() {
+  while true; do
+    read -p "$* [y/n]: " yn
+    case $yn in
+    [Yy]*) return 0 ;;
+    [Nn]*)
+      echo "Aborted"
+      return 1
+      ;;
+    esac
+  done
+}
+
+# realpath polyfill, notably absent macOS and some debian distros
+absolute_path() {
+  echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"
+}
+
+# If arg is a file process the key values
 if [ -f "$1" ]; then
     IFS="="
     while read -r key value; do
         eval "$key='$value'"
     done < $1
-#If there are in line args, process them
+# If there are in line args, process them
 elif [ ! -z "$*" ]; then
     for arg in "$@"; do
         eval "$arg"
     done
-#Else query user for settings
+# Else query user for settings
 else
-    read -p "Enter docker image [default: $default_image]: " image
-    read -p "Enter absolute path to Data folder [default: $default_data_dir]: " data_dir
-    read -p "Enter absolute path to store notebooks [default: $default_notebook_dir]: " notebook_dir
+    read -p "Enter docker image [default: $DEFAULT_IMAGE]: " IMAGE
+    read -p "Enter absolute path to Data folder [default: $DEFAULT_DATA_DIR]: " DATA_DIR
+    read -p "Enter absolute path to store notebooks [default: $DEFAULT_NOTEBOOK_DIR]: " NOTEBOOK_DIR
+    read -p "Would you like to update the Docker Image? [default: Y]: " UPDATE
 fi
 
-#Have to reset IFS for cfg files to work properly
+# Have to reset IFS for cfg files to work properly
 IFS=" "
 
-if [ -z "$image" ]; then
-    image=$default_image
-fi
+# Fall back to defaults on empty input
+DATA_DIR=${DATA_DIR:-$DEFAULT_DATA_DIR}
+NOTEBOOK_DIR=${NOTEBOOK_DIR:-$DEFAULT_NOTEBOOK_DIR}
+IMAGE=${IMAGE:-$DEFAULT_IMAGE}
+UPDATE=${UPDATE:-Y}
 
-if [ -z "$data_dir" ]; then
-    data_dir=$default_data_dir
-fi
+# Convert to absolute paths
+DATA_DIR=$(absolute_path "${DATA_DIR}")
+NOTEBOOK_DIR=$(absolute_path "${NOTEBOOK_DIR}")
 
-if [ ! -d "$data_dir" ]; then
-    echo "Data directory $data_dir does not exist"
+if [ ! -d "$DATA_DIR" ]; then
+    echo "Data directory $DATA_DIR does not exist"
     exit 1
 fi
 
-if [ -z "$notebook_dir" ]; then
-    notebook_dir=$default_notebook_dir
+if [ ! -d "$NOTEBOOK_DIR" ]; then
+    mkdir $NOTEBOOK_DIR
 fi
 
-if [ ! -d "$notebook_dir" ]; then
-    mkdir $notebook_dir
+SUDO=""
+
+# Verify if user has docker permissions
+if ! touch /var/run/docker.sock &>/dev/null; then
+  sudo -v
+  SUDO="sudo"
+  COMMAND="$SUDO $COMMAND"
+fi
+
+# Check if the container is running already
+if [ "$($SUDO docker container inspect -f '{{.State.Running}}' $CONTAINER_NAME)" == "true" ]; then
+  yes_or_no "A Lean container is already running. Stop and recreate with this configuration?" &&
+    ($SUDO docker stop $CONTAINER_NAME)
+elif $SUDO docker ps -a | grep -q $CONTAINER_NAME; then
+  yes_or_no "A Lean container is halted and will be removed. Continue?" &&
+    $SUDO docker rm $CONTAINER_NAME
+fi
+
+# Pull the image if we want to update 
+if [[ "$UPDATE" == "y" ]]; then
+  echo "Pulling Docker image: $IMAGE"
+  $SUDO docker pull $IMAGE
 fi
 
 echo "Starting docker container; container id is:"
 sudo docker run -d --rm -p 8888:8888 \
-    --mount type=bind,source=$data_dir,target=/home/Data,readonly \
-    --mount type=bind,source=$notebook_dir,target=/Lean/Launcher/bin/Debug/Notebooks \
-    $image
+    -v $DATA_DIR:/home/Data,ro\
+    -v $NOTEBOOK_DIR:/Lean/Launcher/bin/Debug/Notebooks  \
+    --name $CONTAINER_NAME \
+    $IMAGE
 
 echo "Docker container started; will wait 2 seconds before opening web browser."
 sleep 2s
