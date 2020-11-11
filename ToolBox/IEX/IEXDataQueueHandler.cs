@@ -33,10 +33,8 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using QuantConnect.Indicators;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
-using QuantConnect.Securities;
 using QuantConnect.ToolBox.IEX.Response;
 
 namespace QuantConnect.ToolBox.IEX
@@ -53,17 +51,13 @@ namespace QuantConnect.ToolBox.IEX
 
         private readonly IEXEventSourceCollection _clients;
         private readonly ManualResetEvent _refreshEvent = new ManualResetEvent(false);
-        private readonly ManualResetEvent _newTradeEvent = new ManualResetEvent(false);
         private readonly string _apiKey = Config.Get("iex-cloud-api-key");
-        private readonly SecurityExchangeHours _exchangeHours;
 
         private readonly ConcurrentDictionary<string, Symbol> _symbols = new ConcurrentDictionary<string, Symbol>(StringComparer.InvariantCultureIgnoreCase);
         private readonly ConcurrentDictionary<string, long> _iexLastTradeTime = new ConcurrentDictionary<string, long>();
-        private readonly ConcurrentQueue<long> _tradeMillisDiffQueue = new ConcurrentQueue<long>();
 
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private int _dataPointCount;
-        private long _averageTimeDifference;
 
         private readonly IDataAggregator _aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
             Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
@@ -144,37 +138,6 @@ namespace QuantConnect.ToolBox.IEX
             })
             { IsBackground = true };
             clientUpdateThread.Start();
-
-            var equity = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-
-            _exchangeHours = MarketHoursDatabase
-                .FromDataFolder()
-                .GetExchangeHours(equity.ID.Market, equity, equity.SecurityType);
-
-
-            // This thead is running to monitor the time difference between iex time stamp and local time
-            var timeReferenceCalculationThread = new Thread(() =>
-            {
-                // Calculate average on last 50 values
-                var window = new RollingWindow<long>(50);
-
-                while (!_cts.Token.IsCancellationRequested)
-                {
-                    _newTradeEvent.WaitOne();
-
-                    long output;
-                    while (_tradeMillisDiffQueue.TryDequeue(out output))
-                    {
-                        window.Add(output);
-                        var sum = window.Sum();
-                        _averageTimeDifference = sum / window.Count;
-                    }
-
-                    _refreshEvent.Reset();
-                }
-            })
-            { IsBackground = true };
-            timeReferenceCalculationThread.Start();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -203,10 +166,10 @@ namespace QuantConnect.ToolBox.IEX
                     var lastPrice = item.IexRealtimePrice;
                     var lastSize = item.IexRealtimeSize;
 
-                    // IEX-LAST-UPDATED -
-                    // Refers to the last update time of iexRealtimePrice in milliseconds since midnight Jan 1, 1970 UTC or -1 or 0.
-                    // If the value is -1 or 0, IEX has not quoted the symbol in the trading day.
-                    var lastTradeMillis = item.IexLastUpdated ?? 0;
+                    // (!) Epoch timestamp in milliseconds of the last market hours trade excluding the closing auction trade.
+                    var lastTradeMillis = item.LastTradeTime ?? 0;
+                    
+                    var lastTradeTimeNewYork = DateTime.MinValue;
 
                     if (lastTradeMillis > 0)
                     {
@@ -220,13 +183,13 @@ namespace QuantConnect.ToolBox.IEX
                         long value;
                         var isInDictionary = _iexLastTradeTime.TryGetValue(symbolString, out value);
 
-                        // We should update if:
+                        // We should update with trade-tick if:
                         // - there exist an entry for a symbol and new trade time is different from time in dictionary
-                        // - not in dictionary, means the first trade case
+                        // - not in dictionary, means the first trade-tick case
                         if (isInDictionary && value != lastTradeMillis || !isInDictionary)
                         {
                             var lastTradeDateTime = UnixEpoch.AddMilliseconds(lastTradeMillis);
-                            var lastTradeTimeNewYork = lastTradeDateTime.ConvertFromUtc(TimeZones.NewYork);
+                            lastTradeTimeNewYork = lastTradeDateTime.ConvertFromUtc(TimeZones.NewYork);
 
                             var tradeTick = new Tick()
                             {
@@ -240,14 +203,6 @@ namespace QuantConnect.ToolBox.IEX
                             _aggregator.Update(tradeTick);
 
                             _iexLastTradeTime[symbolString] = lastTradeMillis;
-
-                            // During exchange open hours calculate average difference between local and trade time and enqueue that value
-                            if (_exchangeHours.IsOpen(lastTradeTimeNewYork, false))
-                            {
-                                var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                                _tradeMillisDiffQueue.Enqueue(now - lastTradeMillis);
-                                _newTradeEvent.Set();
-                            }
                         }
                     }
 
@@ -265,13 +220,16 @@ namespace QuantConnect.ToolBox.IEX
                     var quoteTick = new Tick()
                     {
                         Symbol = symbol,
-                        Time = GetIexAdjustedLocalDateTime(),
+                        // Use local time if bid-ask came not as part of new trade-tick update
+                        Time = lastTradeTimeNewYork == DateTime.MinValue ? 
+                            DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork) : lastTradeTimeNewYork,
                         TickType = TickType.Quote,
                         BidSize = bidSize.Value,
                         BidPrice = bidPrice.Value,
                         AskSize = askSize.Value,
                         AskPrice = askPrice.Value,
                     };
+
                     _aggregator.Update(quoteTick);
                 }
             }
@@ -279,19 +237,6 @@ namespace QuantConnect.ToolBox.IEX
             {
                 Log.Error("IEXDataQueueHandler.ProcessJsonObject(): " + err.Message);
             }
-        }
-
-        // Since we don't have a stamp for quote updates we
-        // calculate the average delay between trade tick data time stamp and local time, and
-        // assuming that delay in average is the same for quote updates -
-        // just assign the local machine time adjusted for this average
-        private DateTime GetIexAdjustedLocalDateTime()
-        {
-            var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            var adjustedNowDateTime = UnixEpoch.AddMilliseconds(now - _averageTimeDifference);
-            var result = adjustedNowDateTime.ConvertFromUtc(TimeZones.NewYork);
-
-            return result;
         }
 
         /// <summary>

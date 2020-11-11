@@ -300,7 +300,7 @@ namespace QuantConnect.ToolBox.IEX.Response
         /// <summary>
         /// Epoch timestamp in milliseconds of the last market hours trade excluding the closing auction trade.
         /// </summary>
-        public long LastTradeTime { get; set; }
+        public long? LastTradeTime { get; set; }
 
         /// <summary>
         /// Returns a string that represents the current object.
