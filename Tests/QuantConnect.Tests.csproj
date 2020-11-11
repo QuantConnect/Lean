@@ -474,6 +474,7 @@
     <Compile Include="Engine\DataFeeds\AggregationManagerTests.cs" />
     <Compile Include="Engine\DataFeeds\BacktestingFutureChainProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\DataPermissionManagerTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\DividendEventProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\ScannableEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\InternalSubscriptionManagerTests.cs" />
     <Compile Include="Engine\DataFeeds\RealTimeScheduleEventServiceTests.cs" />

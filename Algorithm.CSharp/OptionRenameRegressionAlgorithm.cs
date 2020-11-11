@@ -56,6 +56,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
+            foreach (var dividend in slice.Dividends.Values)
+            {
+                if (dividend.ReferencePrice != 32.59m || dividend.Distribution != 3.82m)
+                {
+                    throw new Exception($"{Time} - Invalid dividend {dividend}");
+                }
+            }
             if (!Portfolio.Invested)
             {
                 if (Time.Day == 28 && Time.Hour > 9 && Time.Minute > 0)
@@ -139,11 +146,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "4"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.02%"},
-            {"Compounding Annual Return", "-0.453%"},
+            {"Compounding Annual Return", "-0.492%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "-1"},
             {"Net Profit", "-0.006%"},
-            {"Sharpe Ratio", "-3.554"},
+            {"Sharpe Ratio", "-3.943"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
@@ -152,15 +159,15 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0.002"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-3.554"},
+            {"Information Ratio", "-3.943"},
             {"Tracking Error", "0.002"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$4.00"},
-            {"Fitness Score", "0.001"},
+            {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-1.768"},
+            {"Return Over Maximum Drawdown", "-2.808"},
             {"Portfolio Turnover", "0.001"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},

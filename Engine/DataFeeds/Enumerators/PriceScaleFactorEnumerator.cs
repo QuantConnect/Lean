@@ -19,7 +19,6 @@ using System.Collections;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {

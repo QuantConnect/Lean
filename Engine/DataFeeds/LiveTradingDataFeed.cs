@@ -239,7 +239,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     EventHandler handler = (sender, args) => subscription?.OnNewDataAvailable();
                     enumerator = _dataQueueHandler.Subscribe(request.Configuration, handler);
 
-                    if (request.Configuration.Symbol.SecurityType == SecurityType.Equity && !request.Configuration.IsInternalFeed)
+                    if (request.Configuration.SecurityType == SecurityType.Equity && CorporateEventEnumeratorFactory.ShouldEmitAuxiliaryBaseData(request.Configuration))
                     {
                         var dividends = _dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Dividend)), handler);
                         var splits = _dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Split)), handler);
