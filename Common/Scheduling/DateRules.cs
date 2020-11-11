@@ -118,8 +118,8 @@ namespace QuantConnect.Scheduling
         /// <returns>A date rule that fires every day the specified symbol trades</returns>
         public IDateRule EveryDay(Symbol symbol)
         {
-            var security = GetSecurity(symbol);
-            return new FuncDateRule($"{symbol.Value}: EveryDay", (start, end) => Time.EachTradeableDay(security, start, end));
+            var securitySchedule = GetSecuritySchedule(symbol);
+            return new FuncDateRule($"{symbol.Value}: EveryDay", (start, end) => Time.EachTradeableDay(securitySchedule, start, end));
         }
 
         /// <summary>
@@ -129,14 +129,14 @@ namespace QuantConnect.Scheduling
         /// <returns>A date rule that fires on the first of each month + offset</returns>
         public IDateRule MonthStart(int daysOffset = 0)
         {
-            return MonthStart(null, daysOffset);
+            return new FuncDateRule(GetName(null, "MonthStart", daysOffset), (start, end) => MonthIterator(null, start, end, daysOffset, true));
         }
 
         /// <summary>
         /// Specifies an event should fire on the first tradable date + offset for the specified symbol of each month
         /// </summary>
         /// <param name="symbol">The symbol whose exchange is used to determine the first tradable date of the month</param>
-        /// <param name="daysOffset"> The amount of days to offset the schedule by; must be between 0 and 30</param>
+        /// <param name="daysOffset"> The amount of tradable days to offset the schedule by; must be between 0 and 30</param>
         /// <returns>A date rule that fires on the first tradable date + offset for the
         /// specified security each month</returns>
         public IDateRule MonthStart(Symbol symbol, int daysOffset = 0)
@@ -148,7 +148,7 @@ namespace QuantConnect.Scheduling
             }
 
             // Create the new DateRule and return it
-            return new FuncDateRule(GetName(symbol, "MonthStart", daysOffset), (start, end) => MonthIterator(GetSecurity(symbol), start, end, daysOffset, true));
+            return new FuncDateRule(GetName(symbol, "MonthStart", daysOffset), (start, end) => MonthIterator(GetSecuritySchedule(symbol), start, end, daysOffset, true));
         }
 
         /// <summary>
@@ -158,14 +158,14 @@ namespace QuantConnect.Scheduling
         /// <returns>A date rule that fires on the last of each month - offset</returns>
         public IDateRule MonthEnd(int daysOffset = 0)
         {
-            return MonthEnd(null, daysOffset);
+            return new FuncDateRule(GetName(null, "MonthEnd", -daysOffset), (start, end) => MonthIterator(null, start, end, daysOffset, false));
         }
 
         /// <summary>
         /// Specifies an event should fire on the last tradable date - offset for the specified symbol of each month
         /// </summary>
         /// <param name="symbol">The symbol whose exchange is used to determine the last tradable date of the month</param>
-        /// <param name="daysOffset">The amount of days to offset the schedule by; must be between 0 and 30.</param>
+        /// <param name="daysOffset">The amount of tradable days to offset the schedule by; must be between 0 and 30.</param>
         /// <returns>A date rule that fires on the last tradable date - offset for the specified security each month</returns>
         public IDateRule MonthEnd(Symbol symbol, int daysOffset = 0)
         {
@@ -176,7 +176,7 @@ namespace QuantConnect.Scheduling
             }
 
             // Create the new DateRule and return it
-            return new FuncDateRule(GetName(symbol, "MonthEnd", -daysOffset), (start, end) => MonthIterator(GetSecurity(symbol), start, end, daysOffset, false));
+            return new FuncDateRule(GetName(symbol, "MonthEnd", -daysOffset), (start, end) => MonthIterator(GetSecuritySchedule(symbol), start, end, daysOffset, false));
         }
 
         /// <summary>
@@ -197,7 +197,7 @@ namespace QuantConnect.Scheduling
 
         /// <summary>
         /// Specifies an event should fire on the first tradable date + offset for the specified
-        /// symbol each week;
+        /// symbol each week
         /// </summary>
         /// <param name="symbol">The symbol whose exchange is used to determine the first
         /// tradeable date of the week</param>
@@ -206,20 +206,20 @@ namespace QuantConnect.Scheduling
         /// security each week</returns>
         public IDateRule WeekStart(Symbol symbol, int daysOffset = 0)
         {
-            var security = GetSecurity(symbol);
-            var tradingDays = security.Exchange.Hours.MarketHours.Values
+            var securitySchedule = GetSecuritySchedule(symbol);
+            var tradingDays = securitySchedule.MarketHours.Values
                 .Where(x => x.IsClosedAllDay == false).OrderBy(x => x.DayOfWeek).ToList();
 
             // Limit offsets to securities weekly schedule
             if (daysOffset > tradingDays.Count - 1)
             {
                 throw new ArgumentOutOfRangeException(nameof(daysOffset),
-                    $"DateRules.WeekStart() : {tradingDays.First().DayOfWeek}+{daysOffset} is out of range for {security.Symbol}'s schedule," +
+                    $"DateRules.WeekStart() : {tradingDays.First().DayOfWeek}+{daysOffset} is out of range for {symbol}'s schedule," +
                     $" please use an offset between 0 - {tradingDays.Count - 1}; Schedule : {string.Join(", ", tradingDays.Select(x => x.DayOfWeek))}");
             }
 
             // Create the new DateRule and return it
-            return new FuncDateRule(GetName(symbol, "WeekStart", daysOffset), (start, end) => WeekIterator(security, start, end, daysOffset, true));
+            return new FuncDateRule(GetName(symbol, "WeekStart", daysOffset), (start, end) => WeekIterator(securitySchedule, start, end, daysOffset, true));
         }
 
         /// <summary>
@@ -241,26 +241,27 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Specifies an event should fire on the last - offset tradable date for the specified
         /// symbol of each week
+        /// </summary>
         /// <param name="symbol">The symbol whose exchange is used to determine the last
         /// tradable date of the week</param>
         /// <param name="daysOffset"> The amount of tradable days to offset the last tradable day by each week</param>
         /// <returns>A date rule that fires on the last - offset tradable date for the specified security each week</returns>
         public IDateRule WeekEnd(Symbol symbol, int daysOffset = 0)
         {
-            var security = GetSecurity(symbol);
-            var tradingDays = security.Exchange.Hours.MarketHours.Values
+            var securitySchedule = GetSecuritySchedule(symbol);
+            var tradingDays = securitySchedule.MarketHours.Values
                 .Where(x => x.IsClosedAllDay == false).OrderBy(x => x.DayOfWeek).ToList();
 
             // Limit offsets to securities weekly schedule
             if (daysOffset > tradingDays.Count - 1)
             {
                 throw new ArgumentOutOfRangeException(nameof(daysOffset),
-                    $"DateRules.WeekEnd() : {tradingDays.Last().DayOfWeek}-{daysOffset} is out of range for {security.Symbol}'s schedule," +
+                    $"DateRules.WeekEnd() : {tradingDays.Last().DayOfWeek}-{daysOffset} is out of range for {symbol}'s schedule," +
                     $" please use an offset between 0 - {tradingDays.Count - 1}; Schedule : {string.Join(", ", tradingDays.Select(x => x.DayOfWeek))}");
             }
 
             // Create the new DateRule and return it
-            return new FuncDateRule(GetName(symbol, "WeekEnd", -daysOffset), (start, end) => WeekIterator(security, start, end, daysOffset, false));
+            return new FuncDateRule(GetName(symbol, "WeekEnd", -daysOffset), (start, end) => WeekIterator(securitySchedule, start, end, daysOffset, false));
         }
 
         /// <summary>
@@ -268,20 +269,14 @@ namespace QuantConnect.Scheduling
         /// </summary>
         /// <param name="symbol">The security's symbol to search for</param>
         /// <returns>The security object matching the given symbol</returns>
-        private Security GetSecurity(Symbol symbol)
+        private SecurityExchangeHours GetSecuritySchedule(Symbol symbol)
         {
-            // We use this for the rules without a symbol
-            if (symbol == null)
-            {
-                return null;
-            }
-
             Security security;
             if (!_securities.TryGetValue(symbol, out security))
             {
                 throw new KeyNotFoundException(symbol.Value + " not found in portfolio. Request this data when initializing the algorithm.");
             }
-            return security;
+            return security.Exchange.Hours;
         }
 
         /// <summary>
@@ -352,10 +347,13 @@ namespace QuantConnect.Scheduling
             return scheduledDate;
         }
 
-        private static IEnumerable<DateTime> MonthIterator(Security security, DateTime start, DateTime end, int offset, bool searchForward)
+        private static IEnumerable<DateTime> MonthIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward)
         {
-            // Get our schedule for this security's exchange
-            var securitySchedule = security == null ? SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork) : security.Exchange.Hours;
+            // No schedule means no security, set to open everyday
+            if (securitySchedule == null)
+            {
+                securitySchedule = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
+            }
 
             foreach (var date in Time.EachDay(start, end))
             {
@@ -380,16 +378,16 @@ namespace QuantConnect.Scheduling
             }
         }
 
-        private static IEnumerable<DateTime> WeekIterator(Security security, DateTime start, DateTime end, int offset, bool searchForward)
+        private static IEnumerable<DateTime> WeekIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward)
         {
-            // Get our schedule for this security's exchange
-            var securitySchedule = security == null ? SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork) : security.Exchange.Hours;
-
             // Determine the weekly base day and boundary to schedule off of
             DayOfWeek weeklyBaseDay;
             DayOfWeek weeklyBoundaryDay;
-            if (security == null)
+            if (securitySchedule == null)
             {
+                // No schedule means no security, set to open everyday
+                securitySchedule = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
+
                 // Searching forward Monday is baseDay, with boundary being the following Sunday
                 // Searching backward Friday is baseDay, with boundary being the previous Saturday
                 weeklyBaseDay = searchForward ? DayOfWeek.Monday : DayOfWeek.Friday;

@@ -293,22 +293,25 @@ namespace QuantConnect.Tests.Common.Scheduling
             Assert.AreEqual(52, count);
         }
 
-        [Test]
-        public void StartOfWeekWithSymbol()
+        [TestCase(Symbols.SymbolsKey.SPY, new[] { 3, 10, 18, 24, 31 })]
+        [TestCase(Symbols.SymbolsKey.BTCUSD, new[] { 2, 9, 16, 23, 30 })]
+        [TestCase(Symbols.SymbolsKey.EURUSD, new[] { 2, 9, 16, 23, 30 })]
+        [TestCase(Symbols.SymbolsKey.Fut_SPY_Feb19_2016, new int[] { 2, 9, 16, 23, 30 })]
+        public void StartOfWeekWithSymbol(Symbols.SymbolsKey symbolKey, int[] expectedDays)
         {
             var rules = GetDateRules();
-            var rule = rules.WeekStart(Symbols.SPY);
-            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+            var rule = rules.WeekStart(Symbols.Lookup(symbolKey));
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 1, 31)).ToList();
 
-            int count = 0;
-            foreach (var date in dates)
+            // Assert we have as many dates as expected
+            Assert.AreEqual(expectedDays.Length, dates.Count);
+
+            // Verify the days match up
+            var datesAndExpectedDays = dates.Zip(expectedDays, (date, expectedDay) => new { date, expectedDay });
+            foreach (var pair in datesAndExpectedDays)
             {
-                count++;
-                Assert.IsTrue(date.DayOfWeek == DayOfWeek.Monday || date.DayOfWeek == DayOfWeek.Tuesday);
-                Console.WriteLine(date + " " + date.DayOfWeek);
+                Assert.AreEqual(pair.expectedDay, pair.date.Day);
             }
-
-            Assert.AreEqual(52, count);
         }
 
         [TestCase(Symbols.SymbolsKey.SPY, new[] { 5, 12, 20, 26 })] // Set contains holiday on 1/17
@@ -381,21 +384,26 @@ namespace QuantConnect.Tests.Common.Scheduling
             Assert.AreEqual(52, count);
         }
 
-        [Test]
-        public void EndOfWeekWithSymbol()
+        [TestCase(Symbols.SymbolsKey.SPY, new[] { 7, 14, 21, 28 })]
+        [TestCase(Symbols.SymbolsKey.BTCUSD, new[] { 1, 8, 15, 22, 29 })]
+        [TestCase(Symbols.SymbolsKey.EURUSD, new[] { 7, 14, 21, 28 })]
+        [TestCase(Symbols.SymbolsKey.Fut_SPY_Feb19_2016, new int[] { 7, 14, 21, 28 })]
+        public void EndOfWeekWithSymbol(Symbols.SymbolsKey symbolKey, int[] expectedDays)
         {
             var rules = GetDateRules();
-            var rule = rules.WeekEnd(Symbols.SPY);
-            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
+            var rule = rules.WeekEnd(Symbols.Lookup(symbolKey));
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 1, 31)).ToList();
 
-            int count = 0;
-            foreach (var date in dates)
+
+            // Assert we have as many dates as expected
+            Assert.AreEqual(expectedDays.Length, dates.Count);
+
+            // Verify the days match up
+            var datesAndExpectedDays = dates.Zip(expectedDays, (date, expectedDay) => new { date, expectedDay });
+            foreach (var pair in datesAndExpectedDays)
             {
-                count++;
-                Assert.IsTrue(date.DayOfWeek == DayOfWeek.Friday || date.DayOfWeek == DayOfWeek.Thursday);
+                Assert.AreEqual(pair.expectedDay, pair.date.Day);
             }
-
-            Assert.AreEqual(52, count);
         }
 
         [TestCase(Symbols.SymbolsKey.SPY, new[] { 5, 12, 19, 26 })]
@@ -503,6 +511,22 @@ namespace QuantConnect.Tests.Common.Scheduling
             config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURUSD, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
             manager.Add(
                 Symbols.EURUSD,
+                new Security(
+                    securityExchangeHours,
+                    config,
+                    new Cash(Currencies.USD, 0, 1m),
+                    SymbolProperties.GetDefault(Currencies.USD),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
+                )
+            );
+
+            // Add Fut_SPY_Feb19_2016 for testing
+            securityExchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.CME, Symbols.Fut_SPY_Feb19_2016, SecurityType.Future);
+            config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.Fut_SPY_Feb19_2016, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
+            manager.Add(
+                Symbols.Fut_SPY_Feb19_2016,
                 new Security(
                     securityExchangeHours,
                     config,
