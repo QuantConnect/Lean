@@ -70,7 +70,7 @@ if not exist "%DATA_DIR%" (
 REM Pull the image if we want to update
 if /I "%UPDATE%" == "Y" (
     echo Updating Docker Image
-    docker pull %image%
+    docker pull %IMAGE%
 )
 
 echo Starting docker container; container id is:

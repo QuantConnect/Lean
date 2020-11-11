@@ -131,7 +131,7 @@ if /I "%DEBUGGING%" == "Y" (
 REM Pull the image if we want to update
 if /I "%UPDATE%" == "Y" (
     echo Updating Docker Image
-    docker pull %image%
+    docker pull %IMAGE%
 )
 
 REM Run built docker COMMAND
