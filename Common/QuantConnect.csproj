@@ -121,6 +121,9 @@
     <Reference Include="MathNet.Numerics, Version=3.19.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MathNet.Numerics.3.19.0\lib\net40\MathNet.Numerics.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.IO.RecyclableMemoryStream, Version=1.3.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.IO.RecyclableMemoryStream.1.3.5\lib\net46\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -372,6 +375,7 @@
     <Compile Include="Orders\Fees\AlphaStreamsFeeModel.cs" />
     <Compile Include="Orders\Fees\ModifiedFillQuantityOrderFee.cs" />
     <Compile Include="Orders\Fills\Fill.cs" />
+    <Compile Include="Orders\Fills\EquityFillModel.cs" />
     <Compile Include="Orders\Fills\FillModelParameters.cs" />
     <Compile Include="Orders\Fees\FeeModel.cs" />
     <Compile Include="Orders\Fees\OrderFee.cs" />
@@ -399,6 +403,8 @@
     <Compile Include="Securities\BuyingPowerModel.cs" />
     <Compile Include="Securities\BuyingPowerModelExtensions.cs" />
     <Compile Include="Securities\BuyingPowerParameters.cs" />
+    <Compile Include="Securities\ContractSecurityFilterUniverse.cs" />
+    <Compile Include="Securities\Future\FutureSymbol.cs" />
     <Compile Include="Securities\GetMaximumOrderQuantityForDeltaBuyingPowerParameters.cs" />
     <Compile Include="Securities\RegisteredSecurityDataTypesProvider.cs" />
     <Compile Include="Securities\ErrorCurrencyConverter.cs" />

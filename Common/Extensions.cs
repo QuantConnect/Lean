@@ -47,7 +47,7 @@ using QuantConnect.Securities;
 using QuantConnect.Util;
 using Timer = System.Timers.Timer;
 using static QuantConnect.StringExtensions;
-using System.Runtime.CompilerServices;
+using Microsoft.IO;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Securities.Option;
 
@@ -58,8 +58,51 @@ namespace QuantConnect
     /// </summary>
     public static class Extensions
     {
+        private static RecyclableMemoryStreamManager MemoryManager = new RecyclableMemoryStreamManager();
+        private static ConcurrentBag<Guid> Guids = new ConcurrentBag<Guid>();
+
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
+
+        /// <summary>
+        /// Will return a memory stream using the <see cref="RecyclableMemoryStreamManager"/> instance.
+        /// </summary>
+        /// <remarks>For performance will reuse a memory stream guid per thread. So</remarks>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static MemoryStream GetMemoryStream(Guid guid)
+        {
+            return MemoryManager.GetStream(guid);
+        }
+
+        /// <summary>
+        /// Gets a unique id. Should be returned using <see cref="ReturnId"/>
+        /// </summary>
+        /// <remarks>Creating a new <see cref="Guid"/> is expensive</remarks>
+        /// <remarks>Used for <see cref="GetMemoryStream"/></remarks>
+        /// <returns>A unused <see cref="Guid"/></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Guid RentId()
+        {
+            Guid guid;
+            if (!Guids.TryTake(out guid))
+            {
+                guid = new Guid();
+            }
+            return guid;
+        }
+
+        /// <summary>
+        /// Returns a rented unique id <see cref="RentId"/>
+        /// </summary>
+        /// <remarks>Creating a new <see cref="Guid"/> is expensive</remarks>
+        /// <remarks>Used for <see cref="GetMemoryStream"/></remarks>
+        /// <param name="guid">The guid to return</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ReturnId(Guid guid)
+        {
+            Guids.Add(guid);
+        }
 
         /// <summary>
         /// Serialize a list of ticks using protobuf
@@ -68,11 +111,16 @@ namespace QuantConnect
         /// <returns>The resulting byte array</returns>
         public static byte[] ProtobufSerialize(this List<Tick> ticks)
         {
-            using (var stream = new MemoryStream())
+            var guid = RentId();
+            byte[] result;
+            using (var stream = GetMemoryStream(guid))
             {
                 Serializer.Serialize(stream, ticks);
-                return stream.ToArray();
+                result = stream.ToArray();
             }
+
+            ReturnId(guid);
+            return result;
         }
 
         /// <summary>
@@ -82,7 +130,10 @@ namespace QuantConnect
         /// <returns>The resulting byte array</returns>
         public static byte[] ProtobufSerialize(this IBaseData baseData)
         {
-            using (var stream = new MemoryStream())
+            var guid = RentId();
+
+            byte[] result;
+            using (var stream = GetMemoryStream(guid))
             {
                 switch (baseData.DataType)
                 {
@@ -99,8 +150,11 @@ namespace QuantConnect
                         Serializer.SerializeWithLengthPrefix(stream, baseData as BaseData, PrefixStyle.Base128, 1);
                         break;
                 }
-                return stream.ToArray();
+                result = stream.ToArray();
             }
+            ReturnId(guid);
+
+            return result;
         }
 
         /// <summary>

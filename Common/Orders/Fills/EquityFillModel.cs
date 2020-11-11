@@ -26,7 +26,7 @@ namespace QuantConnect.Orders.Fills
     /// <summary>
     /// Provides a base class for all fill models
     /// </summary>
-    public class FillModel : IFillModel
+    public class EquityFillModel : IFillModel
     {
         /// <summary>
         /// The parameters instance to be used by the different XxxxFill() implementations
@@ -468,7 +468,8 @@ namespace QuantConnect.Orders.Fills
         {
             if (PythonWrapper != null)
             {
-                return PythonWrapper.GetPrices(asset, direction);
+                var prices = PythonWrapper.GetPricesInternal(asset, direction);
+                return new Prices(prices.EndTime, prices.Current, prices.Open, prices.High, prices.Low, prices.Close);
             }
             return GetPrices(asset, direction);
         }
@@ -498,7 +499,7 @@ namespace QuantConnect.Orders.Fills
                 .Select(x => x.Type).ToList();
             // Tick
             var tick = asset.Cache.GetData<Tick>();
-            if (tick != null && subscriptionTypes.Contains(typeof(Tick)))
+            if (subscriptionTypes.Contains(typeof(Tick)) && tick != null)
             {
                 var price = direction == OrderDirection.Sell ? tick.BidPrice : tick.AskPrice;
                 if (price != 0m)
@@ -516,7 +517,7 @@ namespace QuantConnect.Orders.Fills
 
             // Quote
             var quoteBar = asset.Cache.GetData<QuoteBar>();
-            if (quoteBar != null && subscriptionTypes.Contains(typeof(QuoteBar)))
+            if (subscriptionTypes.Contains(typeof(QuoteBar)) && quoteBar != null)
             {
                 var bar = direction == OrderDirection.Sell ? quoteBar.Bid : quoteBar.Ask;
                 if (bar != null)
@@ -527,7 +528,7 @@ namespace QuantConnect.Orders.Fills
 
             // Trade
             var tradeBar = asset.Cache.GetData<TradeBar>();
-            if (tradeBar != null && subscriptionTypes.Contains(typeof(TradeBar)))
+            if (subscriptionTypes.Contains(typeof(TradeBar)) && tradeBar != null)
             {
                 return new Prices(tradeBar);
             }

@@ -125,7 +125,7 @@ cme,CB,future,Cash-settled Butter Futures,USD,20000.0,0.00025,1.0
 cme,CJY,future,Canadian Dollar/Japanese Yen Futures,JPY,200000.0,0.01,1.0
 cme,CNH,future,Standard-Size USD/Offshore RMB (CNH) Futures,CNY,100000.0,0.0001,1.0
 cme,CSC,future,Cash-Settled Cheese Futures,USD,20000.0,0.001,1.0
-cme,DC,future,Class III Milk Futures,USD,200000.0,0.0001,1.0
+cme,DC,future,Class III Milk Futures,USD,2000.0,0.01,1.0
 cme,DY,future,Dry Whey Futures,USD,44000.0,0.00025,1.0
 cme,E7,future,E-mini Euro FX Futures,USD,62500.0,0.0001,1.0
 cme,EAD,future,Euro/Australian Dollar Futures,AUD,125000.0,0.0001,1.0
@@ -135,7 +135,7 @@ cme,EMD,future,E-mini S&P MidCap 400 Futures,USD,100.0,0.1,1.0
 cme,ES,future,E-mini S&P 500 Futures,USD,50.0,0.25,1.0
 cme,ESK,future,Euro/Swedish Krona Futures,SEK,125000.0,0.0005,1.0
 cme,GD,future,S&P-GSCI Commodity Index Futures,USD,250.0,0.05,1.0
-cme,GDK,future,Class IV Milk Futures,USD,200000.0,0.0001,1.0
+cme,GDK,future,Class IV Milk Futures,USD,2000.0,0.01,1.0
 cme,GE,future,Eurodollar Futures,USD,2500.0,0.0025,1.0
 cme,GF,future,Feeder Cattle Futures,USD,500.0,0.025,1.0
 cme,GNF,future,Nonfat Dry Milk Futures,USD,44000.0,0.00025,1.0

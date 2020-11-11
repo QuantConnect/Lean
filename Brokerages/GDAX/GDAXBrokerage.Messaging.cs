@@ -539,7 +539,12 @@ namespace QuantConnect.Brokerages.GDAX
 
                         if (response.StatusCode != HttpStatusCode.OK)
                         {
-                            throw new Exception($"GDAXBrokerage.FillMonitorAction(): request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+                            OnMessage(new BrokerageMessageEvent(
+                                BrokerageMessageType.Warning,
+                                -1,
+                                $"GDAXBrokerage.FillMonitorAction(): request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}"));
+
+                            continue;
                         }
 
                         var fills = JsonConvert.DeserializeObject<List<Messages.Fill>>(response.Content);
