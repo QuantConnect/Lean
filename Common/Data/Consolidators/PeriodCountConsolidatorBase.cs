@@ -362,7 +362,8 @@ namespace QuantConnect.Data.Consolidators
                 Period = period;
             }
 
-            public DateTime GetRoundedBarTime(DateTime time) => time.RoundDown(Period.Value);
+            public DateTime GetRoundedBarTime(DateTime time) => 
+                time.SubtractRoundDown(Period.Value, Time.OneDay);
         }
 
         /// <summary>

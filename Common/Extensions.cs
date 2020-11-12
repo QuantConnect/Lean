@@ -1015,7 +1015,7 @@ namespace QuantConnect
         /// Extension method to round a datetime down by a timespan interval.
         /// </summary>
         /// <param name="dateTime">Base DateTime object we're rounding down.</param>
-        /// <param name="interval">Timespan interval to round to.</param>
+        /// <param name="interval">Timespan interval to round to, must be less than one day</param>
         /// <returns>Rounded datetime</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DateTime RoundDown(this DateTime dateTime, TimeSpan interval)
@@ -1026,12 +1026,31 @@ namespace QuantConnect
                 return dateTime;
             }
 
+            if (interval > TimeSpan.FromDays(1))
+            {
+                throw new ArgumentOutOfRangeException(nameof(interval),
+                    "DateTime.RoundDown(): Interval must be less than 1 day");
+            }
+
             var amount = dateTime.Ticks % interval.Ticks;
             if (amount > 0)
             {
                 return dateTime.AddTicks(-amount);
             }
             return dateTime;
+        }
+
+        /// <summary>
+        /// Extension method to subtract a period from a datetime and then round down by a timespan interval.
+        /// </summary>
+        /// <param name="dateTime">Base DateTime object we are subtracting and rounding down on</param>
+        /// <param name="period">Period to subtract from DateTime</param>
+        /// <param name="interval">Timespan interval to round to, must be less than one day</param>
+        /// <returns>Rounded datetime</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static DateTime SubtractRoundDown(this DateTime dateTime, TimeSpan period, TimeSpan interval)
+        {
+            return dateTime.Subtract(period).RoundDown(interval);
         }
 
         /// <summary>
@@ -1124,16 +1143,36 @@ namespace QuantConnect
         /// Extension method to explicitly round up to the nearest timespan interval.
         /// </summary>
         /// <param name="time">Base datetime object to round up.</param>
-        /// <param name="d">Timespan interval for rounding</param>
+        /// <param name="interval">Timespan interval for rounding, must be less than one day</param>
         /// <returns>Rounded datetime</returns>
-        public static DateTime RoundUp(this DateTime time, TimeSpan d)
+        public static DateTime RoundUp(this DateTime time, TimeSpan interval)
         {
-            if (d == TimeSpan.Zero)
+            if (interval == TimeSpan.Zero)
             {
                 // divide by zero exception
                 return time;
             }
-            return new DateTime(((time.Ticks + d.Ticks - 1) / d.Ticks) * d.Ticks);
+
+            if (interval > TimeSpan.FromDays(1))
+            {
+                throw new ArgumentOutOfRangeException(nameof(interval),
+                    "DateTime.RoundDown(): Interval must be less than 1 day");
+            }
+
+            return new DateTime(((time.Ticks + interval.Ticks - 1) / interval.Ticks) * interval.Ticks);
+        }
+
+        /// <summary>
+        /// Extension method to add a period to a datetime and then round up by a timespan interval.
+        /// </summary>
+        /// <param name="dateTime">Base DateTime object we are adding to and rounding up on</param>
+        /// <param name="period">Period to add to DateTime</param>
+        /// <param name="interval">Timespan interval to round up to, must be less than one day</param>
+        /// <returns>Rounded datetime</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static DateTime AddRoundUp(this DateTime dateTime, TimeSpan period, TimeSpan interval)
+        {
+            return dateTime.Add(period).RoundUp(interval);
         }
 
         /// <summary>
