@@ -1156,7 +1156,7 @@ namespace QuantConnect
             if (interval > TimeSpan.FromDays(1))
             {
                 throw new ArgumentOutOfRangeException(nameof(interval),
-                    "DateTime.RoundDown(): Interval must be less than 1 day");
+                    "DateTime.RoundUp(): Interval must be less than 1 day");
             }
 
             return new DateTime(((time.Ticks + interval.Ticks - 1) / interval.Ticks) * interval.Ticks);
