@@ -13,10 +13,12 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using QuantConnect.Util;
 
-namespace QuantConnect.Securities.Future
+namespace QuantConnect.Securities.FutureOption.Api
 {
     /// <summary>
     /// CME options trades, dates, and expiration list API call root response

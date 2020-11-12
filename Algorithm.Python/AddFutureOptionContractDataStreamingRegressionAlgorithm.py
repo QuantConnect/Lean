@@ -1,3 +1,16 @@
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from datetime import datetime, timedelta
 
 from QuantConnect import *
@@ -7,7 +20,10 @@ from QuantConnect.Data.Market import *
 from QuantConnect.Securities import *
 from QuantConnect.Securities.Future import *
 
-
+### <summary>
+### This regression algorithm tests that we receive the expected data when
+### we add future option contracts individually using <see cref="AddFutureOptionContract"/>
+### </summary>
 class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
         self.onDataReached = False
@@ -68,13 +84,13 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
         self.expectedSymbolsReceived = list(set(self.expectedSymbolsReceived))
 
         if not self.onDataReached:
-            raise Exception("OnData() was never called.")
+            raise AssertionError("OnData() was never called.")
         if len(self.symbolsReceived) != len(self.expectedSymbolsReceived):
-            raise Exception(f"Expected {len(self.expectedSymbolsReceived)} option contracts Symbols, found {len(self.symbolsReceived)}")
+            raise AssertionError(f"Expected {len(self.expectedSymbolsReceived)} option contracts Symbols, found {len(self.symbolsReceived)}")
 
         missingSymbols = [expectedSymbol for expectedSymbol in self.expectedSymbolsReceived if expectedSymbol not in self.symbolsReceived]
         if any(missingSymbols):
-            raise Exception(f'Symbols: "{", ".join(missingSymbols)}" were not found in OnData')
+            raise AssertionError(f'Symbols: "{", ".join(missingSymbols)}" were not found in OnData')
 
         for expectedSymbol in self.expectedSymbolsReceived:
             data = self.dataReceived[expectedSymbol]
@@ -83,4 +99,4 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
 
             nonDupeDataCount = len(set(data))
             if nonDupeDataCount < 1000:
-                raise Exception(f"Received too few data points. Expected >=1000, found {nonDupeDataCount} for {expectedSymbol}")
+                raise AssertionError(f"Received too few data points. Expected >=1000, found {nonDupeDataCount} for {expectedSymbol}")

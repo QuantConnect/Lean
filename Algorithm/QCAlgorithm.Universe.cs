@@ -453,7 +453,8 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Adds a filter to options created using the provided Symbol's added universe.
+        /// Adds a new universe that creates options of the security by monitoring any changes in the Universe the provided security is in.
+        /// Additionally, a filter can be applied to the options generated when the universe of the security changes.
         /// </summary>
         /// <param name="underlyingSymbol">Underlying Symbol to add as an option. For Futures, the option chain constructed will be per-contract, as long as a canonical Symbol is provided.</param>
         /// <param name="optionFilter">User-defined filter used to select the options we want out of the option chain provided.</param>

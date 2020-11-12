@@ -20,6 +20,7 @@ using System.Globalization;
 namespace QuantConnect.Util
 {
     /// <summary>
+    /// Allows for conversion of string numeric values from JSON to the <see cref="decimal"/> type
     /// </summary>
     public class StringDecimalJsonConverter : TypeChangeJsonConverter<decimal, string>
     {

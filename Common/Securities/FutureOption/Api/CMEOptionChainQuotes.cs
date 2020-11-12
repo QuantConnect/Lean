@@ -13,41 +13,33 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
-using System.Globalization;
 using Newtonsoft.Json;
 using QuantConnect.Util;
 
-namespace QuantConnect.Securities.Future
+namespace QuantConnect.Securities.FutureOption.Api
 {
     /// <summary>
-    /// CME Option Chain Settlements API call root response
+    /// CME Option Chain Quotes API call root response
     /// </summary>
-    public class CMEOptionChainSettlements
+    public class CMEOptionChainQuotes
     {
         /// <summary>
         /// The future options contracts with/without settlements
         /// </summary>
-        [JsonProperty("settlements")]
-        public List<CMEOptionChainSettlement> Settlements { get; private set; }
+        [JsonProperty("optionContractQuotes")]
+        public List<CMEOptionChainQuoteEntry> Quotes { get; private set; }
     }
 
     /// <summary>
-    /// Option chain entry settlement values, containing strike price
+    /// Option chain entry quotes, containing strike price
     /// </summary>
-    public class CMEOptionChainSettlement
+    public class CMEOptionChainQuoteEntry
     {
-        /// <summary>
-        /// Option right (call/put)
-        /// </summary>
-        [JsonProperty("type")]
-        public string OptionRight { get; private set; }
-
         /// <summary>
         /// Strike price of the future option quote entry
         /// </summary>
-        [JsonProperty("strike"), JsonConverter(typeof(StringDecimalJsonConverter), true)]
+        [JsonProperty("strikePrice"), JsonConverter(typeof(StringDecimalJsonConverter), true)]
         public decimal StrikePrice { get; private set; }
     }
 }

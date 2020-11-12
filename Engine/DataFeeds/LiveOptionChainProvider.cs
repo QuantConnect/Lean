@@ -24,6 +24,8 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
+using QuantConnect.Securities.FutureOption;
+using QuantConnect.Securities.FutureOption.Api;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -47,7 +49,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private const string CMEProductSlateURL = "https://www.cmegroup.com/CmeWS/mvc/ProductSlate/V2/List?pageNumber=1&sortAsc=false&sortField=rank&searchString=" + CMESymbolReplace + "&pageSize=5";
         private const string CMEOptionsTradeDateAndExpirations = "https://www.cmegroup.com/CmeWS/mvc/Settlements/Options/TradeDateAndExpirations/" + CMEProductCodeReplace;
-        private const string CMEOptionChainURL = "https://www.cmegroup.com/CmeWS/mvc/Settlements/Options/Settlements/" + CMEProductCodeReplace + "/OOF?monthYear=" + CMEContractCodeReplace + "&optionProductId=" + CMEProductCodeReplace + "&optionExpiration=" + CMEProductCodeReplace + "-" + CMEProductExpirationReplace + "&tradeDate=" + CMEDateTimeReplace + "&pageSize=500&_=";
+        private const string CMEOptionChainQuotesURL = "https://www.cmegroup.com/CmeWS/mvc/Quotes/Option/" + CMEProductCodeReplace + "/G/" + CMEProductExpirationReplace + "/ALL?_=";
 
         private const int MaxDownloadAttempts = 5;
 
@@ -105,6 +107,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         .ReadAsStringAsync()
                         .SynchronouslyAwaitTaskResult());
 
+                    productResponse.Dispose();
+
                     // We want to gather the future product to get the future options ID
                     var futureProductId = productResults.Products.Where(p => p.Globex == futureContractSymbol.ID.Symbol && p.GlobexTraded && p.Cleared == "Futures")
                         .Select(p => p.Id)
@@ -122,6 +126,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         .ReadAsStringAsync()
                         .SynchronouslyAwaitTaskResult());
 
+                    optionsTradesAndExpiriesResponse.Dispose();
+
                     // For now, only support American options on CME
                     var selectedOption = tradesAndExpiriesResponse
                         .FirstOrDefault(x => !x.Daily && !x.Weekly && !x.Sto && x.OptionType == "AME");
@@ -133,8 +139,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // Gather the month code and the year's last number to query the next API, which expects an expiration as `<MONTH_CODE><YEAR_LAST_NUMBER>`
+                    var canonicalFuture = Symbol.Create(futureContractSymbol.ID.Symbol, SecurityType.Future, futureContractSymbol.ID.Market);
+                    var expiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFuture);
+
                     var futureContractExpiration = selectedOption.Expirations
-                        .FirstOrDefault(x => x.Expiration.Year == futureContractSymbol.ID.Date.Year && x.Expiration.Month == futureContractSymbol.ID.Date.Month);
+                        .Select(x => new KeyValuePair<CMEOptionsExpiration, DateTime>(x, expiryFunction(new DateTime(x.Expiration.Year, x.Expiration.Month, 1))))
+                        .FirstOrDefault(x => x.Value.Year == futureContractSymbol.ID.Date.Year && x.Value.Month == futureContractSymbol.ID.Date.Month)
+                        .Key;
 
                     if (futureContractExpiration == null)
                     {
@@ -143,50 +154,61 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     var futureContractMonthCode = futureContractExpiration.Expiration.Code;
-                    var futureContractId = futureContractExpiration.ContractId;
 
                     _rateGate.WaitToProceed();
 
-                    var mhdbEntry = MarketHoursDatabase.FromDataFolder()
-                        .GetExchangeHours(futureContractSymbol.ID.Market, futureContractSymbol, futureContractSymbol.SecurityType);
-                    // We want at least yesterday's trading day, not today since settlement hasn't occurred yet.
-                    var lastTradeDate = mhdbEntry.GetPreviousTradingDay(DateTime.UtcNow.AddDays(-1).ConvertFromUtc(mhdbEntry.TimeZone));
-
                     // Subtract one day from now for settlement API since settlement may not be available for today yet
-                    var optionChainQuotesResponseResult = _client.GetAsync(CMEOptionChainURL.Replace(CMEProductCodeReplace, selectedOption.ProductId.ToStringInvariant())
-                        .Replace(CMEContractCodeReplace, futureContractId)
+                    var optionChainQuotesResponseResult = _client.GetAsync(CMEOptionChainQuotesURL
+                        .Replace(CMEProductCodeReplace, selectedOption.ProductId.ToStringInvariant())
                         .Replace(CMEProductExpirationReplace, futureContractMonthCode)
-                        .Replace(CMEDateTimeReplace, lastTradeDate.ToStringInvariant("MM/dd/yyyy"))
                         + Math.Floor((DateTime.UtcNow - _epoch).TotalMilliseconds).ToStringInvariant());
 
                     optionChainQuotesResponseResult.Result.EnsureSuccessStatusCode();
 
-                    var futureOptionChain = JsonConvert.DeserializeObject<CMEOptionChainSettlements>(optionChainQuotesResponseResult.Result.Content
+                    var futureOptionChain = JsonConvert.DeserializeObject<CMEOptionChainQuotes>(optionChainQuotesResponseResult.Result.Content
                         .ReadAsStringAsync()
                         .SynchronouslyAwaitTaskResult())
-                        .Settlements
-                        .Where(s => s.StrikePrice != default(decimal))
-                        .DistinctBy(s => s.StrikePrice);
+                        .Quotes
+                        .DistinctBy(s => s.StrikePrice)
+                        .ToList();
+
+                    optionChainQuotesResponseResult.Dispose();
+
+                    // Each CME contract can have arbitrary scaling applied to the strike price, so we normalize it to the
+                    // underlying's price via static entries.
+                    var optionStrikePriceScaleFactor = CMEStrikePriceScalingFactors.GetScaleFactor(futureContractSymbol);
+                    var canonicalOption = Symbol.CreateOption(
+                        futureContractSymbol,
+                        futureContractSymbol.ID.Market,
+                        default(OptionStyle),
+                        default(OptionRight),
+                        default(decimal),
+                        SecurityIdentifier.DefaultDate);
 
                     foreach (var optionChainEntry in futureOptionChain)
                     {
+                        var futureOptionExpiry = FuturesOptionsExpiryFunctions.FuturesOptionExpiry(canonicalOption, futureContractSymbol.ID.Date);
+                        var scaledStrikePrice = optionChainEntry.StrikePrice / optionStrikePriceScaleFactor;
+
                         // Calls and puts share the same strike, create two symbols per each to avoid iterating twice.
                         symbols.Add(Symbol.CreateOption(
                             futureContractSymbol,
                             futureContractSymbol.ID.Market,
                             OptionStyle.American,
                             OptionRight.Call,
-                            optionChainEntry.StrikePrice,
-                            futureContractSymbol.ID.Date));
+                            scaledStrikePrice,
+                            futureOptionExpiry));
 
                        symbols.Add(Symbol.CreateOption(
                            futureContractSymbol,
                            futureContractSymbol.ID.Market,
                            OptionStyle.American,
                            OptionRight.Put,
-                           optionChainEntry.StrikePrice,
-                           futureContractSymbol.ID.Date));
+                           scaledStrikePrice,
+                           futureOptionExpiry));
                     }
+
+                    break;
                 }
                 catch (HttpRequestException err)
                 {

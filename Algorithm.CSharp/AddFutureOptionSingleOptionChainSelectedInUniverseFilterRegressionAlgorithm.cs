@@ -107,14 +107,31 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            foreach (var chain in data.FutureChains.Values)
+            foreach (var chain in data.OptionChains.Values)
             {
-                foreach (var future in chain.Contracts.Keys)
+                var futureInvested = false;
+                var optionInvested = false;
+
+                foreach (var option in chain.Contracts.Keys)
                 {
-                    if (data.ContainsKey(future))
+                    if (futureInvested && optionInvested)
                     {
-                        SetHoldings(future, 0.25);
+                        return;
+                    }
+
+                    var future = option.Underlying;
+
+                    if (!optionInvested && data.ContainsKey(option))
+                    {
+                        MarketOrder(option, 1);
                         _invested = true;
+                        optionInvested = true;
+                    }
+                    if (!futureInvested && data.ContainsKey(future))
+                    {
+                        MarketOrder(future, 1);
+                        _invested = true;
+                        futureInvested = true;
                     }
                 }
             }

@@ -67,7 +67,7 @@ class FutureOptionPutOTMExpiryRegressionAlgorithm(QCAlgorithm):
 
         self.expectedContract = Symbol.CreateOption(self.es19h21, Market.CME, OptionStyle.American, OptionRight.Put, 3200.0, datetime(2021, 3, 19))
         if self.esOption != self.expectedContract:
-            raise Exception(f"Contract {self.expectedContract} was not found in the chain");
+            raise AssertionError(f"Contract {self.expectedContract} was not found in the chain");
 
         self.Schedule.On(self.DateRules.Today, self.TimeRules.AfterMarketOpen(self.es19h21, 1), self.ScheduledMarketOrder)
 
@@ -80,11 +80,11 @@ class FutureOptionPutOTMExpiryRegressionAlgorithm(QCAlgorithm):
         for delisting in data.Delistings.Values:
             if delisting.Type == DelistingType.Warning:
                 if delisting.Time != datetime(2021, 3, 19):
-                    raise Exception(f"Delisting warning issued at unexpected date: {delisting.Time}");
+                    raise AssertionError(f"Delisting warning issued at unexpected date: {delisting.Time}");
 
             if delisting.Type == DelistingType.Delisted:
                 if delisting.Time != datetime(2021, 3, 20):
-                    raise Exception(f"Delisting happened at unexpected date: {delisting.Time}");
+                    raise AssertionError(f"Delisting happened at unexpected date: {delisting.Time}");
         
 
     def OnOrderEvent(self, orderEvent: OrderEvent):
@@ -93,30 +93,30 @@ class FutureOptionPutOTMExpiryRegressionAlgorithm(QCAlgorithm):
             return
 
         if not self.Securities.ContainsKey(orderEvent.Symbol):
-            raise Exception(f"Order event Symbol not found in Securities collection: {orderEvent.Symbol}")
+            raise AssertionError(f"Order event Symbol not found in Securities collection: {orderEvent.Symbol}")
 
         security = self.Securities[orderEvent.Symbol]
         if security.Symbol == self.es19h21:
-            raise Exception("Invalid state: did not expect a position for the underlying to be opened, since this contract expires OTM")
+            raise AssertionError("Invalid state: did not expect a position for the underlying to be opened, since this contract expires OTM")
         
         # Expected contract is ES19H21 Put Option expiring OTM @ 3200
         if (security.Symbol == self.expectedContract):
             self.AssertFutureOptionContractOrder(orderEvent, security)
         else:
-            raise Exception(f"Received order event for unknown Symbol: {orderEvent.Symbol}")
+            raise AssertionError(f"Received order event for unknown Symbol: {orderEvent.Symbol}")
 
         self.Log(f"{orderEvent}");
         
 
     def AssertFutureOptionContractOrder(self, orderEvent: OrderEvent, option: Security):
         if orderEvent.Direction == OrderDirection.Buy and option.Holdings.Quantity != 1:
-            raise Exception(f"No holdings were created for option contract {option.Symbol}");
+            raise AssertionError(f"No holdings were created for option contract {option.Symbol}");
 
         if orderEvent.Direction == OrderDirection.Sell and option.Holdings.Quantity != 0:
-            raise Exception("Holdings were found after a filled option exercise");
+            raise AssertionError("Holdings were found after a filled option exercise");
 
         if orderEvent.Direction == OrderDirection.Sell and "OTM" not in orderEvent.Message:
-            raise Exception("Contract did not expire OTM");
+            raise AssertionError("Contract did not expire OTM");
 
         if "Exercise" in orderEvent.Message:
-            raise Exception("Exercised option, even though it expires OTM");
+            raise AssertionError("Exercised option, even though it expires OTM");

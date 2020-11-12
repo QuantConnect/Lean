@@ -22,17 +22,16 @@ namespace QuantConnect.Securities.Option
     /// We re-use the <see cref="FutureMarginModel"/> implementation and multiply its results
     /// by 1.5x to simulate the increased margins seen for future options.
     /// </summary>
-    public class FutureOptionMarginModel : FutureMarginModel
+    public class FuturesOptionsMarginModel : FutureMarginModel
     {
         private const decimal FixedMarginMultiplier = 1.5m;
-        private readonly Security _security;
 
         /// <summary>
         /// Creates an instance of FutureOptionMarginModel
         /// </summary>
         /// <param name="requiredFreeBuyingPowerPercent">The percentage used to determine the required unused buying power for the account.</param>
-        /// <param name="security">The security that this model belongs to</param>
-        public FutureOptionMarginModel(decimal requiredFreeBuyingPowerPercent = 0, Option futureOption = null) : base(requiredFreeBuyingPowerPercent, futureOption?.Underlying)
+        /// <param name="futureOption">Option Security containing a Future security as the underlying</param>
+        public FuturesOptionsMarginModel(decimal requiredFreeBuyingPowerPercent = 0, Option futureOption = null) : base(requiredFreeBuyingPowerPercent, futureOption?.Underlying)
         {
         }
 

@@ -129,35 +129,35 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <param name="securityCurrency">Expected security currency(if any)</param>
         /// <param name="securityExchange">Expected security exchange name(if any)</param>
         /// <returns></returns>
-        public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null)
+        public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, bool includeExpired, string securityCurrency = null, string securityExchange = null)
         {
             Func<Symbol, string> lookupFunc;
 
-            switch (symbol.SecurityType)
+            switch (securityType)
             {
                 case SecurityType.Option:
                     // for option, futures contract we search the underlying
-                    lookupFunc = lookupSymbol => lookupSymbol.HasUnderlying ? lookupSymbol.Underlying.Value : string.Empty;
+                    lookupFunc = symbol => symbol.HasUnderlying ? symbol.Underlying.Value : string.Empty;
                     break;
                 case SecurityType.Future:
-                    lookupFunc = lookupSymbol => lookupSymbol.ID.Symbol;
+                    lookupFunc = symbol => symbol.ID.Symbol;
                     break;
                 default:
-                    lookupFunc = lookupSymbol => lookupSymbol.Value;
+                    lookupFunc = symbol => symbol.Value;
                     break;
             }
 
-            var lookupName = lookupFunc(symbol);
             var result = _symbolUniverse.Where(x => lookupFunc(x.Symbol) == lookupName &&
-                                            x.Symbol.ID.SecurityType == symbol.SecurityType &&
-                                            (securityCurrency == null || x.SecurityCurrency == securityCurrency))
+                                            x.Symbol.ID.SecurityType == securityType &&
+                                            (securityCurrency == null || x.SecurityCurrency == securityCurrency) &&
+                                            (securityExchange == null || x.SecurityExchange == securityExchange))
                                          .ToList();
 
             bool onDemandRequests = result.All(symbolData => !symbolData.IsDataLoaded());
 
             if (onDemandRequests)
             {
-                var exchanges = symbol.SecurityType == SecurityType.Future ?
+                var exchanges = securityType == SecurityType.Future ?
                                     FuturesExchanges.Values.Reverse().ToArray() :
                                     new string[] { };
 
@@ -176,12 +176,25 @@ namespace QuantConnect.ToolBox.IQFeed
                 // if we found some data that was loaded on demand, then we have to re-run the query to include that data into method output
 
                 result = _symbolUniverse.Where(x => lookupFunc(x.Symbol) == lookupName &&
-                                            x.Symbol.ID.SecurityType == symbol.SecurityType &&
-                                            (securityCurrency == null || x.SecurityCurrency == securityCurrency))
+                                            x.Symbol.ID.SecurityType == securityType &&
+                                            (securityCurrency == null || x.SecurityCurrency == securityCurrency) &&
+                                            (securityExchange == null || x.SecurityExchange == securityExchange))
                                         .ToList();
             }
 
             return result.Select(x => x.Symbol);
+        }
+
+        /// <summary>
+        /// Method returns a collection of Symbols that are available at the data source.
+        /// </summary>
+        /// <param name="symbol">Symbol to lookup</param>
+        /// <param name="includeExpired">Include expired contracts</param>
+        /// <param name="securityCurrency">Expected security currency(if any)</param>
+        /// <returns>Symbol results</returns>
+        public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency)
+        {
+            return LookupSymbols(symbol.ID.Symbol, symbol.SecurityType, includeExpired, securityCurrency);
         }
 
         /// <summary>

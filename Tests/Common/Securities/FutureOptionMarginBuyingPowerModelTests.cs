@@ -52,9 +52,9 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         // Test class to enable calling protected methods
-        public class TestFutureOptionMarginModel : FutureOptionMarginModel
+        public class TestFuturesOptionsMarginModel : FuturesOptionsMarginModel
         {
-            public TestFutureOptionMarginModel(Option futureOption) : base(futureOption: futureOption)
+            public TestFuturesOptionsMarginModel(Option futureOption) : base(futureOption: futureOption)
             {
             }
 
@@ -108,7 +108,7 @@ namespace QuantConnect.Tests.Common.Securities
             optionSecurity.Underlying.Holdings.SetHoldings(1.5m, 1);
 
             var futureBuyingPowerModel = new TestFutureMarginModel(optionSecurity.Underlying);
-            var futureOptionBuyingPowerModel = new TestFutureOptionMarginModel(optionSecurity);
+            var futureOptionBuyingPowerModel = new TestFuturesOptionsMarginModel(optionSecurity);
 
             Assert.AreNotEqual(0m, futureOptionBuyingPowerModel.GetMaintenanceMargin(optionSecurity));
             Assert.AreEqual(futureBuyingPowerModel.GetMaintenanceMargin(optionSecurity.Underlying) * 1.5m, futureOptionBuyingPowerModel.GetMaintenanceMargin(optionSecurity));

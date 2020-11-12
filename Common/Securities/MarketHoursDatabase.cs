@@ -289,11 +289,19 @@ namespace QuantConnect.Securities
                         // The `Symbol.Value` of a non-canonical future  will contain contract-specific information in
                         // it, such as the expiry of the contract. We use the SID Symbol value instead to get
                         // the value of the underlying without the contract information.
-                        stringSymbol = symbol.HasUnderlying
-                            ? symbol.Underlying.SecurityType != SecurityType.Equity
-                                ? symbol.Underlying.ID.Symbol
-                                : symbol.Underlying.Value
-                            : string.Empty;
+                        if (symbol.HasUnderlying && symbol.Underlying.SecurityType != SecurityType.Equity)
+                        {
+                            stringSymbol = symbol.Underlying.ID.Symbol;
+                        }
+                        else if (symbol.HasUnderlying)
+                        {
+                            stringSymbol = symbol.Underlying.Value;
+                        }
+                        else
+                        {
+                            stringSymbol = string.Empty;
+                        }
+
                         break;
 
                     case SecurityType.Base:

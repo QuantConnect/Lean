@@ -20,7 +20,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -58,6 +57,11 @@ namespace QuantConnect.Algorithm.CSharp
             foreach (var optionContract in optionChains)
             {
                 _expectedSymbolsReceived.Add(AddFutureOptionContract(optionContract, Resolution.Minute).Symbol);
+            }
+
+            if (_expectedSymbolsReceived.Count == 0)
+            {
+                throw new InvalidOperationException("Expected Symbols receive count is 0, expected >0");
             }
         }
 

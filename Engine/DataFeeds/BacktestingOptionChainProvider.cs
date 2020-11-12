@@ -35,6 +35,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The list of option contracts</returns>
         public IEnumerable<Symbol> GetOptionContractList(Symbol underlyingSymbol, DateTime date)
         {
+            if (underlyingSymbol.SecurityType != SecurityType.Equity && underlyingSymbol.SecurityType != SecurityType.Future)
+            {
+                throw new NotSupportedException($"BacktestingOptionChainProvider.GetOptionContractList(): SecurityType.Equity or SecurityType.Future is expected but was {underlyingSymbol.SecurityType}");
+            }
+
             // build the option contract list from the open interest zip file entry names
 
             // create a canonical option symbol for the given underlying

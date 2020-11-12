@@ -71,7 +71,7 @@ namespace QuantConnect.Securities.Option
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 config.Symbol.Underlying.SecurityType == SecurityType.Future
-                    ? (IBuyingPowerModel)new FutureOptionMarginModel()
+                    ? (IBuyingPowerModel)new FuturesOptionsMarginModel()
                     : (IBuyingPowerModel)new OptionMarginModel(),
                 new OptionDataFilter(),
                 new SecurityPriceVariationModel(),
@@ -117,7 +117,7 @@ namespace QuantConnect.Securities.Option
                new ImmediateSettlementModel(),
                Securities.VolatilityModel.Null,
                symbol.Underlying.SecurityType == SecurityType.Future
-                   ? (IBuyingPowerModel)new FutureOptionMarginModel()
+                   ? (IBuyingPowerModel)new FuturesOptionsMarginModel()
                    : (IBuyingPowerModel)new OptionMarginModel(),
                new OptionDataFilter(),
                new SecurityPriceVariationModel(),

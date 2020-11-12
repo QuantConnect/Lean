@@ -140,12 +140,15 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new Exception("Option was not assigned at expected strike price (3250)");
                 }
-                if (orderEvent.Direction == OrderDirection.Sell && future.Holdings.Quantity != -1) 
+                if (orderEvent.Direction != OrderDirection.Sell || future.Holdings.Quantity != -1)
                 {
                     throw new Exception($"Expected Qty: -1 futures holdings for assigned future {future.Symbol}, found {future.Holdings.Quantity}");
                 }
+
+                return;
             }
-            if (!orderEvent.Message.Contains("Assignment") && orderEvent.Direction == OrderDirection.Buy && future.Holdings.Quantity != 0)
+
+            if (orderEvent.Direction == OrderDirection.Buy && future.Holdings.Quantity != 0)
             {
                 // We buy back the underlying at expiration, so we expect a neutral position then
                 throw new Exception($"Expected no holdings when liquidating future contract {future.Symbol}");
@@ -164,8 +167,19 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
         public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "3"},

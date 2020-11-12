@@ -36,6 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     /// <remarks>
     /// Total Trades in regression algorithm should be 1, but expiration is counted as a trade.
+    /// See related issue: https://github.com/QuantConnect/Lean/issues/4854
     /// </remarks>
     public class FutureOptionCallOTMExpiryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -154,8 +155,19 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
         public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},

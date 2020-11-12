@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Symbol _es19h21;
         private Symbol _esOption;
-        private Symbol _expectedContract;
+        private Symbol _expectedOptionContract;
 
         public override void Initialize()
         {
@@ -67,10 +67,10 @@ namespace QuantConnect.Algorithm.CSharp
                 .Take(1)
                 .Single(), Resolution.Minute).Symbol;
 
-            _expectedContract = QuantConnect.Symbol.CreateOption(_es19h21, Market.CME, OptionStyle.American, OptionRight.Call, 3250m, new DateTime(2021, 3, 19));
-            if (_esOption != _expectedContract)
+            _expectedOptionContract = QuantConnect.Symbol.CreateOption(_es19h21, Market.CME, OptionStyle.American, OptionRight.Call, 3250m, new DateTime(2021, 3, 19));
+            if (_esOption != _expectedOptionContract)
             {
-                throw new Exception($"Contract {_expectedContract} was not found in the chain");
+                throw new Exception($"Contract {_expectedOptionContract} was not found in the chain");
             }
 
             Schedule.On(DateRules.Today, TimeRules.AfterMarketOpen(_es19h21, 1), () =>
@@ -118,9 +118,9 @@ namespace QuantConnect.Algorithm.CSharp
             var security = Securities[orderEvent.Symbol];
             if (security.Symbol == _es19h21)
             {
-                AssertFutureOptionOrderExercise(orderEvent, security, Securities[_expectedContract]);
+                AssertFutureOptionOrderExercise(orderEvent, security, Securities[_expectedOptionContract]);
             }
-            else if (security.Symbol == _expectedContract)
+            else if (security.Symbol == _expectedOptionContract)
             {
                 AssertFutureOptionContractOrder(orderEvent, security);
             }
@@ -134,8 +134,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void AssertFutureOptionOrderExercise(OrderEvent orderEvent, Security future, Security optionContract)
         {
-            // This vvvv is the actual expected liquidation date. But because of the issue described above w/ FillForward,
-            // we will modify the liquidation date to 2021-03-22 (Monday) since that's when equities start trading again.
+            // The commented date below is the actual expected liquidation date. But because of issue #4872
+            // we will change the liquidation date to 2021-03-22 (Monday) since that's when equities begin trading again.
             // `new DateTime(2021, 3, 19, 5, 0, 0);`
             var expectedLiquidationTimeUtc = new DateTime(2021, 3, 22, 13, 32, 0);
 
@@ -186,8 +186,19 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
         public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "3"},

@@ -16,7 +16,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace QuantConnect.Securities.Future
+namespace QuantConnect.Securities.FutureOption.Api
 {
     /// <summary>
     /// Product slate API call root response

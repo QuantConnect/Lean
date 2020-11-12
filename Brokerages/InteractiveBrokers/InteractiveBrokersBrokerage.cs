@@ -37,6 +37,8 @@ using NodaTime;
 using QuantConnect.IBAutomater;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
+using QuantConnect.Securities.Future;
+using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 using Bar = QuantConnect.Data.Market.Bar;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
@@ -1849,15 +1851,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 contract.PrimaryExch = GetPrimaryExchange(contract, symbol);
             }
-            // Note: this if's placement before the generic SecurityType.Option is important.
-            // Otherwise, when we go to call `GetTradingClass`, Lean will crash as a result
-            // since it's unable to find a future option with "Smart" as its destination.
-            if (symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType == SecurityType.Future)
-            {
-                contract.Exchange = _futuresExchanges.ContainsKey(symbol.ID.Market) ?
-                    _futuresExchanges[symbol.ID.Market] :
-                    symbol.ID.Market;
-            }
+
             if (symbol.ID.SecurityType == SecurityType.Option)
             {
                 contract.LastTradeDateOrContractMonth = symbol.ID.Date.ToStringInvariant(DateFormat.EightCharacter);
@@ -1869,7 +1863,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // to "100", which is the default equity contract multiplier.
                 contract.Multiplier = "100";
 
-                var spdbContainsSymbol = _symbolPropertiesDatabase.ContainsKey(symbol.ID.Market, symbol, symbol.Underlying.SecurityType);
+                var spdbContainsSymbol = _symbolPropertiesDatabase.ContainsKey(symbol.ID.Market, symbol.ID.Symbol, symbol.SecurityType);
                 var security = _securityProvider.GetSecurity(symbol);
 
                 if (security != null || _algorithm.Securities.TryGetValue(symbol, out security))
@@ -1885,7 +1879,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         .GetSymbolProperties(
                             isFutureOption ? symbol.Underlying.ID.Market : symbol.ID.Market,
                             isFutureOption ? symbol.Underlying : symbol,
-                            isFutureOption ? symbol.Underlying.ID.SecurityType : symbol.ID.SecurityType,
+                            isFutureOption ? symbol.Underlying.ID.SecurityType : symbol.SecurityType,
                             _algorithm.Portfolio.CashBook.AccountCurrency)
                         .ContractMultiplier
                         .ToStringInvariant();
@@ -2279,19 +2273,24 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     market = defaultMarket;
                 }
 
-                var contractDate = DateTime.ParseExact(contract.LastTradeDateOrContractMonth, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
-                var futureSymbol = _symbolMapper.GetLeanSymbol(ibSymbol, SecurityType.Future, market, contractDate);
+                var contractExpiryDate = DateTime.ParseExact(contract.LastTradeDateOrContractMonth, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
 
                 if (!isFutureOption)
                 {
-                    return futureSymbol;
+                    return _symbolMapper.GetLeanSymbol(ibSymbol, SecurityType.Future, market, contractExpiryDate);
                 }
 
-                var expiryDate = DateTime.ParseExact(contract.LastTradeDateOrContractMonth, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                // Create a canonical future Symbol for lookup in the FuturesExpiryFunctions helper class.
+                // We then get the delta between the futures option's expiry month vs. the future's expiry month.
+                var canonicalFutureSymbol = _symbolMapper.GetLeanSymbol(ibSymbol, SecurityType.Future, market, SecurityIdentifier.DefaultDate);
+                var futureExpiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFutureSymbol);
+                var futureContractExpiryDate = futureExpiryFunction(FuturesOptionsExpiryFunctions.GetFutureContractMonth(canonicalFutureSymbol, contractExpiryDate));
+                var futureSymbol = Symbol.CreateFuture(canonicalFutureSymbol.ID.Symbol, canonicalFutureSymbol.ID.Market, futureContractExpiryDate);
+
                 var right = contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put;
                 var strike = Convert.ToDecimal(contract.Strike);
 
-                return Symbol.CreateOption(futureSymbol, market, OptionStyle.American, right, strike, expiryDate);
+                return Symbol.CreateOption(futureSymbol, market, OptionStyle.American, right, strike, contractExpiryDate);
             }
             if (securityType == SecurityType.Option)
             {
@@ -2775,12 +2774,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Method returns a collection of Symbols that are available at the broker.
         /// </summary>
-        /// <param name="lookupName">String representing the name to lookup</param>
-        /// <param name="securityType">Expected security type of the returned symbols (if any)</param>
+        /// <param name="symbol">Symbol to search future/option chain for</param>
         /// <param name="includeExpired">Include expired contracts</param>
         /// <param name="securityCurrency">Expected security currency(if any)</param>
-        /// <param name="securityExchange">Expected security exchange name(if any)</param>
-        /// <returns></returns>
+        /// <returns>Future/Option chain associated with the Symbol provided</returns>
         public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null)
         {
             // setting up exchange defaults and filters
@@ -2826,6 +2823,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 // IB requests for full option chains are rate limited and responses can be delayed up to a minute for each underlying,
                 // so we fetch them from the OCC website instead of using the IB API.
+                // For futures options, we fetch the option chain from CME.
                 symbols.AddRange(_algorithm.OptionChainProvider.GetOptionContractList(symbol.Underlying, DateTime.Today));
             }
             else if (symbol.SecurityType == SecurityType.Future)
@@ -2930,16 +2928,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // preparing the data for IB request
-
-            // Future options orders will be routed through CME's GLOBEX venue.
-            // The exchanges GLOBEX encompasses are: CME, NYMEX, COMEX, CBOT.
-            // Default back to SMART for all other order types.
-            var exchange = request.Symbol.SecurityType == SecurityType.Option &&
-                request.Symbol.Underlying.SecurityType == SecurityType.Future ?
-                    _futuresExchanges[request.Symbol.ID.Market] :
-                    null;
-
-            var contract = CreateContract(request.Symbol, true, exchange);
+            var contract = CreateContract(request.Symbol, true);
             var resolution = ConvertResolution(request.Resolution);
             var duration = ConvertResolutionToDuration(request.Resolution);
             var startTime = request.Resolution == Resolution.Daily ? request.StartTimeUtc.Date : request.StartTimeUtc;
@@ -3126,7 +3115,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     goto default;
 
                 case SecurityType.Future:
-                    return _futuresExchanges[symbol.ID.Market];
+                    return _futuresExchanges.ContainsKey(symbol.ID.Market)
+                        ? _futuresExchanges[symbol.ID.Market]
+                        : symbol.ID.Market;
 
                 default:
                     return "Smart";

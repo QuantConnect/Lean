@@ -63,7 +63,7 @@ class FutureOptionPutITMExpiryRegressionAlgorithm(QCAlgorithm):
 
         self.expectedContract = Symbol.CreateOption(self.es19h21, Market.CME, OptionStyle.American, OptionRight.Put, 3300.0, datetime(2021, 3, 19))
         if self.esOption != self.expectedContract:
-            raise Exception(f"Contract {self.expectedContract} was not found in the chain")
+            raise AssertionError(f"Contract {self.expectedContract} was not found in the chain")
 
         self.Schedule.On(self.DateRules.Today, self.TimeRules.AfterMarketOpen(self.es19h21, 1), self.ScheduleCallback)
 
@@ -76,10 +76,10 @@ class FutureOptionPutITMExpiryRegressionAlgorithm(QCAlgorithm):
         for delisting in data.Delistings.Values:
             if delisting.Type == DelistingType.Warning:
                 if delisting.Time != datetime(2021, 3, 19):
-                    raise Exception(f"Delisting warning issued at unexpected date: {delisting.Time}")
+                    raise AssertionError(f"Delisting warning issued at unexpected date: {delisting.Time}")
             elif delisting.Type == DelistingType.Delisted:
                 if delisting.Time != datetime(2021, 3, 20):
-                    raise Exception(f"Delisting happened at unexpected date: {delisting.Time}")
+                    raise AssertionError(f"Delisting happened at unexpected date: {delisting.Time}")
 
     def OnOrderEvent(self, orderEvent: OrderEvent):
         if orderEvent.Status != OrderStatus.Filled:
@@ -87,7 +87,7 @@ class FutureOptionPutITMExpiryRegressionAlgorithm(QCAlgorithm):
             return
 
         if not self.Securities.ContainsKey(orderEvent.Symbol):
-            raise Exception(f"Order event Symbol not found in Securities collection: {orderEvent.Symbol}")
+            raise AssertionError(f"Order event Symbol not found in Securities collection: {orderEvent.Symbol}")
 
         security = self.Securities[orderEvent.Symbol]
         if security.Symbol == self.es19h21:
@@ -96,7 +96,7 @@ class FutureOptionPutITMExpiryRegressionAlgorithm(QCAlgorithm):
             # Expected contract is ES19H21 Call Option expiring ITM @ 3250
             self.AssertFutureOptionContractOrder(orderEvent, security)
         else:
-            raise Exception(f"Received order event for unknown Symbol: {orderEvent.Symbol}")
+            raise AssertionError(f"Received order event for unknown Symbol: {orderEvent.Symbol}")
 
         self.Log(f"{self.Time} -- {orderEvent.Symbol} :: Price: {self.Securities[orderEvent.Symbol].Holdings.Price} Qty: {self.Securities[orderEvent.Symbol].Holdings.Quantity} Direction: {orderEvent.Direction} Msg: {orderEvent.Message}")
 
@@ -108,29 +108,29 @@ class FutureOptionPutITMExpiryRegressionAlgorithm(QCAlgorithm):
 
         if orderEvent.Direction == OrderDirection.Buy and future.Holdings.Quantity != 0:
             # We expect the contract to have been liquidated immediately
-            raise Exception(f"Did not liquidate existing holdings for Symbol {future.Symbol}")
+            raise AssertionError(f"Did not liquidate existing holdings for Symbol {future.Symbol}")
         if orderEvent.Direction == OrderDirection.Buy and orderEvent.UtcTime.replace(tzinfo=None) != expectedLiquidationTimeUtc:
-            raise Exception(f"Liquidated future contract, but not at the expected time. Expected: {expectedLiquidationTimeUtc} - found {orderEvent.UtcTime.replace(tzinfo=None)}");
+            raise AssertionError(f"Liquidated future contract, but not at the expected time. Expected: {expectedLiquidationTimeUtc} - found {orderEvent.UtcTime.replace(tzinfo=None)}");
 
         # No way to detect option exercise orders or any other kind of special orders
         # other than matching strings, for now.
         if "Option Exercise" in orderEvent.Message:
             if orderEvent.FillPrice != 3300.0:
-                raise Exception("Option did not exercise at expected strike price (3300)")
+                raise AssertionError("Option did not exercise at expected strike price (3300)")
 
             if future.Holdings.Quantity != -1:
                 # Here, we expect to have some holdings in the underlying, but not in the future option anymore.
-                raise Exception(f"Exercised option contract, but we have no holdings for Future {future.Symbol}")
+                raise AssertionError(f"Exercised option contract, but we have no holdings for Future {future.Symbol}")
 
             if optionContract.Holdings.Quantity != 0:
-                raise Exception(f"Exercised option contract, but we have holdings for Option contract {optionContract.Symbol}")
+                raise AssertionError(f"Exercised option contract, but we have holdings for Option contract {optionContract.Symbol}")
 
     def AssertFutureOptionContractOrder(self, orderEvent: OrderEvent, option: Security):
         if orderEvent.Direction == OrderDirection.Buy and option.Holdings.Quantity != 1:
-            raise Exception(f"No holdings were created for option contract {option.Symbol}")
+            raise AssertionError(f"No holdings were created for option contract {option.Symbol}")
 
         if orderEvent.Direction == OrderDirection.Sell and option.Holdings.Quantity != 0:
-            raise Exception(f"Holdings were found after a filled option exercise")
+            raise AssertionError(f"Holdings were found after a filled option exercise")
 
         if "Exercise" in orderEvent.Message and option.Holdings.Quantity != 0:
-            raise Exception(f"Holdings were found after exercising option contract {option.Symbol}")
+            raise AssertionError(f"Holdings were found after exercising option contract {option.Symbol}")

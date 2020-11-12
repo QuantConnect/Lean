@@ -320,7 +320,7 @@ namespace QuantConnect.Brokerages
                     break;
                 case SecurityType.Option:
                     model = security.Symbol.Underlying.SecurityType == SecurityType.Future
-                        ? (IBuyingPowerModel)new FutureOptionMarginModel(RequiredFreeBuyingPowerPercent, (Option)security)
+                        ? (IBuyingPowerModel)new FuturesOptionsMarginModel(RequiredFreeBuyingPowerPercent, (Option)security)
                         : (IBuyingPowerModel)new OptionMarginModel(RequiredFreeBuyingPowerPercent);
                     break;
                 case SecurityType.Future:
