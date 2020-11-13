@@ -68,7 +68,7 @@ function publish_stubs {
     # This API token should be valid for the current $PYPI_REPO and should include the "pypi-" prefix
 
     cd $STUBS_DIR
-    python setup.py --quiet sdist bdist_wheel
+    python setup.py sdist bdist_wheel
 
     TWINE_USERNAME="__token__" \
     TWINE_PASSWORD="$PYPI_API_TOKEN" \
