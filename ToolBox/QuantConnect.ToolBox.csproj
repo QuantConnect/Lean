@@ -377,6 +377,11 @@
     <Compile Include="Polygon\History\AggregateRowResponse.cs" />
     <Compile Include="Polygon\History\AggregatesResponse.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="QuiverDataDownloader\QuiverCongressDataDownloader.cs" />
+    <Compile Include="QuiverDataDownloader\QuiverDataDownloader.cs" />
+    <Compile Include="QuiverDataDownloader\QuiverEventsBetaDownloader.cs" />
+    <Compile Include="QuiverDataDownloader\QuiverWallStreetBetsDataDownloader.cs" />
+    <Compile Include="QuiverDataDownloader\QuiverWikipediaDataDownloader.cs" />
     <Compile Include="RandomDataGenerator\DividendSplitMapGenerator.cs" />
     <Compile Include="RandomDataGenerator\ConsoleLeveledOutput.cs" />
     <Compile Include="RandomDataGenerator\DataDensity.cs" />
