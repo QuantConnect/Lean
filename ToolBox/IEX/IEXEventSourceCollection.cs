@@ -189,7 +189,7 @@ namespace QuantConnect.ToolBox.IEX
 
         private string BuildUrlString(IEnumerable<string> symbols)
         {
-            var url = "https://cloud-sse.iexapis.com/stable/stocksUSNoUTP?token=" + _apiKey;
+            var url = "https://cloud-sse.iexapis.com/stable/stocksUSNoUTP1Second?token=" + _apiKey;
             url += "&symbols=" + string.Join(",", symbols);
             return url;
         }

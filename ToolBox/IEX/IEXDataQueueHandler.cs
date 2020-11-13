@@ -159,78 +159,57 @@ namespace QuantConnect.ToolBox.IEX
                         continue;
                     }
 
-                    var bidSize = item.IexBidSize;
-                    var bidPrice = item.IexBidPrice;
-                    var askSize = item.IexAskSize;
-                    var askPrice = item.IexAskPrice;
-                    var lastPrice = item.IexRealtimePrice;
-                    var lastSize = item.IexRealtimeSize;
+                    var lastPrice = item.IexRealtimePrice ?? 0;
+                    var lastSize = item.IexRealtimeSize ?? 0;
+
+                    // Refers to the last update time of iexRealtimePrice in milliseconds since midnight Jan 1, 1970 UTC or -1 or 0.
+                    // If the value is -1 or 0, IEX has not quoted the symbol in the trading day.
+                    var lastUpdateMillis = item.IexLastUpdated ?? 0;
+
+                    if (lastUpdateMillis <= 0)
+                    {
+                        continue;
+                    }
 
                     // (!) Epoch timestamp in milliseconds of the last market hours trade excluding the closing auction trade.
                     var lastTradeMillis = item.LastTradeTime ?? 0;
-                    
-                    var lastTradeTimeNewYork = DateTime.MinValue;
 
-                    if (lastTradeMillis > 0)
-                    {
-                        // If there is a last trade time but no last price or size - this is an error
-                        if (!lastPrice.HasValue || !lastSize.HasValue || lastPrice == 0 && lastSize == 0)
-                        {
-                            throw new InvalidOperationException("ProcessJsonObject(): Invalid price & size.");
-                        }
-
-                        // Check if there is a kvp entry for a symbol
-                        long value;
-                        var isInDictionary = _iexLastTradeTime.TryGetValue(symbolString, out value);
-
-                        // We should update with trade-tick if:
-                        // - there exist an entry for a symbol and new trade time is different from time in dictionary
-                        // - not in dictionary, means the first trade-tick case
-                        if (isInDictionary && value != lastTradeMillis || !isInDictionary)
-                        {
-                            var lastTradeDateTime = UnixEpoch.AddMilliseconds(lastTradeMillis);
-                            lastTradeTimeNewYork = lastTradeDateTime.ConvertFromUtc(TimeZones.NewYork);
-
-                            var tradeTick = new Tick()
-                            {
-                                Symbol = symbol,
-                                Time = lastTradeTimeNewYork,
-                                TickType = TickType.Trade,
-                                Value = lastPrice.Value,
-                                Quantity = lastSize.Value
-                            };
-
-                            _aggregator.Update(tradeTick);
-
-                            _iexLastTradeTime[symbolString] = lastTradeMillis;
-                        }
-                    }
-
-                    // Always update quotes for a new snapshot, if there are bid and ask prices available
-                    if (!bidPrice.HasValue || !bidSize.HasValue || bidPrice == 0 || bidSize == 0)
+                    if (lastTradeMillis <= 0)
                     {
                         continue;
                     }
 
-                    if (!askPrice.HasValue || !askSize.HasValue || askPrice == 0 || askSize == 0)
+                    // If there is a last trade time but no last price or size - this is an error
+                    if (lastPrice == 0 || lastSize == 0)
                     {
-                        continue;
+                        throw new InvalidOperationException("ProcessJsonObject(): Invalid price & size.");
                     }
 
-                    var quoteTick = new Tick()
-                    {
-                        Symbol = symbol,
-                        // Use local time if bid-ask came not as part of new trade-tick update
-                        Time = lastTradeTimeNewYork == DateTime.MinValue ? 
-                            DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork) : lastTradeTimeNewYork,
-                        TickType = TickType.Quote,
-                        BidSize = bidSize.Value,
-                        BidPrice = bidPrice.Value,
-                        AskSize = askSize.Value,
-                        AskPrice = askPrice.Value,
-                    };
+                    // Check if there is a kvp entry for a symbol
+                    long value;
+                    var isInDictionary = _iexLastTradeTime.TryGetValue(symbolString, out value);
 
-                    _aggregator.Update(quoteTick);
+                    // We should update with trade-tick if:
+                    // - there exist an entry for a symbol and new trade time is different from time in dictionary
+                    // - not in dictionary, means the first trade-tick case
+                    if (isInDictionary && value != lastTradeMillis || !isInDictionary)
+                    {
+                        var lastTradeDateTime = UnixEpoch.AddMilliseconds(lastTradeMillis);
+                        var lastTradeTimeNewYork = lastTradeDateTime.ConvertFromUtc(TimeZones.NewYork);
+
+                        var tradeTick = new Tick()
+                        {
+                            Symbol = symbol,
+                            Time = lastTradeTimeNewYork,
+                            TickType = TickType.Trade,
+                            Value = lastPrice,
+                            Quantity = lastSize
+                        };
+
+                        _aggregator.Update(tradeTick);
+
+                        _iexLastTradeTime[symbolString] = lastTradeMillis;
+                    }
                 }
             }
             catch (Exception err)
