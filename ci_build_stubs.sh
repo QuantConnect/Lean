@@ -68,12 +68,12 @@ function publish_stubs {
     # This API token should be valid for the current $PYPI_REPO and should include the "pypi-" prefix
 
     cd $STUBS_DIR
-    python setup.py --quiet sdist bdist_wheel
+    python setup.py sdist bdist_wheel
 
     TWINE_USERNAME="__token__" \
     TWINE_PASSWORD="$PYPI_API_TOKEN" \
     TWINE_REPOSITORY="$PYPI_REPO" \
-    twine upload "$STUBS_DIR/dist/*" &>/dev/null
+    twine upload "$STUBS_DIR/dist/*"
 
     if [ $? -ne 0 ]; then
         echo "PyPI publishing failed"
