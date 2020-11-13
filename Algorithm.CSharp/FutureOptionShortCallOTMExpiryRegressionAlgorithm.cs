@@ -42,10 +42,12 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2020, 9, 22);
+            SetStartDate(2020, 3, 1);
             typeof(QCAlgorithm)
                 .GetField("_endDate", BindingFlags.NonPublic | BindingFlags.Instance)
                 .SetValue(this, new DateTime(2021, 3, 30));
+
+            var start = new DateTime(2020, 9, 22);
 
             // We add AAPL as a temporary workaround for https://github.com/QuantConnect/Lean/issues/4872
             // which causes delisting events to never be processed, thus leading to options that might never
@@ -60,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Resolution.Minute).Symbol;
 
             // Select a future option expiring ITM, and adds it to the algorithm.
-            _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19h21, Time)
+            _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19h21, start)
                 .Where(x => x.ID.StrikePrice <= 3300m)
                 .OrderByDescending(x => x.ID.StrikePrice)
                 .Take(1)
@@ -72,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"Contract {_expectedContract} was not found in the chain");
             }
 
-            Schedule.On(DateRules.Today, TimeRules.AfterMarketOpen(_es19h21, 1), () =>
+            Schedule.On(DateRules.On(start), TimeRules.AfterMarketOpen(_es19h21, 1), () =>
             {
                 MarketOrder(_esOption, -1);
             });
@@ -149,6 +151,18 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
+        /// Ran at the end of the algorithm to ensure the algorithm has no holdings
+        /// </summary>
+        /// <exception cref="Exception">The algorithm has holdings</exception>
+        public override void OnEndOfAlgorithm()
+        {
+            if (Portfolio.Invested)
+            {
+                throw new Exception($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
+            }
+        }
+
+        /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
         public bool CanRunLocally { get; } = true;
@@ -166,28 +180,28 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "2"},
             {"Average Win", "11.67%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "23.762%"},
+            {"Compounding Annual Return", "10.769%"},
             {"Drawdown", "0.100%"},
             {"Expectancy", "0"},
             {"Net Profit", "11.671%"},
-            {"Sharpe Ratio", "1.376"},
-            {"Probabilistic Sharpe Ratio", "65.417%"},
+            {"Sharpe Ratio", "0.906"},
+            {"Probabilistic Sharpe Ratio", "38.113%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0.149"},
-            {"Annual Variance", "0.022"},
-            {"Information Ratio", "1.376"},
-            {"Tracking Error", "0.149"},
-            {"Treynor Ratio", "0"},
+            {"Alpha", "0.093"},
+            {"Beta", "0.002"},
+            {"Annual Standard Deviation", "0.103"},
+            {"Annual Variance", "0.011"},
+            {"Information Ratio", "1.039"},
+            {"Tracking Error", "0.14"},
+            {"Treynor Ratio", "44.362"},
             {"Total Fees", "$3.70"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "248.551"},
+            {"Return Over Maximum Drawdown", "112.644"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},

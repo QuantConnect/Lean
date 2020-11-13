@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Statistics
             var spyPath = LeanData.GenerateZipFilePath(Globals.DataFolder, spy, new DateTime(2020, 3, 1), Resolution.Daily, TickType.Trade);
             var spyConfig = new QuantConnect.Data.SubscriptionDataConfig(typeof(TradeBar), spy, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
             var endDate = new DateTime(2020, 3, 8);
-            
+
             foreach (var line in QuantConnect.Compression.ReadLines(spyPath))
             {
                 var bar = TradeBar.ParseEquity(spyConfig, line, DateTime.Now.Date);
@@ -93,7 +93,7 @@ namespace QuantConnect.Tests.Common.Statistics
             // This might seem arbitrary, but there's 1 missing date vs. AAPL for SPY data, and it happens to be at line 5555 for date 2020-01-31
             var result = QuantConnect.Statistics.Statistics.TrackingError(_aaplPerformance.Take(5555).ToList(), _spyPerformance.Take(5555).ToList());
 
-            Assert.AreEqual(0.43080483472331765, result, 0.00001);
+            Assert.AreEqual(0.43115365020121948, result, 0.00001);
         }
 
         [Test]

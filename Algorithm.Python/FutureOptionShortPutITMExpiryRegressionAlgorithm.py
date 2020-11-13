@@ -39,9 +39,11 @@ from QuantConnect import Market
 ### </summary>
 class FutureOptionShortPutITMExpiryRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
-        self.SetStartDate(2020, 9, 22)
+        self.SetStartDate(2020, 3, 1)
         clr.GetClrType(QCAlgorithm).GetField("_endDate", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(self, DateTime(2021, 3, 30))
         
+        start = datetime(2020, 9, 22)
+
         # We add AAPL as a temporary workaround for https://github.com/QuantConnect/Lean/issues/4872
         # which causes delisting events to never be processed, thus leading to options that might never
         # be exercised until the next data point arrives.
@@ -58,7 +60,7 @@ class FutureOptionShortPutITMExpiryRegressionAlgorithm(QCAlgorithm):
         self.esOption = self.AddFutureOptionContract(
             list(
                 sorted(
-                    [x for x in self.OptionChainProvider.GetOptionContractList(self.es19h21, self.Time) if x.ID.StrikePrice >= 3300.0 and x.ID.OptionRight == OptionRight.Put],
+                    [x for x in self.OptionChainProvider.GetOptionContractList(self.es19h21, start) if x.ID.StrikePrice >= 3300.0 and x.ID.OptionRight == OptionRight.Put],
                     key=lambda x: x.ID.StrikePrice
                 )
             )[0], Resolution.Minute).Symbol
@@ -67,7 +69,7 @@ class FutureOptionShortPutITMExpiryRegressionAlgorithm(QCAlgorithm):
         if self.esOption != self.expectedContract:
             raise AssertionError(f"Contract {self.expectedContract} was not found in the chain");
 
-        self.Schedule.On(self.DateRules.Today, self.TimeRules.AfterMarketOpen(self.es19h21, 1), self.ScheduledMarketOrder)
+        self.Schedule.On(self.DateRules.On(start.year, start.month, start.day), self.TimeRules.AfterMarketOpen(self.es19h21, 1), self.ScheduledMarketOrder)
 
     def ScheduledMarketOrder(self):
         self.MarketOrder(self.esOption, -1)
@@ -125,3 +127,7 @@ class FutureOptionShortPutITMExpiryRegressionAlgorithm(QCAlgorithm):
 
         if orderEvent.IsAssignment and option.Holdings.Quantity != 0:
             raise AssertionError(f"Holdings were found after option contract was assigned: {option.Symbol}")
+
+    def OnEndOfAlgorithm(self):
+        if self.Portfolio.Invested:
+            raise AssertionError(f"Expected no holdings at end of algorithm, but are invested in: {', '.join([str(i.ID) for i in self.Portfolio.Keys])}")

@@ -19,6 +19,7 @@ from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Securities import *
 from QuantConnect.Securities.Future import *
+from QuantConnect import Market
 
 ### <summary>
 ### This regression algorithm tests that we receive the expected data when
@@ -36,11 +37,11 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
         self.SetEndDate(2020, 9, 23)
 
         self.es18z20 = self.AddFutureContract(
-            Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, datetime(2020, 12, 18)), 
+            Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, datetime(2020, 12, 18)),
             Resolution.Minute).Symbol
 
         self.es19h21 = self.AddFutureContract(
-            Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, datetime(2021, 3, 19)), 
+            Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, datetime(2021, 3, 19)),
             Resolution.Minute).Symbol
 
         optionChains = self.OptionChainProvider.GetOptionContractList(self.es18z20, self.Time)

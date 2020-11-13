@@ -1874,12 +1874,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
                 else if (spdbContainsSymbol)
                 {
-                    // Let's use the Future option's
+                    // If the SPDB entry for the future option is not found,
+                    // we will default back to using the Futures symbol properties instead.
                     contract.Multiplier = _symbolPropertiesDatabase
                         .GetSymbolProperties(
-                            isFutureOption ? symbol.Underlying.ID.Market : symbol.ID.Market,
-                            isFutureOption ? symbol.Underlying : symbol,
-                            isFutureOption ? symbol.Underlying.ID.SecurityType : symbol.SecurityType,
+                            symbol.ID.Market,
+                            symbol,
+                            symbol.SecurityType,
                             _algorithm.Portfolio.CashBook.AccountCurrency)
                         .ContractMultiplier
                         .ToStringInvariant();

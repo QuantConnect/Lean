@@ -13,12 +13,12 @@
 
 from datetime import datetime, timedelta
 
-from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Securities import *
 from QuantConnect.Securities.Future import *
+from QuantConnect import *
 
 ### <summary>
 ### This regression algorithm tests that we only receive the option chain for a single future contract

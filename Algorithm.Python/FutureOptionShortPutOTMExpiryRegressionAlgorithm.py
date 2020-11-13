@@ -38,9 +38,11 @@ from QuantConnect import Market
 ### </summary>
 class FutureOptionShortPutOTMExpiryRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
-        self.SetStartDate(2020, 9, 22)
+        self.SetStartDate(2020, 3, 1)
         clr.GetClrType(QCAlgorithm).GetField("_endDate", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(self, DateTime(2021, 3, 30))
         
+        start = datetime(2020, 9, 22)
+
         # We add AAPL as a temporary workaround for https://github.com/QuantConnect/Lean/issues/4872
         # which causes delisting events to never be processed, thus leading to options that might never
         # be exercised until the next data point arrives.
@@ -53,20 +55,24 @@ class FutureOptionShortPutOTMExpiryRegressionAlgorithm(QCAlgorithm):
                 datetime(2021, 3, 19)),
             Resolution.Minute).Symbol
 
+        self.Log('lookup')
         # Select a future option expiring ITM, and adds it to the algorithm.
         self.esOption = self.AddFutureOptionContract(
             list(
                 sorted(
-                    [x for x in self.OptionChainProvider.GetOptionContractList(self.es19h21, self.Time) if x.ID.StrikePrice >= 3200.0 and x.ID.OptionRight == OptionRight.Put],
+                    [x for x in self.OptionChainProvider.GetOptionContractList(self.es19h21, start) if x.ID.StrikePrice >= 3200.0 and x.ID.OptionRight == OptionRight.Put],
                     key=lambda x: x.ID.StrikePrice
                 )
             )[0], Resolution.Minute).Symbol
+
+        self.Log("Creation")
 
         self.expectedContract = Symbol.CreateOption(self.es19h21, Market.CME, OptionStyle.American, OptionRight.Put, 3200.0, datetime(2021, 3, 19))
         if self.esOption != self.expectedContract:
             raise AssertionError(f"Contract {self.expectedContract} was not found in the chain");
 
-        self.Schedule.On(self.DateRules.Today, self.TimeRules.AfterMarketOpen(self.es19h21, 1), self.ScheduledMarketOrder)
+        self.Log("Schedule")
+        self.Schedule.On(self.DateRules.On(start.year, start.month, start.day), self.TimeRules.AfterMarketOpen(self.es19h21, 1), self.ScheduledMarketOrder)
 
     def ScheduledMarketOrder(self):
         self.MarketOrder(self.esOption, -1)
@@ -113,3 +119,7 @@ class FutureOptionShortPutOTMExpiryRegressionAlgorithm(QCAlgorithm):
 
         if orderEvent.IsAssignment:
             raise AssertionError(f"Assignment was not expected for {orderEvent.Symbol}")
+
+    def OnEndOfAlgorithm(self):
+        if self.Portfolio.Invested:
+            raise AssertionError(f"Expected no holdings at end of algorithm, but are invested in: {', '.join([str(i.ID) for i in self.Portfolio.Keys])}")

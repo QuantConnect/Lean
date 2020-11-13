@@ -40,10 +40,12 @@ namespace QuantConnect.Algorithm.CSharp
     {
         public override void Initialize()
         {
-            SetStartDate(2020, 9, 22);
+            SetStartDate(2020, 3, 1);
             typeof(QCAlgorithm)
                 .GetField("_endDate", BindingFlags.NonPublic | BindingFlags.Instance)
                 .SetValue(this, new DateTime(2021, 3, 30));
+
+            var start = new DateTime(2020, 9, 22);
 
             // We add AAPL as a temporary workaround for https://github.com/QuantConnect/Lean/issues/4872
             // which causes delisting events to never be processed, thus leading to options that might never
@@ -65,8 +67,8 @@ namespace QuantConnect.Algorithm.CSharp
                 Resolution.Minute).Symbol;
 
             // Select a future option expiring ITM, and adds it to the algorithm.
-            var esOptions = OptionChainProvider.GetOptionContractList(es19h21, Time)
-                .Concat(OptionChainProvider.GetOptionContractList(es18z20, Time))
+            var esOptions = OptionChainProvider.GetOptionContractList(es19h21, start)
+                .Concat(OptionChainProvider.GetOptionContractList(es18z20, start))
                 .Where(x => x.ID.StrikePrice == 3250m && x.ID.OptionRight == OptionRight.Call)
                 .Select(x => AddFutureOptionContract(x, Resolution.Minute).Symbol)
                 .ToList();
@@ -87,15 +89,27 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            Schedule.On(DateRules.Today, TimeRules.AfterMarketOpen(es19h21, 1), () =>
+            Schedule.On(DateRules.On(start), TimeRules.AfterMarketOpen(es19h21, 1), () =>
             {
                 MarketOrder(esOptions[0], 1);
                 MarketOrder(esOptions[1], -1);
             });
-            Schedule.On(DateRules.Today, TimeRules.Noon, () =>
+            Schedule.On(DateRules.On(start), TimeRules.Noon, () =>
             {
                 Liquidate();
             });
+        }
+
+        /// <summary>
+        /// Ran at the end of the algorithm to ensure the algorithm has no holdings
+        /// </summary>
+        /// <exception cref="Exception">The algorithm has holdings</exception>
+        public override void OnEndOfAlgorithm()
+        {
+            if (Portfolio.Invested)
+            {
+                throw new Exception($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
+            }
         }
 
         /// <summary>
@@ -116,29 +130,29 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "6"},
             {"Average Win", "6.28%"},
             {"Average Loss", "-7.43%"},
-            {"Compounding Annual Return", "-6.898%"},
+            {"Compounding Annual Return", "-3.371%"},
             {"Drawdown", "10.300%"},
             {"Expectancy", "-0.078"},
             {"Net Profit", "-3.634%"},
-            {"Sharpe Ratio", "-0.273"},
-            {"Probabilistic Sharpe Ratio", "14.861%"},
+            {"Sharpe Ratio", "-0.191"},
+            {"Probabilistic Sharpe Ratio", "7.956%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
             {"Profit-Loss Ratio", "0.84"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0.163"},
-            {"Annual Variance", "0.026"},
-            {"Information Ratio", "-0.273"},
-            {"Tracking Error", "0.163"},
-            {"Treynor Ratio", "0"},
+            {"Alpha", "-0.022"},
+            {"Beta", "-0.001"},
+            {"Annual Standard Deviation", "0.112"},
+            {"Annual Variance", "0.013"},
+            {"Information Ratio", "0.208"},
+            {"Tracking Error", "0.147"},
+            {"Treynor Ratio", "41.964"},
             {"Total Fees", "$14.80"},
-            {"Fitness Score", "0.018"},
+            {"Fitness Score", "0.009"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-0.06"},
-            {"Return Over Maximum Drawdown", "-0.667"},
-            {"Portfolio Turnover", "0.042"},
+            {"Sortino Ratio", "-0.029"},
+            {"Return Over Maximum Drawdown", "-0.326"},
+            {"Portfolio Turnover", "0.02"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},

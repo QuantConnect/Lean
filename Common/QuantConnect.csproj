@@ -418,6 +418,7 @@
     <Compile Include="Securities\FutureOption\Api\CMEOptionsCategoryList.cs" />
     <Compile Include="Securities\FutureOption\Api\CMEProductSlateV2.cs" />
     <Compile Include="Securities\FutureOption\Api\CMEStrikePriceScalingFactors.cs" />
+    <Compile Include="Securities\FutureOption\FutureOptionSymbol.cs" />
     <Compile Include="Securities\FutureOption\FuturesOptionsMarginModel.cs" />
     <Compile Include="Securities\FutureOption\FuturesOptionsExpiryFunctions.cs" />
     <Compile Include="Securities\FutureOption\FuturesOptionsSymbolMappings.cs" />

@@ -358,5 +358,26 @@ namespace QuantConnect.Tests.Common.Securities
 
         #endregion
 
+        [TestCase("ES", Market.CME, 50, 0.25)]
+        [TestCase("ZB", Market.CBOT, 1000, 0.015625)]
+        [TestCase("ZW", Market.CBOT, 5000, 0.00125)]
+        [TestCase("SI", Market.COMEX, 5000, 0.001)]
+        public void ReadsFuturesOptionsEntries(string ticker, string market, int expectedMultiplier, double expectedMinimumPriceFluctuation)
+        {
+            var future = Symbol.CreateFuture(ticker, market, SecurityIdentifier.DefaultDate);
+            var option = Symbol.CreateOption(
+                future,
+                market,
+                default(OptionStyle),
+                default(OptionRight),
+                default(decimal),
+                SecurityIdentifier.DefaultDate);
+
+            var db = SymbolPropertiesDatabase.FromDataFolder();
+            var results = db.GetSymbolProperties(market, option, SecurityType.Option, "USD");
+
+            Assert.AreEqual((decimal)expectedMultiplier, results.ContractMultiplier);
+            Assert.AreEqual((decimal)expectedMinimumPriceFluctuation, results.MinimumPriceVariation);
+        }
     }
 }

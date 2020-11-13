@@ -100,6 +100,7 @@
     <Content Include="ExtendedMarketTradingRegressionAlgorithm.py" />
     <Content Include="FilterUniverseRegressionAlgorithm.py" />
     <Content Include="FineFundamentalFilteredUniverseRegressionAlgorithm.py" />
+    <Content Include="FutureOptionBuySellCallIntradayRegressionAlgorithm.py" />
     <Content Include="FutureOptionCallITMExpiryRegressionAlgorithm.py" />
     <Content Include="FutureOptionCallOTMExpiryRegressionAlgorithm.py" />
     <Content Include="FutureOptionPutITMExpiryRegressionAlgorithm.py" />
