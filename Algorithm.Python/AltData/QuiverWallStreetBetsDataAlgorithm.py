@@ -11,11 +11,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from clr import AddReference
+AddReference("System")
+AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Common")
+
+from System import *
+from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Custom.Quiver import *
-from QuantConnect.Data.UniverseSelection import *
-from QuantConnect import *
 
 ### <summary>
 ### Quiver Quantitative is a provider of alternative data.
@@ -43,9 +48,3 @@ class QuiverWallStreetBetsDataAlgorithm(QCAlgorithm):
             # Go short in the stock if it was mentioned less than 5 times in the WallStreetBets daily discussion
             if point.Mentions < 5:
                 self.SetHoldings(point.Symbol.Underlying, -1)
-
-    def OnSecuritiesChanged(self, changes):
-        for r in changes.RemovedSecurities:
-            # If removed from the universe, liquidate and remove the custom data from the algorithm
-            self.Liquidate(r.Symbol)
-            self.RemoveSecurity(Symbol.CreateBase(QuiverWikipedia, r.Symbol, Market.USA))

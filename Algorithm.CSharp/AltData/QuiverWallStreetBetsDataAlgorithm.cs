@@ -16,7 +16,6 @@
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.Quiver;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp.AltData
 {
@@ -26,8 +25,6 @@ namespace QuantConnect.Algorithm.CSharp.AltData
     /// </summary>
     public class QuiverWallStreetBetsDataAlgorithm : QCAlgorithm
     {
-        private Symbol _aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -59,16 +56,6 @@ namespace QuantConnect.Algorithm.CSharp.AltData
                 {
                     SetHoldings(point.Symbol.Underlying, -1);
                 }
-            }
-        }
-
-        public override void OnSecuritiesChanged(SecurityChanges changes)
-        {
-            foreach (var r in changes.RemovedSecurities)
-            {
-                // If removed from the universe, liquidate and remove the custom data from the algorithm
-                Liquidate(r.Symbol);
-                RemoveSecurity(QuantConnect.Symbol.CreateBase(typeof(QuiverWikipedia), r.Symbol, Market.USA));
             }
         }
     }
