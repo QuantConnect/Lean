@@ -74,7 +74,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var content = "{ \"ReportDate\": \"2020-01-01\", \"TransactionDate\": \"2019-12-23\", \"Representative\": \"Cory Gardner\", \"Transaction\": \"Purchase\", \"Amount\": 100, \"House\": \"Senate\" }";
             var data = JsonConvert.DeserializeObject<QuiverCongress>(content, _jsonSerializerSettings);
 
-            Assert.AreEqual(new DateTime(2020, 1, 1), data.Date);
+            Assert.AreEqual(new DateTime(2020, 1, 1), data.ReportDate);
             Assert.AreEqual(new DateTime(2019, 12, 23), data.TransactionDate);
             Assert.AreEqual("Cory Gardner", data.Representative);
             Assert.AreEqual(OrderDirection.Buy, data.Transaction);

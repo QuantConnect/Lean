@@ -14,10 +14,7 @@
 */
 
 using Newtonsoft.Json;
-using QuantConnect.Configuration;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom.Quiver;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using System;
@@ -25,12 +22,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.QuiverDataDownloader
 {
-
+    /// <summary>
+    /// Quiver downloader implementation for <see cref="QuiverEventsBeta"/> data type
+    /// </summary>
     public class QuiverEventsBetaDataDownloader : QuiverDataDownloader
     {
         private readonly string _destinationFolder;

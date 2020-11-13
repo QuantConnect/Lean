@@ -17,7 +17,10 @@ from QuantConnect.Data.Custom.Quiver import *
 from QuantConnect.Data.UniverseSelection import *
 from QuantConnect import *
 
-
+### <summary>
+### Quiver Quantitative is a provider of alternative data.
+### This algorithm shows how to consume the 'QuiverWallStreetBets'
+### </summary>
 class QuiverWallStreetBetsDataAlgorithm(QCAlgorithm):
     def Initialize(self):
         self.SetStartDate(2019, 1, 1)

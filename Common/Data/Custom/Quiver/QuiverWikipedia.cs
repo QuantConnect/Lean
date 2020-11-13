@@ -14,8 +14,6 @@
 */
 
 using QuantConnect.Util;
-using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json;
 using System;
 using System.IO;
@@ -93,6 +91,11 @@ namespace QuantConnect.Data.Custom.Quiver
         /// <returns>Subscription Data Source.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
+            if (isLiveMode)
+            {
+                throw new InvalidOperationException($"{nameof(QuiverWikipedia)} data source is currently not supported in live trading");
+            }
+
             var source = Path.Combine(
                 Globals.DataFolder,
                 "alternative",
@@ -111,7 +114,7 @@ namespace QuantConnect.Data.Custom.Quiver
         /// <param name="date">Date of the requested data</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>
-        /// Quiver Twitter object
+        /// Quiver Wikipedia object
         /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {

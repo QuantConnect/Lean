@@ -13,18 +13,16 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.Quiver;
 using QuantConnect.Data.UniverseSelection;
 
-
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Algorithm.CSharp.AltData
 {
     /// <summary>
     /// Quiver Quantitative is a provider of alternative data.
+    /// This algorithm shows how to consume the <see cref="QuiverWallStreetBets"/>
     /// </summary>
     public class QuiverWallStreetBetsDataAlgorithm : QCAlgorithm
     {

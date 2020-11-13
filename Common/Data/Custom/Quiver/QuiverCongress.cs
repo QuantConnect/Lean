@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json;
 using System;
 using System.IO;
@@ -27,7 +25,6 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Data.Custom.Quiver
 {
-
     /// <summary>
     /// Personal stock transactions by U.S. Representatives
     /// </summary>
@@ -40,7 +37,7 @@ namespace QuantConnect.Data.Custom.Quiver
         [ProtoMember(10)]
         [JsonProperty(PropertyName = "ReportDate")]
         [JsonConverter(typeof(DateTimeJsonConverter), "yyyy-MM-dd")]
-        public DateTime Date { get; set; }
+        public DateTime ReportDate { get; set; }
 
         /// <summary>
         /// The date the transaction took place
@@ -95,14 +92,14 @@ namespace QuantConnect.Data.Custom.Quiver
         {
             // ReportDate[0], TransactionDate[1], Representative[2], Transaction[3], Amount[4],House[5]
             var csv = csvLine.Split(',');
-            Date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
+            ReportDate = Parse.DateTimeExact(csv[0], "yyyyMMdd");
             TransactionDate = Parse.DateTimeExact(csv[1], "yyyyMMdd");
             Representative = csv[2];
             var transaction = (TransactionDirection)Enum.Parse(typeof(TransactionDirection), csv[3], true);
             Transaction = transaction == TransactionDirection.Purchase ? OrderDirection.Buy : OrderDirection.Sell;
             Amount = csv[4].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
             House = (Congress)Enum.Parse(typeof(Congress), csv[5], true);
-            Time = Date;
+            Time = ReportDate;
         }
 
         /// <summary>
@@ -114,6 +111,11 @@ namespace QuantConnect.Data.Custom.Quiver
         /// <returns>Subscription Data Source.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
+            if (isLiveMode)
+            {
+                throw new InvalidOperationException($"{nameof(QuiverCongress)} data source is currently not supported in live trading");
+            }
+
             var source = Path.Combine(
                 Globals.DataFolder,
                 "alternative",
@@ -132,7 +134,7 @@ namespace QuantConnect.Data.Custom.Quiver
         /// <param name="date">Date of the requested data</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>
-        /// Quiver Twitter object
+        /// Quiver Congress object
         /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
@@ -143,11 +145,11 @@ namespace QuantConnect.Data.Custom.Quiver
         }
 
         /// <summary>
-        /// Formats a string with the Quiver Twitter information.
+        /// Formats a string with the Quiver Congress information.
         /// </summary>
         public override string ToString()
         {
-            return Invariant($"{Symbol}({Date}) :: ") +
+            return Invariant($"{Symbol}({ReportDate}) :: ") +
                    Invariant($"Transaction Date: {TransactionDate} ") +
                    Invariant($"Representative: {Representative} ") +
                    Invariant($"House: {House} ") +

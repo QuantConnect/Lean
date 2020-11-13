@@ -31,6 +31,9 @@ using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.QuiverDataDownloader
 {
+    /// <summary>
+    /// Base QuiverDataDownloader implementation. https://www.quiverquant.com/
+    /// </summary>
     public abstract class QuiverDataDownloader : IDataDownloader
     {
         private readonly string _clientKey;
@@ -111,6 +114,7 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
                         if (response.StatusCode == HttpStatusCode.NotFound)
                         {
                             Log.Error($"QuiverDataDownloader.HttpRequester(): Files not found at url: {Uri.EscapeUriString(url)}");
+                            response.DisposeSafely();
                             return string.Empty;
                         }
 
@@ -123,7 +127,10 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
 
                         response.EnsureSuccessStatusCode();
 
-                        return await response.Content.ReadAsStringAsync();
+                        var result =  await response.Content.ReadAsStringAsync();
+                        response.DisposeSafely();
+
+                        return result;
                     }
                 }
                 catch (Exception e)

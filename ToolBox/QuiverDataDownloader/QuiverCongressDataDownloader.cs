@@ -14,10 +14,7 @@
 */
 
 using Newtonsoft.Json;
-using QuantConnect.Configuration;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom.Quiver;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using System;
@@ -25,12 +22,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.QuiverDataDownloader
 {
-
+    /// <summary>
+    /// Quiver downloader implementation for <see cref="QuiverCongress"/> data type
+    /// </summary>
     public class QuiverCongressDataDownloader : QuiverDataDownloader
     {
         private readonly string _destinationFolder;
@@ -115,7 +113,7 @@ namespace QuantConnect.ToolBox.QuiverDataDownloader
                                     foreach (var kvp in followers)
                                     {
                                         var csvContents = new string[] {
-                                            $"{kvp.Date.ToStringInvariant("yyyyMMdd")}," +
+                                            $"{kvp.ReportDate.ToStringInvariant("yyyyMMdd")}," +
                                             $"{kvp.TransactionDate.ToStringInvariant("yyyyMMdd")}," +
                                             $"{kvp.Representative}," +
                                             $"{kvp.Transaction}," +
