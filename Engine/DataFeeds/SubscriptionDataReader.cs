@@ -73,6 +73,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly bool _isLiveMode;
 
         private BaseData _previous;
+        private decimal? _lastRawPrice;
         private readonly IEnumerator<DateTime> _tradeableDates;
 
         // used when emitting aux data from within while loop
@@ -424,6 +425,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // we've satisfied user and market hour filters, so this data is good to go as current
                     Current = instance;
 
+                    // we keep the last raw price registered before we return so we are not affected by anyone (price scale) modifying our current
+                    _lastRawPrice = Current.Price;
                     return true;
                 }
 
@@ -571,7 +574,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 date = _tradeableDates.Current;
 
-                OnNewTradableDate(new NewTradableDateEventArgs(date, _previous, _config.Symbol));
+                OnNewTradableDate(new NewTradableDateEventArgs(date, _previous, _config.Symbol, _lastRawPrice));
 
                 if (_pastDelistedDate || date > _delistingDate)
                 {

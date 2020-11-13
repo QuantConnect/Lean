@@ -181,17 +181,24 @@ namespace QuantConnect
         public BaseData LastBaseData { get; }
 
         /// <summary>
+        /// The last raw security price we have
+        /// </summary>
+        public decimal? LastRawPrice { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="NewTradableDateEventArgs"/> class
         /// </summary>
         /// <param name="date">The new tradable date</param>
         /// <param name="lastBaseData">The last <see cref="BaseData"/> of the
         /// <see cref="Security"/> for which we are enumerating</param>
         /// <param name="symbol">The <see cref="Symbol"/> of the new tradable date</param>
-        public NewTradableDateEventArgs(DateTime date, BaseData lastBaseData, Symbol symbol)
+        /// <param name="lastRawPrice">The last raw security price we have</param>
+        public NewTradableDateEventArgs(DateTime date, BaseData lastBaseData, Symbol symbol, decimal? lastRawPrice)
             : base(symbol)
         {
             Date = date;
             LastBaseData = lastBaseData;
+            LastRawPrice = lastRawPrice;
         }
     }
 }

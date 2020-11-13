@@ -91,14 +91,14 @@ From a terminal; Pycharm has a built in terminal on the bottom taskbar labeled *
 
  2. Using the **run_docker.cfg** to store args for repeated use; any blank entries will resort to default values! example: **_./run_docker.bat run_docker.cfg_**
   
-        image=quantconnect/lean:latest
-        config_file=
-        data_dir=
-        results_dir=
-        debugging=
-        python_dir=
+        IMAGE=quantconnect/lean:latest
+        CONFIG_FILE=
+        DATA_DIR=
+        RESULTS_DIR=
+        DEBUGGING=
+        PYTHON_DIR=
 
- 3. Inline arguments; anything you don't enter will use the default args! example: **_./run_docker.bat debugging=y_** 
+ 3. Inline arguments; anything you don't enter will use the default args! example: **_./run_docker.bat DEBUGGING=y_** 
       *    Accepted args for inline include all listed in the file in #2; must follow the **key=value** format
 
 <br />
