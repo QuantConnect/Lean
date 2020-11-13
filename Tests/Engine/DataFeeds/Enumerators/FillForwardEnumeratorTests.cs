@@ -1166,76 +1166,232 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         }
 
         private static TestCaseData[] SubscriptionStarts => new[] {
-            new TestCaseData(new DateTime(2011, 7, 7, 20, 0, 0)), // no move
-            new TestCaseData(new DateTime(2011, 11, 3, 20, 0, 0)), // move to EST
-            new TestCaseData(new DateTime(2012, 3, 8, 19, 0, 0))   // move to EDT
+            new TestCaseData(new DateTime(2011, 1, 21, 0, 0, 0)),  // no move
+            new TestCaseData(new DateTime(2011, 3, 11, 0, 0, 0)),   // move to EDT
+            new TestCaseData(new DateTime(2011, 7, 8, 0, 0, 0)),  // no move
+            new TestCaseData(new DateTime(2011, 11, 4, 0, 0, 0)) // move to EST
         };
 
         [Test, TestCaseSource(nameof(SubscriptionStarts))]
         public void FillsForwardDaylightSavingTime(DateTime reference)
         {
+            var dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
+            var exchange = new ForexExchange();
             var dataResolution = Time.OneDay;
             var data = new[]
             {
                 new TradeBar
                 {
-                    Time = reference,
+                    Time = reference.ConvertTo(dataTimeZone, exchange.TimeZone),
                     Value = 0,
                     Period = dataResolution,
                     Volume = 100
                 },
                 new TradeBar
                 {
-                    Time = reference.AddDays(2),
+                    Time = reference.AddDays(2).ConvertTo(dataTimeZone, exchange.TimeZone),
                     Value = 1,
                     Period = dataResolution,
                     Volume = 100
                 },
                 new TradeBar
                 {
-                    Time = reference.AddDays(3),
+                    Time = reference.AddDays(3).ConvertTo(dataTimeZone, exchange.TimeZone),
                     Value = 2,
                     Period = dataResolution,
                     Volume = 100
-                },
-                new TradeBar
-                {
-                    Time = reference.AddDays(3),
-                    Value = 3,
-                    Period = dataResolution,
-                    Volume = 100
-                },
-                new TradeBar
-                {
-                    Time = reference.AddDays(4),
-                    Value = 4,
-                    Period = dataResolution,
-                    Volume = 200
                 }
             }.ToList();
             var enumerator = data.GetEnumerator();
 
-            var exchange = new ForexExchange();
-            var isExtendedMarketHours = false;
             var fillForwardEnumerator = new FillForwardEnumerator(
                 enumerator,
                 exchange,
                 Ref.Create(TimeSpan.FromDays(1)),
-                isExtendedMarketHours,
+                false,
                 data.Last().EndTime,
                 dataResolution,
-                DateTimeZone.Utc,
+                dataTimeZone,
                 data.First().EndTime);
 
-            for (int i = 0; i < data.Count; i++)
-            {
-                Assert.IsTrue(fillForwardEnumerator.MoveNext());
-                Assert.AreEqual(data[i].Time.AddDays(1), fillForwardEnumerator.Current.EndTime);
-                Assert.AreEqual(i, fillForwardEnumerator.Current.Value);
-                Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
-                Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
-            }
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(data[0].Time.Add(dataResolution), fillForwardEnumerator.Current.EndTime);
+            Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
 
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(data[1].Time.Add(dataResolution), fillForwardEnumerator.Current.EndTime);
+            Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(data[2].Time.Add(dataResolution), fillForwardEnumerator.Current.EndTime);
+            Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+
+            fillForwardEnumerator.Dispose();
+        }
+
+        private static TestCaseData[] NoMoveSubscriptionStarts => new[] {
+            new TestCaseData(new DateTime(2011, 7, 4, 0, 0, 0)),  // no move
+            new TestCaseData(new DateTime(2011, 1, 17, 0, 0, 0)),  // no move
+        };
+
+        [Test, TestCaseSource(nameof(NoMoveSubscriptionStarts))]
+        public void FillsForwardMiddleWeek(DateTime reference)
+        {
+            var dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
+            var exchange = new ForexExchange();
+            var dataResolution = Time.OneDay;
+            var data = new[]
+            {
+                new TradeBar
+                {
+                    Time = reference.ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 0,
+                    Period = dataResolution,
+                    Volume = 100
+                },
+                new TradeBar
+                {
+                    Time = reference.AddDays(2).ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 1,
+                    Period = dataResolution,
+                    Volume = 100
+                },
+                new TradeBar
+                {
+                    Time = reference.AddDays(3).ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 2,
+                    Period = dataResolution,
+                    Volume = 100
+                }
+            }.ToList();
+            var enumerator = data.GetEnumerator();
+
+            var fillForwardEnumerator = new FillForwardEnumerator(
+                enumerator,
+                exchange,
+                Ref.Create(TimeSpan.FromDays(1)),
+                false,
+                data.Last().EndTime,
+                dataResolution,
+                dataTimeZone,
+                data.First().EndTime);
+
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(data[0].Time.Add(dataResolution), fillForwardEnumerator.Current.EndTime);
+            Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(data[0].Time.AddTicks(2 * dataResolution.Ticks), fillForwardEnumerator.Current.EndTime);
+            Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(data[1].Time.Add(dataResolution), fillForwardEnumerator.Current.EndTime);
+            Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(data[2].Time.Add(dataResolution), fillForwardEnumerator.Current.EndTime);
+            Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+
+            fillForwardEnumerator.Dispose();
+        }
+
+        [Test]
+        public void FillsForwardFromPreMarketWhenDaylightMove()
+        {
+            var dataResolution = Time.OneMinute;
+            var data = new[]
+            {
+                new TradeBar
+                {
+                    Time = new DateTime(2008, 3, 7, 16, 20, 0),
+                    Value = 0,
+                    Period = dataResolution,
+                    Volume = 100
+                },
+                new TradeBar
+                {
+                    Time = new DateTime(2008, 3, 10, 8, 33, 0),
+                    Value = 1,
+                    Period = dataResolution,
+                    Volume = 200
+                },
+                new TradeBar
+                {
+                    Time = new DateTime(2008, 3, 10, 9, 28, 0),
+                    Value = 2,
+                    Period = dataResolution,
+                    Volume = 300
+                },
+                new TradeBar
+                {
+                    Time = new DateTime(2008, 3, 10, 9, 32, 0),
+                    Value = 3,
+                    Period = dataResolution,
+                    Volume = 400
+                }
+            }.ToList();
+            var enumerator = data.GetEnumerator();
+
+            var exchange = new EquityExchange();
+            var isExtendedMarketHours = false;
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromMinutes(1)), isExtendedMarketHours, data.Last().EndTime, dataResolution, exchange.TimeZone, data.First().EndTime);
+
+            // 2008-03-07 16:50
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(data[0].Time.Add(dataResolution), fillForwardEnumerator.Current.EndTime);
+            Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
+            Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(100, ((TradeBar)fillForwardEnumerator.Current).Volume);
+
+            // 2008-03-10 08:33 (pre-market)
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(data[1].Time.Add(dataResolution), fillForwardEnumerator.Current.EndTime);
+            Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
+            Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(200, ((TradeBar)fillForwardEnumerator.Current).Volume);
+
+            // 2008-03-10 09:28 (pre-market)
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(data[2].Time.Add(dataResolution), fillForwardEnumerator.Current.EndTime);
+            Assert.AreEqual(2, fillForwardEnumerator.Current.Value);
+            Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(300, ((TradeBar)fillForwardEnumerator.Current).Volume);
+
+            // 9:30 (ff)
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(new DateTime(2008, 3, 10, 9, 31, 0), fillForwardEnumerator.Current.EndTime);
+            Assert.AreEqual(2, fillForwardEnumerator.Current.Value);
+            Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
+
+            // 9:31 (ff)
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(new DateTime(2008, 3, 10, 9, 32, 0), fillForwardEnumerator.Current.EndTime);
+            Assert.AreEqual(2, fillForwardEnumerator.Current.Value);
+            Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
+
+            // 9:32
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(data[3].Time.Add(dataResolution), fillForwardEnumerator.Current.EndTime);
+            Assert.AreEqual(3, fillForwardEnumerator.Current.Value);
+            Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(400, ((TradeBar)fillForwardEnumerator.Current).Volume);
+
+            Assert.IsFalse(fillForwardEnumerator.MoveNext());
             fillForwardEnumerator.Dispose();
         }
 

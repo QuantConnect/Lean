@@ -45,7 +45,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly DateTime _subscriptionEndTimeRoundDownByDataResolution;
         private readonly IEnumerator<BaseData> _enumerator;
         private readonly IReadOnlyRef<TimeSpan> _fillForwardResolution;
-        private readonly TimeZoneOffsetProvider _offsetProvider;
 
         /// <summary>
         /// The exchange used to determine when to insert fill forward data
@@ -83,9 +82,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _dataTimeZone = dataTimeZone;
             _fillForwardResolution = fillForwardResolution;
             _isExtendedMarketHours = isExtendedMarketHours;
-            _offsetProvider = new TimeZoneOffsetProvider(Exchange.TimeZone,
-                subscriptionStartTime.ConvertToUtc(Exchange.TimeZone),
-                subscriptionEndTime.ConvertToUtc(Exchange.TimeZone));
             // '_dataResolution' and '_subscriptionEndTime' are readonly they won't change, so lets calculate this once here since it's expensive
             _subscriptionEndTimeRoundDownByDataResolution = RoundDown(_subscriptionEndTime, _dataResolution);
         }
@@ -271,16 +267,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 return false;
             }
 
-            // define real delta, can be bigger than data resolution, for example during weekend
-            var nextPreviousTimeDelta = next.Time - previous.Time;
-
-            // 1. Utc => allows us to define did we swallow hour when calculated EndTime (Time+Period) or not,
-            // for example, with data resolution 1 day and dataTimeZone = UTC we have next.Time 20111105 20:00, next.EndTime = 20111106 20:00
-            // but converting these values to UTC we have next.Time 20111106 00:00 (recognized as EDT), next.EndTime = 20111107 01:00 (recognized as EST)
-            // 2. previous.Time - next.Time => gives us real delta time in local time zone - not necessary equals data resolution(for weekend)
-            // 3. dataResolution => we use EndTime
-            var daylightMovement = nextEndTimeUtc - (previousTimeUtc + nextPreviousTimeDelta + _dataResolution);
-
             // every bar emitted MUST be of the data resolution.
 
             // compute end times of the four potential fill forward scenarios
@@ -294,15 +280,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             foreach (var item in GetSortedReferenceDateIntervals(previous, fillForwardResolution, _dataResolution))
             {
-                // add interval in utc to avoid daylight savings from swallowing it, see GH 3707
-                //var potentialUtc = _offsetProvider.ConvertToUtc(item.ReferenceDateTime) + item.Interval;
-                var potentialUtc = _offsetProvider.ConvertToUtc(item.ReferenceDateTime);
-                var potentialInTimeZone = _offsetProvider.ConvertFromUtc(potentialUtc);
-                //var potentialBarEndTime = RoundDown(potentialInTimeZone, item.Interval);
-                var potentialBarEndTime = RoundDown(potentialInTimeZone, item.Interval) + item.Interval;
-                // apply the same timezone to next and potential bars because incoming next.EndTime can swallow one hour
-                var nextEndTime = next.EndTime - daylightMovement;
-                if (potentialBarEndTime < nextEndTime)
+                // daylight saving time starts/end at 2 a.m. on Sunday
+                // by adding interval in daily resolution we move to next day
+                // in order to track daylight movement need to round-down origin day (before + Interval)
+                var potentialBarEndTime = RoundDown(item.ReferenceDateTime, item.Interval) + item.Interval;
+                if (potentialBarEndTime < next.EndTime)
                 {
                     var nextFillForwardBarStartTime = potentialBarEndTime - item.Interval;
                     if (Exchange.IsOpenDuringBar(nextFillForwardBarStartTime, potentialBarEndTime, _isExtendedMarketHours))
