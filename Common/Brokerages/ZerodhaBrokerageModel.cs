@@ -54,7 +54,23 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage would be able to perform the execution, false otherwise</returns>
         public override bool CanExecuteOrder(Security security, Order order)
         {
-            return order.SecurityType != SecurityType.Base;
+
+            // validate security type
+            if (security.Type != SecurityType.Equity &&
+                security.Type != SecurityType.Option &&
+                security.Type != SecurityType.Future)
+            {
+                return false;
+            }
+
+           
+            // validate time in force
+            if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
