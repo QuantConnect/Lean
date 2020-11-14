@@ -524,7 +524,10 @@ namespace QuantConnect.Util
 
                 case SecurityType.Future:
                     var expiryDate = symbol.ID.Date;
-                    var monthsToAdd = FuturesExpiryUtilityFunctions.ExpiresInPreviousMonth(symbol.ID.Symbol); 
+                    // GH review comment:
+                    // We skip adding the expiry component to maintain backwards compatibility. @Jay-Jay-D let me know if
+                    // you'd like to fix this and reprocess futures data
+                    var monthsToAdd = FuturesExpiryUtilityFunctions.ExpiresInPreviousMonth(symbol.ID.Symbol);// expiryDate.Date);
                     var contractYearMonth = expiryDate.AddMonths(monthsToAdd).ToStringInvariant(DateFormat.YearMonth);
 
                     if (isHourOrDaily)
@@ -767,8 +770,8 @@ namespace QuantConnect.Util
             }
             if (type == typeof(Tick))
             {
-                if (securityType == SecurityType.Forex || 
-                    securityType == SecurityType.Cfd || 
+                if (securityType == SecurityType.Forex ||
+                    securityType == SecurityType.Cfd ||
                     securityType == SecurityType.Crypto)
                 {
                     return TickType.Quote;
