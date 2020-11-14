@@ -183,8 +183,8 @@ namespace QuantConnect.Brokerages
         {
             var map = DefaultMarketMap.ToDictionary();
             map[SecurityType.Equity] = Market.NSE;
-            map[SecurityType.Future] = Market.NSEFO;
-            map[SecurityType.Option] = Market.NSEFO;
+            map[SecurityType.Future] = Market.NFO;
+            map[SecurityType.Option] = Market.NFO;
             return map.ToReadOnlyDictionary();
         }
     }

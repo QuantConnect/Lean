@@ -61,13 +61,13 @@ namespace QuantConnect
             Tuple.Create(SGX, 24),
             Tuple.Create(HKFE, 25),
 
-            Tuple.Create(NSEFO, 26),
-            Tuple.Create(NSECDS, 27),
+            Tuple.Create(NFO, 26),
+            Tuple.Create(CDS, 27),
             Tuple.Create(NCDEX, 28),
 
             Tuple.Create(BSE, 29),
             Tuple.Create(MCX, 30),
-            Tuple.Create(BSEFO, 31),
+            Tuple.Create(BFO, 31),
         };
 
         static Market()
@@ -140,12 +140,12 @@ namespace QuantConnect
         /// <summary>
         /// NSE - National Stock Exchange Commodity Derivatives
         /// </summary>
-        public const string NSECDS = "nsecds";
+        public const string CDS = "cds";
 
         /// <summary>
         /// NSE - National Stock Exchange Futures and Options
         /// </summary>
-        public const string NSEFO = "nsefo";
+        public const string NFO = "nfo";
 
         /// <summary>
         /// BSE - Bombay Stock Exchange
@@ -154,7 +154,11 @@ namespace QuantConnect
 
         /// BSE Futures and Options
         /// </summary>
-        public const string BSEFO = "bsefo";
+        public const string BFO = "bfo";
+
+        /// BSE Currency Derivatives
+        /// </summary>
+        public const string BCD = "bcd";
 
         /// <summary>
         /// MCX - Multi Commodity Exchange

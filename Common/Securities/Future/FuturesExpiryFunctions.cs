@@ -502,13 +502,13 @@ namespace QuantConnect.Securities.Future
             },
 
             // Nifty 50 Index Futures: https://www1.nseindia.com/products/content/derivatives/equities/contract_specifitns.htm
-            {Symbol.Create(Futures.Indices.Nifty50, SecurityType.Future, Market.NSEFO), (time =>
+            {Symbol.Create(Futures.Indices.Nifty50, SecurityType.Future, Market.NFO), (time =>
                 {
                     // Last Thursday of the expiring contract month. If this falls on an NSE non-business day, the last trading day shall be the preceding business day.
                     // The expiring contract shall close on its last trading day at 3.30 pm.
 
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.NSEFO, Futures.Indices.Nifty50, SecurityType.Future)
+                        .GetEntry(Market.NFO, Futures.Indices.Nifty50, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -523,13 +523,13 @@ namespace QuantConnect.Securities.Future
             },
 
             // BankNifty Index Futures: https://www1.nseindia.com/products/content/derivatives/equities/bank_nifty_new.htm
-            {Symbol.Create(Futures.Indices.BankNifty, SecurityType.Future, Market.NSEFO), (time =>
+            {Symbol.Create(Futures.Indices.BankNifty, SecurityType.Future, Market.NFO), (time =>
                 {
                     // Last Thursday of the expiring contract month. If this falls on an NSE non-business day, the last trading day shall be the preceding business day.
                     // The expiring contract shall close on its last trading day at 3.30 pm.
 
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.NSEFO, Futures.Indices.BankNifty, SecurityType.Future)
+                        .GetEntry(Market.NFO, Futures.Indices.BankNifty, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 

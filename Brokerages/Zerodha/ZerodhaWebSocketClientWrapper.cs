@@ -178,7 +178,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         protected virtual void OnOpen()
         {
-            Log.Trace($"ZerodhaWebSocketClientWrapper.OnOpen(): Connection opened (IsOpen:{IsOpen}, State:{_client.State}): {_url}");
+            Log.Trace($"ZerodhaWebSocketClientWrapper.OnOpen(): Connection opened (IsOpen:{IsOpen}, State:{_client.State}): wss://ws.kite.trade ...");
             Open?.Invoke(this, EventArgs.Empty);
         }
 
@@ -187,7 +187,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         protected virtual void OnClose(WebSocketCloseData e)
         {
-            Log.Trace($"ZerodhaWebSocketClientWrapper.OnClose(): Connection closed (IsOpen:{IsOpen}, State:{_client.State}): {_url}");
+            Log.Trace($"ZerodhaWebSocketClientWrapper.OnClose(): Connection closed (IsOpen:{IsOpen}, State:{_client.State}):  wss://ws.kite.trade ...");
             Closed?.Invoke(this, e);
         }
 

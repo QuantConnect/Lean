@@ -50,7 +50,6 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             get
             {
-                var symbols = new List<Symbol>();
                 return KnownSymbolsList;
             }
         }
@@ -105,10 +104,10 @@ namespace QuantConnect.Brokerages.Zerodha
                         market = Market.NSE;
                         break;
                     case "NFO":
-                        market = Market.NSEFO;
+                        market = Market.NFO;
                         break;
                     case "CDS":
-                        market = Market.NSECDS;
+                        market = Market.CDS;
                         break;
                     case "BSE":
                         market = Market.BSE;
@@ -232,7 +231,7 @@ namespace QuantConnect.Brokerages.Zerodha
             if (!IsKnownBrokerageSymbol(brokerageSymbol))
                 throw new ArgumentException($"Unknown Zerodha symbol: {brokerageSymbol}");
             var symbol = KnownSymbols.Where(s => s.ID.Symbol == brokerageSymbol).FirstOrDefault();
-            
+
             return symbol.SecurityType;
         }
 
