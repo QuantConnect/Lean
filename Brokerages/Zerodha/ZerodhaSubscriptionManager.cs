@@ -1,16 +1,16 @@
 ﻿/*
- * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
- * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+    * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+    * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
 */
 
 using System;
@@ -31,6 +31,7 @@ namespace QuantConnect.Brokerages.Zerodha
     public class ZerodhaSubscriptionManager : DataQueueHandlerSubscriptionManager
     {
         private readonly string _wssUrl;
+        private volatile int _subscribeErrorCode;
         private readonly object _locker = new object();
         private readonly ZerodhaBrokerage _brokerage;
         private readonly ZerodhaSymbolMapper _symbolMapper;
@@ -126,8 +127,8 @@ namespace QuantConnect.Brokerages.Zerodha
             }
 
             Log.Trace("ZerodhaSubscriptionManager.GetFreeWebSocket(): New websocket added: " +
-                      $"Hashcode: {webSocket.GetHashCode()}, " +
-                      $"WebSocket connections: {connections}");
+                        $"Hashcode: {webSocket.GetHashCode()}, " +
+                        $"WebSocket connections: {connections}");
 
             return webSocket;
         }
@@ -169,7 +170,7 @@ namespace QuantConnect.Brokerages.Zerodha
             Log.Error("ZerodhaSubscriptionManager.OnConnectionLost(): WebSocket connection lost.");
         }
 
-       
+
 
         private void OnReconnectRequested(object sender, EventArgs e)
         {
@@ -182,7 +183,7 @@ namespace QuantConnect.Brokerages.Zerodha
             lock (_locker)
             {
                 webSocket = _channelsByWebSocket.Keys
-                   .FirstOrDefault(connection => connection.ConnectionId == connectionHandler.ConnectionId);
+                    .FirstOrDefault(connection => connection.ConnectionId == connectionHandler.ConnectionId);
             }
 
             if (webSocket == null)
@@ -220,9 +221,9 @@ namespace QuantConnect.Brokerages.Zerodha
 
             foreach (var channel in channels.Values)
             {
-                Log.Trace("Resubcribing quotes for: "+channel.Symbol);
+                Log.Trace("Resubcribing quotes for: " + channel.Symbol);
                 var ticker = _symbolMapper.GetBrokerageSymbol(channel.Symbol);
-                var sub = new Subscription();
+                var sub = new ChannelSubscription();
                 sub.a = "subscribe";
                 sub.v = new string[] { channel.ChannelId };
                 var request = JsonConvert.SerializeObject(sub);
@@ -331,22 +332,21 @@ namespace QuantConnect.Brokerages.Zerodha
         private ZerodhaWebSocketWrapper SubscribeChannel(string channelName, string listingId, string symbol)
         {
             var ticker = _symbolMapper.GetBrokerageSymbol(symbol);
-            var sub = new Subscription();
+            var securityType = _symbolMapper.GetBrokerageSecurityType(symbol);
+            var sub = new ChannelSubscription();
             sub.a = "subscribe";
             sub.v = new string[] { listingId };
             var request = JsonConvert.SerializeObject(sub);
-            var channel = new Channel { Name = channelName, Symbol = ticker, ChannelId = listingId };
+            var channel = new Channel(channelName,listingId, ticker, securityType);
             var webSocket = GetFreeWebSocket(channel);
-            //TODO: bug handle if websocket state is still connecting
-            System.Threading.Thread.Sleep(1000);
-            Log.Trace("Websocket Request: "+request.ToStringInvariant());
-            if (webSocket.IsOpen)
-            {
-                webSocket.Send(request);
-                webSocket.Send("\n");
 
-                OnSubscribe(webSocket, channel);
-            }
+            Log.Trace("Websocket Request: " + request.ToStringInvariant());
+            //if (webSocket.IsOpen)
+            //{
+            webSocket.Send(request);
+            webSocket.Send("\n");
+            //OnSubscribe(webSocket, channel);
+            //}
             return webSocket;
         }
 
@@ -387,15 +387,16 @@ namespace QuantConnect.Brokerages.Zerodha
 
         //}
 
-        private void UnsubscribeChannel(ZerodhaWebSocketWrapper webSocket, Channel channel)
+        
+        private void UnsubscribeChannel(ZerodhaWebSocketWrapper webSocket, ZerodhaWebSocketChannels channels, Channel channel)
         {
-            var sub = new ChannelSubscription();
+            var sub = new ChannelUnsubscription();
             sub.a = "unsubcribe";
-            sub.v = new string[] { channel.ChannelId };
+            sub.v = new string[] { channels.GetChannelId(channel) };
             var request = JsonConvert.SerializeObject(sub);
             webSocket.Send(request);
             webSocket.Send("\n");
-            OnUnsubscribe(webSocket, channel);
+            //OnUnsubscribe(webSocket, channel);
         }
 
         private void OnSubscribe(ZerodhaWebSocketWrapper webSocket, Channel data)
@@ -429,7 +430,7 @@ namespace QuantConnect.Brokerages.Zerodha
             }
         }
 
-        private void OnUnsubscribe(ZerodhaWebSocketWrapper webSocket, ChannelUnsubscribing data)
+        private void OnUnsubscribe(ZerodhaWebSocketWrapper webSocket, ChannelUnsubscription data)
         {
             try
             {
@@ -694,6 +695,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     _subscribeErrorCode = 0;
                     var subscription = SubscribeChannel(
                         ChannelNameFromTickType(tickType),
+                        symbol.ID.ToString(),
                         symbol);
 
                     _subscriptionsBySymbol.AddOrUpdate(
@@ -750,7 +752,7 @@ namespace QuantConnect.Brokerages.Zerodha
                         _onUnsubscribeEvent.Reset();
                         try
                         {
-                            var channel = new Channel(channelName, symbol,symbol.SecurityType);
+                            var channel = new Channel(channelName, symbol, symbol.SecurityType);
                             ZerodhaWebSocketChannels channels;
                             if (_channelsByWebSocket.TryGetValue(webSocket, out channels) && channels.Contains(channel))
                             {
