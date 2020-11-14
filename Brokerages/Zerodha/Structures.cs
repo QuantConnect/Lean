@@ -18,7 +18,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
-using System.Linq;
 using System.Globalization;
 
 namespace QuantConnect.Brokerages.Zerodha.Messages
@@ -451,11 +450,20 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
         public string Variety { get; set; }
     }
 
-    public struct Subscription
+    public struct ChannelSubscription
     {
+        public string ChannelId { get; set; }
         public string a { get; set; }
         public string[] v { get; set; }
     }
+
+    public struct ChannelUnsubscribing
+    {
+        public string ChannelId { get; set; }
+        public string a { get; set; }
+        public string[] v { get; set; }
+    }
+
     /// <summary>
     /// GTTOrder structure
     /// </summary>
@@ -1034,202 +1042,5 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
         }
         public UInt32 InstrumentToken { get; set; }
         public decimal LastPrice { get; }
-    }
-
-    /// <summary>
-    /// Mutual funds holdings structure
-    /// </summary>
-    public struct MFHolding
-    {
-        public MFHolding(Dictionary<string, dynamic> data)
-        {
-            try
-            {
-                Quantity = data["quantity"];
-                Fund = data["fund"];
-                Folio = data["folio"];
-                AveragePrice = data["average_price"];
-                TradingSymbol = data["tradingsymbol"];
-                LastPrice = data["last_price"];
-                PNL = data["pnl"];
-            }
-            catch (Exception e)
-            {
-                throw new DataException("Unable to parse data. " + Utils.JsonSerialize(data), HttpStatusCode.OK, e);
-            }
-
-        }
-
-        public decimal Quantity { get; }
-        public string Fund { get; }
-        public string Folio { get; }
-        public decimal AveragePrice { get; }
-        public string TradingSymbol { get; }
-        public decimal LastPrice { get; }
-        public decimal PNL { get; }
-    }
-
-    /// <summary>
-    /// Mutual funds instrument structure
-    /// </summary>
-    public struct MFInstrument
-    {
-        public MFInstrument(Dictionary<string, dynamic> data)
-        {
-            try
-            {
-                TradingSymbol = data["tradingsymbol"];
-                AMC = data["amc"];
-                Name = data["name"];
-
-                PurchaseAllowed = data["purchase_allowed"] == "1";
-                RedemtpionAllowed = data["redemption_allowed"] == "1";
-
-                MinimumPurchaseAmount = Convert.ToDecimal(data["minimum_purchase_amount"]);
-                PurchaseAmountMultiplier = Convert.ToDecimal(data["purchase_amount_multiplier"]);
-                MinimumAdditionalPurchaseAmount = Convert.ToDecimal(data["minimum_additional_purchase_amount"]);
-                MinimumRedemptionQuantity = Convert.ToDecimal(data["minimum_redemption_quantity"]);
-                RedemptionQuantityMultiplier = Convert.ToDecimal(data["redemption_quantity_multiplier"]);
-                LastPrice = Convert.ToDecimal(data["last_price"]);
-
-                DividendType = data["dividend_type"];
-                SchemeType = data["scheme_type"];
-                Plan = data["plan"];
-                SettlementType = data["settlement_type"];
-                LastPriceDate = Utils.StringToDate(data["last_price_date"]);
-            }
-            catch (Exception e)
-            {
-                throw new DataException("Unable to parse data. " + Utils.JsonSerialize(data), HttpStatusCode.OK, e);
-            }
-
-        }
-
-        public string TradingSymbol { get; }
-        public string AMC { get; }
-        public string Name { get; }
-
-        public bool PurchaseAllowed { get; }
-        public bool RedemtpionAllowed { get; }
-
-        public decimal MinimumPurchaseAmount { get; }
-        public decimal PurchaseAmountMultiplier { get; }
-        public decimal MinimumAdditionalPurchaseAmount { get; }
-        public decimal MinimumRedemptionQuantity { get; }
-        public decimal RedemptionQuantityMultiplier { get; }
-        public decimal LastPrice { get; }
-
-        public string DividendType { get; }
-        public string SchemeType { get; }
-        public string Plan { get; }
-        public string SettlementType { get; }
-        public DateTime? LastPriceDate { get; }
-    }
-
-    /// <summary>
-    /// Mutual funds order structure
-    /// </summary>
-    public struct MFOrder
-    {
-        public MFOrder(Dictionary<string, dynamic> data)
-        {
-            try
-            {
-                StatusMessage = data["status_message"];
-                PurchaseType = data["purchase_type"];
-                PlacedBy = data["placed_by"];
-                Amount = data["amount"];
-                Quantity = data["quantity"];
-                SettlementId = data["settlement_id"];
-                OrderTimestamp = Utils.StringToDate(data["order_timestamp"]);
-                AveragePrice = data["average_price"];
-                TransactionType = data["transaction_type"];
-                ExchangeOrderId = data["exchange_order_id"];
-                ExchangeTimestamp = Utils.StringToDate(data["exchange_timestamp"]);
-                Fund = data["fund"];
-                Variety = data["variety"];
-                Folio = data["folio"];
-                Tradingsymbol = data["tradingsymbol"];
-                Tag = data["tag"];
-                OrderId = data["order_id"];
-                Status = data["status"];
-                LastPrice = data["last_price"];
-            }
-            catch (Exception e)
-            {
-                throw new DataException("Unable to parse data. " + Utils.JsonSerialize(data), HttpStatusCode.OK, e);
-            }
-
-        }
-
-        public string StatusMessage { get; }
-        public string PurchaseType { get; }
-        public string PlacedBy { get; }
-        public decimal Amount { get; }
-        public decimal Quantity { get; }
-        public string SettlementId { get; }
-        public DateTime? OrderTimestamp { get; }
-        public decimal AveragePrice { get; }
-        public string TransactionType { get; }
-        public string ExchangeOrderId { get; }
-        public DateTime? ExchangeTimestamp { get; }
-        public string Fund { get; }
-        public string Variety { get; }
-        public string Folio { get; }
-        public string Tradingsymbol { get; }
-        public string Tag { get; }
-        public string OrderId { get; }
-        public string Status { get; }
-        public decimal LastPrice { get; }
-    }
-
-    /// <summary>
-    /// Mutual funds SIP structure
-    /// </summary>
-    public struct MFSIP
-    {
-        public MFSIP(Dictionary<string, dynamic> data)
-        {
-            try
-            {
-                DividendType = data["dividend_type"];
-                PendingInstalments = data["pending_instalments"];
-                Created = Utils.StringToDate(data["created"]);
-                LastInstalment = Utils.StringToDate(data["last_instalment"]);
-                TransactionType = data["transaction_type"];
-                Frequency = data["frequency"];
-                InstalmentDate = data["instalment_date"];
-                Fund = data["fund"];
-                SIPId = data["sip_id"];
-                Tradingsymbol = data["tradingsymbol"];
-                Tag = data["tag"];
-                InstalmentAmount = data["instalment_amount"];
-                Instalments = data["instalments"];
-                Status = data["status"];
-                OrderId = data.ContainsKey(("order_id")) ? data["order_id"] : "";
-            }
-            catch (Exception e)
-            {
-                throw new DataException("Unable to parse data. " + Utils.JsonSerialize(data), HttpStatusCode.OK, e);
-            }
-
-        }
-
-        public string DividendType { get; }
-        public int PendingInstalments { get; }
-        public DateTime? Created { get; }
-        public DateTime? LastInstalment { get; }
-        public string TransactionType { get; }
-        public string Frequency { get; }
-        public int InstalmentDate { get; }
-        public string Fund { get; }
-        public string SIPId { get; }
-        public string Tradingsymbol { get; }
-        public string Tag { get; }
-        public int InstalmentAmount { get; }
-        public int Instalments { get; }
-        public string Status { get; }
-        public string OrderId { get; }
-    }
-
+    }    
 }

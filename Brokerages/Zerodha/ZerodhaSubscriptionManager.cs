@@ -24,6 +24,7 @@ using QuantConnect.Util;
 using System.Text;
 using QuantConnect.Brokerages.Zerodha.Messages;
 using QuantConnect.Data;
+using System.Threading;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
@@ -34,11 +35,23 @@ namespace QuantConnect.Brokerages.Zerodha
         private readonly ZerodhaBrokerage _brokerage;
         private readonly ZerodhaSymbolMapper _symbolMapper;
         private string _wssAuthToken;
-        private const int MaximumSubscriptionsPerSocket = 30;
+        private const int MaximumSubscriptionsPerSocket = 3000;
+
+        private const int ConnectionTimeout = 30000;
+
         private ConcurrentDictionary<uint, Symbol> _subscriptionsById = new ConcurrentDictionary<uint, Symbol>();
         private RateGate _connectionRateLimiter = new RateGate(30, TimeSpan.FromMinutes(1));
         private ConcurrentDictionary<Symbol, List<ZerodhaWebSocketWrapper>> _subscriptionsBySymbol = new ConcurrentDictionary<Symbol, List<ZerodhaWebSocketWrapper>>();
-        private ConcurrentDictionary<ZerodhaWebSocketWrapper, List<Channel>> _channelsByWebSocket = new ConcurrentDictionary<ZerodhaWebSocketWrapper, List<Channel>>();
+        private readonly ConcurrentDictionary<ZerodhaWebSocketWrapper, ZerodhaWebSocketChannels> _channelsByWebSocket = new ConcurrentDictionary<ZerodhaWebSocketWrapper, ZerodhaWebSocketChannels>();
+        private readonly ConcurrentDictionary<Symbol, DefaultOrderBook> _orderBooks = new ConcurrentDictionary<Symbol, DefaultOrderBook>();
+        private readonly IReadOnlyDictionary<TickType, string> _tickType2ChannelName = new Dictionary<TickType, string>
+        {
+            { TickType.Trade, "trades"},
+            { TickType.Quote, "book"}
+        };
+        private readonly ManualResetEvent _onSubscribeEvent = new ManualResetEvent(false);
+        private readonly ManualResetEvent _onUnsubscribeEvent = new ManualResetEvent(false);
+
         int _timerTick = 5;
         private int _interval = 5;
         // If set to true will print extra debug information
@@ -68,7 +81,6 @@ namespace QuantConnect.Brokerages.Zerodha
 
         private ZerodhaWebSocketWrapper GetFreeWebSocket(Channel channel)
         {
-            int count;
 
             lock (_locker)
             {
@@ -76,9 +88,6 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     if (kvp.Value.Count < MaximumSubscriptionsPerSocket)
                     {
-                        kvp.Value.Add(channel);
-                        count = _channelsByWebSocket.Sum(x => x.Value.Count);
-                        Log.Trace($"ZerodhaSubscriptionManager.GetFreeWebSocket(): Channel added: Total channels:{count}");
                         return kvp.Key;
                     }
                 }
@@ -97,28 +106,57 @@ namespace QuantConnect.Brokerages.Zerodha
 
             lock (_locker)
             {
-                _channelsByWebSocket.TryAdd(webSocket, new List<Channel> { channel });
-
-                count = _channelsByWebSocket.Sum(x => x.Value.Count);
-                Log.Trace($"ZerodhaSubscriptionManager.GetFreeWebSocket(): Channel added: Total channels:{count}");
+                _channelsByWebSocket.TryAdd(webSocket, new ZerodhaWebSocketChannels());
             }
 
             webSocket.Initialize(_wssUrl);
             webSocket.Message += OnMessage;
             webSocket.Error += OnError;
             webSocket.Closed += OnClosed;
-            webSocket.Connect();
+            Connect(webSocket);
 
             webSocket.ConnectionHandler.ConnectionLost += OnConnectionLost;
-            webSocket.ConnectionHandler.ConnectionRestored += OnConnectionRestored;
             webSocket.ConnectionHandler.ReconnectRequested += OnReconnectRequested;
             webSocket.ConnectionHandler.Initialize(webSocket.ConnectionId);
 
+            int connections;
+            lock (_locker)
+            {
+                connections = _channelsByWebSocket.Count;
+            }
+
             Log.Trace("ZerodhaSubscriptionManager.GetFreeWebSocket(): New websocket added: " +
                       $"Hashcode: {webSocket.GetHashCode()}, " +
-                      $"WebSocket connections: {_channelsByWebSocket.Count}");
+                      $"WebSocket connections: {connections}");
 
             return webSocket;
+        }
+
+        private void Connect(ZerodhaWebSocketWrapper webSocket)
+        {
+            var connectedEvent = new ManualResetEvent(false);
+            EventHandler onOpenAction = (s, e) =>
+            {
+                connectedEvent.Set();
+            };
+
+            webSocket.Open += onOpenAction;
+
+            try
+            {
+                webSocket.Connect();
+
+                if (!connectedEvent.WaitOne(ConnectionTimeout))
+                {
+                    throw new Exception("BitfinexSubscriptionManager.Connect(): WebSocket connection timeout.");
+                }
+            }
+            finally
+            {
+                webSocket.Open -= onOpenAction;
+
+                connectedEvent.DisposeSafely();
+            }
         }
 
         private void OnClosed(object sender, WebSocketCloseData e)
@@ -131,17 +169,7 @@ namespace QuantConnect.Brokerages.Zerodha
             Log.Error("ZerodhaSubscriptionManager.OnConnectionLost(): WebSocket connection lost.");
         }
 
-        private void OnConnectionRestored(object sender, EventArgs e)
-        {
-            Log.Trace("ZerodhaSubscriptionManager.OnConnectionRestored(): WebSocket connection restored.");
-            foreach (var channels in _channelsByWebSocket.Values)
-            {
-                foreach (var channel in channels)
-                {
-                    SubscribeChannel(channel.Name, channel.ChannelId, channel.Symbol);
-                }
-            }
-        }
+       
 
         private void OnReconnectRequested(object sender, EventArgs e)
         {
@@ -153,13 +181,8 @@ namespace QuantConnect.Brokerages.Zerodha
 
             lock (_locker)
             {
-                foreach (var connection in _channelsByWebSocket.Keys)
-                {
-                    if (connection.ConnectionId == connectionHandler.ConnectionId)
-                    {
-                        webSocket = connection;
-                    }
-                }
+                webSocket = _channelsByWebSocket.Keys
+                   .FirstOrDefault(connection => connection.ConnectionId == connectionHandler.ConnectionId);
             }
 
             if (webSocket == null)
@@ -184,16 +207,18 @@ namespace QuantConnect.Brokerages.Zerodha
 
             Log.Trace($"ZerodhaSubscriptionManager.OnReconnectRequested(): Reconnected: IsOpen:{webSocket.IsOpen} ReadyState:{webSocket.ReadyState} [Id: {connectionHandler.ConnectionId}]");
 
-            List<Channel> channels;
+            ZerodhaWebSocketChannels channels;
             lock (_locker)
             {
                 if (!_channelsByWebSocket.TryGetValue(webSocket, out channels))
+                {
                     return;
+                }
             }
 
             Log.Trace($"ZerodhaSubscriptionManager.OnReconnectRequested(): Resubscribing channels. [Id: {connectionHandler.ConnectionId}]");
 
-            foreach (var channel in channels)
+            foreach (var channel in channels.Values)
             {
                 Log.Trace("Resubcribing quotes for: "+channel.Symbol);
                 var ticker = _symbolMapper.GetBrokerageSymbol(channel.Symbol);
@@ -218,7 +243,6 @@ namespace QuantConnect.Brokerages.Zerodha
 
         private void OnMessage(object sender, MessageData e)
         {
-           
             _timerTick = _interval;
             if (e.MessageType == WebSocketMessageType.Binary)
             {
@@ -294,7 +318,6 @@ namespace QuantConnect.Brokerages.Zerodha
                 var quote = _brokerage.GetQuote(symbol);
                 _subscriptionsById[quote.InstrumentToken] = symbol;
                 Log.Trace("Subscribe symbol: " + quote.InstrumentToken.ToStringInvariant());
-
                 var quotesSubscription = SubscribeChannel("quotes", quote.InstrumentToken.ToStringInvariant(), symbol);
                 _subscriptionsBySymbol.TryAdd(symbol, new List<ZerodhaWebSocketWrapper> { quotesSubscription });
             }
@@ -328,45 +351,45 @@ namespace QuantConnect.Brokerages.Zerodha
         }
 
 
-        /// <summary>
-        /// Removes the subscription for the requested symbol
-        /// </summary>
-        /// <param name="symbol">The symbol</param>
-        public void Unsubscribe(Symbol symbol)
-        {
-            List<ZerodhaWebSocketWrapper> subscriptions;
-            if (_subscriptionsBySymbol.TryGetValue(symbol, out subscriptions))
-            {
-                foreach (var webSocket in subscriptions)
-                {
-                    try
-                    {
-                        lock (_locker)
-                        {
-                            List<Channel> channels;
-                            if (_channelsByWebSocket.TryGetValue(webSocket, out channels))
-                            {
-                                foreach (var channel in channels)
-                                {
-                                    UnsubscribeChannel(webSocket, channel);
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception exception)
-                    {
-                        Log.Error(exception);
-                    }
-                }
+        ///// <summary>
+        ///// Removes the subscription for the requested symbol
+        ///// </summary>
+        ///// <param name="symbol">The symbol</param>
+        //public void Unsubscribe(Symbol symbol)
+        //{
+        //    List<ZerodhaWebSocketWrapper> subscriptions;
+        //    if (_subscriptionsBySymbol.TryGetValue(symbol, out subscriptions))
+        //    {
+        //        foreach (var webSocket in subscriptions)
+        //        {
+        //            try
+        //            {
+        //                lock (_locker)
+        //                {
+        //                    List<ZerodhaWebSocketChannels> channels;
+        //                    if (_channelsByWebSocket.TryGetValue(webSocket, out channels))
+        //                    {
+        //                        foreach (var channel in channels)
+        //                        {
+        //                            UnsubscribeChannel(webSocket, channel);
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //            catch (Exception exception)
+        //            {
+        //                Log.Error(exception);
+        //            }
+        //        }
 
-                _subscriptionsBySymbol.TryRemove(symbol, out subscriptions);
-            }
+        //        _subscriptionsBySymbol.TryRemove(symbol, out subscriptions);
+        //    }
 
-        }
+        //}
 
         private void UnsubscribeChannel(ZerodhaWebSocketWrapper webSocket, Channel channel)
         {
-            var sub = new Subscription();
+            var sub = new ChannelSubscription();
             sub.a = "unsubcribe";
             sub.v = new string[] { channel.ChannelId };
             var request = JsonConvert.SerializeObject(sub);
@@ -381,15 +404,22 @@ namespace QuantConnect.Brokerages.Zerodha
             {
                 lock (_locker)
                 {
-                    List<Channel> channels;
-                    if (_channelsByWebSocket.TryGetValue(webSocket, out channels))
+                    var leanSymbol = _symbolMapper.GetLeanSymbol(data.Symbol);
+                    var channel = new Channel(data.ChannelId, leanSymbol, leanSymbol.SecurityType);
+                    ZerodhaWebSocketChannels channels;
+                    if (!_channelsByWebSocket.TryGetValue(webSocket, out channels))
                     {
-                        var channel = channels.First(x => x.Name == data.Name && x.Symbol == data.Symbol);
-
-                        channel.ChannelId = data.ChannelId;
-
-                        webSocket.ConnectionHandler.EnableMonitoring(true);
+                        _onSubscribeEvent.Set();
+                        return;
                     }
+
+                    channels.TryAdd(data.ChannelId, channel);
+
+                    Log.Trace($"BitfinexSubscriptionManager.OnSubscribe(): Channel subscribed: Id:{data.ChannelId} {channel.Symbol}/{channel.Name}");
+
+                    _onSubscribeEvent.Set();
+
+                    webSocket.ConnectionHandler.EnableMonitoring(true);
                 }
             }
             catch (Exception e)
@@ -399,18 +429,44 @@ namespace QuantConnect.Brokerages.Zerodha
             }
         }
 
-        private void OnUnsubscribe(ZerodhaWebSocketWrapper webSocket, Channel data)
+        private void OnUnsubscribe(ZerodhaWebSocketWrapper webSocket, ChannelUnsubscribing data)
         {
             try
             {
                 lock (_locker)
                 {
-                    List<Channel> channels;
-                    if (!_channelsByWebSocket.TryGetValue(webSocket, out channels)) return;
+                    ZerodhaWebSocketChannels channels;
+                    if (!_channelsByWebSocket.TryGetValue(webSocket, out channels))
+                    {
+                        return;
+                    }
 
-                    channels.Remove(channels.First(x => x.ChannelId == data.ChannelId));
+                    Channel channel;
+                    if (!channels.TryRemove(data.ChannelId, out channel))
+                    {
+                        return;
+                    }
 
-                    if (channels.Count != 0) return;
+                    _onUnsubscribeEvent.Set();
+
+                    if (channels.Values.Count(c => c.Symbol.Equals(channel.Symbol)) == 0)
+                    {
+                        List<ZerodhaWebSocketWrapper> subscriptions;
+                        if (_subscriptionsBySymbol.TryGetValue(channel.Symbol, out subscriptions))
+                        {
+                            subscriptions.Remove(webSocket);
+
+                            if (subscriptions.Count == 0)
+                            {
+                                _subscriptionsBySymbol.TryRemove(channel.Symbol, out subscriptions);
+                            }
+                        }
+                    }
+
+                    if (channels.Count != 0)
+                    {
+                        return;
+                    }
 
                     _channelsByWebSocket.TryRemove(webSocket, out channels);
                 }
@@ -622,19 +678,116 @@ namespace QuantConnect.Brokerages.Zerodha
             return tick;
         }
 
+        /// <summary>
+        /// Subscribes to the requested subscription (using an individual streaming channel)
+        /// </summary>
+        /// <param name="symbols">symbol list</param>
+        /// <param name="tickType">Type of tick data</param>
         protected override bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var states = new List<bool>(symbols.Count());
+                foreach (var symbol in symbols)
+                {
+                    _onSubscribeEvent.Reset();
+                    _subscribeErrorCode = 0;
+                    var subscription = SubscribeChannel(
+                        ChannelNameFromTickType(tickType),
+                        symbol);
+
+                    _subscriptionsBySymbol.AddOrUpdate(
+                        symbol,
+                        new List<ZerodhaWebSocketWrapper> { subscription },
+                        (k, v) =>
+                        {
+                            if (!v.Contains(subscription))
+                            {
+                                v.Add(subscription);
+                            }
+                            return v;
+                        });
+
+                    Log.Trace($"ZerodhaBrokerage.Subscribe(): Sent subscribe for {symbol.Value}/{tickType}.");
+
+                    if (_onSubscribeEvent.WaitOne(TimeSpan.FromSeconds(10)) && _subscribeErrorCode == 0)
+                    {
+                        states.Add(true);
+                    }
+                    else
+                    {
+                        Log.Trace($"ZerodhaBrokerage.Subscribe(): Could not subscribe to {symbol.Value}/{tickType}.");
+                        states.Add(false);
+                    }
+                }
+
+                return states.All(s => s);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception);
+                throw;
+            }
         }
 
+        /// <summary>
+        /// Removes the subscription for the requested symbol
+        /// </summary>
+        /// <param name="symbols">symbol list</param>
+        /// <param name="tickType">Type of tick data</param>
         protected override bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
         {
-            throw new NotImplementedException();
+            var channelName = ChannelNameFromTickType(tickType);
+            var states = new List<bool>(symbols.Count());
+            foreach (var symbol in symbols)
+            {
+                List<ZerodhaWebSocketWrapper> subscriptions;
+                if (_subscriptionsBySymbol.TryGetValue(symbol, out subscriptions))
+                {
+                    for (var i = subscriptions.Count - 1; i >= 0; i--)
+                    {
+                        var webSocket = subscriptions[i];
+                        _onUnsubscribeEvent.Reset();
+                        try
+                        {
+                            var channel = new Channel(channelName, symbol,symbol.SecurityType);
+                            ZerodhaWebSocketChannels channels;
+                            if (_channelsByWebSocket.TryGetValue(webSocket, out channels) && channels.Contains(channel))
+                            {
+                                UnsubscribeChannel(webSocket, channels, channel);
+
+                                if (_onUnsubscribeEvent.WaitOne(TimeSpan.FromSeconds(30)))
+                                {
+                                    states.Add(true);
+                                }
+                                else
+                                {
+                                    Log.Trace($"ZerodhaBrokerage.Unsubscribe(): Could not unsubscribe from {symbol.Value}.");
+                                    states.Add(false);
+                                }
+                            }
+                        }
+                        catch (Exception exception)
+                        {
+                            Log.Error(exception);
+                        }
+                    }
+                }
+            }
+            return states.All(s => s);
         }
 
         protected override string ChannelNameFromTickType(TickType tickType)
         {
-            throw new NotImplementedException();
+            string channelName;
+            if (_tickType2ChannelName.TryGetValue(tickType, out channelName))
+            {
+                return channelName;
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException("TickType", $"ZerodhaSubscriptionManager.Subscribe(): Tick type {tickType} is not allowed for this brokerage.");
+            }
         }
     }
 }

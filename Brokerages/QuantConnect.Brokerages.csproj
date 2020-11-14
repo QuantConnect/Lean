@@ -679,6 +679,9 @@
     <Compile Include="Zerodha\Utils.cs" />
     <Compile Include="Zerodha\Exceptions.cs" />
     <Compile Include="Zerodha\ZerodhaWebSocketClientWrapper.cs" />
+    <Compile Include="Zerodha\ZerodhaWebSocketChannels.cs" />
+    <Compile Include="Zerodha\Zerodha.DataQueueHandler.cs" />
+    <Compile Include="Zerodha\ZerodhaBrokerage.DataQueueUniverseProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Binance\BinanceBrokerage.Messaging.cs" />
