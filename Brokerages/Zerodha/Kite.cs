@@ -21,6 +21,7 @@ using System.Net;
 using System.Collections;
 using System.Globalization;
 using QuantConnect.Brokerages.Zerodha.Messages;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
@@ -34,7 +35,6 @@ namespace QuantConnect.Brokerages.Zerodha
         private string _root = "https://api.kite.trade";
         private string _apiKey;
         private string _accessToken;
-        private bool _enableLogging;
         private WebProxy _proxy;
         private int _timeout;
 
@@ -94,26 +94,16 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="Timeout">Time in milliseconds for which  the API client will wait for a request to complete before it fails</param>
         /// <param name="Proxy">To set proxy for http request. Should be an object of WebProxy.</param>
         /// <param name="Pool">Number of connections to server. Client will reuse the connections if they are alive.</param>
-        public Kite(string APIKey, string AccessToken = null, string Root = null, bool Debug = false, int Timeout = 7000, WebProxy Proxy = null, int Pool = 2)
+        public Kite(string APIKey, string AccessToken = null, string Root = null, int Timeout = 7000, WebProxy Proxy = null, int Pool = 2)
         {
             _accessToken = AccessToken;
             _apiKey = APIKey;
             if (!String.IsNullOrEmpty(Root)) this._root = Root;
-            _enableLogging = Debug;
 
             _timeout = Timeout;
             _proxy = Proxy;
 
             ServicePointManager.DefaultConnectionLimit = Pool;
-        }
-
-        /// <summary>
-        /// Enabling logging prints HTTP request and response summaries to console
-        /// </summary>
-        /// <param name="enableLogging">Set to true to enable logging</param>
-        public void EnableLogging(bool enableLogging)
-        {
-            _enableLogging = enableLogging;
         }
 
         /// <summary>
@@ -872,13 +862,7 @@ namespace QuantConnect.Brokerages.Zerodha
             Req.Timeout = _timeout;
             if (_proxy != null) Req.Proxy = _proxy;
 
-            if (_enableLogging)
-            {
-                foreach (string header in Req.Headers.Keys)
-                {
-                    Console.WriteLine("DEBUG: " + header + ": " + Req.Headers.GetValues(header)[0]);
-                }
-            }
+           
         }
 
         /// <summary>
@@ -923,7 +907,6 @@ namespace QuantConnect.Brokerages.Zerodha
                 request.Method = Method;
                 request.ContentType = "application/x-www-form-urlencoded";
                 request.ContentLength = paramString.Length;
-                if (_enableLogging) Console.WriteLine("DEBUG: " + Method + " " + url + "\n" + paramString);
                 AddExtraHeaders(ref request);
 
                 using (Stream webStream = request.GetRequestStream())
@@ -935,7 +918,6 @@ namespace QuantConnect.Brokerages.Zerodha
                 request = (HttpWebRequest)WebRequest.Create(url + "?" + paramString);
                 request.AllowAutoRedirect = true;
                 request.Method = Method;
-                if (_enableLogging) Console.WriteLine("DEBUG: " + Method + " " + url + "?" + paramString);
                 AddExtraHeaders(ref request);
             }
 
@@ -957,7 +939,6 @@ namespace QuantConnect.Brokerages.Zerodha
                 using (StreamReader responseReader = new StreamReader(webStream))
                 {
                     string response = responseReader.ReadToEnd();
-                    if (_enableLogging) Console.WriteLine("DEBUG: " + (int)((HttpWebResponse)webResponse).StatusCode + " " + response + "\n");
 
                     HttpStatusCode status = ((HttpWebResponse)webResponse).StatusCode;
 

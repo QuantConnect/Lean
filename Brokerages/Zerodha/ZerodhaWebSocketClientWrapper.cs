@@ -195,7 +195,7 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             using (_client = new ClientWebSocket())
             {
-                Log.Trace("ZerodhaWebSocketClientWrapper.HandleConnection(): Connecting to " + _url + " ....");
+                Log.Trace("ZerodhaWebSocketClientWrapper.HandleConnection(): Connecting to  wss://ws.kite.trade ....");
 
                 try
                 {                    

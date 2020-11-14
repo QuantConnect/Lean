@@ -25,7 +25,6 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using System.Globalization;
-using NotVisualBasic.FileIO;
 
 namespace QuantConnect.Brokerages.Zerodha
 {

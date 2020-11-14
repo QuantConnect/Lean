@@ -86,7 +86,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         public readonly object TickLocker = new object();
 
-        private readonly ZerodhaSymbolMapper _symbolMapper = new ZerodhaSymbolMapper();
+        private readonly ZerodhaSymbolMapper _symbolMapper;
 
         private Kite _kite;
         private readonly IOrderProvider _orderProvider;
@@ -122,6 +122,7 @@ namespace QuantConnect.Brokerages.Zerodha
             WebSocket.Error += OnError;
             _subscriptionManager = new ZerodhaSubscriptionManager(this, _wssUrl, _symbolMapper, sessionToken);
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+            _symbolMapper = new ZerodhaSymbolMapper(_kite);
             Log.Trace("Start Zerodha Brokerage");
         }
 
