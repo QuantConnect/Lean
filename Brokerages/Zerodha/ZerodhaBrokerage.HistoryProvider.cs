@@ -190,15 +190,18 @@ namespace QuantConnect.Brokerages.Zerodha
             string scripSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
             var candles = _kite.GetHistoricalData(scripSymbol, start, end, "day");
 
+            if (candles == null)
+            {
+                return Enumerable.Empty<Slice>();
+            }
+
             if (!candles.Any())
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "NoHistoricalData",
                     $"Exchange returned no data for {symbol} on history request " +
                     $"from {start:s} to {end:s}"));
             }
-
-            if (candles == null)
-                return Enumerable.Empty<Slice>();
+            
 
             DataPointCount += candles.Count;
 
@@ -213,6 +216,11 @@ namespace QuantConnect.Brokerages.Zerodha
             string scripSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
             var candles = _kite.GetHistoricalData(scripSymbol, start, end, "60minute");
 
+            if (candles == null)
+            {
+                return Enumerable.Empty<Slice>();
+            }
+
             if (!candles.Any())
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "NoHistoricalData",
@@ -220,9 +228,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     $"from {start:s} to {end:s}"));
             }
 
-            if (candles == null)
-                return Enumerable.Empty<Slice>();
-
+           
             DataPointCount += candles.Count;
 
             return candles
@@ -236,15 +242,17 @@ namespace QuantConnect.Brokerages.Zerodha
             string scripSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
             var candles = _kite.GetHistoricalData(scripSymbol, start, end, "minute");
 
+            if (candles == null)
+            {
+                return Enumerable.Empty<Slice>();
+            }
+
             if (!candles.Any())
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "NoHistoricalData",
                     $"Exchange returned no data for {symbol} on history request " +
                     $"from {start:s} to {end:s}"));
             }
-
-            if (candles == null)
-                return Enumerable.Empty<Slice>();
 
             DataPointCount += candles.Count;
 
