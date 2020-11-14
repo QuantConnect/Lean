@@ -3,6 +3,10 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fees
 {
+    /// <summary>
+    /// Provides the default implementation of <see cref="IFeeModel"/>
+    /// Refer to https://zerodha.com/brokerage-calculator
+    /// </summary>
     public class ZerodhaFeeModel : IFeeModel
     {
         public OrderFee GetOrderFee(OrderFeeParameters parameters)
@@ -14,8 +18,7 @@ namespace QuantConnect.Orders.Fees
             var val = parameters.Order.GetValue(parameters.Security);
 
             var fee = GetFee(val);
-            //TODO: Change Currency to INR Later
-            return new OrderFee(new CashAmount(fee, Currencies.USD));
+            return new OrderFee(new CashAmount(fee, Currencies.INR));
         }
 
         private static decimal GetFee(decimal value)

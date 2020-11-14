@@ -15,22 +15,18 @@
 
 using Newtonsoft.Json;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using QuantConnect.Packets;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using NodaTime;
 using QuantConnect.Orders.Fees;
 using System.Threading;
 using QuantConnect.Orders;
 using QuantConnect.Brokerages.Zerodha.Messages;
-using Newtonsoft.Json.Linq;
 using Tick = QuantConnect.Data.Market.Tick;
 
 namespace QuantConnect.Brokerages.Zerodha
