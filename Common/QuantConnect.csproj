@@ -270,6 +270,13 @@
     <Compile Include="Chart.cs" />
     <Compile Include="ChartPoint.cs" />
     <Compile Include="Data\Channel.cs" />
+    <Compile Include="Data\Custom\Quiver\Congress.cs" />
+    <Compile Include="Data\Custom\Quiver\QuiverCongress.cs" />
+    <Compile Include="Data\Custom\Quiver\QuiverEventsBeta.cs" />
+    <Compile Include="Data\Custom\Quiver\QuiverWallStreetBets.cs" />
+    <Compile Include="Data\Custom\Quiver\QuiverWikipedia.cs" />
+    <Compile Include="Data\Custom\Quiver\TransactionDirection.cs" />
+    <Compile Include="Data\Custom\Quiver\TransactionDirectionJsonConverter.cs" />
     <Compile Include="Data\EventBasedDataQueueHandlerSubscriptionManager.cs" />
     <Compile Include="Data\IDataAggregator.cs" />
     <Compile Include="Data\Auxiliary\MappingExtensions.cs" />

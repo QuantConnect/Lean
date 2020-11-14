@@ -389,6 +389,7 @@
     <Compile Include="Common\Data\Auxiliary\FactorFileTests.cs" />
     <Compile Include="Common\Data\Auxiliary\MapFileTests.cs" />
     <Compile Include="Common\Data\ChannelTests.cs" />
+    <Compile Include="Common\Data\Custom\QuiverTests.cs" />
     <Compile Include="Common\Data\Custom\TradingEconomicsTests.cs" />
     <Compile Include="Common\Data\DataQueueHandlerSubscriptionManagerTests.cs" />
     <Compile Include="Common\Data\FakeDataQueuehandlerSubscriptionManager.cs" />
