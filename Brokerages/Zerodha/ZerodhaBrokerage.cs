@@ -140,38 +140,6 @@ namespace QuantConnect.Brokerages.Zerodha
             return quotes[symbol.ID.Symbol];
         }
 
-        /// <summary>
-        /// Subscribes to the requested symbols (using an individual streaming channel)
-        /// </summary>
-        /// <param name="symbols">The list of symbols to subscribe</param>
-        public void Subscribe(IEnumerable<Symbol> symbols)
-        {
-            foreach (var symbol in symbols)
-            {
-                if (_subscriptionManager.IsSubscribed(symbol) ||
-                    symbol.Value.Contains("UNIVERSE") ||
-                    !_symbolMapper.IsKnownBrokerageSymbol(symbol.Value) ||
-                    symbol.SecurityType != _symbolMapper.GetLeanSecurityType(symbol.Value))
-                {
-                    continue;
-                }
-
-                _subscriptionManager.Subscribe(symbol);
-                Log.Trace($"ZerodhaBrokerage.Subscribe(): Sent subscribe for {symbol.Value}.");
-            }
-        }
-
-        /// <summary>
-        /// Ends current subscriptions
-        /// </summary>
-        public void Unsubscribe(IEnumerable<Symbol> symbols)
-        {
-            foreach (var symbol in symbols)
-            {
-                _subscriptionManager.Unsubscribe(symbol);
-                Log.Trace($"ZerodhaBrokerage.Unsubscribe(): Sent unsubscribe for {symbol.Value}.");
-            }
-        }
 
         private void OnOrderClose(string[] entries)
         {
@@ -681,6 +649,22 @@ namespace QuantConnect.Brokerages.Zerodha
     /// </summary>
     public class Channel
     {
+
+        public Channel(string channelId, Symbol symbol, SecurityType securityType)
+        {
+            ChannelId = channelId;
+            Symbol = symbol;
+            SecurityType = securityType;
+        }
+
+        public Channel(string name, string channelId, Symbol symbol, SecurityType securityType)
+        {
+            Name = name;
+            ChannelId = channelId;
+            Symbol = symbol;
+            SecurityType = securityType;
+        }
+
         /// <summary>
         /// Represents channel identifier for specific subscription
         /// </summary>

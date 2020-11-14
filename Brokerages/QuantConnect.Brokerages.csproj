@@ -194,6 +194,9 @@
     <Reference Include="CsvHelper">
       <HintPath>..\packages\CsvHelper.15.0.8\lib\net45\CsvHelper.dll</HintPath>
     </Reference>
+    <Reference Include="CsvTextFieldParser">
+      <HintPath>..\packages\CsvTextFieldParser.1.2.1\lib\netstandard2.0\CsvTextFieldParser.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
@@ -668,7 +671,6 @@
     <Compile Include="Zerodha\Constants.cs" />
     <Compile Include="Zerodha\ZerodhaSymbolMapper.cs" />
     <Compile Include="Zerodha\ExceptionMessages.cs" />
-    <Compile Include="Zerodha\TextFieldParser.cs" />
     <Compile Include="Zerodha\Structures.cs" />
     <Compile Include="Zerodha\ZerodhaWebSocketWrapper.cs" />
     <Compile Include="Zerodha\ZerodhaSubscriptionManager.cs" />

@@ -457,7 +457,7 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
         public string[] v { get; set; }
     }
 
-    public struct ChannelUnsubscribing
+    public struct ChannelUnsubscription
     {
         public string ChannelId { get; set; }
         public string a { get; set; }

@@ -20,7 +20,6 @@ using Newtonsoft.Json.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Brokerages.Zerodha

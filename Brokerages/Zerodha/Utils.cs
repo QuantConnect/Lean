@@ -25,6 +25,7 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using System.Globalization;
+using NotVisualBasic.FileIO;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
@@ -127,14 +128,14 @@ namespace QuantConnect.Brokerages.Zerodha
 
             List<Dictionary<string, dynamic>> instruments = new List<Dictionary<string, dynamic>>();
 
-            using (TextFieldParser parser = new TextFieldParser(StreamFromString(Data)))
+            using (var parser = new CsvTextFieldParser(StreamFromString(Data)))
             {
                 // parser.CommentTokens = new string[] { "#" };
-                parser.SetDelimiters(new string[] { "," });
+                // parser.SetDelimiters(new string[] { "," });
                 parser.HasFieldsEnclosedInQuotes = true;
 
                 // Skip over header line.
-                string[] headers = parser.ReadLine().Split(',');
+                string[] headers = parser.ReadFields();
 
                 while (!parser.EndOfData)
                 {

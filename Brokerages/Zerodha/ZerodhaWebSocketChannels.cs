@@ -15,14 +15,13 @@
 
 using System.Collections.Concurrent;
 using System.Linq;
-using QuantConnect.Data;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
     /// <summary>
     /// Contains the channel mappings for a WebSocket connection
     /// </summary>
-    public class ZerodhaWebSocketChannels : ConcurrentDictionary<int, Channel>
+    public class ZerodhaWebSocketChannels : ConcurrentDictionary<string, Channel>
     {
         /// <summary>
         /// Determines whether the dictionary contains a specific channel.
@@ -39,7 +38,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         /// <param name="channel">The channel</param>
         /// <returns>The channel id</returns>
-        public int GetChannelId(Channel channel)
+        public string GetChannelId(Channel channel)
         {
             return this.First(c => c.Value.Equals(channel)).Key;
         }
