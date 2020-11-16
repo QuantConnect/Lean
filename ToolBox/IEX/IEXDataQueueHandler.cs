@@ -226,6 +226,18 @@ namespace QuantConnect.ToolBox.IEX
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            if (dataConfig.ExtendedMarketHours)
+            {
+                Log.Error("IEXDataQueueHandler.Subscribe(): Unfortunately no updates could be received from IEX outside the regular exchange open hours. " +
+                          "Please be aware that only regular hours updates will be submitted to an algorithm.");
+            }
+
+            if (dataConfig.Resolution < Resolution.Second)
+            {
+                Log.Error($"IEXDataQueueHandler.Subscribe(): Selected data resolution ({dataConfig.Resolution}) " +
+                          "is not supported by current implementation of  IEXDataQueueHandler. Sorry. Please try the higher resolution.");
+            }
+
             if (dataConfig.SecurityType != SecurityType.Equity)
             {
                 return Enumerable.Empty<BaseData>().GetEnumerator();

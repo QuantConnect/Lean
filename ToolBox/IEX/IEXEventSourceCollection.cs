@@ -73,7 +73,8 @@ namespace QuantConnect.ToolBox.IEX
                 var clientSymbols = kvp.Value;
 
                 // Need to perform no changes if all client symbols are relevant
-                if (clientSymbols.All(symbols.Contains))
+                // and subscription is fully loaded (otherwise it is also a replacement)
+                if (clientSymbols.All(symbols.Contains) && clientSymbols.Length == SymbolsPerConnectionLimit)
                 {
                     Log.Debug($"IEXEventSourceCollection.UpdateSubscription(): Leave unchanged subscription for: {string.Join(",", clientSymbols)}");
 
@@ -96,8 +97,6 @@ namespace QuantConnect.ToolBox.IEX
             var packagedSymbolsList = new List<string[]>();
             do
             {
-                Counter.AddCount();  // Increment
-
                 if (remainingSymbols.Count > SymbolsPerConnectionLimit)
                 {
                     var firstFifty = remainingSymbols.Take(SymbolsPerConnectionLimit).ToArray();
@@ -116,9 +115,8 @@ namespace QuantConnect.ToolBox.IEX
             // Create new client for every package (make sure that we do not exceed the rate-gate-limit while creating)
             packagedSymbolsList.DoForEach(package =>
             {
-                _rateGate.WaitToProceed();
-
                 Log.Debug($"IEXEventSourceCollection.CreateNewSubscription(): Creating new subscription for: {string.Join(",", package)}");
+
                 var client = CreateNewSubscription(package);
 
                 // Add to the dictionary
@@ -134,6 +132,7 @@ namespace QuantConnect.ToolBox.IEX
             clientsToRemove.DoForEach(RemoveOldClient);
 
             // Reset counter
+            Log.Debug($"IEXEventSourceCollection.CreateNewSubscription(): Updated successfully. Resetting the counter.");
             Counter.Reset(1);
 
             IsConnected = true;
@@ -141,12 +140,18 @@ namespace QuantConnect.ToolBox.IEX
 
         protected virtual EventSource CreateNewSubscription(string[] symbols)
         {
+            Counter.AddCount();  // Increment
+            _rateGate.WaitToProceed();
+
             var client = CreateNewClient(symbols);
 
             // Set up the handlers
             client.Opened += (sender, args) =>
             {
+                Log.Debug($"ClientOnOpened(): Sender's hashcode is {sender.GetHashCode()}");
+
                 Counter.Signal();   // Decrement
+
                 Log.Debug($"ClientOnOpened(): Counter count after decrement: {Counter.CurrentCount}");
             };
 
@@ -184,7 +189,7 @@ namespace QuantConnect.ToolBox.IEX
             string[] stub;
             ClientSymbolsDictionary.TryRemove(client, out stub);
 
-            client.Dispose();
+            client.DisposeSafely();
         }
 
         private string BuildUrlString(IEnumerable<string> symbols)
