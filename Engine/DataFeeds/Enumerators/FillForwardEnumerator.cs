@@ -64,15 +64,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="dataResolution">The source enumerator's data resolution</param>
         /// <param name="dataTimeZone">The time zone of the underlying source data. This is used for rounding calculations and
         /// is NOT the time zone on the BaseData instances (unless of course data time zone equals the exchange time zone)</param>
-        /// <param name="subscriptionStartTime">The subscriptions start time</param>
         public FillForwardEnumerator(IEnumerator<BaseData> enumerator,
             SecurityExchange exchange,
             IReadOnlyRef<TimeSpan> fillForwardResolution,
             bool isExtendedMarketHours,
             DateTime subscriptionEndTime,
             TimeSpan dataResolution,
-            DateTimeZone dataTimeZone,
-            DateTime subscriptionStartTime
+            DateTimeZone dataTimeZone
             )
         {
             _subscriptionEndTime = subscriptionEndTime;
