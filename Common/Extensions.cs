@@ -1015,8 +1015,12 @@ namespace QuantConnect
         /// Extension method to round a datetime down by a timespan interval.
         /// </summary>
         /// <param name="dateTime">Base DateTime object we're rounding down.</param>
-        /// <param name="interval">Timespan interval to round to, must be less than or equal to one day</param>
+        /// <param name="interval">Timespan interval to round to</param>
         /// <returns>Rounded datetime</returns>
+        /// <remarks>Using this with timespans greater than 1 day may have unintended
+        /// consequences. Be aware that rounding occurs against ALL time, so when using
+        /// timespan such as 30 days we will see 30 day increments but it will be based
+        /// on 30 day increments from the beginning of time.</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DateTime RoundDown(this DateTime dateTime, TimeSpan interval)
         {
@@ -1024,12 +1028,6 @@ namespace QuantConnect
             {
                 // divide by zero exception
                 return dateTime;
-            }
-
-            if (interval > TimeSpan.FromDays(1))
-            {
-                throw new ArgumentOutOfRangeException(nameof(interval),
-                    "DateTime.RoundDown(): Interval must be less than or equal to 1 day");
             }
 
             var amount = dateTime.Ticks % interval.Ticks;
@@ -1130,20 +1128,18 @@ namespace QuantConnect
         /// Extension method to explicitly round up to the nearest timespan interval.
         /// </summary>
         /// <param name="time">Base datetime object to round up.</param>
-        /// <param name="interval">Timespan interval for rounding, must be less than or equal to one day</param>
+        /// <param name="interval">Timespan interval to round to</param>
         /// <returns>Rounded datetime</returns>
+        /// <remarks>Using this with timespans greater than 1 day may have unintended
+        /// consequences. Be aware that rounding occurs against ALL time, so when using
+        /// timespan such as 30 days we will see 30 day increments but it will be based
+        /// on 30 day increments from the beginning of time.</remarks>
         public static DateTime RoundUp(this DateTime time, TimeSpan interval)
         {
             if (interval == TimeSpan.Zero)
             {
                 // divide by zero exception
                 return time;
-            }
-
-            if (interval > TimeSpan.FromDays(1))
-            {
-                throw new ArgumentOutOfRangeException(nameof(interval),
-                    "DateTime.RoundUp(): Interval must be less than or equal to 1 day");
             }
 
             return new DateTime(((time.Ticks + interval.Ticks - 1) / interval.Ticks) * interval.Ticks);
