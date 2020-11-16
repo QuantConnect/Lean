@@ -180,8 +180,8 @@ namespace QuantConnect.Securities.Future
             {new DateTime(2022, 7, 1), new DateTime(2022, 8, 3) },
             {new DateTime(2022, 8, 1), new DateTime(2022, 8, 31) },
             {new DateTime(2022, 9, 1), new DateTime(2022, 10, 5) },
-            {new DateTime(2022, 10, 1), new DateTime(2022, 9, 2) },
-            {new DateTime(2022, 11, 1), new DateTime(2022, 9, 30) },
+            {new DateTime(2022, 10, 1), new DateTime(2022, 11, 2) },
+            {new DateTime(2022, 11, 1), new DateTime(2022, 11, 30) },
             {new DateTime(2022, 12, 1), new DateTime(2023, 1, 5) },
         };
 

@@ -527,7 +527,7 @@ namespace QuantConnect.Util
                     // GH review comment:
                     // We skip adding the expiry component to maintain backwards compatibility. @Jay-Jay-D let me know if
                     // you'd like to fix this and reprocess futures data
-                    var monthsToAdd = FuturesExpiryUtilityFunctions.ExpiresInPreviousMonth(symbol.ID.Symbol);// expiryDate.Date);
+                    var monthsToAdd = FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(symbol.ID.Symbol);// expiryDate.Date);
                     var contractYearMonth = expiryDate.AddMonths(monthsToAdd).ToStringInvariant(DateFormat.YearMonth);
 
                     if (isHourOrDaily)

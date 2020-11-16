@@ -141,21 +141,22 @@ namespace QuantConnect
         /// <returns></returns>
         public static string GenerateFutureTicker(string underlying, DateTime expiration, bool doubleDigitsYear = true)
         {
-            var year = doubleDigitsYear ? expiration.Year % 100 : expiration.Year % 10;// 2020
-            var month = expiration.Month; // 10
+            var year = doubleDigitsYear ? expiration.Year % 100 : expiration.Year % 10;
+            var month = expiration.Month;
 
-            var contractMonthDelta = FuturesExpiryUtilityFunctions.ExpiresInPreviousMonth(underlying, expiration.Date);// 1
+            var contractMonthDelta = FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(underlying, expiration.Date);
             if (contractMonthDelta < 0)
             {
-                // For futures that have an expiry after the contract month
-                expiration = expiration.AddDays(-(expiration.Day - 1))
+                // For futures that have an expiry after the contract month.
+                // This is for dairy contracts, which can and do expire after the contract month.
+                var expirationMonth = expiration.AddDays(-(expiration.Day - 1))
                     .AddMonths(contractMonthDelta);
 
-                month = expiration.Month;
-                year = expiration.Year;
+                month = expirationMonth.Month;
+                year = doubleDigitsYear ? expirationMonth.Year % 100 : expirationMonth.Year % 10;
             }
             else {
-                // These futures expire in the month before the contract month
+                // These futures expire in the month before or in the contract month
                 month += contractMonthDelta;
 
                 // Get the month back into the allowable range, allowing for a wrap
@@ -163,10 +164,10 @@ namespace QuantConnect
                 // In this case, were dealing with months, wrapping to years once we get to January
                 // As modulo works for [0, x), it's best to subtract 1 (as months are [1, 12] to convert to [0, 11]),
                 // do the modulo/integer division, then add 1 back on to get into the correct range again
-                month--; // 10
-                year += month / 12; // 2020
-                month %= 12; // 10
-                month++; // 11
+                month--;
+                year += month / 12;
+                month %= 12;
+                month++;
             }
 
             return $"{underlying}{expiration.Day:00}{_futuresMonthLookup[month]}{year}";

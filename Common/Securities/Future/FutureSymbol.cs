@@ -36,7 +36,7 @@ namespace QuantConnect.Securities.Future
             {
                 // Use our FutureExpiryFunctions to determine standard contracts dates.
                 var expiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(symbol);
-                var monthsToAdd = FuturesExpiryUtilityFunctions.ExpiresInPreviousMonth(symbol.ID.Symbol, contractExpirationDate);
+                var monthsToAdd = FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(symbol.ID.Symbol, contractExpirationDate);
                 var contractMonth = contractExpirationDate.AddDays(-(contractExpirationDate.Day - 1))
                     .AddMonths(monthsToAdd);
 

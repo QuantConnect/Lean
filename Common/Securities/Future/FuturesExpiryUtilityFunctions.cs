@@ -335,16 +335,17 @@ namespace QuantConnect.Securities.Future
         }
 
         /// <summary>
-        /// Returns the number of months prior to the contract month that the future expires
+        /// Gets the number of months between the contract month and the expiry date.
         /// </summary>
-        /// <param name="underlying">The future symbol</param>
-        /// <param name="expiryDate">Expiry date to use to look up contract month delta</param>
-        /// <returns>The number of months prior it expires</returns>
-        public static int ExpiresInPreviousMonth(string underlying, DateTime? expiryDate = null)
+        /// <param name="underlying">The future symbol ticker</param>
+        /// <param name="expiryDate">Expiry date to use to look up contract month delta. Only used for dairy, since we need to lookup its contract month in a pre-defined table.</param>
+        /// <returns>The number of months between the contract month and the contract expiry</returns>
+        public static int GetDeltaBetweenContractMonthAndContractExpiry(string underlying, DateTime? expiryDate = null)
         {
             int value;
             if (expiryDate != null && _dairyUnderlying.Contains(underlying))
             {
+                // Dairy can expire in the month following the contract month.
                 var dairyReportDate = expiryDate.Value.Date.AddDays(1);
                 if (_reverseDairyReportDates.ContainsKey(dairyReportDate))
                 {
