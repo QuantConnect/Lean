@@ -1166,17 +1166,33 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         }
 
         private static TestCaseData[] SubscriptionStarts => new[] {
-            new TestCaseData(new DateTime(2011, 1, 21, 0, 0, 0)),  // no move
-            new TestCaseData(new DateTime(2011, 3, 11, 0, 0, 0)),   // move to EDT
-            new TestCaseData(new DateTime(2011, 7, 8, 0, 0, 0)),  // no move
-            new TestCaseData(new DateTime(2011, 11, 4, 0, 0, 0)) // move to EST
+            new TestCaseData(new DateTime(2011, 1, 21, 0, 0, 0), new ForexExchange()),  // no move
+            new TestCaseData(new DateTime(2011, 3, 11, 0, 0, 0), new ForexExchange()),   // move to EDT
+            new TestCaseData(new DateTime(2011, 7, 8, 0, 0, 0), new ForexExchange()),  // no move
+            new TestCaseData(new DateTime(2011, 11, 4, 0, 0, 0), new ForexExchange()), // move to EST
+
+            new TestCaseData(new DateTime(2011, 1, 21, 0, 0, 0), new EquityExchange()),  // no move
+            new TestCaseData(new DateTime(2011, 3, 11, 0, 0, 0), new EquityExchange()),   // move to EDT
+            new TestCaseData(new DateTime(2011, 7, 8, 0, 0, 0),  new EquityExchange()),  // no move
+            new TestCaseData(new DateTime(2011, 11, 4, 0, 0, 0), new EquityExchange()), // move to EST
         };
 
-        [Test, TestCaseSource(nameof(SubscriptionStarts))]
-        public void FillsForwardDaylightSavingTime(DateTime reference)
+        private static IEnumerable<TestCaseData> DaylightSavingCases(int offsetInHours)
         {
-            var dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
-            var exchange = new ForexExchange();
+            return SubscriptionStarts.Select(origin =>
+            {
+                var list = new List<object>(origin.Arguments) { DateTimeZone.ForOffset(Offset.FromHours(offsetInHours)) };
+
+                return new TestCaseData(list.ToArray());
+            });
+        }
+
+        [Test]
+        [TestCaseSource(nameof(DaylightSavingCases), new object[] { -5 })]
+        [TestCaseSource(nameof(DaylightSavingCases), new object[] { 0 })]
+        [TestCaseSource(nameof(DaylightSavingCases), new object[] { -3 })]
+        public void FillsForwardDaylightSavingTime(DateTime reference, SecurityExchange exchange, DateTimeZone dataTimeZone)
+        {
             var dataResolution = Time.OneDay;
             var data = new[]
             {
@@ -1231,16 +1247,89 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             fillForwardEnumerator.Dispose();
         }
 
+        [Test, TestCaseSource(nameof(SubscriptionStarts))]
+        public void FillsForwardDaylightSavingTimeUtcPlus5(DateTime reference, SecurityExchange exchange)
+        {
+            var dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(+5));
+            var dataResolution = Time.OneDay;
+            var data = new[]
+            {
+                new TradeBar
+                {
+                    Time = reference.ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 0,
+                    Period = dataResolution,
+                    Volume = 100
+                },
+                new TradeBar
+                {
+                    Time = reference.AddDays(2).ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 1,
+                    Period = dataResolution,
+                    Volume = 100
+                },
+                new TradeBar
+                {
+                    Time = reference.AddDays(3).ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 2,
+                    Period = dataResolution,
+                    Volume = 100
+                }
+            }.ToList();
+            var enumerator = data.GetEnumerator();
+
+            var fillForwardEnumerator = new FillForwardEnumerator(
+                enumerator,
+                exchange,
+                Ref.Create(TimeSpan.FromDays(1)),
+                false,
+                data.Last().EndTime,
+                dataResolution,
+                dataTimeZone);
+
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(data[0].Time.Add(dataResolution), fillForwardEnumerator.Current.EndTime);
+            Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(data[0].Time.AddTicks(2 * dataResolution.Ticks), fillForwardEnumerator.Current.EndTime);
+            Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(data[1].Time.Add(dataResolution), fillForwardEnumerator.Current.EndTime);
+            Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(data[2].Time.Add(dataResolution), fillForwardEnumerator.Current.EndTime);
+            Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+
+            fillForwardEnumerator.Dispose();
+        }
+
         private static TestCaseData[] NoMoveSubscriptionStarts => new[] {
-            new TestCaseData(new DateTime(2011, 7, 4, 0, 0, 0)),  // no move
-            new TestCaseData(new DateTime(2011, 1, 17, 0, 0, 0)),  // no move
+            new TestCaseData(new DateTime(2011, 7, 4, 0, 0, 0), new ForexExchange(), DateTimeZone.ForOffset(Offset.FromHours(-5))),  // no move
+            new TestCaseData(new DateTime(2011, 1, 17, 0, 0, 0), new ForexExchange(), DateTimeZone.ForOffset(Offset.FromHours(-5))),  // no move
+            new TestCaseData(new DateTime(2011, 7, 4, 0, 0, 0), new EquityExchange(), DateTimeZone.ForOffset(Offset.FromHours(-5))),  // no move
+            new TestCaseData(new DateTime(2011, 1, 17, 0, 0, 0), new EquityExchange(), DateTimeZone.ForOffset(Offset.FromHours(-5))),  // no move
+
+            new TestCaseData(new DateTime(2011, 7, 4, 0, 0, 0), new ForexExchange(), DateTimeZone.Utc),  // no move
+            new TestCaseData(new DateTime(2011, 1, 17, 0, 0, 0), new ForexExchange(), DateTimeZone.Utc),  // no move
+            new TestCaseData(new DateTime(2011, 7, 4, 0, 0, 0), new EquityExchange(), DateTimeZone.Utc),  // no move
+            new TestCaseData(new DateTime(2011, 1, 17, 0, 0, 0), new EquityExchange(), DateTimeZone.Utc),  // no move
+
+            new TestCaseData(new DateTime(2011, 7, 4, 0, 0, 0), new ForexExchange(), DateTimeZone.ForOffset(Offset.FromHours(+5))),  // no move
+            new TestCaseData(new DateTime(2011, 1, 17, 0, 0, 0), new ForexExchange(), DateTimeZone.ForOffset(Offset.FromHours(+5))),  // no move
+            new TestCaseData(new DateTime(2011, 7, 4, 0, 0, 0), new EquityExchange(), DateTimeZone.ForOffset(Offset.FromHours(+5))),  // no move
+            new TestCaseData(new DateTime(2011, 1, 17, 0, 0, 0), new EquityExchange(), DateTimeZone.ForOffset(Offset.FromHours(+5)))  // no move
         };
 
         [Test, TestCaseSource(nameof(NoMoveSubscriptionStarts))]
-        public void FillsForwardMiddleWeek(DateTime reference)
+        public void FillsForwardMiddleWeek(DateTime reference, SecurityExchange exchange, DateTimeZone dataTimeZone)
         {
-            var dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
-            var exchange = new ForexExchange();
             var dataResolution = Time.OneDay;
             var data = new[]
             {
