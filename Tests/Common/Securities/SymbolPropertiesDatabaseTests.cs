@@ -31,8 +31,8 @@ namespace QuantConnect.Tests.Common.Securities
         public void LoadsLotSize()
         {
             var db = SymbolPropertiesDatabase.FromDataFolder();
-
-            var symbolProperties = db.GetSymbolProperties(Market.FXCM, "EURGBP", SecurityType.Forex, "GBP");
+            var symbol = Symbol.Create("EURGBP", SecurityType.Forex, Market.FXCM);
+            var symbolProperties = db.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "GBP");
 
             Assert.AreEqual(symbolProperties.LotSize, 1000);
         }
@@ -41,8 +41,8 @@ namespace QuantConnect.Tests.Common.Securities
         public void LoadsQuoteCurrency()
         {
             var db = SymbolPropertiesDatabase.FromDataFolder();
-
-            var symbolProperties = db.GetSymbolProperties(Market.FXCM, "EURGBP", SecurityType.Forex, "GBP");
+            var symbol = Symbol.Create("EURGBP", SecurityType.Forex, Market.FXCM);
+            var symbolProperties = db.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "GBP");
 
             Assert.AreEqual(symbolProperties.QuoteCurrency, "GBP");
         }

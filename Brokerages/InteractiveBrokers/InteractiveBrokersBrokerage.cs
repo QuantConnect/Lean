@@ -1902,8 +1902,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
                     symbol.ID.Market,
-                    symbol.ID.Symbol,
-                    SecurityType.Future,
+                    symbol,
+                    symbol.SecurityType,
                     Currencies.USD);
 
                 contract.Multiplier = Convert.ToInt32(symbolProperties.ContractMultiplier).ToStringInvariant();
@@ -2834,7 +2834,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 {
                     var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
                         market,
-                        lookupName,
+                        symbol,
                         symbol.SecurityType,
                         Currencies.USD);
 

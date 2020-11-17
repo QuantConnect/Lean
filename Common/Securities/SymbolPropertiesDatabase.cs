@@ -109,33 +109,6 @@ namespace QuantConnect.Securities
         /// Gets the symbol properties for the specified market/symbol/security-type
         /// </summary>
         /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
-        /// <param name="symbol">The particular symbol being traded</param>
-        /// <param name="securityType">The security type of the symbol</param>
-        /// <param name="defaultQuoteCurrency">Specifies the quote currency to be used when returning a default instance of an entry is not found in the database</param>
-        /// <returns>The symbol properties matching the specified market/symbol/security-type or null if not found</returns>
-        [Obsolete("Symbol Properties Database lookup with a string ticker is error-prone and deprecated. Use the overload accepting a Symbol instead")]
-        public SymbolProperties GetSymbolProperties(string market, string symbol, SecurityType securityType, string defaultQuoteCurrency)
-        {
-            SymbolProperties symbolProperties;
-            var key = new SecurityDatabaseKey(market, symbol, securityType);
-
-            if (!_entries.TryGetValue(key, out symbolProperties))
-            {
-                // now check with null symbol key
-                if (!_entries.TryGetValue(new SecurityDatabaseKey(market, null, securityType), out symbolProperties))
-                {
-                    // no properties found, return object with default property values
-                    return SymbolProperties.GetDefault(defaultQuoteCurrency);
-                }
-            }
-
-            return symbolProperties;
-        }
-
-        /// <summary>
-        /// Gets the symbol properties for the specified market/symbol/security-type
-        /// </summary>
-        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
         /// <param name="symbol">The particular symbol being traded (Symbol class)</param>
         /// <param name="securityType">The security type of the symbol</param>
         /// <param name="defaultQuoteCurrency">Specifies the quote currency to be used when returning a default instance of an entry is not found in the database</param>
@@ -144,12 +117,12 @@ namespace QuantConnect.Securities
         public SymbolProperties GetSymbolProperties(string market, Symbol symbol, SecurityType securityType, string defaultQuoteCurrency)
         {
             SymbolProperties symbolProperties;
-            var lookupTicker = symbol.SecurityType == SecurityType.Equity ? symbol.Value : symbol.ID.Symbol;
+            var lookupTicker = symbol?.SecurityType == SecurityType.Equity ? symbol.Value : symbol?.ID.Symbol;
             var key = new SecurityDatabaseKey(market, lookupTicker, securityType);
 
             if (!_entries.TryGetValue(key, out symbolProperties))
             {
-                if (symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType != SecurityType.Equity)
+                if (symbol != null && symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType != SecurityType.Equity)
                 {
                     // Default to looking up the underlying symbol's properties and using those instead if there's
                     // no existing entry for the option.
