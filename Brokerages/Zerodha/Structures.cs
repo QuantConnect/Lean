@@ -19,6 +19,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using System.Globalization;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Brokerages.Zerodha.Messages
 {
@@ -148,14 +150,14 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
     /// </summary>
     public struct AvailableMargin
     {
-        public AvailableMargin(Dictionary<string, dynamic> data)
+        public AvailableMargin(JObject data)
         {
             try
             {
-                AdHocMargin = data["adhoc_margin"];
-                Cash = data["cash"];
-                Collateral = data["collateral"];
-                IntradayPayin = data["intraday_payin"];
+                AdHocMargin = (decimal)data["adhoc_margin"];
+                Cash = (decimal)data["cash"];
+                Collateral = (decimal)data["collateral"];
+                IntradayPayin = (decimal)data["intraday_payin"];
             }
             catch (Exception e)
             {
@@ -174,19 +176,19 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
     /// </summary>
     public struct UtilisedMargin
     {
-        public UtilisedMargin(Dictionary<string, dynamic> data)
+        public UtilisedMargin(JObject data)
         {
             try
             {
-                Debits = data["debits"];
-                Exposure = data["exposure"];
-                M2MRealised = data["m2m_realised"];
-                M2MUnrealised = data["m2m_unrealised"];
-                OptionPremium = data["option_premium"];
-                Payout = data["payout"];
-                Span = data["span"];
-                HoldingSales = data["holding_sales"];
-                Turnover = data["turnover"];
+                Debits = (decimal)data["debits"];
+                Exposure = (decimal)data["exposure"];
+                M2MRealised = (decimal)data["m2m_realised"];
+                M2MUnrealised = (decimal)data["m2m_unrealised"];
+                OptionPremium = (decimal)data["option_premium"];
+                Payout = (decimal)data["payout"];
+                Span = (decimal)data["span"];
+                HoldingSales = (decimal)data["holding_sales"];
+                Turnover = (decimal)data["turnover"];
             }
             catch (Exception e)
             {
@@ -211,14 +213,14 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
     /// </summary>
     public struct UserMargin
     {
-        public UserMargin(Dictionary<string, dynamic> data)
+        public UserMargin(JObject data)
         {
             try
             {
-                Enabled = data["enabled"];
-                Net = data["net"];
-                Available = new AvailableMargin(data["available"]);
-                Utilised = new UtilisedMargin(data["utilised"]);
+                Enabled = (bool)data["enabled"];
+                Net = (decimal)data["net"];
+                Available = JsonConvert.DeserializeObject<AvailableMargin>(data["available"].ToString());
+                Utilised = JsonConvert.DeserializeObject<UtilisedMargin>(data["utilised"].ToString());
             }
             catch (Exception e)
             {
@@ -237,12 +239,12 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
     /// </summary>
     public struct UserMarginsResponse
     {
-        public UserMarginsResponse(Dictionary<string, dynamic> data)
+        public UserMarginsResponse(JObject data)
         {
             try
             {
-                Equity = new UserMargin(data["equity"]);
-                Commodity = new UserMargin(data["commodity"]);
+                Equity = JsonConvert.DeserializeObject<UserMargin>(data["equity"].ToString());
+                Commodity = JsonConvert.DeserializeObject<UserMargin>(data["commodity"].ToString());
             }
             catch (Exception e)
             {
@@ -454,14 +456,14 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
     {
         public string ChannelId { get; set; }
         public string a { get; set; }
-        public string[] v { get; set; }
+        public uint[] v { get; set; }
     }
 
     public struct ChannelUnsubscription
     {
         public string ChannelId { get; set; }
         public string a { get; set; }
-        public string[] v { get; set; }
+        public uint[] v { get; set; }
     }
 
     /// <summary>

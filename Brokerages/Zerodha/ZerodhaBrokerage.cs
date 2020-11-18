@@ -28,6 +28,9 @@ using System.Threading;
 using QuantConnect.Orders;
 using QuantConnect.Brokerages.Zerodha.Messages;
 using Tick = QuantConnect.Data.Market.Tick;
+using System.Net.WebSockets;
+using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
@@ -35,9 +38,10 @@ namespace QuantConnect.Brokerages.Zerodha
     /// Zerodha Brokerage implementation
     /// </summary>
     [BrokerageFactory(typeof(ZerodhaBrokerageFactory))]
-    public partial class ZerodhaBrokerage : Brokerage, IDataQueueHandler,IDataQueueUniverseProvider, IHistoryProvider
+    public partial class ZerodhaBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider, IHistoryProvider
     {
         #region Declarations
+        private const int ConnectionTimeout = 30000;
         /// <summary>
         /// The websockets client instance
         /// </summary>
@@ -76,7 +80,9 @@ namespace QuantConnect.Brokerages.Zerodha
         private readonly IAlgorithm _algorithm;
         private volatile bool _streamLocked;
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
-        private ZerodhaSubscriptionManager _subscriptionManager;
+        //private ZerodhaSubscriptionManager _subscriptionManager;
+        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
+        private ConcurrentDictionary<string, Symbol> _subscriptionsById = new ConcurrentDictionary<string, Symbol>();
         private readonly ConcurrentQueue<MessageData> _messageBuffer = new ConcurrentQueue<MessageData>();
 
         private readonly IDataAggregator _aggregator;
@@ -94,37 +100,103 @@ namespace QuantConnect.Brokerages.Zerodha
         private readonly string _apiKey;
         private readonly string _accessToken;
         private readonly string _wssUrl = "wss://ws.kite.trade/";
-        public string sessionToken;
+        private readonly string RestApiUrl = "https://api.kite.trade";
         #endregion
 
 
-        
+
         /// <summary>
         /// Constructor for brokerage
         /// </summary>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
-        public ZerodhaBrokerage(string apiKey, string apiSecret, string accessToken, IAlgorithm algorithm, IDataAggregator aggregator)
+        public ZerodhaBrokerage(string apiKey, string accessToken, IAlgorithm algorithm, IDataAggregator aggregator)
             : base("Zerodha")
         {
             _algorithm = algorithm;
             _aggregator = aggregator;
-            _kite = new Kite(apiKey);
+            _kite = new Kite(apiKey,accessToken);
             _apiKey = apiKey;
-            //var user = _kite.GenerateSession(requestToken,apiSecret);
             _accessToken = accessToken;
-            var websocket = new ZerodhaWebSocketClientWrapper();
+            WebSocket = new ZerodhaWebSocketClientWrapper();
             _wssUrl += string.Format(CultureInfo.InvariantCulture,"?api_key={0}&access_token={1}", _apiKey, _accessToken);
-            websocket.Initialize(_wssUrl);
-            WebSocket = websocket;
+            WebSocket.Initialize(_wssUrl);
             WebSocket.Message += OnMessage;
+            WebSocket.Open += (sender, args) =>
+            {
+                Log.Trace($"ZerodhaBrokerage(): WebSocket.Open. Subscribing");
+                //Subscribe(GetSubscribed());
+            };
             WebSocket.Error += OnError;
-            _subscriptionManager = new ZerodhaSubscriptionManager(this, _wssUrl, _symbolMapper, sessionToken);
-            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _symbolMapper = new ZerodhaSymbolMapper(_kite);
+
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager.SubscribeImpl += (s, t) =>
+            {
+                Subscribe(s);
+                return true;
+            };
+            _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
+
+            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             Log.Trace("Start Zerodha Brokerage");
         }
+
+        /// <summary>
+        /// Subscribes to the requested symbols (using an individual streaming channel)
+        /// </summary>
+        /// <param name="symbols">The list of symbols to subscribe</param>
+        public void Subscribe(IEnumerable<Symbol> symbols)
+        {
+            foreach (var symbol in symbols)
+            {
+                var instrumentToken = _symbolMapper.GetZerodhaInstrumentToken(symbol.ID.Symbol, symbol.ID.Market);
+                if (instrumentToken == 0)
+                {
+                    Log.Error("Invalid Zerodha Instrument token");
+                }
+                var securityType = _symbolMapper.GetBrokerageSecurityType(symbol.ID.Symbol);
+
+                string request = "{\"a\":\"subscribe\",\"v\":[" + String.Join(",", instrumentToken) + "]}";
+
+                Log.Trace("Websocket Request: " + request.ToStringInvariant());
+                //if (webSocket.IsOpen)
+                //{
+                WebSocket.Send(request);
+                WebSocket.Send("\n");
+                _subscriptionsById[instrumentToken.ToStringInvariant()] = symbol;
+                //OnSubscribe(webSocket, channel);
+                //}
+            }
+        }
+
+        /// <summary>
+        /// Ends current subscriptions
+        /// </summary>
+        private bool Unsubscribe(IEnumerable<Symbol> symbols)
+        {
+            if (WebSocket.IsOpen)
+            {
+                foreach (var symbol in symbols)
+                {
+                    var instrumentToken = _symbolMapper.GetZerodhaInstrumentToken(symbol.ID.Symbol, symbol.ID.Market);
+                    if (instrumentToken == 0)
+                    {
+                        Log.Error("Invalid Zerodha Instrument token");
+                    }
+                    var sub = new ChannelUnsubscription();
+                    sub.a = "unsubcribe";
+                    sub.v = new uint[] { instrumentToken };
+                    var request = JsonConvert.SerializeObject(sub);
+                    WebSocket.Send(request);
+                    WebSocket.Send("\n");
+                }
+            }
+
+            return true;
+        }
+
 
         /// <summary>
         /// Gets Quote using Zerodha API
@@ -275,7 +347,20 @@ namespace QuantConnect.Brokerages.Zerodha
 
         public override void Connect()
         {
+            if (IsConnected)
+                return;
+
+            Log.Trace("ZerodhaBrokerage.Connect(): Connecting...");
+
+            var resetEvent = new ManualResetEvent(false);
+            EventHandler triggerEvent = (o, args) => resetEvent.Set();
+            WebSocket.Open += triggerEvent;
             WebSocket.Connect();
+            if (!resetEvent.WaitOne(ConnectionTimeout))
+            {
+                throw new TimeoutException("Websockets connection timeout.");
+            }
+            WebSocket.Open -= triggerEvent;
         }
 
         /// <summary>
@@ -300,7 +385,6 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             LockStream();
             Dictionary<string,dynamic> orderResponse;
-
             //if (order.Type == OrderType.Bracket)
             //{
             //    orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market, order.Symbol.ID.Symbol,"",order.Quantity.ConvertInvariant<int>());
@@ -518,22 +602,22 @@ namespace QuantConnect.Brokerages.Zerodha
             var orderDetail = _kite.GetOrderHistory(orderDetails.OrderId);
             if (orderDetails.Status != "complete" && filledQty == 0)
             {
-                return Orders.OrderStatus.Submitted;
+                return OrderStatus.Submitted;
             }
             else if (filledQty > 0 && pendingQty > 0)
             {
-                return Orders.OrderStatus.PartiallyFilled;
+                return OrderStatus.PartiallyFilled;
             }
             else if (pendingQty == 0)
             {
-                return Orders.OrderStatus.Filled;
+                return OrderStatus.Filled;
             }
             else if (orderDetails.Status.ToUpperInvariant() == "CANCELLED")
             {
-                return Orders.OrderStatus.Canceled;
+                return OrderStatus.Canceled;
             }
 
-            return Orders.OrderStatus.None;
+            return OrderStatus.None;
         }
 
         /// <summary>
@@ -577,7 +661,7 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             var list = new List<CashAmount>();
             var response = _kite.GetMargins();
-            decimal amt = Convert.ToDecimal(response.Equity.Available, CultureInfo.InvariantCulture);
+            decimal amt = Convert.ToDecimal(response.Equity.Net, CultureInfo.InvariantCulture);
             list.Add(new CashAmount(amt, AccountBaseCurrency));
             return list;
         }
@@ -587,9 +671,9 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         /// <param name="request">The historical data request</param>
         /// <returns>An enumerable of bars covering the span specified in the request</returns>
-        public override IEnumerable<BaseData> GetHistory(Data.HistoryRequest request)
+        public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
         {
-            if (request.Symbol.SecurityType != SecurityType.Equity)
+            if (request.Symbol.SecurityType != SecurityType.Equity || request.Symbol.SecurityType != SecurityType.Future || request.Symbol.SecurityType != SecurityType.Option)
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidSecurityType",
                     $"{request.Symbol.SecurityType} security type not supported, no history returned"));
@@ -637,6 +721,289 @@ namespace QuantConnect.Brokerages.Zerodha
             } while (latestTime < request.EndTimeUtc);
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public override void Dispose()
+        {
+        }
+
+        private void OnError(object sender, WebSocketError e)
+        {
+            Log.Error($"ZerodhaSubscriptionManager.OnError(): Message: {e.Message} Exception: {e.Exception}");
+        }
+
+        private void OnMessage(object sender, MessageData e)
+        {
+            LastHeartbeatUtcTime = DateTime.UtcNow;
+
+            // Verify if we're allowed to handle the streaming packet yet; while we're placing an order we delay the
+            // stream processing a touch.
+            try
+            {
+                if (_streamLocked)
+                {
+                    _messageBuffer.Enqueue(e);
+                    return;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+
+            OnMessageImpl(e);
+        }
+
+        /// <summary>
+        /// Implementation of the OnMessage event
+        /// </summary>
+        /// <param name="e"></param>
+        private void OnMessageImpl(MessageData e)
+        {
+            try
+            {
+                if (e.MessageType == WebSocketMessageType.Binary)
+                {
+                    if (e.Count == 1)
+                    {
+                         Log.Trace(DateTime.Now.ToLocalTime() + "Zerodha Heartbeat");
+                    }
+                    else
+                    {
+                        int offset = 0;
+                        ushort count = ReadShort(e.Data, ref offset); //number of packets
+
+                        for (ushort i = 0; i < count; i++)
+                        {
+                            ushort length = ReadShort(e.Data, ref offset); // length of the packet
+                            Messages.Tick tick = new Messages.Tick();
+                            if (length == 8) // ltp
+                                tick = ReadLTP(e.Data, ref offset);
+                            else if (length == 28) // index quote
+                                tick = ReadIndexQuote(e.Data, ref offset);
+                            else if (length == 32) // index quote
+                                tick = ReadIndexFull(e.Data, ref offset);
+                            else if (length == 44) // quote
+                                tick = ReadQuote(e.Data, ref offset);
+                            else if (length == 184) // full with marketdepth and timestamp
+                                tick = ReadFull(e.Data, ref offset);
+                            // If the number of bytes got from stream is less that that is required
+                            // data is invalid. This will skip that wrong tick
+                            if (tick.InstrumentToken != 0 && offset <= e.Count)
+                            {
+                                var symbol = _subscriptionsById[tick.InstrumentToken.ToStringInvariant()];
+                                EmitQuoteTick(symbol, tick.AveragePrice, tick.BuyQuantity, tick.AveragePrice,tick.SellQuantity);
+                            }
+                        }
+                    }
+                }
+                else if (e.MessageType == WebSocketMessageType.Text)
+                {
+                    string message = Encoding.UTF8.GetString(e.Data.Take(e.Count).ToArray());
+
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, $"Parsing new wss message. Data: {e.Data}"));
+
+                    JObject messageDict = Utils.JsonDeserialize(message);
+                    if ((string)messageDict["type"] == "order")
+                    {
+                        //TODO handle this
+                        //OnOrderUpdate?.Invoke(new Order(messageDict["data"]));
+                        //EmitFillOrder();
+                    }
+                    else if ((string)messageDict["type"] == "error")
+                    {
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Zerodha WSS Error. Data: {e.Data} Exception: {messageDict["data"]}"));
+
+                    }
+                }
+                else if (e.MessageType == WebSocketMessageType.Close)
+                {
+                    //Close();
+                }
+            }
+            catch (Exception exception)
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Data} Exception: {exception}"));
+                throw;
+            }
+        }
+
+
+
+        private void EmitQuoteTick(Symbol symbol, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
+        {
+            lock (TickLocker)
+            {
+                EmitTick(new Tick
+                {
+                    AskPrice = askPrice,
+                    BidPrice = bidPrice,
+                    Value = (askPrice + bidPrice) / 2m,
+                    Time = DateTime.UtcNow,
+                    Symbol = symbol,
+                    TickType = TickType.Quote,
+                    AskSize = Math.Abs(askSize),
+                    BidSize = Math.Abs(bidSize)
+                });
+            }
+        }
+
+        /// <summary>
+        /// Reads 2 byte short int from byte stream
+        /// </summary>
+        private ushort ReadShort(byte[] b, ref int offset)
+        {
+            ushort data = (ushort)(b[offset + 1] + (b[offset] << 8));
+            offset += 2;
+            return data;
+        }
+
+        /// <summary>
+        /// Reads 4 byte int32 from byte stream
+        /// </summary>
+        private uint ReadInt(byte[] b, ref int offset)
+        {
+            uint data = BitConverter.ToUInt32(new byte[] { b[offset + 3], b[offset + 2], b[offset + 1], b[offset + 0] }, 0);
+            offset += 4;
+            return data;
+        }
+
+        /// <summary>
+        /// Reads an ltp mode tick from raw binary data
+        /// </summary>
+        private Messages.Tick ReadLTP(byte[] b, ref int offset)
+        {
+            Messages.Tick tick = new Messages.Tick();
+            tick.Mode = Constants.MODE_LTP;
+            tick.InstrumentToken = ReadInt(b, ref offset);
+
+            decimal divisor = (tick.InstrumentToken & 0xff) == 3 ? 10000000.0m : 100.0m;
+
+            tick.Tradable = (tick.InstrumentToken & 0xff) != 9;
+            tick.LastPrice = ReadInt(b, ref offset) / divisor;
+            return tick;
+        }
+
+        /// <summary>
+        /// Reads a index's quote mode tick from raw binary data
+        /// </summary>
+        private Messages.Tick ReadIndexQuote(byte[] b, ref int offset)
+        {
+            Messages.Tick tick = new Messages.Tick();
+            tick.Mode = Constants.MODE_QUOTE;
+            tick.InstrumentToken = ReadInt(b, ref offset);
+
+            decimal divisor = (tick.InstrumentToken & 0xff) == 3 ? 10000000.0m : 100.0m;
+
+            tick.Tradable = (tick.InstrumentToken & 0xff) != 9;
+            tick.LastPrice = ReadInt(b, ref offset) / divisor;
+            tick.High = ReadInt(b, ref offset) / divisor;
+            tick.Low = ReadInt(b, ref offset) / divisor;
+            tick.Open = ReadInt(b, ref offset) / divisor;
+            tick.Close = ReadInt(b, ref offset) / divisor;
+            tick.Change = ReadInt(b, ref offset) / divisor;
+            return tick;
+        }
+
+        private Messages.Tick ReadIndexFull(byte[] b, ref int offset)
+        {
+            Messages.Tick tick = new Messages.Tick();
+            tick.Mode = Constants.MODE_FULL;
+            tick.InstrumentToken = ReadInt(b, ref offset);
+
+            decimal divisor = (tick.InstrumentToken & 0xff) == 3 ? 10000000.0m : 100.0m;
+
+            tick.Tradable = (tick.InstrumentToken & 0xff) != 9;
+            tick.LastPrice = ReadInt(b, ref offset) / divisor;
+            tick.High = ReadInt(b, ref offset) / divisor;
+            tick.Low = ReadInt(b, ref offset) / divisor;
+            tick.Open = ReadInt(b, ref offset) / divisor;
+            tick.Close = ReadInt(b, ref offset) / divisor;
+            tick.Change = ReadInt(b, ref offset) / divisor;
+            uint time = ReadInt(b, ref offset);
+            tick.Timestamp = Utils.UnixToDateTime(time);
+            return tick;
+        }
+
+        /// <summary>
+        /// Reads a quote mode tick from raw binary data
+        /// </summary>
+        private Messages.Tick ReadQuote(byte[] b, ref int offset)
+        {
+            Messages.Tick tick = new Messages.Tick
+            {
+                Mode = Constants.MODE_QUOTE,
+                InstrumentToken = ReadInt(b, ref offset)
+            };
+
+            decimal divisor = (tick.InstrumentToken & 0xff) == 3 ? 10000000.0m : 100.0m;
+
+            tick.Tradable = (tick.InstrumentToken & 0xff) != 9;
+            tick.LastPrice = ReadInt(b, ref offset) / divisor;
+            tick.LastQuantity = ReadInt(b, ref offset);
+            tick.AveragePrice = ReadInt(b, ref offset) / divisor;
+            tick.Volume = ReadInt(b, ref offset);
+            tick.BuyQuantity = ReadInt(b, ref offset);
+            tick.SellQuantity = ReadInt(b, ref offset);
+            tick.Open = ReadInt(b, ref offset) / divisor;
+            tick.High = ReadInt(b, ref offset) / divisor;
+            tick.Low = ReadInt(b, ref offset) / divisor;
+            tick.Close = ReadInt(b, ref offset) / divisor;
+
+            return tick;
+        }
+
+        /// <summary>
+        /// Reads a full mode tick from raw binary data
+        /// </summary>
+        private Messages.Tick ReadFull(byte[] b, ref int offset)
+        {
+            Messages.Tick tick = new Messages.Tick();
+            tick.Mode = Constants.MODE_FULL;
+            tick.InstrumentToken = ReadInt(b, ref offset);
+
+            decimal divisor = (tick.InstrumentToken & 0xff) == 3 ? 10000000.0m : 100.0m;
+
+            tick.Tradable = (tick.InstrumentToken & 0xff) != 9;
+            tick.LastPrice = ReadInt(b, ref offset) / divisor;
+            tick.LastQuantity = ReadInt(b, ref offset);
+            tick.AveragePrice = ReadInt(b, ref offset) / divisor;
+            tick.Volume = ReadInt(b, ref offset);
+            tick.BuyQuantity = ReadInt(b, ref offset);
+            tick.SellQuantity = ReadInt(b, ref offset);
+            tick.Open = ReadInt(b, ref offset) / divisor;
+            tick.High = ReadInt(b, ref offset) / divisor;
+            tick.Low = ReadInt(b, ref offset) / divisor;
+            tick.Close = ReadInt(b, ref offset) / divisor;
+
+            // KiteConnect 3 fields
+            tick.LastTradeTime = Utils.UnixToDateTime(ReadInt(b, ref offset));
+            tick.OI = ReadInt(b, ref offset);
+            tick.OIDayHigh = ReadInt(b, ref offset);
+            tick.OIDayLow = ReadInt(b, ref offset);
+            tick.Timestamp = Utils.UnixToDateTime(ReadInt(b, ref offset));
+
+
+            tick.Bids = new DepthItem[5];
+            for (int i = 0; i < 5; i++)
+            {
+                tick.Bids[i].Quantity = ReadInt(b, ref offset);
+                tick.Bids[i].Price = ReadInt(b, ref offset) / divisor;
+                tick.Bids[i].Orders = ReadShort(b, ref offset);
+                offset += 2;
+            }
+
+            tick.Offers = new DepthItem[5];
+            for (int i = 0; i < 5; i++)
+            {
+                tick.Offers[i].Quantity = ReadInt(b, ref offset);
+                tick.Offers[i].Price = ReadInt(b, ref offset) / divisor;
+                tick.Offers[i].Orders = ReadShort(b, ref offset);
+                offset += 2;
+            }
+            return tick;
+        }
         #endregion
 
     }

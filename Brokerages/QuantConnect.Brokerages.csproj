@@ -670,7 +670,6 @@
     <Compile Include="Zerodha\ExceptionMessages.cs" />
     <Compile Include="Zerodha\Structures.cs" />
     <Compile Include="Zerodha\ZerodhaWebSocketWrapper.cs" />
-    <Compile Include="Zerodha\ZerodhaSubscriptionManager.cs" />
     <Compile Include="Zerodha\Kite.cs" />
     <Compile Include="Zerodha\ZerodhaBrokerageFactory.cs" />
     <Compile Include="Zerodha\ZerodhaBrokerage.cs" />

@@ -25,6 +25,7 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using System.Globalization;
+using Newtonsoft.Json.Linq;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
@@ -74,13 +75,10 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         /// <param name="Json">Json string to deserialize.</param>
         /// <returns>Json in the form of nested string dictionary.</returns>
-        public static Dictionary<string, dynamic> JsonDeserialize(string Json)
+        public static JObject JsonDeserialize(string Json)
         {
-            
-            Dictionary<string, dynamic> dict = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(Json);
-            // Replace double with decimal in the map
-            dict = DoubleToDecimal(dict);
-            return dict;
+            JObject jObject = JObject.Parse(Json);
+            return jObject;
         }
 
         /// <summary>

@@ -159,7 +159,6 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         protected virtual void OnMessage(MessageData e)
         {
-            //Log.Trace("ZerodhaWebSocketClientWrapper.OnMessage(): " + e.Message);
             Message?.Invoke(this, e);
         }
 

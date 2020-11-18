@@ -22,6 +22,8 @@ using System.Collections;
 using System.Globalization;
 using QuantConnect.Brokerages.Zerodha.Messages;
 using QuantConnect.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
@@ -876,8 +878,10 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             string url = _root + _routes[Route];
 
-            if (Params.Equals(null))
+            if (Params == null)
+            {
                 Params = new Dictionary<string, dynamic>();
+            }
 
             if (url.Contains("{"))
             {
@@ -944,18 +948,18 @@ namespace QuantConnect.Brokerages.Zerodha
 
                     if (webResponse.ContentType == "application/json")
                     {
-                        Dictionary<string, dynamic> responseDictionary = Utils.JsonDeserialize(response);
+                        JObject responseDictionary = Utils.JsonDeserialize(response);
 
                         if (status != HttpStatusCode.OK)
                         {
                             string errorType = "GeneralException";
                             string message = "";
 
-                            if (responseDictionary.ContainsKey("error_type"))
-                                errorType = responseDictionary["error_type"];
+                            if (responseDictionary["error_type"] != null)
+                                errorType = (string)responseDictionary["error_type"];
 
-                            if (responseDictionary.ContainsKey("message"))
-                                message = responseDictionary["message"];
+                            if (responseDictionary["message"] != null)
+                                message = (string)responseDictionary["message"];
 
                             switch (errorType)
                             {

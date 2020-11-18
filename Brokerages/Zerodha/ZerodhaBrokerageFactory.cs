@@ -48,7 +48,6 @@ namespace QuantConnect.Brokerages.Zerodha
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
             { "zerodha-api-key", Config.Get("zerodha-api-key")},
-            { "zerodha-api-secret", Config.Get("zerodha-api-secret")},
             { "zerodha-access-token", Config.Get("zerodha-access-token")}
         };
 
@@ -66,7 +65,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns></returns>
         public override IBrokerage CreateBrokerage(Packets.LiveNodePacket job, IAlgorithm algorithm)
         {
-            var required = new[] { "zerodha-api-key", "zerodha-api-secret", "zerodha-access-token" };
+            var required = new[] { "zerodha-api-key", "zerodha-access-token" };
 
             foreach (var item in required)
             {
@@ -76,13 +75,13 @@ namespace QuantConnect.Brokerages.Zerodha
 
             var brokerage = new ZerodhaBrokerage(
                 job.BrokerageData["zerodha-api-key"],
-                job.BrokerageData["zerodha-api-secret"],
                 job.BrokerageData["zerodha-access-token"],
                 algorithm,
                 Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"))
                );
             //Add the brokerage to the composer to ensure its accessible to the live data feed.
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
+            Composer.Instance.AddPart<IDataQueueUniverseProvider>(brokerage);
             Composer.Instance.AddPart<IHistoryProvider>(brokerage);
             return brokerage;
         }

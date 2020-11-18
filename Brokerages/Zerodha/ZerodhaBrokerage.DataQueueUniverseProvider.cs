@@ -25,7 +25,6 @@ namespace QuantConnect.Brokerages.Zerodha
     public partial class ZerodhaBrokerage
     {
         #region IDataQueueUniverseProvider
-
         /// <summary>
         /// Method returns a collection of Symbols that are available at the broker.
         /// </summary>

@@ -16,6 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.WebSockets;
+using System.Text;
 using Newtonsoft.Json.Linq;
 using NodaTime;
 using QuantConnect.Data;
@@ -272,57 +274,7 @@ namespace QuantConnect.Brokerages.Zerodha
         }
 
 
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        public override void Dispose()
-        {
-        }
-
-        private void OnError(object sender, WebSocketError e)
-        {
-            Log.Error($"ZerodhaSubscriptionManager.OnError(): Message: {e.Message} Exception: {e.Exception}");
-        }
-
-        private void OnMessage(object sender, MessageData e)
-        {
-            LastHeartbeatUtcTime = DateTime.UtcNow;
-
-            // Verify if we're allowed to handle the streaming packet yet; while we're placing an order we delay the
-            // stream processing a touch.
-            try
-            {
-                if (_streamLocked)
-                {
-                    _messageBuffer.Enqueue(e);
-                    return;
-                }
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-
-            OnMessageImpl(e);
-        }
-
-        /// <summary>
-        /// Implementation of the OnMessage event
-        /// </summary>
-        /// <param name="e"></param>
-        private void OnMessageImpl(MessageData e)
-        {
-            try
-            {
-                var token = JToken.Parse(e.Data.ToString());
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, $"Parsing new wss message. Data: {e.Data}"));
-            }
-            catch (Exception exception)
-            {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Data} Exception: {exception}"));
-                throw;
-            }
-        }
+        
         #endregion
     }
 }
