@@ -40,34 +40,33 @@ from QuantConnect import Market
 class FutureOptionCallITMExpiryRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2020, 3, 1)
-        clr.GetClrType(QCAlgorithm).GetField("_endDate", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(self, DateTime(2021, 3, 30))
+        self.SetStartDate(2020, 1, 5)
+        self.SetEndDate(2020, 6, 30)
 
-        start = datetime(2020, 9, 22)
         # We add AAPL as a temporary workaround for https://github.com/QuantConnect/Lean/issues/4872
         # which causes delisting events to never be processed, thus leading to options that might never
         # be exercised until the next data point arrives.
         self.AddEquity("AAPL", Resolution.Daily)
 
-        self.es19h21 = self.AddFutureContract(
+        self.es19m20 = self.AddFutureContract(
             Symbol.CreateFuture(
                 Futures.Indices.SP500EMini,
                 Market.CME,
-                datetime(2021, 3, 19)
+                datetime(2020, 6, 19)
             ),
             Resolution.Minute).Symbol
 
         # Select a future option expiring ITM, and adds it to the algorithm.
         self.esOption = self.AddFutureOptionContract(
             list(
-                sorted([x for x in self.OptionChainProvider.GetOptionContractList(self.es19h21, start) if x.ID.StrikePrice <= 3250.0], key=lambda x: x.ID.StrikePrice, reverse=True)
+                sorted([x for x in self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time) if x.ID.StrikePrice <= 3200.0 and x.ID.OptionRight == OptionRight.Call], key=lambda x: x.ID.StrikePrice, reverse=True)
             )[0], Resolution.Minute).Symbol
 
-        self.expectedContract = Symbol.CreateOption(self.es19h21, Market.CME, OptionStyle.American, OptionRight.Call, 3250.0, datetime(2021, 3, 19))
+        self.expectedContract = Symbol.CreateOption(self.es19m20, Market.CME, OptionStyle.American, OptionRight.Call, 3200.0, datetime(2020, 6, 19))
         if self.esOption != self.expectedContract:
             raise AssertionError(f"Contract {self.expectedContract} was not found in the chain")
 
-        self.Schedule.On(self.DateRules.On(start.year, start.month, start.day), self.TimeRules.AfterMarketOpen(self.es19h21, 1), self.ScheduleCallback)
+        self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.AfterMarketOpen(self.es19m20, 1), self.ScheduleCallback)
 
     def ScheduleCallback(self):
         self.MarketOrder(self.esOption, 1)
@@ -77,10 +76,10 @@ class FutureOptionCallITMExpiryRegressionAlgorithm(QCAlgorithm):
         # the expected time. These assertions detect bug #4872
         for delisting in data.Delistings.Values:
             if delisting.Type == DelistingType.Warning:
-                if delisting.Time != datetime(2021, 3, 19):
+                if delisting.Time != datetime(2020, 6, 19):
                     raise AssertionError(f"Delisting warning issued at unexpected date: {delisting.Time}")
             elif delisting.Type == DelistingType.Delisted:
-                if delisting.Time != datetime(2021, 3, 20):
+                if delisting.Time != datetime(2020, 6, 20):
                     raise AssertionError(f"Delisting happened at unexpected date: {delisting.Time}")
 
     def OnOrderEvent(self, orderEvent: OrderEvent):
@@ -92,7 +91,7 @@ class FutureOptionCallITMExpiryRegressionAlgorithm(QCAlgorithm):
             raise AssertionError(f"Order event Symbol not found in Securities collection: {orderEvent.Symbol}")
 
         security = self.Securities[orderEvent.Symbol]
-        if security.Symbol == self.es19h21:
+        if security.Symbol == self.es19m20:
             self.AssertFutureOptionOrderExercise(orderEvent, security, self.Securities[self.expectedContract])
         elif security.Symbol == self.expectedContract:
             # Expected contract is ES19H21 Call Option expiring ITM @ 3250
@@ -103,10 +102,7 @@ class FutureOptionCallITMExpiryRegressionAlgorithm(QCAlgorithm):
         self.Log(f"{self.Time} -- {orderEvent.Symbol} :: Price: {self.Securities[orderEvent.Symbol].Holdings.Price} Qty: {self.Securities[orderEvent.Symbol].Holdings.Quantity} Direction: {orderEvent.Direction} Msg: {orderEvent.Message}")
 
     def AssertFutureOptionOrderExercise(self, orderEvent: OrderEvent, future: Security, optionContract: Security):
-        # This vvvv is the actual expected liquidation date. But because of the issue described above w/ FillForward,
-        # we will modify the liquidation date to 2021-03-22 (Monday) since that's when equities start trading again.
-        # `datetime(2021, 3, 19, 5, 0, 0)`
-        expectedLiquidationTimeUtc = datetime(2021, 3, 22, 13, 32, 0)
+        expectedLiquidationTimeUtc = datetime(2020, 6, 20)
 
         if orderEvent.Direction == OrderDirection.Sell and future.Holdings.Quantity != 0:
             # We expect the contract to have been liquidated immediately
@@ -117,8 +113,8 @@ class FutureOptionCallITMExpiryRegressionAlgorithm(QCAlgorithm):
         # No way to detect option exercise orders or any other kind of special orders
         # other than matching strings, for now.
         if "Option Exercise" in orderEvent.Message:
-            if orderEvent.FillPrice != 3250.0:
-                raise AssertionError("Option did not exercise at expected strike price (3250)")
+            if orderEvent.FillPrice != 3200.0:
+                raise AssertionError("Option did not exercise at expected strike price (3200)")
 
             if future.Holdings.Quantity != 1:
                 # Here, we expect to have some holdings in the underlying, but not in the future option anymore.

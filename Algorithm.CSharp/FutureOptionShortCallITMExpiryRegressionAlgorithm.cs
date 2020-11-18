@@ -37,45 +37,41 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class FutureOptionShortCallITMExpiryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _es19h21;
+        private Symbol _es19m20;
         private Symbol _esOption;
         private Symbol _expectedContract;
 
         public override void Initialize()
         {
-            SetStartDate(2020, 3, 1);
-            typeof(QCAlgorithm)
-                .GetField("_endDate", BindingFlags.NonPublic | BindingFlags.Instance)
-                .SetValue(this, new DateTime(2021, 3, 30));
-
-            var start = new DateTime(2020, 9, 22);
+            SetStartDate(2020, 1, 5);
+            SetEndDate(2020, 6, 30);
 
             // We add AAPL as a temporary workaround for https://github.com/QuantConnect/Lean/issues/4872
             // which causes delisting events to never be processed, thus leading to options that might never
             // be exercised until the next data point arrives.
             AddEquity("AAPL", Resolution.Daily);
 
-            _es19h21 = AddFutureContract(
+            _es19m20 = AddFutureContract(
                 QuantConnect.Symbol.CreateFuture(
                     Futures.Indices.SP500EMini,
                     Market.CME,
-                    new DateTime(2021, 3, 19)),
+                    new DateTime(2020, 6, 19)),
                 Resolution.Minute).Symbol;
 
             // Select a future option expiring ITM, and adds it to the algorithm.
-            _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19h21, start)
-                .Where(x => x.ID.StrikePrice <= 3250m)
+            _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19m20, Time)
+                .Where(x => x.ID.StrikePrice <= 3100m && x.ID.OptionRight == OptionRight.Call)
                 .OrderByDescending(x => x.ID.StrikePrice)
                 .Take(1)
                 .Single(), Resolution.Minute).Symbol;
 
-            _expectedContract = QuantConnect.Symbol.CreateOption(_es19h21, Market.CME, OptionStyle.American, OptionRight.Call, 3250m, new DateTime(2021, 3, 19));
+            _expectedContract = QuantConnect.Symbol.CreateOption(_es19m20, Market.CME, OptionStyle.American, OptionRight.Call, 3100m, new DateTime(2020, 6, 19));
             if (_esOption != _expectedContract)
             {
                 throw new Exception($"Contract {_expectedContract} was not found in the chain");
             }
 
-            Schedule.On(DateRules.On(start), TimeRules.AfterMarketOpen(_es19h21, 1), () =>
+            Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(_es19m20, 1), () =>
             {
                 MarketOrder(_esOption, -1);
             });
@@ -89,14 +85,14 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (delisting.Type == DelistingType.Warning)
                 {
-                    if (delisting.Time != new DateTime(2021, 3, 19))
+                    if (delisting.Time != new DateTime(2020, 6, 19))
                     {
                         throw new Exception($"Delisting warning issued at unexpected date: {delisting.Time}");
                     }
                 }
                 if (delisting.Type == DelistingType.Delisted)
                 {
-                    if (delisting.Time != new DateTime(2021, 3, 20))
+                    if (delisting.Time != new DateTime(2020, 6, 20))
                     {
                         throw new Exception($"Delisting happened at unexpected date: {delisting.Time}");
                     }
@@ -118,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var security = Securities[orderEvent.Symbol];
-            if (security.Symbol == _es19h21)
+            if (security.Symbol == _es19m20)
             {
                 AssertFutureOptionOrderExercise(orderEvent, security, Securities[_expectedContract]);
             }
@@ -138,9 +134,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (orderEvent.Message.Contains("Assignment"))
             {
-                if (orderEvent.FillPrice != 3250m)
+                if (orderEvent.FillPrice != 3100m)
                 {
-                    throw new Exception("Option was not assigned at expected strike price (3250)");
+                    throw new Exception("Option was not assigned at expected strike price (3100)");
                 }
                 if (orderEvent.Direction != OrderDirection.Sell || future.Holdings.Quantity != -1)
                 {
@@ -197,31 +193,31 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "3"},
-            {"Average Win", "13.21%"},
-            {"Average Loss", "-1.96%"},
-            {"Compounding Annual Return", "10.145%"},
-            {"Drawdown", "0.100%"},
-            {"Expectancy", "2.874"},
-            {"Net Profit", "10.993%"},
-            {"Sharpe Ratio", "0.903"},
-            {"Probabilistic Sharpe Ratio", "38.045%"},
+            {"Average Win", "10.05%"},
+            {"Average Loss", "-5.60%"},
+            {"Compounding Annual Return", "8.121%"},
+            {"Drawdown", "0.500%"},
+            {"Expectancy", "0.396"},
+            {"Net Profit", "3.880%"},
+            {"Sharpe Ratio", "1.192"},
+            {"Probabilistic Sharpe Ratio", "58.203%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "6.75"},
-            {"Alpha", "0.088"},
-            {"Beta", "0.002"},
-            {"Annual Standard Deviation", "0.097"},
-            {"Annual Variance", "0.009"},
-            {"Information Ratio", "1.03"},
-            {"Tracking Error", "0.136"},
-            {"Treynor Ratio", "44.246"},
+            {"Profit-Loss Ratio", "1.79"},
+            {"Alpha", "0.069"},
+            {"Beta", "0.003"},
+            {"Annual Standard Deviation", "0.057"},
+            {"Annual Variance", "0.003"},
+            {"Information Ratio", "1.641"},
+            {"Tracking Error", "0.18"},
+            {"Treynor Ratio", "22.101"},
             {"Total Fees", "$7.40"},
-            {"Fitness Score", "0.009"},
+            {"Fitness Score", "0.021"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "99.606"},
-            {"Portfolio Turnover", "0.009"},
+            {"Return Over Maximum Drawdown", "17.255"},
+            {"Portfolio Turnover", "0.021"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -235,7 +231,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "635953525"}
+            {"OrderListHash", "-297682058"}
         };
     }
 }

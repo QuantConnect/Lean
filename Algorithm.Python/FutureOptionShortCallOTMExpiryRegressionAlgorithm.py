@@ -38,38 +38,35 @@ from QuantConnect import Market
 ### </summary>
 class FutureOptionShortCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
-        self.SetStartDate(2020, 3, 1)
-        clr.GetClrType(QCAlgorithm).GetField("_endDate", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(self, DateTime(2021, 3, 30))
-        
-        start = datetime(2020, 9, 22)
+        self.SetStartDate(2020, 1, 5)
+        self.SetEndDate(2020, 6, 30)
 
         # We add AAPL as a temporary workaround for https://github.com/QuantConnect/Lean/issues/4872
         # which causes delisting events to never be processed, thus leading to options that might never
         # be exercised until the next data point arrives.
         self.AddEquity("AAPL", Resolution.Daily)
 
-        self.es19h21 = self.AddFutureContract(
+        self.es19m20 = self.AddFutureContract(
             Symbol.CreateFuture(
                 Futures.Indices.SP500EMini,
                 Market.CME,
-                datetime(2021, 3, 19)),
+                datetime(2020, 6, 19)),
             Resolution.Minute).Symbol
 
         # Select a future option expiring ITM, and adds it to the algorithm.
         self.esOption = self.AddFutureOptionContract(
             list(
                 sorted(
-                    [x for x in self.OptionChainProvider.GetOptionContractList(self.es19h21, start) if x.ID.StrikePrice <= 3300.0],
-                    key=lambda x: x.ID.StrikePrice,
-                    reverse=True
+                    [x for x in self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time) if x.ID.StrikePrice >= 3400.0 and x.ID.OptionRight == OptionRight.Call],
+                    key=lambda x: x.ID.StrikePrice
                 )
             )[0], Resolution.Minute).Symbol
 
-        self.expectedContract = Symbol.CreateOption(self.es19h21, Market.CME, OptionStyle.American, OptionRight.Call, 3300.0, datetime(2021, 3, 19))
+        self.expectedContract = Symbol.CreateOption(self.es19m20, Market.CME, OptionStyle.American, OptionRight.Call, 3400.0, datetime(2020, 6, 19))
         if self.esOption != self.expectedContract:
             raise AssertionError(f"Contract {self.expectedContract} was not found in the chain");
 
-        self.Schedule.On(self.DateRules.On(start.year, start.month, start.day), self.TimeRules.AfterMarketOpen(self.es19h21, 1), self.ScheduledMarketOrder)
+        self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.AfterMarketOpen(self.es19m20, 1), self.ScheduledMarketOrder)
 
     def ScheduledMarketOrder(self):
         self.MarketOrder(self.esOption, -1)
@@ -79,11 +76,11 @@ class FutureOptionShortCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
         # the expected time. These assertions detect bug #4872
         for delisting in data.Delistings.Values:
             if delisting.Type == DelistingType.Warning:
-                if delisting.Time != datetime(2021, 3, 19):
+                if delisting.Time != datetime(2020, 6, 19):
                     raise AssertionError(f"Delisting warning issued at unexpected date: {delisting.Time}");
 
             if delisting.Type == DelistingType.Delisted:
-                if delisting.Time != datetime(2021, 3, 20):
+                if delisting.Time != datetime(2020, 6, 20):
                     raise AssertionError(f"Delisting happened at unexpected date: {delisting.Time}");
         
 
@@ -96,7 +93,7 @@ class FutureOptionShortCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
             raise AssertionError(f"Order event Symbol not found in Securities collection: {orderEvent.Symbol}")
 
         security = self.Securities[orderEvent.Symbol]
-        if security.Symbol == self.es19h21:
+        if security.Symbol == self.es19m20:
             raise AssertionError(f"Expected no order events for underlying Symbol {security.Symbol}")
 
         if security.Symbol == self.expectedContract:

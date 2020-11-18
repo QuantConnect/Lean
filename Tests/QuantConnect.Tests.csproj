@@ -421,6 +421,7 @@
     <Compile Include="Common\Securities\Options\StrategyMatcher\OptionStrategyLegPredicateTests.cs" />
     <Compile Include="Common\Securities\Options\StrategyMatcher\OptionStrategyMatcherTests.cs" />
     <Compile Include="Common\Securities\FutureOptionMarginBuyingPowerModelTests.cs" />
+    <Compile Include="Common\Securities\FutureOption\FuturesOptionsExpiryFunctionsTests.cs" />
     <Compile Include="Common\Securities\Options\OptionSecurityTests.cs" />
     <Compile Include="Common\Securities\TestDefaultMarginCallModel.cs" />
     <Compile Include="Common\Statistics\AnnualPerformanceTests.cs" />

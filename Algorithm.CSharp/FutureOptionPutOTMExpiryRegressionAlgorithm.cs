@@ -39,45 +39,41 @@ namespace QuantConnect.Algorithm.CSharp
     /// </remarks>
     public class FutureOptionPutOTMExpiryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _es19h21;
+        private Symbol _es19m20;
         private Symbol _esOption;
         private Symbol _expectedContract;
 
         public override void Initialize()
         {
-            SetStartDate(2020, 3, 1);
-            typeof(QCAlgorithm)
-                .GetField("_endDate", BindingFlags.NonPublic | BindingFlags.Instance)
-                .SetValue(this, new DateTime(2021, 3, 30));
-
-            var start = new DateTime(2020, 9, 22);
+            SetStartDate(2020, 1, 5);
+            SetEndDate(2020, 6, 30);
 
             // We add AAPL as a temporary workaround for https://github.com/QuantConnect/Lean/issues/4872
             // which causes delisting events to never be processed, thus leading to options that might never
             // be exercised until the next data point arrives.
             AddEquity("AAPL", Resolution.Daily);
 
-            _es19h21 = AddFutureContract(
+            _es19m20 = AddFutureContract(
                 QuantConnect.Symbol.CreateFuture(
                     Futures.Indices.SP500EMini,
                     Market.CME,
-                    new DateTime(2021, 3, 19)),
+                    new DateTime(2020, 6, 19)),
                 Resolution.Minute).Symbol;
 
             // Select a future option expiring ITM, and adds it to the algorithm.
-            _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19h21, start)
-                .Where(x => x.ID.StrikePrice >= 3200m && x.ID.OptionRight == OptionRight.Put)
-                .OrderBy(x => x.ID.StrikePrice)
+            _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19m20, Time)
+                .Where(x => x.ID.StrikePrice <= 3150m && x.ID.OptionRight == OptionRight.Put)
+                .OrderByDescending(x => x.ID.StrikePrice)
                 .Take(1)
                 .Single(), Resolution.Minute).Symbol;
 
-            _expectedContract = QuantConnect.Symbol.CreateOption(_es19h21, Market.CME, OptionStyle.American, OptionRight.Put, 3200m, new DateTime(2021, 3, 19));
+            _expectedContract = QuantConnect.Symbol.CreateOption(_es19m20, Market.CME, OptionStyle.American, OptionRight.Put, 3150m, new DateTime(2020, 6, 19));
             if (_esOption != _expectedContract)
             {
                 throw new Exception($"Contract {_expectedContract} was not found in the chain");
             }
 
-            Schedule.On(DateRules.On(start), TimeRules.AfterMarketOpen(_es19h21, 1), () =>
+            Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(_es19m20, 1), () =>
             {
                 MarketOrder(_esOption, 1);
             });
@@ -91,14 +87,14 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (delisting.Type == DelistingType.Warning)
                 {
-                    if (delisting.Time != new DateTime(2021, 3, 19))
+                    if (delisting.Time != new DateTime(2020, 6, 19))
                     {
                         throw new Exception($"Delisting warning issued at unexpected date: {delisting.Time}");
                     }
                 }
                 if (delisting.Type == DelistingType.Delisted)
                 {
-                    if (delisting.Time != new DateTime(2021, 3, 20))
+                    if (delisting.Time != new DateTime(2020, 6, 20))
                     {
                         throw new Exception($"Delisting happened at unexpected date: {delisting.Time}");
                     }
@@ -120,7 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var security = Securities[orderEvent.Symbol];
-            if (security.Symbol == _es19h21)
+            if (security.Symbol == _es19m20)
             {
                 throw new Exception("Invalid state: did not expect a position for the underlying to be opened, since this contract expires OTM");
             }
@@ -185,29 +181,29 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-10.33%"},
-            {"Compounding Annual Return", "-9.607%"},
-            {"Drawdown", "10.300%"},
+            {"Average Loss", "-5.12%"},
+            {"Compounding Annual Return", "-10.212%"},
+            {"Drawdown", "5.100%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-10.329%"},
-            {"Sharpe Ratio", "-0.846"},
-            {"Probabilistic Sharpe Ratio", "0.001%"},
+            {"Net Profit", "-5.116%"},
+            {"Sharpe Ratio", "-1.26"},
+            {"Probabilistic Sharpe Ratio", "0.016%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.076"},
-            {"Beta", "-0.002"},
-            {"Annual Standard Deviation", "0.09"},
-            {"Annual Variance", "0.008"},
-            {"Information Ratio", "-0.181"},
-            {"Tracking Error", "0.131"},
-            {"Treynor Ratio", "40.796"},
+            {"Alpha", "-0.084"},
+            {"Beta", "-0.003"},
+            {"Annual Standard Deviation", "0.066"},
+            {"Annual Variance", "0.004"},
+            {"Information Ratio", "0.785"},
+            {"Tracking Error", "0.184"},
+            {"Treynor Ratio", "28.158"},
             {"Total Fees", "$3.70"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-0.083"},
-            {"Return Over Maximum Drawdown", "-0.93"},
+            {"Sortino Ratio", "-0.181"},
+            {"Return Over Maximum Drawdown", "-1.995"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -222,7 +218,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "-4581648"}
+            {"OrderListHash", "392528894"}
         };
     }
 }

@@ -33,11 +33,11 @@ class AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorith
         self.expectedSymbolsReceived = []
         self.dataReceived = {}
 
-        self.SetStartDate(2020, 9, 22)
-        self.SetEndDate(2020, 9, 23)
+        self.SetStartDate(2020, 1, 5)
+        self.SetEndDate(2020, 1, 6)
 
         self.es = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, Market.CME)
-        self.es.SetFilter(lambda futureFilter: futureFilter.Expiration(0, 365).ExpirationCycle([3, 12]))
+        self.es.SetFilter(lambda futureFilter: futureFilter.Expiration(0, 365).ExpirationCycle([3, 6]))
 
         self.AddFutureOption(self.es.Symbol, self.OptionContractUniverseFilterFunction)
 

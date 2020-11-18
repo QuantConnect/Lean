@@ -27,61 +27,62 @@ from QuantConnect import Market
 
 
 ### <summary>
-### This regression algorithm tests In The Money (ITM) future option expiry for calls.
-### We expect 3 orders from the algorithm, which are:
-### 
-###   * Initial entry, buy ES Call Option (expiring ITM)
-###   * Option exercise, receiving ES future contracts
-###   * Future contract liquidation, due to impending expiry
-### 
+### This regression algorithm tests In The Money (ITM) future option calls across different strike prices.
+### We expect 6 orders from the algorithm, which are:
+###
+###   * (1) Initial entry, buy ES Call Option (ES19M20 expiring ITM)
+###   * (2) Initial entry, sell ES Call Option at different strike (ES20H20 expiring ITM)
+###   * [2] Option assignment, opens a position in the underlying (ES20H20, Qty: -1)
+###   * [2] Future contract liquidation, due to impending expiry
+###   * [1] Option exercise, receive 1 ES19M20 future contract
+###   * [1] Liquidate ES19M20 contract, due to expiry
+###
 ### Additionally, we test delistings for future options and assert that our
 ### portfolio holdings reflect the orders the algorithm has submitted.
 ### </summary>
 class FutureOptionBuySellCallIntradayRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2020, 3, 1)
-        clr.GetClrType(QCAlgorithm).GetField("_endDate", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(self, DateTime(2021, 3, 30))
-
-        start = datetime(2020, 9, 22)
+        self.SetStartDate(2020, 1, 5)
+        self.SetEndDate(2020, 6, 30)
 
         # We add AAPL as a temporary workaround for https://github.com/QuantConnect/Lean/issues/4872
         # which causes delisting events to never be processed, thus leading to options that might never
         # be exercised until the next data point arrives.
         self.AddEquity("AAPL", Resolution.Daily)
 
-        self.es18z20 = self.AddFutureContract(
+        self.es20h20 = self.AddFutureContract(
             Symbol.CreateFuture(
                 Futures.Indices.SP500EMini,
                 Market.CME,
-                datetime(2020, 12, 18)
+                datetime(2020, 3, 20)
             ),
             Resolution.Minute).Symbol
 
-        self.es19h21 = self.AddFutureContract(
+        self.es19m20 = self.AddFutureContract(
             Symbol.CreateFuture(
                 Futures.Indices.SP500EMini,
                 Market.CME,
-                datetime(2021, 3, 19)
+                datetime(2020, 6, 19)
             ),
             Resolution.Minute).Symbol
 
         # Select a future option expiring ITM, and adds it to the algorithm.
         self.esOptions = [
-            self.AddFutureOptionContract(i, Resolution.Minute).Symbol for i in (self.OptionChainProvider.GetOptionContractList(self.es19h21, start) + self.OptionChainProvider.GetOptionContractList(self.es18z20, start)) if i.ID.StrikePrice == 3250.0 and i.ID.OptionRight == OptionRight.Call
+            self.AddFutureOptionContract(i, Resolution.Minute).Symbol for i in (self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time) + self.OptionChainProvider.GetOptionContractList(self.es20h20, self.Time)) if i.ID.StrikePrice == 3200.0 and i.ID.OptionRight == OptionRight.Call
         ]
 
         self.expectedContracts = [
-            Symbol.CreateOption(self.es19h21, Market.CME, OptionStyle.American, OptionRight.Call, 3250.0, datetime(2021, 3, 19)),
-            Symbol.CreateOption(self.es18z20, Market.CME, OptionStyle.American, OptionRight.Call, 3250.0, datetime(2020, 12, 18))
+            Symbol.CreateOption(self.es20h20, Market.CME, OptionStyle.American, OptionRight.Call, 3200.0, datetime(2020, 3, 20)),
+            Symbol.CreateOption(self.es19m20, Market.CME, OptionStyle.American, OptionRight.Call, 3200.0, datetime(2020, 6, 19))
         ]
 
         for esOption in self.esOptions:
             if esOption not in self.expectedContracts:
                 raise AssertionError(f"Contract {esOption} was not found in the chain")
 
-        self.Schedule.On(self.DateRules.On(start.year, start.month, start.day), self.TimeRules.AfterMarketOpen(self.es19h21, 1), self.ScheduleCallbackBuy)
-        self.Schedule.On(self.DateRules.On(start.year, start.month, start.day), self.TimeRules.Noon, self.ScheduleCallbackLiquidate)
+        self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.AfterMarketOpen(self.es19m20, 1), self.ScheduleCallbackBuy)
+        self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.Noon, self.ScheduleCallbackLiquidate)
 
     def ScheduleCallbackBuy(self):
         self.MarketOrder(self.esOptions[0], 1)

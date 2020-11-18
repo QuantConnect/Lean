@@ -33,19 +33,19 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
         self.expectedSymbolsReceived = []
         self.dataReceived = {}
 
-        self.SetStartDate(2020, 9, 22)
-        self.SetEndDate(2020, 9, 23)
+        self.SetStartDate(2020, 1, 5)
+        self.SetEndDate(2020, 1, 6)
 
-        self.es18z20 = self.AddFutureContract(
-            Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, datetime(2020, 12, 18)),
+        self.es20h20 = self.AddFutureContract(
+            Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, datetime(2020, 3, 20)),
             Resolution.Minute).Symbol
 
-        self.es19h21 = self.AddFutureContract(
-            Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, datetime(2021, 3, 19)),
+        self.es19m20 = self.AddFutureContract(
+            Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, datetime(2020, 6, 19)),
             Resolution.Minute).Symbol
 
-        optionChains = self.OptionChainProvider.GetOptionContractList(self.es18z20, self.Time)
-        optionChains += self.OptionChainProvider.GetOptionContractList(self.es19h21, self.Time)
+        optionChains = self.OptionChainProvider.GetOptionContractList(self.es20h20, self.Time)
+        optionChains += self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time)
 
         for optionContract in optionChains:
             self.expectedSymbolsReceived.append(self.AddFutureOptionContract(optionContract, Resolution.Minute).Symbol)
@@ -72,9 +72,9 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
         if self.invested or not hasOptionQuoteBars:
             return
 
-        if data.ContainsKey(self.es18z20) and data.ContainsKey(self.es19h21):
-            self.SetHoldings(self.es18z20, 0.2)
-            self.SetHoldings(self.es19h21, 0.2)
+        if data.ContainsKey(self.es20h20) and data.ContainsKey(self.es19m20):
+            self.SetHoldings(self.es20h20, 0.2)
+            self.SetHoldings(self.es19m20, 0.2)
 
             self.invested = True
 
