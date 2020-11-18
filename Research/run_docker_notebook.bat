@@ -75,7 +75,7 @@ if /I "%UPDATE%" == "Y" (
 
 echo Starting docker container; container id is:
  docker run -d --rm -p 8888:8888^
-    -v %DATA_DIR%:/home/Data,ro^
+    -v %DATA_DIR%:/home/Data:ro^
     -v %NOTEBOOK_DIR%:/Lean/Launcher/bin/Debug/Notebooks^
     --name %CONTAINER_NAME%^
     %IMAGE%

@@ -362,7 +362,10 @@ namespace QuantConnect.Data.Consolidators
                 Period = period;
             }
 
-            public DateTime GetRoundedBarTime(DateTime time) => time.RoundDown(Period.Value);
+            public DateTime GetRoundedBarTime(DateTime time) =>
+                Period.Value > Time.OneDay
+                    ? time // #4915 For periods larger than a day, don't use a rounding schedule.
+                    : time.RoundDown(Period.Value);
         }
 
         /// <summary>
