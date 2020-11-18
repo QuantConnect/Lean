@@ -26,21 +26,26 @@ namespace QuantConnect.Tests.API
     /// Test class for all nodes/ endpoints:
     /// create, read, update, delete, stop
     /// </summary>
-    [TestFixture, Ignore("These tests require an account, token, and organization ID")]
+    [TestFixture, Ignore("These tests require an account, token, organization ID and billing permissions")]
     public class NodeTests
     {
-        private int _testAccount = 1;
-        private string _testToken = "ec87b337ac970da4cbea648f24f1c851";
-        private string _testOrganization = "enter Org ID here";
-        private string _dataFolder = Config.Get("data-folder");
+        private int _testAccount;
+        private string _testToken;
+        private string _testOrganization;
+        private string _dataFolder;
         private Api.Api _api;
 
         /// <summary>
-        /// Setup for this text fixture, will create API connection.
+        /// Setup for this text fixture, will create API connection and load in configuration
         /// </summary>
-        [SetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
+            _testAccount = Config.GetInt("job-user-id", 1);
+            _testToken = Config.Get("api-access-token", "EnterTokenHere");
+            _testOrganization = Config.Get("job-organization-id", "EnterOrgHere");
+            _dataFolder = Config.Get("data-folder");
+
             _api = new Api.Api();
             _api.Initialize(_testAccount, _testToken, _dataFolder);
         }

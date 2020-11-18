@@ -78,9 +78,10 @@ namespace QuantConnect.Data.Market
         /// <param name="date">The date</param>
         /// <param name="referencePrice">The previous day's closing price</param>
         /// <param name="priceFactorRatio">The ratio of the price factors, pf_i/pf_i+1</param>
-        public static Dividend Create(Symbol symbol, DateTime date, decimal referencePrice, decimal priceFactorRatio)
+        /// <param name="decimalPlaces">The number of decimal places to round the dividend's distribution to, defaulting to 2</param>
+        public static Dividend Create(Symbol symbol, DateTime date, decimal referencePrice, decimal priceFactorRatio, int decimalPlaces = 2)
         {
-            var distribution = ComputeDistribution(referencePrice, priceFactorRatio);
+            var distribution = ComputeDistribution(referencePrice, priceFactorRatio, decimalPlaces);
             return new Dividend(symbol, date, distribution, referencePrice);
         }
 
@@ -91,7 +92,7 @@ namespace QuantConnect.Data.Market
         /// <param name="priceFactorRatio">Price factor ratio pf_i/pf_i+1</param>
         /// <param name="decimalPlaces">The number of decimal places to round the result to, defaulting to 2</param>
         /// <returns>The distribution rounded to the specified number of decimal places, defaulting to 2</returns>
-        public static decimal ComputeDistribution(decimal close, decimal priceFactorRatio, int decimalPlaces = 2)
+        public static decimal ComputeDistribution(decimal close, decimal priceFactorRatio, int decimalPlaces)
         {
             return Math.Round(close - close * priceFactorRatio, decimalPlaces);
         }

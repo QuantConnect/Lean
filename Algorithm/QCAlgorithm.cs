@@ -959,8 +959,19 @@ namespace QuantConnect.Algorithm
             // the time rules need to know the default time zone as well
             TimeRules.SetDefaultTimeZone(timeZone);
 
-            // reset the current time according to the time zone
-            SetDateTime(_startDate.ConvertToUtc(TimeZone));
+            // In BackTest mode we reset the Algorithm time to reflect the new timezone
+            // startDate is set by the user so we expect it to be for their timezone already
+            // so there is no need to update it.
+            if (!LiveMode)
+            {
+                SetDateTime(_startDate.ConvertToUtc(TimeZone));
+            }
+            // In live mode we need to adjust startDate to reflect the new timezone
+            // startDate is set by Lean to the default timezone (New York), so we must update it here
+            else
+            {
+                _startDate = DateTime.UtcNow.ConvertFromUtc(TimeZone).Date;
+            }
         }
 
         /// <summary>
@@ -1362,7 +1373,8 @@ namespace QuantConnect.Algorithm
                 Securities.SetLiveMode(live);
                 if (live)
                 {
-                    _startDate = DateTime.Today;
+                    // startDate is set relative to the algorithm's timezone.
+                    _startDate = DateTime.UtcNow.ConvertFromUtc(TimeZone).Date;
                     _endDate = QuantConnect.Time.EndOfTime;
                 }
             }

@@ -1,10 +1,9 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- *
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,33 +13,24 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
-using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Util;
-using System;
-using System.Linq;
 
-namespace QuantConnect.Tests.ToolBox
+namespace QuantConnect.Data.Custom.Quiver
 {
-    [TestFixture]
-    public class BasicTests
+    /// <summary>
+    /// Converts Quiver Quantitative <see cref="TransactionDirection"/> to <see cref="OrderDirection"/>
+    /// </summary>
+    public class TransactionDirectionJsonConverter : TypeChangeJsonConverter<OrderDirection, string>
     {
-        [Test]
-        public void ComposeDataQueueHandlerInstances()
+        protected override string Convert(OrderDirection value)
         {
-            var type = typeof(IDataQueueHandler);
+            return value == OrderDirection.Buy ? "purchase" : "sale";
+        }
 
-            var types = AppDomain.CurrentDomain.Load("QuantConnect.ToolBox")
-                .GetTypes()
-                .Where(p => type.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract)
-                .ToList();
-
-            Assert.NotZero(types.Count);
-
-            types.ForEach(t =>
-            {
-                Assert.NotNull(t.GetConstructor(Type.EmptyTypes));
-            });            
+        protected override OrderDirection Convert(string value)
+        {
+            return value.ToLowerInvariant() == "purchase" ? OrderDirection.Buy : OrderDirection.Sell;
         }
     }
 }

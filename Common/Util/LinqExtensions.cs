@@ -361,5 +361,19 @@ namespace QuantConnect.Util
             V obj;
             return dictionary.TryGetValue(key, out obj) ? obj : defaultValue;
         }
+
+        /// <summary>
+        /// Performs an action for each element in collection source
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">Collection source</param>
+        /// <param name="action">An action to perform</param>
+        public static void DoForEach<T>(this IEnumerable<T> source, Action<T> action)
+        {
+            foreach (var element in source)
+            {
+                action(element);
+            }
+        }
     }
 }

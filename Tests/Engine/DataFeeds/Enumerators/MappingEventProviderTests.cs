@@ -74,7 +74,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 .GetEvents(new NewTradableDateEventArgs(
                     new DateTime(2013, 6, 29),
                     null,
-                    _config.Symbol)).Single();
+                    _config.Symbol,
+                    null)).Single();
 
             Assert.AreEqual("FOXA", symbolEvent.NewSymbol);
             Assert.AreEqual("NWSA", symbolEvent.OldSymbol);
