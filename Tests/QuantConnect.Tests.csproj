@@ -404,6 +404,7 @@
     <Compile Include="Common\Data\FakeDataQueuehandlerSubscriptionManager.cs" />
     <Compile Include="Common\Data\Fundamental\CoarseFundamentalTests.cs" />
     <Compile Include="Common\Data\Fundamental\FineFundamentalTests.cs" />
+    <Compile Include="Common\Data\PeriodCountConsolidatorTests.cs" />
     <Compile Include="Common\Orders\Fills\EquityFillModelTests.cs" />
     <Compile Include="Common\Orders\OrderEventTests.cs" />
     <Compile Include="Common\ExtendedDictionaryTests.cs" />
