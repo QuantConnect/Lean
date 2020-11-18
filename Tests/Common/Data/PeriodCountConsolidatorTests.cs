@@ -18,13 +18,11 @@ using System;
 using NUnit.Framework;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
-using QuantConnect.Indicators;
-
 
 namespace QuantConnect.Tests.Common.Data
 {
-    [TestFixture]
-    class PeriodCountConsolidatorTests
+    [TestFixture, Parallelizable(ParallelScope.All)]
+    public class PeriodCountConsolidatorTests
     {
         private static readonly object[] PeriodCases =
         {
@@ -70,8 +68,8 @@ namespace QuantConnect.Tests.Common.Data
 
                 // Our asserts
                 Assert.IsNotNull(consolidated);                                 // We have a bar
-                Assert.IsTrue(consolidated.EndTime == dataTime);                // New bar time should be dataTime
-                Assert.IsTrue(consolidated.EndTime - lastBarTime == barSpan);      // The difference between the bars is the span
+                Assert.AreEqual(dataTime, consolidated.EndTime);    // New bar time should be dataTime
+                Assert.AreEqual(barSpan, consolidated.EndTime - lastBarTime);      // The difference between the bars is the span
 
                 nextBarTime = dataTime + barSpan;
                 lastBarTime = consolidated.EndTime;
@@ -110,8 +108,8 @@ namespace QuantConnect.Tests.Common.Data
 
                 // Our asserts
                 Assert.IsNotNull(consolidated);                                 // We have a bar
-                Assert.IsTrue(consolidated.EndTime == dataTime);                // New bar time should be dataTime
-                Assert.IsTrue(consolidated.EndTime - lastBarTime == barSpan);      // The difference between the bars is the span
+                Assert.AreEqual(dataTime, consolidated.EndTime);    // New bar time should be dataTime
+                Assert.AreEqual(barSpan, consolidated.EndTime - lastBarTime);      // The difference between the bars is the span
 
                 nextBarTime = dataTime + barSpan;
                 lastBarTime = consolidated.EndTime;
