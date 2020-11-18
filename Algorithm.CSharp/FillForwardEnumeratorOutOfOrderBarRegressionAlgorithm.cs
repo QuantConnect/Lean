@@ -22,13 +22,9 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Basic template algorithm simply initializes the date range and cash. This is a skeleton
-    /// framework you can use for designing an algorithm.
+    /// Regression test algorithm simply fetch and compare data of minute resolution around daylight saving period
     /// </summary>
-    /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="using quantconnect" />
-    /// <meta name="tag" content="trading and orders" />
-    public class FillForwardEnumeratorOutOfOrderBar : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FillForwardEnumeratorOutOfOrderBarRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private decimal _exptectedClose = 84.09m;
         private DateTime _exptectedTime = new DateTime(2008, 3, 10, 9, 30, 0);
