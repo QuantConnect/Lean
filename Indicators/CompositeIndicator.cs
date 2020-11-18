@@ -156,6 +156,12 @@ namespace QuantConnect.Indicators
                     newLeftData = null;
                     newRightData = null;
                 }
+                else
+                {
+                    // Fill forward time
+                    Current = (IndicatorDataPoint)Current.Clone();
+                    Current.Time = MaxTime(updated);
+                }
             };
 
             Right.Updated += (sender, updated) =>
@@ -170,6 +176,12 @@ namespace QuantConnect.Indicators
                     // reset these to null after each update
                     newLeftData = null;
                     newRightData = null;
+                }
+                else
+                {
+                    // Fill forward time
+                    Current = (IndicatorDataPoint)Current.Clone();
+                    Current.Time = MaxTime(updated);
                 }
             };
         }
