@@ -131,5 +131,24 @@ namespace QuantConnect.Tests.Indicators
 
             Assert.AreEqual(DateTime.Today.AddDays(1), composite.Current.Time);
         }
+
+        [Test]
+        public void DoesNotUpdateUntilDataUpdatedOnBothSides()
+        {
+            var left = new Identity("left");
+            var right = new Identity("right");
+            var composite = new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => l.Current.Value + r.Current.Value);
+
+            // Base value assertion
+            Assert.AreEqual(0m, composite.Current.Value);
+
+            // Update one side, should still be base value
+            left.Update(DateTime.Today, 1m);
+            Assert.AreEqual(0m, composite.Current.Value);
+
+            // Update the other side, should be updated
+            right.Update(DateTime.Today, 1m);
+            Assert.AreEqual(2m, composite.Current.Value);
+        }
     }
 }
