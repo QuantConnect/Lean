@@ -103,10 +103,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// The current element in the collection.
         /// </returns>
         /// <filterpriority>2</filterpriority>
-        object IEnumerator.Current
-        {
-            get { return Current; }
-        }
+        object IEnumerator.Current => Current;
 
         /// <summary>
         /// Advances the enumerator to the next element of the collection.
@@ -195,13 +192,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             if (underlyingCurrent != null && underlyingCurrent.DataType == MarketDataType.Auxiliary)
             {
-                Current = underlyingCurrent;
-                var delisting = Current as Delisting;
-                if (delisting != null && delisting.Type == DelistingType.Delisted)
+                var delisting = underlyingCurrent as Delisting;
+                if (delisting != null)
                 {
-                    _delistedTime = delisting.EndTime;
+                    if (delisting.Type == DelistingType.Delisted)
+                    {
+                        _delistedTime = delisting.EndTime;
+                    }
                 }
-                return true;
+                else
+                {
+                    Current = underlyingCurrent;
+                    return true;
+                }
             }
 
             if (RequiresFillForwardData(_fillForwardResolution.Value, _previous, underlyingCurrent, out fillForward))
