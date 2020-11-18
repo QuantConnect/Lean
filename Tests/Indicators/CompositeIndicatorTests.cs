@@ -93,5 +93,43 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(left.PeriodsSinceMaximum, 0);
             Assert.AreEqual(right.PeriodsSinceMinimum, 0);
         }
+
+        [Test]
+        public void TimeAdvancesWithDataToBothSides()
+        {
+            var left = new Maximum("left", 2);
+            var right = new Minimum("right", 2);
+            var composite = new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => l.Current.Value + r.Current.Value);
+
+            Assert.AreEqual(DateTime.MinValue, composite.Current.Time);
+
+            left.Update(DateTime.Today, 1m);
+            right.Update(DateTime.Today, -1m);
+
+            Assert.AreEqual(DateTime.Today, composite.Current.Time);
+
+            left.Update(DateTime.Today.AddDays(1), -1m);
+            right.Update(DateTime.Today.AddDays(1), 1m);
+
+            Assert.AreEqual(DateTime.Today.AddDays(1), composite.Current.Time);
+        }
+
+        [Test]
+        public void TimeAdvancesWithDataToOnlyOneSide()
+        {
+            var left = new Maximum("left", 2);
+            var right = new Minimum("right", 2);
+            var composite = new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => l.Current.Value + r.Current.Value);
+
+            Assert.AreEqual(DateTime.MinValue, composite.Current.Time);
+
+            left.Update(DateTime.Today, 1m);
+
+            Assert.AreEqual(DateTime.Today, composite.Current.Time);
+
+            left.Update(DateTime.Today.AddDays(1), -1m);
+
+            Assert.AreEqual(DateTime.Today.AddDays(1), composite.Current.Time);
+        }
     }
 }
