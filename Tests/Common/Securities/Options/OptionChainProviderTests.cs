@@ -47,13 +47,13 @@ namespace QuantConnect.Tests.Common.Securities.Options
                 Symbol.CreateFuture(
                     QuantConnect.Securities.Futures.Indices.SP500EMini,
                     Market.CME,
-                    new DateTime(2021, 3, 19)),
-                new DateTime(2020, 9, 22))
+                    new DateTime(2020, 6, 19)),
+                new DateTime(2020, 1, 5))
                 .ToList();
 
-            Assert.AreEqual(342, esOptionChain.Count);
-            Assert.AreEqual(100m, esOptionChain.OrderBy(s => s.ID.StrikePrice).First().ID.StrikePrice);
-            Assert.AreEqual(4700m, esOptionChain.OrderBy(s => s.ID.StrikePrice).Last().ID.StrikePrice);
+            Assert.AreEqual(107, esOptionChain.Count);
+            Assert.AreEqual(2900m, esOptionChain.OrderBy(s => s.ID.StrikePrice).First().ID.StrikePrice);
+            Assert.AreEqual(3500m, esOptionChain.OrderBy(s => s.ID.StrikePrice).Last().ID.StrikePrice);
         }
 
         [Test]
@@ -118,6 +118,15 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var result = provider.GetOptionContractList(underlyingFuture, december);
 
             Assert.AreNotEqual(0, result.Count());
+
+            foreach (var symbol in result)
+            {
+                Assert.IsTrue(symbol.HasUnderlying);
+                Assert.AreEqual(Market.CME, symbol.ID.Market);
+                Assert.AreEqual(OptionStyle.American, symbol.ID.OptionStyle);
+                Assert.GreaterOrEqual(symbol.ID.StrikePrice, 100m);
+                Assert.Less(symbol.ID.StrikePrice, 30000m);
+            }
         }
 
         [Test]

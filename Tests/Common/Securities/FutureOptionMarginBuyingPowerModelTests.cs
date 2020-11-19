@@ -38,17 +38,6 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 return base.GetMaintenanceMargin(security);
             }
-
-            public new decimal GetInitialMarginRequirement(Security security, decimal quantity)
-            {
-                return base.GetInitialMarginRequirement(security, quantity);
-            }
-
-            public new decimal GetInitialMarginRequiredForOrder(
-                InitialMarginRequiredForOrderParameters parameters)
-            {
-                return base.GetInitialMarginRequiredForOrder(parameters);
-            }
         }
 
         // Test class to enable calling protected methods
@@ -62,21 +51,10 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 return base.GetMaintenanceMargin(security);
             }
-
-            public new decimal GetInitialMarginRequirement(Security security, decimal quantity)
-            {
-                return base.GetInitialMarginRequirement(security, quantity);
-            }
-
-            public new decimal GetInitialMarginRequiredForOrder(
-                InitialMarginRequiredForOrderParameters parameters)
-            {
-                return base.GetInitialMarginRequiredForOrder(parameters);
-            }
         }
 
         [Test]
-        public void TestMarginForSymbolWithOneLinerHistory()
+        public void MarginForSymbolWithOneLinerHistory()
         {
             const decimal price = 1.2345m;
             var time = new DateTime(2020, 10, 14);
