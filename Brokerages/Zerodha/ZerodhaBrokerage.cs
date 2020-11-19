@@ -161,13 +161,11 @@ namespace QuantConnect.Brokerages.Zerodha
                 string request = "{\"a\":\"subscribe\",\"v\":[" + String.Join(",", instrumentToken) + "]}";
 
                 Log.Trace("Websocket Request: " + request.ToStringInvariant());
-                //if (webSocket.IsOpen)
-                //{
+
                 WebSocket.Send(request);
                 WebSocket.Send("\n");
                 _subscriptionsById[instrumentToken.ToStringInvariant()] = symbol;
-                //OnSubscribe(webSocket, channel);
-                //}
+                
             }
         }
 
@@ -1008,43 +1006,4 @@ namespace QuantConnect.Brokerages.Zerodha
 
     }
 
-    /// <summary>
-    /// Represents a subscription channel
-    /// </summary>
-    public class Channel
-    {
-
-        public Channel(string channelId, Symbol symbol, SecurityType securityType)
-        {
-            ChannelId = channelId;
-            Symbol = symbol;
-            SecurityType = securityType;
-        }
-
-        public Channel(string name, string channelId, Symbol symbol, SecurityType securityType)
-        {
-            Name = name;
-            ChannelId = channelId;
-            Symbol = symbol;
-            SecurityType = securityType;
-        }
-
-        /// <summary>
-        /// Represents channel identifier for specific subscription
-        /// </summary>
-        public string ChannelId { get; set; }
-        /// <summary>
-        /// The name of the channel
-        /// </summary>
-        public string Name { get; set; }
-        /// <summary>
-        /// The ticker symbol of the channel
-        /// </summary>
-        public string Symbol { get; set; }
-
-        /// <summary>
-        /// The ticker symbol security type of the channel
-        /// </summary>
-        public SecurityType SecurityType { get;  set; }
-    }
 }
