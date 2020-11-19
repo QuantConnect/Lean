@@ -16,9 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.WebSockets;
-using System.Text;
-using Newtonsoft.Json.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -118,22 +115,22 @@ namespace QuantConnect.Brokerages.Zerodha
             base.OnMessage(e);
         }
 
-        /// <summary>
-        /// Gets a list of current subscriptions
-        /// </summary>
-        /// <returns></returns>
-        protected virtual IList<Symbol> GetSubscribed()
-        {
-            IList<Symbol> list = new List<Symbol>();
-            lock (ChannelList)
-            {
-                foreach (var item in ChannelList)
-                {
-                    list.Add(Symbol.Create(item.Value.Symbol, item.Value.SecurityType, _market));
-                }
-            }
-            return list;
-        }
+        ///// <summary>
+        ///// Gets a list of current subscriptions
+        ///// </summary>
+        ///// <returns></returns>
+        //protected virtual IList<Symbol> GetSubscribed()
+        //{
+        //    IList<Symbol> list = new List<Symbol>();
+        //    lock (ChannelList)
+        //    {
+        //        foreach (var item in ChannelList)
+        //        {
+        //            list.Add(Symbol.Create(item.Value.Symbol, item.Value.SecurityType, _market));
+        //        }
+        //    }
+        //    return list;
+        //}
 
         public IEnumerable<Slice> GetHistory(IEnumerable<Data.HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
