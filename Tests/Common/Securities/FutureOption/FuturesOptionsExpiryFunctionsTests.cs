@@ -23,9 +23,9 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
     [TestFixture]
     public class FuturesOptionsExpiryFunctionsTests
     {
-        [TestCase("ES", Market.CME, 0)]
-        [TestCase("ZB", Market.CBOT, 1)]
-        public void FutureContractMonthDelta(string futureTicker, string market, int expectedDelta)
+        [TestCase("ES", Market.CME, 12, 0)]
+        [TestCase("ZB", Market.CBOT, 11, 1)]
+        public void FutureContractMonthDelta(string futureTicker, string market, int expiryMonth, int expectedDelta)
         {
             var contractMonth = new DateTime(2020, 12, 1);
 
@@ -39,7 +39,8 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
                 SecurityIdentifier.DefaultDate);
 
             var futureOptionExpiry = FuturesOptionsExpiryFunctions.FuturesOptionExpiry(option, contractMonth);
-            Assert.AreEqual(expectedDelta, FuturesOptionsExpiryFunctions.GetFutureContractMonth(future, futureOptionExpiry));
+            Assert.AreEqual(expectedDelta, contractMonth.Month - futureOptionExpiry.Month);
+            Assert.AreEqual(new DateTime(2020, 12, 1), FuturesOptionsExpiryFunctions.GetFutureContractMonth(future, new DateTime(2020, expiryMonth, 1)));
         }
         [TestCaseSource(nameof(ExpiryTestCases))]
         public void ExpiryFunctionsReturnExpectedResults(string futureTicker, string market, DateTime expected)
