@@ -152,6 +152,27 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
+        /// Live trading via Bitfinex
+        /// </summary>
+        [Test]
+        public void LiveBitfinexTest()
+        {
+            var key = Config.Get("bitfinex-api-key");
+            var secretKey = Config.Get("bitfinex-api-secret");
+
+            // Create default algorithm settings
+            var settings = new BitfinexLiveAlgorithmSettings(key, secretKey);
+
+            var file = new ProjectFile
+            {
+                Name = "main.cs",
+                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
+            };
+
+            RunLiveAlgorithm(settings, file);
+        }
+
+        /// <summary>
         /// Test creating the settings object that provide the necessary parameters for each broker
         /// </summary>
         [Test]
