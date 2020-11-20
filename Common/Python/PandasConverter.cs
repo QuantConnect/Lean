@@ -135,8 +135,15 @@ namespace QuantConnect.Python
 
                 foreach (var kvp in data)
                 {
-                    var index = kvp.Value.Select(x => x.EndTime);
-                    var values = kvp.Value.Select(x => x.Value);
+                    var index = new List<DateTime>();
+                    var values = new List<double>();
+
+                    foreach (var item in kvp.Value)
+                    {
+                        index.Add(item.EndTime);
+                        values.Add((double)item.Value);
+                    }
+
                     pyDict.SetItem(kvp.Key.ToLowerInvariant(), _pandas.Series(data: values, index: index));
                 }
 
