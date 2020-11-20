@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Linq;
 using System.Threading;
 using QuantConnect.Util;
 using QuantConnect.Logging;
@@ -363,7 +362,7 @@ namespace QuantConnect.Optimizer
 
         private void LaunchLeanForParameterSet(ParameterSet parameterSet)
         {
-            if (_disposed)
+            if (_disposed || Status == OptimizationStatus.Ended || Status == OptimizationStatus.Aborted)
             {
                 return;
             }
