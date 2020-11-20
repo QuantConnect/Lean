@@ -22,6 +22,8 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture]
     public class CompositeIndicatorTests
     {
+        public DateTime Today = DateTime.Today;
+
         [Test]
         public void CompositeIsReadyWhenBothAre()
         {
@@ -29,26 +31,26 @@ namespace QuantConnect.Tests.Indicators
             var right = new Delay(2);
             var composite = new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => l.Current.Value + r.Current.Value);
 
-            left.Update(DateTime.Today.AddSeconds(0), 1m);
-            right.Update(DateTime.Today.AddSeconds(0), 1m);
+            left.Update(Today.AddSeconds(0), 1m);
+            right.Update(Today.AddSeconds(0), 1m);
             Assert.IsFalse(composite.IsReady);
             Assert.IsFalse(composite.Left.IsReady);
             Assert.IsFalse(composite.Right.IsReady);
 
-            left.Update(DateTime.Today.AddSeconds(1), 2m);
-            right.Update(DateTime.Today.AddSeconds(1), 2m);
+            left.Update(Today.AddSeconds(1), 2m);
+            right.Update(Today.AddSeconds(1), 2m);
             Assert.IsFalse(composite.IsReady);
             Assert.IsTrue(composite.Left.IsReady);
             Assert.IsFalse(composite.Right.IsReady);
 
-            left.Update(DateTime.Today.AddSeconds(2), 3m);
-            right.Update(DateTime.Today.AddSeconds(2), 3m);
+            left.Update(Today.AddSeconds(2), 3m);
+            right.Update(Today.AddSeconds(2), 3m);
             Assert.IsTrue(composite.IsReady);
             Assert.IsTrue(composite.Left.IsReady);
             Assert.IsTrue(composite.Right.IsReady);
 
-            left.Update(DateTime.Today.AddSeconds(3), 4m);
-            right.Update(DateTime.Today.AddSeconds(3), 4m);
+            left.Update(Today.AddSeconds(3), 4m);
+            right.Update(Today.AddSeconds(3), 4m);
             Assert.IsTrue(composite.IsReady);
             Assert.IsTrue(composite.Left.IsReady);
             Assert.IsTrue(composite.Right.IsReady);
@@ -66,22 +68,25 @@ namespace QuantConnect.Tests.Indicators
                 return l.Current.Value + r.Current.Value;
             });
 
-            left.Update(DateTime.Today, 1m);
-            right.Update(DateTime.Today, 1m);
+            left.Update(Today, 1m);
+            right.Update(Today, 1m);
             Assert.AreEqual(2m, composite.Current.Value);
         }
 
         [Test]
-        public void ResetsProperly() {
+        public void ResetsProperly()
+        {
             var left = new Maximum("left", 2);
             var right = new Minimum("right", 2);
             var composite = new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => l.Current.Value + r.Current.Value);
 
-            left.Update(DateTime.Today, 1m);
-            right.Update(DateTime.Today,-1m);
 
-            left.Update(DateTime.Today.AddDays(1), -1m);
-            right.Update(DateTime.Today.AddDays(1), 1m);
+
+            left.Update(Today, 1m);
+            right.Update(Today, -1m);
+
+            left.Update(Today.AddDays(1), -1m);
+            right.Update(Today.AddDays(1), 1m);
 
             Assert.AreEqual(left.PeriodsSinceMaximum, 1);
             Assert.AreEqual(right.PeriodsSinceMinimum, 1);
@@ -103,15 +108,15 @@ namespace QuantConnect.Tests.Indicators
 
             Assert.AreEqual(DateTime.MinValue, composite.Current.Time);
 
-            left.Update(DateTime.Today, 1m);
-            right.Update(DateTime.Today, -1m);
+            left.Update(Today, 1m);
+            right.Update(Today, -1m);
 
-            Assert.AreEqual(DateTime.Today, composite.Current.Time);
+            Assert.AreEqual(Today, composite.Current.Time);
 
-            left.Update(DateTime.Today.AddDays(1), -1m);
-            right.Update(DateTime.Today.AddDays(1), 1m);
+            left.Update(Today.AddDays(1), -1m);
+            right.Update(Today.AddDays(1), 1m);
 
-            Assert.AreEqual(DateTime.Today.AddDays(1), composite.Current.Time);
+            Assert.AreEqual(Today.AddDays(1), composite.Current.Time);
         }
 
         [Test]
@@ -123,13 +128,13 @@ namespace QuantConnect.Tests.Indicators
 
             Assert.AreEqual(DateTime.MinValue, composite.Current.Time);
 
-            left.Update(DateTime.Today, 1m);
+            left.Update(Today, 1m);
 
-            Assert.AreEqual(DateTime.Today, composite.Current.Time);
+            Assert.AreEqual(Today, composite.Current.Time);
 
-            left.Update(DateTime.Today.AddDays(1), -1m);
+            left.Update(Today.AddDays(1), -1m);
 
-            Assert.AreEqual(DateTime.Today.AddDays(1), composite.Current.Time);
+            Assert.AreEqual(Today.AddDays(1), composite.Current.Time);
         }
 
         [Test]
@@ -143,11 +148,11 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(0m, composite.Current.Value);
 
             // Update one side, should still be base value
-            left.Update(DateTime.Today, 1m);
+            left.Update(Today, 1m);
             Assert.AreEqual(0m, composite.Current.Value);
 
             // Update the other side, should be updated
-            right.Update(DateTime.Today, 1m);
+            right.Update(Today, 1m);
             Assert.AreEqual(2m, composite.Current.Value);
         }
     }
