@@ -25,6 +25,19 @@ namespace QuantConnect.Securities.Future
     /// </summary>
     public static class FuturesExpiryUtilityFunctions
     {
+        private static readonly Dictionary<DateTime, DateTime> _reverseDairyReportDates = FuturesExpiryFunctions.DairyReportDates
+            .ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
+
+        private static readonly HashSet<string> _dairyUnderlying = new HashSet<string>
+        {
+            "CB",
+            "CSC",
+            "DC",
+            "DY",
+            "GDK",
+            "GNF"
+        };
+
         /// <summary>
         /// Method to retrieve n^th succeeding/preceding business day for a given day
         /// </summary>
@@ -322,18 +335,33 @@ namespace QuantConnect.Securities.Future
         }
 
         /// <summary>
-        /// Returns the number of months prior to the contract month that the future expires
+        /// Gets the number of months between the contract month and the expiry date.
         /// </summary>
-        /// <param name="underlying">The future symbol</param>
-        /// <returns>The number of months prior it expires</returns>
-        public static int ExpiresInPreviousMonth(string underlying)
+        /// <param name="underlying">The future symbol ticker</param>
+        /// <param name="expiryDate">Expiry date to use to look up contract month delta. Only used for dairy, since we need to lookup its contract month in a pre-defined table.</param>
+        /// <returns>The number of months between the contract month and the contract expiry</returns>
+        public static int GetDeltaBetweenContractMonthAndContractExpiry(string underlying, DateTime? expiryDate = null)
         {
             int value;
+            if (expiryDate != null && _dairyUnderlying.Contains(underlying))
+            {
+                // Dairy can expire in the month following the contract month.
+                var dairyReportDate = expiryDate.Value.Date.AddDays(1);
+                if (_reverseDairyReportDates.ContainsKey(dairyReportDate))
+                {
+                    var contractMonth = _reverseDairyReportDates[dairyReportDate];
+                    // Gets the distance between two months in months
+                    return ((contractMonth.Year - dairyReportDate.Year) * 12) + contractMonth.Month - dairyReportDate.Month;
+                }
+
+                return 0;
+            }
+
             return ExpiriesPriorMonth.TryGetValue(underlying, out value) ? value : 0;
         }
 
         /// <summary>
-        /// Extracts Date portion of list of DateTimes for 
+        /// Extracts Date portion of list of DateTimes
         /// </summary>
         /// <param name="dateTimeList">List of DateTimes (with optional time portion) to filter</param>
         /// <returns>List of DateTimes with default time (00:00:00)</returns>
