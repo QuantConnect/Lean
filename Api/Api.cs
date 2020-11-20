@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -996,6 +995,27 @@ namespace QuantConnect.Api
             RestResponse result;
             ApiConnection.TryRequest(request, out result);
             return result;
+        }
+
+        /// <summary>
+        /// Will read the organization account status
+        /// </summary>
+        /// <param name="organizationId">The target organization id, if null will return default organization</param>
+        public Account ReadAccount(string organizationId = null)
+        {
+            var request = new RestRequest("account/read/", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            if (organizationId != null)
+            {
+                request.AddParameter("application/json", JsonConvert.SerializeObject(new { organizationId }), ParameterType.RequestBody);
+            }
+
+            Account account;
+            ApiConnection.TryRequest(request, out account);
+            return account;
         }
     }
 }

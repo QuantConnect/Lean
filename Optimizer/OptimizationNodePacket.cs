@@ -56,6 +56,12 @@ namespace QuantConnect.Optimizer
         public string OptimizationId = "";
 
         /// <summary>
+        /// Organization Id of the request
+        /// </summary>
+        [JsonProperty(PropertyName = "organizationId")]
+        public string OrganizationId = "";
+
+        /// <summary>
         /// Limit for the amount of concurrent backtests being run
         /// </summary>
         [JsonProperty(PropertyName = "maximumConcurrentBacktests")]

@@ -235,6 +235,7 @@
     <Compile Include="Algorithm\Framework\Alphas\InsightScoreType.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetCollection.cs" />
     <Compile Include="AlphaRuntimeStatistics.cs" />
+    <Compile Include="Api\Account.cs" />
     <Compile Include="Api\AuthenticationResponse.cs" />
     <Compile Include="Api\Backtest.cs" />
     <Compile Include="Api\Compile.cs" />
