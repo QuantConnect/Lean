@@ -570,12 +570,25 @@ namespace QuantConnect
             var marketCode = (ulong)marketIdentifier * MarketOffset;
 
             ulong strikeScale;
-            var strk = NormalizeStrike(strike, out strikeScale) * StrikeOffset;
+            var normalizedStrike = NormalizeStrike(strike, out strikeScale);
+            var sign = (int)Math.Sign(normalizedStrike);
+            var strk = (ulong)Math.Abs(normalizedStrike) * StrikeOffset;
             strikeScale *= StrikeScaleOffset;
             var style = (ulong)optionStyle * OptionStyleOffset;
             var putcall = (ulong)optionRight * PutCallOffset;
 
-            var otherData = putcall + days + style + strk + strikeScale + marketCode + (ulong)securityType;
+            // Strikes can potentially be negative, but our type is ulong.
+            // We'll need to add or subtract the strike in the order it originally appeared.
+            var otherData = putcall + days + style;
+            if (sign == 1) {
+                otherData += strk;
+            }
+            else
+            {
+                otherData -= strk;
+            }
+
+            otherData = otherData + strikeScale + marketCode + (ulong)securityType;
 
             var result = new SecurityIdentifier(symbol, otherData, underlying ?? Empty);
 
@@ -662,7 +675,7 @@ namespace QuantConnect
         /// The strike is normalized into deci-cents and then a scale factor
         /// is also saved to bring it back to un-normalized
         /// </summary>
-        private static ulong NormalizeStrike(decimal strike, out ulong scale)
+        private static long NormalizeStrike(decimal strike, out ulong scale)
         {
             var str = strike;
 
@@ -687,7 +700,7 @@ namespace QuantConnect
                 throw new ArgumentException(Invariant($"The specified strike price\'s precision is too high: {str}"));
             }
 
-            return (ulong)strike;
+            return (long)strike;
         }
 
         /// <summary>

@@ -556,6 +556,41 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(thursdayBeforeGoodFriday, OptionSymbol.GetLastDayOfTrading(symbol));
         }
 
+        [Test]
+        public void NegativeStrikePriceDoesNotThrow()
+        {
+            var future = Symbol.CreateFuture(
+                "CL",
+                Market.NYMEX,
+                new DateTime(2020, 5, 20));
+
+            Assert.DoesNotThrow(() =>
+            {
+                var a =Symbol.CreateOption(
+                    future,
+                    Market.NYMEX,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    -50,
+                    new DateTime(2020, 4, 16));
+            });
+        }
+
+        [Test]
+        public void SymbolHashForOptionsBackwardsCompatibility()
+        {
+            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            var option = Symbol.CreateOption(
+                equity,
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Call,
+                100m,
+                new DateTime(2020, 5, 21));
+
+            Assert.AreEqual("AAPL XEOLB4YAQ8BQ|AAPL R735QTJ8XC9X", option.ID.ToString());
+        }
+
         class OldSymbol
         {
             public string Value { get; set; }
