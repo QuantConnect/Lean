@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Securities.Option.StrategyMatcher;
 
 namespace QuantConnect.Securities.Option
 {
@@ -23,6 +24,8 @@ namespace QuantConnect.Securities.Option
     /// These strategies can be directly bought and sold via:
     ///     QCAlgorithm.Buy(OptionStrategy strategy, int quantity)
     ///     QCAlgorithm.Sell(OptionStrategy strategy, int quantity)
+    ///
+    /// See also <see cref="OptionStrategyDefinitions"/>
     /// </summary>
     public static class OptionStrategies
     {

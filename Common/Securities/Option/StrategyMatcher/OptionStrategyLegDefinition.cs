@@ -86,16 +86,28 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         {
             // first filter down to applicable right
             positions = positions.Slice(Right, includeUnderlying);
+            if (positions.IsEmpty)
+            {
+                return positions;
+            }
 
             // second filter according to the required side
             var side = (PositionSide) Math.Sign(Quantity);
             positions = positions.Slice(side, includeUnderlying);
+            if (positions.IsEmpty)
+            {
+                return positions;
+            }
 
             // these are ordered such that indexed filters are performed force and
             // opaque/complex predicates follow since they require full table scans
             foreach (var predicate in _predicates)
             {
                 positions = predicate.Filter(legs, positions, includeUnderlying);
+                if (positions.IsEmpty)
+                {
+                    break;
+                }
             }
 
             // at this point, every position in the positions

@@ -22,6 +22,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
 {
     /// <summary>
     /// Provides a listing of pre-defined <see cref="OptionStrategyDefinition"/>
+    /// These definitions are blueprints for <see cref="OptionStrategy"/> instances.
+    /// Factory functions for those can be found at <see cref="OptionStrategies"/>
     /// </summary>
     public static class OptionStrategyDefinitions
     {

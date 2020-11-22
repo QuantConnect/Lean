@@ -63,47 +63,20 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         {
             if (value is DateTime)
             {
-                return Create((DateTime) value);
+                return new ConstantOptionStrategyLegPredicateReferenceValue<DateTime>((DateTime) value, PredicateTargetValue.Expiration);
             }
 
             if (value is decimal)
             {
-                return Create((decimal) value);
+                return new ConstantOptionStrategyLegPredicateReferenceValue<decimal>((decimal) value, PredicateTargetValue.Strike);
             }
 
             if (value is OptionRight)
             {
-                return Create((OptionRight) value);
+                return new ConstantOptionStrategyLegPredicateReferenceValue<OptionRight>((OptionRight) value, PredicateTargetValue.Right);
             }
 
             throw new NotSupportedException($"{value?.GetType().GetBetterTypeName()} is not supported.");
-        }
-
-        /// <summary>
-        /// Creates a new instance of the <see cref="ConstantOptionStrategyLegPredicateReferenceValue{T}"/> class for
-        /// the specified <paramref name="expiration"/>
-        /// </summary>
-        public static IOptionStrategyLegPredicateReferenceValue Create(DateTime expiration)
-        {
-            return new ConstantOptionStrategyLegPredicateReferenceValue<DateTime>(expiration, PredicateTargetValue.Expiration);
-        }
-
-        /// <summary>
-        /// Creates a new instance of the <see cref="ConstantOptionStrategyLegPredicateReferenceValue{T}"/> class for
-        /// the specified <paramref name="strike"/>
-        /// </summary>
-        public static IOptionStrategyLegPredicateReferenceValue Create(decimal strike)
-        {
-            return new ConstantOptionStrategyLegPredicateReferenceValue<decimal>(strike, PredicateTargetValue.Strike);
-        }
-
-        /// <summary>
-        /// Creates a new instance of the <see cref="ConstantOptionStrategyLegPredicateReferenceValue{T}"/> class for
-        /// the specified <paramref name="right"/>
-        /// </summary>
-        public static IOptionStrategyLegPredicateReferenceValue Create(OptionRight right)
-        {
-            return new ConstantOptionStrategyLegPredicateReferenceValue<OptionRight>(right, PredicateTargetValue.Right);
         }
     }
 }
