@@ -15,15 +15,19 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -36,21 +40,28 @@ namespace QuantConnect.Lean.Engine.Results
     {
         private Language Language => Config.GetValue<Language>("algorithm-language");
 
-        private DateTime _lastAlphaRuntimeStatisticsDate;
         private DateTime _testStartTime;
+        private DateTime _lastRuntimeStatisticsDate;
+        private DateTime _lastAlphaRuntimeStatisticsDate;
 
-        private StreamWriter _writer;
+        private TextWriter _writer;
         private readonly object _sync = new object();
+        private readonly ConcurrentQueue<string> _preInitializeLines;
+        private readonly Dictionary<string, string> _currentRuntimeStatistics;
         private readonly Dictionary<string, string> _currentAlphaRuntimeStatistics;
 
         // this defaults to false since it can create massive files. a full regression run takes about 800MB
         // for each folder (800MB for ./passed and 800MB for ./regression)
         private static readonly bool HighFidelityLogging = Config.GetBool("regression-high-fidelity-logging", false);
 
+        private static readonly bool IsTest = !Process.GetCurrentProcess().ProcessName.Contains("Lean.Launcher");
+
         /// <summary>
         /// Gets the path used for logging all portfolio changing events, such as orders, TPV, daily holdings values
         /// </summary>
-        public string LogFilePath => $"./regression/{AlgorithmId}.{Language.ToLower()}.details.log";
+        public string LogFilePath => IsTest
+            ? $"./regression/{AlgorithmId}.{Language.ToLower()}.details.log"
+            : $"./{AlgorithmId}/{DateTime.Now:yyyy-MM-dd-hh-mm-ss}.{Language.ToLower()}.details.log";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RegressionResultHandler"/> class
@@ -58,6 +69,8 @@ namespace QuantConnect.Lean.Engine.Results
         public RegressionResultHandler()
         {
             _testStartTime = DateTime.UtcNow;
+            _preInitializeLines = new ConcurrentQueue<string>();
+            _currentRuntimeStatistics = new Dictionary<string, string>();
             _currentAlphaRuntimeStatistics = new Dictionary<string, string>();
         }
 
@@ -75,8 +88,17 @@ namespace QuantConnect.Lean.Engine.Results
                 fileInfo.Delete();
             }
 
-            _writer = new StreamWriter(LogFilePath);
-            _writer.WriteLine($"{_testStartTime}: Starting regression test");
+            lock (_sync)
+            {
+                _writer = new StreamWriter(LogFilePath);
+                WriteLine($"{_testStartTime}: Starting regression test");
+
+                string line;
+                while (_preInitializeLines.TryDequeue(out line))
+                {
+                    WriteLine(line);
+                }
+            }
         }
 
         /// <summary>
@@ -86,10 +108,10 @@ namespace QuantConnect.Lean.Engine.Results
         {
             lock (_sync)
             {
-                _writer.WriteLine($"{Algorithm.UtcTime}: Total Portfolio Value: {Algorithm.Portfolio.TotalPortfolioValue}");
+                WriteLine($"{Algorithm.UtcTime}: Total Portfolio Value: {Algorithm.Portfolio.TotalPortfolioValue}");
 
                 // write the entire cashbook each day, includes current conversion rates and total value of cash holdings
-                _writer.WriteLine(Algorithm.Portfolio.CashBook);
+                WriteLine($"{Environment.NewLine}{Algorithm.Portfolio.CashBook}");
 
                 foreach (var kvp in Algorithm.Securities)
                 {
@@ -101,7 +123,7 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     // detailed logging of security holdings
-                    _writer.WriteLine(
+                    WriteLine(
                         $"{Algorithm.UtcTime}: " +
                         $"Holdings: {symbol.Value} ({symbol.ID}): " +
                         $"Price: {security.Price} " +
@@ -127,7 +149,19 @@ namespace QuantConnect.Lean.Engine.Results
 
             lock (_sync)
             {
-                _writer.WriteLine($"{Algorithm.UtcTime}: Order: {order}  OrderEvent: {newEvent}");
+                WriteLine("==============================================================");
+                WriteLine($"    Symbol: {order.Symbol}");
+                WriteLine($"     Order: {order}");
+                WriteLine($"     Event: {newEvent}");
+                WriteLine($"  Position: {Algorithm.Portfolio[newEvent.Symbol].Quantity}");
+                SecurityHolding underlyingHolding;
+                if (newEvent.Symbol.HasUnderlying && Algorithm.Portfolio.TryGetValue(newEvent.Symbol.Underlying, out underlyingHolding))
+                {
+                    WriteLine($"Underlying: {underlyingHolding.Quantity}");
+                }
+                WriteLine($"      Cash: {Algorithm.Portfolio.Cash:0.00}");
+                WriteLine($" Portfolio: {Algorithm.Portfolio.TotalPortfolioValue:0.00}");
+                WriteLine("==============================================================");
             }
 
             base.OrderEvent(newEvent);
@@ -153,7 +187,7 @@ namespace QuantConnect.Lean.Engine.Results
                             {
                                 // only log new or updated values
                                 _currentAlphaRuntimeStatistics[kvp.Key] = kvp.Value;
-                                _writer.WriteLine($"{Algorithm.Time}: AlphaRuntimeStatistics: {kvp.Key}: {kvp.Value}");
+                                WriteLine($"AlphaRuntimeStatistics: {kvp.Key}: {kvp.Value}");
                             }
                         }
                     }
@@ -164,6 +198,143 @@ namespace QuantConnect.Lean.Engine.Results
             catch (Exception exception)
             {
                 Log.Error(exception);
+            }
+        }
+
+        /// <summary>
+        /// Send list of security asset types the algortihm uses to browser.
+        /// </summary>
+        public override void SecurityType(List<SecurityType> types)
+        {
+            base.SecurityType(types);
+
+            var sorted = types.Select(type => type.ToString()).OrderBy(type => type);
+            WriteLine($"SecurityTypes: {string.Join("|", sorted)}");
+        }
+
+        /// <summary>
+        /// Send a debug message back to the browser console.
+        /// </summary>
+        /// <param name="message">Message we'd like shown in console.</param>
+        public override void DebugMessage(string message)
+        {
+            base.DebugMessage(message);
+
+            WriteLine($"DebugMessage: {message}");
+        }
+
+        /// <summary>
+        /// Send an error message back to the browser highlighted in red with a stacktrace.
+        /// </summary>
+        /// <param name="message">Error message we'd like shown in console.</param>
+        /// <param name="stacktrace">Stacktrace information string</param>
+        public override void ErrorMessage(string message, string stacktrace = "")
+        {
+            base.ErrorMessage(message, stacktrace);
+
+            stacktrace = string.IsNullOrEmpty(stacktrace) ? null : Environment.NewLine + stacktrace;
+            WriteLine($"ErrorMessage: {message}{stacktrace}");
+        }
+
+        /// <summary>
+        /// Send a logging message to the log list for storage.
+        /// </summary>
+        /// <param name="message">Message we'd in the log.</param>
+        public override void LogMessage(string message)
+        {
+            base.LogMessage(message);
+
+            WriteLine($"LogMessage: {message}");
+        }
+
+        /// <summary>
+        /// Send a runtime error message back to the browser highlighted with in red
+        /// </summary>
+        /// <param name="message">Error message.</param>
+        /// <param name="stacktrace">Stacktrace information string</param>
+        public override void RuntimeError(string message, string stacktrace = "")
+        {
+            base.RuntimeError(message, stacktrace);
+
+            stacktrace = string.IsNullOrEmpty(stacktrace) ? null : Environment.NewLine + stacktrace;
+            WriteLine($"RuntimeError: {message}{stacktrace}");
+        }
+
+        /// <summary>
+        /// Send a system debug message back to the browser console.
+        /// </summary>
+        /// <param name="message">Message we'd like shown in console.</param>
+        public override void SystemDebugMessage(string message)
+        {
+            base.SystemDebugMessage(message);
+
+            WriteLine($"SystemDebugMessage: {message}");
+        }
+
+        /// <summary>
+        /// Set the current runtime statistics of the algorithm.
+        /// These are banner/title statistics which show at the top of the live trading results.
+        /// </summary>
+        /// <param name="key">Runtime headline statistic name</param>
+        /// <param name="value">Runtime headline statistic value</param>
+        public override void RuntimeStatistic(string key, string value)
+        {
+            try
+            {
+                if (HighFidelityLogging || _lastRuntimeStatisticsDate != Algorithm.Time.Date)
+                {
+                    _lastRuntimeStatisticsDate = Algorithm.Time.Date;
+
+                    string existingValue;
+                    if (!_currentRuntimeStatistics.TryGetValue(key, out existingValue) || existingValue != value)
+                    {
+                        _currentRuntimeStatistics[key] = value;
+                        WriteLine($"RuntimeStatistic: {key}: {value}");
+                    }
+                }
+
+                base.RuntimeStatistic(key, value);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception);
+            }
+        }
+
+        /// <summary>
+        /// Save an algorithm message to the log store. Uses a different timestamped method of adding messaging to interweve debug and logging messages.
+        /// </summary>
+        /// <param name="message">String message to store</param>
+        protected override void AddToLogStore(string message)
+        {
+            base.AddToLogStore(message);
+
+            WriteLine($"AddToLogStore: {message}");
+        }
+
+        /// <summary>
+        /// Event fired each time that we add/remove securities from the data feed
+        /// </summary>
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            base.OnSecuritiesChanged(changes);
+
+            if (changes.AddedSecurities.Count > 0)
+            {
+                var added = changes.AddedSecurities
+                    .Select(security => security.Symbol.ToString())
+                    .OrderBy(symbol => symbol);
+
+                WriteLine($"OnSecuritiesChanged:ADD: {string.Join("|", added)}");
+            }
+
+            if (changes.RemovedSecurities.Count > 0)
+            {
+                var removed = changes.RemovedSecurities
+                    .Select(security => security.Symbol.ToString())
+                    .OrderBy(symbol => symbol);
+
+                WriteLine($"OnSecuritiesChanged:REM: {string.Join("|", removed)}");
             }
         }
 
@@ -181,7 +352,7 @@ namespace QuantConnect.Lean.Engine.Results
                     lock (_sync)
                     {
                         // aggregate slice data
-                        _writer.WriteLine($"{Algorithm.UtcTime}: Slice Time: {slice.Time:o} Slice Count: {slice.Count}");
+                        WriteLine($"Slice Time: {slice.Time:o} Slice Count: {slice.Count}");
                         var data = new Dictionary<Symbol, List<BaseData>>();
                         foreach (var kvp in slice.Bars)
                         {
@@ -225,7 +396,7 @@ namespace QuantConnect.Lean.Engine.Results
                         {
                             foreach (var item in kvp.Value)
                             {
-                                _writer.WriteLine($"{Algorithm.UtcTime}: Slice: DataTime: {item.EndTime} {item}");
+                                WriteLine($"{Algorithm.UtcTime}: Slice: DataTime: {item.EndTime} {item}");
                             }
                         }
                     }
@@ -254,11 +425,80 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 if (_writer != null)
                 {
+                    // only log final statistics and we want them to all be together
+                    foreach (var kvp in RuntimeStatistics.OrderBy(kvp => kvp.Key))
+                    {
+                        WriteLine($"{kvp.Key,-15}\t{kvp.Value}");
+                    }
+
                     var end = DateTime.UtcNow;
                     var delta = end - _testStartTime;
-                    _writer.WriteLine($"{end}: Completed regression test, took: {delta.TotalSeconds:0.0} seconds");
+                    WriteLine($"{end}: Completed regression test, took: {delta.TotalSeconds:0.0} seconds");
                     _writer.DisposeSafely();
                     _writer = null;
+                }
+                else
+                {
+                    string line;
+                    while (_preInitializeLines.TryDequeue(out line))
+                    {
+                        Console.WriteLine(line);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// We want to make algorithm messages end up in both the standard regression log file {algorithm}.{language}.log
+        /// as well as the details log {algorithm}.{language}.details.log. The details log is focused on providing a log
+        /// dedicated solely to the algorithm's behavior, void of all <see cref="QuantConnect.Logging.Log"/> messages
+        /// </summary>
+        protected override void ConfigureConsoleTextWriter(IAlgorithm algorithm)
+        {
+            // configure Console.WriteLine and Console.Error.WriteLine to both logs, syslog and details.log
+            // when 'forward-console-messages' is set to false, it guarantees synchronous logging of these messages
+
+            if (Config.GetBool("forward-console-messages", true))
+            {
+                // we need to forward Console.Write messages to the algorithm's Debug function
+                Console.SetOut(new FuncTextWriter(msg =>
+                {
+                    algorithm.Debug(msg);
+                    WriteLine($"DEBUG: {msg}");
+                }));
+                Console.SetError(new FuncTextWriter(msg =>
+                {
+                    algorithm.Error(msg);
+                    WriteLine($"ERROR: {msg}");
+                }));
+            }
+            else
+            {
+                // we need to forward Console.Write messages to the standard Log functions
+                Console.SetOut(new FuncTextWriter(msg =>
+                {
+                    Log.Trace(msg);
+                    WriteLine($"DEBUG: {msg}");
+                }));
+                Console.SetError(new FuncTextWriter(msg =>
+                {
+                    Log.Error(msg);
+                    WriteLine($"ERROR: {msg}");
+                }));
+            }
+        }
+
+        private void WriteLine(string message)
+        {
+            lock (_sync)
+            {
+                if (_writer == null)
+                {
+                    _preInitializeLines.Enqueue(message);
+                }
+                else
+                {
+                    _writer.WriteLine($"{Algorithm.Time:O}: {message}");
                 }
             }
         }

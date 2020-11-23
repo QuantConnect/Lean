@@ -14,9 +14,11 @@ RUN wget --quiet https://github.com/krallin/tini/releases/download/v0.10.0/tini 
     mv tini /usr/local/bin/tini && \
     chmod +x /usr/local/bin/tini
 
-# Install Lean/PythonToolbox
-RUN git clone https://github.com/QuantConnect/Lean.git && cd Lean/PythonToolbox && \
-    python setup.py install && cd ../.. && rm -irf Lean
+# Clone Lean; Copy Python startup file to profile; Install Lean/PythonToolbox; Remove extra files
+RUN git clone https://github.com/QuantConnect/Lean.git && \
+    mkdir -p /root/.ipython/profile_default/startup/ && cp -f Lean/Research/start.py /root/.ipython/profile_default/startup/ && \
+    cd Lean/PythonToolbox && python setup.py install \
+    && cd ../.. && rm -irf Lean
 
 RUN conda install -y -c conda-forge notebook=6.0.3
 

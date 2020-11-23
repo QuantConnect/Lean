@@ -203,7 +203,8 @@ namespace QuantConnect.Data.Fundamental
         public static int MetalsAndMining = 10150;
         public static int Steel = 10160;
         public static int VehiclesAndParts = 10200;
-        public static int Furnishings, FixturesAndAppliances = 10220;
+        public static int Furnishings = 10220;
+        public static int FixturesAndAppliances = 10220;
         public static int HomebuildingAndConstruction = 10230;
         public static int ManufacturingApparelAndAccessories = 10240;
         public static int PackagingAndContainers = 10250;
@@ -369,7 +370,14 @@ namespace QuantConnect.Data.Fundamental
         /// mattresses, bedsprings, lighting fixtures, wooden flooring, wallpaper, and household
         /// products, such as utensils, cutlery, tableware, and appliances.
         /// </summary>
-        public static int Furnishings, FixturesAndAppliances = 10220010;
+        public static int Furnishings = 10220010;
+
+        /// <summary>
+        /// Companies that manufacture and market wooden, metal, and upholstered furniture,
+        /// mattresses, bedsprings, lighting fixtures, wooden flooring, wallpaper, and household
+        /// products, such as utensils, cutlery, tableware, and appliances.
+        /// </summary>
+        public static int FixturesAndAppliances = 10220010;
 
         /// <summary>
         /// Companies that build and renovate residential buildings, such as single-family houses,

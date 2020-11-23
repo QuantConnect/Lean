@@ -47,7 +47,9 @@ using QuantConnect.Securities;
 using QuantConnect.Util;
 using Timer = System.Timers.Timer;
 using static QuantConnect.StringExtensions;
-using System.Runtime.CompilerServices;
+using Microsoft.IO;
+using QuantConnect.Data.Auxiliary;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect
 {
@@ -56,8 +58,51 @@ namespace QuantConnect
     /// </summary>
     public static class Extensions
     {
+        private static RecyclableMemoryStreamManager MemoryManager = new RecyclableMemoryStreamManager();
+        private static ConcurrentBag<Guid> Guids = new ConcurrentBag<Guid>();
+
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
+
+        /// <summary>
+        /// Will return a memory stream using the <see cref="RecyclableMemoryStreamManager"/> instance.
+        /// </summary>
+        /// <remarks>For performance will reuse a memory stream guid per thread. So</remarks>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static MemoryStream GetMemoryStream(Guid guid)
+        {
+            return MemoryManager.GetStream(guid);
+        }
+
+        /// <summary>
+        /// Gets a unique id. Should be returned using <see cref="ReturnId"/>
+        /// </summary>
+        /// <remarks>Creating a new <see cref="Guid"/> is expensive</remarks>
+        /// <remarks>Used for <see cref="GetMemoryStream"/></remarks>
+        /// <returns>A unused <see cref="Guid"/></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Guid RentId()
+        {
+            Guid guid;
+            if (!Guids.TryTake(out guid))
+            {
+                guid = new Guid();
+            }
+            return guid;
+        }
+
+        /// <summary>
+        /// Returns a rented unique id <see cref="RentId"/>
+        /// </summary>
+        /// <remarks>Creating a new <see cref="Guid"/> is expensive</remarks>
+        /// <remarks>Used for <see cref="GetMemoryStream"/></remarks>
+        /// <param name="guid">The guid to return</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ReturnId(Guid guid)
+        {
+            Guids.Add(guid);
+        }
 
         /// <summary>
         /// Serialize a list of ticks using protobuf
@@ -66,11 +111,16 @@ namespace QuantConnect
         /// <returns>The resulting byte array</returns>
         public static byte[] ProtobufSerialize(this List<Tick> ticks)
         {
-            using (var stream = new MemoryStream())
+            var guid = RentId();
+            byte[] result;
+            using (var stream = GetMemoryStream(guid))
             {
                 Serializer.Serialize(stream, ticks);
-                return stream.ToArray();
+                result = stream.ToArray();
             }
+
+            ReturnId(guid);
+            return result;
         }
 
         /// <summary>
@@ -80,7 +130,10 @@ namespace QuantConnect
         /// <returns>The resulting byte array</returns>
         public static byte[] ProtobufSerialize(this IBaseData baseData)
         {
-            using (var stream = new MemoryStream())
+            var guid = RentId();
+
+            byte[] result;
+            using (var stream = GetMemoryStream(guid))
             {
                 switch (baseData.DataType)
                 {
@@ -97,8 +150,11 @@ namespace QuantConnect
                         Serializer.SerializeWithLengthPrefix(stream, baseData as BaseData, PrefixStyle.Base128, 1);
                         break;
                 }
-                return stream.ToArray();
+                result = stream.ToArray();
             }
+            ReturnId(guid);
+
+            return result;
         }
 
         /// <summary>
@@ -959,8 +1015,12 @@ namespace QuantConnect
         /// Extension method to round a datetime down by a timespan interval.
         /// </summary>
         /// <param name="dateTime">Base DateTime object we're rounding down.</param>
-        /// <param name="interval">Timespan interval to round to.</param>
+        /// <param name="interval">Timespan interval to round to</param>
         /// <returns>Rounded datetime</returns>
+        /// <remarks>Using this with timespans greater than 1 day may have unintended
+        /// consequences. Be aware that rounding occurs against ALL time, so when using
+        /// timespan such as 30 days we will see 30 day increments but it will be based
+        /// on 30 day increments from the beginning of time.</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DateTime RoundDown(this DateTime dateTime, TimeSpan interval)
         {
@@ -1068,16 +1128,21 @@ namespace QuantConnect
         /// Extension method to explicitly round up to the nearest timespan interval.
         /// </summary>
         /// <param name="time">Base datetime object to round up.</param>
-        /// <param name="d">Timespan interval for rounding</param>
+        /// <param name="interval">Timespan interval to round to</param>
         /// <returns>Rounded datetime</returns>
-        public static DateTime RoundUp(this DateTime time, TimeSpan d)
+        /// <remarks>Using this with timespans greater than 1 day may have unintended
+        /// consequences. Be aware that rounding occurs against ALL time, so when using
+        /// timespan such as 30 days we will see 30 day increments but it will be based
+        /// on 30 day increments from the beginning of time.</remarks>
+        public static DateTime RoundUp(this DateTime time, TimeSpan interval)
         {
-            if (d == TimeSpan.Zero)
+            if (interval == TimeSpan.Zero)
             {
                 // divide by zero exception
                 return time;
             }
-            return new DateTime(((time.Ticks + d.Ticks - 1) / d.Ticks) * d.Ticks);
+
+            return new DateTime(((time.Ticks + interval.Ticks - 1) / interval.Ticks) * interval.Ticks);
         }
 
         /// <summary>
@@ -2135,43 +2200,40 @@ namespace QuantConnect
                     break;
                 case MarketDataType.Tick:
                     var securityType = data.Symbol.SecurityType;
-                    var tick = data as Tick;
-                    if (tick != null)
+                    if (securityType != SecurityType.Equity &&
+                        securityType != SecurityType.Option &&
+                        securityType != SecurityType.Future)
                     {
-                        if (securityType == SecurityType.Equity)
-                        {
-                            tick.Value = factor(tick.Value);
-                        }
-                        if (securityType == SecurityType.Option
-                            || securityType == SecurityType.Future)
-                        {
-                            if (tick.TickType == TickType.Trade)
-                            {
-                                tick.Value = factor(tick.Value);
-                            }
-                            else if (tick.TickType != TickType.OpenInterest)
-                            {
-                                tick.BidPrice = tick.BidPrice != 0 ? factor(tick.BidPrice) : 0;
-                                tick.AskPrice = tick.AskPrice != 0 ? factor(tick.AskPrice) : 0;
-
-                                if (tick.BidPrice != 0)
-                                {
-                                    if (tick.AskPrice != 0)
-                                    {
-                                        tick.Value = (tick.BidPrice + tick.AskPrice) / 2m;
-                                    }
-                                    else
-                                    {
-                                        tick.Value = tick.BidPrice;
-                                    }
-                                }
-                                else
-                                {
-                                    tick.Value = tick.AskPrice;
-                                }
-                            }
-                        }
+                        break;
                     }
+
+                    var tick = data as Tick;
+                    if (tick == null || tick.TickType == TickType.OpenInterest)
+                    {
+                        break;
+                    }
+
+                    if (tick.TickType == TickType.Trade)
+                    {
+                        tick.Value = factor(tick.Value);
+                        break;
+                    }
+
+                    tick.BidPrice = tick.BidPrice != 0 ? factor(tick.BidPrice) : 0;
+                    tick.AskPrice = tick.AskPrice != 0 ? factor(tick.AskPrice) : 0;
+
+                    if (tick.BidPrice == 0)
+                    {
+                        tick.Value = tick.AskPrice;
+                        break;
+                    }
+                    if (tick.AskPrice == 0)
+                    {
+                        tick.Value = tick.BidPrice;
+                        break;
+                    }
+
+                    tick.Value = (tick.BidPrice + tick.AskPrice) / 2m;
                     break;
                 case MarketDataType.QuoteBar:
                     var quoteBar = data as QuoteBar;
@@ -2265,6 +2327,79 @@ namespace QuantConnect
                 default:
                     return isShort ? OrderDirection.Buy : OrderDirection.Sell;
             }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="OrderDirection"/> for the specified <paramref name="quantity"/>
+        /// </summary>
+        public static OrderDirection GetOrderDirection(decimal quantity)
+        {
+            var sign = Math.Sign(quantity);
+            switch (sign)
+            {
+                case 1: return OrderDirection.Buy;
+                case 0: return OrderDirection.Hold;
+                case -1: return OrderDirection.Sell;
+                default:
+                    throw new ApplicationException(
+                        $"The skies are falling and the oceans are rising! Math.Sign({quantity}) returned {sign} :/"
+                    );
+            }
+        }
+
+        /// <summary>
+        /// Creates a <see cref="OptionChainUniverse"/> for a given symbol
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance to create universes for</param>
+        /// <param name="symbol">Symbol of the option</param>
+        /// <param name="filter">The option filter to use</param>
+        /// <param name="universeSettings">The universe settings, will use algorithm settings if null</param>
+        /// <returns><see cref="OptionChainUniverse"/> for the given symbol</returns>
+        public static OptionChainUniverse CreateOptionChain(this IAlgorithm algorithm, Symbol symbol, Func<OptionFilterUniverse, OptionFilterUniverse> filter, UniverseSettings universeSettings = null)
+        {
+            if (symbol.SecurityType != SecurityType.Option)
+            {
+                throw new ArgumentException("CreateOptionChain requires an option symbol.");
+            }
+
+            // rewrite non-canonical symbols to be canonical
+            var market = symbol.ID.Market;
+            var underlying = symbol.Underlying;
+            if (!symbol.IsCanonical())
+            {
+                var alias = $"?{underlying.Value}";
+                symbol = Symbol.Create(underlying.Value, SecurityType.Option, market, alias);
+            }
+
+            // resolve defaults if not specified
+            var settings = universeSettings ?? algorithm.UniverseSettings;
+
+            // create canonical security object, but don't duplicate if it already exists
+            Security security;
+            Option optionChain;
+            if (!algorithm.Securities.TryGetValue(symbol, out security))
+            {
+                var config = algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(
+                    typeof(ZipEntryName),
+                    symbol,
+                    settings.Resolution,
+                    settings.FillForward,
+                    settings.ExtendedMarketHours,
+                    false);
+                optionChain = (Option)algorithm.Securities.CreateSecurity(symbol, config, settings.Leverage, false);
+            }
+            else
+            {
+                optionChain = (Option)security;
+            }
+
+            // set the option chain contract filter function
+            optionChain.SetFilter(filter);
+
+            // force option chain security to not be directly tradable AFTER it's configured to ensure it's not overwritten
+            optionChain.IsTradable = false;
+
+            return new OptionChainUniverse(optionChain, settings, algorithm.LiveMode);
         }
     }
 }

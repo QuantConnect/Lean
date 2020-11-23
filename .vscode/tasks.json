@@ -51,13 +51,13 @@
                 "command": "${workspaceFolder}/run_docker.sh"
             },
             "args": [
-                "image=quantconnect/lean:latest",
-                "config_file=${workspaceFolder}/Launcher/config.json",
-                "data_dir=${workspaceFolder}/Data",
-                "results_dir=${workspaceFolder}/",
-                "debugging=Y",
-                "python_dir=${workspaceFolder}/Algorithm.Python",
-                "exit=Y"
+                "IMAGE=quantconnect/lean:latest",
+                "CONFIG_FILE=${workspaceFolder}/Launcher/config.json",
+                "DATA_DIR=${workspaceFolder}/Data",
+                "RESULTS_DIR=${workspaceFolder}/Results",
+                "DEBUGGING=Y",
+                "PYTHON_DIR=${workspaceFolder}/Algorithm.Python",
+                "EXIT=Y"
             ],
             "problemMatcher": [
                 {

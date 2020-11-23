@@ -498,7 +498,7 @@ namespace QuantConnect.Orders.Fills
                 .Select(x => x.Type).ToList();
             // Tick
             var tick = asset.Cache.GetData<Tick>();
-            if (subscriptionTypes.Contains(typeof(Tick)) && tick != null)
+            if (tick != null && subscriptionTypes.Contains(typeof(Tick)))
             {
                 var price = direction == OrderDirection.Sell ? tick.BidPrice : tick.AskPrice;
                 if (price != 0m)
@@ -516,7 +516,7 @@ namespace QuantConnect.Orders.Fills
 
             // Quote
             var quoteBar = asset.Cache.GetData<QuoteBar>();
-            if (subscriptionTypes.Contains(typeof(QuoteBar)) && quoteBar != null)
+            if (quoteBar != null && subscriptionTypes.Contains(typeof(QuoteBar)))
             {
                 var bar = direction == OrderDirection.Sell ? quoteBar.Bid : quoteBar.Ask;
                 if (bar != null)
@@ -527,7 +527,7 @@ namespace QuantConnect.Orders.Fills
 
             // Trade
             var tradeBar = asset.Cache.GetData<TradeBar>();
-            if (subscriptionTypes.Contains(typeof(TradeBar)) && tradeBar != null)
+            if (tradeBar != null && subscriptionTypes.Contains(typeof(TradeBar)))
             {
                 return new Prices(tradeBar);
             }

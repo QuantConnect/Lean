@@ -100,7 +100,7 @@
   "fxcm-account-id": "",
 
   // iqfeed configuration
-  "iqfeed-host": "127.0.0.1", 
+  "iqfeed-host": "127.0.0.1",
   "iqfeed-username": "",
   "iqfeed-password": "",
   "iqfeed-productName": "",
@@ -118,6 +118,10 @@
     // binance configuration
   "binance-api-secret": "",
   "binance-api-key": "",
+
+  // Required to access data from Quiver Quantitative
+  // To get your access token go to https://api.quiverquant.com
+  "quiver-auth-token": "",
 
   // Required to access data from Quandl
   // To get your access token go to https://www.quandl.com/account/api

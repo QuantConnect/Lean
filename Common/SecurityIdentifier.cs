@@ -155,8 +155,8 @@ namespace QuantConnect
         /// Gets the date component of this identifier. For equities this
         /// is the first date the security traded. Technically speaking,
         /// in LEAN, this is the first date mentioned in the map_files.
-        /// For options this is the expiry date. For futures this is the
-        /// settlement date. For forex and cfds this property will throw an
+        /// For futures and options this is the expiry date of the contract.
+        /// For other asset classes, this property will throw an
         /// exception as the field is not specified.
         /// </summary>
         public DateTime Date

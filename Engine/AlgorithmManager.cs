@@ -499,6 +499,7 @@ namespace QuantConnect.Lean.Engine
                         var timeKeeper = algorithm.TimeKeeper;
                         foreach (var update in timeSlice.ConsolidatorUpdateData)
                         {
+                            var localTime = timeKeeper.GetLocalTimeKeeper(update.Target.ExchangeTimeZone).LocalTime;
                             var consolidators = update.Target.Consolidators;
                             foreach (var consolidator in consolidators)
                             {
@@ -512,7 +513,7 @@ namespace QuantConnect.Lean.Engine
                                 }
 
                                 // scan for time after we've pumped all the data through for this consolidator
-                                consolidator.Scan(timeKeeper.GetLocalTimeKeeper(update.Target.ExchangeTimeZone).LocalTime);
+                                consolidator.Scan(localTime);
                             }
                         }
                     }
@@ -586,16 +587,6 @@ namespace QuantConnect.Lean.Engine
                 //After we've fired all other events in this second, fire the pricing events:
                 try
                 {
-
-                    // TODO: For backwards compatibility only. Remove in 2017
-                    // For compatibility with Forex Trade data, moving
-                    if (timeSlice.Slice.QuoteBars.Count > 0)
-                    {
-                        foreach (var tradeBar in timeSlice.Slice.QuoteBars.Where(x => x.Key.ID.SecurityType == SecurityType.Forex))
-                        {
-                            timeSlice.Slice.Bars.Add(tradeBar.Value.Collapse());
-                        }
-                    }
                     if (hasOnDataTradeBars && timeSlice.Slice.Bars.Count > 0) methodInvokers[typeof(TradeBars)](algorithm, timeSlice.Slice.Bars);
                     if (hasOnDataQuoteBars && timeSlice.Slice.QuoteBars.Count > 0) methodInvokers[typeof(QuoteBars)](algorithm, timeSlice.Slice.QuoteBars);
                     if (hasOnDataOptionChains && timeSlice.Slice.OptionChains.Count > 0) methodInvokers[typeof(OptionChains)](algorithm, timeSlice.Slice.OptionChains);
@@ -1003,13 +994,22 @@ namespace QuantConnect.Lean.Engine
                     security.IsTradable = false;
                     security.IsDelisted = true;
 
+                    // the subscription are getting removed from the data feed because they end
                     // remove security from all universes
                     foreach (var ukvp in algorithm.UniverseManager)
                     {
                         var universe = ukvp.Value;
                         if (universe.ContainsMember(security.Symbol))
                         {
-                            universe.RemoveMember(algorithm.UtcTime, security);
+                            var userUniverse = universe as UserDefinedUniverse;
+                            if (userUniverse != null)
+                            {
+                                userUniverse.Remove(security.Symbol);
+                            }
+                            else
+                            {
+                                universe.RemoveMember(algorithm.UtcTime, security);
+                            }
                         }
                     }
 
@@ -1032,34 +1032,36 @@ namespace QuantConnect.Lean.Engine
             {
                 // check if we are holding position
                 var security = algorithm.Securities[delistings[i].Symbol];
-                if (security.Holdings.Quantity == 0) continue;
+                if (security.Holdings.Quantity == 0)
+                {
+                    continue;
+                }
 
                 // check if the time has come for delisting
                 var delistingTime = delistings[i].Time;
                 var nextMarketOpen = security.Exchange.Hours.GetNextMarketOpen(delistingTime, false);
                 var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(nextMarketOpen, false);
 
-                if (security.LocalTime < nextMarketClose) continue;
+                if (security.LocalTime < nextMarketClose)
+                {
+                    continue;
+                }
 
-                // submit an order to liquidate on market close or exercise (for options)
-                SubmitOrderRequest request;
-
+                var orderType = OrderType.Market;
+                var tag = "Liquidate from delisting";
                 if (security.Type == SecurityType.Option)
                 {
-                    // notify tx handler of the expiration, this will be handled via the configured exercise model to see if
-                    // we auto-exercise or get assigned at expiration. don't be presumptuous from here and guess if exercised/assigned
-                    request = new SubmitOrderRequest(OrderType.OptionExercise, security.Type, security.Symbol,
-                        security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Option Expired");
-                }
-                else
-                {
-                    request = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol,
-                        -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Liquidate from delisting");
+                    // tx handler will determine auto exercise/assignment
+                    tag = "Option Expired";
+                    orderType = OrderType.OptionExercise;
                 }
 
-                algorithm.Transactions.ProcessRequest(request);
+                // submit an order to liquidate on market close or exercise (for options)
+                var request = new SubmitOrderRequest(orderType, security.Type, security.Symbol,
+                    -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, tag);
 
                 delistings.RemoveAt(i);
+                algorithm.Transactions.ProcessRequest(request);
             }
         }
 

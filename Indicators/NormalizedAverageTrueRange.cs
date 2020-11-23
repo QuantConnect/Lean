@@ -73,19 +73,19 @@ namespace QuantConnect.Indicators
             if (!IsReady)
             {
                 _atr.Update(input);
-                return input.Close != 0 ? _atr / input.Close * 100 : 0m;
+                return input.Close != 0 ? _atr.Current.Value / input.Close * 100 : 0m;
             }
 
             if (Samples == _period + 1)
             {
                 // first output value is SMA of TrueRange
                 _atr.Update(input);
-                _lastAtrValue = _atr;
+                _lastAtrValue = _atr.Current.Value;
             }
             else
             {
                 // next TrueRange values are smoothed using Wilder's approach
-                _lastAtrValue = (_lastAtrValue * (_period - 1) + _tr) / _period;
+                _lastAtrValue = (_lastAtrValue * (_period - 1) + _tr.Current.Value) / _period;
             }
 
             return input.Close != 0 ? _lastAtrValue / input.Close * 100 : 0m;

@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_expectedCloseValues.Count > 0)
             {
-                throw new Exception($"Not all expected data points were recieved.");
+                throw new Exception($"Not all expected data points were received.");
             }
         }
 

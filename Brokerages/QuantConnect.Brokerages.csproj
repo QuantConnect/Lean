@@ -156,7 +156,7 @@
       <HintPath>Fxcm\QuantConnect.Fxcm.dll</HintPath>
     </Reference>
     <Reference Include="QuantConnect.IBAutomater, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\QuantConnect.IBAutomater.1.0.29\lib\net45\QuantConnect.IBAutomater.exe</HintPath>
+      <HintPath>..\packages\QuantConnect.IBAutomater.1.0.31\lib\net45\QuantConnect.IBAutomater.exe</HintPath>
     </Reference>
     <Reference Include="RestSharp, Version=106.6.10.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
       <HintPath>..\packages\RestSharp.106.6.10\lib\net452\RestSharp.dll</HintPath>
@@ -342,7 +342,6 @@
     <Compile Include="Binance\BinanceBrokerageFactory.cs" />
     <Compile Include="Binance\BinanceOrderSubmitEventArgs.cs" />
     <Compile Include="Binance\BinanceRestApiClient.cs" />
-    <Compile Include="Binance\BinanceSymbolMapper.cs" />
     <Compile Include="Binance\BinanceWebSocketWrapper.cs" />
     <Compile Include="Binance\Messages.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerage.Messaging.cs" />
@@ -350,8 +349,8 @@
     <Compile Include="Bitfinex\BitfinexBrokerageFactory.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerage.Utility.cs" />
     <Compile Include="Bitfinex\BitfinexSubscriptionManager.cs" />
+    <Compile Include="Bitfinex\BitfinexWebSocketChannels.cs" />
     <Compile Include="Bitfinex\BitfinexWebSocketWrapper.cs" />
-    <Compile Include="Bitfinex\BitfinexSymbolMapper.cs" />
     <Compile Include="Bitfinex\Messages\Messages.cs" />
     <Compile Include="Bitfinex\Messages\Order.cs" />
     <Compile Include="Bitfinex\Messages\Position.cs" />
@@ -364,6 +363,9 @@
     <Compile Include="Bitfinex\Converters\TickerConverter.cs" />
     <Compile Include="Bitfinex\Converters\PositionConverter.cs" />
     <Compile Include="Bitfinex\Converters\WalletConverter.cs" />
+    <Compile Include="InteractiveBrokers\Client\FamilyCodesEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\AccountSummaryEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\ManagedAccountsEventArgs.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersStateManager.cs" />
     <Compile Include="IOrderBookUpdater.cs" />
     <Compile Include="DefaultOrderBook.cs" />
@@ -433,35 +435,8 @@
     <Compile Include="InteractiveBrokers\InteractiveBrokersSymbolMapper.cs" />
     <Compile Include="ISymbolMapper.cs" />
     <Compile Include="Oanda\OandaRestApiBase.cs" />
-    <Compile Include="Oanda\OandaRestApiV1.cs" />
     <Compile Include="Oanda\OandaRestApiV20.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Account.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Candle.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\AccountResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\AccountsResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\CandlesResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\InstrumentsResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\OrdersResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\PositionsResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\PostOrderResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\PricesResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\Requests\CandlesRequest.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\Requests\Request.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\Response.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\TradesResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Event.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Heartbeat.cs" />
-    <Compile Include="Oanda\RestV1\DataType\IHeartbeat.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Instrument.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Order.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Position.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Price.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Communications\RateStreamResponse.cs" />
-    <Compile Include="Oanda\RestV1\DataType\TradeData.cs" />
-    <Compile Include="Oanda\RestV1\DataType\Transaction.cs" />
     <Compile Include="Oanda\Environment.cs" />
-    <Compile Include="Oanda\RestV1\Framework\Common.cs" />
-    <Compile Include="Oanda\RestV1\Framework\EndpointResolver.cs" />
     <Compile Include="Oanda\OandaBrokerage.cs" />
     <Compile Include="Oanda\OandaBrokerageFactory.cs" />
     <Compile Include="Oanda\OandaSymbolMapper.cs" />
@@ -668,9 +643,6 @@
     <Compile Include="Oanda\RestV20\Session\StreamSession.cs" />
     <Compile Include="Oanda\RestV20\Session\TransactionStreamSession.cs" />
     <Compile Include="Oanda\Server.cs" />
-    <Compile Include="Oanda\RestV1\Session\EventsSession.cs" />
-    <Compile Include="Oanda\RestV1\Session\RatesSession.cs" />
-    <Compile Include="Oanda\RestV1\Session\StreamSession.cs" />
     <Compile Include="Paper\PaperBrokerage.cs" />
     <Compile Include="Paper\PaperBrokerageFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -694,7 +666,6 @@
     <None Include="InteractiveBrokers\IB-symbol-map.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Oanda\RestV1\LICENSE.md" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
@@ -746,9 +717,9 @@
     <Error Condition="!Exists('..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props'))" />
-    <Error Condition="!Exists('..\packages\QuantConnect.IBAutomater.1.0.29\build\QuantConnect.IBAutomater.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.IBAutomater.1.0.29\build\QuantConnect.IBAutomater.targets'))" />
+    <Error Condition="!Exists('..\packages\QuantConnect.IBAutomater.1.0.31\build\QuantConnect.IBAutomater.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.IBAutomater.1.0.31\build\QuantConnect.IBAutomater.targets'))" />
   </Target>
-  <Import Project="..\packages\QuantConnect.IBAutomater.1.0.29\build\QuantConnect.IBAutomater.targets" Condition="Exists('..\packages\QuantConnect.IBAutomater.1.0.29\build\QuantConnect.IBAutomater.targets')" />
+  <Import Project="..\packages\QuantConnect.IBAutomater.1.0.31\build\QuantConnect.IBAutomater.targets" Condition="Exists('..\packages\QuantConnect.IBAutomater.1.0.31\build\QuantConnect.IBAutomater.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

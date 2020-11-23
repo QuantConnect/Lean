@@ -195,7 +195,7 @@ namespace QuantConnect.Securities
             sb.AppendLine(Invariant($"Symbol {"Quantity",13}    {"Conversion",10} = Value in {AccountCurrency}"));
             foreach (var value in _currencies.Select(x => x.Value))
             {
-                sb.AppendLine(value.ToString());
+                sb.AppendLine(value.ToString(AccountCurrency));
             }
             sb.AppendLine("-------------------------------------------------");
             sb.AppendLine("CashBook Total Value:                " +

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -154,6 +154,26 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual(crawlDate, deserialized.CrawlDate);
             Assert.AreEqual(crawlDate, deserialized.Time);
             Assert.AreEqual(crawlDate, deserialized.EndTime);
+        }
+
+        [Test]
+        public void DoesNotFailIfTickerContainsSpace()
+        {
+            var content = @"[{
+    ""source"":""source"",
+    ""crawlDate"":""2019-01-29T22:20:01.696871Z"",
+    ""description"":""description"",
+    ""url"":""url"",
+    ""publishedDate"":""2018-01-29T22:17:00Z"",
+    ""tags"":[ ""tag1"", ""tag2""],
+    ""tickers"":[""aapl"", ""iff 6"", ""abc|1"", ""zxc | 1""],
+    ""id"":1,
+    ""title"":""title""
+}]";
+
+            Assert.DoesNotThrow(()=>JsonConvert.DeserializeObject<List<TiingoNews>>(content,
+                new TiingoNewsJsonConverter(Symbols.SPY)));
+
         }
     }
 }

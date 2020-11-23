@@ -101,14 +101,14 @@ This section will cover how to actually launch Lean in the container with your d
 
 <h3>Option 1 (Recommended)</h3>
 
-In VS Code click on the debug/run icon on the left toolbar, at the top you should see a drop down menu with launch options, be sure to select **Debug in Container**. This option will kick off a launch script that will start the docker. With this specific launch option the parameters are already configured in VS Codes **tasks.json** under the **run-docker** task args. These set arguements are:
+In VS Code click on the debug/run icon on the left toolbar, at the top you should see a drop down menu with launch options, be sure to select **Debug in Container**. This option will kick off a launch script that will start the docker. With this specific launch option the parameters are already configured in VS Codes **tasks.json** under the **run-docker** task args. These set arguments are:
 
-    "image=quantconnect/lean:latest",
-    "config_file=${workspaceFolder}/Launcher/config.json",
-    "data_dir=${workspaceFolder}/Data",
-    "results_dir=${workspaceFolder}/",
-    "debugging=Y",
-    "python_location=${workspaceFolder}/Algorithm.Python"
+    "IMAGE=quantconnect/lean:latest",
+    "CONFIG_FILE=${workspaceFolder}/Launcher/config.json",
+    "DATA_DIR=${workspaceFolder}/Data",
+    "RESULTS_DIR=${workspaceFolder}/Results",
+    "DEBUGGING=Y",
+    "PYHTON_DIR=${workspaceFolder}/Algorithm.Python"
 
 As defaults these are all great! Feel free to change them as needed for your setup.
 
@@ -120,21 +120,21 @@ From a terminal launch the run_docker.bat/.sh script; there are a few choices on
  1. Launch with no parameters and answer the questions regarding configuration (Press enter for defaults)
    
         *   Enter docker image [default: quantconnect/lean:latest]:
-        *   Enter absolute path to Lean config file [default: _~currentDir_\Launcher\config.json]:
-        *   Enter absolute path to Data folder [default: ~_currentDir_\Data\]:
-        *   Enter absolute path to store results [default: ~_currentDir_\]:
+        *   Enter absolute path to Lean config file [default: .\Launcher\config.json]:
+        *   Enter absolute path to Data folder [default: .\Data\]:
+        *   Enter absolute path to store results [default: .\Results]:
         *   Would you like to debug C#? (Requires mono debugger attachment) [default: N]:
 
  2. Using the **run_docker.cfg** to store args for repeated use; any blank entries will resort to default values! example: **_./run_docker.bat run_docker.cfg_**
   
-        image=quantconnect/lean:latest
-        config_file=
-        data_dir=
-        results_dir=
-        debugging=
-        python_dir=
+        IMAGE=quantconnect/lean:latest
+        CONFIG_FILE=
+        DATA_DIR=
+        RESULTS_DIR=
+        DEBUGGING=
+        PYTHON_DIR=
 
- 3. Inline arguments; anything you don't enter will use the default args! example: **_./run_docker.bat debugging=y_** 
+ 3. Inline arguments; anything you don't enter will use the default args! example: **_./run_docker.bat DEBUGGING=y_** 
       *    Accepted args for inline include all listed in the file in #2
 
 <br />

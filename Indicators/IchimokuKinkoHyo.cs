@@ -155,7 +155,7 @@ namespace QuantConnect.Indicators
 
             SenkouA = new FunctionalIndicator<IndicatorDataPoint>(
                 name + "_SenkouA",
-                input => SenkouA.IsReady ? (DelayedTenkanSenkouA + DelayedKijunSenkouA) / 2 : decimal.Zero,
+                input => SenkouA.IsReady ? (DelayedTenkanSenkouA.Current.Value + DelayedKijunSenkouA.Current.Value) / 2 : decimal.Zero,
                 senkouA => DelayedTenkanSenkouA.IsReady && DelayedKijunSenkouA.IsReady,
                 () =>
                 {
@@ -165,7 +165,7 @@ namespace QuantConnect.Indicators
 
             SenkouB = new FunctionalIndicator<IndicatorDataPoint>(
                 name + "_SenkouB",
-                input => SenkouB.IsReady ? (DelayedMaximumSenkouB + DelayedMinimumSenkouB) / 2 : decimal.Zero,
+                input => SenkouB.IsReady ? (DelayedMaximumSenkouB.Current.Value + DelayedMinimumSenkouB.Current.Value) / 2 : decimal.Zero,
                 senkouA => DelayedMaximumSenkouB.IsReady && DelayedMinimumSenkouB.IsReady,
                 () =>
                 {
@@ -175,7 +175,7 @@ namespace QuantConnect.Indicators
 
             Tenkan = new FunctionalIndicator<IndicatorDataPoint>(
                 name + "_Tenkan",
-                input => Tenkan.IsReady ? (TenkanMaximum + TenkanMinimum) / 2 : decimal.Zero,
+                input => Tenkan.IsReady ? (TenkanMaximum.Current.Value + TenkanMinimum.Current.Value) / 2 : decimal.Zero,
                 tenkan => TenkanMaximum.IsReady && TenkanMinimum.IsReady,
                 () =>
                 {
@@ -185,7 +185,7 @@ namespace QuantConnect.Indicators
 
             Kijun = new FunctionalIndicator<IndicatorDataPoint>(
                 name + "_Kijun",
-                input => Kijun.IsReady ? (KijunMaximum + KijunMinimum) / 2 : decimal.Zero,
+                input => Kijun.IsReady ? (KijunMaximum.Current.Value + KijunMinimum.Current.Value) / 2 : decimal.Zero,
                 kijun => KijunMaximum.IsReady && KijunMinimum.IsReady,
                 () =>
                 {

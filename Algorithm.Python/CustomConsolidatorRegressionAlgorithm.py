@@ -13,19 +13,18 @@
 
 from clr import AddReference
 AddReference("System")
+AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Indicators")
-AddReference("QuantConnect.Common")
 
-from System import *
 from QuantConnect import *
 from QuantConnect.Python import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Data import *
+from QuantConnect.Data.Market import *
 from QuantConnect.Data.Consolidators import *
 from QuantConnect.Indicators import *
-from QuantConnect.Data.Market import *
+from System import *
 from datetime import *
 
 class CustomConsolidatorRegressionAlgorithm(QCAlgorithm):

@@ -379,7 +379,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     }
                 }
 
-                var symbol = _symbolMapper.GetLeanSymbol(update.Symbol);
+                var symbol = _symbolMapper.GetLeanSymbol(update.Symbol, SecurityType.Crypto, Market.Bitfinex);
                 var fillPrice = update.ExecPrice;
                 var fillQuantity = update.ExecAmount;
                 var direction = fillQuantity < 0 ? OrderDirection.Sell : OrderDirection.Buy;
@@ -397,6 +397,15 @@ namespace QuantConnect.Brokerages.Bitfinex
                     status = totalFillQuantity == order.Quantity
                         ? OrderStatus.Filled
                         : OrderStatus.PartiallyFilled;
+                }
+
+                if (_algorithm.BrokerageModel.AccountType == AccountType.Cash &&
+                    order.Direction == OrderDirection.Buy)
+                {
+                    // fees are debited in the base currency, so we have to subtract them from the filled quantity
+                    fillQuantity -= orderFee.Value.Amount;
+
+                    orderFee = new ModifiedFillQuantityOrderFee(orderFee.Value);
                 }
 
                 var orderEvent = new OrderEvent

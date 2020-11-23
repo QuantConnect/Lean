@@ -59,8 +59,6 @@ namespace QuantConnect.Brokerages.Fxcm
         private readonly Dictionary<string, AutoResetEvent> _mapRequestsToAutoResetEvents = new Dictionary<string, AutoResetEvent>();
         private readonly HashSet<string> _pendingHistoryRequests = new HashSet<string>();
 
-        private string _fxcmAccountCurrency = Currencies.USD;
-
         private void LoadInstruments()
         {
             // Note: requestTradingSessionStatus() MUST be called just after login
@@ -109,7 +107,8 @@ namespace QuantConnect.Brokerages.Fxcm
             AutoResetEvent autoResetEvent;
             lock (_locker)
             {
-                _currentRequest = _gateway.requestOpenOrders(_accountId);
+                _currentRequest = _gateway.requestOpenOrders(null);
+
                 autoResetEvent = new AutoResetEvent(false);
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
@@ -246,7 +245,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 }
 
                 // get account base currency
-                _fxcmAccountCurrency = message.getParameter("BASE_CRNCY").getValue();
+                AccountBaseCurrency = message.getParameter("BASE_CRNCY").getValue();
 
                 _mapRequestsToAutoResetEvents[_currentRequest].Set();
                 _mapRequestsToAutoResetEvents.Remove(_currentRequest);

@@ -541,8 +541,8 @@ namespace QuantConnect.Securities
                 if (accountCurrency != CashBook.AccountCurrency)
                 {
                     Log.Trace("SecurityPortfolioManager.SetAccountCurrency():" +
-                              $" account currency has already been set to {CashBook.AccountCurrency}." +
-                              $" Will ignore new value {accountCurrency}");
+                        $" account currency has already been set to {CashBook.AccountCurrency}." +
+                        $" Will ignore new value {accountCurrency}");
                 }
                 return;
             }

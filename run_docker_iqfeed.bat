@@ -13,7 +13,7 @@ REM WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 REM See the License for the specific language governing permissions and
 REM limitations under the License.
 
-set docker_params=
+set DOCKER_PARAMS=
 
 set iqconnect_exec="C:\Program Files (x86)\DTN\IQFeed\iqconnect.exe"
 

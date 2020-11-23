@@ -24,6 +24,7 @@ using System.ComponentModel.Composition.ReflectionModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
@@ -81,7 +82,11 @@ namespace QuantConnect.Util
                 }
                 catch (Exception exception)
                 {
-                    Log.Error(exception);
+                    // ThreadAbortException is triggered when we shutdown ignore the error log
+                    if (!(exception is ThreadAbortException))
+                    {
+                        Log.Error(exception);
+                    }
                 }
                 return new List<ComposablePartDefinition>();
             });

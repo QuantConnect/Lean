@@ -111,11 +111,18 @@ namespace QuantConnect.Brokerages.Alpaca
         public override bool IsConnected => _sockClient.IsConnected;
 
         /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
+        public override string AccountBaseCurrency => Currencies.USD;
+
+        /// <summary>
         /// Connects the client to the broker's remote servers
         /// </summary>
         public override void Connect()
         {
             if (IsConnected) return;
+
+            AccountBaseCurrency = GetAccountBaseCurrency();
 
             _sockClient.Connect();
         }
@@ -153,8 +160,7 @@ namespace QuantConnect.Brokerages.Alpaca
 
             return new List<CashAmount>
             {
-                new CashAmount(balance.TradableCash,
-                    Currencies.USD)
+                new CashAmount(balance.TradableCash, balance.Currency)
             };
         }
 
@@ -291,6 +297,19 @@ namespace QuantConnect.Brokerages.Alpaca
             {
                 yield return item;
             }
+        }
+
+        /// <summary>
+        /// Gets the account base currency
+        /// </summary>
+        private string GetAccountBaseCurrency()
+        {
+            CheckRateLimiting();
+
+            var task = _alpacaTradingClient.GetAccountAsync();
+            var balance = task.SynchronouslyAwaitTaskResult();
+
+            return balance.Currency;
         }
 
         #endregion

@@ -80,7 +80,7 @@ namespace QuantConnect.Indicators
             if (_ema3.IsReady)
                 _roc.Update(_ema3.Current);
 
-            return _roc;
+            return _roc.Current.Value;
         }
 
         /// <summary>

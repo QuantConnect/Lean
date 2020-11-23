@@ -524,7 +524,7 @@ namespace QuantConnect.Util
 
                 case SecurityType.Future:
                     var expiryDate = symbol.ID.Date;
-                    var monthsToAdd = FuturesExpiryUtilityFunctions.ExpiresInPreviousMonth(symbol.ID.Symbol); 
+                    var monthsToAdd = FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(symbol.ID.Symbol, expiryDate.Date);
                     var contractYearMonth = expiryDate.AddMonths(monthsToAdd).ToStringInvariant(DateFormat.YearMonth);
 
                     if (isHourOrDaily)
@@ -767,8 +767,8 @@ namespace QuantConnect.Util
             }
             if (type == typeof(Tick))
             {
-                if (securityType == SecurityType.Forex || 
-                    securityType == SecurityType.Cfd || 
+                if (securityType == SecurityType.Forex ||
+                    securityType == SecurityType.Cfd ||
                     securityType == SecurityType.Crypto)
                 {
                     return TickType.Quote;

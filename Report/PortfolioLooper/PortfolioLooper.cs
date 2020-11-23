@@ -40,7 +40,7 @@ namespace QuantConnect.Report
     /// the holdings and other miscellaneous metrics at a point in time by reprocessing the orders
     /// as they were filled.
     /// </summary>
-    public class PortfolioLooper
+    public class PortfolioLooper : IDisposable
     {
         /// <summary>
         /// Default resolution to read. This will affect the granularity of the results generated for FX and Crypto
@@ -49,6 +49,8 @@ namespace QuantConnect.Report
 
         private SecurityService _securityService;
         private DataManager _dataManager;
+        private IResultHandler _resultHandler;
+        private IDataCacheProvider _cacheProvider;
         private IEnumerable<Slice> _conversionSlices = new List<Slice>();
 
         /// <summary>
@@ -68,11 +70,11 @@ namespace QuantConnect.Report
             // Initialize the providers that the HistoryProvider requires
             var factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>("LocalDiskFactorFileProvider");
             var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>("LocalDiskMapFileProvider");
-            var dataCacheProvider = new ZipDataCacheProvider(new DefaultDataProvider(), false);
+            _cacheProvider = new ZipDataCacheProvider(new DefaultDataProvider(), false);
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
 
             var dataPermissionManager = new DataPermissionManager();
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, dataCacheProvider, mapFileProvider, factorFileProvider, (_) => { }, false, dataPermissionManager));
+            historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, _cacheProvider, mapFileProvider, factorFileProvider, (_) => { }, false, dataPermissionManager));
             Algorithm = new PortfolioLooperAlgorithm((decimal)startingCash, orders);
             Algorithm.SetHistoryProvider(historyProvider);
 
@@ -109,7 +111,7 @@ namespace QuantConnect.Report
                 new SecurityCacheProvider(Algorithm.Portfolio));
 
             var transactions = new BacktestingTransactionHandler();
-            var results = new BacktestingResultHandler();
+            _resultHandler = new BacktestingResultHandler();
 
             // Initialize security services and other properties so that we
             // don't get null reference exceptions during our re-calculation
@@ -124,10 +126,10 @@ namespace QuantConnect.Report
             Algorithm.PostInitialize();
 
             // More initialization, this time with Algorithm and other misc. classes
-            results.Initialize(job, new Messaging.Messaging(), new Api.Api(), transactions);
-            results.SetAlgorithm(Algorithm, Algorithm.Portfolio.TotalPortfolioValue);
-            transactions.Initialize(Algorithm, new BacktestingBrokerage(Algorithm), results);
-            feed.Initialize(Algorithm, job, results, null, null, null, _dataManager, null, null);
+            _resultHandler.Initialize(job, new Messaging.Messaging(), new Api.Api(), transactions);
+            _resultHandler.SetAlgorithm(Algorithm, Algorithm.Portfolio.TotalPortfolioValue);
+            transactions.Initialize(Algorithm, new BacktestingBrokerage(Algorithm), _resultHandler);
+            feed.Initialize(Algorithm, job, _resultHandler, null, null, null, _dataManager, null, null);
 
             // Begin setting up the currency conversion feed if needed
             var coreSecurities = Algorithm.Securities.Values.ToList();
@@ -147,46 +149,13 @@ namespace QuantConnect.Report
         }
 
         /// <summary>
-        /// Utility method to get historical data for a list of securities
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        /// <param name="securities">List of securities you want historical data for</param>
-        /// <param name="start">Start date of the history request</param>
-        /// <param name="end">End date of the history request</param>
-        /// <param name="resolution">Resolution of the history request</param>
-        /// <returns>Enumerable of slices</returns>
-        public static IEnumerable<Slice> GetHistory(List<Security> securities, DateTime start, DateTime end, Resolution resolution)
+        public void Dispose()
         {
-            var looper = new PortfolioLooper(0, new List<Order>(), resolution);
-            looper.Algorithm.SetStartDate(start);
-            looper.Algorithm.SetEndDate(end);
-
-            return GetHistory(looper.Algorithm, securities, resolution);
-        }
-
-        /// <summary>
-        /// Gets the history for the given symbols from the <paramref name="start"/> to the <paramref name="end"/>
-        /// </summary>
-        /// <param name="symbols">Symbols to request history for</param>
-        /// <param name="start">Start date of history request</param>
-        /// <param name="end">End date of history request</param>
-        /// <param name="resolution">Resolution of history request</param>
-        /// <returns>Enumerable of slices</returns>
-        public static IEnumerable<Slice> GetHistory(List<Symbol> symbols, DateTime start, DateTime end, Resolution resolution)
-        {
-            // Handles the conversion of Symbol to Security for us.
-            var looper = new PortfolioLooper(0, new List<Order>(), resolution);
-            var securities = new List<Security>();
-
-            looper.Algorithm.SetStartDate(start);
-            looper.Algorithm.SetEndDate(end);
-
-            foreach (var symbol in symbols)
-            {
-                var configs = looper.Algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, false, false);
-                securities.Add(looper.Algorithm.Securities.CreateSecurity(symbol, configs));
-            }
-
-            return GetHistory(looper.Algorithm, securities, resolution);
+            _dataManager.RemoveAllSubscriptions();
+            _cacheProvider.DisposeSafely();
+            _resultHandler.Exit();
         }
 
         /// <summary>
@@ -273,6 +242,7 @@ namespace QuantConnect.Report
                 previousOrderId = order.Id;
             }
 
+            PortfolioLooper looper = null;
             PointInTimePortfolio prev = null;
             foreach (var deploymentOrders in portfolioDeployments)
             {
@@ -297,7 +267,7 @@ namespace QuantConnect.Report
                 }
 
                 // For every deployment, we want to start fresh.
-                var looper = new PortfolioLooper(deployment.LastValue(), deploymentOrders);
+                looper = new PortfolioLooper(deployment.LastValue(), deploymentOrders);
 
                 foreach (var portfolio in looper.ProcessOrders(deploymentOrders))
                 {
@@ -310,6 +280,8 @@ namespace QuantConnect.Report
             {
                 yield return new PointInTimePortfolio(prev, equityCurve.LastKey());
             }
+
+            looper.DisposeSafely();
         }
 
         /// <summary>

@@ -120,7 +120,8 @@ namespace QuantConnect.Securities
             var configuration = configurations.First();
 
             var barCount = _window.Size + 1;
-            var extendedMarketHours = configurations.IsExtendedMarketHours();
+            // hour resolution does no have extended market hours data
+            var extendedMarketHours = _periodSpan != Time.OneHour && configurations.IsExtendedMarketHours();
             var localStartTime = Time.GetStartTimeForTradeBars(
                 security.Exchange.Hours,
                 utcTime.ConvertFromUtc(security.Exchange.TimeZone),

@@ -224,6 +224,11 @@ namespace QuantConnect.Brokerages
         public virtual bool AccountInstantlyUpdated => false;
 
         /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
+        public virtual string AccountBaseCurrency { get; protected set; }
+
+        /// <summary>
         /// Gets the history for the requested security
         /// </summary>
         /// <param name="request">The historical data request</param>

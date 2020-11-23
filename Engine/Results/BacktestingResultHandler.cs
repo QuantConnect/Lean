@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -27,8 +26,6 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
-using System.IO;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.Alphas;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -38,9 +35,6 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public class BacktestingResultHandler : BaseResultsHandler, IResultHandler
     {
-        // used for resetting out/error upon completion
-        private static readonly TextWriter StandardOut = Console.Out;
-        private static readonly TextWriter StandardError = Console.Error;
         private const double Samples = 4000;
         private const double MinimumSamplePeriod = 4;
 
@@ -136,10 +130,6 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             Log.Trace("BacktestingResultHandler.Run(): Ending Thread...");
-
-            // reset standard out/error
-            Console.SetOut(StandardOut);
-            Console.SetError(StandardError);
         } // End Run();
 
         /// <summary>
@@ -422,25 +412,14 @@ namespace QuantConnect.Lean.Engine.Results
             }
             SecurityType(types);
 
-            if (Config.GetBool("forward-console-messages", true))
-            {
-                // we need to forward Console.Write messages to the algorithm's Debug function
-                Console.SetOut(new FuncTextWriter(algorithm.Debug));
-                Console.SetError(new FuncTextWriter(algorithm.Error));
-            }
-            else
-            {
-                // we need to forward Console.Write messages to the standard Log functions
-                Console.SetOut(new FuncTextWriter(msg => Log.Trace(msg)));
-                Console.SetError(new FuncTextWriter(msg => Log.Error(msg)));
-            }
+            ConfigureConsoleTextWriter(algorithm);
         }
 
         /// <summary>
         /// Send a debug message back to the browser console.
         /// </summary>
         /// <param name="message">Message we'd like shown in console.</param>
-        public void DebugMessage(string message)
+        public virtual void DebugMessage(string message)
         {
             Messages.Enqueue(new DebugPacket(_projectId, AlgorithmId, CompileId, message));
             AddToLogStore(message);
@@ -450,7 +429,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// Send a system debug message back to the browser console.
         /// </summary>
         /// <param name="message">Message we'd like shown in console.</param>
-        public void SystemDebugMessage(string message)
+        public virtual void SystemDebugMessage(string message)
         {
             Messages.Enqueue(new SystemDebugPacket(_projectId, AlgorithmId, CompileId, message));
             AddToLogStore(message);
@@ -460,7 +439,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// Send a logging message to the log list for storage.
         /// </summary>
         /// <param name="message">Message we'd in the log.</param>
-        public void LogMessage(string message)
+        public virtual void LogMessage(string message)
         {
             Messages.Enqueue(new LogPacket(AlgorithmId, message));
             AddToLogStore(message);
@@ -481,7 +460,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Send list of security asset types the algortihm uses to browser.
         /// </summary>
-        public void SecurityType(List<SecurityType> types)
+        public virtual void SecurityType(List<SecurityType> types)
         {
             var packet = new SecurityTypesPacket
             {
@@ -495,7 +474,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="message">Error message we'd like shown in console.</param>
         /// <param name="stacktrace">Stacktrace information string</param>
-        public void ErrorMessage(string message, string stacktrace = "")
+        public virtual void ErrorMessage(string message, string stacktrace = "")
         {
             if (message == _errorMessage) return;
             if (Messages.Count > 500) return;
@@ -508,7 +487,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="message">Error message.</param>
         /// <param name="stacktrace">Stacktrace information string</param>
-        public void RuntimeError(string message, string stacktrace = "")
+        public virtual void RuntimeError(string message, string stacktrace = "")
         {
             PurgeQueue();
             Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, AlgorithmId, message, stacktrace));
@@ -639,7 +618,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Terminate the result thread and apply any required exit procedures like sending final results.
         /// </summary>
-        public virtual void Exit()
+        public override void Exit()
         {
             // Only process the logs once
             if (!ExitTriggered)
@@ -661,6 +640,8 @@ namespace QuantConnect.Lean.Engine.Results
                 StopUpdateRunner();
 
                 SendFinalResult();
+
+                base.Exit();
             }
         }
 
@@ -681,7 +662,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="key">Runtime headline statistic name</param>
         /// <param name="value">Runtime headline statistic value</param>
-        public void RuntimeStatistic(string key, string value)
+        public virtual void RuntimeStatistic(string key, string value)
         {
             lock (RuntimeStatistics)
             {
@@ -718,6 +699,30 @@ namespace QuantConnect.Lean.Engine.Results
             foreach (var pair in Algorithm.RuntimeStatistics)
             {
                 RuntimeStatistic(pair.Key, pair.Value);
+            }
+        }
+
+        /// <summary>
+        /// Configures the <see cref="Console.Out"/> and <see cref="Console.Error"/> <see cref="TextWriter"/>
+        /// instances. By default, we forward <see cref="Console.WriteLine(string)"/> to <see cref="IAlgorithm.Debug"/>.
+        /// This is perfect for running in the cloud, but since they're processed asynchronously, the ordering of these
+        /// messages with respect to <see cref="Log"/> messages is broken. This can lead to differences in regression
+        /// test logs based solely on the ordering of messages. To disable this forwarding, set <code>"forward-console-messages"</code>
+        /// to <code>false</code> in the configuration.
+        /// </summary>
+        protected virtual void ConfigureConsoleTextWriter(IAlgorithm algorithm)
+        {
+            if (Config.GetBool("forward-console-messages", true))
+            {
+                // we need to forward Console.Write messages to the algorithm's Debug function
+                Console.SetOut(new FuncTextWriter(algorithm.Debug));
+                Console.SetError(new FuncTextWriter(algorithm.Error));
+            }
+            else
+            {
+                // we need to forward Console.Write messages to the standard Log functions
+                Console.SetOut(new FuncTextWriter(msg => Log.Trace(msg)));
+                Console.SetError(new FuncTextWriter(msg => Log.Error(msg)));
             }
         }
     }

@@ -22,6 +22,7 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Brokerages;
 
 namespace QuantConnect.ToolBox.BitfinexDownloader
 {
@@ -31,7 +32,7 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
     public class BitfinexDataDownloader : IDataDownloader, IDisposable
     {
         private readonly BitfinexBrokerage _brokerage;
-        private readonly BitfinexSymbolMapper _symbolMapper = new BitfinexSymbolMapper();
+        private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.Bitfinex);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BitfinexDataDownloader"/> class
@@ -88,7 +89,7 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
         /// <returns></returns>
         internal Symbol GetSymbol(string ticker)
         {
-            return _symbolMapper.GetLeanSymbol(ticker);
+            return _symbolMapper.GetLeanSymbol(ticker, SecurityType.Crypto, Market.Bitfinex);
         }
 
         /// <summary>

@@ -125,6 +125,11 @@ namespace QuantConnect.Brokerages.Tradier
         }
 
         /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
+        public override string AccountBaseCurrency => Currencies.USD;
+
+        /// <summary>
         /// Create a new Tradier Object:
         /// </summary>
         public TradierBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, string accountID)

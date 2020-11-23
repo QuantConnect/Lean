@@ -17,6 +17,7 @@
 #r "QuantConnect.Configuration.dll"
 #r "QuantConnect.Lean.Engine.dll"
 #r "QuantConnect.Algorithm.CSharp.dll"
+#r "QuantConnect.Api.dll"
 // Note: #r directives must be in the beggining of the file
 
 /*
@@ -54,6 +55,7 @@ using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Risk;
+using QuantConnect.Api;
 using QuantConnect.Parameters;
 using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
@@ -77,3 +79,10 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Interfaces;
+using QuantConnect.Configuration;
+
+// Loads up a connection to our API for use in the research environment
+Api api = new Api();
+api.Initialize(Config.GetInt("job-user-id", 1), 
+    Config.Get("api-access-token", "default"),
+    Config.Get("data-folder"));

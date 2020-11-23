@@ -65,6 +65,12 @@
     <Reference Include="CloneExtensions, Version=1.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\CloneExtensions.1.3.0\lib\net461\CloneExtensions.dll</HintPath>
     </Reference>
+    <Reference Include="Common.Logging, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.3.4.1\lib\net40\Common.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="Common.Logging.Core, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.Core.3.4.1\lib\net40\Common.Logging.Core.dll</HintPath>
+    </Reference>
     <Reference Include="CSharpAPI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Brokerages\InteractiveBrokers\CSharpAPI.dll</HintPath>
@@ -161,6 +167,12 @@
     </Reference>
     <Reference Include="IKVM.Runtime.JNI, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
       <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.Runtime.JNI.dll</HintPath>
+    </Reference>
+    <Reference Include="LaunchDarkly.EventSource, Version=3.3.2.0, Culture=neutral, PublicKeyToken=18e8c36453e3060f, processorArchitecture=MSIL">
+      <HintPath>..\packages\LaunchDarkly.EventSource.3.3.2\lib\net45\LaunchDarkly.EventSource.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.CommandLineUtils, Version=1.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.CommandLineUtils.1.1.1\lib\net451\Microsoft.Extensions.CommandLineUtils.dll</HintPath>
     </Reference>
     <Reference Include="Moq, Version=4.7.63.0, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
       <HintPath>..\packages\Moq.4.7.63\lib\net45\Moq.dll</HintPath>
@@ -360,16 +372,14 @@
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetTests.cs" />
     <Compile Include="Algorithm\Framework\Selection\OpenInterestFutureUniverseSelectionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Selection\QC500UniverseSelectionModelTests.cs" />
-    <Compile Include="API\NodeTests.cs" />
+    <Compile Include="Api\NodeTests.cs" />
     <Compile Include="Brokerages\BrokerageFactoryTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageAdditionalTests.cs" />
     <Compile Include="Brokerages\Binance\BinanceBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\Binance\BinanceBrokerageTests.cs" />
     <Compile Include="Brokerages\Binance\BinanceFeeModelTests.cs" />
-    <Compile Include="Brokerages\Binance\BinanceSymbolMapperTests.cs" />
     <Compile Include="Brokerages\Binance\BinanceBrokerageExchangeInfoTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexFeeModelTests.cs" />
-    <Compile Include="Brokerages\Bitfinex\BitfinexSymbolMapperTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\DowngradeErrorCodeToWarningBrokerageMessageHandlerTests.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersFuturesTests.cs" />
@@ -387,11 +397,14 @@
     <Compile Include="Common\Data\Auxiliary\FactorFileTests.cs" />
     <Compile Include="Common\Data\Auxiliary\MapFileTests.cs" />
     <Compile Include="Common\Data\ChannelTests.cs" />
+    <Compile Include="Common\Data\Custom\QuiverTests.cs" />
     <Compile Include="Common\Data\Custom\TradingEconomicsTests.cs" />
     <Compile Include="Common\Data\DataQueueHandlerSubscriptionManagerTests.cs" />
     <Compile Include="Common\Data\FakeDataQueuehandlerSubscriptionManager.cs" />
     <Compile Include="Common\Data\Fundamental\CoarseFundamentalTests.cs" />
     <Compile Include="Common\Data\Fundamental\FineFundamentalTests.cs" />
+    <Compile Include="Common\Data\PeriodCountConsolidatorTests.cs" />
+    <Compile Include="Common\Orders\Fills\EquityFillModelTests.cs" />
     <Compile Include="Common\Orders\OrderEventTests.cs" />
     <Compile Include="Common\ExtendedDictionaryTests.cs" />
     <Compile Include="Common\Orders\OrderSizingTests.cs" />
@@ -463,6 +476,7 @@
     <Compile Include="Common\Util\BaseDataExtensionsTests.cs" />
     <Compile Include="Common\Util\SubscriptionDataConfigExtensionsTests.cs" />
     <Compile Include="Common\Util\ValidateTests.cs" />
+    <Compile Include="Configuration\ApplicationParserTests.cs" />
     <Compile Include="Engine\AlgorithmTimeLimitManagerTests.cs" />
     <Compile Include="Engine\Alphas\DefaultAlphaHandlerTests.cs" />
     <Compile Include="Engine\Alphas\InsightAnalysisContextTests.cs" />
@@ -470,6 +484,7 @@
     <Compile Include="Engine\DataFeeds\AggregationManagerTests.cs" />
     <Compile Include="Engine\DataFeeds\BacktestingFutureChainProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\DataPermissionManagerTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\DividendEventProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\ScannableEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\InternalSubscriptionManagerTests.cs" />
     <Compile Include="Engine\DataFeeds\RealTimeScheduleEventServiceTests.cs" />
@@ -510,7 +525,8 @@
     <Compile Include="Algorithm\Framework\QCAlgorithmFrameworkTests.cs" />
     <Compile Include="Algorithm\Framework\Risk\MaximumDrawdownPercentPerSecurityTests.cs" />
     <Compile Include="Algorithm\Framework\Selection\ManualUniverseSelectionModelTests.cs" />
-    <Compile Include="API\ApiTests.cs" />
+    <Compile Include="Api\ApiTests.cs" />
+    <Compile Include="Api\ApiLiveTradingTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageTests.cs" />
     <Compile Include="Brokerages\BrokerageTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageHistoryProviderTests.cs" />
@@ -762,7 +778,7 @@
     <Compile Include="Symbols.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />
-    <Compile Include="ToolBox\BasicTests.cs" />
+    <Compile Include="ToolBox\ToolBoxTests.cs" />
     <Compile Include="ToolBox\PolygonHistoryTests.cs" />
     <Compile Include="ToolBox\PolygonSymbolMapperTests.cs" />
     <Compile Include="ToolBox\EstimizeTests.cs" />

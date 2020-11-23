@@ -52,11 +52,14 @@
     <Reference Include="CoinAPI.WebSocket.V1, Version=1.6.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\CoinAPI.WebSocket.V1.1.6.0\lib\net45\CoinAPI.WebSocket.V1.dll</HintPath>
     </Reference>
+    <Reference Include="Common.Logging, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.3.4.1\lib\net40\Common.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="Common.Logging.Core, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.Core.3.4.1\lib\net40\Common.Logging.Core.dll</HintPath>
+    </Reference>
     <Reference Include="DotNetZip, Version=1.13.3.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
       <HintPath>..\packages\DotNetZip.1.13.3\lib\net40\DotNetZip.dll</HintPath>
-    </Reference>
-    <Reference Include="EngineIoClientDotNet, Version=1.0.7.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\EngineIoClientDotNet.1.0.7\lib\net45\EngineIoClientDotNet.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.SharpZipLib, Version=1.2.0.246, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpZipLib.1.2.0\lib\net45\ICSharpCode.SharpZipLib.dll</HintPath>
@@ -148,6 +151,9 @@
     <Reference Include="IQFeed.CSharpApiClient, Version=2.5.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\IQFeed.CSharpApiClient.2.5.1\lib\net461\IQFeed.CSharpApiClient.dll</HintPath>
     </Reference>
+    <Reference Include="LaunchDarkly.EventSource, Version=3.3.2.0, Culture=neutral, PublicKeyToken=18e8c36453e3060f, processorArchitecture=MSIL">
+      <HintPath>..\packages\LaunchDarkly.EventSource.3.3.2\lib\net45\LaunchDarkly.EventSource.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Extensions.CommandLineUtils, Version=1.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.CommandLineUtils.1.1.1\lib\net451\Microsoft.Extensions.CommandLineUtils.dll</HintPath>
     </Reference>
@@ -163,16 +169,10 @@
     <Reference Include="SevenZipSharp">
       <HintPath>..\packages\SevenZipSharp.0.64\lib\SevenZipSharp.dll</HintPath>
     </Reference>
-    <Reference Include="SocketIoClientDotNet, Version=1.0.7.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SocketIoClientDotNet.1.0.7.1\lib\net45\SocketIoClientDotNet.dll</HintPath>
-    </Reference>
     <Reference Include="SuperSocket.ClientEngine, Version=0.10.0.0, Culture=neutral, PublicKeyToken=ee9af13f57f00acc, processorArchitecture=MSIL">
       <HintPath>..\packages\SuperSocket.ClientEngine.Core.0.10.0\lib\net45\SuperSocket.ClientEngine.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=1.2.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Collections.Immutable.1.4.0\lib\netstandard2.0\System.Collections.Immutable.dll</HintPath>
-    </Reference>
     <Reference Include="System.Collections.Specialized, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Collections.Specialized.4.3.0\lib\net46\System.Collections.Specialized.dll</HintPath>
       <Private>True</Private>
@@ -351,8 +351,10 @@
     <Compile Include="IBDownloader\IBDownloaderProgram.cs" />
     <Compile Include="IExchangeInfoDownloader.cs" />
     <Compile Include="ExchangeInfoUpdater.cs" />
+    <Compile Include="IEX\IEXEventSourceCollection.cs" />
     <Compile Include="IEX\IEXDataDownloader.cs" />
     <Compile Include="IEX\IEXDownloaderProgram.cs" />
+    <Compile Include="IEX\Response\StreamResponseStocksUS.cs" />
     <Compile Include="IQFeedDownloader\IQFeedDataDownloader.cs" />
     <Compile Include="IQFeedDownloader\IQFeedDownloaderProgram.cs" />
     <Compile Include="IQFeed\IQFeedFileHistoryProvider.cs" />
@@ -377,6 +379,11 @@
     <Compile Include="Polygon\History\AggregateRowResponse.cs" />
     <Compile Include="Polygon\History\AggregatesResponse.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="QuiverDataDownloader\QuiverCongressDataDownloader.cs" />
+    <Compile Include="QuiverDataDownloader\QuiverDataDownloader.cs" />
+    <Compile Include="QuiverDataDownloader\QuiverEventsBetaDownloader.cs" />
+    <Compile Include="QuiverDataDownloader\QuiverWallStreetBetsDataDownloader.cs" />
+    <Compile Include="QuiverDataDownloader\QuiverWikipediaDataDownloader.cs" />
     <Compile Include="RandomDataGenerator\DividendSplitMapGenerator.cs" />
     <Compile Include="RandomDataGenerator\ConsoleLeveledOutput.cs" />
     <Compile Include="RandomDataGenerator\DataDensity.cs" />

@@ -86,7 +86,6 @@ namespace QuantConnect.Data
         /// The end time of this data. Some data covers spans (trade bars) and as such we want
         /// to know the entire time span covered
         /// </summary>
-        [ProtoMember(3)]
         public virtual DateTime EndTime
         {
             get { return Time; }

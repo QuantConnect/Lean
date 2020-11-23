@@ -14,10 +14,11 @@ REM See the License for the specific language governing permissions and
 REM limitations under the License.
 
 set current_dir=%~dp0
-set default_image=quantconnect/research:latest
-set default_data_dir=%current_dir%..\Data\
-set default_notebook_dir=%current_dir%Notebooks\
-set work_dir=/Lean/Launcher/bin/Debug/
+set DEFAULT_IMAGE=quantconnect/research:latest
+set DEFAULT_DATA_DIR=%current_dir%..\Data\
+set DEFAULT_NOTEBOOK_DIR=%current_dir%Notebooks\
+set CONTAINER_NAME=LeanResearch
+set WORK_DIR=/Lean/Launcher/bin/Debug/
 
 REM If the arg is a file load in the params from the file (run_docker.cfg)
 if exist "%~1" (
@@ -33,39 +34,51 @@ if not "%*"=="" (
         if NOT x%%b==x call :arg_loop %%b
     )
 ) else (
-    set /p image="Enter docker image [default: %default_image%]: "
-    set /p data_dir="Enter absolute path to Data folder [default: %default_data_dir%]: "
-    set /p notebook_dir="Enter absolute path to store notebooks [default: %default_notebook_dir%]: "
+    set /p IMAGE="Enter docker image [default: %DEFAULT_IMAGE%]: "
+    set /p DATA_DIR="Enter absolute path to Data folder [default: %DEFAULT_DATA_DIR%]: "
+    set /p NOTEBOOK_DIR="Enter absolute path to store notebooks [default: %DEFAULT_NOTEBOOK_DIR%]: "
+    set /p UPDATE="Would you like to check for updates on the Docker image? [default: Y]: "	
 )
 
 :verify
 
-if "%image%" == "" (
-    set image=%default_image%
+if "%IMAGE%" == "" (
+    set IMAGE=%DEFAULT_IMAGE%
 )
 
-if "%notebook_dir%" == "" (
-    set notebook_dir=%default_notebook_dir%
+if "%NOTEBOOK_DIR%" == "" (
+    set NOTEBOOK_DIR=%DEFAULT_NOTEBOOK_DIR%
 )
 
-if not exist "%notebook_dir%" (
-    mkdir %notebook_dir%
+if "%UPDATE%" == "" (
+    set UPDATE=Y
 )
 
-if "%data_dir%" == "" (
-    set data_dir=%default_data_dir%
+if not exist "%NOTEBOOK_DIR%" (
+    mkdir %NOTEBOOK_DIR%
 )
 
-if not exist "%data_dir%" (
-    echo Data directory '%data_dir%' does not exist
+if "%DATA_DIR%" == "" (
+    set DATA_DIR=%DEFAULT_DATA_DIR%
+)
+
+if not exist "%DATA_DIR%" (
+    echo Data directory '%DATA_DIR%' does not exist
     goto script_exit
+)
+
+REM Pull the image if we want to update
+if /I "%UPDATE%" == "Y" (
+    echo Updating Docker Image
+    docker pull %IMAGE%
 )
 
 echo Starting docker container; container id is:
  docker run -d --rm -p 8888:8888^
-    --mount type=bind,source=%data_dir%,target=/home/Data,readonly^
-    --mount type=bind,source=%notebook_dir%,target=/Lean/Launcher/bin/Debug/Notebooks^
-    %image%
+    -v %DATA_DIR%:/home/Data:ro^
+    -v %NOTEBOOK_DIR%:/Lean/Launcher/bin/Debug/Notebooks^
+    --name %CONTAINER_NAME%^
+    %IMAGE%
 
 echo Docker container started; will wait 2 seconds before opening web browser.
 timeout 2 /nobreak

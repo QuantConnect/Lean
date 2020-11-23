@@ -140,6 +140,8 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         [Test]
         public void ConnectTest()
         {
+            SetupResponse(_accountsData);
+
             _wss.Setup(m => m.Connect()).Raises(m => m.Open += null, EventArgs.Empty).Verifiable();
             _wss.Setup(m => m.IsOpen).Returns(false);
             _unit.Connect();

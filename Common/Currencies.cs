@@ -28,6 +28,16 @@ namespace QuantConnect
         public static string USD = "USD";
 
         /// <summary>
+        /// EUR currency string
+        /// </summary>
+        public static string EUR = "EUR";
+
+        /// <summary>
+        /// GBP currency string
+        /// </summary>
+        public static string GBP = "GBP";
+
+        /// <summary>
         /// Null currency used when a real one is not required
         /// </summary>
         public const string NullCurrency = "QCC";

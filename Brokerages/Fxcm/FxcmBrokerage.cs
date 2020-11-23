@@ -431,7 +431,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
             //Adds the account currency to the cashbook.
             cashBook.Add(new CashAmount(Convert.ToDecimal(_accounts[_accountId].getCashOutstanding()),
-                _fxcmAccountCurrency));
+                AccountBaseCurrency));
 
             // include cash balances from currency swaps for open Forex positions
             foreach (var trade in _openPositions.Values)

@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             var row = new FactorFileRow(new DateTime(2018, 08, 23), 1m, 2m, 123m);
             var dividend = new Dividend(Symbols.SPY, row.Date.AddDays(1), 1m, 123m);
             var updated = row.Apply(dividend, SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
-            Assert.AreEqual("20180823,0.99187,2,123", updated.ToCsv());
+            Assert.AreEqual("20180823,0.9918699,2,123", updated.ToCsv());
         }
 
         [Test]

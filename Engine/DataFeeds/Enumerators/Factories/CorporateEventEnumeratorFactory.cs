@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 
@@ -84,6 +85,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             }
 
             return new SynchronizingEnumerator(dataEnumerator, enumerator);
+        }
+
+        /// <summary>
+        /// Centralized logic used by the data feeds to determine if we should emit auxiliary base data points.
+        /// For equities we only want to emit split/dividends events for non internal and only for <see cref="TradeBar"/> configurations
+        /// this last part is because equities also have <see cref="QuoteBar"/> subscriptions.
+        /// </summary>
+        /// <remarks>The <see cref="TimeSliceFactory"/> does not allow for multiple dividends/splits per symbol in the same time slice
+        /// but we don't want to rely only on that and make an explicit decision here.</remarks>
+        /// <remarks>History provider is never emitting auxiliary data points</remarks>
+        public static bool ShouldEmitAuxiliaryBaseData(SubscriptionDataConfig config)
+        {
+            return config.SecurityType != SecurityType.Equity || !config.IsInternalFeed
+                && (config.Type == typeof(TradeBar) || config.Type == typeof(Tick) && config.TickType == TickType.Trade);
         }
 
         private static MapFile GetMapFileToUse(

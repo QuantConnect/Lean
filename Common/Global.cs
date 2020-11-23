@@ -632,7 +632,7 @@ namespace QuantConnect
         /// </summary>
         Raw,
         /// <summary>
-        /// The adjusted prices with splits and dividendends factored in
+        /// The adjusted prices with splits and dividends factored in
         /// </summary>
         Adjusted,
         /// <summary>

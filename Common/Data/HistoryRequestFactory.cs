@@ -91,7 +91,8 @@ namespace QuantConnect.Data
             var configs = _algorithm.SubscriptionManager
                 .SubscriptionDataConfigService
                 .GetSubscriptionDataConfigs(symbol);
-            var isExtendedMarketHours = configs.IsExtendedMarketHours();
+            // hour resolution does no have extended market hours data
+            var isExtendedMarketHours = resolution != Resolution.Hour && configs.IsExtendedMarketHours();
 
             var timeSpan = resolution.ToTimeSpan();
             // make this a minimum of one second
