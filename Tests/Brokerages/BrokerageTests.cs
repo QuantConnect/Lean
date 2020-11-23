@@ -108,12 +108,6 @@ namespace QuantConnect.Tests.Brokerages
                 Assert.Fail("Failed to connect to brokerage");
             }
 
-            //gdax does not have a user data stream. Instead, we need to symbol subscribe and monitor for our orders.
-            if (brokerage.Name == "GDAX")
-            {
-                ((QuantConnect.Brokerages.GDAX.GDAXBrokerage)brokerage).Subscribe(new[] { Symbol });
-            }
-
             Log.Trace("");
             Log.Trace("GET OPEN ORDERS");
             Log.Trace("");

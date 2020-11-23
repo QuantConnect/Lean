@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
             var apiSecret = Config.Get("binance-api-secret");
 
             _binanceApi = new BinanceRestApiClient(
-                new BinanceSymbolMapper(),
+                new SymbolPropertiesDatabaseSymbolMapper(Market.Binance),
                 algorithm.Object?.Portfolio,
                 apiKey,
                 apiSecret);
@@ -76,7 +76,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
         /// <summary>
         /// Gets Binance symbol mapper
         /// </summary>
-        protected ISymbolMapper SymbolMapper => new BinanceSymbolMapper();
+        protected ISymbolMapper SymbolMapper => new SymbolPropertiesDatabaseSymbolMapper(Market.Binance);
 
         /// <summary>
         /// Gets the symbol to be traded, must be shortable

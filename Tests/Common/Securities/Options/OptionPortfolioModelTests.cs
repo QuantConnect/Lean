@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
                     SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                     CreateTradeBarConfig(Symbols.SPY_C_192_Feb19_2016),
                     EUR,
-                    new OptionSymbolProperties(new SymbolProperties("EUR", "EUR", 100, 0.01m, 1)),
+                    new OptionSymbolProperties(new SymbolProperties("EUR", "EUR", 100, 0.01m, 1, string.Empty)),
                     ErrorCurrencyConverter.Instance,
                     RegisteredSecurityDataTypesProvider.Null
                 )

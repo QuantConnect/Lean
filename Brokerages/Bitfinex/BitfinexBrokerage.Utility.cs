@@ -221,7 +221,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             var holding = new Holding
             {
-                Symbol = _symbolMapper.GetLeanSymbol(position.Symbol),
+                Symbol = _symbolMapper.GetLeanSymbol(position.Symbol, SecurityType.Crypto, Market.Bitfinex),
                 AveragePrice = position.BasePrice,
                 Quantity = position.Amount,
                 UnrealizedPnL = position.ProfitLoss,

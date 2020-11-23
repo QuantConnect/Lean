@@ -72,7 +72,7 @@ namespace QuantConnect.Brokerages.GDAX
                     (order as StopMarketOrder)?.StopPrice ?? 0;
             }
 
-            payload.product_id = ConvertSymbol(order.Symbol);
+            payload.product_id = _symbolMapper.GetBrokerageSymbol(order.Symbol);
 
             if (_algorithm.BrokerageModel.AccountType == AccountType.Margin)
             {
@@ -262,7 +262,7 @@ namespace QuantConnect.Brokerages.GDAX
 
                 order.Quantity = item.Side == "sell" ? -item.Size : item.Size;
                 order.BrokerId = new List<string> { item.Id };
-                order.Symbol = ConvertProductId(item.ProductId);
+                order.Symbol = _symbolMapper.GetLeanSymbol(item.ProductId, SecurityType.Crypto, Market.GDAX);
                 order.Time = DateTime.UtcNow;
                 order.Status = ConvertOrderStatus(item);
                 order.Price = item.Price;
@@ -339,6 +339,13 @@ namespace QuantConnect.Brokerages.GDAX
                 yield break;
             }
 
+            if (!_symbolMapper.IsKnownLeanSymbol(request.Symbol))
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidSymbol",
+                    $"Unknown symbol: {request.Symbol.Value}, no history returned"));
+                yield break;
+            }
+
             if (request.EndTimeUtc < request.StartTimeUtc)
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidDateRange",
@@ -367,7 +374,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="request">The history request instance</param>
         private IEnumerable<TradeBar> GetHistoryFromCandles(HistoryRequest request)
         {
-            var productId = ConvertSymbol(request.Symbol);
+            var productId = _symbolMapper.GetBrokerageSymbol(request.Symbol);
             var granularity = Convert.ToInt32(request.Resolution.ToTimeSpan().TotalSeconds);
 
             var startTime = request.StartTimeUtc;

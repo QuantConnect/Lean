@@ -48,7 +48,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         private volatile int _subscribeErrorCode;
         private readonly object _locker = new object();
         private readonly BitfinexBrokerage _brokerage;
-        private readonly BitfinexSymbolMapper _symbolMapper;
+        private readonly ISymbolMapper _symbolMapper;
         private readonly RateGate _connectionRateLimiter = new RateGate(5, TimeSpan.FromMinutes(1));
         private readonly ConcurrentDictionary<Symbol, List<BitfinexWebSocketWrapper>> _subscriptionsBySymbol = new ConcurrentDictionary<Symbol, List<BitfinexWebSocketWrapper>>();
         private readonly ConcurrentDictionary<BitfinexWebSocketWrapper, BitfinexWebSocketChannels> _channelsByWebSocket = new ConcurrentDictionary<BitfinexWebSocketWrapper, BitfinexWebSocketChannels>();
@@ -64,7 +64,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <summary>
         /// Initializes a new instance of the <see cref="BitfinexSubscriptionManager"/> class.
         /// </summary>
-        public BitfinexSubscriptionManager(BitfinexBrokerage brokerage, string wssUrl, BitfinexSymbolMapper symbolMapper)
+        public BitfinexSubscriptionManager(BitfinexBrokerage brokerage, string wssUrl, ISymbolMapper symbolMapper)
         {
             _brokerage = brokerage;
             _wssUrl = wssUrl;
@@ -456,7 +456,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 lock (_locker)
                 {
-                    var channel = new Channel(data.Channel, _symbolMapper.GetLeanSymbol(data.Symbol));
+                    var channel = new Channel(data.Channel, _symbolMapper.GetLeanSymbol(data.Symbol, SecurityType.Crypto, Market.Bitfinex));
 
                     BitfinexWebSocketChannels channels;
                     if (!_channelsByWebSocket.TryGetValue(webSocket, out channels))

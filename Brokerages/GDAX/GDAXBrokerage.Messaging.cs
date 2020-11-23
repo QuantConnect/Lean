@@ -26,7 +26,6 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Threading;
 using RestSharp;
-using System.Text.RegularExpressions;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Orders.Fees;
@@ -45,12 +44,13 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         public ConcurrentDictionary<long, GDAXFill> FillSplit { get; set; }
         private readonly string _passPhrase;
-        private const string SymbolMatching = "ETH|LTC|BTC|BCH|XRP|EOS|XLM|ETC|ZRX";
         private readonly IAlgorithm _algorithm;
         private readonly CancellationTokenSource _canceller = new CancellationTokenSource();
         private readonly ConcurrentDictionary<Symbol, DefaultOrderBook> _orderBooks = new ConcurrentDictionary<Symbol, DefaultOrderBook>();
         private readonly bool _isDataQueueHandler;
         protected readonly IDataAggregator _aggregator;
+
+        private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.GDAX);
 
         // GDAX has different rate limits for public and private endpoints
         // https://docs.gdax.com/#rate-limits
@@ -165,7 +165,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 var message = JsonConvert.DeserializeObject<Messages.Snapshot>(data);
 
-                var symbol = ConvertProductId(message.ProductId);
+                var symbol = _symbolMapper.GetLeanSymbol(message.ProductId, SecurityType.Crypto, Market.GDAX);
 
                 DefaultOrderBook orderBook;
                 if (!_orderBooks.TryGetValue(symbol, out orderBook))
@@ -220,7 +220,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 var message = JsonConvert.DeserializeObject<Messages.L2Update>(data);
 
-                var symbol = ConvertProductId(message.ProductId);
+                var symbol = _symbolMapper.GetLeanSymbol(message.ProductId, SecurityType.Crypto, Market.GDAX);
 
                 var orderBook = _orderBooks[symbol];
 
@@ -275,7 +275,7 @@ namespace QuantConnect.Brokerages.GDAX
 
         private void EmitFillOrderEvent(Messages.Fill fill, Order order)
         {
-            var symbol = ConvertProductId(fill.ProductId);
+            var symbol = _symbolMapper.GetLeanSymbol(fill.ProductId, SecurityType.Crypto, Market.GDAX);
 
             if (!FillSplit.ContainsKey(order.Id))
             {
@@ -327,7 +327,9 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns></returns>
         public Tick GetTick(Symbol symbol)
         {
-            var req = new RestRequest($"/products/{ConvertSymbol(symbol)}/ticker", Method.GET);
+            var brokerageSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
+
+            var req = new RestRequest($"/products/{brokerageSymbol}/ticker", Method.GET);
             var response = ExecuteRestRequest(req, GdaxEndpointType.Public);
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {
@@ -366,7 +368,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         private void EmitTradeTick(Messages.Matched message)
         {
-            var symbol = ConvertProductId(message.ProductId);
+            var symbol = _symbolMapper.GetLeanSymbol(message.ProductId, SecurityType.Crypto, Market.GDAX);
 
             _aggregator.Update(new Tick
             {
@@ -387,20 +389,25 @@ namespace QuantConnect.Brokerages.GDAX
             var pendingSymbols = new List<Symbol>();
             foreach (var item in fullList)
             {
-                if (!IsSubscribeAvailable(item))
+                if (_symbolMapper.IsKnownLeanSymbol(item))
+                {
+                    pendingSymbols.Add(item);
+                }
+                else if (item.SecurityType == SecurityType.Crypto)
+                {
+                    Log.Error($"Unknown GDAX symbol: {item.Value}");
+                }
+                else
                 {
                     //todo: refactor this outside brokerage
                     //alternative service: http://openexchangerates.org/latest.json
                     PollTick(item);
                 }
-                else
-                {
-                    pendingSymbols.Add(item);
-                }
             }
 
             var products = pendingSymbols
-                .Select(s => s.Value.Substring(0, 3) + "-" + s.Value.Substring(3)).ToArray();
+                .Select(s => _symbolMapper.GetBrokerageSymbol(s))
+                .ToArray();
 
             var payload = new
             {
@@ -484,11 +491,6 @@ namespace QuantConnect.Brokerages.GDAX
             }
         }
 
-        private bool IsSubscribeAvailable(Symbol symbol)
-        {
-            return Regex.IsMatch(symbol.Value, SymbolMatching);
-        }
-
         /// <summary>
         /// Ends current subscriptions
         /// </summary>
@@ -497,7 +499,7 @@ namespace QuantConnect.Brokerages.GDAX
             if (WebSocket.IsOpen)
             {
                 var products = symbols
-                    .Select(s => s.Value.Substring(0, 3) + "-" + s.Value.Substring(3))
+                    .Select(s => _symbolMapper.GetBrokerageSymbol(s))
                     .ToArray();
 
                 var payload = new

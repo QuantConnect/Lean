@@ -378,15 +378,14 @@
     <Compile Include="Brokerages\Binance\BinanceBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\Binance\BinanceBrokerageTests.cs" />
     <Compile Include="Brokerages\Binance\BinanceFeeModelTests.cs" />
-    <Compile Include="Brokerages\Binance\BinanceSymbolMapperTests.cs" />
     <Compile Include="Brokerages\Binance\BinanceBrokerageExchangeInfoTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexFeeModelTests.cs" />
-    <Compile Include="Brokerages\Bitfinex\BitfinexSymbolMapperTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\DowngradeErrorCodeToWarningBrokerageMessageHandlerTests.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersFuturesTests.cs" />
     <Compile Include="Brokerages\Paper\PaperBrokerageTests.cs" />
     <Compile Include="AlgorithmRunnerResults.cs" />
+    <Compile Include="Brokerages\SymbolPropertiesDatabaseSymbolMapperTests.cs" />
     <Compile Include="Common\Benchmarks\SecurityBenchmarkTests.cs" />
     <Compile Include="Common\Brokerages\AlpacaBrokerageModelTests.cs" />
     <Compile Include="Common\Brokerages\BitfinexBrokerageModelTests.cs" />

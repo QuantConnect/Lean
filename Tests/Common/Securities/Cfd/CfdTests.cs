@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Common.Securities.Cfd
         {
             var symbol = Symbol.Create("DE30EUR", SecurityType.Cfd, Market.Oanda);
             var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.Utc, TimeZones.NewYork, true, true, true);
-            var symbolProperties = new SymbolProperties("Dax German index", "EUR", 1, 1, 1);
+            var symbolProperties = new SymbolProperties("Dax German index", "EUR", 1, 1, 1, string.Empty);
             var cfd = new QuantConnect.Securities.Cfd.Cfd(SecurityExchangeHours.AlwaysOpen(config.DataTimeZone), new Cash("EUR", 0, 0), config, symbolProperties, ErrorCurrencyConverter.Instance, RegisteredSecurityDataTypesProvider.Null);
             Assert.AreEqual("EUR", cfd.QuoteCurrency.Symbol);
         }
