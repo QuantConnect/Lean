@@ -1,5 +1,0 @@
-{
-    "python.autoComplete.extraPaths": [
-        "Algorithm.Python/stubs"
-    ]
-}
