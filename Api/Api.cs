@@ -410,6 +410,13 @@ namespace QuantConnect.Api
 
             Backtest result;
             ApiConnection.TryRequest(request, out result);
+
+            // Go fetch the charts if the backtest is completed
+            if (result.Completed)
+            {
+                // TODO
+            }
+
             return result;
         }
 

@@ -22,7 +22,10 @@ namespace QuantConnect.Api
 {
     /// <summary>
     /// Backtest response packet from the QuantConnect.com API.
+    /// Used in Backtest/Create
     /// </summary>
+    ///
+    /// TODO: Maybe we need a more uniform backtest class for all backtest/* endpoints
     public class Backtest : RestResponse
     {
         /// <summary>
@@ -56,12 +59,6 @@ namespace QuantConnect.Api
         public decimal Progress;
 
         /// <summary>
-        /// Result packet for the backtest
-        /// </summary>
-        [JsonProperty(PropertyName = "result")]
-        public BacktestResult Result;
-
-        /// <summary>
         /// Backtest error message
         /// </summary>
         [JsonProperty(PropertyName = "error")]
@@ -78,6 +75,42 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "created")]
         public DateTime Created;
+
+        /// <summary>
+        /// Contains population averages scores over the life of the algorithm
+        /// </summary>
+        [JsonProperty(PropertyName = "alphaRuntimeStatistics")]
+        public AlphaRuntimeStatistics AlphaRuntimeStatistics;
+
+        /// <summary>
+        /// Charts updates for the live algorithm since the last result packet
+        /// </summary>
+        [JsonProperty(PropertyName = "charts")]
+        public IDictionary<string, Chart> Charts;
+
+        /// <summary>
+        /// Statistics information sent during the algorithm operations.
+        /// </summary>
+        /// <remarks>Intended for update mode -- send updates to the existing statistics in the result GUI. If statistic key does not exist in GUI, create it</remarks>
+        [JsonProperty(PropertyName = "statistics")]
+        public IDictionary<string, string> Statistics;
+
+        /// <summary>
+        /// Runtime banner/updating statistics in the title banner of the live algorithm GUI.
+        /// </summary>
+        [JsonProperty(PropertyName = "runtimeStatistics")]
+        public IDictionary<string, string> RuntimeStatistics;
+    }
+
+    // TODO: Temporary work around non-uniform Backtest/* endpoints
+    // Will remove this once it has been unified
+    public class BacktestReadResponseWrapper : RestResponse
+    {
+        /// <summary>
+        /// Backtest Object
+        /// </summary>
+        [JsonProperty(PropertyName = "backtest")]
+        public Backtest Backtest;
     }
 
     /// <summary>
