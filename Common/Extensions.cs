@@ -51,6 +51,7 @@ using static QuantConnect.StringExtensions;
 using Microsoft.IO;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Securities.Future;
+using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect
@@ -2322,6 +2323,29 @@ namespace QuantConnect
 
                 default:
                     throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        /// <summary>
+        /// Gets the delisting date for the provided Symbol
+        /// </summary>
+        /// <param name="symbol">The symbol to lookup the last trading date</param>
+        /// <param name="mapFile">Map file to use for delisting date. Defaults to SID.DefaultDate if no value is passed and is equity.</param>
+        /// <returns></returns>
+        public static DateTime GetDelistingDate(this Symbol symbol, MapFile mapFile = null)
+        {
+            switch (symbol.ID.SecurityType)
+            {
+                case SecurityType.Future:
+                    return symbol.ID.Date;
+                case SecurityType.Option:
+                    if (symbol.Underlying.SecurityType == SecurityType.Future)
+                    {
+                        return FutureOptionSymbol.GetLastDayOfTrading(symbol);
+                    }
+                    return OptionSymbol.GetLastDayOfTrading(symbol);
+                default:
+                    return mapFile?.DelistingDate ?? SecurityIdentifier.DefaultDate;
             }
         }
 

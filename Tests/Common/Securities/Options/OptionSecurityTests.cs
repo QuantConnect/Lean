@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             var equityOptionSecurity = new Option(
                 equityOption,
-                MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.CME, equityOption, equityOption.SecurityType),
+                MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, equityOption, equityOption.SecurityType),
                 new Cash("USD", 100000m, 1m),
                 new OptionSymbolProperties(string.Empty, "USD", 100m, 0.0001m, 1m),
                 new CashBook(),

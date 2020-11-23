@@ -264,6 +264,24 @@ namespace QuantConnect.Securities
         /// <returns>The entry matching the specified market/symbol/security-type</returns>
         public virtual Entry GetEntry(string market, Symbol symbol, SecurityType securityType)
         {
+            if (securityType == SecurityType.Option && symbol.ID.Underlying.SecurityType != SecurityType.Equity)
+            {
+                // Try and get the option market hours. If they don't exist, we default back to
+                // the underlying's market hours.
+                Entry entry;
+                if (!TryGetEntry(market, GetDatabaseSymbolKey(symbol), securityType, out entry) &&
+                    !TryGetEntry(market, GetDatabaseSymbolKey(symbol.Underlying), symbol.ID.Underlying.SecurityType, out entry))
+                {
+                    var key = new SecurityDatabaseKey(market, symbol, securityType);
+                    var keys = string.Join(", ", _entries.Keys);
+
+                    Log.Error($"MarketHoursDatabase.GetExchangeHours(): Unable to locate exchange hours for {key}. Available keys: {keys}");
+                    throw new ArgumentException($"Unable to locate exchange hours for {key}");
+                }
+
+                return entry;
+            }
+
             return GetEntry(market, GetDatabaseSymbolKey(symbol), securityType);
         }
 
@@ -291,7 +309,7 @@ namespace QuantConnect.Securities
                         // the value of the underlying without the contract information.
                         if (symbol.HasUnderlying && symbol.Underlying.SecurityType != SecurityType.Equity)
                         {
-                            stringSymbol = symbol.Underlying.ID.Symbol;
+                            stringSymbol = symbol.ID.Symbol;
                         }
                         else if (symbol.HasUnderlying)
                         {
