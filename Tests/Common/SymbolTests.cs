@@ -17,6 +17,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Reflection;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Data;
@@ -557,27 +558,35 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
-        public void NegativeStrikePriceDoesNotThrow()
+        public void NegativeStrikePriceRoundTrip()
         {
             var future = Symbol.CreateFuture(
                 "CL",
                 Market.NYMEX,
                 new DateTime(2020, 5, 20));
 
-            Assert.DoesNotThrow(() =>
-            {
-                var a =Symbol.CreateOption(
-                    future,
-                    Market.NYMEX,
-                    OptionStyle.American,
-                    OptionRight.Call,
-                    -50,
-                    new DateTime(2020, 4, 16));
-            });
+            var option = Symbol.CreateOption(
+                future,
+                Market.NYMEX,
+                OptionStyle.American,
+                OptionRight.Call,
+                -50,
+                new DateTime(2020, 4, 16));
+
+            Assert.AreEqual(-50, option.ID.StrikePrice);
+
+            var properties = (ulong)typeof(SecurityIdentifier)
+                .GetField("_properties", BindingFlags.NonPublic | BindingFlags.Instance)
+                .GetValue(option.ID);
+
+            // Forces the reconstruction of the strike price to ensure that it's been properly parsed.
+            var newSid = new SecurityIdentifier(option.ID.Symbol, properties);
+
+            Assert.AreEqual(-50, newSid.StrikePrice);
         }
 
         [Test]
-        public void SymbolHashForOptionsBackwardsCompatibility()
+        public void SymbolHashForOptionsBackwardsCompatibilityWholeNumber()
         {
             var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             var option = Symbol.CreateOption(
@@ -589,6 +598,39 @@ namespace QuantConnect.Tests.Common
                 new DateTime(2020, 5, 21));
 
             Assert.AreEqual("AAPL XEOLB4YAQ8BQ|AAPL R735QTJ8XC9X", option.ID.ToString());
+            Assert.AreEqual(100m, option.ID.StrikePrice);
+        }
+
+        [Test]
+        public void SymbolHashForOptionsBackwardsCompatibilityFractionalNumber()
+        {
+            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            var option = Symbol.CreateOption(
+                equity,
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Call,
+                0.01m,
+                new DateTime(2020, 5, 21));
+
+            Assert.AreEqual("AAPL XEOLB4YAHNOM|AAPL R735QTJ8XC9X", option.ID.ToString());
+            Assert.AreEqual(0.01m, option.ID.StrikePrice);
+        }
+
+        [Test]
+        public void SymbolHashForOptionsBackwardsCompatibilityLargeFractionalNumberDoesNotThrow()
+        {
+            Assert.DoesNotThrow(() =>
+            {
+                var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+                var option = Symbol.CreateOption(
+                    equity,
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    3600.75m,
+                    new DateTime(2020, 5, 21));
+            });
         }
 
         class OldSymbol
