@@ -269,6 +269,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.OpenOrder += HandleOpenOrder;
             _client.OpenOrderEnd += HandleOpenOrderEnd;
             _client.UpdateAccountValue += HandleUpdateAccountValue;
+            _client.AccountSummary += HandleAccountSummary;
+            _client.ManagedAccounts += HandleManagedAccounts;
+            _client.FamilyCodes += HandleFamilyCodes;
             _client.ExecutionDetails += HandleExecutionDetails;
             _client.CommissionReport += HandleCommissionReport;
             _client.Error += HandleError;
@@ -723,6 +726,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     Log.Trace("InteractiveBrokersBrokerage.Connect(): IB next valid id received.");
 
                     if (!_client.Connected) throw new Exception("InteractiveBrokersBrokerage.Connect(): Connection returned but was not in connected state.");
+
+                    // request account information for logging purposes
+                    _client.ClientSocket.reqAccountSummary(GetNextId(), "All", "AccountType");
+                    _client.ClientSocket.reqManagedAccts();
+                    _client.ClientSocket.reqFamilyCodes();
 
                     if (IsFinancialAdvisor)
                     {
@@ -3079,6 +3087,24 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     throw new Exception($"InteractiveBrokersBrokerage.CheckIbAutomaterError(): {result.ErrorCode} - {result.ErrorMessage}");
                 }
             }
+        }
+
+        private void HandleAccountSummary(object sender, IB.AccountSummaryEventArgs e)
+        {
+            Log.Trace($"InteractiveBrokersBrokerage.HandleAccountSummary(): Request id: {e.RequestId}, Account: {e.Account}, Tag: {e.Tag}, Value: {e.Value}, Currency: {e.Currency}");
+        }
+
+        private void HandleFamilyCodes(object sender, IB.FamilyCodesEventArgs e)
+        {
+            foreach (var familyCode in e.FamilyCodes)
+            {
+                Log.Trace($"InteractiveBrokersBrokerage.HandleFamilyCodes(): Account id: {familyCode.AccountID}, Family code: {familyCode.FamilyCodeStr}");
+            }
+        }
+
+        private void HandleManagedAccounts(object sender, IB.ManagedAccountsEventArgs e)
+        {
+            Log.Trace($"InteractiveBrokersBrokerage.HandleManagedAccounts(): Account list: {e.AccountList}");
         }
 
         private readonly ConcurrentDictionary<Symbol, int> _subscribedSymbols = new ConcurrentDictionary<Symbol, int>();

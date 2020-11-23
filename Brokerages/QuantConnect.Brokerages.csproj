@@ -365,6 +365,9 @@
     <Compile Include="Bitfinex\Converters\TickerConverter.cs" />
     <Compile Include="Bitfinex\Converters\PositionConverter.cs" />
     <Compile Include="Bitfinex\Converters\WalletConverter.cs" />
+    <Compile Include="InteractiveBrokers\Client\FamilyCodesEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\AccountSummaryEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\ManagedAccountsEventArgs.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersStateManager.cs" />
     <Compile Include="IOrderBookUpdater.cs" />
     <Compile Include="DefaultOrderBook.cs" />
