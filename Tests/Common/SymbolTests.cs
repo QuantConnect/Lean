@@ -17,7 +17,6 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Reflection;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Data;
