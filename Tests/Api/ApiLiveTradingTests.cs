@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.API
 
             var file = new ProjectFile
             {
-                Name = "main.cs",
+                Name = "Main.cs",
                 Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
             };
 
@@ -93,7 +93,7 @@ namespace QuantConnect.Tests.API
 
             var file = new ProjectFile
             {
-                Name = "main.cs",
+                Name = "Main.cs",
                 Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateForexAlgorithm.cs")
             };
 
@@ -116,7 +116,7 @@ namespace QuantConnect.Tests.API
 
             var file = new ProjectFile
             {
-                Name = "main.cs",
+                Name = "Main.cs",
                 Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateForexAlgorithm.cs")
             };
 
@@ -144,7 +144,7 @@ namespace QuantConnect.Tests.API
 
             var file = new ProjectFile
             {
-                Name = "main.cs",
+                Name = "Main.cs",
                 Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
             };
 
@@ -165,7 +165,7 @@ namespace QuantConnect.Tests.API
 
             var file = new ProjectFile
             {
-                Name = "main.cs",
+                Name = "Main.cs",
                 Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
             };
 
@@ -187,7 +187,7 @@ namespace QuantConnect.Tests.API
 
             var file = new ProjectFile
             {
-                Name = "main.cs",
+                Name = "Main.cs",
                 Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
             };
 
@@ -209,7 +209,7 @@ namespace QuantConnect.Tests.API
 
             var file = new ProjectFile
             {
-                Name = "main.cs",
+                Name = "Main.cs",
                 Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
             };
 
