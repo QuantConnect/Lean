@@ -62,8 +62,9 @@ namespace QuantConnect.Data.Custom.SmartInsider
         SatisfyStockVesting,
 
         /// <summary>
-        /// Error, but should actually be SatisfyStockVesting
+        /// The field was not found in the enum, or is representative of a SatisfyStockVesting entry.
         /// </summary>
+        /// <remarks>The EnumMember attribute is kept for backwards compatibility</remarks>
         [EnumMember(Value = "Missing Lookup Formula for BuybackHoldingTypeId 10.00")]
         Error
     }
