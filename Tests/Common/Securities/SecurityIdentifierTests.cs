@@ -388,7 +388,7 @@ namespace QuantConnect.Tests.Common.Securities
             var sid = SecurityIdentifier.GenerateBase(baseDataType, symbol, Market.USA);
             Assert.AreEqual(expected, sid.Symbol);
         }
-        
+
         [Test]
         public void NegativeStrikePriceRoundTrip()
         {
@@ -412,35 +412,41 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(-50, newSid.StrikePrice);
         }
 
-        [Test]
-        public void SymbolHashForOptionsBackwardsCompatibilityWholeNumber()
+        [TestCase(OptionStyle.American, OptionRight.Call, "AAPL XEOLB4YAQ8BQ|AAPL R735QTJ8XC9X")]
+        [TestCase(OptionStyle.American, OptionRight.Put, "AAPL 31DSLGKXI01PI|AAPL R735QTJ8XC9X")]
+        [TestCase(OptionStyle.European, OptionRight.Call, "AAPL XEOOUQW0JB1I|AAPL R735QTJ8XC9X")]
+        [TestCase(OptionStyle.European, OptionRight.Put, "AAPL 31DSP06V7T4FA|AAPL R735QTJ8XC9X")]
+        public void SymbolHashForOptionsBackwardsCompatibilityWholeNumber(OptionStyle style, OptionRight right, string expected)
         {
             var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             var option = Symbol.CreateOption(
                 equity,
                 Market.USA,
-                OptionStyle.American,
-                OptionRight.Call,
+                style,
+                right,
                 100m,
                 new DateTime(2020, 5, 21));
 
-            Assert.AreEqual("AAPL XEOLB4YAQ8BQ|AAPL R735QTJ8XC9X", option.ID.ToString());
+            Assert.AreEqual(expected, option.ID.ToString());
             Assert.AreEqual(100m, option.ID.StrikePrice);
         }
 
-        [Test]
-        public void SymbolHashForOptionsBackwardsCompatibilityFractionalNumber()
+        [TestCase(OptionStyle.American, OptionRight.Call, "AAPL XEOLB4YAHNOM|AAPL R735QTJ8XC9X")]
+        [TestCase(OptionStyle.American, OptionRight.Put, "AAPL 31DSLGKXHRH2E|AAPL R735QTJ8XC9X")]
+        [TestCase(OptionStyle.European, OptionRight.Call, "AAPL XEOOUQW0AQEE|AAPL R735QTJ8XC9X")]
+        [TestCase(OptionStyle.European, OptionRight.Put, "AAPL 31DSP06V7KJS6|AAPL R735QTJ8XC9X")]
+        public void SymbolHashForOptionsBackwardsCompatibilityFractionalNumber(OptionStyle style, OptionRight right, string expected)
         {
             var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             var option = Symbol.CreateOption(
                 equity,
                 Market.USA,
-                OptionStyle.American,
-                OptionRight.Call,
+                style,
+                right,
                 0.01m, // strike decimal precision is limited to 4 decimal places only
                 new DateTime(2020, 5, 21));
 
-            Assert.AreEqual("AAPL XEOLB4YAHNOM|AAPL R735QTJ8XC9X", option.ID.ToString());
+            Assert.AreEqual(expected, option.ID.ToString());
             Assert.AreEqual(0.01m, option.ID.StrikePrice);
         }
 
@@ -471,7 +477,7 @@ namespace QuantConnect.Tests.Common.Securities
                 OptionRight.Call,
                 475711m,
                 new DateTime(2020, 5, 21));
-            
+
             // The SID specification states that the total width for the properties value
             // is at most 20 digits long. If we overflowed the SID, the strike price can and will
             // eat from other slots, corrupting the data. If we have no overflow, the SID will
@@ -485,7 +491,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OptionStyle.American, sid.OptionStyle);
             Assert.AreEqual(Market.USA, sid.Market);
             Assert.AreEqual(SecurityType.Option, sid.SecurityType);
-            
+
             Assert.AreEqual(option.ID.Date,sid.Date);
             Assert.AreEqual(option.ID.StrikePrice, sid.StrikePrice);
             Assert.AreEqual(option.ID.OptionRight, sid.OptionRight);
@@ -493,7 +499,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(option.ID.Market, sid.Market);
             Assert.AreEqual(option.ID.SecurityType, sid.SecurityType);
         }
-        
+
         [Test]
         public void PositiveFractionalNumberStrikePriceApproachesBoundsWithoutOverflowingSid()
         {
@@ -505,7 +511,7 @@ namespace QuantConnect.Tests.Common.Securities
                 OptionRight.Call,
                 47.5711m,
                 new DateTime(2020, 5, 21));
-            
+
             // The SID specification states that the total width for the properties value
             // is at most 20 digits long. If we overflowed the SID, the strike price can and will
             // eat from other slots, corrupting the data. If we have no overflow, the SID will
@@ -519,7 +525,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OptionStyle.American, sid.OptionStyle);
             Assert.AreEqual(Market.USA, sid.Market);
             Assert.AreEqual(SecurityType.Option, sid.SecurityType);
-            
+
             Assert.AreEqual(option.ID.Date,sid.Date);
             Assert.AreEqual(option.ID.StrikePrice, sid.StrikePrice);
             Assert.AreEqual(option.ID.OptionRight, sid.OptionRight);
@@ -527,7 +533,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(option.ID.Market, sid.Market);
             Assert.AreEqual(option.ID.SecurityType, sid.SecurityType);
         }
-        
+
         [Test]
         public void NegativeWholeNumberStrikePriceApproachesBoundsWithoutOverflowingSid()
         {
@@ -539,7 +545,7 @@ namespace QuantConnect.Tests.Common.Securities
                 OptionRight.Call,
                 -475711m,
                 new DateTime(2020, 5, 21));
-            
+
             // The SID specification states that the total width for the properties value
             // is at most 20 digits long. If we overflowed the SID, the strike price can and will
             // eat from other slots, corrupting the data. If we have no overflow, the SID will
@@ -553,7 +559,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OptionStyle.American, sid.OptionStyle);
             Assert.AreEqual(Market.USA, sid.Market);
             Assert.AreEqual(SecurityType.Option, sid.SecurityType);
-            
+
             Assert.AreEqual(option.ID.Date,sid.Date);
             Assert.AreEqual(option.ID.StrikePrice, sid.StrikePrice);
             Assert.AreEqual(option.ID.OptionRight, sid.OptionRight);
@@ -561,7 +567,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(option.ID.Market, sid.Market);
             Assert.AreEqual(option.ID.SecurityType, sid.SecurityType);
         }
-        
+
         [Test]
         public void NegativeFractionalNumberStrikePriceApproachesBoundsWithoutOverflowingSid()
         {
@@ -573,7 +579,7 @@ namespace QuantConnect.Tests.Common.Securities
                 OptionRight.Call,
                 -47.5711m,
                 new DateTime(2020, 5, 21));
-            
+
             // The SID specification states that the total width for the properties value
             // is at most 20 digits long. If we overflowed the SID, the strike price can and will
             // eat from other slots, corrupting the data. If we have no overflow, the SID will
@@ -587,7 +593,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OptionStyle.American, sid.OptionStyle);
             Assert.AreEqual(Market.USA, sid.Market);
             Assert.AreEqual(SecurityType.Option, sid.SecurityType);
-            
+
             Assert.AreEqual(option.ID.Date,sid.Date);
             Assert.AreEqual(option.ID.StrikePrice, sid.StrikePrice);
             Assert.AreEqual(option.ID.OptionRight, sid.OptionRight);
@@ -611,7 +617,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new DateTime(2020, 5, 21));
             });
         }
-        
+
         [Test]
         public void HighPrecisionFractionalNumberStrikePricesThrows()
         {
@@ -627,7 +633,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new DateTime(2020, 5, 21));
             });
         }
-        
+
         [Test]
         public void HighPrecisionWholeVeryOutOfBoundsNumberStrikePricesThrows()
         {
@@ -643,7 +649,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new DateTime(2020, 5, 21));
             });
         }
-        
+
         [Test]
         public void HighPrecisionFractionalNonBoundApproachingNumberStrikePricesThrows()
         {
@@ -659,7 +665,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new DateTime(2020, 5, 21));
             });
         }
-        
+
         [Test]
         public void HighPrecisionNegativeWholeNumberStrikePricesThrows()
         {
@@ -675,7 +681,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new DateTime(2020, 5, 21));
             });
         }
-        
+
         [Test]
         public void HighPrecisionNegativeFractionalNumberStrikePricesThrows()
         {
@@ -691,7 +697,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new DateTime(2020, 5, 21));
             });
         }
-        
+
         [Test]
         public void HighPrecisionNegativeWholeVeryOutOfBoundsNumberStrikePricesThrows()
         {
@@ -707,7 +713,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new DateTime(2020, 5, 21));
             });
         }
-        
+
         [Test]
         public void HighPrecisionNegativeFractionalNonBoundApproachingNumberStrikePricesThrows()
         {
