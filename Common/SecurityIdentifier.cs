@@ -704,13 +704,9 @@ namespace QuantConnect
             const ulong negativeMask = 1 << 19;
             const ulong maxStrikePrice = negativeMask - ((negativeMask ^ (negativeMask - 1)) - StrikeWidth) - 1;
 
-            if (strike >= maxStrikePrice)
+            if (strike >= maxStrikePrice || strike <= -(long)maxStrikePrice)
             {
                 throw new ArgumentException(Invariant($"The specified strike price\'s precision is too high: {str}"));
-            }
-            if (strike <= -(long)maxStrikePrice)
-            {
-                throw new ArgumentException(Invariant($"The specified strike price\'s precision is too low: {str}"));
             }
 
             var encodedStrike = (long)strike;
@@ -720,7 +716,7 @@ namespace QuantConnect
                 encodedStrike = -encodedStrike;
 
                 // Sets the 20th bit equal to 1
-                encodedStrike ^= 1 << 19;
+                encodedStrike |= 1 << 19;
             }
 
             return (ulong)encodedStrike;

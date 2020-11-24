@@ -388,6 +388,341 @@ namespace QuantConnect.Tests.Common.Securities
             var sid = SecurityIdentifier.GenerateBase(baseDataType, symbol, Market.USA);
             Assert.AreEqual(expected, sid.Symbol);
         }
+        
+        [Test]
+        public void NegativeStrikePriceRoundTrip()
+        {
+            var future = Symbol.CreateFuture(
+                "CL",
+                Market.NYMEX,
+                new DateTime(2020, 5, 20));
+
+            var option = Symbol.CreateOption(
+                future,
+                Market.NYMEX,
+                OptionStyle.American,
+                OptionRight.Call,
+                -50,
+                new DateTime(2020, 4, 16));
+
+            Assert.AreEqual(-50, option.ID.StrikePrice);
+
+            // Forces the reconstruction of the strike price to ensure that it's been properly parsed.
+            var newSid = SecurityIdentifier.Parse(option.ID.ToString());
+            Assert.AreEqual(-50, newSid.StrikePrice);
+        }
+
+        [Test]
+        public void SymbolHashForOptionsBackwardsCompatibilityWholeNumber()
+        {
+            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            var option = Symbol.CreateOption(
+                equity,
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Call,
+                100m,
+                new DateTime(2020, 5, 21));
+
+            Assert.AreEqual("AAPL XEOLB4YAQ8BQ|AAPL R735QTJ8XC9X", option.ID.ToString());
+            Assert.AreEqual(100m, option.ID.StrikePrice);
+        }
+
+        [Test]
+        public void SymbolHashForOptionsBackwardsCompatibilityFractionalNumber()
+        {
+            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            var option = Symbol.CreateOption(
+                equity,
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Call,
+                0.01m, // strike decimal precision is limited to 4 decimal places only
+                new DateTime(2020, 5, 21));
+
+            Assert.AreEqual("AAPL XEOLB4YAHNOM|AAPL R735QTJ8XC9X", option.ID.ToString());
+            Assert.AreEqual(0.01m, option.ID.StrikePrice);
+        }
+
+        [Test]
+        public void SymbolHashForOptionsBackwardsCompatibilityLargeFractionalNumberDoesNotThrow()
+        {
+            Assert.DoesNotThrow(() =>
+            {
+                var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+                var option = Symbol.CreateOption(
+                    equity,
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    3600.75m, // strike decimal precision is limited to 4 decimal places only
+                    new DateTime(2020, 5, 21));
+            });
+        }
+
+        [Test]
+        public void PositiveWholeNumberStrikePriceApproachesBoundsWithoutOverflowingSid()
+        {
+            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            var option = Symbol.CreateOption(
+                equity,
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Call,
+                475711m,
+                new DateTime(2020, 5, 21));
+            
+            // The SID specification states that the total width for the properties value
+            // is at most 20 digits long. If we overflowed the SID, the strike price can and will
+            // eat from other slots, corrupting the data. If we have no overflow, the SID will
+            // be constructed properly without corrupting any data, even as we approach the bounds.
+            // We will assert that all properties contained within the _properties field are valid and not corrupted
+            var sid = SecurityIdentifier.Parse(option.ID.ToString());
+
+            Assert.AreEqual(new DateTime(2020, 5, 21), sid.Date);
+            Assert.AreEqual(475711m, sid.StrikePrice);
+            Assert.AreEqual(OptionRight.Call, sid.OptionRight);
+            Assert.AreEqual(OptionStyle.American, sid.OptionStyle);
+            Assert.AreEqual(Market.USA, sid.Market);
+            Assert.AreEqual(SecurityType.Option, sid.SecurityType);
+            
+            Assert.AreEqual(option.ID.Date,sid.Date);
+            Assert.AreEqual(option.ID.StrikePrice, sid.StrikePrice);
+            Assert.AreEqual(option.ID.OptionRight, sid.OptionRight);
+            Assert.AreEqual(option.ID.OptionStyle, sid.OptionStyle);
+            Assert.AreEqual(option.ID.Market, sid.Market);
+            Assert.AreEqual(option.ID.SecurityType, sid.SecurityType);
+        }
+        
+        [Test]
+        public void PositiveFractionalNumberStrikePriceApproachesBoundsWithoutOverflowingSid()
+        {
+            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            var option = Symbol.CreateOption(
+                equity,
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Call,
+                47.5711m,
+                new DateTime(2020, 5, 21));
+            
+            // The SID specification states that the total width for the properties value
+            // is at most 20 digits long. If we overflowed the SID, the strike price can and will
+            // eat from other slots, corrupting the data. If we have no overflow, the SID will
+            // be constructed properly without corrupting any data, even as we approach the bounds.
+            // We will assert that all properties contained within the _properties field are valid and not corrupted
+            var sid = SecurityIdentifier.Parse(option.ID.ToString());
+
+            Assert.AreEqual(new DateTime(2020, 5, 21), sid.Date);
+            Assert.AreEqual(47.5711m, sid.StrikePrice);
+            Assert.AreEqual(OptionRight.Call, sid.OptionRight);
+            Assert.AreEqual(OptionStyle.American, sid.OptionStyle);
+            Assert.AreEqual(Market.USA, sid.Market);
+            Assert.AreEqual(SecurityType.Option, sid.SecurityType);
+            
+            Assert.AreEqual(option.ID.Date,sid.Date);
+            Assert.AreEqual(option.ID.StrikePrice, sid.StrikePrice);
+            Assert.AreEqual(option.ID.OptionRight, sid.OptionRight);
+            Assert.AreEqual(option.ID.OptionStyle, sid.OptionStyle);
+            Assert.AreEqual(option.ID.Market, sid.Market);
+            Assert.AreEqual(option.ID.SecurityType, sid.SecurityType);
+        }
+        
+        [Test]
+        public void NegativeWholeNumberStrikePriceApproachesBoundsWithoutOverflowingSid()
+        {
+            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            var option = Symbol.CreateOption(
+                equity,
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Call,
+                -475711m,
+                new DateTime(2020, 5, 21));
+            
+            // The SID specification states that the total width for the properties value
+            // is at most 20 digits long. If we overflowed the SID, the strike price can and will
+            // eat from other slots, corrupting the data. If we have no overflow, the SID will
+            // be constructed properly without corrupting any data, even as we approach the bounds.
+            // We will assert that all properties contained within the _properties field are valid and not corrupted
+            var sid = SecurityIdentifier.Parse(option.ID.ToString());
+
+            Assert.AreEqual(new DateTime(2020, 5, 21), sid.Date);
+            Assert.AreEqual(-475711m, sid.StrikePrice);
+            Assert.AreEqual(OptionRight.Call, sid.OptionRight);
+            Assert.AreEqual(OptionStyle.American, sid.OptionStyle);
+            Assert.AreEqual(Market.USA, sid.Market);
+            Assert.AreEqual(SecurityType.Option, sid.SecurityType);
+            
+            Assert.AreEqual(option.ID.Date,sid.Date);
+            Assert.AreEqual(option.ID.StrikePrice, sid.StrikePrice);
+            Assert.AreEqual(option.ID.OptionRight, sid.OptionRight);
+            Assert.AreEqual(option.ID.OptionStyle, sid.OptionStyle);
+            Assert.AreEqual(option.ID.Market, sid.Market);
+            Assert.AreEqual(option.ID.SecurityType, sid.SecurityType);
+        }
+        
+        [Test]
+        public void NegativeFractionalNumberStrikePriceApproachesBoundsWithoutOverflowingSid()
+        {
+            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            var option = Symbol.CreateOption(
+                equity,
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Call,
+                -47.5711m,
+                new DateTime(2020, 5, 21));
+            
+            // The SID specification states that the total width for the properties value
+            // is at most 20 digits long. If we overflowed the SID, the strike price can and will
+            // eat from other slots, corrupting the data. If we have no overflow, the SID will
+            // be constructed properly without corrupting any data, even as we approach the bounds.
+            // We will assert that all properties contained within the _properties field are valid and not corrupted
+            var sid = SecurityIdentifier.Parse(option.ID.ToString());
+
+            Assert.AreEqual(new DateTime(2020, 5, 21), sid.Date);
+            Assert.AreEqual(-47.5711m, sid.StrikePrice);
+            Assert.AreEqual(OptionRight.Call, sid.OptionRight);
+            Assert.AreEqual(OptionStyle.American, sid.OptionStyle);
+            Assert.AreEqual(Market.USA, sid.Market);
+            Assert.AreEqual(SecurityType.Option, sid.SecurityType);
+            
+            Assert.AreEqual(option.ID.Date,sid.Date);
+            Assert.AreEqual(option.ID.StrikePrice, sid.StrikePrice);
+            Assert.AreEqual(option.ID.OptionRight, sid.OptionRight);
+            Assert.AreEqual(option.ID.OptionStyle, sid.OptionStyle);
+            Assert.AreEqual(option.ID.Market, sid.Market);
+            Assert.AreEqual(option.ID.SecurityType, sid.SecurityType);
+        }
+
+        [Test]
+        public void HighPrecisionWholeNumberStrikePricesThrows()
+        {
+            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            Assert.Throws<ArgumentException>(() =>
+            {
+                Symbol.CreateOption(
+                    equity,
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    475712m,
+                    new DateTime(2020, 5, 21));
+            });
+        }
+        
+        [Test]
+        public void HighPrecisionFractionalNumberStrikePricesThrows()
+        {
+            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            Assert.Throws<ArgumentException>(() =>
+            {
+                Symbol.CreateOption(
+                    equity,
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    47.5712m, // strike decimal precision is limited to 4 decimal places only
+                    new DateTime(2020, 5, 21));
+            });
+        }
+        
+        [Test]
+        public void HighPrecisionWholeVeryOutOfBoundsNumberStrikePricesThrows()
+        {
+            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            Assert.Throws<ArgumentException>(() =>
+            {
+                Symbol.CreateOption(
+                    equity,
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    999999m,
+                    new DateTime(2020, 5, 21));
+            });
+        }
+        
+        [Test]
+        public void HighPrecisionFractionalNonBoundApproachingNumberStrikePricesThrows()
+        {
+            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            Assert.Throws<ArgumentException>(() =>
+            {
+                Symbol.CreateOption(
+                    equity,
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    47.5712m, // strike decimal precision is limited to 4 decimal places only
+                    new DateTime(2020, 5, 21));
+            });
+        }
+        
+        [Test]
+        public void HighPrecisionNegativeWholeNumberStrikePricesThrows()
+        {
+            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            Assert.Throws<ArgumentException>(() =>
+            {
+                Symbol.CreateOption(
+                    equity,
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    -475712m,
+                    new DateTime(2020, 5, 21));
+            });
+        }
+        
+        [Test]
+        public void HighPrecisionNegativeFractionalNumberStrikePricesThrows()
+        {
+            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            Assert.Throws<ArgumentException>(() =>
+            {
+                Symbol.CreateOption(
+                    equity,
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    -47.5712m, // strike decimal precision is limited to 4 decimal places only
+                    new DateTime(2020, 5, 21));
+            });
+        }
+        
+        [Test]
+        public void HighPrecisionNegativeWholeVeryOutOfBoundsNumberStrikePricesThrows()
+        {
+            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            Assert.Throws<ArgumentException>(() =>
+            {
+                Symbol.CreateOption(
+                    equity,
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    -999999m,
+                    new DateTime(2020, 5, 21));
+            });
+        }
+        
+        [Test]
+        public void HighPrecisionNegativeFractionalNonBoundApproachingNumberStrikePricesThrows()
+        {
+            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            Assert.Throws<ArgumentException>(() =>
+            {
+                Symbol.CreateOption(
+                    equity,
+                    Market.USA,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    -47.5712m, // strike decimal precision is limited to 4 decimal places only
+                    new DateTime(2020, 5, 21));
+            });
+        }
 
         class Container
         {
