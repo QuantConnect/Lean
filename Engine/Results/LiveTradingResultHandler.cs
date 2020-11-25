@@ -106,8 +106,17 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         protected override void Run()
         {
-            // give the algorithm time to initialize, else we will log an error right away
-            Thread.Sleep(TimeSpan.FromSeconds(3));
+            var sleepSpan = TimeSpan.FromMilliseconds(100);
+            for (var i = 0; i < 30; i++)
+            {
+                // let's check exit flag while sleeping so we reduce latency on shutdown
+                if (ExitTriggered)
+                {
+                    break;
+                }
+                // give the algorithm time to initialize, else we will log an error right away
+                Thread.Sleep(sleepSpan);
+            }
 
             // -> 1. Run Primary Sender Loop: Continually process messages from queue as soon as they arrive.
             while (!(ExitTriggered && Messages.Count == 0))
@@ -711,7 +720,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
         {
             Algorithm = algorithm;
-            DailyPortfolioValue = StartingPortfolioValue = startingPortfolioValue;
+            _portfolioValue = DailyPortfolioValue = StartingPortfolioValue = startingPortfolioValue;
 
             var types = new List<SecurityType>();
             foreach (var kvp in Algorithm.Securities)
@@ -1158,7 +1167,9 @@ namespace QuantConnect.Lean.Engine.Results
                 return true;
             }
 
-            if (_lastChartSampleLogicCheck.Minute == utcDateTime.Minute)
+            if (_lastChartSampleLogicCheck.Day == utcDateTime.Day
+                && _lastChartSampleLogicCheck.Hour == utcDateTime.Hour
+                && _lastChartSampleLogicCheck.Minute == utcDateTime.Minute)
             {
                 // we cache the value for a minute
                 return _userExchangeIsOpen;
