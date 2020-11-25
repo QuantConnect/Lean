@@ -151,8 +151,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-30.28"},
-            {"Portfolio Turnover", "1.029"},
+            {"Return Over Maximum Drawdown", "-30.158"},
+            {"Portfolio Turnover", "1.033"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -166,7 +166,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "737971736"}
+            {"OrderListHash", "1349023435"}
         };
     }
 }

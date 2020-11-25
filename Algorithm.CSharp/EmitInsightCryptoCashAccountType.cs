@@ -90,13 +90,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$14.91"},
+            {"Total Fees", "$14.92"},
             {"Fitness Score", "0.258"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-27.251"},
-            {"Portfolio Turnover", "0.515"},
+            {"Return Over Maximum Drawdown", "-27.228"},
+            {"Portfolio Turnover", "0.516"},
             {"Total Insights Generated", "1"},
             {"Total Insights Closed", "1"},
             {"Total Insights Analysis Completed", "1"},
@@ -110,7 +110,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "221046152"}
+            {"OrderListHash", "1296183675"}
         };
     }
 }
