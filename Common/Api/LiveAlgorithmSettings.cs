@@ -132,6 +132,16 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
+        /// The constructor used by Bitfinex
+        /// </summary>
+        public BaseLiveAlgorithmSettings()
+        {
+            User = "";
+            Password = "";
+            Account = "";
+        }
+
+        /// <summary>
         /// 'Interactive' / 'FXCM' / 'Oanda' / 'Tradier' /'PaperTrading'
         /// </summary>
         [JsonProperty(PropertyName = "id")]
@@ -316,5 +326,107 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "lifetime")]
         public string Lifetime { get; private set; }
+    }
+
+    /// <summary>
+    /// Live algorithm settings for trading with Bitfinex
+    /// </summary>
+    public class BitfinexLiveAlgorithmSettings : BaseLiveAlgorithmSettings
+    {
+        /// <summary>
+        /// Constructor for live trading with Bitfinex
+        /// </summary>
+        /// <param name="key"> Api key to Bitfinex account</param>
+        /// <param name="secret">Secret Api key to Bitfinex account</param>
+        public BitfinexLiveAlgorithmSettings(string key, string secret)
+        {
+            Environment = BrokerageEnvironment.Live;
+            Id = "BitfinexBrokerage"; // BrokerageName.Bitfinex.ToString() returns "Bitfinex"
+            Key = key;
+            Secret = secret;
+        }
+
+        /// <summary>
+        /// Property specific to Bitfinex account. API Key 
+        /// </summary>
+        [JsonProperty(PropertyName = "key")]
+        public string Key { get; private set; }
+
+        /// <summary>
+        /// Property specific to Bitfinex account. API Secret Key
+        /// </summary>
+        [JsonProperty(PropertyName = "secret")]
+        public string Secret { get; private set; }
+    }
+
+    /// <summary>
+    /// Live algorithm settings for trading with Alpaca
+    /// </summary>
+    public class AlpacaLiveAlgorithmSettings : BaseLiveAlgorithmSettings
+    {
+        /// <summary>
+        /// Constructor for live trading with Alpaca
+        /// </summary>
+        /// <param name="key"> Api key to Alpaca account</param>
+        /// <param name="secret">Secret Api key to Alpaca account</param>
+        /// <param name="environment">Environment to launch the algorithm in</param>
+        public AlpacaLiveAlgorithmSettings(string key, string secret, BrokerageEnvironment environment)
+        {
+            Environment = environment;
+            Id = "AlpacaBrokerage"; //BrokerageName.Alpaca.ToString(); returns "Alpaca"
+            Key = key;
+            Secret = secret;
+        }
+
+        /// <summary>
+        /// Property specific to Alpaca account. API Key 
+        /// </summary>
+        [JsonProperty(PropertyName = "key")]
+        public string Key { get; private set; }
+
+        /// <summary>
+        /// Property specific to Alpaca account. API Secret Key
+        /// </summary>
+        [JsonProperty(PropertyName = "secret")]
+        public string Secret { get; private set; }
+    }
+
+    /// <summary>
+    /// Live algorithm settings for trading with GDAX (Coinbase)
+    /// </summary>
+    public class GDAXLiveAlgorithmSettings : BaseLiveAlgorithmSettings
+    {
+        /// <summary>
+        /// Constructor for live trading with GDAX (Coinbase)
+        /// </summary>
+        /// <param name="key"> Api key to GDAX account</param>
+        /// <param name="secret">Secret Api key to GDAX account</param>
+        /// <param name="passphrase">Passphrase to this API key</param>
+        public GDAXLiveAlgorithmSettings(string key, string secret, string passphrase)
+        {
+            Environment = BrokerageEnvironment.Live;
+            Id = "GDAXBrokerage"; //BrokerageName.GDAX.ToString(); returns "GDAX"
+            Key = key;
+            Secret = secret;
+            Passphrase = passphrase;
+        }
+
+        /// <summary>
+        /// Property specific to GDAX account. API Key 
+        /// </summary>
+        [JsonProperty(PropertyName = "key")]
+        public string Key { get; private set; }
+
+        /// <summary>
+        /// Property specific to GDAX account. API Secret Key
+        /// </summary>
+        [JsonProperty(PropertyName = "secret")]
+        public string Secret { get; private set; }
+
+        /// <summary>
+        /// Property specific to GDAX account. API Passphrase
+        /// </summary>
+        [JsonProperty(PropertyName = "passphrase")]
+        public string Passphrase { get; private set; }
     }
 }
