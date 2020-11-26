@@ -68,8 +68,8 @@ namespace QuantConnect.Orders.Fees
             {
                 var optionOrder = (OptionExerciseOrder)order;
 
-                if (optionOrder.Symbol.ID.SecurityType == SecurityType.Option &&
-                    optionOrder.Symbol.ID.Underlying.SecurityType == SecurityType.Equity)
+                if (optionOrder.Symbol.ID.SecurityType == SecurityType.Option ||
+                    optionOrder.Symbol.ID.SecurityType == SecurityType.FutureOption)
                 {
                     return OrderFee.Zero;
                 }
@@ -90,13 +90,6 @@ namespace QuantConnect.Orders.Fees
                     break;
 
                 case SecurityType.Option:
-                    // The future option fee model is exactly the same as the one futures
-                    // uses. Let's fall through and use that fee model instead.
-                    if (security.Symbol.Underlying.SecurityType == SecurityType.Future)
-                    {
-                        goto case SecurityType.Future;
-                    }
-
                     Func<decimal, decimal, CashAmount> optionsCommissionFunc;
                     if (!_optionFee.TryGetValue(market, out optionsCommissionFunc))
                     {
@@ -109,6 +102,8 @@ namespace QuantConnect.Orders.Fees
                     break;
 
                 case SecurityType.Future:
+                case SecurityType.FutureOption:
+                    // The futures options fee model is exactly the same as futures' fees on IB.
                     if (market == Market.Globex || market == Market.NYMEX
                         || market == Market.CBOT || market == Market.ICE
                         || market == Market.CBOE || market == Market.COMEX

@@ -141,7 +141,7 @@ namespace QuantConnect.Util
             if (securityTypeOffset == LowResSecurityTypeOffset)
             {
                 ticker = Path.GetFileNameWithoutExtension(path);
-                if (securityType == SecurityType.Option)
+                if (securityType == SecurityType.Option || securityType == SecurityType.FutureOption)
                 {
                     // ticker_trade_american
                     var tickerWithoutStyle = ticker.Substring(0, ticker.LastIndexOfInvariant("_"));
@@ -167,7 +167,7 @@ namespace QuantConnect.Util
             var date = securityTypeOffset == LowResSecurityTypeOffset ? DateTime.MinValue : DateTime.ParseExact(filename.Substring(0, filename.IndexOf("_", StringComparison.Ordinal)), DateFormat.EightCharacter, null);
 
             Symbol symbol;
-            if (securityType == SecurityType.Option)
+            if (securityType == SecurityType.Option || securityType == SecurityType.FutureOption)
             {
                 var withoutExtension = Path.GetFileNameWithoutExtension(filename);
                 rawValue = withoutExtension.Substring(withoutExtension.LastIndexOf("_", StringComparison.Ordinal) + 1);

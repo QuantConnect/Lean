@@ -65,7 +65,7 @@ namespace QuantConnect.Algorithm.Selection
                 _symbols.Remove(removedSymbol);
 
                 // the option has been removed! This can happen when the user manually removed the option contract we remove the underlying
-                if (removedSymbol.SecurityType == SecurityType.Option)
+                if (removedSymbol.SecurityType == SecurityType.Option || removedSymbol.SecurityType == SecurityType.FutureOption)
                 {
                     Remove(removedSymbol.Underlying);
                 }
@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.Selection
         {
             var ticker = $"qc-universe-optioncontract-{securityType.SecurityTypeToLower()}-{market.ToLowerInvariant()}";
             var underlying = Symbol.Create(ticker, securityType, market);
-            var sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlying.ID, market, 0, 0, 0);
+            var sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlying.ID, market, 0, 0, 0, optionType: Symbol.GetOptionTypeFromUnderlying(securityType));
 
             return new Symbol(sid, ticker);
         }

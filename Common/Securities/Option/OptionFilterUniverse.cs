@@ -66,7 +66,7 @@ namespace QuantConnect.Securities
         /// <returns>True if standard</returns>
         protected override bool IsStandard(Symbol symbol)
         {
-            return symbol.Underlying.SecurityType == SecurityType.Future
+            return symbol.SecurityType == SecurityType.FutureOption
                 ? FutureOptionSymbol.IsStandard(symbol)
                 : OptionSymbol.IsStandard(symbol);
         }

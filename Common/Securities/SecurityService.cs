@@ -135,16 +135,18 @@ namespace QuantConnect.Securities
 
                 case SecurityType.Option:
                     if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
+                    security = new Option.Option(symbol, exchangeHours, quoteCash, new Option.OptionSymbolProperties(symbolProperties), _cashBook, _registeredTypes, cache);
+                    break;
+
+                case SecurityType.FutureOption:
+                    if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
                     var optionSymbolProperties = new Option.OptionSymbolProperties(symbolProperties);
 
                     // Future options exercised only gives us one contract back, rather than the
                     // 100x seen in equities.
-                    if (symbol.Underlying.SecurityType == SecurityType.Future)
-                    {
-                        optionSymbolProperties.SetContractUnitOfTrade(1);
-                    }
+                    optionSymbolProperties.SetContractUnitOfTrade(1);
 
-                    security = new Option.Option(symbol, exchangeHours, quoteCash, optionSymbolProperties, _cashBook, _registeredTypes, cache);
+                    security = new FutureOption.FutureOption(symbol, exchangeHours, quoteCash, optionSymbolProperties, _cashBook, _registeredTypes, cache);
                     break;
 
                 case SecurityType.Future:

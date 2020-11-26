@@ -117,7 +117,7 @@ namespace QuantConnect
             }
 
             var qlCalendar = new UnitedStates();
-            var options = symbols.Where(x => x.ID.SecurityType == SecurityType.Option).ToList();
+            var options = symbols.Where(x => x.ID.SecurityType == SecurityType.Option || x.ID.SecurityType == SecurityType.FutureOption).ToList();
             var futures = symbols.Where(x => x.ID.SecurityType == SecurityType.Future).ToList();
 
             foreach (var dayIdx in Enumerable.Range(0, (int)(end.Date.AddDays(1.0) - start.Date).TotalDays))

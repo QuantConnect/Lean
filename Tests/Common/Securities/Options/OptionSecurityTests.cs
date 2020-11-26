@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
                 2550m,
                 new DateTime(2021, 3, 19));
 
-            var futureOptionSecurity = new Option(
+            var futureOptionSecurity = new QuantConnect.Securities.FutureOption.FutureOption(
                 futureOption,
                 MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.CME, futureOption, futureOption.SecurityType),
                 new Cash("USD", 100000m, 1m),

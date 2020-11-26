@@ -238,12 +238,12 @@ sgx,IN,future,Nifty Indices Futures,USD,2,0.5,50.0
 hkfe,HSI,future,Hang Seng Index,HKD,50,1,1.0
 
 # Futures options -- will default to Futures contract specs in case no entry exists
-cbot,OZB,option,U.S. Treasury Bond American Futures Options,USD,1000.0,0.015625,1.0
-cbot,OZC,option,Corn American Futures Options,USD,5000.0,0.00125,1.0
-cbot,OZS,option,Soybean American Futures Options,USD,5000.0,0.00125,1.0
-cbot,OZT,option,2-Year T-Note American Futures Options,USD,2000.0,0.0078125,1.0
-cbot,OZW,option,Chicago SRW Wheat American Futures Options,USD,5000.0,0.00125,1.0
-comex,SO,option,Silver American Futures Options,USD,5000.0,0.001,1.0
+cbot,OZB,futureoption,U.S. Treasury Bond American Futures Options,USD,1000.0,0.015625,1.0
+cbot,OZC,futureoption,Corn American Futures Options,USD,5000.0,0.00125,1.0
+cbot,OZS,futureoption,Soybean American Futures Options,USD,5000.0,0.00125,1.0
+cbot,OZT,futureoption,2-Year T-Note American Futures Options,USD,2000.0,0.0078125,1.0
+cbot,OZW,futureoption,Chicago SRW Wheat American Futures Options,USD,5000.0,0.00125,1.0
+comex,SO,futureoption,Silver American Futures Options,USD,5000.0,0.001,1.0
 
 
 fxcm,AUDCAD,forex,,CAD,1,0.00001,1000

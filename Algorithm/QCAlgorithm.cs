@@ -1481,7 +1481,7 @@ namespace QuantConnect.Algorithm
             var isCanonical = symbol.IsCanonical();
 
             // Short-circuit to AddOptionContract because it will add the underlying if required
-            if (!isCanonical && symbol.SecurityType == SecurityType.Option)
+            if (!isCanonical && (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.FutureOption))
             {
                 return AddOptionContract(symbol, resolution, fillDataForward, leverage);
             }
@@ -1504,7 +1504,7 @@ namespace QuantConnect.Algorithm
                 if (!UniverseManager.TryGetValue(symbol, out universe) && _pendingUniverseAdditions.All(u => u.Configuration.Symbol != symbol))
                 {
                     var settings = new UniverseSettings(configs.First().Resolution, leverage, true, false, TimeSpan.Zero);
-                    if (symbol.SecurityType == SecurityType.Option)
+                    if (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.FutureOption)
                     {
                         universe = new OptionChainUniverse((Option)security, settings, LiveMode);
                     }
@@ -1574,11 +1574,17 @@ namespace QuantConnect.Algorithm
         /// <exception cref="KeyNotFoundException"></exception>
         public Option AddOption(Symbol underlying, Resolution? resolution = null, string market = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
         {
+            var optionType = SecurityType.Option;
+            if (underlying.SecurityType == SecurityType.Future)
+            {
+                optionType = SecurityType.FutureOption;
+            }
+
             if (market == null)
             {
-                if (!BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Option, out market))
+                if (!BrokerageModel.DefaultMarkets.TryGetValue(optionType, out market))
                 {
-                    throw new KeyNotFoundException($"No default market set for security type: {SecurityType.Option}");
+                    throw new KeyNotFoundException($"No default market set for security type: {optionType}");
                 }
             }
 
@@ -1586,7 +1592,8 @@ namespace QuantConnect.Algorithm
             var alias = "?" + underlying.Value;
             if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol) ||
                 canonicalSymbol.ID.Market != market ||
-                canonicalSymbol.SecurityType != SecurityType.Option)
+                canonicalSymbol.SecurityType != SecurityType.Option ||
+                canonicalSymbol.SecurityType != SecurityType.FutureOption)
             {
                 canonicalSymbol = QuantConnect.Symbol.CreateOption(
                     underlying,

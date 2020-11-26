@@ -770,7 +770,7 @@ namespace QuantConnect.Algorithm
 
             if (request.OrderType == OrderType.OptionExercise)
             {
-                if (security.Type != SecurityType.Option)
+                if (security.Type != SecurityType.Option && security.Type != SecurityType.FutureOption)
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.NonExercisableSecurity,
                         $"The security with symbol '{request.Symbol}' is not exercisable."

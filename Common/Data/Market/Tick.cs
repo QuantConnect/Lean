@@ -387,6 +387,7 @@ namespace QuantConnect.Data.Market
                         }
                     case SecurityType.Future:
                     case SecurityType.Option:
+                    case SecurityType.FutureOption:
                         {
                             TickType = config.TickType;
                             Time = date.Date.AddMilliseconds((double)reader.GetDecimal())
@@ -530,6 +531,7 @@ namespace QuantConnect.Data.Market
                     }
                     case SecurityType.Future:
                     case SecurityType.Option:
+                    case SecurityType.FutureOption:
                     {
                         var csv = line.ToCsv(7);
                         TickType = config.TickType;
@@ -632,7 +634,8 @@ namespace QuantConnect.Data.Market
 
             var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
             if (config.SecurityType == SecurityType.Option ||
-                config.SecurityType == SecurityType.Future)
+                config.SecurityType == SecurityType.Future ||
+                config.SecurityType == SecurityType.FutureOption)
             {
                 source += "#" + LeanData.GenerateZipEntryName(config.Symbol, date, config.Resolution, config.TickType);
             }
@@ -722,8 +725,7 @@ namespace QuantConnect.Data.Market
         /// <returns>Scaling factor</returns>
         private static decimal GetScaleFactor(Symbol symbol)
         {
-            return symbol.SecurityType == SecurityType.Equity ||
-                    (symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType == SecurityType.Equity) ? 10000m : 1;
+            return symbol.SecurityType == SecurityType.Equity || symbol.SecurityType == SecurityType.Option ? 10000m : 1;
         }
 
     }

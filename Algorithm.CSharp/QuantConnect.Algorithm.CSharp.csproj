@@ -148,7 +148,6 @@
     <Compile Include="AddOptionContractExpiresRegressionAlgorithm.cs" />
     <Compile Include="AltData\QuiverWallStreetBetsDataAlgorithm.cs" />
     <Compile Include="OnOrderEventExceptionRegression.cs" />
-    <Compile Include="FutureOptionCallPutITMExpiryRegressionAlgorithm.cs" />
     <Compile Include="FutureOptionCallITMExpiryRegressionAlgorithm.cs" />
     <Compile Include="FutureOptionCallOTMExpiryRegressionAlgorithm.cs" />
     <Compile Include="FutureOptionPutITMExpiryRegressionAlgorithm.cs" />

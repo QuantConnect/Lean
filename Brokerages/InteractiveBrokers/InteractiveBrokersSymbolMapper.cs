@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using QuantConnect.Securities.Future;
+using QuantConnect.Securities.FutureOption;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -72,6 +73,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (symbol.ID.SecurityType != SecurityType.Forex &&
                 symbol.ID.SecurityType != SecurityType.Equity &&
                 symbol.ID.SecurityType != SecurityType.Option &&
+                symbol.ID.SecurityType != SecurityType.FutureOption &&
                 symbol.ID.SecurityType != SecurityType.Future)
                 throw new ArgumentException("Invalid security type: " + symbol.ID.SecurityType);
 
@@ -81,17 +83,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             switch (symbol.ID.SecurityType)
             {
                 case SecurityType.Option:
-                    if (symbol.Underlying.SecurityType != SecurityType.Equity)
-                    {
-                        // We use the underlying Future Symbol since IB doesn't use
-                        // the Futures Options' ticker, but rather uses the underlying's
-                        // Symbol, mapped to the brokerage.
-                        return GetBrokerageSymbol(symbol.Underlying);
-                    }
-
                     // Final case is for equities. We use the mapped value to select
                     // the equity we want to trade.
                     return symbol.Underlying.Value;
+
+                case SecurityType.FutureOption:
+                    // We use the underlying Future Symbol since IB doesn't use
+                    // the Futures Options' ticker, but rather uses the underlying's
+                    // Symbol, mapped to the brokerage.
+                    return GetBrokerageSymbol(symbol.Underlying);
 
                 case SecurityType.Future:
                     return GetBrokerageRootSymbol(symbol.ID.Symbol);
@@ -121,7 +121,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (securityType != SecurityType.Forex &&
                 securityType != SecurityType.Equity &&
                 securityType != SecurityType.Option &&
-                securityType != SecurityType.Future)
+                securityType != SecurityType.Future &&
+                securityType != SecurityType.FutureOption)
                 throw new ArgumentException("Invalid security type: " + securityType);
 
             try
@@ -133,6 +134,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     case SecurityType.Option:
                         return Symbol.CreateOption(brokerageSymbol, market, OptionStyle.American, optionRight, strike, expirationDate);
+
+                    case SecurityType.FutureOption:
+                        var canonicalFutureSymbol = Symbol.Create(GetLeanRootSymbol(brokerageSymbol), SecurityType.Future, market);
+                        var futureContractMonth = FuturesOptionsExpiryFunctions.GetFutureContractMonth(canonicalFutureSymbol, expirationDate);
+                        var futureExpiry = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFutureSymbol)(futureContractMonth);
+
+                        return Symbol.CreateOption(
+                            Symbol.CreateFuture(
+                                brokerageSymbol,
+                                market,
+                                futureExpiry),
+                            market,
+                            OptionStyle.American,
+                            optionRight,
+                            strike,
+                            expirationDate);
 
                     case SecurityType.Equity:
                         brokerageSymbol = brokerageSymbol.Replace(" ", ".");

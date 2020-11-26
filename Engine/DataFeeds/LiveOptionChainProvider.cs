@@ -83,7 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return GetFutureOptionContractList(underlyingSymbol, date);
             }
 
-            throw new ArgumentException("Option's Underlying SecurityType is not supported. Supported types are: Equity, Future");
+            throw new ArgumentException("Option Underlying SecurityType is not supported. Supported types are: Equity, Future");
         }
 
         private IEnumerable<Symbol> GetFutureOptionContractList(Symbol futureContractSymbol, DateTime date)

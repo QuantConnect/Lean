@@ -122,10 +122,10 @@ namespace QuantConnect.Securities
 
             if (!_entries.TryGetValue(key, out symbolProperties))
             {
-                if (symbol != null && symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType != SecurityType.Equity)
+                if (symbol != null && symbol.SecurityType == SecurityType.FutureOption)
                 {
                     // Default to looking up the underlying symbol's properties and using those instead if there's
-                    // no existing entry for the option.
+                    // no existing entry for the future option.
                     lookupTicker = symbol.Underlying.ID.Symbol;
                     key = new SecurityDatabaseKey(market, lookupTicker, symbol.Underlying.SecurityType);
 

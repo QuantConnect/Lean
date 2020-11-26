@@ -88,6 +88,9 @@ namespace QuantConnect
                     sid = SecurityIdentifier.GenerateCrypto(ticker, market);
                     break;
 
+                case SecurityType.FutureOption:
+                    throw new NotImplementedException("Cannot create future option Symbol using this method. Use `CreateOption(Symbol, ...)` instead.");
+
                 case SecurityType.Commodity:
                 default:
                     throw new NotImplementedException(Invariant($"The security type has not been implemented yet: {securityType}"));
@@ -116,6 +119,7 @@ namespace QuantConnect
             var firstDate = underlying.SecurityType == SecurityType.Equity ||
                 underlying.SecurityType == SecurityType.Option ||
                 underlying.SecurityType == SecurityType.Future ||
+                underlying.SecurityType == SecurityType.FutureOption ||
                 underlying.SecurityType == SecurityType.Base
                     ? underlying.ID.Date
                     : (DateTime?)null;
@@ -159,7 +163,7 @@ namespace QuantConnect
         /// <returns>A new Symbol object for the specified option contract</returns>
         public static Symbol CreateOption(Symbol underlyingSymbol, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null)
         {
-            var sid = SecurityIdentifier.GenerateOption(expiry, underlyingSymbol.ID, market, strike, right, style);
+            var sid = SecurityIdentifier.GenerateOption(expiry, underlyingSymbol.ID, market, strike, right, style, GetOptionTypeFromUnderlying(underlyingSymbol));
 
             if (expiry == SecurityIdentifier.DefaultDate)
             {
@@ -222,7 +226,7 @@ namespace QuantConnect
         {
             return
                 (ID.SecurityType == SecurityType.Future ||
-                (ID.SecurityType == SecurityType.Option && HasUnderlying)) &&
+                ((ID.SecurityType == SecurityType.Option || ID.SecurityType == SecurityType.FutureOption) && HasUnderlying)) &&
                 ID.Date == SecurityIdentifier.DefaultDate;
         }
 
@@ -329,6 +333,36 @@ namespace QuantConnect
             else
             {
                 return new Symbol(ID, mappedSymbol, Underlying);
+            }
+        }
+
+        /// <summary>
+        /// Determines the SecurityType based on the underlying Symbol's SecurityType
+        /// </summary>
+        /// <param name="underlyingSymbol">Underlying Symbol of an option</param>
+        /// <returns>SecurityType of the option</returns>
+        /// <exception cref="ArgumentException">The provided underlying has no SecurityType able to represent it as an option</exception>
+        public static SecurityType GetOptionTypeFromUnderlying(Symbol underlyingSymbol)
+        {
+            return GetOptionTypeFromUnderlying(underlyingSymbol.SecurityType);
+        }
+
+        /// <summary>
+        /// Determines the SecurityType based on the underlying Symbol's SecurityType
+        /// </summary>
+        /// <param name="securityType">SecurityType of the underlying Symbol</param>
+        /// <returns>SecurityType of the option</returns>
+        /// <exception cref="ArgumentException">The provided underlying has no SecurityType able to represent it as an option</exception>
+        public static SecurityType GetOptionTypeFromUnderlying(SecurityType securityType)
+        {
+            switch (securityType)
+            {
+                case SecurityType.Equity:
+                    return SecurityType.Option;
+                case SecurityType.Future:
+                    return SecurityType.FutureOption;
+                default:
+                    throw new ArgumentException($"No option type exists for underlying SecurityType: {securityType}");
             }
         }
 

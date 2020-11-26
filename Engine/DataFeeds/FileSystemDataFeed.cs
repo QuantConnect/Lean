@@ -150,7 +150,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 factory = new OptionChainUniverseSubscriptionEnumeratorFactory((req) =>
                 {
-                    var mapFileResolver = req.Security.Symbol.Underlying.SecurityType == SecurityType.Equity
+                    var mapFileResolver = req.Security.Symbol.SecurityType == SecurityType.Option
                         ? _mapFileProvider.Get(req.Configuration.Market)
                         : null;
 

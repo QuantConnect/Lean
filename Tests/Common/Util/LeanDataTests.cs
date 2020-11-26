@@ -341,6 +341,7 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase(SecurityType.Forex, "Forex")]
         [TestCase(SecurityType.Future, "Future")]
         [TestCase(SecurityType.Option, "Option")]
+        [TestCase(SecurityType.FutureOption, "FutureOption")]
         public void ParsesDataSecurityType(SecurityType type, string path)
         {
             Assert.AreEqual(type, LeanData.ParseDataSecurityType(path));

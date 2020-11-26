@@ -221,6 +221,7 @@ namespace QuantConnect.Data.Market
                         return ParseCfd(config, line, date);
 
                     case SecurityType.Option:
+                    case SecurityType.FutureOption:
                         return ParseOption(config, line, date);
 
                     case SecurityType.Future:
@@ -278,6 +279,7 @@ namespace QuantConnect.Data.Market
                         return ParseCfd(config, stream, date);
 
                     case SecurityType.Option:
+                    case SecurityType.FutureOption:
                         return ParseOption(config, stream, date);
 
                     case SecurityType.Future:
@@ -891,7 +893,8 @@ namespace QuantConnect.Data.Market
 
             var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
             if (config.SecurityType == SecurityType.Option ||
-                config.SecurityType == SecurityType.Future)
+                config.SecurityType == SecurityType.Future ||
+                config.SecurityType == SecurityType.FutureOption)
             {
                 source += "#" + LeanData.GenerateZipEntryName(config.Symbol, date, config.Resolution, config.TickType);
             }
@@ -946,8 +949,7 @@ namespace QuantConnect.Data.Market
         /// <returns>Scaling factor</returns>
         private static decimal GetScaleFactor(Symbol symbol)
         {
-            return symbol.SecurityType == SecurityType.Equity ||
-                (symbol.SecurityType == SecurityType.Option && symbol.Underlying.SecurityType == SecurityType.Equity) ? _scaleFactor : 1;
+            return symbol.SecurityType == SecurityType.Equity || symbol.SecurityType == SecurityType.Option ? _scaleFactor : 1;
         }
 
         /// <summary>

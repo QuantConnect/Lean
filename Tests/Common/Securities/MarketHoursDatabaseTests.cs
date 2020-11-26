@@ -190,7 +190,7 @@ namespace QuantConnect.Tests.Common.Securities
                 SecurityIdentifier.DefaultDate);
 
             var futureEntry = provider.GetEntry(market, future, SecurityType.Future);
-            var optionEntry = provider.GetEntry(market, option, SecurityType.Option);
+            var optionEntry = provider.GetEntry(market, option, SecurityType.FutureOption);
 
             Assert.AreEqual(futureEntry, optionEntry);
         }

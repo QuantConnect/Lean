@@ -945,7 +945,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // We resolve non-equity markets in the `CreateContract` method.
             if (exchange == null &&
                 order.Symbol.SecurityType == SecurityType.Option &&
-                order.Symbol.Underlying.SecurityType == SecurityType.Equity &&
                 (order.Type == OrderType.MarketOnOpen || order.Type == OrderType.MarketOnClose))
             {
                 exchange = Market.CBOE.ToUpperInvariant();
@@ -1828,9 +1827,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>A new IB contract for the order</returns>
         private Contract CreateContract(Symbol symbol, bool includeExpired, string exchange = null)
         {
-            var securityType = ConvertSecurityType(symbol.SecurityType, symbol.Underlying?.SecurityType);
+            var securityType = ConvertSecurityType(symbol.SecurityType);
             var ibSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
-            var isFutureOption = securityType == IB.SecurityType.FutureOption;
 
             var contract = new Contract
             {
@@ -1852,7 +1850,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.PrimaryExch = GetPrimaryExchange(contract, symbol);
             }
 
-            if (symbol.ID.SecurityType == SecurityType.Option)
+            if (symbol.ID.SecurityType == SecurityType.Option || symbol.ID.SecurityType == SecurityType.FutureOption)
             {
                 contract.LastTradeDateOrContractMonth = symbol.ID.Date.ToStringInvariant(DateFormat.EightCharacter);
                 contract.Right = symbol.ID.OptionRight == OptionRight.Call ? IB.RightType.Call : IB.RightType.Put;
@@ -2120,7 +2118,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Maps SecurityType enum to an IBApi SecurityType value
         /// </summary>
-        private static string ConvertSecurityType(SecurityType type, SecurityType? underlyingSecurityType = null)
+        private static string ConvertSecurityType(SecurityType type)
         {
             switch (type)
             {
@@ -2128,11 +2126,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return IB.SecurityType.Stock;
 
                 case SecurityType.Option:
-                    // IB distinguishes Options and FutureOptions as different asset classes.
-                    // We must detect an underlying future and designate it as a future option here.
-                    return underlyingSecurityType == SecurityType.Future
-                        ? IB.SecurityType.FutureOption
-                        : IB.SecurityType.Option;
+                     return IB.SecurityType.Option;
+
+                case SecurityType.FutureOption:
+                    return IB.SecurityType.FutureOption;
 
                 case SecurityType.Forex:
                     return IB.SecurityType.Cash;
@@ -2155,9 +2152,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case IB.SecurityType.Stock:
                     return SecurityType.Equity;
 
-                case IB.SecurityType.FutureOption:
                 case IB.SecurityType.Option:
                     return SecurityType.Option;
+
+                case IB.SecurityType.FutureOption:
+                    return SecurityType.FutureOption;
 
                 case IB.SecurityType.Cash:
                     return SecurityType.Forex;
@@ -2263,8 +2262,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var isFutureOption = contract.SecType == IB.SecurityType.FutureOption;
 
             // Handle future options as a Future, up until we actually return the future.
-            // Note that this may be problematic, since some future option symbols might
-            // differ from the underlying Symbol, but it's all dependent on IB.
             if (isFutureOption || securityType == SecurityType.Future)
             {
                 var leanSymbol = _symbolMapper.GetLeanRootSymbol(ibSymbol);
@@ -2379,7 +2376,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             var subscribeSymbol = symbol;
 
                             // we subscribe to the underlying
-                            if (symbol.ID.SecurityType == SecurityType.Option && symbol.IsCanonical())
+                            if ((symbol.ID.SecurityType == SecurityType.Option || symbol.ID.SecurityType == SecurityType.FutureOption) && symbol.IsCanonical())
                             {
                                 subscribeSymbol = symbol.Underlying;
                                 _underlyings.Add(subscribeSymbol, symbol);
@@ -2453,7 +2450,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         {
                             Log.Trace("InteractiveBrokersBrokerage.Unsubscribe(): Unsubscribe Request: " + symbol.Value);
 
-                            if (symbol.ID.SecurityType == SecurityType.Option && symbol.ID.StrikePrice == 0.0m)
+                            if ((symbol.ID.SecurityType == SecurityType.Option || symbol.ID.SecurityType == SecurityType.FutureOption) && symbol.ID.StrikePrice == 0.0m)
                             {
                                 _underlyings.Remove(symbol.Underlying);
                             }
@@ -2511,7 +2508,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 (securityType == SecurityType.Equity && market == Market.USA) ||
                 (securityType == SecurityType.Forex && market == Market.Oanda) ||
                 (securityType == SecurityType.Option && market == Market.USA) ||
-                (securityType == SecurityType.Option && symbol.Underlying.SecurityType == SecurityType.Future) ||
+                (securityType == SecurityType.FutureOption) ||
                 (securityType == SecurityType.Future);
         }
 
@@ -2735,7 +2732,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case IBApi.TickType.OPTION_CALL_OPEN_INTEREST:
                 case IBApi.TickType.OPTION_PUT_OPEN_INTEREST:
 
-                    if (symbol.ID.SecurityType != SecurityType.Option && symbol.ID.SecurityType != SecurityType.Future)
+                    if (symbol.ID.SecurityType != SecurityType.Option && symbol.ID.SecurityType != SecurityType.FutureOption && symbol.ID.SecurityType != SecurityType.Future)
                     {
                         return;
                     }
@@ -2794,16 +2791,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             else if (symbol.SecurityType == SecurityType.Option)
             {
-                if (symbol.Underlying.SecurityType == SecurityType.Equity)
-                {
-                    lookupName = symbol.Underlying.Value;
-                }
-                else
-                {
-                    // Non-equity Symbols do not undergo mapping, so to get a Symbol representing the asset without expiry information,
-                    // we use the SID's Symbol property, since it's guaranteed to never change, whereas equities do.
-                    lookupName = symbol.Underlying.ID.Symbol;
-                }
+                lookupName = symbol.Underlying.Value;
+            }
+            else if (symbol.SecurityType == SecurityType.FutureOption)
+            {
+                // Futures Options use the underlying Symbol ticker for their ticker on IB.
+                lookupName = symbol.Underlying.ID.Symbol;
             }
 
             // setting up lookup request
@@ -2812,7 +2805,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Symbol = _symbolMapper.GetBrokerageRootSymbol(lookupName),
                 Currency = securityCurrency ?? Currencies.USD,
                 Exchange = exchangeSpecifier,
-                SecType = ConvertSecurityType(symbol.SecurityType, symbol.Underlying?.SecurityType),
+                SecType = ConvertSecurityType(symbol.SecurityType),
                 IncludeExpired = includeExpired
             };
 
@@ -2820,7 +2813,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             var symbols = new List<Symbol>();
 
-            if (symbol.SecurityType == SecurityType.Option)
+            if (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.FutureOption)
             {
                 // IB requests for full option chains are rate limited and responses can be delayed up to a minute for each underlying,
                 // so we fetch them from the OCC website instead of using the IB API.
@@ -2861,7 +2854,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // Try to remove options or futures contracts that have expired
             if (!includeExpired)
             {
-                if (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.Future)
+                if (symbol.SecurityType == SecurityType.Option ||
+                    symbol.SecurityType == SecurityType.Future ||
+                    symbol.SecurityType == SecurityType.FutureOption)
                 {
                     var removedSymbols = symbols.Where(x => x.ID.Date < GetRealTimeTickTime(x).Date).ToHashSet();
 
@@ -2904,6 +2899,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // skipping universe and canonical symbols
             if (!CanSubscribe(request.Symbol) ||
                 (request.Symbol.ID.SecurityType == SecurityType.Option && request.Symbol.IsCanonical()) ||
+                (request.Symbol.ID.SecurityType == SecurityType.FutureOption && request.Symbol.IsCanonical()) ||
                 (request.Symbol.ID.SecurityType == SecurityType.Future && request.Symbol.IsCanonical()))
             {
                 yield break;
@@ -2914,6 +2910,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 request.Symbol.SecurityType != SecurityType.Forex &&
                 request.Symbol.SecurityType != SecurityType.Cfd &&
                 request.Symbol.SecurityType != SecurityType.Future &&
+                request.Symbol.SecurityType != SecurityType.FutureOption &&
                 request.Symbol.SecurityType != SecurityType.Option)
             {
                 yield break;
@@ -3107,14 +3104,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             switch (symbol.SecurityType)
             {
                 case SecurityType.Option:
-                    if (symbol.Underlying.SecurityType == SecurityType.Future)
-                    {
-                        // Future options share the same market as the underlying Symbol
-                        goto case SecurityType.Future;
-                    }
                     // Regular equity options uses default, in this case "Smart"
                     goto default;
 
+                // Futures options share the same market as the underlying Symbol
+                case SecurityType.FutureOption:
                 case SecurityType.Future:
                     return _futuresExchanges.ContainsKey(symbol.ID.Market)
                         ? _futuresExchanges[symbol.ID.Market]

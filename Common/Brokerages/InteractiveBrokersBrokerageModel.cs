@@ -40,6 +40,7 @@ namespace QuantConnect.Brokerages
             {SecurityType.Equity, Market.USA},
             {SecurityType.Option, Market.USA},
             {SecurityType.Future, Market.CME},
+            {SecurityType.FutureOption, Market.CME},
             {SecurityType.Forex, Market.Oanda},
             {SecurityType.Cfd, Market.Oanda}
         }.ToReadOnlyDictionary();

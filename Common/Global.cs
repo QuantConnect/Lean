@@ -313,7 +313,19 @@ namespace QuantConnect
         /// <summary>
         /// Cryptocurrency Security Type.
         /// </summary>
-        Crypto
+        Crypto,
+
+        /// <summary>
+        /// Futures Options Security Type.
+        /// </summary>
+        /// <remarks>
+        /// Futures options function similar to equity options, but with a few key differences.
+        /// Firstly, the contract unit of trade is 1x, rather than 100x. This means that each
+        /// option represents the right to buy or sell 1 future contract at expiry/exercise.
+        /// The contract multiplier for Futures Options plays a big part in determining the premium
+        /// of the option, which can also differ from the underlying future's multiplier.
+        /// </remarks>
+        FutureOption
     }
 
     /// <summary>

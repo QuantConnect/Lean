@@ -86,7 +86,7 @@ namespace QuantConnect.Algorithm.CSharp
             var hasOptionQuoteBars = false;
             foreach (var qb in data.QuoteBars.Values)
             {
-                if (qb.Symbol.SecurityType != SecurityType.Option)
+                if (qb.Symbol.SecurityType != SecurityType.FutureOption)
                 {
                     continue;
                 }

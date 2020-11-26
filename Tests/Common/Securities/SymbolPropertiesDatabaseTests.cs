@@ -374,7 +374,7 @@ namespace QuantConnect.Tests.Common.Securities
                 SecurityIdentifier.DefaultDate);
 
             var db = SymbolPropertiesDatabase.FromDataFolder();
-            var results = db.GetSymbolProperties(market, option, SecurityType.Option, "USD");
+            var results = db.GetSymbolProperties(market, option, SecurityType.FutureOption, "USD");
 
             Assert.AreEqual((decimal)expectedMultiplier, results.ContractMultiplier);
             Assert.AreEqual((decimal)expectedMinimumPriceFluctuation, results.MinimumPriceVariation);

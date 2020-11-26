@@ -264,7 +264,7 @@ namespace QuantConnect.Securities
         /// <returns>The entry matching the specified market/symbol/security-type</returns>
         public virtual Entry GetEntry(string market, Symbol symbol, SecurityType securityType)
         {
-            if (securityType == SecurityType.Option && symbol.ID.Underlying.SecurityType != SecurityType.Equity)
+            if (securityType == SecurityType.FutureOption)
             {
                 // Try and get the option market hours. If they don't exist, we default back to
                 // the underlying's market hours.
@@ -302,24 +302,10 @@ namespace QuantConnect.Securities
                 switch (symbol.ID.SecurityType)
                 {
                     case SecurityType.Option:
-                        // Only for equity options we will use `Symbol.Value` since it's an accurate representation
-                        // of the underlying's ticker, unlike futures.
-                        // The `Symbol.Value` of a non-canonical future  will contain contract-specific information in
-                        // it, such as the expiry of the contract. We use the SID Symbol value instead to get
-                        // the value of the underlying without the contract information.
-                        if (symbol.HasUnderlying && symbol.Underlying.SecurityType != SecurityType.Equity)
-                        {
-                            stringSymbol = symbol.ID.Symbol;
-                        }
-                        else if (symbol.HasUnderlying)
-                        {
-                            stringSymbol = symbol.Underlying.Value;
-                        }
-                        else
-                        {
-                            stringSymbol = string.Empty;
-                        }
-
+                        stringSymbol = symbol.HasUnderlying ? symbol.Underlying.Value : string.Empty;
+                        break;
+                    case SecurityType.FutureOption:
+                        stringSymbol = symbol.HasUnderlying ? symbol.ID.Symbol : string.Empty;
                         break;
 
                     case SecurityType.Base:
