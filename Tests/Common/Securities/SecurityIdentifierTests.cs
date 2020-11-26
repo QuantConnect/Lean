@@ -16,11 +16,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -602,8 +604,13 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(option.ID.SecurityType, sid.SecurityType);
         }
 
-        [Test]
-        public void HighPrecisionWholeNumberStrikePricesThrows()
+        [TestCase(475712.0)]
+        [TestCase(47.5712)]
+        [TestCase(999999.0)]
+        [TestCase(-475712.0)]
+        [TestCase(-47.5712)]
+        [TestCase(-999999)]
+        public void HighPrecisionNumberThrows(double strike)
         {
             var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             Assert.Throws<ArgumentException>(() =>
@@ -613,121 +620,53 @@ namespace QuantConnect.Tests.Common.Securities
                     Market.USA,
                     OptionStyle.American,
                     OptionRight.Call,
-                    475712m,
+                    (decimal)strike, // strike decimal precision is limited to 4 decimal places only
                     new DateTime(2020, 5, 21));
             });
         }
 
-        [Test]
-        public void HighPrecisionFractionalNumberStrikePricesThrows()
+        [Test, Ignore("Requires complete option data to validate chain")]
+        public void ValidateAAPLOptionChainSecurityIdentifiers()
         {
-            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            Assert.Throws<ArgumentException>(() =>
-            {
-                Symbol.CreateOption(
-                    equity,
-                    Market.USA,
-                    OptionStyle.American,
-                    OptionRight.Call,
-                    47.5712m, // strike decimal precision is limited to 4 decimal places only
-                    new DateTime(2020, 5, 21));
-            });
-        }
+            var chainProvider = new BacktestingOptionChainProvider();
+            var aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            var chains = new HashSet<Symbol>();
+            var expectedChains = File.ReadAllLines("TestData/aapl_chain.csv")
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .ToDictionary(x => x, _ => false);
 
-        [Test]
-        public void HighPrecisionWholeVeryOutOfBoundsNumberStrikePricesThrows()
-        {
-            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            Assert.Throws<ArgumentException>(() =>
-            {
-                Symbol.CreateOption(
-                    equity,
-                    Market.USA,
-                    OptionStyle.American,
-                    OptionRight.Call,
-                    999999m,
-                    new DateTime(2020, 5, 21));
-            });
-        }
+            Assert.AreNotEqual(0, expectedChains.Count);
 
-        [Test]
-        public void HighPrecisionFractionalNonBoundApproachingNumberStrikePricesThrows()
-        {
-            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            Assert.Throws<ArgumentException>(() =>
-            {
-                Symbol.CreateOption(
-                    equity,
-                    Market.USA,
-                    OptionStyle.American,
-                    OptionRight.Call,
-                    47.5712m, // strike decimal precision is limited to 4 decimal places only
-                    new DateTime(2020, 5, 21));
-            });
-        }
+            var start = new DateTime(2020, 1, 1);
+            var end = new DateTime(2020, 7, 1);
 
-        [Test]
-        public void HighPrecisionNegativeWholeNumberStrikePricesThrows()
-        {
-            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            Assert.Throws<ArgumentException>(() =>
+            foreach (var date in Time.EachDay(start, end))
             {
-                Symbol.CreateOption(
-                    equity,
-                    Market.USA,
-                    OptionStyle.American,
-                    OptionRight.Call,
-                    -475712m,
-                    new DateTime(2020, 5, 21));
-            });
-        }
+                if (USHoliday.Dates.Contains(date) || date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    continue;
+                }
 
-        [Test]
-        public void HighPrecisionNegativeFractionalNumberStrikePricesThrows()
-        {
-            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            Assert.Throws<ArgumentException>(() =>
-            {
-                Symbol.CreateOption(
-                    equity,
-                    Market.USA,
-                    OptionStyle.American,
-                    OptionRight.Call,
-                    -47.5712m, // strike decimal precision is limited to 4 decimal places only
-                    new DateTime(2020, 5, 21));
-            });
-        }
+                foreach (var symbol in chainProvider.GetOptionContractList(aapl, date))
+                {
+                    chains.Add(symbol);
+                }
+            }
 
-        [Test]
-        public void HighPrecisionNegativeWholeVeryOutOfBoundsNumberStrikePricesThrows()
-        {
-            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            Assert.Throws<ArgumentException>(() =>
+            var fails = new HashSet<Symbol>();
+            foreach (var chain in chains)
             {
-                Symbol.CreateOption(
-                    equity,
-                    Market.USA,
-                    OptionStyle.American,
-                    OptionRight.Call,
-                    -999999m,
-                    new DateTime(2020, 5, 21));
-            });
-        }
+                if (expectedChains.ContainsKey(chain.ID.ToString()))
+                {
+                    expectedChains[chain.ID.ToString()] = true;
+                    continue;
+                }
 
-        [Test]
-        public void HighPrecisionNegativeFractionalNonBoundApproachingNumberStrikePricesThrows()
-        {
-            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            Assert.Throws<ArgumentException>(() =>
-            {
-                Symbol.CreateOption(
-                    equity,
-                    Market.USA,
-                    OptionStyle.American,
-                    OptionRight.Call,
-                    -47.5712m, // strike decimal precision is limited to 4 decimal places only
-                    new DateTime(2020, 5, 21));
-            });
+                fails.Add(chain);
+            }
+
+            Assert.AreEqual(0, fails.Count, $"The following option Symbols were not found in the expected chain:    \n{string.Join("\n", fails.Select(x => x.ID.ToString()))}");
+            Assert.IsTrue(expectedChains.All(kvp => kvp.Value), $"The following option Symbols were not loaded:    \n{string.Join("\n", expectedChains.Where(kvp => !kvp.Value).Select(x => x.Key))}");
         }
 
         class Container
