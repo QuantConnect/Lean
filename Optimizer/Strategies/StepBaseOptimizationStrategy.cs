@@ -38,10 +38,14 @@ namespace QuantConnect.Optimizer.Strategies
         /// </summary>
         protected HashSet<OptimizationParameter> OptimizationParameters;
 
-        // Optimization target, i.e. maximize or minimize
+        /// <summary>
+        /// Optimization target, i.e. maximize or minimize
+        /// </summary>
         protected Target Target;
 
-        // Optimization constraints; if it doesn't comply just drop the backtest
+        /// <summary>
+        /// Optimization constraints; if it doesn't comply just drop the backtest
+        /// </summary>
         protected IEnumerable<Constraint> Constraints;
 
         /// <summary>
@@ -57,7 +61,7 @@ namespace QuantConnect.Optimizer.Strategies
         /// <summary>
         /// Fires when new parameter set is generated
         /// </summary>
-        public event EventHandler NewParameterSet;
+        public event EventHandler<ParameterSet> NewParameterSet;
 
         /// <summary>
         /// Initializes the strategy using generator, extremum settings and optimization parameters
@@ -80,6 +84,7 @@ namespace QuantConnect.Optimizer.Strategies
 
             foreach (var optimizationParameter in OptimizationParameters.OfType<OptimizationStepParameter>())
             {
+                // if the Step optimization parameter does not provide a step to use, we calculate one based on settings
                 if (!optimizationParameter.Step.HasValue)
                 {
                     optimizationParameter.CalculateStep(Settings.DefaultSegmentAmount);
@@ -101,7 +106,7 @@ namespace QuantConnect.Optimizer.Strategies
         /// <returns>Number of parameter sets for given optimization parameters</returns>
         public int GetTotalBacktestEstimate()
         {
-            int total = 1;
+            var total = 1;
             foreach (var arg in OptimizationParameters)
             {
                 total *= arg.Estimate();
@@ -116,7 +121,7 @@ namespace QuantConnect.Optimizer.Strategies
         /// <param name="parameterSet">New parameter set</param>
         protected virtual void OnNewParameterSet(ParameterSet parameterSet)
         {
-            NewParameterSet?.Invoke(this, new OptimizationEventArgs(parameterSet));
+            NewParameterSet?.Invoke(this, parameterSet);
         }
 
         protected virtual void ProcessNewResult(OptimizationResult result)
@@ -138,12 +143,11 @@ namespace QuantConnect.Optimizer.Strategies
         /// <summary>
         /// Enumerate all possible arrangements
         /// </summary>
-        /// <param name="seed">Seeding</param>
         /// <param name="args"></param>
         /// <returns>Collection of possible combinations for given optimization parameters settings</returns>
-        protected IEnumerable<ParameterSet> Step(ParameterSet seed, HashSet<OptimizationParameter> args)
+        protected IEnumerable<ParameterSet> Step(HashSet<OptimizationParameter> args)
         {
-            foreach (var step in Recursive(seed, new Queue<OptimizationParameter>(args)))
+            foreach (var step in Recursive(new Queue<OptimizationParameter>(args)))
             {
                 yield return new ParameterSet(
                     ++_i,
@@ -151,7 +155,7 @@ namespace QuantConnect.Optimizer.Strategies
             }
         }
 
-        private IEnumerable<Dictionary<string, string>> Recursive(ParameterSet seed, Queue<OptimizationParameter> args)
+        private IEnumerable<Dictionary<string, string>> Recursive(Queue<OptimizationParameter> args)
         {
             if (args.Count == 1)
             {
@@ -169,7 +173,7 @@ namespace QuantConnect.Optimizer.Strategies
             var optimizationParameter = args.Dequeue();
             foreach (var value in optimizationParameter)
             {
-                foreach (var inner in Recursive(seed, new Queue<OptimizationParameter>(args)))
+                foreach (var inner in Recursive(new Queue<OptimizationParameter>(args)))
                 {
                     inner.Add(optimizationParameter.Name, value);
 
@@ -177,6 +181,5 @@ namespace QuantConnect.Optimizer.Strategies
                 }
             }
         }
-
     }
 }

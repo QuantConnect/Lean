@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Logging;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
 
@@ -31,11 +30,18 @@ namespace QuantConnect.Optimizer.Strategies
         private readonly HashSet<ParameterSet> _runningParameterSet = new HashSet<ParameterSet>();
         private int _segmentsAmount = 4;
 
+        /// <summary>
+        /// Initializes the strategy using generator, extremum settings and optimization parameters
+        /// </summary>
+        /// <param name="target">The optimization target</param>
+        /// <param name="constraints">The optimization constraints to apply on backtest results</param>
+        /// <param name="parameters">Optimization parameters</param>
+        /// <param name="settings">Optimization strategy settings</param>
         public override void Initialize(Target target, IReadOnlyList<Constraint> constraints, HashSet<OptimizationParameter> parameters, OptimizationStrategySettings settings)
         {
             if (settings == null)
             {
-                throw new ArgumentNullException(
+                throw new ArgumentNullException(nameof(settings),
                     "EulerSearchOptimizationStrategy.Initialize: Optimizations Strategy settings are required for this strategy");
             }
             _segmentsAmount = settings.DefaultSegmentAmount;
@@ -71,9 +77,12 @@ namespace QuantConnect.Optimizer.Strategies
 
                 if (_runningParameterSet.Count > 0)
                 {
+                    // we wait till all backtest end during each euler step
                     return;
                 }
 
+                // Once all running backtests have ended, for the current collection of optimization parameters, for each parameter we determine if
+                // we can create a new smaller/finer optimization scope
                 if (Target.Current.HasValue && OptimizationParameters.OfType<OptimizationStepParameter>().Any(s => s.Step > s.MinStep))
                 {
                     var boundaries = new HashSet<OptimizationParameter>();
@@ -103,10 +112,11 @@ namespace QuantConnect.Optimizer.Strategies
                 }
                 else if (!ReferenceEquals(result, OptimizationResult.Initial))
                 {
+                    // we ended!
                     return;
                 }
 
-                foreach (var parameterSet in Step(result.ParameterSet, OptimizationParameters))
+                foreach (var parameterSet in Step(OptimizationParameters))
                 {
                     OnNewParameterSet(parameterSet);
                 }

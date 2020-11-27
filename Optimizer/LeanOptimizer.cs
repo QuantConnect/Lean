@@ -88,12 +88,12 @@ namespace QuantConnect.Optimizer
         {
             if (nodePacket.OptimizationParameters.IsNullOrEmpty())
             {
-                throw new InvalidOperationException("Cannot start an optimization job with no parameter to optimize");
+                throw new ArgumentException("Cannot start an optimization job with no parameter to optimize");
             }
 
             if (string.IsNullOrEmpty(nodePacket.Criterion?.Target))
             {
-                throw new InvalidOperationException("Cannot start an optimization job with no target to optimize");
+                throw new ArgumentException("Cannot start an optimization job with no target to optimize");
             }
 
             NodePacket = nodePacket;
@@ -111,11 +111,12 @@ namespace QuantConnect.Optimizer
 
             Strategy.Initialize(OptimizationTarget, nodePacket.Constraints, NodePacket.OptimizationParameters, NodePacket.OptimizationStrategySettings);
 
-            Strategy.NewParameterSet += (s, e) =>
+            Strategy.NewParameterSet += (s, parameterSet) =>
             {
-                var parameterSet = (e as OptimizationEventArgs)?.ParameterSet;
                 if (parameterSet == null)
                 {
+                    // shouldn't happen
+                    Log.Error($"Strategy.NewParameterSet({GetLogDetails()}): generated a null {nameof(ParameterSet)} instance");
                     return;
                 }
                 LaunchLeanForParameterSet(parameterSet);
@@ -136,7 +137,7 @@ namespace QuantConnect.Optimizer
                 // if after we started there are no running parameter sets means we have failed to start
                 if (RunningParameterSetForBacktest.Count == 0)
                 {
-                    throw new Exception($"LeanOptimizer.Start({GetLogDetails()}): failed to start");
+                    throw new InvalidOperationException($"LeanOptimizer.Start({GetLogDetails()}): failed to start");
                 }
                 Log.Trace($"LeanOptimizer.Start({GetLogDetails()}): start ended. Waiting on {RunningParameterSetForBacktest.Count + PendingParameterSet.Count} backtests");
             }
@@ -367,15 +368,15 @@ namespace QuantConnect.Optimizer
                 return;
             }
 
-            if (NodePacket.MaximumConcurrentBacktests != 0 && RunningParameterSetForBacktest.Count >= NodePacket.MaximumConcurrentBacktests)
-            {
-                // we hit the limit on the concurrent backtests
-                PendingParameterSet.Enqueue(parameterSet);
-                return;
-            }
-
             lock (RunningParameterSetForBacktest)
             {
+                if (NodePacket.MaximumConcurrentBacktests != 0 && RunningParameterSetForBacktest.Count >= NodePacket.MaximumConcurrentBacktests)
+                {
+                    // we hit the limit on the concurrent backtests
+                    PendingParameterSet.Enqueue(parameterSet);
+                    return;
+                }
+
                 try
                 {
                     var backtestId = RunLean(parameterSet);

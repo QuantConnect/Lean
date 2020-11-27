@@ -15,13 +15,12 @@
 
 using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer.Parameters
 {
     /// <summary>
-    /// Defines the optimization parameter meta information
+    /// Defines the step based optimization parameter
     /// </summary>
     public class OptimizationStepParameter : OptimizationParameter
     {
@@ -46,6 +45,7 @@ namespace QuantConnect.Optimizer.Parameters
         /// <summary>
         /// Minimal possible movement for current parameter, should be positive
         /// </summary>
+        /// <remarks>Used by <see cref="Strategies.EulerSearchOptimizationStrategy"/> to determine when this parameter can no longer be optimized</remarks>
         [JsonProperty("min-step")]
         public decimal? MinStep { get; private set; }
 

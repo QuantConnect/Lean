@@ -21,7 +21,7 @@ using Newtonsoft.Json;
 namespace QuantConnect.Optimizer.Objectives
 {
     /// <summary>
-    /// Base class for optimization <see cref="QuantConnect.Optimizer.Target"/> and <see cref="Constraint"/>
+    /// Base class for optimization <see cref="Objectives.Target"/> and <see cref="Constraint"/>
     /// </summary>
     public abstract class Objective
     {
@@ -34,8 +34,10 @@ namespace QuantConnect.Optimizer.Objectives
         public string Target { get; }
 
         /// <summary>
-        /// Target value; if defined and backtest complies with the targets then finish
+        /// Target value
         /// </summary>
+        /// <remarks>For <see cref="Objectives.Target"/> if defined and backtest complies with the targets then finish optimization</remarks>
+        /// <remarks>For <see cref="Constraint"/> non optional, the value of the target constraint</remarks>
         [JsonProperty("target-value")]
         public decimal? TargetValue { get; }
 
@@ -46,7 +48,7 @@ namespace QuantConnect.Optimizer.Objectives
         {
             if (string.IsNullOrEmpty(target))
             {
-                throw new ArgumentNullException("target", $"Objective can not be null or empty");
+                throw new ArgumentNullException(nameof(target), "Objective can not be null or empty");
             }
 
             var objective = target;

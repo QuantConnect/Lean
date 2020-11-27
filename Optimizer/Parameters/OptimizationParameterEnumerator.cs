@@ -13,10 +13,8 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 
 namespace QuantConnect.Optimizer.Parameters
 {
@@ -25,7 +23,14 @@ namespace QuantConnect.Optimizer.Parameters
     /// </summary>
     public abstract class OptimizationParameterEnumerator<T> : IEnumerator<string>  where T: OptimizationParameter
     {
-        protected T OptimizationParameter;
+        /// <summary>
+        /// The target optimization parameter to enumerate
+        /// </summary>
+        protected readonly T OptimizationParameter;
+
+        /// <summary>
+        /// The current enumeration state
+        /// </summary>
         protected int Index = -1;
 
         protected OptimizationParameterEnumerator(T optimizationParameter)

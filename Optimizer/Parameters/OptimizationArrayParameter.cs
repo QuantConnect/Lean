@@ -20,19 +20,26 @@ using System.Collections.Generic;
 namespace QuantConnect.Optimizer.Parameters
 {
     /// <summary>
-    /// Defines the optimization parameter meta information
+    /// Defines the array based optimization parameter
     /// </summary>
     public class OptimizationArrayParameter : OptimizationParameter
     {
         /// <summary>
-        /// Minimum value of optimization parameter, applicable for boundary conditions
+        /// The discrete set of optimization parameters to use
         /// </summary>
         [JsonProperty("values")]
         public IList<string> Values { get; }
 
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
         public OptimizationArrayParameter(string name, IList<string> values) : base(name)
         {
             Values = values;
+            if (Values == null || Values.Count == 0)
+            {
+                throw new ArgumentException("Array based optimization parameter cannot be null or empty", nameof(values));
+            }
         }
 
         public override IEnumerator<string> GetEnumerator() => new OptimizationArrayParameterEnumerator(this);
@@ -43,10 +50,6 @@ namespace QuantConnect.Optimizer.Parameters
         /// <returns></returns>
         public override int Estimate()
         {
-            if (Values == null || Values.Count == 0)
-            {
-                throw new InvalidOperationException("Optimization parameter cannot be estimated due to values are not initialized properly");
-            }
             return Values.Count;
         }
     }

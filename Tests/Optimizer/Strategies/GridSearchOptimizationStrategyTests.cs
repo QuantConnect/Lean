@@ -55,9 +55,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new OptimizationStrategySettings());
 
-                _strategy.NewParameterSet += (s, e) =>
+                _strategy.NewParameterSet += (s, parameterSet) =>
                 {
-                    var parameterSet = (e as OptimizationEventArgs).ParameterSet;
                     Assert.AreEqual(0, parameterSet.Value["ema-fast"].ToDecimal());
                     Assert.AreEqual(0, parameterSet.Value["ema-slow"].ToDecimal());
                     Assert.AreEqual(1, parameterSet.Value["ema-custom"].ToDecimal());
@@ -79,9 +78,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                 using (var enumerator = new EnqueueableEnumerator<ParameterSet>())
                 {
-                    _strategy.NewParameterSet += (s, e) =>
+                    _strategy.NewParameterSet += (s, parameterSet) =>
                     {
-                        enumerator.Enqueue((e as OptimizationEventArgs)?.ParameterSet);
+                        enumerator.Enqueue(parameterSet);
                     };
 
                     _strategy.PushNewResults(OptimizationResult.Initial);
@@ -140,9 +139,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 var counter = 0;
                 using (var enumerator = new EnqueueableEnumerator<ParameterSet>())
                 {
-                    _strategy.NewParameterSet += (s, e) =>
+                    _strategy.NewParameterSet += (s, parameterSet) =>
                     {
-                        enumerator.Enqueue((e as OptimizationEventArgs)?.ParameterSet);
+                        enumerator.Enqueue(parameterSet);
                     };
 
                     _strategy.PushNewResults(OptimizationResult.Initial);
@@ -213,9 +212,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                 using (var enumerator = new EnqueueableEnumerator<ParameterSet>())
                 {
-                    _strategy.NewParameterSet += (s, e) =>
+                    _strategy.NewParameterSet += (s, parameterSet) =>
                     {
-                        enumerator.Enqueue((e as OptimizationEventArgs)?.ParameterSet);
+                        enumerator.Enqueue(parameterSet);
                     };
 
                     _strategy.PushNewResults(OptimizationResult.Initial);
@@ -291,10 +290,10 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new OptimizationStrategySettings());
 
                 var counter = 0;
-                _strategy.NewParameterSet += (s, e) =>
+                _strategy.NewParameterSet += (s, parameterSet) =>
                 {
                     counter++;
-                    Assert.AreEqual(depth, (e as OptimizationEventArgs).ParameterSet.Value.Count);
+                    Assert.AreEqual(depth, parameterSet.Value.Count);
                     if (counter == 10000)
                     {
                         throw new Exception("Break loop due to large amount of data");
@@ -321,9 +320,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 };
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), null, set, new OptimizationStrategySettings());
 
-                _strategy.NewParameterSet += (s, e) =>
+                _strategy.NewParameterSet += (s, parameterSet) =>
                 {
-                    Assert.AreEqual(nextId++, (e as OptimizationEventArgs).ParameterSet.Id);
+                    Assert.AreEqual(nextId++, parameterSet.Id);
                 };
 
                 last = nextId;

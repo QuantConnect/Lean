@@ -23,9 +23,9 @@ namespace QuantConnect.Optimizer
     public class OptimizationResult
     {
         /// <summary>
-        /// Corresponds to empty result - zero profit at empty permission set
+        /// Corresponds to initial result to drive the optimization strategy
         /// </summary>
-        public static readonly OptimizationResult Initial = new OptimizationResult();
+        public static readonly OptimizationResult Initial = new OptimizationResult(null, null, null);
 
         /// <summary>
         /// The backtest id that generated this result
@@ -33,7 +33,7 @@ namespace QuantConnect.Optimizer
         public string BacktestId { get; }
 
         /// <summary>
-        /// Id of optimization job. Equals to parameter set Id
+        /// Parameter set Id
         /// </summary>
         public int Id => ParameterSet?.Id ?? 0;
 
@@ -46,11 +46,6 @@ namespace QuantConnect.Optimizer
         /// The parameter set at which the result was achieved
         /// </summary>
         public ParameterSet ParameterSet { get; }
-
-        /// <summary>
-        /// Create an empty instance of <see cref="OptimizationResult"/>
-        /// </summary>
-        private OptimizationResult() {}
 
         /// <summary>
         /// Create an instance of <see cref="OptimizationResult"/>

@@ -74,7 +74,6 @@
     <Compile Include="Strategies\EulerSearchOptimizationStrategy.cs" />
     <Compile Include="Strategies\IOptimizationStrategy.cs" />
     <Compile Include="Strategies\GridSearchOptimizationStrategy.cs" />
-    <Compile Include="OptimizationEventArgs.cs" />
     <Compile Include="OptimizationNodePacket.cs" />
     <Compile Include="Parameters\OptimizationParameterEnumerator.cs" />
     <Compile Include="OptimizationResult.cs" />

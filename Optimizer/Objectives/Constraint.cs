@@ -26,6 +26,9 @@ namespace QuantConnect.Optimizer.Objectives
     /// </summary>
     public class Constraint : Objective
     {
+        /// <summary>
+        /// The target comparison operation, eg. 'Greater'
+        /// </summary>
         [JsonProperty("operator")]
         public ComparisonOperatorTypes Operator { get; }
 
@@ -35,6 +38,11 @@ namespace QuantConnect.Optimizer.Objectives
         public Constraint(string target, ComparisonOperatorTypes @operator, decimal? targetValue) : base(target, targetValue)
         {
             Operator = @operator;
+
+            if (!TargetValue.HasValue)
+            {
+                throw new ArgumentNullException(nameof(targetValue), $"Constraint target value is not specified");
+            }
         }
 
         /// <summary>
@@ -45,11 +53,6 @@ namespace QuantConnect.Optimizer.Objectives
             if (string.IsNullOrEmpty(jsonBacktestResult))
             {
                 throw new ArgumentNullException(nameof(jsonBacktestResult), "Constraint.IsMet: backtest result can not be null or empty.");
-            }
-
-            if (!TargetValue.HasValue)
-            {
-                throw new ArgumentNullException("TargetValue", $"Constraint target value is not specified");
             }
 
             var token = JObject.Parse(jsonBacktestResult).SelectToken(Target);

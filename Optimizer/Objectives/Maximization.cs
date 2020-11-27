@@ -25,7 +25,6 @@ namespace QuantConnect.Optimizer.Objectives
         /// </summary>
         public Maximization() : base((v1, v2) => v1 < v2)
         {
-
         }
     }
 }

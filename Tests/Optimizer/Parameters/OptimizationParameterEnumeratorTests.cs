@@ -14,7 +14,6 @@
  *
 */
 
-
 using NUnit.Framework;
 using QuantConnect.Optimizer.Parameters;
 using System;
@@ -79,9 +78,7 @@ namespace QuantConnect.Tests.Optimizer.Parameters
         {
             private static TestCaseData[] OptimizationParameters => new[]
             {
-                new TestCaseData(new OptimizationArrayParameter("ema-fast", new string[0])),
                 new TestCaseData(new OptimizationArrayParameter("ema-fast", new []{"0", "1", "2", "3"})),
-                new TestCaseData(new OptimizationArrayParameter("ema-fast", new string[]{ null })),
                 new TestCaseData(new OptimizationArrayParameter("ema-fast", new []{"a", null, "c", "d"}))
             };
 

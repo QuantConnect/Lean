@@ -14,8 +14,6 @@
 */
 
 using System;
-using System.Linq;
-using QuantConnect.Optimizer.Parameters;
 
 namespace QuantConnect.Optimizer.Strategies
 {
@@ -52,7 +50,7 @@ namespace QuantConnect.Optimizer.Strategies
                     return;
                 }
 
-                foreach (var parameterSet in Step(result.ParameterSet, OptimizationParameters))
+                foreach (var parameterSet in Step(OptimizationParameters))
                 {
                     OnNewParameterSet(parameterSet);
                 }

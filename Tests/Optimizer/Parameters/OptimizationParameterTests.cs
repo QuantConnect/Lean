@@ -366,16 +366,16 @@ namespace QuantConnect.Tests.Optimizer.Parameters
 
             private static TestCaseData[] OptimizationParametersEmptyEstimations => new[]
             {
-                new TestCaseData(new OptimizationArrayParameter("ema-fast", null)),
-                new TestCaseData(new OptimizationArrayParameter("ema-fast", new string[0]))
+                new TestCaseData(null),
+                new TestCaseData(new List<string>())
             };
 
             [Test, TestCaseSource(nameof(OptimizationParametersEmptyEstimations))]
-            public void ThrowIfEstimateNullOrEmpty(OptimizationArrayParameter optimizationParameter)
+            public void ThrowIfEstimateNullOrEmpty(IList<string> values)
             {
-                Assert.Throws<InvalidOperationException>(() =>
+                Assert.Throws<ArgumentException>(() =>
                 {
-                    optimizationParameter.Estimate();
+                    var pepe = new OptimizationArrayParameter("ema-fast", values);
                 });
             }
         }

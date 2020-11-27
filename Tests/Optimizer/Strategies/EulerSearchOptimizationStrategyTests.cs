@@ -52,14 +52,13 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     new OptimizationStrategySettings { DefaultSegmentAmount = _defaultSegmentAmount });
                 Queue<OptimizationResult> _pendingOptimizationResults = new Queue<OptimizationResult>();
                 int depth = -1;
-                _strategy.NewParameterSet += (s, e) =>
+                _strategy.NewParameterSet += (s, parameterSet) =>
                     {
                         if (_pendingOptimizationResults.Count == 0)
                         {
                             depth++;
                         }
 
-                        var parameterSet = (e as OptimizationEventArgs)?.ParameterSet;
                         _pendingOptimizationResults.Enqueue(new OptimizationResult(_stringify(_profit(parameterSet), _drawdown(parameterSet)), parameterSet, ""));
                     };
 
@@ -99,14 +98,13 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     new OptimizationStrategySettings { DefaultSegmentAmount = amountOfSegments });
                 Queue<OptimizationResult> pendingOptimizationResults = new Queue<OptimizationResult>();
                 int depth = -1;
-                _strategy.NewParameterSet += (s, e) =>
+                _strategy.NewParameterSet += (s, parameterSet) =>
                 {
                     if (pendingOptimizationResults.Count == 0)
                     {
                         depth++;
                     }
 
-                    var parameterSet = (e as OptimizationEventArgs)?.ParameterSet;
                     pendingOptimizationResults.Enqueue(new OptimizationResult(_stringify(_profit(parameterSet), _drawdown(parameterSet)), parameterSet, ""));
                 };
 

@@ -20,13 +20,15 @@ using System.Collections.Generic;
 namespace QuantConnect.Optimizer.Parameters
 {
     /// <summary>
-    /// Represents the single combination of optimization parameters
+    /// Represents a single combination of optimization parameters
     /// </summary>
     public class ParameterSet
     {
         /// <summary>
         /// The unique identifier within scope (current optimization job)
         /// </summary>
+        /// <remarks>Internal id, useful for the optimization strategy to id each generated parameter sets,
+        /// even before there is any backtest id</remarks>
         public int Id { get; }
 
         /// <summary>

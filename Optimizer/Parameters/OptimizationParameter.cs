@@ -35,7 +35,7 @@ namespace QuantConnect.Optimizer.Parameters
         /// Create an instance of <see cref="OptimizationParameter"/> based on configuration
         /// </summary>
         /// <param name="name">parameter name</param>
-        public OptimizationParameter(string name)
+        protected OptimizationParameter(string name)
         {
             Name = name;
         }

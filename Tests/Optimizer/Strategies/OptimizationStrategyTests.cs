@@ -44,9 +44,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             _pendingOptimizationResults = new Queue<OptimizationResult>();
             Strategy = CreateStrategy();
 
-            Strategy.NewParameterSet += (s, e) =>
+            Strategy.NewParameterSet += (s, parameterSet) =>
             {
-                var parameterSet = (e as OptimizationEventArgs)?.ParameterSet;
                 _pendingOptimizationResults.Enqueue(new OptimizationResult(_stringify(_profit(parameterSet), _drawdown(parameterSet)), parameterSet, ""));
             };
         }
@@ -55,9 +54,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         public void ThrowOnReinitialization()
         {
             int nextId = 1;
-            Strategy.NewParameterSet += (s, e) =>
+            Strategy.NewParameterSet += (s, parameterSet) =>
             {
-                Assert.AreEqual(nextId++, (e as OptimizationEventArgs).ParameterSet.Id);
+                Assert.AreEqual(nextId++, parameterSet.Id);
             };
 
             var set1 = new HashSet<OptimizationParameter>()

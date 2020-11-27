@@ -42,10 +42,18 @@ namespace QuantConnect.Tests.Optimizer.Objectives
             Assert.IsFalse(constraint.IsMet(BacktestResult.Create(value).ToJson()));
         }
 
+        [Test]
+        public void ThrowIfTargetNull()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                var constraint = new Constraint("Drawdown", ComparisonOperatorTypes.Less, null);
+            });
+        }
 
         [TestCase("")]
         [TestCase(null)]
-        public void ThrowIfNullOrEmpty(string json)
+        public void ThrowIfResultNullOrEmpty(string json)
         {
             var constraint = new Constraint("Drawdown", ComparisonOperatorTypes.Less, 10);
 
@@ -76,13 +84,13 @@ namespace QuantConnect.Tests.Optimizer.Objectives
         [Test]
         public void FromJson()
         {
-            var json = "{\"operator\": \"equals\",\"target\": \"pin ocho.Gepetto\",\"target-value\": null}";
+            var json = "{\"operator\": \"equals\",\"target\": \"pin ocho.Gepetto\",\"target-value\": 11}";
 
             var constraint = (Constraint)JsonConvert.DeserializeObject(json, typeof(Constraint));
 
             Assert.AreEqual("['pin ocho'].['Gepetto']", constraint.Target);
-            Assert.IsNull(constraint.TargetValue);
             Assert.AreEqual(ComparisonOperatorTypes.Equals, constraint.Operator);
+            Assert.AreEqual(11, constraint.TargetValue.Value);
         }
 
         [Test]

@@ -18,12 +18,12 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Newtonsoft.Json.Serialization;
 
 namespace QuantConnect.Optimizer.Parameters
 {
     /// <summary>
-    /// Override <see cref="OptimizationParameter"/> deserialization method
+    /// Override <see cref="OptimizationParameter"/> deserialization method.
+    /// Can handle <see cref="OptimizationArrayParameter"/> and <see cref="OptimizationStepParameter"/> instances
     /// </summary>
     public class OptimizationParameterJsonConverter : JsonConverter
     {

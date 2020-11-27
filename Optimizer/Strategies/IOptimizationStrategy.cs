@@ -28,7 +28,7 @@ namespace QuantConnect.Optimizer.Strategies
         /// <summary>
         /// Fires when new parameter set is retrieved
         /// </summary>
-        event EventHandler NewParameterSet;
+        event EventHandler<ParameterSet> NewParameterSet;
 
         /// <summary>
         /// Best found solution, its value and parameter set
@@ -53,7 +53,6 @@ namespace QuantConnect.Optimizer.Strategies
         /// <summary>
         /// Estimates amount of parameter sets that can be run
         /// </summary>
-        /// <param name="result">Number of parameter sets</param>
         int GetTotalBacktestEstimate();
     }
 }
