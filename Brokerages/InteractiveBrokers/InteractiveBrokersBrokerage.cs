@@ -895,7 +895,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         public override void Disconnect()
         {
-            _client.ClientSocket.eDisconnect();
+            _client?.ClientSocket.eDisconnect();
 
             if (_messageProcessingThread != null)
             {
