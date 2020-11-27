@@ -29,6 +29,10 @@ namespace QuantConnect.Lean.Launcher
     public class Program
     {
         private const string _collapseMessage = "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
+        private static LeanEngineSystemHandlers leanEngineSystemHandlers;
+        private static LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
+        private static AlgorithmNodePacket job;
+        private static AlgorithmManager algorithmManager;
 
         static Program()
         {
@@ -72,7 +76,7 @@ namespace QuantConnect.Lean.Launcher
             Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
 
             //Import external libraries specific to physical server location (cloud/local)
-            LeanEngineSystemHandlers leanEngineSystemHandlers;
+            
             try
             {
                 leanEngineSystemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
@@ -88,7 +92,7 @@ namespace QuantConnect.Lean.Launcher
 
             //-> Pull job from QuantConnect job queue, or, pull local build:
             string assemblyPath;
-            var job = leanEngineSystemHandlers.JobQueue.NextJob(out assemblyPath);
+            job = leanEngineSystemHandlers.JobQueue.NextJob(out assemblyPath);
 
             if (job == null)
             {
@@ -97,7 +101,6 @@ namespace QuantConnect.Lean.Launcher
                 throw new ArgumentException(jobNullMessage);
             }
 
-            LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
             try
             {
                 leanEngineAlgorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
@@ -124,7 +127,11 @@ namespace QuantConnect.Lean.Launcher
 
             try
             {
-                var algorithmManager = new AlgorithmManager(liveMode, job);
+                // Set our exit handler for the algorithm
+                Console.CancelKeyPress += new ConsoleCancelEventHandler(ExitKeyPress);
+
+                // Create the algorithm manager and start our engine
+                algorithmManager = new AlgorithmManager(liveMode, job);
 
                 leanEngineSystemHandlers.LeanManager.Initialize(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, job, algorithmManager);
 
@@ -133,19 +140,33 @@ namespace QuantConnect.Lean.Launcher
             }
             finally
             {
-                //Delete the message from the job queue:
-                leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
-                Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
-
-                // clean up resources
-                leanEngineSystemHandlers.Dispose();
-                leanEngineAlgorithmHandlers.Dispose();
-                Log.LogHandler.Dispose();
-
-                Log.Trace("Program.Main(): Exiting Lean...");
-
-                Environment.Exit(0);
+                Exit();
             }
+        }
+
+        public static void ExitKeyPress(object sender, ConsoleCancelEventArgs args)
+        {
+            // Allow our process to resume after this event
+            args.Cancel = true;
+
+            // Stop the algorithm
+            algorithmManager.SetStatus(AlgorithmStatus.Stopped);
+            Log.Trace("Program.ExitKeyPress(): Lean instance has been cancelled, shutting down safely now");
+        }
+
+        public static void Exit()
+        {
+            //Delete the message from the job queue:
+            leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
+            Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
+
+            // clean up resources
+            leanEngineSystemHandlers.Dispose();
+            leanEngineAlgorithmHandlers.Dispose();
+            Log.LogHandler.Dispose();
+
+            Log.Trace("Program.Main(): Exiting Lean...");
+            Environment.Exit(0);
         }
     }
 }

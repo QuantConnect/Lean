@@ -506,6 +506,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     ProcessAsynchronousEvents();
                 }
             }
+            catch (ThreadAbortException)
+            {
+                Log.Trace("BrokerageTransactionHandler.Run(): Thread has been aborted");
+            }
             catch (Exception err)
             {
                 // unexpected error, we need to close down shop
