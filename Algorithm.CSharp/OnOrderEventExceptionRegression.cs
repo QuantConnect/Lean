@@ -55,6 +55,10 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        /// <summary>
+        /// OnOrderEvent is called whenever an order is updated
+        /// </summary>
+        /// <param name="orderEvent">Order Event</param>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             throw new Exception("OnOrderEvent exception");
