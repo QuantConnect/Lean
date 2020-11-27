@@ -1055,6 +1055,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     _algorithm.Error("Order Event Handler Error: " + err.Message);
                     // kill the algorithm
                     _algorithm.RunTimeError = err;
+                    _algorithm.Status = AlgorithmStatus.RuntimeError;
                 }
             }
         }

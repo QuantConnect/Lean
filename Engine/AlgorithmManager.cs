@@ -689,6 +689,14 @@ namespace QuantConnect.Lean.Engine
                 results.SendStatusUpdate(AlgorithmStatus.Deleted);
             }
 
+            //Runtime Error.
+            if (_algorithm.Status == AlgorithmStatus.RuntimeError)
+            {
+                Log.Trace("AlgorithmManager.Run(): Algorithm RuntimeError...");
+                Log.Trace("RuntimeError:" + _algorithm.RunTimeError);
+                return;
+            }
+
             //Algorithm finished, send regardless of commands:
             results.SendStatusUpdate(AlgorithmStatus.Completed);
             SetStatus(AlgorithmStatus.Completed);
