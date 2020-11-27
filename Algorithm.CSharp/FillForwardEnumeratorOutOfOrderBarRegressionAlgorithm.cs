@@ -23,11 +23,14 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression test algorithm simply fetch and compare data of minute resolution around daylight saving period
+    /// reproduces issue reported in GB issue GH issue https://github.com/QuantConnect/Lean/issues/4925
+    /// related issues https://github.com/QuantConnect/Lean/issues/3707; https://github.com/QuantConnect/Lean/issues/4630
     /// </summary>
     public class FillForwardEnumeratorOutOfOrderBarRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private decimal _exptectedClose = 84.09m;
         private DateTime _exptectedTime = new DateTime(2008, 3, 10, 9, 30, 0);
+        private Symbol _shy;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -36,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2008, 3, 7);
             SetEndDate(2008, 3, 10);
-            AddEquity("SHY", Resolution.Minute);
+            _shy = AddEquity("SHY", Resolution.Minute).Symbol;
             // just to make debugging easier, less subscriptions
             SetBenchmark(time => 1);
         }
@@ -44,9 +47,19 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             var trackingBar = slice.Bars.Values.FirstOrDefault(s => s.Time.Equals(_exptectedTime));
-            if (trackingBar != null && trackingBar.Close != _exptectedClose)
+
+            if (trackingBar != null)
             {
-                throw new Exception($"Bar at {_exptectedTime.ToStringInvariant()} closed at price {trackingBar.Close.ToStringInvariant()}; expected {_exptectedClose.ToStringInvariant()}");
+                if (!Portfolio.Invested)
+                {
+                    SetHoldings(_shy, 1);
+                }
+
+                if (trackingBar.Close != _exptectedClose)
+                {
+                    throw new Exception(
+                        $"Bar at {_exptectedTime.ToStringInvariant()} closed at price {trackingBar.Close.ToStringInvariant()}; expected {_exptectedClose.ToStringInvariant()}");
+                }
             }
         }
 
@@ -65,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "0"},
+            {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -84,13 +97,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Fitness Score", "0"},
+            {"Total Fees", "$5.93"},
+            {"Fitness Score", "0.499"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0"},
+            {"Return Over Maximum Drawdown", "-105.726"},
+            {"Portfolio Turnover", "0.998"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -104,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "371857150"}
+            {"OrderListHash", "-850144190"}
         };
     }
 }
