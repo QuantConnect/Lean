@@ -112,5 +112,11 @@ sudo docker run -d --rm -p 8888:8888 \
 
 echo "Docker container started; will wait 2 seconds before opening web browser."
 sleep 2s
-xdg-open http://localhost:8888/lab
 
+if [ "$(uname)" == "Darwin" ]; then
+    # Mac system, can just use "open"
+    open http://localhost:8888/lab
+else
+    # Other system, use default
+    xdg-open http://localhost:8888/lab
+fi
