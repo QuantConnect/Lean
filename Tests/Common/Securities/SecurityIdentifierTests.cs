@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
@@ -468,16 +469,20 @@ namespace QuantConnect.Tests.Common.Securities
             });
         }
 
-        [Test]
-        public void PositiveWholeNumberStrikePriceApproachesBoundsWithoutOverflowingSid()
+        [TestCase("-475711")]
+        [TestCase("475711")]
+        [TestCase("47.5711")]
+        [TestCase("-47.5711")]
+        public void NumberStrikePriceApproachesBoundsWithoutOverflowingSid(string strikeStr)
         {
+            var strike = decimal.Parse(strikeStr, CultureInfo.InvariantCulture);
             var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             var option = Symbol.CreateOption(
                 equity,
                 Market.USA,
                 OptionStyle.American,
                 OptionRight.Call,
-                475711m,
+                strike,
                 new DateTime(2020, 5, 21));
 
             // The SID specification states that the total width for the properties value
@@ -488,109 +493,7 @@ namespace QuantConnect.Tests.Common.Securities
             var sid = SecurityIdentifier.Parse(option.ID.ToString());
 
             Assert.AreEqual(new DateTime(2020, 5, 21), sid.Date);
-            Assert.AreEqual(475711m, sid.StrikePrice);
-            Assert.AreEqual(OptionRight.Call, sid.OptionRight);
-            Assert.AreEqual(OptionStyle.American, sid.OptionStyle);
-            Assert.AreEqual(Market.USA, sid.Market);
-            Assert.AreEqual(SecurityType.Option, sid.SecurityType);
-
-            Assert.AreEqual(option.ID.Date,sid.Date);
-            Assert.AreEqual(option.ID.StrikePrice, sid.StrikePrice);
-            Assert.AreEqual(option.ID.OptionRight, sid.OptionRight);
-            Assert.AreEqual(option.ID.OptionStyle, sid.OptionStyle);
-            Assert.AreEqual(option.ID.Market, sid.Market);
-            Assert.AreEqual(option.ID.SecurityType, sid.SecurityType);
-        }
-
-        [Test]
-        public void PositiveFractionalNumberStrikePriceApproachesBoundsWithoutOverflowingSid()
-        {
-            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            var option = Symbol.CreateOption(
-                equity,
-                Market.USA,
-                OptionStyle.American,
-                OptionRight.Call,
-                47.5711m,
-                new DateTime(2020, 5, 21));
-
-            // The SID specification states that the total width for the properties value
-            // is at most 20 digits long. If we overflowed the SID, the strike price can and will
-            // eat from other slots, corrupting the data. If we have no overflow, the SID will
-            // be constructed properly without corrupting any data, even as we approach the bounds.
-            // We will assert that all properties contained within the _properties field are valid and not corrupted
-            var sid = SecurityIdentifier.Parse(option.ID.ToString());
-
-            Assert.AreEqual(new DateTime(2020, 5, 21), sid.Date);
-            Assert.AreEqual(47.5711m, sid.StrikePrice);
-            Assert.AreEqual(OptionRight.Call, sid.OptionRight);
-            Assert.AreEqual(OptionStyle.American, sid.OptionStyle);
-            Assert.AreEqual(Market.USA, sid.Market);
-            Assert.AreEqual(SecurityType.Option, sid.SecurityType);
-
-            Assert.AreEqual(option.ID.Date,sid.Date);
-            Assert.AreEqual(option.ID.StrikePrice, sid.StrikePrice);
-            Assert.AreEqual(option.ID.OptionRight, sid.OptionRight);
-            Assert.AreEqual(option.ID.OptionStyle, sid.OptionStyle);
-            Assert.AreEqual(option.ID.Market, sid.Market);
-            Assert.AreEqual(option.ID.SecurityType, sid.SecurityType);
-        }
-
-        [Test]
-        public void NegativeWholeNumberStrikePriceApproachesBoundsWithoutOverflowingSid()
-        {
-            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            var option = Symbol.CreateOption(
-                equity,
-                Market.USA,
-                OptionStyle.American,
-                OptionRight.Call,
-                -475711m,
-                new DateTime(2020, 5, 21));
-
-            // The SID specification states that the total width for the properties value
-            // is at most 20 digits long. If we overflowed the SID, the strike price can and will
-            // eat from other slots, corrupting the data. If we have no overflow, the SID will
-            // be constructed properly without corrupting any data, even as we approach the bounds.
-            // We will assert that all properties contained within the _properties field are valid and not corrupted
-            var sid = SecurityIdentifier.Parse(option.ID.ToString());
-
-            Assert.AreEqual(new DateTime(2020, 5, 21), sid.Date);
-            Assert.AreEqual(-475711m, sid.StrikePrice);
-            Assert.AreEqual(OptionRight.Call, sid.OptionRight);
-            Assert.AreEqual(OptionStyle.American, sid.OptionStyle);
-            Assert.AreEqual(Market.USA, sid.Market);
-            Assert.AreEqual(SecurityType.Option, sid.SecurityType);
-
-            Assert.AreEqual(option.ID.Date,sid.Date);
-            Assert.AreEqual(option.ID.StrikePrice, sid.StrikePrice);
-            Assert.AreEqual(option.ID.OptionRight, sid.OptionRight);
-            Assert.AreEqual(option.ID.OptionStyle, sid.OptionStyle);
-            Assert.AreEqual(option.ID.Market, sid.Market);
-            Assert.AreEqual(option.ID.SecurityType, sid.SecurityType);
-        }
-
-        [Test]
-        public void NegativeFractionalNumberStrikePriceApproachesBoundsWithoutOverflowingSid()
-        {
-            var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            var option = Symbol.CreateOption(
-                equity,
-                Market.USA,
-                OptionStyle.American,
-                OptionRight.Call,
-                -47.5711m,
-                new DateTime(2020, 5, 21));
-
-            // The SID specification states that the total width for the properties value
-            // is at most 20 digits long. If we overflowed the SID, the strike price can and will
-            // eat from other slots, corrupting the data. If we have no overflow, the SID will
-            // be constructed properly without corrupting any data, even as we approach the bounds.
-            // We will assert that all properties contained within the _properties field are valid and not corrupted
-            var sid = SecurityIdentifier.Parse(option.ID.ToString());
-
-            Assert.AreEqual(new DateTime(2020, 5, 21), sid.Date);
-            Assert.AreEqual(-47.5711m, sid.StrikePrice);
+            Assert.AreEqual(strike, sid.StrikePrice);
             Assert.AreEqual(OptionRight.Call, sid.OptionRight);
             Assert.AreEqual(OptionStyle.American, sid.OptionStyle);
             Assert.AreEqual(Market.USA, sid.Market);
