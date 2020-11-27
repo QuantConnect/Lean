@@ -32,6 +32,8 @@ namespace QuantConnect.Data.Market
     [ProtoInclude(1000, typeof(OpenInterest))]
     public class Tick : BaseData
     {
+        private string _exchange;
+        private int _exchangeCode;
         private uint? _parsedSaleCondition;
 
         /// <summary>
@@ -47,10 +49,37 @@ namespace QuantConnect.Data.Market
         public decimal Quantity = 0;
 
         /// <summary>
-        /// Exchange we are executing on. String short code expanded in the MarketCodes.US global dictionary
+        /// Exchange code this tick came from <see cref="Exchanges"/>
         /// </summary>
         [ProtoMember(12)]
-        public string Exchange = "";
+        public int ExchangeCode
+        {
+            get
+            {
+                return _exchangeCode;
+            }
+            set
+            {
+                _exchangeCode = value;
+                _exchange = Exchanges.GetName(value);
+            }
+        }
+
+        /// <summary>
+        /// Exchange name this tick came from <see cref="Exchanges"/>
+        /// </summary>
+        public string Exchange
+        {
+            get
+            {
+                return _exchange;
+            }
+            set
+            {
+                _exchange = value;
+                _exchangeCode = Exchanges.GetCode(value);
+            }
+        }
 
         /// <summary>
         /// Sale condition for the tick.

@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -679,40 +680,132 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Global Market Short Codes and their full versions: (used in tick objects)
+    /// Defines Lean exchanges codes and names
     /// </summary>
-    public static class MarketCodes
+    public static class Exchanges
     {
-        /// US Market Codes
-        public static Dictionary<string, string> US = new Dictionary<string, string>()
+        /// <summary>
+        /// Gets the exchange name for the given code number
+        /// </summary>
+        /// <remarks>Useful for performance</remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int GetCode(string exchange)
         {
-            {"A", "American Stock Exchange"},
-            {"B", "Boston Stock Exchange"},
-            {"C", "National Stock Exchange"},
-            {"D", "FINRA ADF"},
-            {"I", "International Securities Exchange"},
-            {"J", "Direct Edge A"},
-            {"K", "Direct Edge X"},
-            {"M", "Chicago Stock Exchange"},
-            {"N", "New York Stock Exchange"},
-            {"P", "Nyse Arca Exchange"},
-            {"Q", "NASDAQ OMX"},
-            {"T", "NASDAQ OMX"},
-            {"U", "OTC Bulletin Board"},
-            {"u", "Over-the-Counter trade in Non-NASDAQ issue"},
-            {"W", "Chicago Board Options Exchange"},
-            {"X", "Philadelphia Stock Exchange"},
-            {"Y", "BATS Y-Exchange, Inc"},
-            {"Z", "BATS Exchange, Inc"},
-            {"IEX", "Investors Exchange"},
-        };
+            switch (exchange)
+            {
+                case "NASDA OMX":
+                    return 1;
+                case "BATS Z":
+                    return 2;
+                case "ARCA":
+                    return 3;
+                case "NYSE":
+                    return 4;
+                case "NSE":
+                    return 5;
+                case "FINRA":
+                    return 6;
+                case "ISE":
+                    return 7;
+                case "OPRA":
+                    return 8;
+                case "CSE":
+                    return 9;
+                case "CBOE":
+                    return 10;
+                case "AMEX":
+                    return 11;
+                case "SIAC":
+                    return 12;
+                case "EDGA":
+                    return 13;
+                case "EDGX":
+                    return 14;
+                case "NASDAQ BX":
+                    return 15;
+                case "NASDAQ PSX":
+                    return 16;
+                case "BATS Y":
+                    return 17;
+                case "C2":
+                    return 18;
+                case "BOSTON":
+                    return 19;
+                case "MIAX":
+                    return 20;
+                case "ISE_GEMINI":
+                    return 21;
+                case "ISE_MERCURY":
+                    return 22;
+                case "NASDAQ":
+                    return 2;
+                default:
+                case "UNKNOWN":
+                    return 0;
+            }
+        }
 
-        /// Canada Market Short Codes:
-        public static Dictionary<string, string> Canada = new Dictionary<string, string>()
+        /// <summary>
+        /// Gets the exchange name for the given code number
+        /// </summary>
+        /// <remarks>Useful for performance</remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string GetName(int exchangeCode)
         {
-            {"T", "Toronto"},
-            {"V", "Venture"}
-        };
+            switch (exchangeCode)
+            {
+                case (0):
+                    return "UNKNOWN";
+                case (1):
+                    return "NASDA OMX";
+                case (2):
+                    return "BATS Z";
+                case (3):
+                    return "ARCA";
+                case (4):
+                    return "NYSE";
+                case (5):
+                    return "NSE";
+                case (6):
+                    return "FINRA";
+                case (7):
+                    return "ISE";
+                case (8):
+                    return "OPRA";
+                case (9):
+                    return "CSE";
+                case (10):
+                    return "CBOE";
+                case (11):
+                    return "AMEX";
+                case (12):
+                    return "SIAC";
+                case (13):
+                    return "EDGA";
+                case (14):
+                    return "EDGX";
+                case (15):
+                    return "NASDAQ BX";
+                case (16):
+                    return "NASDAQ PSX";
+                case (17):
+                    return "BATS Y";
+                case (18):
+                    return "C2";
+                case (19):
+                    return "BOSTON";
+                case (20):
+                    return "MIAX";
+                case (21):
+                    return "ISE_GEMINI";
+                case (22):
+                    return "ISE_MERCURY";
+                case (23):
+                    return "NASDAQ";
+                default:
+                    return string.Empty;
+            }
+        }
     }
 
     /// <summary>
