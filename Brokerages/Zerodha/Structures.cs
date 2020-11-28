@@ -60,11 +60,11 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
     /// </summary>
     public struct DepthItem
     {
-        public DepthItem(Dictionary<string, dynamic> data)
+        public DepthItem(JObject data)
         {
-            Quantity = Convert.ToUInt32(data["quantity"]);
-            Price = data["price"];
-            Orders = Convert.ToUInt32(data["orders"]);
+            Quantity = Convert.ToUInt32(data["quantity"], CultureInfo.InvariantCulture);
+            Price = (decimal)data["price"];
+            Orders = Convert.ToUInt32(data["orders"], CultureInfo.InvariantCulture);
         }
 
         public UInt32 Quantity { get; set; }
@@ -77,7 +77,7 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
     /// </summary>
     public struct Historical
     {
-        public Historical(ArrayList data)
+        public Historical(dynamic data)
         {
             TimeStamp = Convert.ToDateTime(data[0], CultureInfo.InvariantCulture);
             Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
@@ -85,7 +85,7 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
             Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);
             Close = Convert.ToDecimal(data[4], CultureInfo.InvariantCulture);
             Volume = Convert.ToUInt32(data[5], CultureInfo.InvariantCulture);
-            OI = data.Count > 6 ? Convert.ToUInt32(data[6], CultureInfo.InvariantCulture) : 0;
+            OI = data.Count > 6 ? Convert.ToUInt32(data[6], CultureInfo.InvariantCulture) : Convert.ToUInt32(0, CultureInfo.InvariantCulture); ;
         }
 
         public DateTime TimeStamp { get; }
@@ -781,12 +781,13 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
     /// </summary>
     public struct User
     {
-        public User(Dictionary<string, dynamic> data)
+        public User(dynamic data)
         {
             try
             {
                 APIKey = data["data"]["api_key"];
-                Products = (string[])data["data"]["products"].ToArray(typeof(string));
+                //Products = (string[])data["data"]["products"].ToArray(typeof(string));
+                Products = data["data"]["products"].ToObject<string[]>();
                 UserName = data["data"]["user_name"];
                 UserShortName = data["data"]["user_shortname"];
                 AvatarURL = data["data"]["avatar_url"];
@@ -796,9 +797,9 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
                 RefreshToken = data["data"]["refresh_token"];
                 UserType = data["data"]["user_type"];
                 UserId = data["data"]["user_id"];
-                LoginTime = Utils.StringToDate(data["data"]["login_time"]);
-                Exchanges = (string[])data["data"]["exchanges"].ToArray(typeof(string));
-                OrderTypes = (string[])data["data"]["order_types"].ToArray(typeof(string));
+                LoginTime = Utils.StringToDate(data["data"]["login_time"].ToString());
+                Exchanges = data["data"]["exchanges"].ToObject<string[]>();
+                OrderTypes = data["data"]["order_types"].ToObject<string[]>();
                 Email = data["data"]["email"];
             }
             catch (Exception e)
@@ -888,52 +889,52 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
     /// </summary>
     public struct Quote
     {
-        public Quote(Dictionary<string, dynamic> data)
+        public Quote(JObject data)
         {
             try
             {
-                InstrumentToken = Convert.ToUInt32(data["instrument_token"]);
-                Timestamp = Utils.StringToDate(data["timestamp"]);
-                LastPrice = data["last_price"];
+                InstrumentToken = Convert.ToUInt32(data["instrument_token"], CultureInfo.InvariantCulture);
+                Timestamp = Utils.StringToDate(data["timestamp"].ToString());
+                LastPrice = (decimal)data["last_price"];
 
-                Change = data["net_change"];
+                Change = (decimal)data["net_change"];
 
-                Open = data["ohlc"]["open"];
-                Close = data["ohlc"]["close"];
-                Low = data["ohlc"]["low"];
-                High = data["ohlc"]["high"];                
+                Open = (decimal)data["ohlc"]["open"];
+                Close = (decimal)data["ohlc"]["close"];
+                Low = (decimal)data["ohlc"]["low"];
+                High = (decimal)data["ohlc"]["high"];
 
-                if (data.ContainsKey("last_quantity"))
+                if (data["last_quantity"] != null)
                 {
                     // Non index quote
-                    LastQuantity = Convert.ToUInt32(data["last_quantity"]);
-                    LastTradeTime = Utils.StringToDate(data["last_trade_time"]);
-                    AveragePrice = data["average_price"];
-                    Volume = Convert.ToUInt32(data["volume"]);
+                    LastQuantity = Convert.ToUInt32(data["last_quantity"], CultureInfo.InvariantCulture);
+                    LastTradeTime = Utils.StringToDate(data["last_trade_time"].ToString());
+                    AveragePrice = (decimal)data["average_price"];
+                    Volume = Convert.ToUInt32(data["volume"], CultureInfo.InvariantCulture);
 
-                    BuyQuantity = Convert.ToUInt32(data["buy_quantity"]);
-                    SellQuantity = Convert.ToUInt32(data["sell_quantity"]);
+                    BuyQuantity = Convert.ToUInt32(data["buy_quantity"], CultureInfo.InvariantCulture);
+                    SellQuantity = Convert.ToUInt32(data["sell_quantity"], CultureInfo.InvariantCulture);
 
-                    OI = Convert.ToUInt32(data["oi"]);
+                    OI = Convert.ToUInt32(data["oi"], CultureInfo.InvariantCulture);
 
-                    OIDayHigh = Convert.ToUInt32(data["oi_day_high"]);
-                    OIDayLow = Convert.ToUInt32(data["oi_day_low"]);
+                    OIDayHigh = Convert.ToUInt32(data["oi_day_high"], CultureInfo.InvariantCulture);
+                    OIDayLow = Convert.ToUInt32(data["oi_day_low"], CultureInfo.InvariantCulture);
 
-                    LowerCircuitLimit = data["lower_circuit_limit"];
-                    UpperCircuitLimit = data["upper_circuit_limit"];
+                    LowerCircuitLimit = (decimal)data["lower_circuit_limit"];
+                    UpperCircuitLimit = (decimal)data["upper_circuit_limit"];
 
                     Bids = new List<DepthItem>();
                     Offers = new List<DepthItem>();
 
                     if (data["depth"]["buy"] != null)
                     {
-                        foreach (Dictionary<string, dynamic> bid in data["depth"]["buy"])
+                        foreach (JObject bid in data["depth"]["buy"])
                             Bids.Add(new DepthItem(bid));
                     }
 
                     if (data["depth"]["sell"] != null)
                     {
-                        foreach (Dictionary<string, dynamic> offer in data["depth"]["sell"])
+                        foreach (JObject offer in data["depth"]["sell"])
                             Offers.Add(new DepthItem(offer));
                     }
                 }
@@ -1044,5 +1045,5 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
         }
         public UInt32 InstrumentToken { get; set; }
         public decimal LastPrice { get; }
-    }    
+    }
 }

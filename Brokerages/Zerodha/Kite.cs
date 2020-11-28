@@ -542,16 +542,16 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         /// <param name="InstrumentId">Indentification of instrument in the form of EXCHANGE:TRADINGSYMBOL (eg: NSE:INFY) or InstrumentToken (eg: 408065)</param>
         /// <returns>Dictionary of all Quote objects with keys as in InstrumentId</returns>
-        public Dictionary<string, Quote> GetQuote(string[] InstrumentId)
+        public Dictionary<string, Quote> GetQuote(string[] InstrumentIds)
         {
             var param = new Dictionary<string, dynamic>
             {
-                { "i", InstrumentId }
+                { "i", InstrumentIds }
             };
-            Dictionary<string, dynamic> quoteData = Get("market.quote", param)["data"];
+            var quoteData = Get("market.quote", param)["data"];
 
             Dictionary<string, Quote> quotes = new Dictionary<string, Quote>();
-            foreach (string item in quoteData.Keys)
+            foreach (string item in InstrumentIds)
                 quotes.Add(item, new Quote(quoteData[item]));
 
             return quotes;
@@ -629,7 +629,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
             List<Historical> historicals = new List<Historical>();
 
-            foreach (ArrayList item in historicalData["data"]["candles"])
+            foreach (var item in historicalData["data"]["candles"])
                 historicals.Add(new Historical(item));
 
             return historicals;
@@ -864,7 +864,7 @@ namespace QuantConnect.Brokerages.Zerodha
             Req.Timeout = _timeout;
             if (_proxy != null) Req.Proxy = _proxy;
 
-           
+
         }
 
         /// <summary>

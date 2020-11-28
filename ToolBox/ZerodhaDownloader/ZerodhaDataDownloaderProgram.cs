@@ -48,7 +48,7 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
             }
             try
             {
-                var _kite = new Kite(_apiKey,_accessToken);
+                var _kite = new Kite(_apiKey, _accessToken);
                 var castResolution = (Resolution)Enum.Parse(typeof(Resolution), resolution);
                 var castSecurityType = (SecurityType)Enum.Parse(typeof(SecurityType), securityType);
 
@@ -57,6 +57,10 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
 
                 foreach (var pair in tickers)
                 {
+                    var quoteTicker = market + ":" + pair;
+                    var instrumentQuotes = _kite.GetQuote(new string[] { quoteTicker });
+                    var quote = instrumentQuotes[quoteTicker];
+
                     // Download data
                     var pairObject = Symbol.Create(pair, castSecurityType, market);
 
@@ -87,17 +91,24 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
                                 throw new ArgumentException("Zerodha Doesn't support tick resolution");
 
                             case Resolution.Minute:
-                                history = _kite.GetHistoricalData(pairObject.ID.Symbol, start, end, "minute").ToList();
+
+                                if ((end - start).Days > 60)
+                                    throw new ArgumentOutOfRangeException("For minutes data Zerodha support 60 days data download");
+                                history = _kite.GetHistoricalData(quote.InstrumentToken.ToStringInvariant(), start, end, "minute").ToList();
                                 timeSpan = Time.OneMinute;
                                 break;
 
                             case Resolution.Hour:
-                                history = _kite.GetHistoricalData(pairObject.ID.Symbol, start, end, "60minute").ToList();
+                                if ((end - start).Days > 400)
+                                    throw new ArgumentOutOfRangeException("For daily data Zerodha support 400 days data download");
+                                history = _kite.GetHistoricalData(quote.InstrumentToken.ToStringInvariant(), start, end, "60minute").ToList();
                                 timeSpan = Time.OneHour;
                                 break;
 
                             case Resolution.Daily:
-                                history = _kite.GetHistoricalData(pairObject.ID.Symbol, start, end, "day").ToList();
+                                if ((end - start).Days > 400)
+                                    throw new ArgumentOutOfRangeException("For daily data Zerodha support 400 days data download");
+                                history = _kite.GetHistoricalData(quote.InstrumentToken.ToStringInvariant(), start, end, "day").ToList();
                                 timeSpan = Time.OneDay;
                                 break;
                         }
@@ -112,9 +123,10 @@ namespace QuantConnect.ToolBox.ZerodhaDownloader
                     }
                 }
             }
+            //TODO:Throw exception
             catch (Exception err)
             {
-                Log.Error(err);
+                Log.Error($"ZerodhaDataDownloadManager.OnError(): Message: {err.Message} Exception: {err.InnerException}");
             }
 
         }
