@@ -22,12 +22,9 @@ using QuantConnect.Orders;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Basic template algorithm simply initializes the date range and cash. This is a skeleton
-    /// framework you can use for designing an algorithm.
+    /// Regression Algorithm for testing engine behavior with throwing errors in OnOrderEvent
+    /// Should result in a RunTimeError status.
     /// </summary>
-    /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="using quantconnect" />
-    /// <meta name="tag" content="trading and orders" />
     public class OnOrderEventExceptionRegression : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
