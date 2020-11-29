@@ -42,22 +42,42 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
         }
 
         [Test]
-        public void CallButterflyMatchesUnderlying()
+        public void CoveredCall_MatchesMultipleTimes_ForEachUniqueShortCallContract()
         {
+            // CoveredCall
+            // 0: +1 underlying lot
+            // 1: -1 Call
+            // so we should match
+            // (4U, -4C100)
+            // (3U, -3C110)
+            // (5U, -5C120)
+            // (9U, -9C130)
+            // (20U, -20C140)
+            // OptionStrategyDefinition.Match produces ALL possible matches
             var positions = Empty.AddRange(Position(Underlying, +20),
-                Position(Call[100, -4]), Position(Put[105, -4]),
-                Position(Call[105, +4]), Position(Put[110, +4]),
-                Position(Call[110, -3]), Position(Put[115, -3]),
-                Position(Call[115, +3]), Position(Put[120, +3]),
-                Position(Call[120, -5]), Position(Put[125, -5]),
-                Position(Call[124, +5]), Position(Put[130, +5])
+                Position(Call[100], -4), Position(Put[105], -4),
+                Position(Call[105], +4), Position(Put[110], +4),
+                Position(Call[110], -3), Position(Put[115], -3),
+                Position(Call[115], +3), Position(Put[120], +3),
+                Position(Call[120], -5), Position(Put[125], -5),
+                Position(Call[125], +5), Position(Put[130], +5),
+                Position(Call[130], -9), Position(Put[135], -9),
+                Position(Call[140], -21), Position(Put[145], -21)
             );
 
-            var matches = CallButterfly.Match(positions).ToList();
-            foreach (var match in matches)
-            {
-                Console.WriteLine($"{match}");
-            }
+            // force lower strikes to be evaluated first to provide determinism for this test
+            var options = OptionStrategyMatcherOptions.ForDefinitions(CoveredCall)
+                .WithPositionEnumerator(new FunctionalOptionPositionCollectionEnumerator(
+                    pos => pos.OrderBy(p => p.IsUnderlying ? 0 : p.Strike)
+                ));
+
+            var matches = CoveredCall.Match(options, positions).ToList();
+            Assert.AreEqual(5, matches.Count);
+            Assert.AreEqual(1, matches.Count(m => m.Multiplier == 4));
+            Assert.AreEqual(1, matches.Count(m => m.Multiplier == 3));
+            Assert.AreEqual(1, matches.Count(m => m.Multiplier == 5));
+            Assert.AreEqual(1, matches.Count(m => m.Multiplier == 9));
+            Assert.AreEqual(1, matches.Count(m => m.Multiplier == 20));
         }
 
         [Test]

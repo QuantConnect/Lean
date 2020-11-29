@@ -39,6 +39,18 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
 
         public static ImmutableList<OptionStrategyDefinition> AllDefinitions => All.Value;
 
+        /// <summary>
+        /// Hold 1 lot of the underlying and sell 1 call contract
+        /// </summary>
+        public static OptionStrategyDefinition CoveredCall { get; }
+            = OptionStrategyDefinition.Create("Covered Call", 1,
+                OptionStrategyDefinition.CallLeg(-1)
+            );
+
+        /// <summary>
+        /// Bear Call Spread strategy consists of two calls with the same expiration but different strikes.
+        /// The strike price of the short call is below the strike of the long call. This is a credit spread.
+        /// </summary>
         public static OptionStrategyDefinition BearCallSpread { get; }
             = OptionStrategyDefinition.Create("Bear Call Spread",
                 OptionStrategyDefinition.CallLeg(-1),
@@ -46,6 +58,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                                                      (legs, p) => p.Expiration == legs[0].Expiration)
             );
 
+        /// <summary>
+        /// Bear Put Spread strategy consists of two puts with the same expiration but different strikes.
+        /// The strike price of the short put is below the strike of the long put. This is a debit spread.
+        /// </summary>
         public static OptionStrategyDefinition BearPutSpread { get; }
             = OptionStrategyDefinition.Create("Bear Put Spread",
                 OptionStrategyDefinition.PutLeg(1),
@@ -53,6 +69,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                                                     (legs, p) => p.Expiration == legs[0].Expiration)
             );
 
+        /// <summary>
+        /// Bull Call Spread strategy consists of two calls with the same expiration but different strikes.
+        /// The strike price of the short call is higher than the strike of the long call. This is a debit spread.
+        /// </summary>
         public static OptionStrategyDefinition BullCallSpread { get; }
             = OptionStrategyDefinition.Create("Bull Call Spread",
                 OptionStrategyDefinition.CallLeg(+1),
@@ -60,6 +80,11 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                                                      (legs, p) => p.Expiration == legs[0].Expiration)
             );
 
+        /// <summary>
+        /// Method creates new Bull Put Spread strategy, that consists of two puts with the same expiration but
+        /// different strikes. The strike price of the short put is above the strike of the long put. This is a
+        /// credit spread.
+        /// </summary>
         public static OptionStrategyDefinition BullPutSpread { get; }
             = OptionStrategyDefinition.Create("Bull Put Spread",
                 OptionStrategyDefinition.PutLeg(-1),
@@ -67,6 +92,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                                                     (legs, p) => p.Expiration == legs[0].Expiration)
             );
 
+        /// <summary>
+        /// Straddle strategy is a combination of buying a call and buying a put, both with the same strike price
+        /// and expiration.
+        /// </summary>
         public static OptionStrategyDefinition Straddle { get; }
             = OptionStrategyDefinition.Create("Straddle",
                 OptionStrategyDefinition.CallLeg(+1),
@@ -74,6 +103,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                                                     (legs, p) => p.Expiration == legs[0].Expiration)
             );
 
+        /// <summary>
+        /// Strangle strategy consists of buying a call option and a put option with the same expiration date.
+        /// The strike price of the call is above the strike of the put.
+        /// </summary>
         public static OptionStrategyDefinition Strangle { get; }
             = OptionStrategyDefinition.Create("Strangle",
                 OptionStrategyDefinition.CallLeg(+1),
@@ -81,6 +114,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                                                     (legs, p) => p.Expiration == legs[0].Expiration)
             );
 
+        /// <summary>
+        /// Call Butterfly strategy consists of two short calls at a middle strike, and one long call each at a lower
+        /// and upper strike. The upper and lower strikes must both be equidistant from the middle strike.
+        /// </summary>
         public static OptionStrategyDefinition CallButterfly { get; }
             = OptionStrategyDefinition.Create("Call Butterfly",
                 OptionStrategyDefinition.CallLeg(+1),
@@ -91,6 +128,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                                                      (legs, p) => p.Strike - legs[1].Strike == legs[1].Strike - legs[0].Strike)
             );
 
+        /// <summary>
+        /// Put Butterfly strategy consists of two short puts at a middle strike, and one long put each at a lower and
+        /// upper strike. The upper and lower strikes must both be equidistant from the middle strike.
+        /// </summary>
         public static OptionStrategyDefinition PutButterfly { get; }
             = OptionStrategyDefinition.Create("Put Butterfly",
                 OptionStrategyDefinition.PutLeg(+1),
@@ -101,6 +142,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                                                     (legs, p) => p.Strike - legs[1].Strike == legs[1].Strike - legs[0].Strike)
             );
 
+        /// <summary>
+        /// Call Calendar Spread strategy is a short one call option and long a second call option with a more distant
+        /// expiration.
+        /// </summary>
         public static OptionStrategyDefinition CallCalendarSpread { get; }
             = OptionStrategyDefinition.Create("Call Calendar Spread",
                 OptionStrategyDefinition.CallLeg(+1),
@@ -108,6 +153,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                                                      (legs, p) => p.Expiration <= legs[0].Expiration)
             );
 
+        /// <summary>
+        /// Put Calendar Spread strategy is a short one put option and long a second put option with a more distant
+        /// expiration.
+        /// </summary>
         public static OptionStrategyDefinition PutCalendarSpread { get; }
             = OptionStrategyDefinition.Create("Put Calendar Spread",
                 OptionStrategyDefinition.PutLeg(+1),
