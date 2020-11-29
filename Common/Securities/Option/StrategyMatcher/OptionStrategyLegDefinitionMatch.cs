@@ -52,11 +52,28 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Creates the appropriate type of <see cref="OptionStrategy.LegData"/> for this matched position
         /// </summary>
-        public OptionStrategy.LegData CreateOptionStrategyLeg()
+        /// <param name="multiplier">The multiplier to use for creating the leg data. This multiplier will be
+        /// the minimum multiplier of all legs within a strategy definition match. Each leg defines its own
+        /// multiplier which is the max matches for that leg and the strategy definition's multiplier is the
+        /// min of the individual legs.</param>
+        public OptionStrategy.LegData CreateOptionStrategyLeg(int multiplier)
         {
+            var quantity = Position.Quantity;
+            if (Multiplier != multiplier)
+            {
+                if (multiplier > Multiplier)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(multiplier), "Unable to create strategy leg with a larger multiplier than matched.");
+                }
+
+                // back out the unit quantity and scale it up to the requested multiplier
+                var unit = Position.Quantity / Multiplier;
+                quantity = unit * multiplier;
+            }
+
             return Position.IsUnderlying
-                ? (OptionStrategy.LegData) OptionStrategy.UnderlyingLegData.Create(Multiplier, Position.Symbol)
-                : OptionStrategy.OptionLegData.Create(Multiplier, Position.Symbol);
+                ? (OptionStrategy.LegData) OptionStrategy.UnderlyingLegData.Create(quantity, Position.Symbol)
+                : OptionStrategy.OptionLegData.Create(quantity, Position.Symbol);
         }
 
         /// <summary>Indicates whether the current object is equal to another object of the same type.</summary>

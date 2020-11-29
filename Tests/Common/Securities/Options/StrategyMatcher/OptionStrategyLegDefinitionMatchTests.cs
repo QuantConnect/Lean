@@ -27,19 +27,33 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
         public void CreatesOptionOptionStrategyLegData()
         {
             var match = new OptionStrategyLegDefinitionMatch(3, Option.Position(Option.Call[100], 3));
-            var leg = match.CreateOptionStrategyLeg();
+            var leg = match.CreateOptionStrategyLeg(3);
             Assert.IsInstanceOf<OptionStrategy.OptionLegData>(leg);
             Assert.AreEqual(3, leg.Quantity);
             Assert.AreEqual(0, leg.OrderPrice);
             Assert.AreEqual(leg.OrderType, OrderType.Market);
         }
+
         [Test]
         public void CreatesUnderlyingOptionStrategyLegData()
         {
             var match = new OptionStrategyLegDefinitionMatch(3, Option.Position(Option.Underlying, 3));
-            var leg = match.CreateOptionStrategyLeg();
+            var leg = match.CreateOptionStrategyLeg(3);
             Assert.IsInstanceOf<OptionStrategy.UnderlyingLegData>(leg);
             Assert.AreEqual(3, leg.Quantity);
+            Assert.AreEqual(0, leg.OrderPrice);
+            Assert.AreEqual(leg.OrderType, OrderType.Market);
+        }
+
+        [Test]
+        public void CreateOptionStrategyLeg_RespectsProvidedMultiplier()
+        {
+            // multiplier of 2 w/ position quantity of 4 means leg definition quantity is +2
+            // so we request a multiplier of 1 and except +2 leg quantity
+            var match = new OptionStrategyLegDefinitionMatch(2, Option.Position(Option.Underlying, 4));
+            var leg = match.CreateOptionStrategyLeg(1);
+            Assert.IsInstanceOf<OptionStrategy.UnderlyingLegData>(leg);
+            Assert.AreEqual(2, leg.Quantity);
             Assert.AreEqual(0, leg.OrderPrice);
             Assert.AreEqual(leg.OrderType, OrderType.Market);
         }

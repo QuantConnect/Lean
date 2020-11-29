@@ -70,7 +70,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// </summary>
         public OptionStrategy CreateStrategy()
         {
-            var legs = Legs.Select(leg => leg.CreateOptionStrategyLeg());
+            var legs = Legs.Select(leg => leg.CreateOptionStrategyLeg(Multiplier));
             var strategy = new OptionStrategy {Name = Definition.Name, Underlying = Legs[0].Position.Underlying};
             foreach (var leg in legs)
             {
