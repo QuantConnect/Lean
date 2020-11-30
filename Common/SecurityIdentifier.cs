@@ -245,7 +245,16 @@ namespace QuantConnect
                     var scale = ExtractFromProperties(StrikeScaleOffset, StrikeScaleWidth);
                     var unscaled = ExtractFromProperties(StrikeOffset, StrikeWidth);
                     var pow = Math.Pow(10, (int)scale - StrikeDefaultScale);
-                    _strikePrice = unscaled * (decimal)pow;
+                    // If the 20th bit is set to 1, we have a negative strike price.
+                    // Let's normalize the strike and explicitly make it negative
+                    if (((unscaled >> 19) & 1) == 1)
+                    {
+                        _strikePrice = -((unscaled ^ 1 << 19) * (decimal)pow);
+                    }
+                    else
+                    {
+                        _strikePrice = unscaled * (decimal)pow;
+                    }
 
                     return _strikePrice.Value;
                 }
@@ -682,12 +691,35 @@ namespace QuantConnect
                 scale++;
             }
 
-            if (strike >= 1000000)
+            // Since our max precision was previously capped at 999999 and it had 20 bits set,
+            // we sacrifice a single bit from the strike price to allow for negative strike prices.
+            // 475711 is the maximum value that can be represented when setting the negative bit because
+            // any number greater than that will cause an overflow in the strike price width and increase
+            // its width to 7 digits.
+            // The idea behind this formula is to determine what number the overflow would happen at.
+            // We get the max number representable in 19 bits, subtract the width to normalize the value,
+            // and then get the difference between the 20 bit mask and the 19 bit normalized value to get
+            // the max strike price + 1. Subtract 1 to normalize the value, and we have established an exclusive
+            // upper bound.
+            const ulong negativeMask = 1 << 19;
+            const ulong maxStrikePrice = negativeMask - ((negativeMask ^ (negativeMask - 1)) - StrikeWidth) - 1;
+
+            if (strike >= maxStrikePrice || strike <= -(long)maxStrikePrice)
             {
                 throw new ArgumentException(Invariant($"The specified strike price\'s precision is too high: {str}"));
             }
 
-            return (ulong)strike;
+            var encodedStrike = (long)strike;
+            if (strike < 0)
+            {
+                // Flip the sign
+                encodedStrike = -encodedStrike;
+
+                // Sets the 20th bit equal to 1
+                encodedStrike |= 1 << 19;
+            }
+
+            return (ulong)encodedStrike;
         }
 
         /// <summary>
