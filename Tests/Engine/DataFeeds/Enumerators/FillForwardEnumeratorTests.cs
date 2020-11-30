@@ -2134,9 +2134,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(fillForwardEnumerator.MoveNext());  // 2014.06.06
 
             var counter = 0;
+            var previous = fillForwardEnumerator.Current;
             while (fillForwardEnumerator.MoveNext())
             {
                 Assert.NotNull(fillForwardEnumerator.Current);
+                Assert.Greater(fillForwardEnumerator.Current.Time, previous?.Time ?? DateTime.MinValue);
                 Assert.AreEqual(
                     fillForwardEnumerator.Current.DataType != MarketDataType.Auxiliary,
                     fillForwardEnumerator.Current.IsFillForward);
@@ -2144,6 +2146,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 {
                     counter++;
                 }
+
+                previous = fillForwardEnumerator.Current;
             }
 
             Assert.AreEqual(

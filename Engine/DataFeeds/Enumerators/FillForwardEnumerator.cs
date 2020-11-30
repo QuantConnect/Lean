@@ -193,17 +193,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             if (underlyingCurrent != null && underlyingCurrent.DataType == MarketDataType.Auxiliary)
             {
                 var delisting = underlyingCurrent as Delisting;
-                if (delisting != null)
+                if (delisting?.Type == DelistingType.Delisted)
                 {
-                    if (delisting.Type == DelistingType.Delisted)
-                    {
-                        _delistedTime = delisting.EndTime;
-                    }
-                }
-                else
-                {
-                    Current = underlyingCurrent;
-                    return true;
+                    _delistedTime = delisting.EndTime;
                 }
             }
 
