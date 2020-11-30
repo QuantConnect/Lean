@@ -328,7 +328,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     _algorithm.Status = AlgorithmStatus.RuntimeError;
                     Log.Trace($"AlgorithmManager.Run(): Algorithm encountered a runtime error at {timeSlice.Time.ToStringInvariant()}. Error: {algorithm.RunTimeError}");
-                    break;
+                    return;
                 }
 
                 // perform margin calls, in live mode we can also use realtime to emit these
