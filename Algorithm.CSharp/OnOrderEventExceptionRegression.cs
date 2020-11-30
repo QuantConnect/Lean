@@ -24,6 +24,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression Algorithm for testing engine behavior with throwing errors in OnOrderEvent
     /// Should result in a RunTimeError status.
+    /// Reference GH Issue #4947
     /// </summary>
     public class OnOrderEventExceptionRegression : QCAlgorithm, IRegressionAlgorithmDefinition
     {
