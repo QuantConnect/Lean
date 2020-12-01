@@ -64,10 +64,10 @@ namespace QuantConnect
             Tuple.Create(NFO, 26),
             Tuple.Create(CDS, 27),
             Tuple.Create(NCDEX, 28),
-
             Tuple.Create(BSE, 29),
-            Tuple.Create(MCX, 30),
-            Tuple.Create(BFO, 31),
+            Tuple.Create(BCD, 30),
+            Tuple.Create(MCX, 31),
+            Tuple.Create(BFO, 32),
         };
 
         static Market()
