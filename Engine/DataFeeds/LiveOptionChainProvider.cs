@@ -187,7 +187,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     foreach (var optionChainEntry in futureOptionChain)
                     {
-                        var futureOptionExpiry = FuturesOptionsExpiryFunctions.FuturesOptionExpiry(canonicalOption, futureContractSymbol.ID.Date);
+                        var futureOptionExpiry = FuturesOptionsExpiryFunctions.GetFutureOptionExpiryFromFutureExpiry(futureContractSymbol, canonicalOption);
                         var scaledStrikePrice = optionChainEntry.StrikePrice / optionStrikePriceScaleFactor;
 
                         // Calls and puts share the same strike, create two symbols per each to avoid iterating twice.

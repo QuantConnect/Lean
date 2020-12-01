@@ -1021,6 +1021,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return details.Contract.TradingClass;
             }
 
+            if (symbol.SecurityType == SecurityType.FutureOption)
+            {
+                // Futures options trading class is the same as the FOP ticker.
+                // This is required in order to resolve the contract details successfully.
+                // We let this method complete even though we assign twice so that the
+                // contract details are added to the cache and won't require another lookup.
+                contract.TradingClass = symbol.ID.Symbol;
+            }
+
             details = GetContractDetails(contract, symbol);
             if (details == null)
             {
@@ -1856,33 +1865,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.Right = symbol.ID.OptionRight == OptionRight.Call ? IB.RightType.Call : IB.RightType.Put;
                 contract.Strike = Convert.ToDouble(symbol.ID.StrikePrice);
                 contract.Symbol = ibSymbol;
-
-                // Let's attempt to source the contract details from multiple locations before defaulting
-                // to "100", which is the default equity contract multiplier.
-                contract.Multiplier = "100";
-
-                var spdbContainsSymbol = _symbolPropertiesDatabase.ContainsKey(symbol.ID.Market, symbol.ID.Symbol, symbol.SecurityType);
-                var security = _securityProvider.GetSecurity(symbol);
-
-                if (security != null || _algorithm.Securities.TryGetValue(symbol, out security))
-                {
-                    contract.Multiplier = security.SymbolProperties
-                        .ContractMultiplier
-                        .ToStringInvariant();
-                }
-                else if (spdbContainsSymbol)
-                {
-                    // If the SPDB entry for the future option is not found,
-                    // we will default back to using the Futures symbol properties instead.
-                    contract.Multiplier = _symbolPropertiesDatabase
-                        .GetSymbolProperties(
-                            symbol.ID.Market,
-                            symbol,
-                            symbol.SecurityType,
-                            _algorithm.Portfolio.CashBook.AccountCurrency)
-                        .ContractMultiplier
-                        .ToStringInvariant();
-                }
+                contract.Multiplier = _symbolPropertiesDatabase.GetSymbolProperties(
+                        symbol.ID.Market,
+                        symbol,
+                        symbol.SecurityType,
+                        _algorithm.Portfolio.CashBook.AccountCurrency)
+                    .ContractMultiplier
+                    .ToStringInvariant();
 
                 contract.TradingClass = GetTradingClass(contract, symbol);
                 contract.IncludeExpired = includeExpired;
