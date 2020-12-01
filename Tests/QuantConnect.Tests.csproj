@@ -995,10 +995,13 @@
     <None Include="TestData\spy_with_keltner.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Compile Include="Brokerages\Zerodha\ZerodhaBrokerageTests.cs" />
+    <Compile Include="Brokerages\Zerodha\ZerodhaBrokerageHistoryProviderTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Adapters\" />
     <Folder Include="Tasks\" />
+    <Folder Include="Brokerages\Zerodha\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj">
