@@ -119,6 +119,10 @@
   "binance-api-secret": "",
   "binance-api-key": "",
 
+  // Required to access data from Quiver Quantitative
+  // To get your access token go to https://api.quiverquant.com
+  "quiver-auth-token": "",
+
   // Required to access data from Quandl
   // To get your access token go to https://www.quandl.com/account/api
   "quandl-auth-token": "",
@@ -331,7 +335,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "AlpacaBrokerage",
-      "data-queue-handler": "AlpacaBrokerage",
+      "data-queue-handler": "PolygonDataQueueHandler",
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",

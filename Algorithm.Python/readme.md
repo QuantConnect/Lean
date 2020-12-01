@@ -1,6 +1,24 @@
 QuantConnect Python Algorithm Project:
 =============
 
+## Local Python Autocomplete
+To enable autocomplete for your local Python IDE, install the `quantconnect-stubs` package from PyPI using the following command:
+```
+pip install quantconnect-stubs
+```
+
+To update your autocomplete to the latest version, you can run the following command:
+```
+pip install --upgrade quantconnect-stubs
+```
+
+Copy and paste the imports found [here](#python-autocomplete-imports) to the top of your project file to enable autocomplete.
+
+In addition, you can use [Skylight](https://www.quantconnect.com/skylight) to automatically sync local changes to the cloud.
+
+------
+
+## Running LEAN Locally with Python
 Before we enable python support, follow the [installation instructions](https://github.com/QuantConnect/Lean#installation-instructions) to get LEAN running C# algorithms in your machine. 
 
 ### Install Python 3.6:
@@ -78,7 +96,8 @@ conda install -y wrapt=1.11.2
  3. Run LEAN. You should see the same result of the C# algorithm you tested earlier.
 
 ___
-#### Python.Runtime.dll compilation
+
+### Python.NET development - Python.Runtime.dll compilation
 LEAN users do **not** need to compile `Python.Runtime.dll`. The information below is targeted to developers who wish to improve it. 
 
 Download [QuantConnect/pythonnet](https://github.com/QuantConnect/pythonnet/) github clone or downloading the zip. If downloading the zip - unzip to a local pathway.
@@ -99,3 +118,45 @@ msbuild pythonnet.sln /nologo /v:quiet /t:Clean;Rebuild /p:Platform=x64 /p:Pytho
 ```
 msbuild pythonnet.sln /nologo /v:quiet /t:Clean;Rebuild /p:Platform=x64 /p:PythonInteropFile="interop36m.cs" /p:Configuration=ReleaseMono /p:DefineConstants="PYTHON36,PYTHON3,UCS4,MONO_LINUX,PYTHON_WITH_PYMALLOC"
 ```
+
+# Python Autocomplete Imports
+Copy and paste these imports to the top of your Python file to enable a development experience equal to the cloud (these imports are exactly the same as the ones used in the QuantConnect Terminal).
+
+```python
+from QuantConnect import *
+from QuantConnect.Parameters import *
+from QuantConnect.Benchmarks import *
+from QuantConnect.Brokerages import *
+from QuantConnect.Util import *
+from QuantConnect.Interfaces import *
+from QuantConnect.Algorithm import *
+from QuantConnect.Algorithm.Framework import *
+from QuantConnect.Algorithm.Framework.Selection import *
+from QuantConnect.Algorithm.Framework.Alphas import *
+from QuantConnect.Algorithm.Framework.Portfolio import *
+from QuantConnect.Algorithm.Framework.Execution import *
+from QuantConnect.Algorithm.Framework.Risk import *
+from QuantConnect.Indicators import *
+from QuantConnect.Data import *
+from QuantConnect.Data.Consolidators import *
+from QuantConnect.Data.Custom import *
+from QuantConnect.Data.Fundamental import *
+from QuantConnect.Data.Market import *
+from QuantConnect.Data.UniverseSelection import *
+from QuantConnect.Notifications import *
+from QuantConnect.Orders import *
+from QuantConnect.Orders.Fees import *
+from QuantConnect.Orders.Fills import *
+from QuantConnect.Orders.Slippage import *
+from QuantConnect.Scheduling import *
+from QuantConnect.Securities import *
+from QuantConnect.Securities.Equity import *
+from QuantConnect.Securities.Forex import *
+from QuantConnect.Securities.Interfaces import *
+from datetime import date, datetime, timedelta
+from QuantConnect.Python import *
+from QuantConnect.Storage import *
+QCAlgorithmFramework = QCAlgorithm
+QCAlgorithmFrameworkBridge = QCAlgorithm
+```
+

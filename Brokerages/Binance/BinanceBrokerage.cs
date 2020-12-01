@@ -39,7 +39,7 @@ namespace QuantConnect.Brokerages.Binance
         private const string WebSocketBaseUrl = "wss://stream.binance.com:9443/ws";
 
         private readonly IAlgorithm _algorithm;
-        private readonly BinanceSymbolMapper _symbolMapper = new BinanceSymbolMapper();
+        private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.Binance);
 
         private readonly RateGate _webSocketRateLimiter = new RateGate(5, TimeSpan.FromSeconds(1));
         private long _lastRequestId;
@@ -205,7 +205,7 @@ namespace QuantConnect.Brokerages.Binance
 
                 order.Quantity = item.Quantity;
                 order.BrokerId = new List<string> { item.Id };
-                order.Symbol = _symbolMapper.GetLeanSymbol(item.Symbol);
+                order.Symbol = _symbolMapper.GetLeanSymbol(item.Symbol, SecurityType.Crypto, Market.Binance);
                 order.Time = Time.UnixMillisecondTimeStampToDateTime(item.Time);
                 order.Status = ConvertOrderStatus(item.Status);
                 order.Price = item.Price;

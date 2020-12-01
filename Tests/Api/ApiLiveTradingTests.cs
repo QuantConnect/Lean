@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.API
 
             var file = new ProjectFile
             {
-                Name = "main.cs",
+                Name = "Main.cs",
                 Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
             };
 
@@ -93,7 +93,7 @@ namespace QuantConnect.Tests.API
 
             var file = new ProjectFile
             {
-                Name = "main.cs",
+                Name = "Main.cs",
                 Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateForexAlgorithm.cs")
             };
 
@@ -116,7 +116,7 @@ namespace QuantConnect.Tests.API
 
             var file = new ProjectFile
             {
-                Name = "main.cs",
+                Name = "Main.cs",
                 Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateForexAlgorithm.cs")
             };
 
@@ -144,7 +144,72 @@ namespace QuantConnect.Tests.API
 
             var file = new ProjectFile
             {
-                Name = "main.cs",
+                Name = "Main.cs",
+                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
+            };
+
+            RunLiveAlgorithm(settings, file);
+        }
+
+        /// <summary>
+        /// Live trading via Bitfinex
+        /// </summary>
+        [Test]
+        public void LiveBitfinexTest()
+        {
+            var key = Config.Get("bitfinex-api-key");
+            var secretKey = Config.Get("bitfinex-api-secret");
+
+            // Create default algorithm settings
+            var settings = new BitfinexLiveAlgorithmSettings(key, secretKey);
+
+            var file = new ProjectFile
+            {
+                Name = "Main.cs",
+                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
+            };
+
+            RunLiveAlgorithm(settings, file);
+        }
+
+        /// <summary>
+        /// Live trading via Alpaca
+        /// </summary>
+        [Test]
+        public void LiveAlpacaTest()
+        {
+            var key = Config.Get("alpaca-key-id");
+            var secretKey = Config.Get("alpaca-secret-key");
+            var environment = Config.Get("alpaca-trading-mode").ToLowerInvariant().Equals("live") ? BrokerageEnvironment.Live : BrokerageEnvironment.Paper;
+
+            // Create default algorithm settings
+            var settings = new AlpacaLiveAlgorithmSettings(key, secretKey, environment);
+
+            var file = new ProjectFile
+            {
+                Name = "Main.cs",
+                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
+            };
+
+            RunLiveAlgorithm(settings, file);
+        }
+
+        /// <summary>
+        /// Live trading via GDAX (Coinbase)
+        /// </summary>
+        [Test]
+        public void LiveGDAXTest()
+        {
+            var key = Config.Get("gdax-api-key");
+            var secretKey = Config.Get("gdax-api-secret");
+            var passphrase = Config.Get("gdax-passphrase");
+
+            // Create default algorithm settings
+            var settings = new GDAXLiveAlgorithmSettings(key, secretKey, passphrase);
+
+            var file = new ProjectFile
+            {
+                Name = "Main.cs",
                 Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
             };
 
@@ -161,6 +226,8 @@ namespace QuantConnect.Tests.API
             string password = "";
             BrokerageEnvironment environment = BrokerageEnvironment.Paper;
             string account = "";
+            string key = "";
+            string secretKey = "";
 
             // Oanda Custom Variables
             string accessToken = "";
@@ -213,7 +280,34 @@ namespace QuantConnect.Tests.API
                         account = Config.Get("tradier-account-id");
 
                         settings = new TradierLiveAlgorithmSettings(refreshToken, dateIssued, refreshToken, account);
+                        break;
+                    case BrokerageName.Bitfinex:
+                        key = Config.Get("bitfinex-api-key");
+                        secretKey = Config.Get("bitfinex-api-secret");
 
+                        settings = new BitfinexLiveAlgorithmSettings(key, secretKey);
+                        break;
+                    case BrokerageName.Alpaca:
+                        key = Config.Get("alpaca-key-id");
+                        secretKey = Config.Get("alpaca-secret-key");
+                        environment = Config.Get("alpaca-trading-mode").ToLowerInvariant().Equals("live") ? BrokerageEnvironment.Live : BrokerageEnvironment.Paper;
+
+                        settings = new AlpacaLiveAlgorithmSettings(key, secretKey, environment);
+                        break;
+                    case BrokerageName.GDAX:
+                        key = Config.Get("gdax-api-key");
+                        secretKey = Config.Get("gdax-api-secret");
+                        var passphrase = Config.Get("gdax-api-passphrase");
+
+                        settings = new GDAXLiveAlgorithmSettings(key, secretKey, passphrase);
+                        break;
+                    case BrokerageName.AlphaStreams:
+                        // No live algorithm settings
+                        settings = new BaseLiveAlgorithmSettings();
+                        break;
+                    case BrokerageName.Binance:
+                        // No live algorithm settings
+                        settings = new BaseLiveAlgorithmSettings();
                         break;
                     default:
                         throw new Exception($"Settings have not been implemented for this brokerage: {brokerageName}");
@@ -223,10 +317,6 @@ namespace QuantConnect.Tests.API
                 Assert.IsTrue(settings != null);
                 Assert.IsTrue(settings.Password == password);
                 Assert.IsTrue(settings.User == user);
-
-                // tradier brokerage is always live, the rest are variable
-                if (brokerageName != BrokerageName.TradierBrokerage)
-                    Assert.IsTrue(settings.Environment == environment);
 
                 // Oanda specific settings
                 if (brokerageName == BrokerageName.OandaBrokerage)

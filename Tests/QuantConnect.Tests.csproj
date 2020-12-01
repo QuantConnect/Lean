@@ -378,15 +378,14 @@
     <Compile Include="Brokerages\Binance\BinanceBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\Binance\BinanceBrokerageTests.cs" />
     <Compile Include="Brokerages\Binance\BinanceFeeModelTests.cs" />
-    <Compile Include="Brokerages\Binance\BinanceSymbolMapperTests.cs" />
     <Compile Include="Brokerages\Binance\BinanceBrokerageExchangeInfoTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexFeeModelTests.cs" />
-    <Compile Include="Brokerages\Bitfinex\BitfinexSymbolMapperTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\DowngradeErrorCodeToWarningBrokerageMessageHandlerTests.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersFuturesTests.cs" />
     <Compile Include="Brokerages\Paper\PaperBrokerageTests.cs" />
     <Compile Include="AlgorithmRunnerResults.cs" />
+    <Compile Include="Brokerages\SymbolPropertiesDatabaseSymbolMapperTests.cs" />
     <Compile Include="Common\Benchmarks\SecurityBenchmarkTests.cs" />
     <Compile Include="Common\Brokerages\AlpacaBrokerageModelTests.cs" />
     <Compile Include="Common\Brokerages\BitfinexBrokerageModelTests.cs" />
@@ -517,6 +516,7 @@
     <Compile Include="Engine\RealTime\BacktestingRealTimeHandlerTests.cs" />
     <Compile Include="Engine\Results\BacktestingResultHandlerTests.cs" />
     <Compile Include="Engine\Results\BaseResultsHandlerTests.cs" />
+    <Compile Include="Engine\Results\LiveTradingResultHandlerTests.cs" />
     <Compile Include="Indicators\AdvanceDeclineRatioVolumeTests.cs" />
     <Compile Include="Indicators\AdvanceDeclineRatioTests.cs" />
     <Compile Include="Indicators\ArmsIndexTests.cs" />
@@ -875,6 +875,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="RegressionAlgorithms\Test_MethodOverload.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\aapl_chain.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\arms_data.txt">

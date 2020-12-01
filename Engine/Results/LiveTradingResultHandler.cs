@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -63,7 +64,9 @@ namespace QuantConnect.Lean.Engine.Results
         private readonly int _streamedChartGroupSize;
 
         private bool _sampleChartAlways;
-        private bool _shouldSampleCharts;
+        private bool _userExchangeIsOpen;
+        private decimal _portfolioValue;
+        private decimal _benchmarkValue;
         private DateTime _lastChartSampleLogicCheck;
         private readonly Dictionary<string, SecurityExchangeHours> _exchangeHours;
 
@@ -103,8 +106,17 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         protected override void Run()
         {
-            // give the algorithm time to initialize, else we will log an error right away
-            Thread.Sleep(TimeSpan.FromSeconds(3));
+            var sleepSpan = TimeSpan.FromMilliseconds(100);
+            for (var i = 0; i < 30; i++)
+            {
+                // let's check exit flag while sleeping so we reduce latency on shutdown
+                if (ExitTriggered)
+                {
+                    break;
+                }
+                // give the algorithm time to initialize, else we will log an error right away
+                Thread.Sleep(sleepSpan);
+            }
 
             // -> 1. Run Primary Sender Loop: Continually process messages from queue as soon as they arrive.
             while (!(ExitTriggered && Messages.Count == 0))
@@ -644,6 +656,7 @@ namespace QuantConnect.Lean.Engine.Results
             if (value > 0)
             {
                 Log.Debug("LiveTradingResultHandler.SampleEquity(): " + time.ToShortTimeString() + " >" + value);
+
                 base.SampleEquity(time, value);
             }
         }
@@ -707,7 +720,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
         {
             Algorithm = algorithm;
-            DailyPortfolioValue = StartingPortfolioValue = startingPortfolioValue;
+            _portfolioValue = DailyPortfolioValue = StartingPortfolioValue = startingPortfolioValue;
 
             var types = new List<SecurityType>();
             foreach (var kvp in Algorithm.Securities)
@@ -1031,7 +1044,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             var time = DateTime.UtcNow;
 
-            if (ShouldSampleCharts(time) && time > _nextSample || forceProcess)
+            if (time > _nextSample || forceProcess)
             {
                 Log.Debug("LiveTradingResultHandler.ProcessSynchronousEvents(): Enter");
 
@@ -1039,7 +1052,7 @@ namespace QuantConnect.Lean.Engine.Results
                 _nextSample = time.Add(ResamplePeriod);
 
                 //Sample the portfolio value over time for chart.
-                SampleEquity(time, Math.Round(Algorithm.Portfolio.TotalPortfolioValue, 4));
+                SampleEquity(time, Math.Round(GetPortfolioValue(), 4));
 
                 //Also add the user samples / plots to the result handler tracking:
                 SampleRange(Algorithm.GetChartUpdates(true));
@@ -1110,20 +1123,56 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// True if this result handler should sample charts
+        /// Samples portfolio equity, benchmark, and daily performance
         /// </summary>
-        /// <remarks>This is used to disable live trading charting on extended market hours unless user is consuming data</remarks>
-        protected override bool ShouldSampleCharts(DateTime utcDateTime)
+        /// <param name="time">Current UTC time in the AlgorithmManager loop</param>
+        /// <param name="force">Force sampling of equity, benchmark, and performance to be </param>
+        public override void Sample(DateTime time, bool force = false)
+        {
+            UpdatePortfolioValue(time, force);
+            UpdateBenchmarkValue(time, force);
+            base.Sample(time, force);
+        }
+
+        /// <summary>
+        /// Gets the current portfolio value
+        /// </summary>
+        /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
+        /// so we ignore extended market hours updates</remarks>
+        protected override decimal GetPortfolioValue()
+        {
+            return _portfolioValue;
+        }
+
+        /// <summary>
+        /// Gets the current benchmark value
+        /// </summary>
+        /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
+        /// so we ignore extended market hours updates</remarks>
+        protected override decimal GetBenchmarkValue()
+        {
+            return _benchmarkValue;
+        }
+
+        /// <summary>
+        /// True if user exchange are open and we should update portfolio and benchmark value
+        /// </summary>
+        /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
+        /// so we ignore extended market hours updates</remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool UserExchangeIsOpen(DateTime utcDateTime)
         {
             if (_sampleChartAlways || _exchangeHours.Count == 0)
             {
                 return true;
             }
 
-            if (_lastChartSampleLogicCheck.Minute == utcDateTime.Minute)
+            if (_lastChartSampleLogicCheck.Day == utcDateTime.Day
+                && _lastChartSampleLogicCheck.Hour == utcDateTime.Hour
+                && _lastChartSampleLogicCheck.Minute == utcDateTime.Minute)
             {
                 // we cache the value for a minute
-                return _shouldSampleCharts;
+                return _userExchangeIsOpen;
             }
             _lastChartSampleLogicCheck = utcDateTime;
 
@@ -1132,13 +1181,13 @@ namespace QuantConnect.Lean.Engine.Results
                 if (exchangeHour.IsOpen(utcDateTime.ConvertFromUtc(exchangeHour.TimeZone), false))
                 {
                     // one of the users exchanges is open
-                    _shouldSampleCharts = true;
+                    _userExchangeIsOpen = true;
                     return true;
                 }
             }
 
             // no user exchange is open
-            _shouldSampleCharts = false;
+            _userExchangeIsOpen = false;
             return false;
         }
 
@@ -1169,6 +1218,24 @@ namespace QuantConnect.Lean.Engine.Results
                     _api.SetAlgorithmStatus(_job.AlgorithmId, AlgorithmStatus.Running);
                 }
                 Task.Delay(TimeSpan.FromMinutes(1), _cancellationTokenSource.Token).ContinueWith(_ => UpdateAlgorithmStatus());
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateBenchmarkValue(DateTime time, bool force)
+        {
+            if (force || UserExchangeIsOpen(time))
+            {
+                _benchmarkValue = base.GetBenchmarkValue();
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdatePortfolioValue(DateTime time, bool force)
+        {
+            if (force || UserExchangeIsOpen(time))
+            {
+                _portfolioValue = base.GetPortfolioValue();
             }
         }
     }

@@ -145,6 +145,7 @@
     <Compile Include="CustomBuyingPowerModelAlgorithm.cs" />
     <Compile Include="AddOptionContractExpiresRegressionAlgorithm.cs" />
     <Compile Include="AltData\QuiverWallStreetBetsDataAlgorithm.cs" />
+    <Compile Include="OnOrderEventExceptionRegression.cs" />
     <Compile Include="ScaledFillForwardDataRegressionAlgorithm.cs" />
     <Compile Include="DailyHistoryForDailyResolutionRegressionAlgorithm.cs" />
     <Compile Include="DailyHistoryForMinuteResolutionRegressionAlgorithm.cs" />

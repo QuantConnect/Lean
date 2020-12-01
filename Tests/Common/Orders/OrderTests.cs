@@ -100,7 +100,7 @@ namespace QuantConnect.Tests.Common.Orders
             forex.SetMarketPrice(new Tick {Value= price});
 
             var eurCash = new Cash("EUR", 0, 1.12m);
-            properties = new SymbolProperties("Euro-Bund", eurCash.Symbol, 10, 0.1m, 1);
+            properties = new SymbolProperties("Euro-Bund", eurCash.Symbol, 10, 0.1m, 1, string.Empty);
             var cfd = new Cfd(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 eurCash,

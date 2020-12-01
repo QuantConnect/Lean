@@ -37,7 +37,7 @@ namespace QuantConnect.Brokerages.Bitfinex
     /// </summary>
     public partial class BitfinexBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
-        private readonly BitfinexSymbolMapper _symbolMapper = new BitfinexSymbolMapper();
+        private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.Bitfinex);
 
         #region IBrokerage
         /// <summary>
@@ -201,7 +201,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
                 order.Quantity = item.Amount;
                 order.BrokerId = new List<string> { item.Id.ToStringInvariant() };
-                order.Symbol = _symbolMapper.GetLeanSymbol(item.Symbol);
+                order.Symbol = _symbolMapper.GetLeanSymbol(item.Symbol, SecurityType.Crypto, Market.Bitfinex);
                 order.Time = Time.UnixMillisecondTimeStampToDateTime(item.MtsCreate);
                 order.Status = ConvertOrderStatus(item);
                 order.Price = item.Price;
@@ -444,8 +444,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             var symbol = dataConfig.Symbol;
             if (symbol.Value.Contains("UNIVERSE") ||
-                !_symbolMapper.IsKnownLeanSymbol(symbol) ||
-                symbol.SecurityType != _symbolMapper.GetLeanSecurityType(symbol.Value))
+                !_symbolMapper.IsKnownLeanSymbol(symbol))
             {
                 return Enumerable.Empty<BaseData>().GetEnumerator();
             }

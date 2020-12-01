@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,30 +13,27 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
+using System;
+using IBApi;
 
-namespace QuantConnect.ToolBox.CoinApi
+namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
-    public class CoinApiSymbol
+    /// <summary>
+    /// Event arguments class for the <see cref="InteractiveBrokersClient.FamilyCodes"/> event
+    /// </summary>
+    public class FamilyCodesEventArgs : EventArgs
     {
-        [JsonProperty("symbol_id")]
-        public string SymbolId { get; set; }
+        /// <summary>
+        /// A comma-separated string with the managed account ids.
+        /// </summary>
+        public FamilyCode[] FamilyCodes { get; }
 
-        [JsonProperty("exchange_id")]
-        public string ExchangeId { get; set; }
-
-        [JsonProperty("symbol_type")]
-        public string SymbolType { get; set; }
-
-        [JsonProperty("asset_id_base")]
-        public string AssetIdBase { get; set; }
-
-        [JsonProperty("asset_id_quote")]
-        public string AssetIdQuote { get; set; }
-
-        public override string ToString()
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FamilyCodesEventArgs"/> class
+        /// </summary>
+        public FamilyCodesEventArgs(FamilyCode[] familyCodes)
         {
-            return SymbolId;
+            FamilyCodes = familyCodes;
         }
     }
 }

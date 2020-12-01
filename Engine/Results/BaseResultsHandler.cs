@@ -339,15 +339,6 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// True if this result handler should sample charts
-        /// </summary>
-        /// <remarks>This is used to disable live trading charting on extended market hours unless user is consuming data</remarks>
-        protected virtual bool ShouldSampleCharts(DateTime utcDateTime)
-        {
-            return true;
-        }
-
-        /// <summary>
         /// Returns the location of the logs
         /// </summary>
         /// <param name="id">Id that will be incorporated into the algorithm log name</param>
@@ -416,6 +407,26 @@ namespace QuantConnect.Lean.Engine.Results
         protected abstract void StoreResult(Packet packet);
 
         /// <summary>
+        /// Gets the current portfolio value
+        /// </summary>
+        /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
+        /// so we ignore extended market hours updates</remarks>
+        protected virtual decimal GetPortfolioValue()
+        {
+            return Algorithm.Portfolio.TotalPortfolioValue;
+        }
+
+        /// <summary>
+        /// Gets the current benchmark value
+        /// </summary>
+        /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
+        /// so we ignore extended market hours updates</remarks>
+        protected virtual decimal GetBenchmarkValue()
+        {
+            return Algorithm.Benchmark.Evaluate(PreviousUtcSampleTime).SmartRounding();
+        }
+
+        /// <summary>
         /// Samples portfolio equity, benchmark, and daily performance
         /// </summary>
         /// <param name="time">Current UTC time in the AlgorithmManager loop</param>
@@ -424,7 +435,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             var dayChanged = PreviousUtcSampleTime.Date != time.Date;
 
-            if (ShouldSampleCharts(time) && dayChanged || force)
+            if (dayChanged || force)
             {
                 if (force)
                 {
@@ -432,11 +443,11 @@ namespace QuantConnect.Lean.Engine.Results
                     PreviousUtcSampleTime = time;
                 }
 
-                var currentPortfolioValue = Algorithm.Portfolio.TotalPortfolioValue;
+                var currentPortfolioValue = GetPortfolioValue();
                 var portfolioPerformance = DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
 
                 SampleEquity(PreviousUtcSampleTime, currentPortfolioValue);
-                SampleBenchmark(PreviousUtcSampleTime, Algorithm.Benchmark.Evaluate(PreviousUtcSampleTime).SmartRounding());
+                SampleBenchmark(PreviousUtcSampleTime, GetBenchmarkValue());
                 SamplePerformance(PreviousUtcSampleTime, portfolioPerformance);
 
                 // If the day changed, set the closing portfolio value. Otherwise, we would end up

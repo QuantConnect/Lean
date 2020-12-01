@@ -47,8 +47,7 @@ namespace QuantConnect.Securities.Future
 
         /// <summary>
         /// The USDA publishes a report containing contract prices for the contract month.
-        /// You can generate the report dates here: https://mpr.datamart.ams.usda.gov/menu.do?path=Products\Dairy\All%20Dairy\(DY_CL102)%20National%20Dairy%20Products%20Prices%20-%20Monthly
-        /// And you can see future publication dates at https://usda.library.cornell.edu/concern/publications/zs25x847n
+        /// You can see future publication dates at https://www.ams.usda.gov/rules-regulations/mmr/dmr (Advanced and Class Price Release Dates)
         /// These dates are erratic and requires maintenance of a separate list instead of using holiday entries in MHDB.
         /// </summary>
         /// <remarks>We only report the publication date of the report. In order to get accurate last trade dates, subtract one (plus holidays) from the value's date</remarks>
@@ -165,6 +164,25 @@ namespace QuantConnect.Securities.Future
             {new DateTime(2021, 3, 1), new DateTime(2021, 3, 31) },
             {new DateTime(2021, 4, 1), new DateTime(2021, 5, 5) },
             {new DateTime(2021, 5, 1), new DateTime(2021, 6, 3) },
+            {new DateTime(2021, 6, 1), new DateTime(2021, 6, 30) },
+            {new DateTime(2021, 7, 1), new DateTime(2021, 8, 4) },
+            {new DateTime(2021, 8, 1), new DateTime(2021, 9, 1) },
+            {new DateTime(2021, 9, 1), new DateTime(2021, 9, 29) },
+            {new DateTime(2021, 10, 1), new DateTime(2021, 11, 3) },
+            {new DateTime(2021, 11, 1), new DateTime(2021, 12, 1) },
+            {new DateTime(2021, 12, 1), new DateTime(2022, 1, 5) },
+            {new DateTime(2022, 1, 1), new DateTime(2022, 2, 2) },
+            {new DateTime(2022, 2, 1), new DateTime(2022, 3, 2) },
+            {new DateTime(2022, 3, 1), new DateTime(2022, 3, 30) },
+            {new DateTime(2022, 4, 1), new DateTime(2022, 5, 4) },
+            {new DateTime(2022, 5, 1), new DateTime(2022, 6, 2) },
+            {new DateTime(2022, 6, 1), new DateTime(2022, 6, 29) },
+            {new DateTime(2022, 7, 1), new DateTime(2022, 8, 3) },
+            {new DateTime(2022, 8, 1), new DateTime(2022, 8, 31) },
+            {new DateTime(2022, 9, 1), new DateTime(2022, 10, 5) },
+            {new DateTime(2022, 10, 1), new DateTime(2022, 11, 2) },
+            {new DateTime(2022, 11, 1), new DateTime(2022, 11, 30) },
+            {new DateTime(2022, 12, 1), new DateTime(2023, 1, 5) },
         };
 
         /// <summary>
