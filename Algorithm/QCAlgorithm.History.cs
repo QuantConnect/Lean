@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution to request</param>
         public void SetWarmup(TimeSpan timeSpan, Resolution? resolution)
         {
-            if (!_locked)
+            if (_locked)
             {
                 throw new InvalidOperationException("QCAlgorithm.SetWarmup(): This method cannot be used after algorithm initialized");
             }
