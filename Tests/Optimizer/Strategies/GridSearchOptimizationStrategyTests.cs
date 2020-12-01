@@ -107,7 +107,6 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
             [TestCase(1, 1, 1)]
             [TestCase(-10, 0, -1)]
-            [TestCase(0, -10, -1)]
             [TestCase(-10, 10.5, -0.5)]
             [TestCase(10, 100, 1)]
             [TestCase(10, 100, 500)]
@@ -123,8 +122,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             private static TestCaseData[] OptimizationStepParameter2D => new[]{
                 new TestCaseData(new decimal[,] {{10, 100, 1}, {20, 200, 1}}),
                 new TestCaseData(new decimal[,] {{10.5m, 100.5m, 1.5m}, { 20m, 209.9m, 3.5m}}),
-                new TestCaseData(new decimal[,] {{ -10.5m, 0m, -1.5m }, { -209.9m, -20m, -3.5m } }),
-                new TestCaseData(new decimal[,] {{ 10.5m, 0m, 1.5m }, { 209.9m, -20m, -3.5m } })
+                new TestCaseData(new decimal[,] {{ -10.5m, 0m, -1.5m }, { -209.9m, -20m, -3.5m } })
             };
 
             [Test, TestCaseSource(nameof(OptimizationStepParameter2D))]

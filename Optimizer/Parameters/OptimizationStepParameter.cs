@@ -58,8 +58,13 @@ namespace QuantConnect.Optimizer.Parameters
         public OptimizationStepParameter(string name, decimal min, decimal max)
             : base(name)
         {
-            MinValue = Math.Min(min, max);
-            MaxValue = Math.Max(min, max);
+            if (min > max)
+            {
+                throw new ArgumentException($"Minimum value ({min}) should be less or equal than maximum ({max})");
+            }
+
+            MinValue = min;
+            MaxValue = max;
         }
 
         /// <summary>
@@ -89,10 +94,12 @@ namespace QuantConnect.Optimizer.Parameters
             var absMinStep = Math.Abs(minStep);
             var actual = Math.Max(absStep, absMinStep);
             
+            // with zero step algorithm can go to infinite loop, use default step value
             Step = actual != 0 
                 ? actual 
                 : 1;
 
+            // EulerSearch algorithm can go to infinite range division if Min step is not provided, use Step as default MinStep
             MinStep = absMinStep != 0
                 ? absMinStep
                 : Step;

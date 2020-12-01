@@ -33,8 +33,8 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             private static TestCaseData[] SegmentBasedOptimizationParameters => new[]
             {
                 new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100), 10),
-                new TestCaseData(new OptimizationStepParameter("ema-fast", 10, -100), 5),
-                new TestCaseData(new OptimizationStepParameter("ema-fast", -1, -100), 4)
+                new TestCaseData(new OptimizationStepParameter("ema-fast", -10, -10), 5),
+                new TestCaseData(new OptimizationStepParameter("ema-fast", -100, -1), 4)
             };
 
             private static TestCaseData[] OptimizationParameters => new[]
@@ -241,8 +241,7 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             {
                 new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100, 1), 100),
                 new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100, 50), 2),
-                new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 1, 0), 1),
-                new TestCaseData(new OptimizationStepParameter("ema-fast", 1, -2, 1), 4)
+                new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 1, 0), 1)
             };
 
             [Test, TestCaseSource(nameof(OptimizationParametersEstimations))]
@@ -273,6 +272,16 @@ namespace QuantConnect.Tests.Optimizer.Parameters
                 Assert.Throws<InvalidOperationException>(() =>
                 {
                     JsonConvert.DeserializeObject<OptimizationParameter>(json);
+                });
+            }
+
+            [TestCase(-1, -10, -1)]
+            [TestCase(10, 1, 1)]
+            public void ThrowIfMinGreatThanMax(decimal min, decimal max, decimal step)
+            {
+                Assert.Throws<ArgumentException>(() =>
+                {
+                    var param = new OptimizationStepParameter("ema-fast", min, max, step);
                 });
             }
         }

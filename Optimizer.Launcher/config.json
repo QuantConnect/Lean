@@ -2,11 +2,13 @@
   // optional: algorithm class selector
   "algorithm-type-name": "ParameterizedAlgorithm",
 
-  // optional: Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
+  // optional: Algorithm language selector - options CSharp, Python
   "algorithm-language": "CSharp",
 
   // optional: Physical DLL location
   "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
+
+  "optimizer-close-automatically": true,
 
   // How we manage solutions and make decision to continue or stop
   "optimization-strategy": "QuantConnect.Optimizer.Strategies.EulerSearchOptimizationStrategy",
@@ -14,7 +16,7 @@
   // on-demand settings required for different optimization strategies
   "optimization-strategy-settings": {
     // EulerSearch
-    "default-segment-amount": 10 
+    "default-segment-amount": 10
   },
 
   // optimization problem

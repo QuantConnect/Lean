@@ -48,7 +48,7 @@ namespace QuantConnect.Optimizer.Launcher
             _leanLocation = Configuration.Config.Get("lean-binaries-location",
                 Path.Combine(Directory.GetCurrentDirectory(), "../../../Launcher/bin/Debug/QuantConnect.Lean.Launcher.exe"));
 
-            var closeLeanAutomatically = Configuration.Config.GetBool("close-automatically", true);
+            var closeLeanAutomatically = Configuration.Config.GetBool("optimizer-close-automatically", true);
             _extraLeanArguments = $"--close-automatically {closeLeanAutomatically}";
 
             var algorithmTypeName = Configuration.Config.Get("algorithm-type-name");
