@@ -35971,7 +35971,7 @@
         "12/24/2020": "13:00:00"
       }
     },
-    "Future-nfocds-[*]": {
+    "Future-cds-[*]": {
       "dataTimeZone": "Asia/Kolkata",
       "exchangeTimeZone": "Asia/Kolkata",
       "sunday": [],
@@ -36338,7 +36338,7 @@
         "12/24/2020": "13:00:00"
       }
     },
-    "Future-nfofo-[*]": {
+    "Future-nfo-[*]": {
       "dataTimeZone": "Asia/Kolkata",
       "exchangeTimeZone": "Asia/Kolkata",
       "sunday": [],
