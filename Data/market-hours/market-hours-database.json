@@ -25590,7 +25590,7 @@
       },
       "lateOpens": {}
     },
-    "Future-nse-[*]": {
+    "Future-nfo-[*]": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "Asia/Kolkata",
       "sunday": [],
@@ -35971,7 +35971,7 @@
         "12/24/2020": "13:00:00"
       }
     },
-    "Future-nsecds-[*]": {
+    "Future-nfocds-[*]": {
       "dataTimeZone": "Asia/Kolkata",
       "exchangeTimeZone": "Asia/Kolkata",
       "sunday": [],
@@ -36338,7 +36338,7 @@
         "12/24/2020": "13:00:00"
       }
     },
-    "Future-nsefo-[*]": {
+    "Future-nfofo-[*]": {
       "dataTimeZone": "Asia/Kolkata",
       "exchangeTimeZone": "Asia/Kolkata",
       "sunday": [],
