@@ -159,7 +159,7 @@ namespace QuantConnect.Tests.Optimizer
                 Criterion = new Target("Profit", new Maximization(), null),
                 OptimizationParameters = new HashSet<OptimizationParameter>
                 {
-                    new OptimizationArrayParameter("ema-slow", new []{"1", "2", "3", "4", "10"}),
+                    new OptimizationStepParameter("ema-slow", 1, 10, 1),
                     new OptimizationStepParameter("ema-fast", 10, 100, 10m, 0.1m)
                 },
                 Constraints = new List<Constraint>

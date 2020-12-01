@@ -95,15 +95,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             new OptimizationStepParameter("ema-fast", 3, 6, 2,0.1m)
         };
 
-        protected static HashSet<OptimizationParameter> OptimizationArrayParameters = new HashSet<OptimizationParameter>
-        {
-            new OptimizationArrayParameter("ema-slow", new[]{"1", "2", "3", "4", "5"}),
-            new OptimizationArrayParameter("ema-fast", new[]{"3", "5"})
-        };
-
         protected static HashSet<OptimizationParameter> OptimizationMixedParameters = new HashSet<OptimizationParameter>
         {
-            new OptimizationArrayParameter("ema-slow", new[]{"1", "2", "3", "4", "5"}),
+            new OptimizationStepParameter("ema-slow", 1, 5, 1),
             new OptimizationStepParameter("ema-fast", 3, 6.75m, 2,0.1m)
         };
 
@@ -217,7 +211,6 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         protected static TestCaseData[] Estimations => new[]
         {
             new TestCaseData(OptimizationStepParameters, 10),
-            new TestCaseData(OptimizationArrayParameters,10),
             new TestCaseData(OptimizationMixedParameters,10)
         };
         [Test, TestCaseSource(nameof(Estimations))]

@@ -55,9 +55,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Objectives\ExtremumJsonConverter.cs" />
-    <Compile Include="Parameters\OptimizationArrayParameter.cs" />
     <Compile Include="Parameters\OptimizationParameter.cs" />
-    <Compile Include="Parameters\OptimizationArrayParameterEnumerator.cs" />
     <Compile Include="Parameters\OptimizationStepParameterEnumerator.cs" />
     <Compile Include="Parameters\OptimizationStepParameter.cs" />
     <Compile Include="Parameters\OptimizationParameterJsonConverter.cs" />

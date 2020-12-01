@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Optimizer.Parameters
         private static TestCaseData[] OptimizationParameters => new[]
         {
             new TestCaseData(new OptimizationStepParameter("ema-fast", -100, 0, 1m)),
-            new TestCaseData(new OptimizationArrayParameter("ema-fast", new []{"0", "1", "2", "3"}))
+            new TestCaseData(new OptimizationStepParameter("ema-slow", 100, 1000, 10m))
         };
 
         [Test, TestCaseSource(nameof(OptimizationParameters))]
@@ -70,44 +70,6 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             {
                 var optimizationParameter = new OptimizationStepParameter("ema-fast", -100, 0, 1m);
                 Assert.IsInstanceOf<OptimizationStepParameterEnumerator>(optimizationParameter.GetEnumerator());
-            }
-        }
-
-        [TestFixture]
-        public class ArrayParameter
-        {
-            private static TestCaseData[] OptimizationParameters => new[]
-            {
-                new TestCaseData(new OptimizationArrayParameter("ema-fast", new []{"0", "1", "2", "3"})),
-                new TestCaseData(new OptimizationArrayParameter("ema-fast", new []{"a", null, "c", "d"}))
-            };
-
-            [Test, TestCaseSource(nameof(OptimizationParameters))]
-            public void Enumerate(OptimizationArrayParameter optimizationParameter)
-            {
-                var enumerator = new OptimizationArrayParameterEnumerator(optimizationParameter);
-
-                using (var actual = optimizationParameter.Values.GetEnumerator())
-                {
-                    int total = 0;
-                    while (enumerator.MoveNext())
-                    {
-                        total++;
-                        Assert.IsTrue(actual.MoveNext());
-                        Assert.AreEqual(actual.Current, enumerator.Current);
-                    }
-
-                    Assert.AreEqual(optimizationParameter.Values.Count, total);
-                    Assert.IsFalse(actual.MoveNext());
-                    Assert.IsFalse(enumerator.MoveNext());
-                }
-            }
-
-            [Test]
-            public void IEnumerable()
-            {
-                var optimizationParameter = new OptimizationArrayParameter("ema-fast", new[] { "1", "2", "3" });
-                Assert.IsInstanceOf<OptimizationArrayParameterEnumerator>(optimizationParameter.GetEnumerator());
             }
         }
     }
