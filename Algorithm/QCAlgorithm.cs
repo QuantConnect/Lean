@@ -1592,8 +1592,8 @@ namespace QuantConnect.Algorithm
             var alias = "?" + underlying.Value;
             if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol) ||
                 canonicalSymbol.ID.Market != market ||
-                canonicalSymbol.SecurityType != SecurityType.Option ||
-                canonicalSymbol.SecurityType != SecurityType.FutureOption)
+                (canonicalSymbol.SecurityType != SecurityType.Option &&
+                canonicalSymbol.SecurityType != SecurityType.FutureOption))
             {
                 canonicalSymbol = QuantConnect.Symbol.CreateOption(
                     underlying,

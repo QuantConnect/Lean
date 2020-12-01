@@ -68,8 +68,9 @@ namespace QuantConnect.Orders.Fees
             {
                 var optionOrder = (OptionExerciseOrder)order;
 
-                if (optionOrder.Symbol.ID.SecurityType == SecurityType.Option ||
-                    optionOrder.Symbol.ID.SecurityType == SecurityType.FutureOption)
+                // For Futures Options, contracts are charged the standard commission at expiration of the contract.
+                // Read more here: https://www1.interactivebrokers.com/en/index.php?f=14718#trading-related-fees
+                if (optionOrder.Symbol.ID.SecurityType == SecurityType.Option)
                 {
                     return OrderFee.Zero;
                 }

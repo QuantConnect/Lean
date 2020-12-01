@@ -104,7 +104,7 @@ namespace QuantConnect.Data
         {
             get
             {
-                return Symbol.ID.SecurityType == SecurityType.Option ?
+                return (Symbol.ID.SecurityType == SecurityType.Option || Symbol.ID.SecurityType == SecurityType.FutureOption) ?
                     (Symbol.HasUnderlying ? Symbol.Underlying.Value : Symbol.Value) :
                     Symbol.Value;
             }

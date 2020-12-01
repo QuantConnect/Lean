@@ -122,7 +122,7 @@ namespace QuantConnect.ToolBox
                 throw new ArgumentException("DownloadAndSave(): The tick type must be Trade or Quote.");
             }
 
-            if (_securityType != SecurityType.Future && _securityType != SecurityType.Option)
+            if (_securityType != SecurityType.Future && _securityType != SecurityType.Option && _securityType != SecurityType.FutureOption)
             {
                 throw new ArgumentException($"DownloadAndSave(): The security type must be {SecurityType.Future} or {SecurityType.Option}.");
             }

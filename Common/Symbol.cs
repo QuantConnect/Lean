@@ -89,7 +89,7 @@ namespace QuantConnect
                     break;
 
                 case SecurityType.FutureOption:
-                    throw new NotImplementedException("Cannot create future option Symbol using this method. Use `CreateOption(Symbol, ...)` instead.");
+                    throw new NotImplementedException("Cannot create future option Symbol using this method (insufficient information). Use `CreateOption(Symbol, ...)` instead.");
 
                 case SecurityType.Commodity:
                 default:
@@ -226,7 +226,8 @@ namespace QuantConnect
         {
             return
                 (ID.SecurityType == SecurityType.Future ||
-                ((ID.SecurityType == SecurityType.Option || ID.SecurityType == SecurityType.FutureOption) && HasUnderlying)) &&
+                (ID.SecurityType == SecurityType.Option && HasUnderlying) ||
+                (ID.SecurityType == SecurityType.FutureOption && HasUnderlying)) &&
                 ID.Date == SecurityIdentifier.DefaultDate;
         }
 
@@ -316,7 +317,7 @@ namespace QuantConnect
         /// </summary>
         public Symbol UpdateMappedSymbol(string mappedSymbol)
         {
-            if (ID.SecurityType == SecurityType.Option)
+            if (ID.SecurityType == SecurityType.Option || ID.SecurityType == SecurityType.FutureOption)
             {
                 var underlyingSymbol = new Symbol(Underlying.ID, mappedSymbol, null);
 

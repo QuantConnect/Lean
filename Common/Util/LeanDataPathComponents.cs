@@ -15,6 +15,7 @@
 
 using System;
 using System.IO;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Util
 {
@@ -167,12 +168,20 @@ namespace QuantConnect.Util
             var date = securityTypeOffset == LowResSecurityTypeOffset ? DateTime.MinValue : DateTime.ParseExact(filename.Substring(0, filename.IndexOf("_", StringComparison.Ordinal)), DateFormat.EightCharacter, null);
 
             Symbol symbol;
-            if (securityType == SecurityType.Option || securityType == SecurityType.FutureOption)
+            if (securityType == SecurityType.Option)
             {
                 var withoutExtension = Path.GetFileNameWithoutExtension(filename);
                 rawValue = withoutExtension.Substring(withoutExtension.LastIndexOf("_", StringComparison.Ordinal) + 1);
                 var style = (OptionStyle) Enum.Parse(typeof (OptionStyle), rawValue, true);
                 symbol = Symbol.CreateOption(ticker, market, style, OptionRight.Call | OptionRight.Put, 0, SecurityIdentifier.DefaultDate);
+            }
+            else if (securityType == SecurityType.FutureOption)
+            {
+                var withoutExtension = Path.GetFileNameWithoutExtension(filename);
+                rawValue = withoutExtension.Substring(withoutExtension.LastIndexOf("_", StringComparison.Ordinal) + 1);
+                var style = (OptionStyle) Enum.Parse(typeof (OptionStyle), rawValue, true);
+                var futureSymbol = QuantConnect.Symbol.Create(FuturesOptionsSymbolMappings.MapFromOption(ticker), SecurityType.Future, market);
+                symbol = Symbol.CreateOption(futureSymbol, market, style, OptionRight.Call | OptionRight.Put, 0, SecurityIdentifier.DefaultDate);
             }
             else if (securityType == SecurityType.Future)
             {
