@@ -85,17 +85,21 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                     _strategy.PushNewResults(OptimizationResult.Initial);
 
-                    foreach (var value in param)
+                    using (var paramEnumerator = new OptimizationStepParameterEnumerator(param))
                     {
-                        counter++;
-                        Assert.IsTrue(enumerator.MoveNext());
+                        while (paramEnumerator.MoveNext())
+                        {
+                            var value = paramEnumerator.Current;
+                            counter++;
+                            Assert.IsTrue(enumerator.MoveNext());
 
-                        var suggestion = enumerator.Current;
+                            var suggestion = enumerator.Current;
 
-                        Assert.IsNotNull(suggestion);
-                        Assert.IsTrue(suggestion.Value.All(s => set.Any(arg => arg.Name == s.Key)));
-                        Assert.AreEqual(1, suggestion.Value.Count);
-                        Assert.AreEqual(value, suggestion.Value["ema-fast"]);
+                            Assert.IsNotNull(suggestion);
+                            Assert.IsTrue(suggestion.Value.All(s => set.Any(arg => arg.Name == s.Key)));
+                            Assert.AreEqual(1, suggestion.Value.Count);
+                            Assert.AreEqual(value, suggestion.Value["ema-fast"]);
+                        }
                     }
 
                     Assert.AreEqual(0, enumerator.Count);
@@ -144,24 +148,36 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                     _strategy.PushNewResults(OptimizationResult.Initial);
 
-                    var fastParam = args.First(arg => arg.Name == "ema-fast");
-                    var slowParam = args.First(arg => arg.Name == "ema-slow");
-                    foreach (var fast in fastParam)
+                    var fastParam = args.First(arg => arg.Name == "ema-fast") as OptimizationStepParameter;
+                    var slowParam = args.First(arg => arg.Name == "ema-slow") as OptimizationStepParameter;
+
+                    using (var fastEnumerator = new OptimizationStepParameterEnumerator(fastParam))
                     {
-                        foreach (var slow in slowParam)
+                        using (var slowEnumerator = new OptimizationStepParameterEnumerator(slowParam))
                         {
-                            counter++;
-                            Assert.IsTrue(enumerator.MoveNext());
+                            while (fastEnumerator.MoveNext())
+                            {
+                                var fast = fastEnumerator.Current;
+                                slowEnumerator.Reset();
+                                while (slowEnumerator.MoveNext())
+                                {
+                                    var slow = slowEnumerator.Current;
 
-                            var suggestion = enumerator.Current;
+                                    counter++;
+                                    Assert.IsTrue(enumerator.MoveNext());
 
-                            Assert.IsNotNull(suggestion);
-                            Assert.IsTrue(suggestion.Value.All(s => args.Any(arg => arg.Name == s.Key)));
-                            Assert.AreEqual(2, suggestion.Value.Count);
-                            Assert.AreEqual(fast, suggestion.Value["ema-fast"]);
-                            Assert.AreEqual(slow, suggestion.Value["ema-slow"]);
+                                    var suggestion = enumerator.Current;
+
+                                    Assert.IsNotNull(suggestion);
+                                    Assert.IsTrue(suggestion.Value.All(s => args.Any(arg => arg.Name == s.Key)));
+                                    Assert.AreEqual(2, suggestion.Value.Count);
+                                    Assert.AreEqual(fast, suggestion.Value["ema-fast"]);
+                                    Assert.AreEqual(slow, suggestion.Value["ema-slow"]);
+                                }
+                            }
                         }
                     }
+
 
                     Assert.AreEqual(0, enumerator.Count);
                 }
@@ -217,26 +233,43 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                     _strategy.PushNewResults(OptimizationResult.Initial);
 
-                    var fastParam = args.First(arg => arg.Name == "ema-fast");
-                    var slowParam = args.First(arg => arg.Name == "ema-slow");
-                    var customParam = args.First(arg => arg.Name == "ema-custom");
-                    foreach (var fast in fastParam)
+                    var fastParam = args.First(arg => arg.Name == "ema-fast") as OptimizationStepParameter;
+                    var slowParam = args.First(arg => arg.Name == "ema-slow") as OptimizationStepParameter;
+                    var customParam = args.First(arg => arg.Name == "ema-custom") as OptimizationStepParameter;
+                    using (var fastEnumerator = new OptimizationStepParameterEnumerator(fastParam))
                     {
-                        foreach (var slow in slowParam)
+                        using (var slowEnumerator = new OptimizationStepParameterEnumerator(slowParam))
                         {
-                            foreach (var custom in customParam)
+                            using (var customEnumerator = new OptimizationStepParameterEnumerator(customParam))
                             {
-                                counter++;
-                                Assert.IsTrue(enumerator.MoveNext());
+                                while (fastEnumerator.MoveNext())
+                                {
+                                    var fast = fastEnumerator.Current;
+                                    slowEnumerator.Reset();
 
-                                var suggestion = enumerator.Current;
+                                    while (slowEnumerator.MoveNext())
+                                    {
+                                        var slow = slowEnumerator.Current;
+                                        customEnumerator.Reset();
 
-                                Assert.IsNotNull(suggestion);
-                                Assert.IsTrue(suggestion.Value.All(s => args.Any(arg => arg.Name == s.Key)));
-                                Assert.AreEqual(3, suggestion.Value.Count());
-                                Assert.AreEqual(fast, suggestion.Value["ema-fast"]);
-                                Assert.AreEqual(slow, suggestion.Value["ema-slow"]);
-                                Assert.AreEqual(custom, suggestion.Value["ema-custom"]);
+                                        while (customEnumerator.MoveNext())
+                                        {
+                                            var custom = customEnumerator.Current;
+                                            counter++;
+                                            Assert.IsTrue(enumerator.MoveNext());
+
+                                            var suggestion = enumerator.Current;
+
+                                            Assert.IsNotNull(suggestion);
+                                            Assert.IsTrue(suggestion.Value.All(s =>
+                                                args.Any(arg => arg.Name == s.Key)));
+                                            Assert.AreEqual(3, suggestion.Value.Count());
+                                            Assert.AreEqual(fast, suggestion.Value["ema-fast"]);
+                                            Assert.AreEqual(slow, suggestion.Value["ema-slow"]);
+                                            Assert.AreEqual(custom, suggestion.Value["ema-custom"]);
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

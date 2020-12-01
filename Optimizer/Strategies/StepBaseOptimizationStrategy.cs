@@ -87,7 +87,7 @@ namespace QuantConnect.Optimizer.Strategies
                 // if the Step optimization parameter does not provide a step to use, we calculate one based on settings
                 if (!optimizationParameter.Step.HasValue)
                 {
-                    optimizationParameter.CalculateStep(Settings.DefaultSegmentAmount);
+                    CalculateStep(optimizationParameter, Settings.DefaultSegmentAmount);
                 }
             }
 
@@ -109,10 +109,29 @@ namespace QuantConnect.Optimizer.Strategies
             var total = 1;
             foreach (var arg in OptimizationParameters)
             {
-                total *= arg.Estimate();
+                total *= Estimate(arg);
             }
 
             return total;
+        }
+
+        /// <summary>
+        /// Calculates number od data points for step based optimization parameter based on min/max and step values
+        /// </summary>
+        private int Estimate(OptimizationParameter parameter)
+        {
+            var stepParameter = parameter as OptimizationStepParameter;
+            if (stepParameter == null)
+            {
+                throw new InvalidOperationException($"Cannot estimate parameter of type {parameter.GetType().FullName}");
+            }
+
+            if (!stepParameter.Step.HasValue)
+            {
+                throw new InvalidOperationException("Optimization parameter cannot be estimated due to step value is not initialized");
+            }
+
+            return (int)Math.Floor((stepParameter.MaxValue - stepParameter.MinValue) / stepParameter.Step.Value) + 1;
         }
 
         /// <summary>
@@ -155,31 +174,63 @@ namespace QuantConnect.Optimizer.Strategies
             }
         }
 
+        /// <summary>
+        /// Calculate step and min step values based on default number of fragments
+        /// </summary>
+        private void CalculateStep(OptimizationStepParameter parameter, int defaultSegmentAmount)
+        {
+            if (defaultSegmentAmount < 1)
+            {
+                throw new ArgumentException(nameof(defaultSegmentAmount), $"Number of segments should be positive number, but specified '{defaultSegmentAmount}'");
+            }
+
+            parameter.Step = Math.Abs(parameter.MaxValue - parameter.MinValue) / defaultSegmentAmount;
+            parameter.MinStep = parameter.Step / 10;
+        }
+
         private IEnumerable<Dictionary<string, string>> Recursive(Queue<OptimizationParameter> args)
         {
             if (args.Count == 1)
             {
                 var optimizationParameterLast = args.Dequeue();
-                foreach (var value in optimizationParameterLast)
+                using (var optimizationParameterLastEnumerator = GetEnumerator(optimizationParameterLast))
                 {
-                    yield return new Dictionary<string, string>()
+                    while (optimizationParameterLastEnumerator.MoveNext())
                     {
-                        {optimizationParameterLast.Name, value}
-                    };
+                        yield return new Dictionary<string, string>()
+                        {
+                            {optimizationParameterLast.Name, optimizationParameterLastEnumerator.Current}
+                        };
+                    }
                 }
+
                 yield break;
             }
 
             var optimizationParameter = args.Dequeue();
-            foreach (var value in optimizationParameter)
+            using (var optimizationParameterEnumerator = GetEnumerator(optimizationParameter))
             {
-                foreach (var inner in Recursive(new Queue<OptimizationParameter>(args)))
+                while (optimizationParameterEnumerator.MoveNext())
                 {
-                    inner.Add(optimizationParameter.Name, value);
+                    foreach (var inner in Recursive(new Queue<OptimizationParameter>(args)))
+                    {
+                        inner.Add(optimizationParameter.Name, optimizationParameterEnumerator.Current);
 
-                    yield return inner;
+                        yield return inner;
+                    }
                 }
             }
+        }
+
+        private IEnumerator<string> GetEnumerator(OptimizationParameter parameter)
+        {
+            var stepParameter = parameter as OptimizationStepParameter;
+            if (stepParameter == null)
+            {
+                throw new InvalidOperationException("");
+            }
+
+            return new OptimizationStepParameterEnumerator(stepParameter);
         }
     }
 }

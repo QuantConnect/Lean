@@ -23,7 +23,7 @@ namespace QuantConnect.Optimizer.Parameters
     /// Defines the optimization parameter meta information
     /// </summary>
     [JsonConverter(typeof(OptimizationParameterJsonConverter))]
-    public abstract class OptimizationParameter : IEnumerable<string>
+    public abstract class OptimizationParameter
     {
         /// <summary>
         /// Name of optimization parameter
@@ -39,21 +39,6 @@ namespace QuantConnect.Optimizer.Parameters
         {
             Name = name;
         }
-
-        /// <summary>
-        /// Return Enumerator for current optimization parameter.
-        /// We moved the enumeration into separate class in order to avoid having within the parameter
-        /// </summary>
-        /// <returns></returns>
-        public abstract IEnumerator<string> GetEnumerator();
-
-        /// <summary>
-        /// Calculate number of point for optimization parameter
-        /// </summary>
-        /// <returns>returns number of data points</returns>
-        public abstract int Estimate();
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <summary>
         /// Indicates whether the current object is equal to another object of the same type.

@@ -83,33 +83,6 @@ namespace QuantConnect.Tests.Optimizer.Parameters
                 Assert.AreEqual(actual, optimizationParameter.MinStep);
             }
 
-            [Test, TestCaseSource(nameof(SegmentBasedOptimizationParameters))]
-            public void CalculateStep(OptimizationStepParameter optimizationParameter, int numberOfSegments)
-            {
-                Assert.IsNull(optimizationParameter.Step);
-                Assert.IsNull(optimizationParameter.MinStep);
-
-                optimizationParameter.CalculateStep(numberOfSegments);
-                var actual = Math.Abs(optimizationParameter.MaxValue - optimizationParameter.MinValue) /
-                    numberOfSegments;
-                Assert.AreEqual(actual, optimizationParameter.Step);
-                Assert.AreEqual(actual / 10, optimizationParameter.MinStep);
-            }
-
-            [TestCase(0)]
-            [TestCase(-1)]
-            public void ThrowExceptionIfNonPositive(int numberOfSegments)
-            {
-                var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100);
-                Assert.IsNull(optimizationParameter.Step);
-                Assert.IsNull(optimizationParameter.MinStep);
-
-                Assert.Throws<ArgumentException>(() =>
-                {
-                    optimizationParameter.CalculateStep(numberOfSegments);
-                });
-            }
-
             [Test, TestCaseSource(nameof(OptimizationParameters))]
             public void Serialize(OptimizationStepParameter parameterSet)
             {
@@ -234,30 +207,6 @@ namespace QuantConnect.Tests.Optimizer.Parameters
                 Assert.AreEqual(50, optimizationParameters[1].MinValue);
                 Assert.AreEqual(250, optimizationParameters[1].MaxValue);
                 Assert.AreEqual(10, optimizationParameters[1].Step);
-            }
-
-
-            private static TestCaseData[] OptimizationParametersEstimations => new[]
-            {
-                new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100, 1), 100),
-                new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100, 50), 2),
-                new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 1, 0), 1)
-            };
-
-            [Test, TestCaseSource(nameof(OptimizationParametersEstimations))]
-            public void Estimate(OptimizationStepParameter optimizationParameter, int estimation)
-            {
-                Assert.AreEqual(estimation, optimizationParameter.Estimate());
-            }
-
-            [Test]
-            public void ThrowIfEstimateNoStepValueProvided()
-            {
-                var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100);
-                Assert.Throws<InvalidOperationException>(() =>
-                {
-                    optimizationParameter.Estimate();
-                });
             }
 
             [Test]

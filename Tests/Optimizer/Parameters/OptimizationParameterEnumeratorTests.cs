@@ -31,9 +31,9 @@ namespace QuantConnect.Tests.Optimizer.Parameters
         };
 
         [Test, TestCaseSource(nameof(OptimizationParameters))]
-        public void IEnumerable(OptimizationParameter optimizationParameter)
+        public void NotIEnumerable(OptimizationParameter optimizationParameter)
         {
-            Assert.IsInstanceOf<IEnumerable<string>>(optimizationParameter);
+            Assert.IsNotInstanceOf<IEnumerable<string>>(optimizationParameter);
         }
 
         [TestFixture]
@@ -63,13 +63,6 @@ namespace QuantConnect.Tests.Optimizer.Parameters
 
                 Assert.AreEqual(Math.Floor((optimizationParameter.MaxValue - optimizationParameter.MinValue) / optimizationParameter.Step.Value) + 1, total);
                 Assert.IsFalse(enumerator.MoveNext());
-            }
-
-            [Test]
-            public void IEnumerable()
-            {
-                var optimizationParameter = new OptimizationStepParameter("ema-fast", -100, 0, 1m);
-                Assert.IsInstanceOf<OptimizationStepParameterEnumerator>(optimizationParameter.GetEnumerator());
             }
         }
     }

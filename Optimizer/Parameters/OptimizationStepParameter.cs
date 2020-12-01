@@ -15,14 +15,13 @@
 
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer.Parameters
 {
     /// <summary>
     /// Defines the step based optimization parameter
     /// </summary>
-    public class OptimizationStepParameter : OptimizationParameter
+    public class OptimizationStepParameter: OptimizationParameter
     {
         /// <summary>
         /// Minimum value of optimization parameter, applicable for boundary conditions
@@ -40,14 +39,14 @@ namespace QuantConnect.Optimizer.Parameters
         /// Movement, should be positive
         /// </summary>
         [JsonProperty("step")]
-        public decimal? Step { get; private set; }
+        public decimal? Step { get; set; }
 
         /// <summary>
         /// Minimal possible movement for current parameter, should be positive
         /// </summary>
         /// <remarks>Used by <see cref="Strategies.EulerSearchOptimizationStrategy"/> to determine when this parameter can no longer be optimized</remarks>
         [JsonProperty("min-step")]
-        public decimal? MinStep { get; private set; }
+        public decimal? MinStep { get; set; }
 
         /// <summary>
         /// Create an instance of <see cref="OptimizationParameter"/> based on configuration
@@ -103,36 +102,6 @@ namespace QuantConnect.Optimizer.Parameters
             MinStep = absMinStep != 0
                 ? absMinStep
                 : Step;
-        }
-
-        /// <summary>
-        /// Calculate step and min step values based on default number of fragments
-        /// </summary>
-        /// <param name="defaultSegmentAmount"></param>
-        public void CalculateStep(int defaultSegmentAmount)
-        {
-            if (defaultSegmentAmount < 1)
-            {
-                throw new ArgumentException(nameof(defaultSegmentAmount), $"Number of segments should be positive number, but specified '{defaultSegmentAmount}'");
-            }
-
-            Step = Math.Abs(MaxValue - MinValue) / defaultSegmentAmount;
-            MinStep = Step / 10;
-        }
-
-        public override IEnumerator<string> GetEnumerator() => new OptimizationStepParameterEnumerator(this);
-
-        /// <summary>
-        /// Calculates number od data points for step based optimization parameter based on min/max and step values
-        /// </summary>
-        /// <returns></returns>
-        public override int Estimate()
-        {
-            if (!Step.HasValue)
-            {
-                throw new InvalidOperationException("Optimization parameter cannot be estimated due to step value is not initialized");
-            }
-            return (int) Math.Floor((MaxValue - MinValue) / Step.Value) + 1;
         }
     }
 }
