@@ -61,5 +61,10 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// </summary>
         [EnumMember(Value = "Independent 3rd Party")]
         ThirdParty,
+
+        /// <summary>
+        /// The field was not found in this enum
+        /// </summary>
+        Error
     }
 }

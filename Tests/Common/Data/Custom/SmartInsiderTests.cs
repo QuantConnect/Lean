@@ -38,8 +38,8 @@ namespace QuantConnect.Tests.Common.Data.Custom
 
             Assert.IsTrue(intention.ExecutionHolding.HasValue);
             Assert.IsTrue(transaction.ExecutionHolding.HasValue);
-            Assert.AreEqual(intention.ExecutionHolding, SmartInsiderExecutionHolding.SatisfyStockVesting);
-            Assert.AreEqual(transaction.ExecutionHolding, SmartInsiderExecutionHolding.SatisfyStockVesting);
+            Assert.AreEqual(SmartInsiderExecutionHolding.SatisfyStockVesting, intention.ExecutionHolding);
+            Assert.AreEqual(SmartInsiderExecutionHolding.SatisfyStockVesting, transaction.ExecutionHolding);
         }
 
         [TestCase("2019-01-01  23:59:59")]
@@ -176,12 +176,12 @@ namespace QuantConnect.Tests.Common.Data.Custom
         }
 
         [Test]
-        public void ParseFromRawDataUnexpectedEventType()
+        public void ParseFromRawDataUnexpectedEventTypes()
         {
             var realRawIntentionLine = "\"BI12345\"\t\"Some new event\"\t2020-07-27\t2009-11-11\t\"US1234567890\"\t\"\"\t12345\t\"https://smartinsidercompanypage.com\"\t\"Consumer Staples\"\t" +
                                        "\"Personal Care, Drug and Grocery Stores\"\t\"Personal Care, Drug and Grocery Stores\"\t\"Personal Products\"\t12345678\t\"Some Company Corp\"\t\"Some-Comapny C\"\t" +
                                        "\"\"\t\"\"\t\"\"\t\"\"\t\"Com\"\t\"US\"\t\"SCC\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\t\t-999\t\"Some unexpected event.\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"" +
-                                       "\"\t2020-07-27\t\"\"\t\"\"\t\"\"\t2020-07-27  13:57:37\t\"US\"\t\"https://smartinsiderdatapage.com\"\t\"On Market\"\t\"Issuer\"\t\"Not Reported\"\t\"\"\t\"\"\t\t" +
+                                       "\"\t2020-07-27\t\"\"\t\"\"\t\"\"\t2020-07-27  13:57:37\t\"US\"\t\"https://smartinsiderdatapage.com\"\t\"UnexpectedEvent\"\t\"UnexpectedIssuer\"\t\"UnexpectedReported\"\t\"\"\t\"\"\t\t" +
                                        "\"\"\t\t\t\"\"\t\t\t\"\"";
 
             var tsv = realRawIntentionLine.Split('\t')
@@ -199,11 +199,13 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var filteredRawIntentionLine = string.Join("\t", tsv);
 
             var intention = new SmartInsiderIntention();
-            intention.FromRawData(filteredRawIntentionLine);
-            Assert.DoesNotThrow(() =>intention.FromRawData(filteredRawIntentionLine));
+            Assert.DoesNotThrow(() => intention.FromRawData(filteredRawIntentionLine));
 
             Assert.IsTrue(intention.EventType.HasValue);
-            Assert.AreEqual(intention.EventType, SmartInsiderEventType.NotSpecified);
+            Assert.AreEqual(SmartInsiderEventType.NotSpecified, intention.EventType);
+            Assert.AreEqual(SmartInsiderExecution.Error, intention.Execution);
+            Assert.AreEqual(SmartInsiderExecutionEntity.Error, intention.ExecutionEntity);
+            Assert.AreEqual(SmartInsiderExecutionHolding.Error, intention.ExecutionHolding);
         }
     }
 }
