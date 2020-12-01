@@ -102,25 +102,25 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
     /// </summary>
     public struct Holding
     {
-        public Holding(Dictionary<string, dynamic> data)
+        public Holding(JObject data)
         {
             try
             {
-                Product = data["product"];
-                Exchange = data["exchange"];
-                Price = data["price"];
-                LastPrice = data["last_price"];
-                CollateralQuantity = data["collateral_quantity"];
-                PNL = data["pnl"];
-                ClosePrice = data["close_price"];
-                AveragePrice = data["average_price"];
-                TradingSymbol = data["tradingsymbol"];
-                CollateralType = data["collateral_type"];
-                T1Quantity = data["t1_quantity"];
-                InstrumentToken = Convert.ToUInt32(data["instrument_token"]);
-                ISIN = data["isin"];
-                RealisedQuantity = data["realised_quantity"];
-                Quantity = data["quantity"];
+                Product = data["product"].ToString();
+                Exchange = data["exchange"].ToString();
+                Price = (decimal)data["price"];
+                LastPrice = (decimal)data["last_price"];
+                CollateralQuantity = Convert.ToInt32(data["collateral_quantity"], CultureInfo.InvariantCulture);
+                PNL = (decimal)data["pnl"];
+                ClosePrice = (decimal)data["close_price"];
+                AveragePrice = (decimal)data["average_price"];
+                TradingSymbol = data["tradingsymbol"].ToString();
+                CollateralType = data["collateral_type"].ToString();
+                T1Quantity = Convert.ToInt32(data["t1_quantity"], CultureInfo.InvariantCulture);
+                InstrumentToken = Convert.ToUInt32(data["instrument_token"], CultureInfo.InvariantCulture);
+                ISIN = data["isin"].ToString();
+                RealisedQuantity = Convert.ToInt32(data["realised_quantity"], CultureInfo.InvariantCulture);
+                Quantity = Convert.ToInt32(data["quantity"], CultureInfo.InvariantCulture);
             }
             catch (Exception e)
             {

@@ -24,6 +24,7 @@ using QuantConnect.Brokerages.Zerodha.Messages;
 using QuantConnect.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.ComponentModel;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
@@ -465,13 +466,12 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>List of holdings.</returns>
         public List<Messages.Holding> GetHoldings()
         {
-            var holdingsData = Get("portfolio.holdings");
+            var holdingsData = Get("portfolio.holdings")["data"];
 
             List<Messages.Holding> holdings = new List<Messages.Holding>();
 
-            foreach (Dictionary<string, dynamic> item in holdingsData["data"])
+            foreach (JObject item in holdingsData)
                 holdings.Add(new Messages.Holding(item));
-
             return holdings;
         }
 
@@ -517,24 +517,44 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>List of instruments.</returns>
         public List<Instrument> GetInstruments(string Exchange = null)
         {
-            var param = new Dictionary<string, dynamic>();
-
-            List<Dictionary<string, dynamic>> instrumentsData;
-
-            if (String.IsNullOrEmpty(Exchange))
-                instrumentsData = Get("market.instruments.all", param);
-            else
-            {
-                param.Add("exchange", Exchange);
-                instrumentsData = Get("market.instruments", param);
-            }
-
             List<Instrument> instruments = new List<Instrument>();
+            List<Dictionary<string, dynamic>> instrumentsData= new List<Dictionary<string, dynamic>>();
+            var param = new Dictionary<string, dynamic>();
+            try
+            {
 
-            foreach (Dictionary<string, dynamic> item in instrumentsData)
-                instruments.Add(new Instrument(item));
+                //TODO:OPtimize this later
+                var useLocalFile =false;
+                var latestFile = Globals.DataFolder+"ZerodhaInstrument-" + DateTime.Today.ToStringInvariant().Replace(" ", "-").Replace("/","-") + ".csv";
+                if (!File.Exists(latestFile))
+                {
 
-            return instruments;
+                    if (String.IsNullOrEmpty(Exchange))
+                    {
+                        instrumentsData = Get("market.instruments.all", param);
+                    }
+                    else
+                    {
+                        param.Add("exchange", Exchange);
+                        instrumentsData = Get("market.instruments", param);
+                    }
+                    SaveToCsv(instruments, "latestFile");
+                }
+                else
+                {
+                    instruments = ReadFromCSV(latestFile);
+                }
+
+                foreach (Dictionary<string, dynamic> item in instrumentsData)
+                    instruments.Add(new Instrument(item));
+
+                return instruments;
+            }
+            catch (Exception err)
+            {
+
+                return instruments;
+            }
         }
 
         /// <summary>
@@ -989,5 +1009,54 @@ namespace QuantConnect.Brokerages.Zerodha
         }
 
         #endregion
+
+        private void SaveToCsv<T>(List<T> reportData, string path)
+        {
+            var lines = new List<string>();
+            IEnumerable<PropertyDescriptor> props = TypeDescriptor.GetProperties(typeof(T)).OfType<PropertyDescriptor>();
+            var header = string.Join(",", props.ToList().Select(x => x.Name));
+            lines.Add(header);
+            var valueLines = reportData.Select(row => string.Join(",", header.Split(',').Select(a => row.GetType().GetProperty(a).GetValue(row, null))));
+            lines.AddRange(valueLines);
+            File.WriteAllLines(path, lines.ToArray());
+        }
+
+        private List<Instrument> ReadFromCSV(string path)
+        {
+            List<Instrument> listOfInstruments = new List<Instrument>();
+            var csvContent = File.ReadAllLines(path).Skip(1);
+
+            foreach (var item in csvContent)
+            {
+                try
+                {
+                    var values = item.Split(',');
+                    var model = new Instrument
+                    {
+                        InstrumentToken = Convert.ToUInt32(values[0], CultureInfo.InvariantCulture),
+                        ExchangeToken = Convert.ToUInt32(values[1], CultureInfo.InvariantCulture),
+                        TradingSymbol = values[2],
+                        Name = values[3],
+                        LastPrice = Convert.ToDecimal(values[4], CultureInfo.InvariantCulture),
+                        TickSize = Convert.ToDecimal(values[5], CultureInfo.InvariantCulture),
+
+                        Expiry = Convert.ToDateTime(values[6], CultureInfo.InvariantCulture),
+                        InstrumentType = values[7],
+                        Segment = values[8],
+                        Exchange = values[9],
+                        Strike = Convert.ToDecimal(values[10], CultureInfo.InvariantCulture),
+                        LotSize = Convert.ToUInt32(values[11], CultureInfo.InvariantCulture)
+
+                    };
+                    listOfInstruments.Add(model);
+                }
+                catch (Exception)
+                {
+
+                    continue;
+                }
+            }
+            return listOfInstruments;
+        }
     }
 }
