@@ -156,7 +156,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     Log.Error("Invalid Zerodha Instrument token");
                 }
-                var securityType = _symbolMapper.GetBrokerageSecurityType(symbol.ID.Symbol);
+                var securityType = _symbolMapper.GetLeanSymbol(symbol.ID.Symbol).SecurityType;
 
                 string request = "{\"a\":\"subscribe\",\"v\":[" + String.Join(",", instrumentToken) + "]}";
 

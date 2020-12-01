@@ -65,9 +65,9 @@ namespace QuantConnect.Brokerages.Zerodha
         public static Dictionary<string,uint> ZerodhaInstrumentsList = new Dictionary<string,uint>();
 
 
-        public ZerodhaSymbolMapper(Kite kite)
+        public ZerodhaSymbolMapper(Kite kite,string exchange="NSE")
         {
-            var tradableInstruments = kite.GetInstruments();
+            var tradableInstruments = kite.GetInstruments(exchange);
             var symbols = new List<Symbol>();
             var zerodhaInstrumentsMapping = new Dictionary<string, uint>();
 
@@ -172,9 +172,6 @@ namespace QuantConnect.Brokerages.Zerodha
 
             var brokerageSymbol = ConvertLeanSymbolToZerodhaSymbol(symbol.Value);
 
-            if (!IsKnownBrokerageSymbol(brokerageSymbol))
-                throw new ArgumentException("Unknown symbol: " + symbol.Value);
-
             return brokerageSymbol;
         } 
 
@@ -225,9 +222,17 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>A new Lean Symbol instance</returns>
         public Symbol GetLeanSymbol(string brokerageSymbol)
         {
-            var securityType = GetBrokerageSecurityType(brokerageSymbol.Replace(" ", "").Trim());
-            var symbol = KnownSymbols.Where(s => s.ID.Symbol == brokerageSymbol.Replace(" ", "").Trim()).FirstOrDefault();
-            return GetLeanSymbol(brokerageSymbol.Replace(" ", "").Trim(), securityType, symbol.ID.Market);
+            brokerageSymbol = brokerageSymbol.Replace(" ", "").Trim();
+
+            if (string.IsNullOrWhiteSpace(brokerageSymbol))
+                throw new ArgumentException($"Invalid Zerodha symbol: {brokerageSymbol}");
+
+            if(IsKnownBrokerageSymbol(brokerageSymbol))
+                throw new ArgumentException($"Symbol not present : {brokerageSymbol}");
+
+
+            var symbol = KnownSymbols.Where(s => s.Value == brokerageSymbol).FirstOrDefault();
+            return GetLeanSymbol(brokerageSymbol.Replace(" ", "").Trim(), symbol.SecurityType, symbol.ID.Market);
         }
 
         /// <summary>
@@ -237,7 +242,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>A new Lean Symbol instance</returns>
         public uint GetZerodhaInstrumentToken(string brokerageSymbol,string market)
         {
-            var symbol = KnownSymbols.Where(s => s.ID.Symbol == brokerageSymbol.Replace(" ", "").Trim()).FirstOrDefault();
+            var symbol = KnownSymbols.Where(s => s.Value == brokerageSymbol.Replace(" ", "").Trim()).FirstOrDefault();
             uint token;
             if (ZerodhaInstrumentsList.TryGetValue(symbol.ID.Symbol + "-" + symbol.ID.Market, out token))
             {
@@ -247,32 +252,6 @@ namespace QuantConnect.Brokerages.Zerodha
         }
 
         /// <summary>
-        /// Returns the security type for an Zerodha symbol
-        /// </summary>
-        /// <param name="brokerageSymbol">The Zerodha symbol</param>
-        /// <returns>The security type</returns>
-        public SecurityType GetBrokerageSecurityType(string brokerageSymbol)
-        {
-            if (string.IsNullOrWhiteSpace(brokerageSymbol))
-                throw new ArgumentException($"Invalid Zerodha symbol: {brokerageSymbol}");
-
-            if (!IsKnownBrokerageSymbol(brokerageSymbol))
-                throw new ArgumentException($"Unknown Zerodha symbol: {brokerageSymbol}");
-            var symbol = KnownSymbols.Where(s => s.ID.Symbol == brokerageSymbol).FirstOrDefault();
-
-            return symbol.SecurityType;
-        }
-
-        /// <summary>
-        /// Returns the security type for a Lean symbol
-        /// </summary>
-        /// <param name="leanSymbol">The Lean symbol</param>
-        /// <returns>The security type</returns>
-        public SecurityType GetLeanSecurityType(string leanSymbol)
-        {
-            return GetBrokerageSecurityType(ConvertLeanSymbolToZerodhaSymbol(leanSymbol));
-        }
-
         /// <summary>
         /// Checks if the symbol is supported by Zerodha
         /// </summary>
@@ -283,12 +262,8 @@ namespace QuantConnect.Brokerages.Zerodha
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 return false;
 
-            return KnownSymbolsList.Contains(brokerageSymbol);
+            return KnownSymbolsList.Where(x=>x.Value.Contains(brokerageSymbol)).IsNullOrEmpty();
         }
-
-        /// <summary>
-        /// Checks if the symbol is supported by Zerodha
-        /// </summary>
         /// <param name="symbol">The Lean symbol</param>
         /// <returns>True if Zerodha supports the symbol</returns>
         public bool IsKnownLeanSymbol(Symbol symbol)
@@ -298,7 +273,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
             var ZerodhaSymbol = ConvertLeanSymbolToZerodhaSymbol(symbol.Value);
 
-            return IsKnownBrokerageSymbol(ZerodhaSymbol) && GetBrokerageSecurityType(ZerodhaSymbol) == symbol.ID.SecurityType;
+            return GetLeanSymbol(ZerodhaSymbol).SecurityType == symbol.ID.SecurityType;
         }
 
         /// <summary>

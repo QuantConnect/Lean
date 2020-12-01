@@ -31,8 +31,7 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             var symbol = dataConfig.Symbol;
             if (symbol.Value.Contains("UNIVERSE") ||
-                !_symbolMapper.IsKnownLeanSymbol(symbol) ||
-                symbol.SecurityType != _symbolMapper.GetLeanSecurityType(symbol.Value))
+                !_symbolMapper.IsKnownLeanSymbol(symbol))
             {
                 return Enumerable.Empty<BaseData>().GetEnumerator();
             }
