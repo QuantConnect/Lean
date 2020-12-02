@@ -122,7 +122,7 @@ namespace QuantConnect.Lean.Launcher
                 leanEngineSystemHandlers.Notify.SetAuthentication(job);
                 leanEngineSystemHandlers.Notify.Send(new RuntimeErrorPacket(job.UserId, job.AlgorithmId, _collapseMessage));
                 leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
-                return;
+                Exit();
             }
 
             try
@@ -161,9 +161,9 @@ namespace QuantConnect.Lean.Launcher
             Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
 
             // clean up resources
-            leanEngineSystemHandlers.Dispose();
-            leanEngineAlgorithmHandlers.Dispose();
-            Log.LogHandler.Dispose();
+            leanEngineSystemHandlers.DisposeSafely();
+            leanEngineAlgorithmHandlers.DisposeSafely();
+            Log.LogHandler.DisposeSafely();
 
             Log.Trace("Program.Main(): Exiting Lean...");
             Environment.Exit(0);

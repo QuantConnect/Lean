@@ -129,9 +129,12 @@ namespace QuantConnect.Lean.Engine
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
+            Log.Trace("LeanEngineSystemHandlers.Dispose(): start...");
+
             Api.DisposeSafely();
             LeanManager.DisposeSafely();
             Notify.DisposeSafely();
+
             Log.Trace("LeanEngineSystemHandlers.Dispose(): Disposed of system handlers.");
         }
     }
