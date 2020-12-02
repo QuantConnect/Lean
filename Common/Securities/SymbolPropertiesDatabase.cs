@@ -117,7 +117,7 @@ namespace QuantConnect.Securities
         public SymbolProperties GetSymbolProperties(string market, Symbol symbol, SecurityType securityType, string defaultQuoteCurrency)
         {
             SymbolProperties symbolProperties;
-            var lookupTicker = symbol?.SecurityType == SecurityType.Equity ? symbol.Value : symbol?.ID.Symbol;
+            var lookupTicker = MarketHoursDatabase.GetDatabaseSymbolKey(symbol);
             var key = new SecurityDatabaseKey(market, lookupTicker, securityType);
 
             if (!_entries.TryGetValue(key, out symbolProperties))
@@ -126,7 +126,7 @@ namespace QuantConnect.Securities
                 {
                     // Default to looking up the underlying symbol's properties and using those instead if there's
                     // no existing entry for the future option.
-                    lookupTicker = symbol.Underlying.ID.Symbol;
+                    lookupTicker = MarketHoursDatabase.GetDatabaseSymbolKey(symbol.Underlying);
                     key = new SecurityDatabaseKey(market, lookupTicker, symbol.Underlying.SecurityType);
 
                     if (_entries.TryGetValue(key, out symbolProperties))
