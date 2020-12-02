@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     new Target("Profit", new Maximization(), null),
                     new List<Constraint>(),
                     set,
-                    new OptimizationStrategySettings { DefaultSegmentAmount = _defaultSegmentAmount });
+                    new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = _defaultSegmentAmount });
                 Queue<OptimizationResult> _pendingOptimizationResults = new Queue<OptimizationResult>();
                 int depth = -1;
                 _strategy.NewParameterSet += (s, parameterSet) =>
@@ -95,7 +95,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     new Target("Profit", new Maximization(), null),
                     new List<Constraint>(),
                     set,
-                    new OptimizationStrategySettings { DefaultSegmentAmount = amountOfSegments });
+                    new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = amountOfSegments });
                 Queue<OptimizationResult> pendingOptimizationResults = new Queue<OptimizationResult>();
                 int depth = -1;
                 _strategy.NewParameterSet += (s, parameterSet) =>
@@ -132,6 +132,11 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         protected override IOptimizationStrategy CreateStrategy()
         {
             return new EulerSearchOptimizationStrategy();
+        }
+
+        protected override OptimizationStrategySettings CreateSettings()
+        {
+            return new StepBaseOptimizationStrategySettings(){DefaultSegmentAmount = 10};
         }
 
         private static TestCaseData[] StrategySettings => new[]

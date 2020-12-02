@@ -14,16 +14,14 @@
 */
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using QuantConnect.Configuration;
-using QuantConnect.Util;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Logging;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Optimizer.Strategies;
+using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer.Launcher
 {
@@ -36,12 +34,15 @@ namespace QuantConnect.Optimizer.Launcher
                 Log.DebuggingEnabled = Config.GetBool("debug-mode");
                 Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
 
-                var optimizationStrategySettings = Config.Get("optimization-criterion", "{}");
+                var optimizationStrategyName = Config.Get("optimization-strategy",
+                    "QuantConnect.Optimizer.GridSearchOptimizationStrategy");
                 var packet = new OptimizationNodePacket
                 {
                     OptimizationId = Guid.NewGuid().ToString(),
-                    OptimizationStrategy = Config.Get("optimization-strategy", "QuantConnect.Optimizer.GridSearchOptimizationStrategy"),
-                    OptimizationStrategySettings = JsonConvert.DeserializeObject<OptimizationStrategySettings>(Config.Get("optimization-strategy-settings", "{}")),
+                    OptimizationStrategy = optimizationStrategyName,
+                    OptimizationStrategySettings = (OptimizationStrategySettings)JsonConvert.DeserializeObject(Config.Get(
+                        "optimization-strategy-settings", 
+                        "{\"$type\":\"QuantConnect.Optimizer.Strategies.OptimizationStrategySettings, QuantConnect.Optimizer\"}"), new JsonSerializerSettings(){TypeNameHandling = TypeNameHandling.All}),
                     Criterion = JsonConvert.DeserializeObject<Target>(Config.Get("optimization-criterion", "{\"target\":\"Statistics.TotalProfit\", \"extremum\": \"max\"}")),
                     Constraints = JsonConvert.DeserializeObject<List<Constraint>>(Config.Get("constraints", "[]")).AsReadOnly(),
                     OptimizationParameters = JsonConvert.DeserializeObject<HashSet<OptimizationParameter>>(Config.Get("parameters", "[]")),

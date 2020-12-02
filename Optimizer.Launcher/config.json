@@ -15,7 +15,7 @@
 
   // on-demand settings required for different optimization strategies
   "optimization-strategy-settings": {
-    // EulerSearch
+    "$type": "QuantConnect.Optimizer.Strategies.StepBaseOptimizationStrategySettings, QuantConnect.Optimizer",
     "default-segment-amount": 10
   },
 

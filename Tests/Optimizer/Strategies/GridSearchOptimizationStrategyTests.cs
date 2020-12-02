@@ -41,9 +41,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 this._strategy = new GridSearchOptimizationStrategy();
             }
 
-            [TestCase(0)]
             [TestCase(1)]
-            [TestCase(-2.5)]
+            [TestCase(0.5)]
             public void SinglePoint(decimal step)
             {
                 var args = new HashSet<OptimizationParameter>()
@@ -53,7 +52,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     new OptimizationStepParameter("ema-custom", 1, 1, step)
                 };
 
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new OptimizationStrategySettings());
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new StepBaseOptimizationStrategySettings());
 
                 _strategy.NewParameterSet += (s, parameterSet) =>
                 {
@@ -65,15 +64,13 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 _strategy.PushNewResults(OptimizationResult.Initial);
             }
 
-            [TestCase(-10, 0, -1)]
-            [TestCase(-10, 10.5, -0.5)]
             [TestCase(10, 100, 1)]
             [TestCase(10, 100, 500)]
             public void Step1D(decimal min, decimal max, decimal step)
             {
                 var param = new OptimizationStepParameter("ema-fast", min, max, step);
                 var set = new HashSet<OptimizationParameter>() { param };
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set, new OptimizationStrategySettings());
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set, new StepBaseOptimizationStrategySettings());
                 var counter = 0;
 
                 using (var enumerator = new EnqueueableEnumerator<ParameterSet>())
@@ -110,23 +107,20 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             }
 
             [TestCase(1, 1, 1)]
-            [TestCase(-10, 0, -1)]
-            [TestCase(-10, 10.5, -0.5)]
             [TestCase(10, 100, 1)]
             [TestCase(10, 100, 500)]
             public void Estimate1D(decimal min, decimal max, decimal step)
             {
                 var param = new OptimizationStepParameter("ema-fast", min, max, step);
                 var set = new HashSet<OptimizationParameter>() { param };
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set, new OptimizationStrategySettings());
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set, new StepBaseOptimizationStrategySettings());
 
                 Assert.AreEqual(Math.Floor(Math.Abs(max - min) / Math.Abs(step)) + 1, _strategy.GetTotalBacktestEstimate());
             }
 
             private static TestCaseData[] OptimizationStepParameter2D => new[]{
                 new TestCaseData(new decimal[,] {{10, 100, 1}, {20, 200, 1}}),
-                new TestCaseData(new decimal[,] {{10.5m, 100.5m, 1.5m}, { 20m, 209.9m, 3.5m}}),
-                new TestCaseData(new decimal[,] {{ -10.5m, 0m, -1.5m }, { -209.9m, -20m, -3.5m } })
+                new TestCaseData(new decimal[,] {{10.5m, 100.5m, 1.5m}, { 20m, 209.9m, 3.5m}})
             };
 
             [Test, TestCaseSource(nameof(OptimizationStepParameter2D))]
@@ -137,7 +131,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     new OptimizationStepParameter("ema-fast", data[0,0], data[0,1], data[0,2]),
                     new OptimizationStepParameter("ema-slow", data[1,0], data[1,1], data[1,2])
                 };
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new OptimizationStrategySettings());
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new StepBaseOptimizationStrategySettings());
                 var counter = 0;
                 using (var enumerator = new EnqueueableEnumerator<ParameterSet>())
                 {
@@ -201,7 +195,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     new OptimizationStepParameter("ema-fast", data[0,0], data[0,1], data[0,2]),
                     new OptimizationStepParameter("ema-slow", data[1,0], data[1,1], data[1,2])
                 };
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new OptimizationStrategySettings());
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new StepBaseOptimizationStrategySettings());
 
                 var total = 1m;
                 foreach (var arg in args.Cast<OptimizationStepParameter>())
@@ -221,7 +215,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     new OptimizationStepParameter("ema-slow", 20, 200, 4),
                     new OptimizationStepParameter("ema-custom", 30, 300, 2)
                 };
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), null, args, new OptimizationStrategySettings());
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), null, args, new StepBaseOptimizationStrategySettings());
                 var counter = 0;
 
                 using (var enumerator = new EnqueueableEnumerator<ParameterSet>())
@@ -297,7 +291,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     new OptimizationStepParameter("ema-slow", 20, 200, 4),
                     new OptimizationStepParameter("ema-custom", 30, 300, 2)
                 };
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), null, args, new OptimizationStrategySettings());
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), null, args, new StepBaseOptimizationStrategySettings());
 
                 var total = 1m;
                 foreach (var arg in args.Cast<OptimizationStepParameter>())
@@ -318,7 +312,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 {
                     args.Add(new OptimizationStepParameter($"ema-{i}", 10, 100, 1));
                 }
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new OptimizationStrategySettings());
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new StepBaseOptimizationStrategySettings());
 
                 var counter = 0;
                 _strategy.NewParameterSet += (s, parameterSet) =>
@@ -349,7 +343,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 {
                     new OptimizationStepParameter("ema-fast", 10, 100, 1)
                 };
-                _strategy.Initialize(new Target("Profit", new Maximization(), null), null, set, new OptimizationStrategySettings());
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), null, set, new StepBaseOptimizationStrategySettings());
 
                 _strategy.NewParameterSet += (s, parameterSet) =>
                 {
@@ -369,6 +363,11 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         protected override IOptimizationStrategy CreateStrategy()
         {
             return new GridSearchOptimizationStrategy();
+        }
+
+        protected override OptimizationStrategySettings CreateSettings()
+        {
+            return new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 10 };
         }
 
         private static TestCaseData[] StrategySettings => new[]

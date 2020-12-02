@@ -42,10 +42,9 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             private static TestCaseData[] OptimizationParameters => new[]
             {
                 new TestCaseData(new OptimizationStepParameter("ema-fast", -100, 0, 1m)),
-                new TestCaseData(new OptimizationStepParameter("ema-fast", -10, 10, 1m)),
-                new TestCaseData(new OptimizationStepParameter("ema-fast", -10, 10, 0)),
+                new TestCaseData(new OptimizationStepParameter("ema-fast", -10, 10, 0.1m)),
                 new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100, 1m)),
-                new TestCaseData(new OptimizationStepParameter("ema-fast", 100, 100, 1m))
+                new TestCaseData(new OptimizationStepParameter("ema-fast", 100, 100, 0.5m))
             };
 
             [Test, TestCaseSource(nameof(OptimizationParameters))]

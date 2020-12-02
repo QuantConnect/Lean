@@ -40,19 +40,6 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         }
 
         [Test]
-        public void EstimateWithDefaultStepIfNoValueProvided()
-        {
-            var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, 0);
-            _strategy.Initialize(
-                new Target("Profit", new Maximization(), null),
-                new List<Constraint>(),
-                new HashSet<OptimizationParameter> { optimizationParameter },
-                new OptimizationStrategySettings());
-
-            Assert.AreEqual(100, _strategy.GetTotalBacktestEstimate());
-        }
-
-        [Test]
         public void ThrowIfNoStepProvidedWhenNoSegmentValue()
         {
             var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100);
@@ -61,8 +48,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 _strategy.Initialize(
                     new Target("Profit", new Maximization(), null),
                     new List<Constraint>(),
-                    new HashSet<OptimizationParameter> {optimizationParameter},
-                    new OptimizationStrategySettings());
+                    new HashSet<OptimizationParameter> { optimizationParameter },
+                    new StepBaseOptimizationStrategySettings());
             });
         }
 
@@ -82,7 +69,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 new Target("Profit", new Maximization(), null),
                 new List<Constraint>(),
                 set,
-                new OptimizationStrategySettings { DefaultSegmentAmount = numberOfSegments });
+                new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = numberOfSegments });
 
             foreach (var parameter in set)
             {
@@ -95,9 +82,17 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             }
         }
 
-        [TestCase(0)]
-        [TestCase(-1)]
-        public void ThrowExceptionIfNonPositive(int numberOfSegments)
+        private static TestCaseData[] StepBaseSettings => new[]
+        {
+            new TestCaseData(new StepBaseOptimizationStrategySettings {DefaultSegmentAmount = 0}),
+            new TestCaseData(new StepBaseOptimizationStrategySettings {DefaultSegmentAmount = -1}),
+            new TestCaseData(null),
+            new TestCaseData(new StepBaseOptimizationStrategySettings()),
+            new TestCaseData(new OptimizationStrategySettings())
+        };
+
+        [Test, TestCaseSource(nameof(StepBaseSettings))]
+        public void ThrowExceptionIfCantCalculateStep(OptimizationStrategySettings settings)
         {
             var set = new HashSet<OptimizationParameter>
             {
@@ -120,7 +115,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     new Target("Profit", new Maximization(), null),
                     new List<Constraint>(),
                     set,
-                    new OptimizationStrategySettings { DefaultSegmentAmount = numberOfSegments });
+                    settings);
             });
         }
 

@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Optimizer
                     new OptimizationStepParameter("ema-fast", 10, 100, 3)
                 },
                 MaximumConcurrentBacktests = 20,
-                OptimizationStrategySettings = new OptimizationStrategySettings { DefaultSegmentAmount = 10 }
+                OptimizationStrategySettings = new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 10 }
             };
             var optimizer = new FakeLeanOptimizer(packet);
 
@@ -87,7 +87,7 @@ namespace QuantConnect.Tests.Optimizer
                     new OptimizationStepParameter("ema-fast", 10, 100, 3)
                 },
                 MaximumConcurrentBacktests = 20,
-                OptimizationStrategySettings = new OptimizationStrategySettings { DefaultSegmentAmount = 10 }
+                OptimizationStrategySettings = new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 10 }
             };
             var optimizer = new FakeLeanOptimizer(packet);
 
@@ -167,7 +167,7 @@ namespace QuantConnect.Tests.Optimizer
                     new Constraint("Drawdown", ComparisonOperatorTypes.LessOrEqual, 0.15m)
                 },
                 MaximumConcurrentBacktests = 20,
-                OptimizationStrategySettings = new OptimizationStrategySettings { DefaultSegmentAmount = 10 }
+                OptimizationStrategySettings = new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 10 }
             };
             var optimizer = new FakeLeanOptimizer(packet);
 

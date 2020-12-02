@@ -44,9 +44,7 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             };
 
             [TestCase(5)]
-            [TestCase(-5)]
             [TestCase(0.5)]
-            [TestCase(-0.5)]
             public void StepShouldBePositiveAlways(double step)
             {
                 var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, new decimal(step));
@@ -57,10 +55,19 @@ namespace QuantConnect.Tests.Optimizer.Parameters
                 Assert.AreEqual(Math.Abs(step), optimizationParameter.Step);
             }
 
+            [TestCase(-5)]
+            [TestCase(-0.5)]
+            [TestCase(0)]
+            public void ThrowIfStepIsNegativeOrZero(double step)
+            {
+                Assert.Throws<ArgumentException>(() =>
+                {
+                    var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, new decimal(step));
+                });
+            }
+
             [TestCase(1, 0.1)]
-            [TestCase(5, -0.1)]
-            [TestCase(-0.1, -0.1)]
-            [TestCase(0.5, -10)]
+            [TestCase(5, 5)]
             public void StepShouldBeGreatOrEqualThanMinStep(decimal step, decimal minStep)
             {
                 var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, step, minStep);
@@ -69,18 +76,25 @@ namespace QuantConnect.Tests.Optimizer.Parameters
                 Assert.AreEqual(actual, optimizationParameter.Step);
             }
 
+            [TestCase(5, 10)]
+            [TestCase(0.1, 0.2)]
+            public void ThrowsIfStepLessThanMinStep(decimal step, decimal minStep)
+            {
+                Assert.Throws<ArgumentException>(() =>
+                {
+                    var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, step, minStep);
+                });
+            }
+
             [TestCase(0, 0)]
             [TestCase(0.5, 0)]
-            [TestCase(2, 0)]
+            [TestCase(0, 2)]
             public void PreventZero(decimal step, decimal minStep)
             {
-                var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, step, minStep);
-
-                var actual = Math.Max(Math.Abs(step), Math.Abs(minStep));
-                actual = actual == 0 ? 1 : actual;
-
-                Assert.AreEqual(actual, optimizationParameter.Step);
-                Assert.AreEqual(actual, optimizationParameter.MinStep);
+                Assert.Throws<ArgumentException>(() =>
+                {
+                    var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, step, minStep);
+                });
             }
 
             [Test, TestCaseSource(nameof(OptimizationParameters))]

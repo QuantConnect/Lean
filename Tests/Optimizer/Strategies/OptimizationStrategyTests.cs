@@ -24,7 +24,6 @@ using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Tests.Optimizer.Strategies
 {
@@ -63,7 +62,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             {
                 new OptimizationStepParameter("ema-fast", 10, 100, 1)
             };
-            Strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set1, new OptimizationStrategySettings());
+            Strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set1, CreateSettings());
 
             Strategy.PushNewResults(OptimizationResult.Initial);
             Assert.Greater(nextId, 1);
@@ -75,7 +74,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             };
             Assert.Throws<InvalidOperationException>(() =>
             {
-                Strategy.Initialize(new Target("Profit", new Minimization(), null), null, set2, new OptimizationStrategySettings());
+                Strategy.Initialize(new Target("Profit", new Minimization(), null), null, set2, CreateSettings());
             });
         }
 
@@ -107,7 +106,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 new Target("Profit", extremum, null),
                 null,
                 optimizationParameters,
-                new OptimizationStrategySettings { DefaultSegmentAmount = 10 });
+                CreateSettings());
 
             Strategy.PushNewResults(OptimizationResult.Initial);
 
@@ -129,7 +128,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 new Target("Profit", new Maximization(), null),
                 new List<Constraint> { new Constraint("Drawdown", ComparisonOperatorTypes.Less, drawdown) },
                 optimizationParameters,
-                new OptimizationStrategySettings() { DefaultSegmentAmount = 10 });
+                CreateSettings());
 
             Strategy.PushNewResults(OptimizationResult.Initial);
 
@@ -159,7 +158,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 target,
                 null,
                 optimizationParameters,
-                new OptimizationStrategySettings { DefaultSegmentAmount = 10 });
+                CreateSettings());
 
 
             Strategy.PushNewResults(OptimizationResult.Initial);
@@ -190,7 +189,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 target,
                 null,
                 optimizationParameters,
-                new OptimizationStrategySettings { DefaultSegmentAmount = 10 });
+                CreateSettings());
 
 
             Strategy.PushNewResults(OptimizationResult.Initial);
@@ -220,11 +219,12 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 new Target("Profit", new Maximization(), null),
                 null,
                 optimizationParameters,
-                new OptimizationStrategySettings { DefaultSegmentAmount = 10 });
+                CreateSettings());
 
             Assert.AreEqual(expected, Strategy.GetTotalBacktestEstimate());
         }
 
         protected abstract IOptimizationStrategy CreateStrategy();
+        protected abstract OptimizationStrategySettings CreateSettings();
     }
 }

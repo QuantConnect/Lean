@@ -94,7 +94,7 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// The user optimization parameters
         /// </summary>
-        [JsonProperty(PropertyName = "optimizationStrategySettings ")]
+        [JsonProperty(PropertyName = "optimizationStrategySettings", TypeNameHandling = TypeNameHandling.All)]
         public OptimizationStrategySettings OptimizationStrategySettings;
 
         /// <summary>

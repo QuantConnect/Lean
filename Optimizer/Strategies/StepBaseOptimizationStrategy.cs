@@ -87,7 +87,12 @@ namespace QuantConnect.Optimizer.Strategies
                 // if the Step optimization parameter does not provide a step to use, we calculate one based on settings
                 if (!optimizationParameter.Step.HasValue)
                 {
-                    CalculateStep(optimizationParameter, Settings.DefaultSegmentAmount);
+                    var stepSettings = Settings as StepBaseOptimizationStrategySettings;
+                    if (stepSettings == null)
+                    {
+                        throw new ArgumentException(nameof(settings), $"OptimizationStrategySettings is not of {nameof(StepBaseOptimizationStrategySettings)} type");
+                    }
+                    CalculateStep(optimizationParameter, stepSettings.DefaultSegmentAmount);
                 }
             }
 

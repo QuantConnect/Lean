@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Optimizer.Strategies
@@ -21,12 +20,12 @@ namespace QuantConnect.Optimizer.Strategies
     /// <summary>
     /// Defines the specific optimization strategy settings
     /// </summary>
-    public class OptimizationStrategySettings
+    public class StepBaseOptimizationStrategySettings : OptimizationStrategySettings
     {
         /// <summary>
-        /// TODO: implement
+        /// Defines the default number of segments for the next step
         /// </summary>
-        [JsonProperty("max-run-time")]
-        public TimeSpan MaxRuntime { get; set; } = TimeSpan.MaxValue;
+        [JsonProperty("default-segment-amount")]
+        public int DefaultSegmentAmount { get; set; }
     }
 }

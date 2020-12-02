@@ -39,12 +39,18 @@ namespace QuantConnect.Optimizer.Strategies
         /// <param name="settings">Optimization strategy settings</param>
         public override void Initialize(Target target, IReadOnlyList<Constraint> constraints, HashSet<OptimizationParameter> parameters, OptimizationStrategySettings settings)
         {
-            if (settings == null)
+            var stepSettings = settings as StepBaseOptimizationStrategySettings;
+            if (stepSettings == null)
             {
                 throw new ArgumentNullException(nameof(settings),
                     "EulerSearchOptimizationStrategy.Initialize: Optimizations Strategy settings are required for this strategy");
             }
-            _segmentsAmount = settings.DefaultSegmentAmount;
+
+            if (stepSettings.DefaultSegmentAmount != 0)
+            {
+                _segmentsAmount = stepSettings.DefaultSegmentAmount;
+            }
+
             base.Initialize(target, constraints, parameters, settings);
         }
 
@@ -93,7 +99,7 @@ namespace QuantConnect.Optimizer.Strategies
                         if (optimizationStepParameter != null && optimizationStepParameter.Step > optimizationStepParameter.MinStep)
                         {
                             var newStep = Math.Max(optimizationStepParameter.MinStep.Value, optimizationStepParameter.Step.Value / _segmentsAmount);
-                            var fractal = newStep * ((decimal)_segmentsAmount/ 2);
+                            var fractal = newStep * ((decimal)_segmentsAmount / 2);
                             var parameter = parameterSet.Value.First(s => s.Key == optimizationParameter.Name);
                             boundaries.Add(new OptimizationStepParameter(
                                 optimizationParameter.Name,

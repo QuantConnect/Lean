@@ -22,6 +22,7 @@ using System.Linq;
 using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Optimizer.Objectives;
+using QuantConnect.Optimizer.Strategies;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 
@@ -32,14 +33,15 @@ namespace QuantConnect.Tests.Optimizer
     {
         private static JsonSerializerSettings _jsonSettings = new JsonSerializerSettings() { Culture = CultureInfo.InvariantCulture };
 
-        [Test]
-        public void RoundTrip()
+        [TestCase("QuantConnect.Optimizer.EulerSearchOptimizationStrategy", typeof(StepBaseOptimizationStrategySettings))]
+        [TestCase("QuantConnect.Optimizer.GridSearchOptimizationStrategy", typeof(OptimizationStrategySettings))]
+        public void RoundTrip(string strategyName, Type settingType)
         {
             var optimizationNodePacket = new OptimizationNodePacket()
             {
                 CompileId = Guid.NewGuid().ToString(),
                 OptimizationId = Guid.NewGuid().ToString(),
-                OptimizationStrategy = "QuantConnect.Optimizer.GridSearchOptimizationStrategy",
+                OptimizationStrategy = strategyName,
                 Criterion = new Target("Profit", new Maximization(), 100.5m),
                 Constraints = new List<Constraint>
                 {
@@ -49,10 +51,10 @@ namespace QuantConnect.Tests.Optimizer
                 OptimizationParameters = new HashSet<OptimizationParameter>()
                 {
                     new OptimizationStepParameter("ema-slow", 1, 100, 1m),
-                    new OptimizationStepParameter("ema-fast", -10, 0, 0.5m),
-                    new OptimizationStepParameter("ema-medium", -10, 0, -0.5m),
+                    new OptimizationStepParameter("ema-fast", -10, 0, 0.5m)
                 },
-                MaximumConcurrentBacktests = 10
+                MaximumConcurrentBacktests = 10,
+                OptimizationStrategySettings = (OptimizationStrategySettings)Activator.CreateInstance(settingType)
             };
             var serialize = JsonConvert.SerializeObject(optimizationNodePacket, _jsonSettings);
             var result = JsonConvert.DeserializeObject<OptimizationNodePacket>(serialize, _jsonSettings);
@@ -91,15 +93,18 @@ namespace QuantConnect.Tests.Optimizer
 
             // others
             Assert.AreEqual(optimizationNodePacket.MaximumConcurrentBacktests, result.MaximumConcurrentBacktests);
+            Assert.AreEqual(settingType, result.OptimizationStrategySettings.GetType());
         }
 
-        [Test]
-        public void FromJson()
+        [TestCase("StepBaseOptimizationStrategySettings")]
+        [TestCase("OptimizationStrategySettings")]
+        public void FromJson(string settingTypeName)
         {
             var json = "{\"OptimizationParameters\": [{\"Name\":\"sleep-ms\",\"min\":0,\"max\":0,\"Step\":1}," +
                        "{\"Name\":\"total-trades\",\"min\":0,\"max\":2,\"Step\":1}]," +
                        "\"criterion\": {\"extremum\" : \"min\",\"target\": \"Statistics.Sharpe Ratio\",\"target-value\": 10}," +
-                       "\"constraints\": [{\"target\": \"Statistics.Sharpe Ratio\",\"operator\": \"equals\",\"target-value\": 11}]}";
+                       "\"constraints\": [{\"target\": \"Statistics.Sharpe Ratio\",\"operator\": \"equals\",\"target-value\": 11}],"+
+                       $"\"optimizationStrategySettings\":{{\"$type\":\"QuantConnect.Optimizer.Strategies.{settingTypeName}, QuantConnect.Optimizer\",\"default-segment-amount\":0,\"max-run-time\":\"10675199.02:48:05.4775807\"}}}}";
 
             var packet = (OptimizationNodePacket)JsonConvert.DeserializeObject(json, typeof(OptimizationNodePacket));
 
@@ -108,6 +113,7 @@ namespace QuantConnect.Tests.Optimizer
             Assert.AreEqual(2, packet.OptimizationParameters.Count);
             Assert.AreEqual(1, packet.Constraints.Count);
             Assert.AreEqual("['Statistics'].['Sharpe Ratio']", packet.Constraints.Single().Target);
+            Assert.AreEqual(settingTypeName, packet.OptimizationStrategySettings.GetType().Name);
         }
     }
 }

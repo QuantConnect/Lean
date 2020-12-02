@@ -21,7 +21,7 @@ namespace QuantConnect.Optimizer.Parameters
     /// <summary>
     /// Defines the step based optimization parameter
     /// </summary>
-    public class OptimizationStepParameter: OptimizationParameter
+    public class OptimizationStepParameter : OptimizationParameter
     {
         /// <summary>
         /// Minimum value of optimization parameter, applicable for boundary conditions
@@ -89,19 +89,25 @@ namespace QuantConnect.Optimizer.Parameters
         /// <param name="minStep">minimal possible movement</param>
         public OptimizationStepParameter(string name, decimal min, decimal max, decimal step, decimal minStep) : this(name, min, max)
         {
-            var absStep = Math.Abs(step);
-            var absMinStep = Math.Abs(minStep);
-            var actual = Math.Max(absStep, absMinStep);
-            
             // with zero step algorithm can go to infinite loop, use default step value
-            Step = actual != 0 
-                ? actual 
-                : 1;
+            if (step <= 0)
+            {
+                throw new ArgumentException($"Step should be positive value; but was {step}");
+            }
 
-            // EulerSearch algorithm can go to infinite range division if Min step is not provided, use Step as default MinStep
-            MinStep = absMinStep != 0
-                ? absMinStep
-                : Step;
+            // EulerSearch algorithm can go to infinite range division if Min step is not provided, use Step as default 
+            if (minStep <= 0)
+            {
+                throw new ArgumentException($"MinStep should be positive value; but was {minStep}");
+            }
+
+            if (step < minStep)
+            {
+                throw new ArgumentException($"Step should be great or equal than MinStep");
+            }
+
+            Step = step;
+            MinStep = minStep;
         }
     }
 }
