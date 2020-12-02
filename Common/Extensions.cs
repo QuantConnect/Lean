@@ -17,6 +17,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -638,6 +639,116 @@ namespace QuantConnect
                 dictionary.Add(key, list);
             }
             list.Add(element);
+        }
+
+        /// <summary>
+        /// Adds the specified element to the collection with the specified key. If an entry does not exist for the
+        /// specified key then one will be created.
+        /// </summary>
+        /// <typeparam name="TKey">The key type</typeparam>
+        /// <typeparam name="TElement">The collection element type</typeparam>
+        /// <param name="dictionary">The source dictionary to be added to</param>
+        /// <param name="key">The key</param>
+        /// <param name="element">The element to be added</param>
+        public static ImmutableDictionary<TKey, ImmutableHashSet<TElement>> Add<TKey, TElement>(
+            this ImmutableDictionary<TKey, ImmutableHashSet<TElement>> dictionary,
+            TKey key,
+            TElement element
+            )
+        {
+            ImmutableHashSet<TElement> set;
+            if (!dictionary.TryGetValue(key, out set))
+            {
+                set = ImmutableHashSet<TElement>.Empty.Add(element);
+                return dictionary.Add(key, set);
+            }
+
+            return dictionary.SetItem(key, set.Add(element));
+        }
+
+        /// <summary>
+        /// Adds the specified element to the collection with the specified key. If an entry does not exist for the
+        /// specified key then one will be created.
+        /// </summary>
+        /// <typeparam name="TKey">The key type</typeparam>
+        /// <typeparam name="TElement">The collection element type</typeparam>
+        /// <param name="dictionary">The source dictionary to be added to</param>
+        /// <param name="key">The key</param>
+        /// <param name="element">The element to be added</param>
+        public static ImmutableSortedDictionary<TKey, ImmutableHashSet<TElement>> Add<TKey, TElement>(
+            this ImmutableSortedDictionary<TKey, ImmutableHashSet<TElement>> dictionary,
+            TKey key,
+            TElement element
+            )
+        {
+            ImmutableHashSet<TElement> set;
+            if (!dictionary.TryGetValue(key, out set))
+            {
+                set = ImmutableHashSet<TElement>.Empty.Add(element);
+                return dictionary.Add(key, set);
+            }
+
+            return dictionary.SetItem(key, set.Add(element));
+        }
+
+        /// <summary>
+        /// Removes the specified element to the collection with the specified key. If the entry's count drops to
+        /// zero, then the entry will be removed.
+        /// </summary>
+        /// <typeparam name="TKey">The key type</typeparam>
+        /// <typeparam name="TElement">The collection element type</typeparam>
+        /// <param name="dictionary">The source dictionary to be added to</param>
+        /// <param name="key">The key</param>
+        /// <param name="element">The element to be added</param>
+        public static ImmutableDictionary<TKey, ImmutableHashSet<TElement>> Remove<TKey, TElement>(
+            this ImmutableDictionary<TKey, ImmutableHashSet<TElement>> dictionary,
+            TKey key,
+            TElement element
+            )
+        {
+            ImmutableHashSet<TElement> set;
+            if (!dictionary.TryGetValue(key, out set))
+            {
+                return dictionary;
+            }
+
+            set = set.Remove(element);
+            if (set.Count == 0)
+            {
+                return dictionary.Remove(key);
+            }
+
+            return dictionary.SetItem(key, set);
+        }
+
+        /// <summary>
+        /// Removes the specified element to the collection with the specified key. If the entry's count drops to
+        /// zero, then the entry will be removed.
+        /// </summary>
+        /// <typeparam name="TKey">The key type</typeparam>
+        /// <typeparam name="TElement">The collection element type</typeparam>
+        /// <param name="dictionary">The source dictionary to be added to</param>
+        /// <param name="key">The key</param>
+        /// <param name="element">The element to be added</param>
+        public static ImmutableSortedDictionary<TKey, ImmutableHashSet<TElement>> Remove<TKey, TElement>(
+            this ImmutableSortedDictionary<TKey, ImmutableHashSet<TElement>> dictionary,
+            TKey key,
+            TElement element
+            )
+        {
+            ImmutableHashSet<TElement> set;
+            if (!dictionary.TryGetValue(key, out set))
+            {
+                return dictionary;
+            }
+
+            set = set.Remove(element);
+            if (set.Count == 0)
+            {
+                return dictionary.Remove(key);
+            }
+
+            return dictionary.SetItem(key, set);
         }
 
         /// <summary>
@@ -2400,6 +2511,20 @@ namespace QuantConnect
             optionChain.IsTradable = false;
 
             return new OptionChainUniverse(optionChain, settings, algorithm.LiveMode);
+        }
+
+        /// <summary>
+        /// Inverts the specified <paramref name="right"/>
+        /// </summary>
+        public static OptionRight Invert(this OptionRight right)
+        {
+            switch (right)
+            {
+                case OptionRight.Call: return OptionRight.Put;
+                case OptionRight.Put:  return OptionRight.Call;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(right), right, null);
+            }
         }
     }
 }

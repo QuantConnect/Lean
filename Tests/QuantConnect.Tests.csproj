@@ -387,6 +387,7 @@
     <Compile Include="AlgorithmRunnerResults.cs" />
     <Compile Include="Brokerages\SymbolPropertiesDatabaseSymbolMapperTests.cs" />
     <Compile Include="Common\Benchmarks\SecurityBenchmarkTests.cs" />
+    <Compile Include="Common\BinaryComparisonTests.cs" />
     <Compile Include="Common\Brokerages\AlpacaBrokerageModelTests.cs" />
     <Compile Include="Common\Brokerages\BitfinexBrokerageModelTests.cs" />
     <Compile Include="Common\Brokerages\FxcmBrokerageModelTests.cs" />
@@ -411,6 +412,14 @@
     <Compile Include="Common\ExpiryTests.cs" />
     <Compile Include="Common\Orders\Serialization\SerializedOrderJsonConverterTests.cs" />
     <Compile Include="Common\Packets\ControlsTests.cs" />
+    <Compile Include="Common\Securities\Options\StrategyMatcher\Option.cs" />
+    <Compile Include="Common\Securities\Options\StrategyMatcher\OptionPositionCollectionTests.cs" />
+    <Compile Include="Common\Securities\Options\StrategyMatcher\OptionPositionTests.cs" />
+    <Compile Include="Common\Securities\Options\StrategyMatcher\OptionStrategyDefinitionMatchTests.cs" />
+    <Compile Include="Common\Securities\Options\StrategyMatcher\OptionStrategyDefinitionTests.cs" />
+    <Compile Include="Common\Securities\Options\StrategyMatcher\OptionStrategyLegDefinitionMatchTests.cs" />
+    <Compile Include="Common\Securities\Options\StrategyMatcher\OptionStrategyLegPredicateTests.cs" />
+    <Compile Include="Common\Securities\Options\StrategyMatcher\OptionStrategyMatcherTests.cs" />
     <Compile Include="Common\Securities\TestDefaultMarginCallModel.cs" />
     <Compile Include="Common\Statistics\AnnualPerformanceTests.cs" />
     <Compile Include="Common\ProtobufSerializationTests.cs" />

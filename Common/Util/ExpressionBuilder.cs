@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,6 +52,44 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Constructs a lambda expression that accepts two parameters of type <typeparamref name="T"/> and applies
+        /// the specified binary comparison and returns the boolean result.
+        /// </summary>
+        public static Expression<Func<T, T, bool>> MakeBinaryComparisonLambda<T>(ExpressionType type)
+        {
+            if (!type.IsBinaryComparison())
+            {
+                throw new ArgumentException($"Provided ExpressionType '{type}' is not a binary comparison.");
+            }
+
+            var left = Expression.Parameter(typeof(T), "left");
+            var right = Expression.Parameter(typeof(T), "right");
+            var body = Expression.MakeBinary(type, left, right);
+            var lambda = Expression.Lambda<Func<T, T, bool>>(body, left, right);
+            return lambda;
+        }
+
+        /// <summary>
+        /// Determines whether or not the specified <paramref name="type"/> is a binary comparison.
+        /// </summary>
+        public static bool IsBinaryComparison(this ExpressionType type)
+        {
+            switch (type)
+            {
+                case ExpressionType.Equal:
+                case ExpressionType.NotEqual:
+                case ExpressionType.LessThan:
+                case ExpressionType.LessThanOrEqual:
+                case ExpressionType.GreaterThan:
+                case ExpressionType.GreaterThanOrEqual:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
         /// Converts the specified expression into an enumerable of expressions by walking the expression tree
         /// </summary>
         /// <param name="expression">The expression to enumerate</param>
@@ -75,9 +113,35 @@ namespace QuantConnect.Util
             return expression.AsEnumerable().OfType<T>();
         }
 
+        /// <summary>
+        /// Returns the single expression of the specified type or throws if none or more than one expression
+        /// of the specified type is contained within the expression.
+        /// </summary>
+        /// <typeparam name="T">The type of expression to search for</typeparam>
+        /// <param name="expression">The expression to search</param>
+        /// <returns>Expression of the specified type</returns>
+        public static T Single<T>(this Expression expression)
+            where T : Expression
+        {
+            return expression.AsEnumerable().OfType<T>().Single();
+        }
+
+        /// <summary>
+        /// Returns the single expression of the specified type or throws if none or more than one expression
+        /// of the specified type is contained within the expression.
+        /// </summary>
+        /// <typeparam name="T">The type of expression to search for</typeparam>
+        /// <param name="expressions">The expressions to search</param>
+        /// <returns>Expression of the specified type</returns>
+        public static T Single<T>(this IEnumerable<Expression> expressions)
+            where T : Expression
+        {
+            return expressions.OfType<T>().Single();
+        }
+
         private class ExpressionWalker : ExpressionVisitor
         {
-            public readonly HashSet<Expression> Expressions = new HashSet<Expression>(); 
+            public readonly HashSet<Expression> Expressions = new HashSet<Expression>();
             public override Expression Visit(Expression node)
             {
                 Expressions.Add(node);
