@@ -132,7 +132,12 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void AssertFutureOptionOrderExercise(OrderEvent orderEvent, Security future, Security optionContract)
         {
-            var expectedLiquidationTimeUtc = new DateTime(2021, 6, 19, 5, 0, 0);
+            // We expect the liquidation to occur on the day of the delisting (while the market is open),
+            // but currently we liquidate at the next market open (AAPL open) which happens to be
+            // at 9:30:00 Eastern Time. For unknown reasons, the delisting happens two minutes after the
+            // market open.
+            // Read more about the issue affecting this test here: https://github.com/QuantConnect/Lean/issues/4980
+            var expectedLiquidationTimeUtc = new DateTime(2020, 6, 22, 13, 32, 0);
 
             if (orderEvent.Direction == OrderDirection.Sell && future.Holdings.Quantity != 0)
             {
@@ -211,29 +216,29 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "3"},
             {"Average Win", "1.25%"},
             {"Average Loss", "-7.42%"},
-            {"Compounding Annual Return", "-13.000%"},
+            {"Compounding Annual Return", "-12.413%"},
             {"Drawdown", "6.300%"},
             {"Expectancy", "-0.416"},
             {"Net Profit", "-6.257%"},
-            {"Sharpe Ratio", "-1.358"},
-            {"Probabilistic Sharpe Ratio", "0.005%"},
+            {"Sharpe Ratio", "-1.325"},
+            {"Probabilistic Sharpe Ratio", "0.004%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
             {"Profit-Loss Ratio", "0.17"},
-            {"Alpha", "-0.107"},
+            {"Alpha", "-0.102"},
             {"Beta", "-0.003"},
-            {"Annual Standard Deviation", "0.078"},
+            {"Annual Standard Deviation", "0.076"},
             {"Annual Variance", "0.006"},
-            {"Information Ratio", "0.685"},
-            {"Tracking Error", "0.193"},
-            {"Treynor Ratio", "33.014"},
+            {"Information Ratio", "0.673"},
+            {"Tracking Error", "0.188"},
+            {"Treynor Ratio", "33.559"},
             {"Total Fees", "$7.40"},
-            {"Fitness Score", "0"},
+            {"Fitness Score", "0.008"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-2.149"},
-            {"Portfolio Turnover", "0"},
+            {"Sortino Ratio", "-0.205"},
+            {"Return Over Maximum Drawdown", "-1.983"},
+            {"Portfolio Turnover", "0.023"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -247,7 +252,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "1607812597"}
+            {"OrderListHash", "23301049"}
         };
     }
 }

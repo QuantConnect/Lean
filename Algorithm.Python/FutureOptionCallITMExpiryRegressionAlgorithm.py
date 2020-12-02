@@ -29,11 +29,11 @@ from QuantConnect import Market
 ### <summary>
 ### This regression algorithm tests In The Money (ITM) future option expiry for calls.
 ### We expect 3 orders from the algorithm, which are:
-### 
+###
 ###   * Initial entry, buy ES Call Option (expiring ITM)
 ###   * Option exercise, receiving ES future contracts
 ###   * Future contract liquidation, due to impending expiry
-### 
+###
 ### Additionally, we test delistings for future options and assert that our
 ### portfolio holdings reflect the orders the algorithm has submitted.
 ### </summary>
@@ -102,7 +102,12 @@ class FutureOptionCallITMExpiryRegressionAlgorithm(QCAlgorithm):
         self.Log(f"{self.Time} -- {orderEvent.Symbol} :: Price: {self.Securities[orderEvent.Symbol].Holdings.Price} Qty: {self.Securities[orderEvent.Symbol].Holdings.Quantity} Direction: {orderEvent.Direction} Msg: {orderEvent.Message}")
 
     def AssertFutureOptionOrderExercise(self, orderEvent: OrderEvent, future: Security, optionContract: Security):
-        expectedLiquidationTimeUtc = datetime(2020, 6, 20)
+        # We expect the liquidation to occur on the day of the delisting (while the market is open),
+        # but currently we liquidate at the next market open (AAPL open) which happens to be
+        # at 9:30:00 Eastern Time. For unknown reasons, the delisting happens two minutes after the
+        # market open.
+        # Read more about the issue affecting this test here: https://github.com/QuantConnect/Lean/issues/4980
+        expectedLiquidationTimeUtc = datetime(2020, 6, 22, 13, 32, 0)
 
         if orderEvent.Direction == OrderDirection.Sell and future.Holdings.Quantity != 0:
             # We expect the contract to have been liquidated immediately
@@ -136,4 +141,3 @@ class FutureOptionCallITMExpiryRegressionAlgorithm(QCAlgorithm):
     def OnEndOfAlgorithm(self):
         if self.Portfolio.Invested:
             raise AssertionError(f"Expected no holdings at end of algorithm, but are invested in: {', '.join([str(i.ID) for i in self.Portfolio.Keys])}")
-    
