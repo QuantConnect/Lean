@@ -218,7 +218,7 @@ namespace QuantConnect.Tests.Algorithm
                     asset = qcAlgorithm.AddForex(ticker, Resolution.Daily);
                     break;
                 case SecurityType.Future:
-                    asset = qcAlgorithm.AddFuture(ticker, Resolution.Daily);
+                    asset = qcAlgorithm.AddFuture(ticker, Resolution.Minute);
                     break;
                 default:
                     throw new Exception($"SecurityType {securityType} is not valid for this test");
@@ -279,7 +279,7 @@ namespace QuantConnect.Tests.Algorithm
                     asset = qcAlgorithm.AddForex(ticker, Resolution.Daily);
                     break;
                 case SecurityType.Future:
-                    asset = qcAlgorithm.AddFuture(ticker, Resolution.Daily);
+                    asset = qcAlgorithm.AddFuture(ticker, Resolution.Minute);
                     break;
                 default:
                     throw new Exception($"SecurityType {securityType} is not valid for this test");
@@ -350,7 +350,7 @@ namespace QuantConnect.Tests.Algorithm
                     asset = qcAlgorithm.AddForex(ticker, Resolution.Daily);
                     break;
                 case SecurityType.Future:
-                    asset = qcAlgorithm.AddFuture(ticker, Resolution.Daily);
+                    asset = qcAlgorithm.AddFuture(ticker, Resolution.Minute);
                     break;
                 default:
                     throw new Exception($"SecurityType {securityType} is not valid for this test");
