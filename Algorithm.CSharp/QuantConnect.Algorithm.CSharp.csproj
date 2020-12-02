@@ -369,6 +369,7 @@
     <Compile Include="USEnergyInformationAdministrationAlgorithm.cs" />
     <Compile Include="UserDefinedUniverseAlgorithm.cs" />
     <Compile Include="VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm.cs" />
+    <Compile Include="WarmUpAfterIntializeRegression.cs" />
     <Compile Include="WarmupAlgorithm.cs" />
     <Compile Include="WarmupConversionRatesRegressionAlgorithm.cs" />
     <Compile Include="WarmupHistoryAlgorithm.cs" />

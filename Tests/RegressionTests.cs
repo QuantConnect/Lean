@@ -77,7 +77,8 @@ namespace QuantConnect.Tests
             var nonDefaultStatuses = new Dictionary<string, AlgorithmStatus>
             {
                 {"TrainingInitializeRegressionAlgorithm", AlgorithmStatus.RuntimeError},
-                {"OnOrderEventExceptionRegression", AlgorithmStatus.RuntimeError}
+                {"OnOrderEventExceptionRegression", AlgorithmStatus.RuntimeError},
+                {"WarmUpAfterIntializeRegression", AlgorithmStatus.RuntimeError }
             };
 
             // find all regression algorithms in Algorithm.CSharp

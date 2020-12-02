@@ -51,9 +51,7 @@ namespace QuantConnect.Algorithm
         /// <param name="timeSpan">The amount of time to warm up, this does not take into account market hours/weekends</param>
         public void SetWarmup(TimeSpan timeSpan)
         {
-            _warmupBarCount = null;
-            _warmupTimeSpan = timeSpan;
-            _warmupResolution = null;
+            SetWarmUp(timeSpan, null);
         }
 
         /// <summary>
@@ -70,8 +68,13 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="timeSpan">The amount of time to warm up, this does not take into account market hours/weekends</param>
         /// <param name="resolution">The resolution to request</param>
-        public void SetWarmup(TimeSpan timeSpan, Resolution resolution)
+        public void SetWarmup(TimeSpan timeSpan, Resolution? resolution)
         {
+            if (_locked)
+            {
+                throw new InvalidOperationException("QCAlgorithm.SetWarmup(): This method cannot be used after algorithm initialized");
+            }
+
             _warmupBarCount = null;
             _warmupTimeSpan = timeSpan;
             _warmupResolution = resolution;
@@ -82,7 +85,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="timeSpan">The amount of time to warm up, this does not take into account market hours/weekends</param>
         /// <param name="resolution">The resolution to request</param>
-        public void SetWarmUp(TimeSpan timeSpan, Resolution resolution)
+        public void SetWarmUp(TimeSpan timeSpan, Resolution? resolution)
         {
             SetWarmup(timeSpan, resolution);
         }
@@ -96,9 +99,7 @@ namespace QuantConnect.Algorithm
         /// <param name="barCount">The number of data points requested for warm up</param>
         public void SetWarmup(int barCount)
         {
-            _warmupTimeSpan = null;
-            _warmupBarCount = barCount;
-            _warmupResolution = null;
+            SetWarmUp(barCount, null);
         }
 
         /// <summary>
@@ -119,8 +120,13 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="barCount">The number of data points requested for warm up</param>
         /// <param name="resolution">The resolution to request</param>
-        public void SetWarmup(int barCount, Resolution resolution)
+        public void SetWarmup(int barCount, Resolution? resolution)
         {
+            if (_locked)
+            {
+                throw new InvalidOperationException("QCAlgorithm.SetWarmup(): This method cannot be used after algorithm initialized");
+            }
+
             _warmupTimeSpan = null;
             _warmupBarCount = barCount;
             _warmupResolution = resolution;
@@ -132,7 +138,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="barCount">The number of data points requested for warm up</param>
         /// <param name="resolution">The resolution to request</param>
-        public void SetWarmUp(int barCount, Resolution resolution)
+        public void SetWarmUp(int barCount, Resolution? resolution)
         {
             SetWarmup(barCount, resolution);
         }
