@@ -25,6 +25,7 @@ using QuantConnect.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.ComponentModel;
+using CsvHelper;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
@@ -525,7 +526,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
                 //TODO:OPtimize this later
                 var useLocalFile =false;
-                var latestFile = Globals.DataFolder+"ZerodhaInstrument-" + DateTime.Today.ToStringInvariant().Replace(" ", "-").Replace("/","-") + ".csv";
+                var latestFile = Globals.DataFolder+"ZerodhaInstrument-" + DateTime.Now.Date.ToString("dd/MM/yyyy",CultureInfo.InvariantCulture).Replace(" ", "-").Replace("/", "-") + ".csv";
                 if (!File.Exists(latestFile))
                 {
 
@@ -538,15 +539,26 @@ namespace QuantConnect.Brokerages.Zerodha
                         param.Add("exchange", Exchange);
                         instrumentsData = Get("market.instruments", param);
                     }
-                    SaveToCsv(instruments, "latestFile");
+
+                    foreach (Dictionary<string, dynamic> item in instrumentsData)
+                        instruments.Add(new Instrument(item));
+
+                    using (var writer = new StreamWriter(latestFile))
+                    using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+                    {
+                        csv.WriteRecords(instruments);
+                    }
                 }
                 else
                 {
-                    instruments = ReadFromCSV(latestFile);
+                    using (var reader = new StreamReader(latestFile))
+                    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                    {
+                        instruments = csv.GetRecords<Instrument>().Cast<Instrument>().ToList();
+                    }
                 }
 
-                foreach (Dictionary<string, dynamic> item in instrumentsData)
-                    instruments.Add(new Instrument(item));
+                
 
                 return instruments;
             }

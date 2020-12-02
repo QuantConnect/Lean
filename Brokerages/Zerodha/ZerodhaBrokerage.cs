@@ -94,6 +94,10 @@ namespace QuantConnect.Brokerages.Zerodha
 
         private readonly ZerodhaSymbolMapper _symbolMapper;
 
+
+        private readonly List<string> subscribeInstrumentTokens = new List<string>();
+        private readonly List<string> unSubscribeInstrumentTokens = new List<string>();
+
         private Kite _kite;
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;
@@ -156,17 +160,20 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     Log.Error("Invalid Zerodha Instrument token");
                 }
-                var securityType = _symbolMapper.GetLeanSymbol(symbol.ID.Symbol).SecurityType;
-
-                string request = "{\"a\":\"subscribe\",\"v\":[" + String.Join(",", instrumentToken) + "]}";
-
-                Log.Trace("Websocket Request: " + request.ToStringInvariant());
-
-                WebSocket.Send(request);
-                WebSocket.Send("\n");
-                _subscriptionsById[instrumentToken.ToStringInvariant()] = symbol;
-                
+                if (!subscribeInstrumentTokens.Contains(instrumentToken.ToStringInvariant()))
+                {
+                    subscribeInstrumentTokens.Add(instrumentToken.ToStringInvariant());
+                    unSubscribeInstrumentTokens.Remove(instrumentToken.ToStringInvariant());
+                    _subscriptionsById[instrumentToken.ToStringInvariant()] = symbol;
+                }
             }
+            string request = "{\"a\":\"subscribe\",\"v\":[" + String.Join(",", subscribeInstrumentTokens.ToArray()) + "]}";
+
+            Log.Trace("Websocket Request: " + request.ToStringInvariant());
+
+            WebSocket.Send(request);
+           
+
         }
 
         /// <summary>
@@ -183,16 +190,22 @@ namespace QuantConnect.Brokerages.Zerodha
                     {
                         Log.Error("Invalid Zerodha Instrument token");
                     }
-                    var sub = new ChannelUnsubscription();
-                    sub.a = "unsubcribe";
-                    sub.v = new uint[] { instrumentToken };
-                    var request = JsonConvert.SerializeObject(sub);
-                    WebSocket.Send(request);
-                    WebSocket.Send("\n");
+                    if (!unSubscribeInstrumentTokens.Contains(instrumentToken.ToStringInvariant()))
+                    {
+                        unSubscribeInstrumentTokens.Add(instrumentToken.ToStringInvariant());
+                        subscribeInstrumentTokens.Remove(instrumentToken.ToStringInvariant());
+                        Symbol unSubscribeSymbol;
+                        _subscriptionsById.TryRemove(instrumentToken.ToStringInvariant(),out unSubscribeSymbol);
+                    }
                 }
-            }
+                string request = "{\"a\":\"unsubscribe\",\"v\":[" + String.Join(",", unSubscribeInstrumentTokens.ToArray()) + "]}";
 
-            return true;
+                Log.Trace("Websocket Request: " + request.ToStringInvariant());
+                WebSocket.Send(request);
+                return true;
+            }
+            return false;
+
         }
 
 
@@ -671,7 +684,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>An enumerable of bars covering the span specified in the request</returns>
         public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
         {
-            if (request.Symbol.SecurityType != SecurityType.Equity || request.Symbol.SecurityType != SecurityType.Future || request.Symbol.SecurityType != SecurityType.Option)
+            if (request.Symbol.SecurityType != SecurityType.Equity && request.Symbol.SecurityType != SecurityType.Future && request.Symbol.SecurityType != SecurityType.Option)
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidSecurityType",
                     $"{request.Symbol.SecurityType} security type not supported, no history returned"));
@@ -693,17 +706,18 @@ namespace QuantConnect.Brokerages.Zerodha
             }
 
             // if the end time cannot be rounded to resolution without a remainder
-            if (request.EndTimeUtc.Ticks % request.Resolution.ToTimeSpan().Ticks > 0)
-            {
-                // give a warning and return
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidEndTime",
-                    "The history request's end date is not a full multiple of a resolution. " +
-                    "Zerodha API only allows to support trade bar history requests. The start and end dates " +
-                    "of a such request are expected to match exactly with the beginning of the first bar and ending of the last"));
-                yield break;
-            }
+            //TODO Fix this 
+            //if (request.EndTimeUtc.Ticks % request.Resolution.ToTimeSpan().Ticks > 0)
+            //{
+            //    // give a warning and return
+            //    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidEndTime",
+            //        "The history request's end date is not a full multiple of a resolution. " +
+            //        "Zerodha API only allows to support trade bar history requests. The start and end dates " +
+            //        "of a such request are expected to match exactly with the beginning of the first bar and ending of the last"));
+            //    yield break;
+            //}
 
-            if (request.Resolution != Resolution.Minute || request.Resolution != Resolution.Hour || request.Resolution != Resolution.Daily)
+            if (request.Resolution != Resolution.Minute && request.Resolution != Resolution.Hour && request.Resolution != Resolution.Daily)
             {
                 throw new ArgumentException($"ZerodhaBrokerage.ConvertResolution: Unsupported resolution type: {request.Resolution}");
             }
@@ -763,11 +777,7 @@ namespace QuantConnect.Brokerages.Zerodha
             {
                 if (e.MessageType == WebSocketMessageType.Binary)
                 {
-                    if (e.Count == 1)
-                    {
-                         Log.Trace(DateTime.Now.ToLocalTime() + "Zerodha Heartbeat");
-                    }
-                    else
+                    if (e.Count > 1)
                     {
                         int offset = 0;
                         ushort count = ReadShort(e.Data, ref offset); //number of packets
