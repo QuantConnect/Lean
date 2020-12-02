@@ -474,6 +474,7 @@
     <Compile Include="Common\ParseTests.cs" />
     <Compile Include="Common\Statistics\ProbabilisticSharpeRatioTests.cs" />
     <Compile Include="Common\StringExtensionsTests.cs" />
+    <Compile Include="Common\Util\ComparisonOperatorTests.cs" />
     <Compile Include="Common\Util\ConcurrentSetTests.cs" />
     <Compile Include="Common\Util\PythonUtilTests.cs" />
     <Compile Include="Common\Util\RateGateTests.cs" />
@@ -763,6 +764,19 @@
     <Compile Include="Indicators\RateOfChangeTests.cs" />
     <Compile Include="Indicators\EaseOfMovementValueTests.cs" />
     <Compile Include="Indicators\StochasticTests.cs" />
+    <Compile Include="Optimizer\Objectives\ExtremumTests.cs" />
+    <Compile Include="Optimizer\FakeLeanOptimizer.cs" />
+    <Compile Include="Optimizer\LeanOptimizerTests.cs" />
+    <Compile Include="Optimizer\Models.cs" />
+    <Compile Include="Optimizer\OptimizationNodePacketTests.cs" />
+    <Compile Include="Optimizer\Parameters\OptimizationParameterEnumeratorTests.cs" />
+    <Compile Include="Optimizer\Parameters\OptimizationParameterTests.cs" />
+    <Compile Include="Optimizer\Strategies\EulerSearchOptimizationStrategyTests.cs" />
+    <Compile Include="Optimizer\Strategies\StepBaseOptimizationStrategyTests.cs" />
+    <Compile Include="Optimizer\Strategies\OptimizationStrategyTests.cs" />
+    <Compile Include="Optimizer\Strategies\GridSearchOptimizationStrategyTests.cs" />
+    <Compile Include="Optimizer\Objectives\ConstraintTests.cs" />
+    <Compile Include="Optimizer\Objectives\TargetTests.cs" />
     <Compile Include="Research\QuantBookFundamentalTests.cs" />
     <Compile Include="Python\PythonOptionTests.cs" />
     <Compile Include="Report\DrawdownCollectionTests.cs" />
@@ -1056,6 +1070,10 @@
     <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
       <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>
       <Name>QuantConnect.Indicators</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Optimizer\QuantConnect.Optimizer.csproj">
+      <Project>{4ecd7df3-a675-4e9e-aca3-2b51c88736ce}</Project>
+      <Name>QuantConnect.Optimizer</Name>
     </ProjectReference>
     <ProjectReference Include="..\Research\QuantConnect.Research.csproj">
       <Project>{9561d14a-467e-40ad-928e-ee9f758d7d98}</Project>

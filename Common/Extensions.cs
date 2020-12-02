@@ -65,6 +65,18 @@ namespace QuantConnect
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
 
+        /// <summary>/// <summary>
+        /// Safe multiplies a decimal by 100
+        /// </summary>
+        /// <param name="value">The decimal to multiply</param>
+        /// <returns>The result, maxed out at decimal.MaxValue</returns>
+        public static decimal SafeMultiply100(this decimal value)
+        {
+            const decimal max = decimal.MaxValue / 100m;
+            if (value >= max) return decimal.MaxValue;
+            return value * 100m;
+        }
+
         /// <summary>
         /// Will return a memory stream using the <see cref="RecyclableMemoryStreamManager"/> instance.
         /// </summary>
@@ -927,6 +939,26 @@ namespace QuantConnect
             var lo = (int)value;
             var mid = (int)(value >> 32);
             return new decimal(lo, mid, 0, isNegative, (byte)(hasDecimals ? decimalPlaces : 0));
+        }
+
+        /// <summary>
+        /// Extension method for faster string to normalized decimal conversion, i.e. 20.0% should be parsed into 0.2
+        /// </summary>
+        /// <param name="str">String to be converted to positive decimal value</param>
+        /// <remarks>
+        /// Leading and trailing whitespace chars are ignored
+        /// </remarks>
+        /// <returns>Decimal value of the string</returns>
+        public static decimal ToNormalizedDecimal(this string str)
+        {
+            var trimmed = str.Trim();
+            var value = str.TrimEnd('%').ToDecimal();
+            if (trimmed.EndsWith("%"))
+            {
+                value /= 100;
+            }
+
+            return value;
         }
 
         /// <summary>
@@ -2525,6 +2557,19 @@ namespace QuantConnect
                 default:
                     throw new ArgumentOutOfRangeException(nameof(right), right, null);
             }
+        }
+
+        /// <summary>
+        /// Compares two values using given operator
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="op">Comparison operator</param>
+        /// <param name="arg1">The first value</param>
+        /// <param name="arg2">The second value</param>
+        /// <returns>Returns true if its left-hand operand meets the operator value to its right-hand operand, false otherwise</returns>
+        public static bool Compare<T>(this ComparisonOperatorTypes op, T arg1, T arg2) where T : IComparable
+        {
+            return ComparisonOperator.Compare(op, arg1, arg2);
         }
     }
 }

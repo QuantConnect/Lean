@@ -234,7 +234,7 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 // let's re update this value after we finish just in case, so we don't re enter in the next loop
-                _nextUpdate = DateTime.UtcNow.AddSeconds(3);
+                _nextUpdate = DateTime.UtcNow.Add(MainUpdateInterval);
             }
             catch (Exception err)
             {
@@ -245,7 +245,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Run over all the data and break it into smaller packets to ensure they all arrive at the terminal
         /// </summary>
-        public IEnumerable<BacktestResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts, Dictionary<int, Order> deltaOrders, Dictionary<string, string> runtimeStatistics, decimal progress, Dictionary<string, string> serverStatistics)
+        public virtual IEnumerable<BacktestResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts, Dictionary<int, Order> deltaOrders, Dictionary<string, string> runtimeStatistics, decimal progress, Dictionary<string, string> serverStatistics)
         {
             // break the charts into groups
             var splitPackets = new List<BacktestResultPacket>();

@@ -23,7 +23,7 @@ using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.API
 {
-    [TestFixture, Ignore("These tests require QC User ID and API Token in the configuration")]
+    [TestFixture, Explicit("These tests require QC User ID and API Token in the configuration")]
     class RestApiTests
     {
         private int _testAccount;
@@ -282,6 +282,20 @@ namespace QuantConnect.Tests.API
 
             Assert.IsTrue(minuteDataLink.Success);
             Assert.IsTrue(dailyDataLink.Success);
+        }
+
+        [TestCase("organizationId")]
+        [TestCase("")]
+        public void ReadAccount(string organizationId)
+        {
+            var account = _api.ReadAccount(organizationId);
+
+            Assert.IsTrue(account.Success);
+            Assert.IsNotEmpty(account.OrganizationId);
+            Assert.IsNotNull(account.Card);
+            Assert.AreNotEqual(default(DateTime),account.Card.Expiration);
+            Assert.IsNotEmpty(account.Card.Brand);
+            Assert.AreNotEqual(0, account.Card.LastFourDigits);
         }
 
         private void Perform_CreateCompileBackTest_Tests(string projectName, Language language, string algorithmName, string code)

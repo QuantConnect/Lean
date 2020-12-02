@@ -607,6 +607,17 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(-0m, value);
         }
 
+        [TestCase("1.23%", 0.0123d)]
+        [TestCase("-1.23%", -0.0123d)]
+        [TestCase("31.2300%", 0.3123d)]
+        [TestCase("20%", 0.2d)]
+        [TestCase("-20%", -0.2d)]
+        [TestCase("220%", 2.2d)]
+        public void ConvertsPercent(string input, double expected)
+        {
+            Assert.AreEqual(new decimal(expected), input.ToNormalizedDecimal());
+        }
+
         [Test]
         public void ConvertsTimeSpanFromString()
         {
