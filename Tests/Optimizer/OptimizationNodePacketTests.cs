@@ -115,5 +115,23 @@ namespace QuantConnect.Tests.Optimizer
             Assert.AreEqual("['Statistics'].['Sharpe Ratio']", packet.Constraints.Single().Target);
             Assert.AreEqual(settingTypeName, packet.OptimizationStrategySettings.GetType().Name);
         }
+
+        [Test]
+        public void FromJsonNoSettings()
+        {
+            var json = "{\"OptimizationParameters\": [{\"Name\":\"sleep-ms\",\"min\":0,\"max\":0,\"Step\":1}," +
+                       "{\"Name\":\"total-trades\",\"min\":0,\"max\":2,\"Step\":1}]," +
+                       "\"criterion\": {\"extremum\" : \"min\",\"target\": \"Statistics.Sharpe Ratio\",\"target-value\": 10}," +
+                       "\"constraints\": [{\"target\": \"Statistics.Sharpe Ratio\",\"operator\": \"equals\",\"target-value\": 11}]}";
+
+            var packet = (OptimizationNodePacket)JsonConvert.DeserializeObject(json, typeof(OptimizationNodePacket));
+
+            Assert.AreEqual("['Statistics'].['Sharpe Ratio']", packet.Criterion.Target);
+            Assert.AreEqual(typeof(Minimization), packet.Criterion.Extremum.GetType());
+            Assert.AreEqual(2, packet.OptimizationParameters.Count);
+            Assert.AreEqual(1, packet.Constraints.Count);
+            Assert.AreEqual("['Statistics'].['Sharpe Ratio']", packet.Constraints.Single().Target);
+            Assert.IsNull(packet.OptimizationStrategySettings);
+        }
     }
 }

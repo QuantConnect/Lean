@@ -32,7 +32,8 @@ namespace QuantConnect.Optimizer
     {
         private readonly int _optimizationUpdateInterval = Config.GetInt("optimization-update-interval", 10);
 
-        private DateTime _startedAt;
+        private DateTime _startedAt = DateTime.UtcNow;
+
         private DateTime _lastUpdate;
         private int _failedBacktest;
         private int _completedBacktest;
@@ -128,8 +129,6 @@ namespace QuantConnect.Optimizer
         /// </summary>
         public virtual void Start()
         {
-            _startedAt = DateTime.UtcNow;
-
             lock (RunningParameterSetForBacktest)
             {
                 Strategy.PushNewResults(OptimizationResult.Initial);
@@ -280,6 +279,7 @@ namespace QuantConnect.Optimizer
         public OptimizationEstimate GetCurrentEstimate()
         {
             var completedCount = _completedBacktest;
+            var runtime = DateTime.UtcNow - _startedAt;
             return new OptimizationEstimate
             {
                 TotalBacktest = Strategy.GetTotalBacktestEstimate(),
@@ -287,7 +287,8 @@ namespace QuantConnect.Optimizer
                 FailedBacktest = _failedBacktest,
                 RunningBacktest = RunningParameterSetForBacktest.Count,
                 InQueueBacktest = PendingParameterSet.Count,
-                AverageBacktest = completedCount > 0 ? new TimeSpan((DateTime.UtcNow - _startedAt).Ticks / completedCount) : TimeSpan.Zero
+                AverageBacktest = completedCount > 0 ? new TimeSpan(runtime.Ticks / completedCount) : TimeSpan.Zero,
+                TotalRuntime = runtime
             };
         }
 

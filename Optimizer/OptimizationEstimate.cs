@@ -57,12 +57,18 @@ namespace QuantConnect.Optimizer
         public TimeSpan AverageBacktest { get; set; }
 
         /// <summary>
+        /// The run time of this optimization
+        /// </summary>
+        [JsonProperty(PropertyName = "totalRuntime")]
+        public TimeSpan TotalRuntime { get; set; }
+
+        /// <summary>
         /// Pretty representation of an optimization estimate
         /// </summary>
         public override string ToString()
         {
             return $"TotalBacktest: {TotalBacktest}. CompletedBacktest: {CompletedBacktest}. FailedBacktest: {FailedBacktest}." +
-                $" RunningBacktest: {RunningBacktest}. InQueueBacktest: {InQueueBacktest}. AverageBacktest: {AverageBacktest}";
+                $" RunningBacktest: {RunningBacktest}. InQueueBacktest: {InQueueBacktest}. TotalRuntime {TotalRuntime}. AverageBacktest: {AverageBacktest}";
         }
     }
 }
