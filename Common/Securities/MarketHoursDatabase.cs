@@ -21,6 +21,7 @@ using Newtonsoft.Json;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Logging;
+using QuantConnect.Securities.Future;
 using QuantConnect.Util;
 
 namespace QuantConnect.Securities
@@ -201,7 +202,9 @@ namespace QuantConnect.Securities
         public virtual Entry GetEntry(string market, string symbol, SecurityType securityType)
         {
             Entry entry;
-            if (!TryGetEntry(market, symbol, securityType, out entry))
+            // Fall back on the Futures MHDB entry if the FOP lookup failed
+            if (!TryGetEntry(market, symbol, securityType, out entry) &&
+                !(securityType == SecurityType.FutureOption && TryGetEntry(market, FuturesOptionsSymbolMappings.MapFromOption(symbol), SecurityType.Future, out entry)))
             {
                 var key = new SecurityDatabaseKey(market, symbol, securityType);
                 var keys = string.Join(", ", _entries.Keys);
@@ -264,24 +267,6 @@ namespace QuantConnect.Securities
         /// <returns>The entry matching the specified market/symbol/security-type</returns>
         public virtual Entry GetEntry(string market, Symbol symbol, SecurityType securityType)
         {
-            if (securityType == SecurityType.FutureOption)
-            {
-                // Try and get the option market hours. If they don't exist, we default back to
-                // the underlying's market hours.
-                Entry entry;
-                if (!TryGetEntry(market, GetDatabaseSymbolKey(symbol), securityType, out entry) &&
-                    !TryGetEntry(market, GetDatabaseSymbolKey(symbol.Underlying), symbol.ID.Underlying.SecurityType, out entry))
-                {
-                    var key = new SecurityDatabaseKey(market, symbol, securityType);
-                    var keys = string.Join(", ", _entries.Keys);
-
-                    Log.Error($"MarketHoursDatabase.GetExchangeHours(): Unable to locate exchange hours for {key}. Available keys: {keys}");
-                    throw new ArgumentException($"Unable to locate exchange hours for {key}");
-                }
-
-                return entry;
-            }
-
             return GetEntry(market, GetDatabaseSymbolKey(symbol), securityType);
         }
 
