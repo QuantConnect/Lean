@@ -237,6 +237,11 @@ namespace QuantConnect.Data
                 return MinuteResolution;
             }
 
+            if (Symbol.SecurityType == SecurityType.Future)
+            {
+                return new List<Resolution> { Resolution.Minute, Resolution.Second, Resolution.Tick };
+            }
+
             return AllResolutions;
         }
 
