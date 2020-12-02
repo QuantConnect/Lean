@@ -58,22 +58,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             var lazyFactorFile =
                 new Lazy<FactorFile>(() => SubscriptionUtils.GetFactorFileToUse(config, factorFileProvider));
 
+            var tradableEventProviders = new List<ITradableDateEventProvider>();
+            if (config.Symbol.SecurityType != SecurityType.FutureOption)
+            {
+                // Maintain order of the old event providers to avoid any sort of potential
+                // non-deterministic errors from occurring
+                tradableEventProviders.Add(new MappingEventProvider());
+                tradableEventProviders.Add(new SplitEventProvider());
+                tradableEventProviders.Add(new DividendEventProvider());
+                tradableEventProviders.Add(new DelistingEventProvider());
+            }
+            else
+            {
+                tradableEventProviders.Add(new DelistingEventProvider());
+            }
+
             var enumerator = new AuxiliaryDataEnumerator(
                 config,
                 lazyFactorFile,
                 new Lazy<MapFile>(() => GetMapFileToUse(config, mapFileResolver)),
-                new ITradableDateEventProvider[]
-                {
-                    new MappingEventProvider(),
-                    new SplitEventProvider(),
-                    new DividendEventProvider(),
-                    new DelistingEventProvider()
-                },
+                tradableEventProviders.ToArray(),
                 tradableDayNotifier,
                 includeAuxiliaryData,
                 startTime);
 
-            // avoid price scaling for backtesting; calculate it directly in worker 
+            // avoid price scaling for backtesting; calculate it directly in worker
             // and allow subscription to extract the the data depending on config data mode
             var dataEnumerator = rawDataEnumerator;
             if (enablePriceScaling)

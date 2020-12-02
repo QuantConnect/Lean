@@ -163,7 +163,7 @@ namespace QuantConnect
         /// <returns>A new Symbol object for the specified option contract</returns>
         public static Symbol CreateOption(Symbol underlyingSymbol, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null)
         {
-            var sid = SecurityIdentifier.GenerateOption(expiry, underlyingSymbol.ID, market, strike, right, style, GetOptionTypeFromUnderlying(underlyingSymbol));
+            var sid = SecurityIdentifier.GenerateOption(expiry, underlyingSymbol.ID, market, strike, right, style);
 
             if (expiry == SecurityIdentifier.DefaultDate)
             {
@@ -317,7 +317,7 @@ namespace QuantConnect
         /// </summary>
         public Symbol UpdateMappedSymbol(string mappedSymbol)
         {
-            if (ID.SecurityType == SecurityType.Option || ID.SecurityType == SecurityType.FutureOption)
+            if (ID.SecurityType == SecurityType.Option)
             {
                 var underlyingSymbol = new Symbol(Underlying.ID, mappedSymbol, null);
 
@@ -331,10 +331,13 @@ namespace QuantConnect
 
                 return new Symbol(ID, alias, underlyingSymbol);
             }
-            else
+
+            if (ID.SecurityType == SecurityType.FutureOption)
             {
-                return new Symbol(ID, mappedSymbol, Underlying);
+                throw new ArgumentException("Future Option can not be mapped.");
             }
+
+            return new Symbol(ID, mappedSymbol, Underlying);
         }
 
         /// <summary>

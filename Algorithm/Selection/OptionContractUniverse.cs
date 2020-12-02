@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.Selection
         {
             var ticker = $"qc-universe-optioncontract-{securityType.SecurityTypeToLower()}-{market.ToLowerInvariant()}";
             var underlying = Symbol.Create(ticker, securityType, market);
-            var sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlying.ID, market, 0, 0, 0, optionType: Symbol.GetOptionTypeFromUnderlying(securityType));
+            var sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlying.ID, market, 0, 0, 0);
 
             return new Symbol(sid, ticker);
         }
