@@ -408,16 +408,47 @@ namespace QuantConnect.Api
                 backtestId
             }), ParameterType.RequestBody);
 
-            Backtest result;
+            BacktestReadResponseWrapper result;
             ApiConnection.TryRequest(request, out result);
 
             // Go fetch the charts if the backtest is completed
-            if (result.Completed)
+            if (result.Backtest.Completed)
             {
-                // TODO
-            }
+                // For storing our collected charts
+                var updatedCharts = new Dictionary<string, Chart>();
 
-            return result;
+                // Create backtest requests for each chart that is empty
+                foreach (var chart in result.Backtest.Charts.Where(x => x.Value.Series.IsNullOrEmpty()))
+                {
+                    var chartRequest = new RestRequest("backtests/read", Method.POST)
+                    {
+                        RequestFormat = DataFormat.Json
+                    };
+
+                    chartRequest.AddParameter("application/json", JsonConvert.SerializeObject(new
+                    {
+                        projectId,
+                        backtestId,
+                        chart = chart.Key
+                    }), ParameterType.RequestBody);
+
+                    BacktestReadResponseWrapper chartResponse;
+                    ApiConnection.TryRequest(chartRequest, out chartResponse);
+
+                    // Add this chart to our updated collection
+                    if (chartResponse.Success)
+                    {
+                        updatedCharts.Add(chart.Key, chartResponse.Backtest.Charts[chart.Key]);
+                    }
+                }
+
+                // Update our result
+                foreach(var updatedChart in updatedCharts)
+                {
+                    result.Backtest.Charts[updatedChart.Key] = updatedChart.Value;
+                }
+            }
+            return result.Backtest;
         }
 
         /// <summary>
