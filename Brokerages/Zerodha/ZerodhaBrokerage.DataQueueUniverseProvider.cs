@@ -34,11 +34,11 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="securityCurrency">Expected security currency(if any)</param>
         /// <param name="securityExchange">Expected security exchange name(if any)</param>
         /// <returns></returns>
-        public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, bool includeExpired, string securityCurrency = null, string securityExchange = null)
+        public IEnumerable<Symbol> LookupSymbols(Symbol lookupSymbol, bool includeExpired, string securityCurrency = null)
         {
             Func<Symbol, string> lookupFunc;
-
-            switch (securityType)
+            var securityExchange = lookupSymbol.ID.Market;
+            switch (lookupSymbol.SecurityType)
             {
                 case SecurityType.Option:
                     // for option, futures contract we search the underlying
@@ -52,8 +52,8 @@ namespace QuantConnect.Brokerages.Zerodha
                     break;
             }
 
-            var result = _symbolMapper.KnownSymbols.Where(x => lookupFunc(x) == lookupName &&
-                                            x.ID.SecurityType == securityType &&
+            var result = _symbolMapper.KnownSymbols.Where(x => lookupFunc(x) == lookupSymbol &&
+                                            x.ID.SecurityType == lookupSymbol.SecurityType &&
                                             (securityExchange == null || x.ID.Market == securityExchange))
                                          .ToList();
 
