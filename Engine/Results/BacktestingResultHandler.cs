@@ -534,7 +534,7 @@ namespace QuantConnect.Lean.Engine.Results
                 //Add our value:
                 if (series.Values.Count == 0 || time > Time.UnixTimeStampToDateTime(series.Values[series.Values.Count - 1].x))
                 {
-                    series.Values.Add(new ChartPoint(time, value));
+                    series.AddPoint(time, value);
                 }
             }
         }
