@@ -1171,6 +1171,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             new TestCaseData(new DateTime(2011, 7, 8, 0, 0, 0), new ForexExchange()),  // no move
             new TestCaseData(new DateTime(2011, 11, 4, 0, 0, 0), new ForexExchange()), // move to EST
 
+            new TestCaseData(new DateTime(2011, 1, 21, 0, 0, 0), new SecurityExchange(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, null, SecurityType.Forex))),  // no move
+            new TestCaseData(new DateTime(2011, 3, 11, 0, 0, 0), new SecurityExchange(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, null, SecurityType.Forex))),   // move to EDT
+            new TestCaseData(new DateTime(2011, 7, 8, 0, 0, 0), new SecurityExchange(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, null, SecurityType.Forex))),  // no move
+            new TestCaseData(new DateTime(2011, 11, 4, 0, 0, 0), new SecurityExchange(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, null, SecurityType.Forex))), // move to EST
+
             new TestCaseData(new DateTime(2011, 1, 21, 0, 0, 0), new EquityExchange()),  // no move
             new TestCaseData(new DateTime(2011, 3, 11, 0, 0, 0), new EquityExchange()),   // move to EDT
             new TestCaseData(new DateTime(2011, 7, 8, 0, 0, 0),  new EquityExchange()),  // no move
