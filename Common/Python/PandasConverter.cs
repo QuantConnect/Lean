@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using QuantConnect.Data.Market;
 using QuantConnect.Util;
 
@@ -442,11 +443,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                     if (tradeBar != null)
                     {
                         hasTrades = true;
-                        _tradeBarOpen.Append((double) tradeBar.Open);
-                        _tradeBarHigh.Append((double) tradeBar.High);
-                        _tradeBarLow.Append((double) tradeBar.Low);
-                        _tradeBarClose.Append((double) tradeBar.Close);
-                        _tradeBarVolume.Append((double) tradeBar.Volume);
+                        _tradeBarOpen.Append(ToDouble(tradeBar.Open));
+                        _tradeBarHigh.Append(ToDouble(tradeBar.High));
+                        _tradeBarLow.Append(ToDouble(tradeBar.Low));
+                        _tradeBarClose.Append(ToDouble(tradeBar.Close));
+                        _tradeBarVolume.Append(ToDouble(tradeBar.Volume));
 
                         _tradeBarSymbols.Append(sid);
                         _tradeBarTimes.Append(new DateTimeOffset(tradeBar.EndTime.Ticks, TimeSpan.Zero));
@@ -463,7 +464,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         if (symbol.SecurityType == SecurityType.Option)
                         {
                             hasOption = true;
-                            _tradeBarStrike.Append((double) symbol.ID.StrikePrice);
+                            _tradeBarStrike.Append(ToDouble(symbol.ID.StrikePrice));
                             _tradeBarRight.Append(symbol.ID.OptionRight.ToString());
                         }
                         else
@@ -479,10 +480,10 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         // when no TradeBar exists in this timestep.
                         if (tradeBar == null)
                         {
-                            _tradeBarOpen.Append((double) quoteBar.Open);
-                            _tradeBarHigh.Append((double) quoteBar.High);
-                            _tradeBarLow.Append((double) quoteBar.Low);
-                            _tradeBarClose.Append((double) quoteBar.Close);
+                            _tradeBarOpen.Append(ToDouble(quoteBar.Open));
+                            _tradeBarHigh.Append(ToDouble(quoteBar.High));
+                            _tradeBarLow.Append(ToDouble(quoteBar.Low));
+                            _tradeBarClose.Append(ToDouble(quoteBar.Close));
                             _tradeBarVolume.AppendNull();
 
                             _tradeBarSymbols.Append(sid);
@@ -500,7 +501,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             if (symbol.SecurityType == SecurityType.Option)
                             {
                                 hasOption = true;
-                                _tradeBarStrike.Append((double) symbol.ID.StrikePrice);
+                                _tradeBarStrike.Append(ToDouble(symbol.ID.StrikePrice));
                                 _tradeBarRight.Append(symbol.ID.OptionRight.ToString());
                             }
                             else
@@ -511,11 +512,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         }
                         if (quoteBar.Bid != null)
                         {
-                            _quoteBarBidOpen.Append((double) quoteBar.Bid.Open);
-                            _quoteBarBidHigh.Append((double) quoteBar.Bid.High);
-                            _quoteBarBidLow.Append((double) quoteBar.Bid.Low);
-                            _quoteBarBidClose.Append((double) quoteBar.Bid.Close);
-                            _quoteBarBidVolume.Append((double) quoteBar.LastBidSize);
+                            _quoteBarBidOpen.Append(ToDouble(quoteBar.Bid.Open));
+                            _quoteBarBidHigh.Append(ToDouble(quoteBar.Bid.High));
+                            _quoteBarBidLow.Append(ToDouble(quoteBar.Bid.Low));
+                            _quoteBarBidClose.Append(ToDouble(quoteBar.Bid.Close));
+                            _quoteBarBidVolume.Append(ToDouble(quoteBar.LastBidSize));
                         }
                         else
                         {
@@ -528,11 +529,11 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
 
                         if (quoteBar.Ask != null)
                         {
-                            _quoteBarAskOpen.Append((double) quoteBar.Ask.Open);
-                            _quoteBarAskHigh.Append((double) quoteBar.Ask.High);
-                            _quoteBarAskLow.Append((double) quoteBar.Ask.Low);
-                            _quoteBarAskClose.Append((double) quoteBar.Ask.Close);
-                            _quoteBarAskVolume.Append((double) quoteBar.LastAskSize);
+                            _quoteBarAskOpen.Append(ToDouble(quoteBar.Ask.Open));
+                            _quoteBarAskHigh.Append(ToDouble(quoteBar.Ask.High));
+                            _quoteBarAskLow.Append(ToDouble(quoteBar.Ask.Low));
+                            _quoteBarAskClose.Append(ToDouble(quoteBar.Ask.Close));
+                            _quoteBarAskVolume.Append(ToDouble(quoteBar.LastAskSize));
                         }
                         else
                         {
@@ -560,7 +561,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         if (symbol.SecurityType == SecurityType.Option)
                         {
                             hasOption = true;
-                            _quoteBarStrike.Append((double) symbol.ID.StrikePrice);
+                            _quoteBarStrike.Append(ToDouble(symbol.ID.StrikePrice));
                             _quoteBarRight.Append(symbol.ID.OptionRight.ToString());
                         }
                         else
@@ -578,7 +579,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             {
                                 _tickSymbols.Append(sid);
                                 _tickTimes.Append(new DateTimeOffset(tick.EndTime.Ticks, TimeSpan.Zero));
-                                _tickValue.Append((double) tick.Value);
+                                _tickValue.Append(ToDouble(tick.Value));
 
                                 if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
                                 {
@@ -592,7 +593,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                 if (symbol.SecurityType == SecurityType.Option)
                                 {
                                     hasOption = true;
-                                    _tickStrike.Append((double) symbol.ID.StrikePrice);
+                                    _tickStrike.Append(ToDouble(symbol.ID.StrikePrice));
                                     _tickRight.Append(symbol.ID.OptionRight.ToString());
                                 }
                                 else
@@ -606,7 +607,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             {
                                 tickHasTrades = true;
 
-                                _tickQuantity.Append((double) tick.Quantity);
+                                _tickQuantity.Append(ToDouble(tick.Quantity));
 
                                 if (tick.Suspicious && !hasSuspicious)
                                 {
@@ -630,17 +631,17 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                 _tickSuspicious.Append(tick.Suspicious);
                                 _tickExchange.Append(tick.Exchange);
 
-                                _tickBidPrice.Append((double) tick.BidPrice);
-                                _tickBidSize.Append((double) tick.BidSize);
-                                _tickAskPrice.Append((double) tick.AskPrice);
-                                _tickAskSize.Append((double) tick.AskSize);
+                                _tickBidPrice.Append(ToDouble(tick.BidPrice));
+                                _tickBidSize.Append(ToDouble(tick.BidSize));
+                                _tickAskPrice.Append(ToDouble(tick.AskPrice));
+                                _tickAskSize.Append(ToDouble(tick.AskSize));
                             }
                             else
                             {
                                 tickHasOpenInterest = true;
                                 _openInterestTimes.Append(new DateTimeOffset(tick.EndTime.Ticks, TimeSpan.Zero));
                                 _openInterestSymbols.Append(sid);
-                                _openInterestValue.Append((double)tick.Value);
+                                _openInterestValue.Append(ToDouble(tick.Value));
 
                                 if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
                                 {
@@ -654,7 +655,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                 if (symbol.SecurityType == SecurityType.Option)
                                 {
                                     hasOption = true;
-                                    _openInterestStrike.Append((double) symbol.ID.StrikePrice);
+                                    _openInterestStrike.Append(ToDouble(symbol.ID.StrikePrice));
                                     _openInterestRight.Append(symbol.ID.OptionRight.ToString());
                                 }
                                 else
@@ -1288,7 +1289,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             }
             if (memberType == typeof(decimal))
             {
-                ((DoubleArray.Builder)builder).Append((double)((decimal)value));
+                ((DoubleArray.Builder)builder).Append(ToDouble((decimal)value));
                 return true;
             }
             if (memberType == typeof(DateTime))
@@ -1542,7 +1543,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                     foreach (var item in kvp.Value)
                     {
                         index.Add(item.EndTime);
-                        values.Add((double)item.Value);
+                        values.Add(ToDouble(item.Value));
                     }
                     pyDict.SetItem(kvp.Key.ToLowerInvariant(), _pandas.Series(values, index));
                 }
@@ -1573,6 +1574,44 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
             return _pandas == null
                 ? "pandas module was not imported."
                 : _pandas.Repr();
+        }
+
+        private static readonly double[] s_doublePowers10 = new double[] {
+            1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9,
+            1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19,
+            1e20, 1e21, 1e22, 1e23, 1e24, 1e25, 1e26, 1e27, 1e28, 1e29,
+            1e30, 1e31, 1e32, 1e33, 1e34, 1e35, 1e36, 1e37, 1e38, 1e39,
+            1e40, 1e41, 1e42, 1e43, 1e44, 1e45, 1e46, 1e47, 1e48, 1e49,
+            1e50, 1e51, 1e52, 1e53, 1e54, 1e55, 1e56, 1e57, 1e58, 1e59,
+            1e60, 1e61, 1e62, 1e63, 1e64, 1e65, 1e66, 1e67, 1e68, 1e69,
+            1e70, 1e71, 1e72, 1e73, 1e74, 1e75, 1e76, 1e77, 1e78, 1e79,
+            1e80
+        };
+
+        /// <summary>
+        /// Converts a decimal to a double, faster than the built-in CLR .NET framework converter.
+        /// Remove once we upgrade to .NET core
+        /// </summary>
+        /// <param name="d">decimal</param>
+        /// <returns>double</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private double ToDouble(decimal d)
+        {
+            var bits = decimal.GetBits(d);
+            var flags = bits[3];
+            var scale = ((flags >> 16) & 0x7F);
+            var sign = flags < 0;
+
+            const double ds2to64 = 1.8446744073709552e+019;
+            ulong lo64 = ((ulong)bits[1] << 32) | (uint)bits[0];
+
+            double dbl = (((double)lo64 + (double)bits[2] * ds2to64) / s_doublePowers10[scale]);
+            if (sign)
+            {
+                dbl = -dbl;
+            }
+
+            return dbl;
         }
     }
 }
