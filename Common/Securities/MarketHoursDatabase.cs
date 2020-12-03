@@ -202,7 +202,10 @@ namespace QuantConnect.Securities
         public virtual Entry GetEntry(string market, string symbol, SecurityType securityType)
         {
             Entry entry;
-            // Fall back on the Futures MHDB entry if the FOP lookup failed
+            // Fall back on the Futures MHDB entry if the FOP lookup failed.
+            // Some FOPs have the same symbol properties as their futures counterparts.
+            // So, to save ourselves some space, we can fall back on the existing entries
+            // so that we don't duplicate the information.
             if (!TryGetEntry(market, symbol, securityType, out entry) &&
                 !(securityType == SecurityType.FutureOption && TryGetEntry(market, FuturesOptionsSymbolMappings.MapFromOption(symbol), SecurityType.Future, out entry)))
             {
