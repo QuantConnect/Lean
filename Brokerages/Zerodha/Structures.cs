@@ -388,35 +388,35 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
     /// </summary>
     public struct Order
     {
-        public Order(Dictionary<string, dynamic> data)
+        public Order(JToken data)
         {
             try
             {
-                AveragePrice = data["average_price"];
-                CancelledQuantity = data["cancelled_quantity"];
-                DisclosedQuantity = data["disclosed_quantity"];
-                Exchange = data["exchange"];
-                ExchangeOrderId = data["exchange_order_id"];
-                ExchangeTimestamp = Utils.StringToDate(data["exchange_timestamp"]);
-                FilledQuantity = data["filled_quantity"];
-                InstrumentToken = Convert.ToUInt32(data["instrument_token"]);
-                OrderId = data["order_id"];
-                OrderTimestamp = Utils.StringToDate(data["order_timestamp"]);
-                OrderType = data["order_type"];
-                ParentOrderId = data["parent_order_id"];
-                PendingQuantity = data["pending_quantity"];
-                PlacedBy = data["placed_by"];
-                Price = data["price"];
-                Product = data["product"];
-                Quantity = data["quantity"];
-                Status = data["status"];
-                StatusMessage = data["status_message"];
-                Tag = data["tag"];
-                Tradingsymbol = data["tradingsymbol"];
-                TransactionType = data["transaction_type"];
-                TriggerPrice = data["trigger_price"];
-                Validity = data["validity"];
-                Variety = data["variety"];
+                AveragePrice = (decimal)data["average_price"];
+                CancelledQuantity = (int)data["cancelled_quantity"];
+                DisclosedQuantity = (int)data["disclosed_quantity"];
+                Exchange = (string)data["exchange"];
+                ExchangeOrderId = (string)data["exchange_order_id"];
+                ExchangeTimestamp = Utils.StringToDate((string)data["exchange_timestamp"]);
+                FilledQuantity = (int)data["filled_quantity"];
+                InstrumentToken = Convert.ToUInt32((uint)data["instrument_token"]);
+                OrderId = (string)data["order_id"];
+                OrderTimestamp = Utils.StringToDate((string)data["order_timestamp"]);
+                OrderType = (string)data["order_type"];
+                ParentOrderId = (string)data["parent_order_id"];
+                PendingQuantity = (int)data["pending_quantity"];
+                PlacedBy = (string)data["placed_by"];
+                Price = (decimal)data["price"];
+                Product = (string)data["product"];
+                Quantity = (int)data["quantity"];
+                Status = (string)data["status"];
+                StatusMessage = (string)data["status_message"];
+                Tag = (string)data["tag"];
+                Tradingsymbol = (string)data["tradingsymbol"];
+                TransactionType = (string)data["transaction_type"];
+                TriggerPrice = (decimal)data["trigger_price"];
+                Validity = (string)data["validity"];
+                Variety = (string)data["variety"];
             }
             catch (Exception e)
             {
@@ -432,7 +432,7 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
         public string ExchangeOrderId { get; set; }
         public DateTime? ExchangeTimestamp { get; set; }
         public int FilledQuantity { get; set; }
-        public UInt32 InstrumentToken { get; set; }
+        public uint InstrumentToken { get; set; }
         public string OrderId { get; set; }
         public DateTime? OrderTimestamp { get; set; }
         public string OrderType { get; set; }

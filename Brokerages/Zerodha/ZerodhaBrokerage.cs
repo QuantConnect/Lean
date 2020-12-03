@@ -31,6 +31,7 @@ using Tick = QuantConnect.Data.Market.Tick;
 using System.Net.WebSockets;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using NodaTime;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
@@ -256,11 +257,11 @@ namespace QuantConnect.Brokerages.Zerodha
             }
         }
 
-        private void EmitFillOrder(string[] entries)
+        private void EmitFillOrder(Messages.Order orderUpdate)
         {
             try
             {
-                var brokerId = entries[4];
+                var brokerId = orderUpdate.OrderId;
                 var order = CachedOrderIDs
                     .FirstOrDefault(o => o.Value.BrokerId.Contains(brokerId))
                     .Value;
@@ -274,16 +275,15 @@ namespace QuantConnect.Brokerages.Zerodha
                     }
                 }
 
-                var symbol = _symbolMapper.GetLeanSymbol(entries[2]);
-                var fillPrice = decimal.Parse(entries[6], NumberStyles.Float, CultureInfo.InvariantCulture);
-                var fillQuantity = decimal.Parse(entries[5], NumberStyles.Float, CultureInfo.InvariantCulture);
+                var symbol = _symbolMapper.ConvertZerodhaSymbolToLeanSymbol(orderUpdate.InstrumentToken);
+                var fillPrice = orderUpdate.Price;
+                var fillQuantity = orderUpdate.FilledQuantity;
                 var direction = fillQuantity < 0 ? OrderDirection.Sell : OrderDirection.Buy;
-                var updTime = Time.UnixTimeStampToDateTime(double.Parse(entries[3], NumberStyles.Float, CultureInfo.InvariantCulture));
+                var updTime = orderUpdate.OrderTimestamp.GetValueOrDefault().ConvertFromUtc(TimeZones.Kolkata);
                 var orderFee = new OrderFee(new CashAmount(
-                        Math.Abs(decimal.Parse(entries[9], NumberStyles.Float, CultureInfo.InvariantCulture)),
-                        entries[10]
+                        20,
+                        Currencies.INR
                     ));
-
                 var status = OrderStatus.Filled;
                 if (fillQuantity != order.Quantity)
                 {
@@ -724,7 +724,7 @@ namespace QuantConnect.Brokerages.Zerodha
             }
 
             DateTime latestTime = request.StartTimeUtc;
-            var requests = new List<Data.HistoryRequest>();
+            var requests = new List<HistoryRequest>();
             requests.Add(request);
             do
             {
@@ -802,7 +802,8 @@ namespace QuantConnect.Brokerages.Zerodha
                             if (tick.InstrumentToken != 0 && offset <= e.Count && tick.Mode == Constants.MODE_FULL)
                             {
                                 var symbol = _symbolMapper.ConvertZerodhaSymbolToLeanSymbol(tick.InstrumentToken);
-                                EmitQuoteTick(symbol, tick.Bids, tick.BuyQuantity, tick.Offers, tick.SellQuantity);
+
+                                EmitQuoteTick(symbol, tick.Bids, tick.BuyQuantity, tick.Offers, tick.SellQuantity,tick.Timestamp.GetValueOrDefault());
                                 EmitTradeTick(symbol, tick.LastTradeTime.GetValueOrDefault(), tick.LastPrice, tick.LastQuantity);
                             }
                         }
@@ -815,9 +816,8 @@ namespace QuantConnect.Brokerages.Zerodha
                     JObject messageDict = Utils.JsonDeserialize(message);
                     if ((string)messageDict["type"] == "order")
                     {
-                        //TODO handle this
-                        //OnOrderUpdate?.Invoke(new Order(messageDict["data"]));
-                        //EmitFillOrder();
+                        
+                        EmitFillOrder(new Messages.Order(messageDict["data"]));
                     }
                     else if ((string)messageDict["type"] == "error")
                     {
@@ -846,7 +846,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     _aggregator.Update(new Tick
                     {
                         Value = price,
-                        Time = time,
+                        Time = time.ConvertFromUtc(TimeZones.Kolkata),
                         Symbol = symbol,
                         TickType = TickType.Trade,
                         Quantity = Math.Abs(amount),
@@ -863,7 +863,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
 
 
-        private void EmitQuoteTick(Symbol symbol, DepthItem[] bids, decimal bidSize, DepthItem[] asks, decimal askSize)
+        private void EmitQuoteTick(Symbol symbol, DepthItem[] bids, decimal bidSize, DepthItem[] asks, decimal askSize, DateTime time)
         {
             if (bids != null && bids.Max(x => x.Price) > 0 && asks != null && asks.Max(x => x.Price) > 0)
             {
@@ -871,7 +871,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     AskPrice = asks.Max(x => x.Price),
                     BidPrice = bids.Max(x => x.Price),
-                    Time = DateTime.UtcNow,
+                    Time = time.ConvertFromUtc(TimeZones.Kolkata),
                     Symbol = symbol,
                     Exchange = symbol.ID.Market,
                     TickType = TickType.Quote,
