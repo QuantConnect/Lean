@@ -167,7 +167,7 @@ namespace QuantConnect.Brokerages.Zerodha
             if (symbol == null || string.IsNullOrWhiteSpace(symbol.Value))
                 throw new ArgumentException("Invalid symbol: " + (symbol == null ? "null" : symbol.ToString()));
 
-            if (symbol.ID.SecurityType != SecurityType.Equity || symbol.ID.SecurityType != SecurityType.Future || symbol.ID.SecurityType != SecurityType.Option)
+            if (symbol.ID.SecurityType != SecurityType.Equity && symbol.ID.SecurityType != SecurityType.Future && symbol.ID.SecurityType != SecurityType.Option)
                 throw new ArgumentException("Invalid security type: " + symbol.ID.SecurityType);
 
             var brokerageSymbol = ConvertLeanSymbolToZerodhaSymbol(symbol.Value);
@@ -205,11 +205,11 @@ namespace QuantConnect.Brokerages.Zerodha
             {
                 case SecurityType.Option:
                     OptionStyle optionStyle = OptionStyle.European;
-                    return Symbol.CreateOption(ConvertZerodhaSymbolToLeanSymbol(brokerageSymbol.Replace(" ", "").Trim()), market, optionStyle, optionRight, strike, expirationDate);
+                    return Symbol.CreateOption(brokerageSymbol.Replace(" ", "").Trim(), market, optionStyle, optionRight, strike, expirationDate);
                 case SecurityType.Future:
-                    return Symbol.CreateFuture(ConvertZerodhaSymbolToLeanSymbol(brokerageSymbol.Replace(" ", "").Trim()), market, expirationDate);
+                    return Symbol.CreateFuture(brokerageSymbol.Replace(" ", "").Trim(), market, expirationDate);
                 default:
-                    return Symbol.Create(ConvertZerodhaSymbolToLeanSymbol(brokerageSymbol.Replace(" ", "").Trim()), securityType, market);
+                    return Symbol.Create(brokerageSymbol.Replace(" ", "").Trim(), securityType, market);
             }
 
         }
@@ -279,13 +279,12 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// Converts an Zerodha symbol to a Lean symbol string
         /// </summary>
-        private static string ConvertZerodhaSymbolToLeanSymbol(string ZerodhaSymbol)
+        public Symbol ConvertZerodhaSymbolToLeanSymbol(uint ZerodhaSymbol)
         {
-            if (string.IsNullOrWhiteSpace(ZerodhaSymbol))
-                throw new ArgumentException($"Invalid Zerodha symbol: {ZerodhaSymbol}");
+            var _symbol=ZerodhaInstrumentsList.FirstOrDefault(x => x.Value == ZerodhaSymbol).Key.Split("-".ToCharArray());
 
             // return as it is due to Zerodha has similar Symbol format
-            return ZerodhaSymbol.Replace(" ", "").Trim().ToUpperInvariant();
+            return KnownSymbolsList.Where(s => s.Value == _symbol[0] && s.ID.Market == _symbol[1]).FirstOrDefault(); 
         }
 
         /// <summary>

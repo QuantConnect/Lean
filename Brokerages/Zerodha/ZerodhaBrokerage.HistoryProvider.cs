@@ -137,7 +137,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
             foreach (var request in requests)
             {
-                if (request.Symbol.ID.SecurityType == SecurityType.Cfd || request.Symbol.ID.SecurityType == SecurityType.Crypto || request.Symbol.ID.SecurityType == SecurityType.Forex || request.Symbol.ID.SecurityType == SecurityType.Commodity)
+                if (request.Symbol.ID.SecurityType != SecurityType.Equity && request.Symbol.ID.SecurityType != SecurityType.Future && request.Symbol.ID.SecurityType != SecurityType.Option)
                 {
                     throw new ArgumentException("Zerodha does not support this security type: " + request.Symbol.ID.SecurityType);
                 }

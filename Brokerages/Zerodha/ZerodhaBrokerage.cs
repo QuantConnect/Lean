@@ -120,11 +120,11 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             _algorithm = algorithm;
             _aggregator = aggregator;
-            _kite = new Kite(apiKey,accessToken);
+            _kite = new Kite(apiKey, accessToken);
             _apiKey = apiKey;
             _accessToken = accessToken;
             WebSocket = new ZerodhaWebSocketClientWrapper();
-            _wssUrl += string.Format(CultureInfo.InvariantCulture,"?api_key={0}&access_token={1}", _apiKey, _accessToken);
+            _wssUrl += string.Format(CultureInfo.InvariantCulture, "?api_key={0}&access_token={1}", _apiKey, _accessToken);
             WebSocket.Initialize(_wssUrl);
             WebSocket.Message += OnMessage;
             WebSocket.Open += (sender, args) =>
@@ -169,10 +169,16 @@ namespace QuantConnect.Brokerages.Zerodha
             }
             string request = "{\"a\":\"subscribe\",\"v\":[" + String.Join(",", subscribeInstrumentTokens.ToArray()) + "]}";
 
-            Log.Trace("Websocket Request: " + request.ToStringInvariant());
+            string requestFullMode = "{\"a\":\"mode\",\"v\":[\"full\",[" + String.Join(",", subscribeInstrumentTokens.ToArray()) + "]]}";
+
+
+            Log.Trace("Websocket Subscribe Request: " + request.ToStringInvariant());
+            Log.Trace("Websocket Subscribe Full Mode Request: " + requestFullMode.ToStringInvariant());
+
 
             WebSocket.Send(request);
-           
+            WebSocket.Send(requestFullMode);
+
 
         }
 
@@ -195,12 +201,12 @@ namespace QuantConnect.Brokerages.Zerodha
                         unSubscribeInstrumentTokens.Add(instrumentToken.ToStringInvariant());
                         subscribeInstrumentTokens.Remove(instrumentToken.ToStringInvariant());
                         Symbol unSubscribeSymbol;
-                        _subscriptionsById.TryRemove(instrumentToken.ToStringInvariant(),out unSubscribeSymbol);
+                        _subscriptionsById.TryRemove(instrumentToken.ToStringInvariant(), out unSubscribeSymbol);
                     }
                 }
                 string request = "{\"a\":\"unsubscribe\",\"v\":[" + String.Join(",", unSubscribeInstrumentTokens.ToArray()) + "]}";
 
-                Log.Trace("Websocket Request: " + request.ToStringInvariant());
+                Log.Trace("Websocket UnSubscribe Request: " + request.ToStringInvariant());
                 WebSocket.Send(request);
                 return true;
             }
@@ -395,14 +401,14 @@ namespace QuantConnect.Brokerages.Zerodha
         public override bool PlaceOrder(Orders.Order order)
         {
             LockStream();
-            Dictionary<string,dynamic> orderResponse;
+            Dictionary<string, dynamic> orderResponse;
             //if (order.Type == OrderType.Bracket)
             //{
             //    orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market, order.Symbol.ID.Symbol,"",order.Quantity.ConvertInvariant<int>());
             //}
             //else
             //{
-                orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market, order.Symbol.ID.Symbol, "", order.Quantity.ConvertInvariant<int>());
+            orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market, order.Symbol.ID.Symbol, "", order.Quantity.ConvertInvariant<int>());
             //}
             Log.Debug("ZerodhaOrderResponse:");
             Log.Debug(orderResponse.ToString());
@@ -510,11 +516,6 @@ namespace QuantConnect.Brokerages.Zerodha
             return true;
         }
 
-        public void EmitTick(Tick tick)
-        {
-            _aggregator.Update(tick);
-        }
-
         /// <summary>
         /// Cancels the order with the specified ID
         /// </summary>
@@ -530,7 +531,7 @@ namespace QuantConnect.Brokerages.Zerodha
             //}
             //else
             //{
-                orderResponse = _kite.CancelOrder(order.Id.ToStringInvariant());
+            orderResponse = _kite.CancelOrder(order.Id.ToStringInvariant());
             //}
             if (orderResponse["status"] == "Success")
             {
@@ -574,7 +575,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     }
                     else
                     {
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error,"UnKnownOrderType",
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "UnKnownOrderType",
                             "ZerodhaBrorage.GetOpenOrders: Unsupported order type returned from brokerage: " + item.OrderType));
                         continue;
                     }
@@ -798,10 +799,11 @@ namespace QuantConnect.Brokerages.Zerodha
                                 tick = ReadFull(e.Data, ref offset);
                             // If the number of bytes got from stream is less that that is required
                             // data is invalid. This will skip that wrong tick
-                            if (tick.InstrumentToken != 0 && offset <= e.Count)
+                            if (tick.InstrumentToken != 0 && offset <= e.Count && tick.Mode == Constants.MODE_FULL)
                             {
-                                var symbol = _subscriptionsById[tick.InstrumentToken.ToStringInvariant()];
-                                EmitQuoteTick(symbol, tick.AveragePrice, tick.BuyQuantity, tick.AveragePrice,tick.SellQuantity);
+                                var symbol = _symbolMapper.ConvertZerodhaSymbolToLeanSymbol(tick.InstrumentToken);
+                                EmitQuoteTick(symbol, tick.Bids, tick.BuyQuantity, tick.Offers, tick.SellQuantity);
+                                EmitTradeTick(symbol, tick.LastTradeTime.GetValueOrDefault(), tick.LastPrice, tick.LastQuantity);
                             }
                         }
                     }
@@ -809,8 +811,6 @@ namespace QuantConnect.Brokerages.Zerodha
                 else if (e.MessageType == WebSocketMessageType.Text)
                 {
                     string message = Encoding.UTF8.GetString(e.Data.Take(e.Count).ToArray());
-
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, $"Parsing new wss message. Data: {e.Data}"));
 
                     JObject messageDict = Utils.JsonDeserialize(message);
                     if ((string)messageDict["type"] == "order")
@@ -827,7 +827,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 }
                 else if (e.MessageType == WebSocketMessageType.Close)
                 {
-                    //Close();
+                    WebSocket.Close();
                 }
             }
             catch (Exception exception)
@@ -837,23 +837,53 @@ namespace QuantConnect.Brokerages.Zerodha
             }
         }
 
-
-
-        private void EmitQuoteTick(Symbol symbol, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
+        private void EmitTradeTick(Symbol symbol, DateTime time, decimal price, decimal amount)
         {
-            lock (TickLocker)
+            try
             {
-                EmitTick(new Tick
+                lock (TickLocker)
                 {
-                    AskPrice = askPrice,
-                    BidPrice = bidPrice,
-                    Value = (askPrice + bidPrice) / 2m,
+                    _aggregator.Update(new Tick
+                    {
+                        Value = price,
+                        Time = time,
+                        Symbol = symbol,
+                        TickType = TickType.Trade,
+                        Quantity = Math.Abs(amount),
+                        Exchange= symbol.ID.Market
+                    });
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw;
+            }
+        }
+
+
+
+        private void EmitQuoteTick(Symbol symbol, DepthItem[] bids, decimal bidSize, DepthItem[] asks, decimal askSize)
+        {
+            if (bids != null && bids.Max(x => x.Price) > 0 && asks != null && asks.Max(x => x.Price) > 0)
+            {
+                var tick = new Tick
+                {
+                    AskPrice = asks.Max(x => x.Price),
+                    BidPrice = bids.Max(x => x.Price),
                     Time = DateTime.UtcNow,
                     Symbol = symbol,
+                    Exchange = symbol.ID.Market,
                     TickType = TickType.Quote,
-                    AskSize = Math.Abs(askSize),
-                    BidSize = Math.Abs(bidSize)
-                });
+                    AskSize = askSize,
+                    BidSize = bidSize
+                };
+                tick.SetValue();
+
+                lock (TickLocker)
+                {
+                    _aggregator.Update(tick);
+                }
             }
         }
 
