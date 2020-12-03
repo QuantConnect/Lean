@@ -354,6 +354,28 @@ namespace QuantConnect.Algorithm
 
             return commodityChannelIndex;
         }
+        
+        /// <summary>
+        /// Creates a new ChaikinMoneyFlow indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose CMF we want</param>
+        /// <param name="period">The period over which to compute the CMF</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The ChaikinMoneyFlow indicator for the requested symbol over the specified period</returns>
+        public ChaikinMoneyFlow CMF(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"CMF({period})", resolution);
+            var chaikinMoneyFlow = new ChaikinMoneyFlow(name, period);
+            RegisterIndicator(symbol, chaikinMoneyFlow, resolution, selector);
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, chaikinMoneyFlow, resolution);
+            }
+
+            return chaikinMoneyFlow;
+            
+        }
 
         /// <summary>
         /// Creates a new ChandeMomentumOscillator indicator.
