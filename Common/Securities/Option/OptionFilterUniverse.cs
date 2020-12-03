@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using System.Linq;
+using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Securities
@@ -41,7 +42,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Constructs OptionFilterUniverse
         /// </summary>
-        public OptionFilterUniverse(IEnumerable<Symbol> allSymbols, BaseData underlying) 
+        public OptionFilterUniverse(IEnumerable<Symbol> allSymbols, BaseData underlying)
             : base(allSymbols, underlying)
         {
             _refreshUniqueStrikes = true;
@@ -65,7 +66,9 @@ namespace QuantConnect.Securities
         /// <returns>True if standard</returns>
         protected override bool IsStandard(Symbol symbol)
         {
-            return OptionSymbol.IsStandard(symbol);
+            return symbol.SecurityType == SecurityType.FutureOption
+                ? FutureOptionSymbol.IsStandard(symbol)
+                : OptionSymbol.IsStandard(symbol);
         }
 
         /// <summary>

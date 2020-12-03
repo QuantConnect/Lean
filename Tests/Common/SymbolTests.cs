@@ -556,6 +556,37 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(thursdayBeforeGoodFriday, OptionSymbol.GetLastDayOfTrading(symbol));
         }
 
+        [TestCase("ES", "ES")]
+        [TestCase("GC", "OG")]
+        [TestCase("ZT", "OZT")]
+        public void FutureOptionsWithDifferentUnderlyingGlobexTickersAreMapped(string futureTicker, string expectedFutureOptionTicker)
+        {
+            var future = Symbol.CreateFuture(futureTicker, Market.CME, DateTime.UtcNow.Date);
+            var canonicalFutureOption = Symbol.CreateOption(
+                future,
+                Market.CME,
+                default(OptionStyle),
+                default(OptionRight),
+                default(decimal),
+                SecurityIdentifier.DefaultDate);
+
+            var nonCanonicalFutureOption = Symbol.CreateOption(
+                future,
+                Market.CME,
+                default(OptionStyle),
+                default(OptionRight),
+                default(decimal),
+                new DateTime(2020, 12, 18));
+
+            Assert.AreEqual(canonicalFutureOption.Underlying.ID.Symbol, futureTicker);
+            Assert.AreEqual(canonicalFutureOption.ID.Symbol, expectedFutureOptionTicker);
+            Assert.IsTrue(canonicalFutureOption.Value.StartsWith("?" + futureTicker));
+
+            Assert.AreEqual(nonCanonicalFutureOption.Underlying.ID.Symbol, futureTicker);
+            Assert.AreEqual(nonCanonicalFutureOption.ID.Symbol, expectedFutureOptionTicker);
+            Assert.IsTrue(nonCanonicalFutureOption.Value.StartsWith(expectedFutureOptionTicker));
+        }
+
         class OldSymbol
         {
             public string Value { get; set; }

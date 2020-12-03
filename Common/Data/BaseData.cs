@@ -198,7 +198,8 @@ namespace QuantConnect.Data
         /// <returns>True indicates mapping should be used</returns>
         public virtual bool RequiresMapping()
         {
-            return Symbol.SecurityType == SecurityType.Equity || Symbol.SecurityType == SecurityType.Option;
+            return Symbol.SecurityType == SecurityType.Equity ||
+                   Symbol.SecurityType == SecurityType.Option;
         }
 
         /// <summary>
@@ -232,7 +233,7 @@ namespace QuantConnect.Data
         /// custom data types can override it</remarks>
         public virtual List<Resolution> SupportedResolutions()
         {
-            if (Symbol.SecurityType == SecurityType.Option)
+            if (Symbol.SecurityType == SecurityType.Option || Symbol.SecurityType == SecurityType.FutureOption)
             {
                 return MinuteResolution;
             }

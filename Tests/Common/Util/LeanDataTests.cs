@@ -341,6 +341,7 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase(SecurityType.Forex, "Forex")]
         [TestCase(SecurityType.Future, "Future")]
         [TestCase(SecurityType.Option, "Option")]
+        [TestCase(SecurityType.FutureOption, "FutureOption")]
         public void ParsesDataSecurityType(SecurityType type, string path)
         {
             Assert.AreEqual(type, LeanData.ParseDataSecurityType(path));
@@ -357,6 +358,49 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsTrue(LeanData.SecurityTypeAsDataPath.Contains("crypto"));
             Assert.IsTrue(LeanData.SecurityTypeAsDataPath.Contains("future"));
             Assert.IsTrue(LeanData.SecurityTypeAsDataPath.Contains("forex"));
+        }
+
+        [Test]
+        public void OptionZipFilePathWithUnderlyingEquity()
+        {
+            var underlying = Symbol.Create("SPY", SecurityType.Equity, QuantConnect.Market.USA);
+            var optionSymbol = Symbol.CreateOption(
+                underlying,
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Put,
+                4200m,
+                new DateTime(2020, 12, 31));
+
+            var optionZipFilePath = LeanData.GenerateZipFilePath(Globals.DataFolder, optionSymbol, new DateTime(2020, 9, 22), Resolution.Minute, TickType.Quote)
+                .Replace(Path.DirectorySeparatorChar, '/');
+            var optionEntryFilePath = LeanData.GenerateZipEntryName(optionSymbol, new DateTime(2020, 9, 22), Resolution.Minute, TickType.Quote);
+
+            Assert.AreEqual("../../../Data/option/usa/minute/spy/20200922_quote_american.zip", optionZipFilePath);
+            Assert.AreEqual("20200922_spy_minute_quote_american_put_42000000_20201231.csv", optionEntryFilePath);
+        }
+
+        [TestCase("ES", "ES")]
+        [TestCase("DC", "DC")]
+        [TestCase("GC", "OG")]
+        [TestCase("ZT", "OZT")]
+        public void OptionZipFilePathWithUnderlyingFuture(string futureOptionTicker, string expectedFutureOptionTicker)
+        {
+            var underlying = Symbol.CreateFuture(futureOptionTicker, Market.CME, new DateTime(2021, 3, 19));
+            var optionSymbol = Symbol.CreateOption(
+                underlying,
+                Market.CME,
+                OptionStyle.American,
+                OptionRight.Put,
+                4200m,
+                new DateTime(2021, 3, 18));
+
+            var optionZipFilePath = LeanData.GenerateZipFilePath(Globals.DataFolder, optionSymbol, new DateTime(2020, 9, 22), Resolution.Minute, TickType.Quote)
+                .Replace(Path.DirectorySeparatorChar, '/');
+            var optionEntryFilePath = LeanData.GenerateZipEntryName(optionSymbol, new DateTime(2020, 9, 22), Resolution.Minute, TickType.Quote);
+
+            Assert.AreEqual($"../../../Data/futureoption/cme/minute/{expectedFutureOptionTicker.ToLowerInvariant()}/{underlying.ID.Date:yyyyMMdd}/20200922_quote_american.zip", optionZipFilePath);
+            Assert.AreEqual($"20200922_{expectedFutureOptionTicker.ToLowerInvariant()}_minute_quote_american_put_42000000_{optionSymbol.ID.Date:yyyyMMdd}.csv", optionEntryFilePath);
         }
 
         private static void AssertBarsAreEqual(IBar expected, IBar actual)

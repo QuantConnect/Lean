@@ -21,6 +21,7 @@ using Newtonsoft.Json;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Logging;
+using QuantConnect.Securities.Future;
 using QuantConnect.Util;
 
 namespace QuantConnect.Securities
@@ -201,7 +202,12 @@ namespace QuantConnect.Securities
         public virtual Entry GetEntry(string market, string symbol, SecurityType securityType)
         {
             Entry entry;
-            if (!TryGetEntry(market, symbol, securityType, out entry))
+            // Fall back on the Futures MHDB entry if the FOP lookup failed.
+            // Some FOPs have the same symbol properties as their futures counterparts.
+            // So, to save ourselves some space, we can fall back on the existing entries
+            // so that we don't duplicate the information.
+            if (!TryGetEntry(market, symbol, securityType, out entry) &&
+                !(securityType == SecurityType.FutureOption && TryGetEntry(market, FuturesOptionsSymbolMappings.MapFromOption(symbol), SecurityType.Future, out entry)))
             {
                 var key = new SecurityDatabaseKey(market, symbol, securityType);
                 var keys = string.Join(", ", _entries.Keys);
@@ -285,6 +291,9 @@ namespace QuantConnect.Securities
                 {
                     case SecurityType.Option:
                         stringSymbol = symbol.HasUnderlying ? symbol.Underlying.Value : string.Empty;
+                        break;
+                    case SecurityType.FutureOption:
+                        stringSymbol = symbol.HasUnderlying ? symbol.ID.Symbol : string.Empty;
                         break;
 
                     case SecurityType.Base:

@@ -37,11 +37,12 @@ namespace QuantConnect.Tests.ToolBox.IBDownloader
         [TestCase("ES", Resolution.Minute, 15)]
         public void DownloadsFuturesData(string ticker, Resolution resolution, int days)
         {
+            var symbol = Symbol.Create(ticker, SecurityType.Future, Market.CME);
             const SecurityType securityType = SecurityType.Future;
 
             using (var downloader = new IBDataDownloader())
             {
-                var symbols = downloader.GetChainSymbols(ticker, securityType, true).ToList();
+                var symbols = downloader.GetChainSymbols(symbol, true).ToList();
 
                 var startDate = DateTime.UtcNow.Date.AddDays(-days);
                 var endDate = DateTime.UtcNow.Date;

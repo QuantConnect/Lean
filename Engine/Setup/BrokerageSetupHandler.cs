@@ -300,7 +300,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 var supportedSecurityTypes = new HashSet<SecurityType>
                 {
-                    SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future, SecurityType.Crypto
+                    SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future, SecurityType.FutureOption, SecurityType.Crypto
                 };
                 var minResolution = new Lazy<Resolution>(() => algorithm.Securities.Select(x => x.Value.Resolution).DefaultIfEmpty(Resolution.Second).Min());
 
@@ -405,7 +405,7 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + symbol.Value);
 
-                if (symbol.SecurityType == SecurityType.Option)
+                if (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.FutureOption)
                 {
                     // add current option contract to the system
                     algorithm.AddOptionContract(symbol, minResolution, true, 1.0m);

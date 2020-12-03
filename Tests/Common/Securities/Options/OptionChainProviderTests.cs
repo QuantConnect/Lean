@@ -24,9 +24,38 @@ using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Securities.Options
 {
-    [TestFixture, Parallelizable(ParallelScope.All)]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class OptionChainProviderTests
     {
+        [Test]
+        public void BacktestingOptionChainProviderLoadsEquityOptionChain()
+        {
+            var provider = new BacktestingOptionChainProvider();
+            var twxOptionChain = provider.GetOptionContractList(Symbol.Create("TWX", SecurityType.Equity, Market.USA), new DateTime(2014, 6, 5))
+                .ToList();
+
+            Assert.AreEqual(184, twxOptionChain.Count);
+            Assert.AreEqual(23m, twxOptionChain.OrderBy(s => s.ID.StrikePrice).First().ID.StrikePrice);
+            Assert.AreEqual(105m, twxOptionChain.OrderBy(s => s.ID.StrikePrice).Last().ID.StrikePrice);
+        }
+
+        [Test]
+        public void BacktestingOptionChainProviderLoadsFutureOptionChain()
+        {
+            var provider = new BacktestingOptionChainProvider();
+            var esOptionChain = provider.GetOptionContractList(
+                Symbol.CreateFuture(
+                    QuantConnect.Securities.Futures.Indices.SP500EMini,
+                    Market.CME,
+                    new DateTime(2020, 6, 19)),
+                new DateTime(2020, 1, 5))
+                .ToList();
+
+            Assert.AreEqual(107, esOptionChain.Count);
+            Assert.AreEqual(2900m, esOptionChain.OrderBy(s => s.ID.StrikePrice).First().ID.StrikePrice);
+            Assert.AreEqual(3500m, esOptionChain.OrderBy(s => s.ID.StrikePrice).Last().ID.StrikePrice);
+        }
+
         [Test]
         public void CachingProviderCachesSymbolsByDate()
         {
@@ -76,6 +105,41 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var result = provider.GetOptionContractList(symbol, DateTime.Today);
 
             Assert.IsFalse(result.Any());
+        }
+
+        [Test]
+        public void LiveOptionChainProviderReturnsFutureOptionData()
+        {
+            var now = DateTime.Now;
+            var december = now.AddMonths(-now.Month).AddMonths(12);
+            var underlyingFuture = Symbol.CreateFuture("ES", Market.CME, december);
+
+            var provider = new LiveOptionChainProvider();
+            var result = provider.GetOptionContractList(underlyingFuture, december);
+
+            Assert.AreNotEqual(0, result.Count());
+
+            foreach (var symbol in result)
+            {
+                Assert.IsTrue(symbol.HasUnderlying);
+                Assert.AreEqual(Market.CME, symbol.ID.Market);
+                Assert.AreEqual(OptionStyle.American, symbol.ID.OptionStyle);
+                Assert.GreaterOrEqual(symbol.ID.StrikePrice, 100m);
+                Assert.Less(symbol.ID.StrikePrice, 30000m);
+            }
+        }
+
+        [Test]
+        public void LiveOptionChainProviderReturnsNoDataForOldFuture()
+        {
+            var now = DateTime.Now;
+            var december = now.AddMonths(-now.Month).AddYears(-1);
+            var underlyingFuture = Symbol.CreateFuture("ES", Market.CME, december);
+
+            var provider = new LiveOptionChainProvider();
+            var result = provider.GetOptionContractList(underlyingFuture, december);
+
+            Assert.AreEqual(0, result.Count());
         }
     }
 

@@ -189,6 +189,24 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates and adds a new Future Option contract to the algorithm.
+        /// </summary>
+        /// <param name="symbol">The <see cref="Future"/> canonical symbol (i.e. Symbol returned from <see cref="AddFuture"/>)</param>
+        /// <param name="optionFilter">Filter to apply to option contracts loaded as part of the universe</param>
+        /// <returns>The new <see cref="Option"/> security, containing a <see cref="Future"/> as its underlying.</returns>
+        /// <exception cref="ArgumentException">The symbol provided is not canonical.</exception>
+        public void AddFutureOption(Symbol futureSymbol, PyObject optionFilter)
+        {
+            Func<OptionFilterUniverse, OptionFilterUniverse> optionFilterUniverse;
+            if (!optionFilter.TryConvertToDelegate(out optionFilterUniverse))
+            {
+                throw new ArgumentException("Option contract universe filter provided is not a function");
+            }
+
+            AddFutureOption(futureSymbol, optionFilterUniverse);
+        }
+
+        /// <summary>
         /// Adds the provided final Symbol with/without underlying set to the algorithm.
         /// This method is meant for custom data types that require a ticker, but have no underlying Symbol.
         /// Examples of data sources that meet this criteria are U.S. Treasury Yield Curve Rates and Trading Economics data
@@ -517,7 +535,7 @@ namespace QuantConnect.Algorithm
             catch
             {
 
-            }     
+            }
 
             // Finally, since above didn't work, just try it as a timespan
             // Issue #4668 Fix
@@ -532,7 +550,7 @@ namespace QuantConnect.Algorithm
                         RegisterIndicator(symbol, indicator, timeSpan, selector);
                     }
                 }
-                catch 
+                catch
                 {
                     throw new ArgumentException("Invalid third argument, should be either a valid consolidator or timedelta object");
                 }

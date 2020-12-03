@@ -24,6 +24,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Securities.Future;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 
@@ -175,11 +176,12 @@ namespace QuantConnect
                         case SecurityType.Equity:
                         case SecurityType.Option:
                         case SecurityType.Future:
+                        case SecurityType.FutureOption:
                             var oadate = ExtractFromProperties(DaysOffset, DaysWidth);
                             _date = DateTime.FromOADate(oadate);
                             return _date.Value;
                         default:
-                            throw new InvalidOperationException("Date is only defined for SecurityType.Equity, SecurityType.Option, SecurityType.Future, and SecurityType.Base");
+                            throw new InvalidOperationException("Date is only defined for SecurityType.Equity, SecurityType.Option, SecurityType.Future, SecurityType.FutureOption, and SecurityType.Base");
                     }
                 }
             }
@@ -236,9 +238,9 @@ namespace QuantConnect
                 }
                 catch (InvalidOperationException)
                 {
-                    if (SecurityType != SecurityType.Option)
+                    if (SecurityType != SecurityType.Option && SecurityType != SecurityType.FutureOption)
                     {
-                        throw new InvalidOperationException("OptionType is only defined for SecurityType.Option");
+                        throw new InvalidOperationException("OptionType is only defined for SecurityType.Option and SecurityType.FutureOption");
                     }
 
                     // performance: lets calculate strike price once
@@ -277,9 +279,9 @@ namespace QuantConnect
                 }
                 catch (InvalidOperationException)
                 {
-                    if (SecurityType != SecurityType.Option)
+                    if (SecurityType != SecurityType.Option && SecurityType != SecurityType.FutureOption)
                     {
-                        throw new InvalidOperationException("OptionRight is only defined for SecurityType.Option");
+                        throw new InvalidOperationException("OptionRight is only defined for SecurityType.Option and SecurityType.FutureOption");
                     }
                     _optionRight = (OptionRight)ExtractFromProperties(PutCallOffset, PutCallWidth);
                     return _optionRight.Value;
@@ -303,9 +305,9 @@ namespace QuantConnect
                 }
                 catch (InvalidOperationException)
                 {
-                    if (SecurityType != SecurityType.Option)
+                    if (SecurityType != SecurityType.Option && SecurityType != SecurityType.FutureOption)
                     {
-                        throw new InvalidOperationException("OptionStyle is only defined for SecurityType.Option");
+                        throw new InvalidOperationException("OptionStyle is only defined for SecurityType.Option and SecurityType.FutureOption");
                     }
 
                     _optionStyle = (OptionStyle)(ExtractFromProperties(OptionStyleOffset, OptionStyleWidth));
@@ -394,7 +396,7 @@ namespace QuantConnect
             OptionRight optionRight,
             OptionStyle optionStyle)
         {
-            return Generate(expiry, underlying.Symbol, SecurityType.Option, market, strike, optionRight, optionStyle, underlying);
+            return Generate(expiry, underlying.Symbol, QuantConnect.Symbol.GetOptionTypeFromUnderlying(underlying.SecurityType), market, strike, optionRight, optionStyle, underlying);
         }
 
         /// <summary>
@@ -567,6 +569,13 @@ namespace QuantConnect
             market = market.ToLowerInvariant();
             symbol = forceSymbolToUpper ? symbol.LazyToUpper() : symbol;
 
+            if (securityType == SecurityType.FutureOption)
+            {
+                // Futures options tickers might not match, so we need
+                // to map the provided future Symbol to the actual future option Symbol.
+                symbol = FuturesOptionsSymbolMappings.Map(symbol);
+            }
+
             var marketIdentifier = QuantConnect.Market.Encode(market);
             if (!marketIdentifier.HasValue)
             {
@@ -597,6 +606,7 @@ namespace QuantConnect
                     result._date = date;
                     break;
                 case SecurityType.Option:
+                case SecurityType.FutureOption:
                     result._date = date;
                     result._strikePrice = strike;
                     result._optionRight = optionRight;

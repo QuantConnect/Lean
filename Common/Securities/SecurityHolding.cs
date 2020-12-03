@@ -225,6 +225,7 @@ namespace QuantConnect.Securities
                 {
                     return 0;
                 }
+
                 return _price * Quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
             }
         }
@@ -450,6 +451,12 @@ namespace QuantConnect.Securities
                 ConvertToAccountCurrency(orderFee).Amount;
 
             var price = marketOrder.Direction == OrderDirection.Sell ? _security.BidPrice : _security.AskPrice;
+            if (price == 0)
+            {
+                // Bid/Ask prices can both be equal to 0. This usually happens when we request our holdings from
+                // the brokerage, but only the last trade price was provided.
+                price = _security.Price;
+            }
 
             return (price - AveragePrice) * Quantity * _security.QuoteCurrency.ConversionRate
                 * _security.SymbolProperties.ContractMultiplier - feesInAccountCurrency;

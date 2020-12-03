@@ -68,9 +68,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <returns>An enumerator reading the subscription request</returns>
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
+            // We decide to use the ZipDataCacheProvider instead of the SingleEntryDataCacheProvider here
+            // for resiliency and as a fix for an issue preventing us from reading non-equity options data.
+            // It has the added benefit of caching any zip files that we request from the filesystem, and reading
+            // files contained within the zip file, which the SingleEntryDataCacheProvider does not support.
             var sourceFactory = request.Configuration.GetBaseDataInstance();
-
-            using (var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider))
+            using (var dataCacheProvider = new ZipDataCacheProvider(dataProvider))
             {
                 foreach (var date in _tradableDaysProvider(request))
                 {
@@ -78,6 +81,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     {
                         request.Configuration.MappedSymbol = GetMappedSymbol(request.Configuration, date);
                     }
+
                     var source = sourceFactory.GetSource(request.Configuration, date, _isLiveMode);
                     var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, request.Configuration, date, _isLiveMode, sourceFactory);
                     var entriesForDate = factory.Read(source);

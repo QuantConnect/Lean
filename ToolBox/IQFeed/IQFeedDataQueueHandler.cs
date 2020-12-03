@@ -348,10 +348,22 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <param name="includeExpired">Include expired contracts</param>
         /// <param name="securityCurrency">Expected security currency(if any)</param>
         /// <param name="securityExchange">Expected security exchange name(if any)</param>
-        /// <returns></returns>
+        /// <returns>Symbol results</returns>
         public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, bool includeExpired, string securityCurrency = null, string securityExchange = null)
         {
             return _symbolUniverse.LookupSymbols(lookupName, securityType, includeExpired, securityCurrency, securityExchange);
+        }
+
+        /// <summary>
+        /// Method returns a collection of Symbols that are available at the data source.
+        /// </summary>
+        /// <param name="symbol">Symbol to lookup</param>
+        /// <param name="includeExpired">Include expired contracts</param>
+        /// <param name="securityCurrency">Expected security currency(if any)</param>
+        /// <returns>Symbol results</returns>
+        public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency)
+        {
+            return LookupSymbols(symbol.ID.Symbol, symbol.SecurityType, includeExpired, securityCurrency);
         }
 
         /// <summary>

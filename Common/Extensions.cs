@@ -50,6 +50,8 @@ using Timer = System.Timers.Timer;
 using static QuantConnect.StringExtensions;
 using Microsoft.IO;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Securities.Future;
+using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect
@@ -1655,6 +1657,7 @@ namespace QuantConnect
                 case SecurityType.Base:
                 case SecurityType.Equity:
                 case SecurityType.Option:
+                case SecurityType.FutureOption:
                 case SecurityType.Commodity:
                 case SecurityType.Forex:
                 case SecurityType.Future:
@@ -1702,6 +1705,8 @@ namespace QuantConnect
                     return "equity";
                 case SecurityType.Option:
                     return "option";
+                case SecurityType.FutureOption:
+                    return "futureoption";
                 case SecurityType.Commodity:
                     return "commodity";
                 case SecurityType.Forex:
@@ -2325,6 +2330,27 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Gets the delisting date for the provided Symbol
+        /// </summary>
+        /// <param name="symbol">The symbol to lookup the last trading date</param>
+        /// <param name="mapFile">Map file to use for delisting date. Defaults to SID.DefaultDate if no value is passed and is equity.</param>
+        /// <returns></returns>
+        public static DateTime GetDelistingDate(this Symbol symbol, MapFile mapFile = null)
+        {
+            switch (symbol.ID.SecurityType)
+            {
+                case SecurityType.Future:
+                    return symbol.ID.Date;
+                case SecurityType.Option:
+                    return OptionSymbol.GetLastDayOfTrading(symbol);
+                case SecurityType.FutureOption:
+                    return FutureOptionSymbol.GetLastDayOfTrading(symbol);
+                default:
+                    return mapFile?.DelistingDate ?? SecurityIdentifier.DefaultDate;
+            }
+        }
+
+        /// <summary>
         /// Scale data based on factor function
         /// </summary>
         public static BaseData Scale(this BaseData data, Func<decimal, decimal> factor)
@@ -2345,6 +2371,7 @@ namespace QuantConnect
                     var securityType = data.Symbol.SecurityType;
                     if (securityType != SecurityType.Equity &&
                         securityType != SecurityType.Option &&
+                        securityType != SecurityType.FutureOption &&
                         securityType != SecurityType.Future)
                     {
                         break;
@@ -2500,7 +2527,7 @@ namespace QuantConnect
         /// <returns><see cref="OptionChainUniverse"/> for the given symbol</returns>
         public static OptionChainUniverse CreateOptionChain(this IAlgorithm algorithm, Symbol symbol, Func<OptionFilterUniverse, OptionFilterUniverse> filter, UniverseSettings universeSettings = null)
         {
-            if (symbol.SecurityType != SecurityType.Option)
+            if (symbol.SecurityType != SecurityType.Option && symbol.SecurityType != SecurityType.FutureOption)
             {
                 throw new ArgumentException("CreateOptionChain requires an option symbol.");
             }
@@ -2510,8 +2537,20 @@ namespace QuantConnect
             var underlying = symbol.Underlying;
             if (!symbol.IsCanonical())
             {
+                // The underlying can be a non-equity Symbol, so we must explicitly
+                // initialize the Symbol using the CreateOption(Symbol, ...) overload
+                // to ensure that the underlying SecurityType is preserved and not
+                // written as SecurityType.Equity.
                 var alias = $"?{underlying.Value}";
-                symbol = Symbol.Create(underlying.Value, SecurityType.Option, market, alias);
+
+                symbol = Symbol.CreateOption(
+                    underlying,
+                    market,
+                    default(OptionStyle),
+                    default(OptionRight),
+                    0m,
+                    SecurityIdentifier.DefaultDate,
+                    alias);
             }
 
             // resolve defaults if not specified

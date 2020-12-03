@@ -46,6 +46,8 @@
   <ItemGroup>
     <Content Include="AccumulativeInsightPortfolioRegressionAlgorithm.py" />
     <Content Include="AddAlphaModelAlgorithm.py" />
+    <Content Include="AddFutureOptionContractDataStreamingRegressionAlgorithm.py" />
+    <Content Include="AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorithm.py" />
     <Content Include="AddOptionContractExpiresRegressionAlgorithm.py" />
     <Content Include="AddOptionContractFromUniverseRegressionAlgorithm.py" />
     <Content Include="AddRiskManagementAlgorithm.py" />
@@ -98,6 +100,15 @@
     <Content Include="ExtendedMarketTradingRegressionAlgorithm.py" />
     <Content Include="FilterUniverseRegressionAlgorithm.py" />
     <Content Include="FineFundamentalFilteredUniverseRegressionAlgorithm.py" />
+    <Content Include="FutureOptionBuySellCallIntradayRegressionAlgorithm.py" />
+    <Content Include="FutureOptionCallITMExpiryRegressionAlgorithm.py" />
+    <Content Include="FutureOptionCallOTMExpiryRegressionAlgorithm.py" />
+    <Content Include="FutureOptionPutITMExpiryRegressionAlgorithm.py" />
+    <Content Include="FutureOptionPutOTMExpiryRegressionAlgorithm.py" />
+    <Content Include="FutureOptionShortCallITMExpiryRegressionAlgorithm.py" />
+    <Content Include="FutureOptionShortCallOTMExpiryRegressionAlgorithm.py" />
+    <Content Include="FutureOptionShortPutITMExpiryRegressionAlgorithm.py" />
+    <Content Include="FutureOptionShortPutOTMExpiryRegressionAlgorithm.py" />
     <Content Include="KerasNeuralNetworkAlgorithm.py" />
     <Content Include="CustomDataUsingMapFileRegressionAlgorithm.py" />
     <Content Include="LiquidETFUniverseFrameworkAlgorithm.py" />

@@ -181,7 +181,7 @@ namespace QuantConnect
         /// <returns>The OSI ticker representation</returns>
         public static string GenerateOptionTickerOSI(this Symbol symbol)
         {
-            if (symbol.SecurityType != SecurityType.Option)
+            if (symbol.SecurityType != SecurityType.Option && symbol.SecurityType != SecurityType.FutureOption)
             {
                 throw new ArgumentException(Invariant($"{nameof(GenerateOptionTickerOSI)} returns symbol to be an option, received {symbol.SecurityType}."));
             }

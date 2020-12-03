@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     /// </summary>
     public class FuncDataQueueHandlerUniverseProvider : FuncDataQueueHandler, IDataQueueUniverseProvider
     {
-        private readonly Func<string, SecurityType, bool, string, string, IEnumerable<Symbol>> _lookupSymbolsFunction;
+        private readonly Func<Symbol, bool, string, IEnumerable<Symbol>> _lookupSymbolsFunction;
         private readonly Func<SecurityType, bool> _canAdvanceTimeFunction;
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// <param name="timeProvider">The time provider instance to use</param>
         public FuncDataQueueHandlerUniverseProvider(
             Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction,
-            Func<string, SecurityType, bool, string, string, IEnumerable<Symbol>> lookupSymbolsFunction,
+            Func<Symbol, bool, string, IEnumerable<Symbol>> lookupSymbolsFunction,
             Func<SecurityType, bool> canAdvanceTimeFunction,
             ITimeProvider timeProvider)
             : base(getNextTicksFunction, timeProvider)
@@ -51,15 +51,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// <summary>
         /// Method returns a collection of Symbols that are available at the data source.
         /// </summary>
-        /// <param name="lookupName">String representing the name to lookup</param>
-        /// <param name="securityType">Expected security type of the returned symbols (if any)</param>
+        /// <param name="symbol">Symbol to lookup</param>
         /// <param name="includeExpired">Include expired contracts</param>
         /// <param name="securityCurrency">Expected security currency(if any)</param>
-        /// <param name="securityExchange">Expected security exchange name(if any)</param>
         /// <returns></returns>
-        public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, bool includeExpired, string securityCurrency = null, string securityExchange = null)
+        public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null)
         {
-            return _lookupSymbolsFunction(lookupName, securityType, includeExpired, securityCurrency, securityExchange);
+            return _lookupSymbolsFunction(symbol, includeExpired, securityCurrency);
         }
 
         /// <summary>

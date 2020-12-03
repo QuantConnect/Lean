@@ -143,9 +143,21 @@
     </Compile>
     <Compile Include="AddAlphaModelAlgorithm.cs" />
     <Compile Include="CustomBuyingPowerModelAlgorithm.cs" />
+    <Compile Include="AddFutureOptionContractDataStreamingRegressionAlgorithm.cs" />
+    <Compile Include="AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorithm.cs" />
     <Compile Include="AddOptionContractExpiresRegressionAlgorithm.cs" />
     <Compile Include="AltData\QuiverWallStreetBetsDataAlgorithm.cs" />
+    <Compile Include="FutureOptionCallITMGreeksExpiryRegressionAlgorithm.cs" />
     <Compile Include="OnOrderEventExceptionRegression.cs" />
+    <Compile Include="FutureOptionCallITMExpiryRegressionAlgorithm.cs" />
+    <Compile Include="FutureOptionCallOTMExpiryRegressionAlgorithm.cs" />
+    <Compile Include="FutureOptionPutITMExpiryRegressionAlgorithm.cs" />
+    <Compile Include="FutureOptionPutOTMExpiryRegressionAlgorithm.cs" />
+    <Compile Include="FutureOptionBuySellCallIntradayRegressionAlgorithm.cs" />
+    <Compile Include="FutureOptionShortCallITMExpiryRegressionAlgorithm.cs" />
+    <Compile Include="FutureOptionShortCallOTMExpiryRegressionAlgorithm.cs" />
+    <Compile Include="FutureOptionShortPutOTMExpiryRegressionAlgorithm.cs" />
+    <Compile Include="FutureOptionShortPutITMExpiryRegressionAlgorithm.cs" />
     <Compile Include="ScaledFillForwardDataRegressionAlgorithm.cs" />
     <Compile Include="DailyHistoryForDailyResolutionRegressionAlgorithm.cs" />
     <Compile Include="DailyHistoryForMinuteResolutionRegressionAlgorithm.cs" />

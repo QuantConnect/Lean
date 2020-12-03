@@ -251,7 +251,7 @@ namespace QuantConnect.Orders
                 message += Invariant($" Message: {Message}");
             }
 
-            if (Symbol.SecurityType == SecurityType.Option)
+            if (Symbol.SecurityType == SecurityType.Option || Symbol.SecurityType == SecurityType.FutureOption)
             {
                 message += Invariant($" IsAssignment: {IsAssignment}");
             }
