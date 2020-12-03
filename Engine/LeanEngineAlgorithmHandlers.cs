@@ -215,8 +215,10 @@ namespace QuantConnect.Lean.Engine
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            Setup.Dispose();
-            ObjectStore.Dispose();
+            Log.Trace("LeanEngineAlgorithmHandlers.Dispose(): start...");
+
+            Setup.DisposeSafely();
+            ObjectStore.DisposeSafely();
 
             Log.Trace("LeanEngineAlgorithmHandlers.Dispose(): Disposed of algorithm handlers.");
         }

@@ -82,12 +82,13 @@ namespace QuantConnect.ToolBox
                     return typeof (QuoteBar);
 
                 case SecurityType.Option:
+                case SecurityType.FutureOption:
                     if (tickType == TickType.Trade) return typeof (TradeBar);
                     if (tickType == TickType.Quote) return typeof (QuoteBar);
                     break;
             }
             var parameters = string.Join(" | ", securityType, resolution, tickType);
-            throw new NotImplementedException("LeanParser.GetDataType does has not yet implemented: " + parameters);
+            throw new NotImplementedException("LeanParser.GetDataType has not yet implemented: " + parameters);
         }
     }
 }

@@ -56,6 +56,10 @@ Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "QuantConnect.PythonToolbox"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Report", "Report\QuantConnect.Report.csproj", "{2431419F-8BC6-4F59-944E-9A1CD28982DF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Optimizer", "Optimizer\QuantConnect.Optimizer.csproj", "{4ECD7DF3-A675-4E9E-ACA3-2B51C88736CE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Optimizer.Launcher", "Optimizer.Launcher\QuantConnect.Optimizer.Launcher.csproj", "{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -210,6 +214,22 @@ Global
 		{2431419F-8BC6-4F59-944E-9A1CD28982DF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2431419F-8BC6-4F59-944E-9A1CD28982DF}.Release|x64.ActiveCfg = Release|Any CPU
 		{2431419F-8BC6-4F59-944E-9A1CD28982DF}.Release|x64.Build.0 = Release|Any CPU
+		{4ECD7DF3-A675-4E9E-ACA3-2B51C88736CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4ECD7DF3-A675-4E9E-ACA3-2B51C88736CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4ECD7DF3-A675-4E9E-ACA3-2B51C88736CE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4ECD7DF3-A675-4E9E-ACA3-2B51C88736CE}.Debug|x64.Build.0 = Debug|Any CPU
+		{4ECD7DF3-A675-4E9E-ACA3-2B51C88736CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4ECD7DF3-A675-4E9E-ACA3-2B51C88736CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4ECD7DF3-A675-4E9E-ACA3-2B51C88736CE}.Release|x64.ActiveCfg = Release|Any CPU
+		{4ECD7DF3-A675-4E9E-ACA3-2B51C88736CE}.Release|x64.Build.0 = Release|Any CPU
+		{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}.Debug|x64.Build.0 = Debug|Any CPU
+		{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}.Release|x64.ActiveCfg = Release|Any CPU
+		{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

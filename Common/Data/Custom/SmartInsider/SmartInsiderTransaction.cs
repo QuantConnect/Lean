@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using System;
 using System.Globalization;
 using System.IO;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Data.Custom.SmartInsider
 {
@@ -154,7 +155,18 @@ namespace QuantConnect.Data.Custom.SmartInsider
             var tsv = line.Split('\t');
 
             TransactionID = string.IsNullOrWhiteSpace(tsv[0]) ? null : tsv[0];
-            EventType = string.IsNullOrWhiteSpace(tsv[1]) ? (SmartInsiderEventType?)null : JsonConvert.DeserializeObject<SmartInsiderEventType>($"\"{tsv[1]}\"");
+            EventType = SmartInsiderEventType.NotSpecified;
+            if (!string.IsNullOrWhiteSpace(tsv[1]))
+            {
+                try
+                {
+                    EventType = JsonConvert.DeserializeObject<SmartInsiderEventType>($"\"{tsv[1]}\"");
+                }
+                catch (JsonSerializationException)
+                {
+                    Log.Error($"SmartInsiderTransaction.FromRawData(): New unexpected entry found for EventType: {tsv[1]}. Parsed as NotSpecified.");
+                }
+            }
             LastUpdate = DateTime.ParseExact(tsv[2], "yyyy-MM-dd", CultureInfo.InvariantCulture);
             LastIDsUpdate = string.IsNullOrWhiteSpace(tsv[3]) ? (DateTime?)null : DateTime.ParseExact(tsv[3], "yyyy-MM-dd", CultureInfo.InvariantCulture);
             ISIN = string.IsNullOrWhiteSpace(tsv[4]) ? null : tsv[4];
@@ -175,10 +187,54 @@ namespace QuantConnect.Data.Custom.SmartInsider
             TickerSymbol = string.IsNullOrWhiteSpace(tsv[19]) ? null : tsv[19];
 
             BuybackDate = string.IsNullOrWhiteSpace(tsv[20]) ? (DateTime?)null : DateTime.ParseExact(tsv[20], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            Execution = string.IsNullOrWhiteSpace(tsv[21]) ? (SmartInsiderExecution?)null : JsonConvert.DeserializeObject<SmartInsiderExecution>($"\"{tsv[21]}\"");
-            ExecutionEntity = string.IsNullOrWhiteSpace(tsv[22]) ? (SmartInsiderExecutionEntity?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionEntity>($"\"{tsv[22]}\"");
-            ExecutionHolding = string.IsNullOrWhiteSpace(tsv[23]) ? (SmartInsiderExecutionHolding?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[23]}\"");
-            ExecutionHolding = ExecutionHolding == SmartInsiderExecutionHolding.Error ? SmartInsiderExecutionHolding.SatisfyStockVesting : ExecutionHolding;
+
+            Execution = null;
+            if (!string.IsNullOrWhiteSpace(tsv[21]))
+            {
+                try
+                {
+                    Execution = JsonConvert.DeserializeObject<SmartInsiderExecution>($"\"{tsv[21]}\"");
+                }
+                catch (JsonSerializationException)
+                {
+                    Log.Error($"SmartInsiderTransaction.FromRawData(): New unexpected entry found for Execution: {tsv[21]}. Parsed as Error.");
+                    Execution = SmartInsiderExecution.Error;
+                }
+            }
+
+            ExecutionEntity = null;
+            if (!string.IsNullOrWhiteSpace(tsv[22]))
+            {
+                try
+                {
+                    ExecutionEntity = JsonConvert.DeserializeObject<SmartInsiderExecutionEntity>($"\"{tsv[22]}\"");
+                }
+                catch (JsonSerializationException)
+                {
+                    Log.Error($"SmartInsiderTransaction.FromRawData(): New unexpected entry found for ExecutionEntity: {tsv[22]}. Parsed as Error.");
+                    ExecutionEntity = SmartInsiderExecutionEntity.Error;
+                }
+            }
+
+            ExecutionHolding = null;
+            if (!string.IsNullOrWhiteSpace(tsv[23]))
+            {
+                try
+                {
+                    ExecutionHolding = JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[23]}\"");
+                    if (ExecutionHolding == SmartInsiderExecutionHolding.Error)
+                    {
+                        // This error in particular represents a SatisfyStockVesting field.
+                        ExecutionHolding = SmartInsiderExecutionHolding.SatisfyStockVesting;
+                    }
+                }
+                catch (JsonSerializationException)
+                {
+                    Log.Error($"SmartInsiderTransaction.FromRawData(): New unexpected entry found for ExecutionHolding: {tsv[23]}. Parsed as Error.");
+                    ExecutionHolding = SmartInsiderExecutionHolding.Error;
+                }
+            }
+
             Currency = string.IsNullOrWhiteSpace(tsv[24]) ? null : tsv[24];
             ExecutionPrice = string.IsNullOrWhiteSpace(tsv[25]) ? (decimal?)null : Convert.ToDecimal(tsv[25], CultureInfo.InvariantCulture);
             Amount = string.IsNullOrWhiteSpace(tsv[26]) ? (decimal?)null : Convert.ToDecimal(tsv[26], CultureInfo.InvariantCulture);

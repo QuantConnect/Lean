@@ -17,6 +17,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -49,6 +50,8 @@ using Timer = System.Timers.Timer;
 using static QuantConnect.StringExtensions;
 using Microsoft.IO;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Securities.Future;
+using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect
@@ -63,6 +66,18 @@ namespace QuantConnect
 
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
+
+        /// <summary>/// <summary>
+        /// Safe multiplies a decimal by 100
+        /// </summary>
+        /// <param name="value">The decimal to multiply</param>
+        /// <returns>The result, maxed out at decimal.MaxValue</returns>
+        public static decimal SafeMultiply100(this decimal value)
+        {
+            const decimal max = decimal.MaxValue / 100m;
+            if (value >= max) return decimal.MaxValue;
+            return value * 100m;
+        }
 
         /// <summary>
         /// Will return a memory stream using the <see cref="RecyclableMemoryStreamManager"/> instance.
@@ -641,6 +656,116 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Adds the specified element to the collection with the specified key. If an entry does not exist for the
+        /// specified key then one will be created.
+        /// </summary>
+        /// <typeparam name="TKey">The key type</typeparam>
+        /// <typeparam name="TElement">The collection element type</typeparam>
+        /// <param name="dictionary">The source dictionary to be added to</param>
+        /// <param name="key">The key</param>
+        /// <param name="element">The element to be added</param>
+        public static ImmutableDictionary<TKey, ImmutableHashSet<TElement>> Add<TKey, TElement>(
+            this ImmutableDictionary<TKey, ImmutableHashSet<TElement>> dictionary,
+            TKey key,
+            TElement element
+            )
+        {
+            ImmutableHashSet<TElement> set;
+            if (!dictionary.TryGetValue(key, out set))
+            {
+                set = ImmutableHashSet<TElement>.Empty.Add(element);
+                return dictionary.Add(key, set);
+            }
+
+            return dictionary.SetItem(key, set.Add(element));
+        }
+
+        /// <summary>
+        /// Adds the specified element to the collection with the specified key. If an entry does not exist for the
+        /// specified key then one will be created.
+        /// </summary>
+        /// <typeparam name="TKey">The key type</typeparam>
+        /// <typeparam name="TElement">The collection element type</typeparam>
+        /// <param name="dictionary">The source dictionary to be added to</param>
+        /// <param name="key">The key</param>
+        /// <param name="element">The element to be added</param>
+        public static ImmutableSortedDictionary<TKey, ImmutableHashSet<TElement>> Add<TKey, TElement>(
+            this ImmutableSortedDictionary<TKey, ImmutableHashSet<TElement>> dictionary,
+            TKey key,
+            TElement element
+            )
+        {
+            ImmutableHashSet<TElement> set;
+            if (!dictionary.TryGetValue(key, out set))
+            {
+                set = ImmutableHashSet<TElement>.Empty.Add(element);
+                return dictionary.Add(key, set);
+            }
+
+            return dictionary.SetItem(key, set.Add(element));
+        }
+
+        /// <summary>
+        /// Removes the specified element to the collection with the specified key. If the entry's count drops to
+        /// zero, then the entry will be removed.
+        /// </summary>
+        /// <typeparam name="TKey">The key type</typeparam>
+        /// <typeparam name="TElement">The collection element type</typeparam>
+        /// <param name="dictionary">The source dictionary to be added to</param>
+        /// <param name="key">The key</param>
+        /// <param name="element">The element to be added</param>
+        public static ImmutableDictionary<TKey, ImmutableHashSet<TElement>> Remove<TKey, TElement>(
+            this ImmutableDictionary<TKey, ImmutableHashSet<TElement>> dictionary,
+            TKey key,
+            TElement element
+            )
+        {
+            ImmutableHashSet<TElement> set;
+            if (!dictionary.TryGetValue(key, out set))
+            {
+                return dictionary;
+            }
+
+            set = set.Remove(element);
+            if (set.Count == 0)
+            {
+                return dictionary.Remove(key);
+            }
+
+            return dictionary.SetItem(key, set);
+        }
+
+        /// <summary>
+        /// Removes the specified element to the collection with the specified key. If the entry's count drops to
+        /// zero, then the entry will be removed.
+        /// </summary>
+        /// <typeparam name="TKey">The key type</typeparam>
+        /// <typeparam name="TElement">The collection element type</typeparam>
+        /// <param name="dictionary">The source dictionary to be added to</param>
+        /// <param name="key">The key</param>
+        /// <param name="element">The element to be added</param>
+        public static ImmutableSortedDictionary<TKey, ImmutableHashSet<TElement>> Remove<TKey, TElement>(
+            this ImmutableSortedDictionary<TKey, ImmutableHashSet<TElement>> dictionary,
+            TKey key,
+            TElement element
+            )
+        {
+            ImmutableHashSet<TElement> set;
+            if (!dictionary.TryGetValue(key, out set))
+            {
+                return dictionary;
+            }
+
+            set = set.Remove(element);
+            if (set.Count == 0)
+            {
+                return dictionary.Remove(key);
+            }
+
+            return dictionary.SetItem(key, set);
+        }
+
+        /// <summary>
         /// Adds the specified Tick to the Ticks collection. If an entry does not exist for the specified key then one will be created.
         /// </summary>
         /// <param name="dictionary">The ticks dictionary</param>
@@ -816,6 +941,26 @@ namespace QuantConnect
             var lo = (int)value;
             var mid = (int)(value >> 32);
             return new decimal(lo, mid, 0, isNegative, (byte)(hasDecimals ? decimalPlaces : 0));
+        }
+
+        /// <summary>
+        /// Extension method for faster string to normalized decimal conversion, i.e. 20.0% should be parsed into 0.2
+        /// </summary>
+        /// <param name="str">String to be converted to positive decimal value</param>
+        /// <remarks>
+        /// Leading and trailing whitespace chars are ignored
+        /// </remarks>
+        /// <returns>Decimal value of the string</returns>
+        public static decimal ToNormalizedDecimal(this string str)
+        {
+            var trimmed = str.Trim();
+            var value = str.TrimEnd('%').ToDecimal();
+            if (trimmed.EndsWith("%"))
+            {
+                value /= 100;
+            }
+
+            return value;
         }
 
         /// <summary>
@@ -1512,6 +1657,7 @@ namespace QuantConnect
                 case SecurityType.Base:
                 case SecurityType.Equity:
                 case SecurityType.Option:
+                case SecurityType.FutureOption:
                 case SecurityType.Commodity:
                 case SecurityType.Forex:
                 case SecurityType.Future:
@@ -1559,6 +1705,8 @@ namespace QuantConnect
                     return "equity";
                 case SecurityType.Option:
                     return "option";
+                case SecurityType.FutureOption:
+                    return "futureoption";
                 case SecurityType.Commodity:
                     return "commodity";
                 case SecurityType.Forex:
@@ -2182,6 +2330,27 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Gets the delisting date for the provided Symbol
+        /// </summary>
+        /// <param name="symbol">The symbol to lookup the last trading date</param>
+        /// <param name="mapFile">Map file to use for delisting date. Defaults to SID.DefaultDate if no value is passed and is equity.</param>
+        /// <returns></returns>
+        public static DateTime GetDelistingDate(this Symbol symbol, MapFile mapFile = null)
+        {
+            switch (symbol.ID.SecurityType)
+            {
+                case SecurityType.Future:
+                    return symbol.ID.Date;
+                case SecurityType.Option:
+                    return OptionSymbol.GetLastDayOfTrading(symbol);
+                case SecurityType.FutureOption:
+                    return FutureOptionSymbol.GetLastDayOfTrading(symbol);
+                default:
+                    return mapFile?.DelistingDate ?? SecurityIdentifier.DefaultDate;
+            }
+        }
+
+        /// <summary>
         /// Scale data based on factor function
         /// </summary>
         public static BaseData Scale(this BaseData data, Func<decimal, decimal> factor)
@@ -2202,6 +2371,7 @@ namespace QuantConnect
                     var securityType = data.Symbol.SecurityType;
                     if (securityType != SecurityType.Equity &&
                         securityType != SecurityType.Option &&
+                        securityType != SecurityType.FutureOption &&
                         securityType != SecurityType.Future)
                     {
                         break;
@@ -2357,7 +2527,7 @@ namespace QuantConnect
         /// <returns><see cref="OptionChainUniverse"/> for the given symbol</returns>
         public static OptionChainUniverse CreateOptionChain(this IAlgorithm algorithm, Symbol symbol, Func<OptionFilterUniverse, OptionFilterUniverse> filter, UniverseSettings universeSettings = null)
         {
-            if (symbol.SecurityType != SecurityType.Option)
+            if (symbol.SecurityType != SecurityType.Option && symbol.SecurityType != SecurityType.FutureOption)
             {
                 throw new ArgumentException("CreateOptionChain requires an option symbol.");
             }
@@ -2367,8 +2537,20 @@ namespace QuantConnect
             var underlying = symbol.Underlying;
             if (!symbol.IsCanonical())
             {
+                // The underlying can be a non-equity Symbol, so we must explicitly
+                // initialize the Symbol using the CreateOption(Symbol, ...) overload
+                // to ensure that the underlying SecurityType is preserved and not
+                // written as SecurityType.Equity.
                 var alias = $"?{underlying.Value}";
-                symbol = Symbol.Create(underlying.Value, SecurityType.Option, market, alias);
+
+                symbol = Symbol.CreateOption(
+                    underlying,
+                    market,
+                    default(OptionStyle),
+                    default(OptionRight),
+                    0m,
+                    SecurityIdentifier.DefaultDate,
+                    alias);
             }
 
             // resolve defaults if not specified
@@ -2400,6 +2582,33 @@ namespace QuantConnect
             optionChain.IsTradable = false;
 
             return new OptionChainUniverse(optionChain, settings, algorithm.LiveMode);
+        }
+
+        /// <summary>
+        /// Inverts the specified <paramref name="right"/>
+        /// </summary>
+        public static OptionRight Invert(this OptionRight right)
+        {
+            switch (right)
+            {
+                case OptionRight.Call: return OptionRight.Put;
+                case OptionRight.Put:  return OptionRight.Call;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(right), right, null);
+            }
+        }
+
+        /// <summary>
+        /// Compares two values using given operator
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="op">Comparison operator</param>
+        /// <param name="arg1">The first value</param>
+        /// <param name="arg2">The second value</param>
+        /// <returns>Returns true if its left-hand operand meets the operator value to its right-hand operand, false otherwise</returns>
+        public static bool Compare<T>(this ComparisonOperatorTypes op, T arg1, T arg2) where T : IComparable
+        {
+            return ComparisonOperator.Compare(op, arg1, arg2);
         }
     }
 }

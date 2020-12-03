@@ -26,13 +26,11 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Method returns a collection of Symbols that are available at the data source.
         /// </summary>
-        /// <param name="lookupName">String representing the name to lookup</param>
-        /// <param name="securityType">Expected security type of the returned symbols (if any)</param>
+        /// <param name="symbol">Symbol to lookup</param>
         /// <param name="includeExpired">Include expired contracts</param>
         /// <param name="securityCurrency">Expected security currency(if any)</param>
-        /// <param name="securityExchange">Expected security exchange name(if any)</param>
-        /// <returns></returns>
-        IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, bool includeExpired, string securityCurrency = null, string securityExchange = null);
+        /// <returns>Enumerable of Symbols, that are associated with the provided Symbol</returns>
+        IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null);
 
         /// <summary>
         /// Returns whether the time can be advanced or not.

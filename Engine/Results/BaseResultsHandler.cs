@@ -45,7 +45,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// The main loop update interval
         /// </summary>
-        protected TimeSpan MainUpdateInterval = TimeSpan.FromSeconds(3);
+        protected virtual TimeSpan MainUpdateInterval => TimeSpan.FromSeconds(3);
 
         /// <summary>
         /// The chart update interval

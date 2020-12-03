@@ -43,6 +43,7 @@ namespace QuantConnect.Brokerages
             {SecurityType.Equity, Market.USA},
             {SecurityType.Option, Market.USA},
             {SecurityType.Future, Market.CME},
+            {SecurityType.FutureOption, Market.CME},
             {SecurityType.Forex, Market.Oanda},
             {SecurityType.Cfd, Market.FXCM},
             {SecurityType.Crypto, Market.GDAX}
@@ -174,6 +175,7 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Base:
                 case SecurityType.Commodity:
                 case SecurityType.Option:
+                case SecurityType.FutureOption:
                 case SecurityType.Future:
                 default:
                     return 1m;
@@ -194,6 +196,8 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Equity:
                     return new EquityFillModel();
                 case SecurityType.Option:
+                    break;
+                case SecurityType.FutureOption:
                     break;
                 case SecurityType.Commodity:
                     break;
@@ -230,6 +234,7 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Equity:
                 case SecurityType.Option:
                 case SecurityType.Future:
+                case SecurityType.FutureOption:
                     return new InteractiveBrokersFeeModel();
 
                 case SecurityType.Commodity:
@@ -258,6 +263,7 @@ namespace QuantConnect.Brokerages
 
                 case SecurityType.Commodity:
                 case SecurityType.Option:
+                case SecurityType.FutureOption:
                 case SecurityType.Future:
                 default:
                     return new ConstantSlippageModel(0);
@@ -320,6 +326,9 @@ namespace QuantConnect.Brokerages
                     break;
                 case SecurityType.Option:
                     model = new OptionMarginModel(RequiredFreeBuyingPowerPercent);
+                    break;
+                case SecurityType.FutureOption:
+                    model = new FuturesOptionsMarginModel(RequiredFreeBuyingPowerPercent, (Option)security);
                     break;
                 case SecurityType.Future:
                     model = new FutureMarginModel(RequiredFreeBuyingPowerPercent, security);

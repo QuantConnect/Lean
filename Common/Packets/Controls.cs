@@ -144,6 +144,12 @@ namespace QuantConnect.Packets
         public HashSet<Resolution> DataResolutionPermissions;
 
         /// <summary>
+        /// The cost associated with running this job
+        /// </summary>
+        [JsonProperty(PropertyName = "iCreditCost")]
+        public uint CreditCost;
+
+        /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class
         /// </summary>
         public Controls()

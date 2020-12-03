@@ -31,8 +31,8 @@ namespace QuantConnect.Tests.Common.Securities
         public void LoadsLotSize()
         {
             var db = SymbolPropertiesDatabase.FromDataFolder();
-
-            var symbolProperties = db.GetSymbolProperties(Market.FXCM, "EURGBP", SecurityType.Forex, "GBP");
+            var symbol = Symbol.Create("EURGBP", SecurityType.Forex, Market.FXCM);
+            var symbolProperties = db.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "GBP");
 
             Assert.AreEqual(symbolProperties.LotSize, 1000);
         }
@@ -41,8 +41,8 @@ namespace QuantConnect.Tests.Common.Securities
         public void LoadsQuoteCurrency()
         {
             var db = SymbolPropertiesDatabase.FromDataFolder();
-
-            var symbolProperties = db.GetSymbolProperties(Market.FXCM, "EURGBP", SecurityType.Forex, "GBP");
+            var symbol = Symbol.Create("EURGBP", SecurityType.Forex, Market.FXCM);
+            var symbolProperties = db.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "GBP");
 
             Assert.AreEqual(symbolProperties.QuoteCurrency, "GBP");
         }
@@ -358,5 +358,26 @@ namespace QuantConnect.Tests.Common.Securities
 
         #endregion
 
+        [TestCase("ES", Market.CME, 50, 0.25)]
+        [TestCase("ZB", Market.CBOT, 1000, 0.015625)]
+        [TestCase("ZW", Market.CBOT, 5000, 0.00125)]
+        [TestCase("SI", Market.COMEX, 5000, 0.001)]
+        public void ReadsFuturesOptionsEntries(string ticker, string market, int expectedMultiplier, double expectedMinimumPriceFluctuation)
+        {
+            var future = Symbol.CreateFuture(ticker, market, SecurityIdentifier.DefaultDate);
+            var option = Symbol.CreateOption(
+                future,
+                market,
+                default(OptionStyle),
+                default(OptionRight),
+                default(decimal),
+                SecurityIdentifier.DefaultDate);
+
+            var db = SymbolPropertiesDatabase.FromDataFolder();
+            var results = db.GetSymbolProperties(market, option, SecurityType.FutureOption, "USD");
+
+            Assert.AreEqual((decimal)expectedMultiplier, results.ContractMultiplier);
+            Assert.AreEqual((decimal)expectedMinimumPriceFluctuation, results.MinimumPriceVariation);
+        }
     }
 }

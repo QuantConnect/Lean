@@ -88,6 +88,9 @@ namespace QuantConnect
                     sid = SecurityIdentifier.GenerateCrypto(ticker, market);
                     break;
 
+                case SecurityType.FutureOption:
+                    throw new NotImplementedException("Cannot create future option Symbol using this method (insufficient information). Use `CreateOption(Symbol, ...)` instead.");
+
                 case SecurityType.Commodity:
                 default:
                     throw new NotImplementedException(Invariant($"The security type has not been implemented yet: {securityType}"));
@@ -116,6 +119,7 @@ namespace QuantConnect
             var firstDate = underlying.SecurityType == SecurityType.Equity ||
                 underlying.SecurityType == SecurityType.Option ||
                 underlying.SecurityType == SecurityType.Future ||
+                underlying.SecurityType == SecurityType.FutureOption ||
                 underlying.SecurityType == SecurityType.Base
                     ? underlying.ID.Date
                     : (DateTime?)null;
@@ -168,6 +172,18 @@ namespace QuantConnect
             else
             {
                 var sym = underlyingSymbol.Value;
+                if (sid.Symbol != underlyingSymbol.ID.Symbol)
+                {
+                    // If we have changed the SID and it does not match the underlying,
+                    // we've mapped a future into another Symbol. We want to have a value
+                    // representing the mapped ticker, not of the underlying.
+                    // e.g. we want:
+                    //     OG  C3200...|GC18Z20
+                    // NOT
+                    //     GC  C3200...|GC18Z20
+                    sym = sid.Symbol;
+                }
+
                 if (sym.Length > 5) sym += " ";
 
                 alias = alias ?? SymbolRepresentation.GenerateOptionTickerOSI(sym, sid.OptionRight, sid.StrikePrice, sid.Date);
@@ -210,7 +226,8 @@ namespace QuantConnect
         {
             return
                 (ID.SecurityType == SecurityType.Future ||
-                (ID.SecurityType == SecurityType.Option && HasUnderlying)) &&
+                (ID.SecurityType == SecurityType.Option && HasUnderlying) ||
+                (ID.SecurityType == SecurityType.FutureOption && HasUnderlying)) &&
                 ID.Date == SecurityIdentifier.DefaultDate;
         }
 
@@ -314,9 +331,42 @@ namespace QuantConnect
 
                 return new Symbol(ID, alias, underlyingSymbol);
             }
-            else
+
+            if (ID.SecurityType == SecurityType.FutureOption)
             {
-                return new Symbol(ID, mappedSymbol, Underlying);
+                throw new ArgumentException("Future Option can not be mapped.");
+            }
+
+            return new Symbol(ID, mappedSymbol, Underlying);
+        }
+
+        /// <summary>
+        /// Determines the SecurityType based on the underlying Symbol's SecurityType
+        /// </summary>
+        /// <param name="underlyingSymbol">Underlying Symbol of an option</param>
+        /// <returns>SecurityType of the option</returns>
+        /// <exception cref="ArgumentException">The provided underlying has no SecurityType able to represent it as an option</exception>
+        public static SecurityType GetOptionTypeFromUnderlying(Symbol underlyingSymbol)
+        {
+            return GetOptionTypeFromUnderlying(underlyingSymbol.SecurityType);
+        }
+
+        /// <summary>
+        /// Determines the SecurityType based on the underlying Symbol's SecurityType
+        /// </summary>
+        /// <param name="securityType">SecurityType of the underlying Symbol</param>
+        /// <returns>SecurityType of the option</returns>
+        /// <exception cref="ArgumentException">The provided underlying has no SecurityType able to represent it as an option</exception>
+        public static SecurityType GetOptionTypeFromUnderlying(SecurityType securityType)
+        {
+            switch (securityType)
+            {
+                case SecurityType.Equity:
+                    return SecurityType.Option;
+                case SecurityType.Future:
+                    return SecurityType.FutureOption;
+                default:
+                    throw new ArgumentException($"No option type exists for underlying SecurityType: {securityType}");
             }
         }
 

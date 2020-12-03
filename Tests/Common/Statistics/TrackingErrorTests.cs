@@ -35,11 +35,15 @@ namespace QuantConnect.Tests.Common.Statistics
             var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
             var spyPath = LeanData.GenerateZipFilePath(Globals.DataFolder, spy, new DateTime(2020, 3, 1), Resolution.Daily, TickType.Trade);
             var spyConfig = new QuantConnect.Data.SubscriptionDataConfig(typeof(TradeBar), spy, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var endDate = new DateTime(2020, 3, 8);
 
             foreach (var line in QuantConnect.Compression.ReadLines(spyPath))
             {
                 var bar = TradeBar.ParseEquity(spyConfig, line, DateTime.Now.Date);
-                _spy.Add(bar);
+                if (bar.EndTime < endDate)
+                {
+                    _spy.Add(bar);
+                }
             }
 
             for (var i = 1; i < _spy.Count(); i++)
@@ -54,7 +58,10 @@ namespace QuantConnect.Tests.Common.Statistics
             foreach (var line in QuantConnect.Compression.ReadLines(aaplPath))
             {
                 var bar = TradeBar.ParseEquity(aaplConfig, line, DateTime.Now.Date);
-                _aapl.Add(bar);
+                if (bar.EndTime < endDate)
+                {
+                    _aapl.Add(bar);
+                }
             }
 
             for (var i = 1; i < _aapl.Count(); i++)
@@ -83,9 +90,10 @@ namespace QuantConnect.Tests.Common.Statistics
         [Test]
         public void TotalPerformance()
         {
-            var result = QuantConnect.Statistics.Statistics.TrackingError(_aaplPerformance, _spyPerformance);
+            // This might seem arbitrary, but there's 1 missing date vs. AAPL for SPY data, and it happens to be at line 5555 for date 2020-01-31
+            var result = QuantConnect.Statistics.Statistics.TrackingError(_aaplPerformance.Take(5555).ToList(), _spyPerformance.Take(5555).ToList());
 
-            Assert.AreEqual(0.43046868698429447, result);
+            Assert.AreEqual(0.43115365020121948, result, 0.00001);
         }
 
         [Test]

@@ -398,14 +398,18 @@ namespace QuantConnect.Securities
                     {
                         var position = kvp.Value;
                         var securityType = position.Type;
-                        // we can't include forex in this calculation since we would be double accounting with respect to the cash book
-                        // we also exclude futures and CFD as they are calculated separately
+                        // We can't include forex in this calculation since we would be double accounting with respect to the cash book
+                        // We also exclude futures and CFD as they are calculated separately because they do not impact the account's cash.
+                        // We include futures options as part of this calculation because IB chooses to change our account's cash balance
+                        // when we buy or sell a futures options contract.
                         if (securityType != SecurityType.Forex && securityType != SecurityType.Crypto &&
                             securityType != SecurityType.Future && securityType != SecurityType.Cfd)
                         {
                             totalHoldingsValueWithoutForexCryptoFutureCfd += position.Holdings.HoldingsValue;
                         }
 
+                        // Futures and CFDs don't impact account cash, so they must be calculated
+                        // by applying the unrealized P&L to the cash balance.
                         if (securityType == SecurityType.Future || securityType == SecurityType.Cfd)
                         {
                             totalFuturesAndCfdHoldingsValue += position.Holdings.UnrealizedProfit;

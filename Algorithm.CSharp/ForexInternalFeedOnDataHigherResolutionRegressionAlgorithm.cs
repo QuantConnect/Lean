@@ -30,6 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
         private readonly Dictionary<Symbol, int> _dataPointsPerSymbol = new Dictionary<Symbol, int>();
         private bool _added;
         private Symbol _eurusd;
+        private DateTime lastDataTime = DateTime.MinValue;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -51,6 +52,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            if (lastDataTime == data.Time)
+            {
+                throw new Exception("Duplicate time for current data and last data slice");
+            }
+
+            lastDataTime = data.Time;
+
             if (_added)
             {
                 var eurUsdSubscription = SubscriptionManager.SubscriptionDataConfigService
@@ -94,7 +102,7 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedDataPointsPerSymbol = new Dictionary<string, int>
             {
                 { "EURGBP", 3 },
-                { "EURUSD", 29 }
+                { "EURUSD", 28 }
             };
 
             foreach (var kvp in _dataPointsPerSymbol)

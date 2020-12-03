@@ -78,7 +78,13 @@ namespace QuantConnect.Securities
                 throw new ArgumentException($"Symbol can't be found in the Symbol Properties Database: {symbol.Value}");
             }
 
-            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
+            // For Futures Options that don't have a SPDB entry, the futures entry will be used instead.
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
+                symbol.ID.Market,
+                symbol,
+                symbol.SecurityType,
+                defaultQuoteCurrency);
+
             // add the symbol to our cache
             if (addToSymbolCache)
             {
@@ -130,6 +136,17 @@ namespace QuantConnect.Securities
                 case SecurityType.Option:
                     if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
                     security = new Option.Option(symbol, exchangeHours, quoteCash, new Option.OptionSymbolProperties(symbolProperties), _cashBook, _registeredTypes, cache);
+                    break;
+
+                case SecurityType.FutureOption:
+                    if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
+                    var optionSymbolProperties = new Option.OptionSymbolProperties(symbolProperties);
+
+                    // Future options exercised only gives us one contract back, rather than the
+                    // 100x seen in equities.
+                    optionSymbolProperties.SetContractUnitOfTrade(1);
+
+                    security = new FutureOption.FutureOption(symbol, exchangeHours, quoteCash, optionSymbolProperties, _cashBook, _registeredTypes, cache);
                     break;
 
                 case SecurityType.Future:

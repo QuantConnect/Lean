@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
@@ -51,20 +52,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             DateTime startTime)
         {
             _config = config;
-            // Estimate delisting date.
-            switch (config.Symbol.ID.SecurityType)
-            {
-                case SecurityType.Future:
-                    _delistingDate = config.Symbol.ID.Date;
-                    break;
-                case SecurityType.Option:
-                    _delistingDate = OptionSymbol.GetLastDayOfTrading(
-                        config.Symbol);
-                    break;
-                default:
-                    _delistingDate = mapFile.DelistingDate;
-                    break;
-            }
+            _delistingDate = config.Symbol.GetDelistingDate(mapFile);
         }
 
         /// <summary>

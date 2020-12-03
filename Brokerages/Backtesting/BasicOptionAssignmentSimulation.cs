@@ -60,7 +60,7 @@ namespace QuantConnect.Brokerages.Backtesting
                 algorithm.UtcTime - _lastUpdate > _securitiesRescanPeriod)
             {
                 var expirations = algorithm.Securities.Select(x => x.Key)
-                            .Where(x => x.ID.SecurityType == SecurityType.Option &&
+                            .Where(x => (x.ID.SecurityType == SecurityType.Option || x.ID.SecurityType == SecurityType.FutureOption) &&
                                         x.ID.Date > algorithm.Time &&
                                         x.ID.Date - algorithm.Time <= _securitiesRescanPeriod)
                             .Select(x => x.ID.Date)
@@ -136,7 +136,7 @@ namespace QuantConnect.Brokerages.Backtesting
 
             algorithm.Securities
                 // we take only options that expire soon
-                .Where(x => x.Key.ID.SecurityType == SecurityType.Option &&
+                .Where(x => (x.Key.ID.SecurityType == SecurityType.Option || x.Key.ID.SecurityType == SecurityType.FutureOption) &&
                             x.Key.ID.Date - algorithm.UtcTime <= _priorExpiration)
                 // we look into short positions only (short for user means long for us)
                 .Where(x => x.Value.Holdings.IsShort)

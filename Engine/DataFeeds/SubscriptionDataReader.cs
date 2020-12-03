@@ -240,7 +240,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
                     if (mapFile.Any()) _mapFile = mapFile;
 
-                    if (!_config.IsCustomData && _config.SecurityType != SecurityType.Option)
+                    if (!_config.IsCustomData && _config.SecurityType != SecurityType.Option && _config.SecurityType != SecurityType.FutureOption)
                     {
                         var factorFile = _factorFileProvider.Get(_config.Symbol);
                         _hasScaleFactors = factorFile != null;
@@ -282,19 +282,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            // Estimate delisting date.
-            switch (_config.Symbol.ID.SecurityType)
-            {
-                case SecurityType.Future:
-                    _delistingDate = _config.Symbol.ID.Date;
-                    break;
-                case SecurityType.Option:
-                    _delistingDate = OptionSymbol.GetLastDayOfTrading(_config.Symbol);
-                    break;
-                default:
-                    _delistingDate = _mapFile.DelistingDate;
-                    break;
-            }
+            _delistingDate = _config.Symbol.GetDelistingDate(_mapFile);
+
             // adding a day so we stop at EOD
             _delistingDate = _delistingDate.AddDays(1);
 

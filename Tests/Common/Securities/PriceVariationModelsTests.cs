@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         private Security GetSecurity(Symbol symbol, DataNormalizationMode mode)
         {
             var symbolProperties = SymbolPropertiesDatabase.FromDataFolder()
-                .GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType, Currencies.USD);
+                .GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, Currencies.USD);
 
             Security security;
             if (symbol.ID.SecurityType == SecurityType.Equity)

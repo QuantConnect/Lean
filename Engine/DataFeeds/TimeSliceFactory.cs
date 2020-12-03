@@ -254,7 +254,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             }
 
                             // special handling of options data to build the option chain
-                            if (symbol.SecurityType == SecurityType.Option)
+                            if (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.FutureOption)
                             {
                                 if (optionChains == null)
                                 {
@@ -303,8 +303,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         securityUpdate.Add(baseData);
 
                         // option underlying security update
-                        if (!packet.Configuration.IsInternalFeed
-                            && symbol.SecurityType == SecurityType.Equity)
+                        if (!packet.Configuration.IsInternalFeed)
                         {
                             optionUnderlyingUpdates[symbol] = baseData;
                         }

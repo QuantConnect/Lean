@@ -1923,7 +1923,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 },
 
                 // LookupSymbols
-                (lookupName, secType, includeExpired, securityCurrency, securityExchange) =>
+                (symbol, includeExpired, securityCurrency) =>
                 {
                     lookupCount++;
 
@@ -1941,7 +1941,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                     time = utcTime.ConvertFromUtc(exchangeTimeZone);
 
-                    switch (secType)
+                    switch (symbol.SecurityType)
                     {
                         case SecurityType.Option:
                             return time.Day == 19

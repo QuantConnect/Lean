@@ -21,6 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
 using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm
@@ -449,6 +450,42 @@ namespace QuantConnect.Algorithm
             var symbol = QuantConnect.Symbol.Create(name, securityType, market);
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, isFilteredSubscription: false);
             return AddUniverse(new UserDefinedUniverse(config, universeSettings, resolution.ToTimeSpan(), selector));
+        }
+
+        /// <summary>
+        /// Adds a new universe that creates options of the security by monitoring any changes in the Universe the provided security is in.
+        /// Additionally, a filter can be applied to the options generated when the universe of the security changes.
+        /// </summary>
+        /// <param name="underlyingSymbol">Underlying Symbol to add as an option. For Futures, the option chain constructed will be per-contract, as long as a canonical Symbol is provided.</param>
+        /// <param name="optionFilter">User-defined filter used to select the options we want out of the option chain provided.</param>
+        /// <exception cref="InvalidOperationException">The underlying Symbol's universe is not found.</exception>
+        public void AddUniverseOptions(Symbol underlyingSymbol, Func<OptionFilterUniverse, OptionFilterUniverse> optionFilter)
+        {
+             // We need to load the universe associated with the provided Symbol and provide that universe to the option filter universe.
+             // The option filter universe will subscribe to any changes in the universe of the underlying Symbol,
+             // ensuring that we load the option chain for every asset found in the underlying's Universe.
+             Universe universe;
+             if (!UniverseManager.TryGetValue(underlyingSymbol, out universe))
+             {
+                 // The universe might be already added, but not registered with the UniverseManager.
+                 universe = _pendingUniverseAdditions.SingleOrDefault(u => u.Configuration.Symbol == underlyingSymbol);
+                 if (universe == null)
+                 {
+                     underlyingSymbol = AddSecurity(underlyingSymbol).Symbol;
+                 }
+
+                 // Recheck again, we should have a universe addition pending for the provided Symbol
+                 universe = _pendingUniverseAdditions.SingleOrDefault(u => u.Configuration.Symbol == underlyingSymbol);
+                 if (universe == null)
+                 {
+                     // Should never happen, but it could be that the subscription
+                     // created with AddSecurity is not aligned with the Symbol we're using.
+                     throw new InvalidOperationException($"Universe not found for underlying Symbol: {underlyingSymbol}.");
+                 }
+             }
+
+             // Allow all option contracts through without filtering if we're provided a null filter.
+             AddUniverseOptions(universe, optionFilter ?? (_ => _));
         }
 
         /// <summary>
