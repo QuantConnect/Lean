@@ -128,6 +128,9 @@ namespace QuantConnect.Report
             // More initialization, this time with Algorithm and other misc. classes
             _resultHandler.Initialize(job, new Messaging.Messaging(), new Api.Api(), transactions);
             _resultHandler.SetAlgorithm(Algorithm, Algorithm.Portfolio.TotalPortfolioValue);
+
+            Algorithm.Transactions.SetOrderProcessor(transactions);
+
             transactions.Initialize(Algorithm, new BacktestingBrokerage(Algorithm), _resultHandler);
             feed.Initialize(Algorithm, job, _resultHandler, null, null, null, _dataManager, null, null);
 
