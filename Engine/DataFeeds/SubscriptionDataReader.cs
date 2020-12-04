@@ -284,8 +284,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _delistingDate = _config.Symbol.GetDelistingDate(_mapFile);
 
-            // adding a day so we stop at EOD
-            _delistingDate = _delistingDate.AddDays(1);
+            var isFutureOrFutureOption = _config.Symbol.SecurityType == SecurityType.Future ||
+                _config.Symbol.SecurityType == SecurityType.FutureOption;
+
+            if (!isFutureOrFutureOption)
+            {
+                // adding a day so we stop at EOD for other asset classes except futures and futures options,
+                // since they expire on the same day as their expiry during market hours.
+                _delistingDate = _delistingDate.AddDays(1);
+            }
 
             UpdateDataEnumerator(true);
 

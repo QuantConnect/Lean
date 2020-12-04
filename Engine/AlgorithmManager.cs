@@ -1041,8 +1041,18 @@ namespace QuantConnect.Lean.Engine
                 var delistingTime = delistings[i].Time;
                 var nextMarketOpen = security.Exchange.Hours.GetNextMarketOpen(delistingTime, false);
                 var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(nextMarketOpen, false);
+                var futureOrFutureOption = security.Type == SecurityType.Future ||
+                    security.Type == SecurityType.FutureOption;
 
-                if (security.LocalTime < nextMarketClose)
+                // Legacy behavior, we want to liquidate at the next market open for any
+                // non-futures/FOPs assets with an expiry
+                if (!futureOrFutureOption && security.LocalTime < nextMarketClose)
+                {
+                    continue;
+                }
+                // We want to liquidate during market hours for futures and futures options, so that we're
+                // not left accidentally holding the contract after expiry.
+                if (futureOrFutureOption && (security.LocalTime < delistingTime || !security.Exchange.Hours.IsOpen(security.LocalTime, false)))
                 {
                     continue;
                 }
