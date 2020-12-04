@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
@@ -381,6 +382,20 @@ namespace QuantConnect.Algorithm
                 }
                 return;
             }
+
+            // Verify insights are valid
+            var validInsights = new List<Insight>();
+            foreach(var insight in insights){
+                if (Securities[insight.Symbol].IsDelisted)
+                {
+                    Error($"QCAlgorithm.EmitInsights(): Cannot emit insight for delisted security {insight.Symbol}");
+                } else {
+                    validInsights.Add(insight);
+                }
+            }
+
+            // Update our insights with our valids ones
+            insights = validInsights.ToArray();
 
             OnInsightsGenerated(insights.Select(InitializeInsightFields));
             ProcessInsights(insights);
