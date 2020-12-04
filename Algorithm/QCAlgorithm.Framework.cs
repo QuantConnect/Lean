@@ -389,7 +389,9 @@ namespace QuantConnect.Algorithm
                 if (Securities[insight.Symbol].IsDelisted)
                 {
                     Error($"QCAlgorithm.EmitInsights(): Cannot emit insight for delisted security {insight.Symbol}");
-                } else {
+                } 
+                else 
+                {
                     validInsights.Add(insight);
                 }
             }
