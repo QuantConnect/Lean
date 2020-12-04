@@ -394,7 +394,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
             List<Order> orders = new List<Order>();
 
-            foreach (Dictionary<string, dynamic> item in ordersData["data"])
+            foreach (JObject item in ordersData["data"])
                 orders.Add(new Order(item));
 
             return orders;
@@ -416,7 +416,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
             List<Order> orderhistory = new List<Order>();
 
-            foreach (Dictionary<string, dynamic> item in orderData["data"])
+            foreach (JObject item in orderData["data"])
                 orderhistory.Add(new Order(item));
 
             return orderhistory;

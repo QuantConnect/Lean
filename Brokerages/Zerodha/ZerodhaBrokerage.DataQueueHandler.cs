@@ -30,8 +30,7 @@ namespace QuantConnect.Brokerages.Zerodha
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
             var symbol = dataConfig.Symbol;
-            if (symbol.Value.Contains("UNIVERSE") ||
-                !_symbolMapper.IsKnownLeanSymbol(symbol)|| symbol.SecurityType== SecurityType.Forex )
+            if (CanSubscribe(symbol))
             {
                 return Enumerable.Empty<BaseData>().GetEnumerator();
             }
@@ -46,6 +45,25 @@ namespace QuantConnect.Brokerages.Zerodha
         {
             _subscriptionManager.Unsubscribe(dataConfig);
             _aggregator.Remove(dataConfig);
+        }
+
+
+        /// <summary>
+        /// Returns true if this data provide can handle the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol to be handled</param>
+        /// <returns>True if this data provider can get data for the symbol, false otherwise</returns>
+        private static bool CanSubscribe(Symbol symbol)
+        {
+            var market = symbol.ID.Market;
+            var securityType = symbol.ID.SecurityType;
+            if (symbol.Value.IndexOfInvariant("universe", true) != -1) return false;
+            // Include future options as a special case with no matching market, otherwise
+            // our subscriptions are removed without any sort of notice.
+            return
+                (securityType == SecurityType.Equity ||
+                securityType == SecurityType.Option||
+                securityType == SecurityType.Future);
         }
         #endregion
     }
