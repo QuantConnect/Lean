@@ -383,9 +383,15 @@ namespace QuantConnect.Api
                 backtestName
             }), ParameterType.RequestBody);
 
-            Backtest result;
+            BacktestResponseWrapper result;
             ApiConnection.TryRequest(request, out result);
-            return result;
+
+            // Use API Response values for Backtest Values
+            result.Backtest.Success = result.Success;
+            result.Backtest.Errors = result.Errors;
+
+            // Return only the backtest object
+            return result.Backtest;
         }
 
         /// <summary>
@@ -408,7 +414,7 @@ namespace QuantConnect.Api
                 backtestId
             }), ParameterType.RequestBody);
 
-            BacktestReadResponseWrapper result;
+            BacktestResponseWrapper result;
             ApiConnection.TryRequest(request, out result);
 
             // Go fetch the charts if the backtest is completed
@@ -429,10 +435,10 @@ namespace QuantConnect.Api
                     {
                         projectId,
                         backtestId,
-                        chart = chart.Key
+                        chart = chart.Key.Replace(' ', '+')
                     }), ParameterType.RequestBody);
 
-                    BacktestReadResponseWrapper chartResponse;
+                    BacktestResponseWrapper chartResponse;
                     ApiConnection.TryRequest(chartRequest, out chartResponse);
 
                     // Add this chart to our updated collection
@@ -448,6 +454,12 @@ namespace QuantConnect.Api
                     result.Backtest.Charts[updatedChart.Key] = updatedChart.Value;
                 }
             }
+
+            // Use API Response values for Backtest Values
+            result.Backtest.Success = result.Success;
+            result.Backtest.Errors = result.Errors;
+
+            // Return only the backtest object
             return result.Backtest;
         }
 

@@ -22,10 +22,7 @@ namespace QuantConnect.Api
 {
     /// <summary>
     /// Backtest response packet from the QuantConnect.com API.
-    /// Used in Backtest/Create
     /// </summary>
-    ///
-    /// TODO: Maybe we need a more uniform backtest class for all backtest/* endpoints
     public class Backtest : RestResponse
     {
         /// <summary>
@@ -79,32 +76,34 @@ namespace QuantConnect.Api
         /// <summary>
         /// Contains population averages scores over the life of the algorithm
         /// </summary>
-        [JsonProperty(PropertyName = "alphaRuntimeStatistics")]
+        [JsonProperty(PropertyName = "alphaRuntimeStatistics", NullValueHandling = NullValueHandling.Ignore)]
         public AlphaRuntimeStatistics AlphaRuntimeStatistics;
 
         /// <summary>
         /// Charts updates for the live algorithm since the last result packet
         /// </summary>
-        [JsonProperty(PropertyName = "charts")]
+        [JsonProperty(PropertyName = "charts", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, Chart> Charts;
 
         /// <summary>
         /// Statistics information sent during the algorithm operations.
         /// </summary>
         /// <remarks>Intended for update mode -- send updates to the existing statistics in the result GUI. If statistic key does not exist in GUI, create it</remarks>
-        [JsonProperty(PropertyName = "statistics")]
+        [JsonProperty(PropertyName = "statistics", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, string> Statistics;
 
         /// <summary>
         /// Runtime banner/updating statistics in the title banner of the live algorithm GUI.
         /// </summary>
-        [JsonProperty(PropertyName = "runtimeStatistics")]
+        [JsonProperty(PropertyName = "runtimeStatistics", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, string> RuntimeStatistics;
     }
 
-    // TODO: Temporary work around non-uniform Backtest/* endpoints
-    // Will remove this once it has been unified
-    public class BacktestReadResponseWrapper : RestResponse
+    /// <summary>
+    /// Wrapper class for Backtest/* endpoints JSON response
+    /// Currently used by Backtest/Read & Backtest/Create
+    /// </summary>
+    public class BacktestResponseWrapper : RestResponse
     {
         /// <summary>
         /// Backtest Object
