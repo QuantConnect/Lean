@@ -24,12 +24,12 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            return new ChaikinMoneyFlow("CMF", 12);
+            return new ChaikinMoneyFlow("CMF", 20);
         }
 
         protected override string TestFileName => "spy_cmf.txt";
 
-        protected override string TestColumnName => "CMF_12";
+        protected override string TestColumnName => "CMF_20";
         
         [Test]
         public void TestTradeBarsWithNoVolume()
