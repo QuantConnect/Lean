@@ -278,10 +278,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             foreach (var item in GetSortedReferenceDateIntervals(previous, fillForwardResolution, _dataResolution))
             {
+                // To build Time/EndTime we always use '+'/'-' dataResolution
+                // DataTime TZ = UTC -5; Exchange TZ = America/New York (-5/-4)
+                // Standard TimeZone    00:00:00 + 1 day = 1.00:00:00
+                // Daylight Time        01:00:00 + 1 day = 1.01:00:00
+
                 // daylight saving time starts/end at 2 a.m. on Sunday
+                // Having this information we find that the specific bar of Sunday
+                // Starts in in one TZ (Standard TZ), but finishes in another (Daylight TZ) (consider winter => summer)
+                // During simple arithmetic operations like +/- we shift the time, but not the time zone
+                // which is sensitive for specific dates (daylight movement) if we are  in Exchange TimeZone, for example
+                // We have 00:00:00 + 1 day = 1.00:00:00, so both are in Standard TZ, but we expect endTime in Daylight, i.e. 1.01:00:00
+
+                // all above means, that all Time values, calculated using simple +/- operations
+                // sticks to original Time Zone, swallowing its own TZ and movement i.e.
+                // EndTime = Time + resolution, both Time and EndTime in the TZ of Time (Standard/Daylight)
+                // Time = EndTime - resolution, both Time and EndTime in the TZ of EndTime (Standard/Daylight)
+
+                // because of all above, we know that next.EndTime sticks to Time TZ,
+                // it means that we have to calculate potentialBadEndTime in the same TZ
                 // by adding interval in daily resolution we move to next day
                 // in order to track daylight movement need to round-down origin day (before + Interval)
                 var potentialBarEndTime = RoundDown(item.ReferenceDateTime, item.Interval) + item.Interval;
+
+                // RoundDown(item.ReferenceDateTime + item.Interval, item.Interval) - behaves differently because 
+                // it's rounded and applies TZ of day "after", which is wrong, because
+                // incoming previous and next are built using TZ of "origin" day
+
                 if (potentialBarEndTime < next.EndTime)
                 {
                     var nextFillForwardBarStartTime = potentialBarEndTime - item.Interval;
@@ -289,7 +312,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     {
                         fillForward = previous.Clone(true);
                         fillForward.Time = potentialBarEndTime - _dataResolution; // bar are ALWAYS of the data resolution
-                        fillForward.EndTime = potentialBarEndTime;
+
+                        // double Convert (Exchange TZ => data TZ => Exchange TZ)
+                        // allows us to calculate EndTime using it's own TZ (aka reapply)
+                        // and don't rely on TZ of bar start time
+                        // i.e. 00:00:00 + 1 day = 1.01:00:00, both start and end are in their own TZ
+                        // it's interesting that NodaTime  consider next
+                        // if time great or equal than 01:00 AM it's considered as "moved" (Standard, not Daylight)
+                        // when time less than 01:00 AM it's considered as previous TZ (Standard, not Daylight)
+                        // it's easy to fix this behavior by substract 1 minute  before first convert, and then return it back.
+                        // so we work with 0:59 AM instead.
+                        // but now follow native behavior
+                        fillForward.EndTime = (fillForward.Time.ConvertTo(Exchange.TimeZone, _dataTimeZone) + _dataResolution)
+                            .ConvertTo(_dataTimeZone, Exchange.TimeZone);
                         return true;
                     }
                 }
@@ -362,7 +397,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             result.Add(new ReferenceDateInterval(marketOpen, largerResolution));
 
             // we need to order them because they might not be in an incremental order and consumer expects them to be
-            foreach(var referenceDateInterval in result.OrderBy(interval => interval.ReferenceDateTime + interval.Interval))
+            foreach (var referenceDateInterval in result.OrderBy(interval => interval.ReferenceDateTime + interval.Interval))
             {
                 yield return referenceDateInterval;
             }
