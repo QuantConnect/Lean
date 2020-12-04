@@ -14,10 +14,6 @@
  *
 */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
@@ -31,6 +27,10 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
@@ -83,7 +83,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var reference = new DateTime(2015, 6, 25, 9, 30, 0);
             var data = Enumerable.Range(0, 2).Select(x => new TradeBar
             {
-                Time = reference.AddMinutes(x*2),
+                Time = reference.AddMinutes(x * 2),
                 Value = x,
                 Period = dataResolution,
                 Volume = (x + 1) * 100
@@ -126,7 +126,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         {
             var dataResolution = Time.OneMinute;
             var reference = new DateTime(2015, 6, 25, 9, 28, 0);
-            var data = new []
+            var data = new[]
             {
                 new TradeBar
                 {
@@ -251,7 +251,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var reference = new DateTime(2015, 6, 25, 15, 57, 0);
             var data = Enumerable.Range(0, 1).Select(x => new TradeBar
             {
-                Time = reference.AddMinutes(x*2),
+                Time = reference.AddMinutes(x * 2),
                 Value = x,
                 Period = dataResolution,
                 Volume = 100
@@ -395,7 +395,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var dataResolution = Time.OneHour;
             var reference = new DateTime(2015, 6, 25, 14, 0, 0);
             var end = reference.Date.AddDays(1).AddHours(10);
-            var data = new []
+            var data = new[]
             {
                 new TradeBar
                 {
@@ -1218,13 +1218,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var exchange = new ForexExchange();
             var isExtendedMarketHours = false;
             var fillForwardEnumerator = new FillForwardEnumerator(
-                enumerator, 
-                exchange, 
-                Ref.Create(TimeSpan.FromDays(1)), 
-                isExtendedMarketHours, 
-                data.Last().EndTime, 
-                dataResolution, 
-                DateTimeZone.Utc, 
+                enumerator,
+                exchange,
+                Ref.Create(TimeSpan.FromDays(1)),
+                isExtendedMarketHours,
+                data.Last().EndTime,
+                dataResolution,
+                DateTimeZone.Utc,
                 data.First().EndTime);
 
             for (int i = 0; i < data.Count; i++)
@@ -1239,9 +1239,168 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             fillForwardEnumerator.Dispose();
         }
 
+        private static TestCaseData[] ExchangeSet => new[] {
+            new TestCaseData(new ForexExchange(), DateTimeZone.ForOffset(Offset.FromHours(-5)), Resolution.Minute),
+            new TestCaseData(new ForexExchange(), DateTimeZone.ForOffset(Offset.FromHours(-5)), Resolution.Hour),
+            new TestCaseData(new ForexExchange(), DateTimeZone.ForOffset(Offset.FromHours(-5)), Resolution.Daily),
+
+            new TestCaseData(new EquityExchange(), TimeZones.NewYork, Resolution.Minute),
+            new TestCaseData(new EquityExchange(), TimeZones.NewYork, Resolution.Hour),
+            new TestCaseData(new EquityExchange(), TimeZones.NewYork, Resolution.Daily),
+
+            new TestCaseData(new SecurityExchange(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, null, SecurityType.Forex)), DateTimeZone.Utc, Resolution.Minute),
+            new TestCaseData(new SecurityExchange(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, null, SecurityType.Forex)), DateTimeZone.Utc, Resolution.Hour),
+            new TestCaseData(new SecurityExchange(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, null, SecurityType.Forex)), DateTimeZone.Utc, Resolution.Daily)
+        };
+
+        private static IEnumerable<TestCaseData> ExchangeSettings(string daylight, DateTime start, int durationInDays)
+        {
+            return ExchangeSet.Select(origin =>
+            {
+                var list = new List<object>(origin.Arguments)
+                {
+                    daylight,
+                    start,
+                    durationInDays
+                };
+
+                return new TestCaseData(list.ToArray());
+            });
+        }
+
+        private static IEnumerable<TestCaseData> ExchangeDaylightTimeSet(int durationInDays)
+        {
+            return ExchangeSettings("DST", new DateTime(2011, 3, 7), durationInDays);
+        }
+
+        private static IEnumerable<TestCaseData> ExchangeStandardTimeSet(int durationInDays)
+        {
+            return ExchangeSettings("ST", new DateTime(2011, 10, 31), durationInDays);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 6 })]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 7 })]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 14 })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 6 })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 7 })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 14 })]
+        public void FillForwardBarsAroundDaylightMovementForDifferentResolutions_Enumerator(SecurityExchange exchange, DateTimeZone dataTimeZone, Resolution resolution, string dst, DateTime reference, int durationInDays)
+        {
+            var data = new[]
+            {
+                new TradeBar
+                {
+                    Time = reference.ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 0,
+                    Period = resolution.ToTimeSpan(),
+                    Volume = 100
+                },
+                new TradeBar
+                {
+                    Time = reference.AddDays(durationInDays).ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 1,
+                    Period = resolution.ToTimeSpan(),
+                    Volume = 100
+                }
+            }.ToList();
+            var enumerator = data.GetEnumerator();
+
+            var isExtendedMarketHours = false;
+            var fillForwardEnumerator = new FillForwardEnumerator(
+                enumerator,
+                exchange,
+                Ref.Create(resolution.ToTimeSpan()),
+                isExtendedMarketHours,
+                data.Last().EndTime,
+                resolution.ToTimeSpan(),
+                dataTimeZone,
+                data.First().EndTime);
+
+            var ffbars = new List<string>();
+            while (fillForwardEnumerator.MoveNext())
+            {
+                if (fillForwardEnumerator.Current?.IsFillForward == true)
+                {
+                    var bar = fillForwardEnumerator.Current;
+                    ffbars.Add($"{bar.Time:yyyy.MM.dd H:m:s} - {bar.EndTime:yyyy.MM.dd H:m:s}");
+                }
+            }
+
+            fillForwardEnumerator.Dispose();
+
+            var expectedDataFile = $"enum_{dst}_{durationInDays}_{exchange.TimeZone.Id.Replace("/", "_")}_{dataTimeZone.Id.Replace("/","_")}_{resolution}.txt";
+
+            // updates expected data
+            if (false)
+            {
+                QuantConnect.Compression.ZipCreateAppendData(
+                    "../../TestData/FillForwardBars.zip",
+                    expectedDataFile,
+                    string.Join(Environment.NewLine, ffbars),
+                    overrideEntry: true);
+            }
+            QuantConnect.Compression.Unzip("TestData/FillForwardBars.zip", "./", overwrite: true);
+            var expected = File.ReadAllLines(expectedDataFile);
+
+            Assert.AreEqual(expected.Length, ffbars.Count);
+            Assert.IsTrue(expected.SequenceEqual(ffbars));
+        }
+
+        [Test]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 6 })]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 7 })]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 14 })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 6 })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 7 })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 14 })]
+        public void FillForwardBarsAroundDaylightMovementForDifferentResolutions_Algorithm(SecurityExchange exchange, DateTimeZone dataTimeZone, Resolution resolution, string dst, DateTime reference, int durationInDays)
+        {
+            MarketHoursDatabase MarketHours = MarketHoursDatabase.FromDataFolder();
+            MarketHours.SetEntry(
+                Market.FXCM,
+                "EURUSD",
+                SecurityType.Forex,
+                exchange.Hours,
+                dataTimeZone);
+            FillForwardDaylightMovementTestAlgorithm.FillForwardBars.Clear();
+            FillForwardDaylightMovementTestAlgorithm.Resolution = resolution;
+            FillForwardDaylightMovementTestAlgorithm.StartDate = reference;
+            FillForwardDaylightMovementTestAlgorithm.DurationInDays = durationInDays;
+
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(nameof(FillForwardDaylightMovementTestAlgorithm),
+                new Dictionary<string, string>(),
+                Language.CSharp,
+                AlgorithmStatus.Completed);
+
+            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+                parameter.Statistics,
+                parameter.AlphaStatistics,
+                parameter.Language,
+                parameter.ExpectedFinalStatus,
+                setupHandler: "FillForwardDaylightMovementTestSetupHandler");
+
+            var expectedDataFile = $"alg_{dst}_{durationInDays}_{exchange.TimeZone.Id.Replace("/", "_")}_{dataTimeZone.Id.Replace("/", "_")}_{resolution}.txt";
+
+            // updates expected data
+            if (false)
+            {
+                QuantConnect.Compression.ZipCreateAppendData(
+                    "../../TestData/FillForwardBars.zip",
+                    expectedDataFile,
+                    string.Join(Environment.NewLine, FillForwardDaylightMovementTestAlgorithm.Result.Value),
+                    overrideEntry: true);
+            }
+            QuantConnect.Compression.Unzip("TestData/FillForwardBars.zip", "./", overwrite: true);
+            var expected = File.ReadAllLines(expectedDataFile);
+
+            Assert.AreEqual(expected.Length, FillForwardDaylightMovementTestAlgorithm.FillForwardBars.Count);
+            Assert.IsTrue(expected.SequenceEqual(FillForwardDaylightMovementTestAlgorithm.FillForwardBars));
+        }
+
         internal class FillForwardTestAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
         {
-            private Symbol _symbol;
+            protected Symbol _symbol;
             public static List<string> FillForwardBars = new List<string>();
             public static Lazy<string> Result { get; set; }
             public static Resolution Resolution { get; set; }
@@ -1274,6 +1433,31 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>();
         }
 
+        internal class FillForwardDaylightMovementTestAlgorithm : FillForwardTestAlgorithm
+        {
+            public static DateTime StartDate { get; set; }
+            public static int DurationInDays { get; set; }
+
+            public override void Initialize()
+            {
+                SetStartDate(StartDate);
+                SetEndDate(StartDate.AddDays(DurationInDays));
+                _symbol = AddForex("EURUSD", Resolution, market: Market.FXCM).Symbol;
+            }
+
+            public override void OnData(Slice data)
+            {
+                if (data.ContainsKey(_symbol))
+                {
+                    var bar = data[_symbol] as QuoteBar;
+                    if (bar != null && bar.IsFillForward)
+                    {
+                        FillForwardBars.Add($"{bar.Time:yyyy.MM.dd H:m:s} - {bar.EndTime:yyyy.MM.dd H:m:s}");
+                    }
+                }
+            }
+        }
+
         internal class FillForwardTestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
         {
             internal static FillForwardTestAlgorithm TestAlgorithm { get; set; }
@@ -1281,6 +1465,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             public override IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
             {
                 Algorithm = TestAlgorithm = new FillForwardTestAlgorithm();
+                return Algorithm;
+            }
+        }
+
+        internal class FillForwardDaylightMovementTestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
+        {
+            internal static FillForwardTestAlgorithm TestAlgorithm { get; set; }
+
+            public override IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
+            {
+                Algorithm = TestAlgorithm = new FillForwardDaylightMovementTestAlgorithm();
                 return Algorithm;
             }
         }
