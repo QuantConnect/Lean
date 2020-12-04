@@ -44,8 +44,6 @@ namespace QuantConnect.Report
                 switch (symbol.SecurityType)
                 {
                     case SecurityType.Option:
-                        resolution = Resolution.Minute;
-                        break;
                     case SecurityType.Future:
                         resolution = Resolution.Minute;
                         break;

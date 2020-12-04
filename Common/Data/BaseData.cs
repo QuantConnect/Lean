@@ -64,6 +64,11 @@ namespace QuantConnect.Data
         protected static readonly List<Resolution> MinuteResolution = new List<Resolution> { Resolution.Minute };
 
         /// <summary>
+        /// A list of high <see cref="Resolution"/>, including minute, second, and tick.
+        /// </summary>
+        protected static readonly List<Resolution> HighResolution = new List<Resolution> { Resolution.Minute, Resolution.Second, Resolution.Tick };
+
+        /// <summary>
         /// Market Data Type of this data - does it come in individual price packets or is it grouped into OHLC.
         /// </summary>
         /// <remarks>Data is classed into two categories - streams of instantaneous prices and groups of OHLC data.</remarks>
@@ -239,7 +244,7 @@ namespace QuantConnect.Data
 
             if (Symbol.SecurityType == SecurityType.Future)
             {
-                return new List<Resolution> { Resolution.Minute, Resolution.Second, Resolution.Tick };
+                return HighResolution;
             }
 
             return AllResolutions;
