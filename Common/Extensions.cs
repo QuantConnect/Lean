@@ -67,7 +67,7 @@ namespace QuantConnect
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
 
-        /// <summary>/// <summary>
+        /// <summary>
         /// Safe multiplies a decimal by 100
         /// </summary>
         /// <param name="value">The decimal to multiply</param>
