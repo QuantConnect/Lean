@@ -203,6 +203,32 @@ namespace QuantConnect.Report
         }
 
         /// <summary>
+        /// Gets the history for the given symbols from the <paramref name="start"/> to the <paramref name="end"/>
+        /// </summary>
+        /// <param name="symbols">Symbols to request history for</param>
+        /// <param name="start">Start date of history request</param>
+        /// <param name="end">End date of history request</param>
+        /// <param name="resolution">Resolution of history request</param>
+        /// <returns>Enumerable of slices</returns>
+        public static IEnumerable<Slice> GetHistory(List<Symbol> symbols, DateTime start, DateTime end, Resolution resolution)
+        {
+            // Handles the conversion of Symbol to Security for us.
+            var looper = new PortfolioLooper(0, new List<Order>(), resolution);
+            var securities = new List<Security>();
+
+            looper.Algorithm.SetStartDate(start);
+            looper.Algorithm.SetEndDate(end);
+
+            foreach (var symbol in symbols)
+            {
+                var configs = looper.Algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, false, false);
+                securities.Add(looper.Algorithm.Securities.CreateSecurity(symbol, configs));
+            }
+
+            return GetHistory(looper.Algorithm, securities, resolution);
+        }
+
+        /// <summary>
         /// Gets the point in time portfolio over multiple deployments
         /// </summary>
         /// <param name="equityCurve">Equity curve series</param>
