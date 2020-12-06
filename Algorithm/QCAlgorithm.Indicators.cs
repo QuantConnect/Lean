@@ -383,6 +383,7 @@ namespace QuantConnect.Algorithm
         ///</summary>
         /// <param name="symbol">The symbol whose DeM we seek.</param>
         /// <param name="period">The period of the moving average implemented</param>
+        /// <param name="movingAverageType">Specifies the type of moving average to be used</param>
         /// <param name="resolution">The resolution.</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The DeMarker indicator for the requested symbol.</returns>
