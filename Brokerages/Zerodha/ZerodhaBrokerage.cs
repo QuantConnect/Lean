@@ -32,6 +32,7 @@ using System.Net.WebSockets;
 using System.Text;
 using Newtonsoft.Json.Linq;
 using NodaTime;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Brokerages.Zerodha
 {
@@ -39,7 +40,7 @@ namespace QuantConnect.Brokerages.Zerodha
     /// Zerodha Brokerage implementation
     /// </summary>
     [BrokerageFactory(typeof(ZerodhaBrokerageFactory))]
-    public partial class ZerodhaBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider, IHistoryProvider
+    public partial class ZerodhaBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
     {
         #region Declarations
         private const int ConnectionTimeout = 30000;
@@ -173,8 +174,8 @@ namespace QuantConnect.Brokerages.Zerodha
             string requestFullMode = "{\"a\":\"mode\",\"v\":[\"full\",[" + String.Join(",", subscribeInstrumentTokens.ToArray()) + "]]}";
 
 
-            Log.Trace("Websocket Subscribe Request: " + request.ToStringInvariant());
-            Log.Trace("Websocket Subscribe Full Mode Request: " + requestFullMode.ToStringInvariant());
+            Log.Debug("Websocket Subscribe Request: " + request.ToStringInvariant());
+            Log.Debug("Websocket Subscribe Full Mode Request: " + requestFullMode.ToStringInvariant());
 
 
             WebSocket.Send(request);
@@ -718,20 +719,82 @@ namespace QuantConnect.Brokerages.Zerodha
             //    yield break;
             //}
 
-            if (request.Resolution != Resolution.Minute && request.Resolution != Resolution.Hour && request.Resolution != Resolution.Daily)
-            {
-                throw new ArgumentException($"ZerodhaBrokerage.ConvertResolution: Unsupported resolution type: {request.Resolution}");
-            }
-
             DateTime latestTime = request.StartTimeUtc;
             var requests = new List<HistoryRequest>();
             requests.Add(request);
-            do
-            {
-                var candles = GetHistory(requests, TimeZones.Kolkata);
-                yield break;
 
-            } while (latestTime < request.EndTimeUtc);
+            foreach (var historyRequest in requests)
+            {
+                if (historyRequest.Symbol.ID.SecurityType != SecurityType.Equity && historyRequest.Symbol.ID.SecurityType != SecurityType.Future && historyRequest.Symbol.ID.SecurityType != SecurityType.Option)
+                {
+                    throw new ArgumentException("Zerodha does not support this security type: " + historyRequest.Symbol.ID.SecurityType);
+                }
+
+                if (historyRequest.StartTimeUtc >= historyRequest.EndTimeUtc)
+                {
+                    throw new ArgumentException("Invalid date range specified");
+                }
+
+                var start = historyRequest.StartTimeUtc.ConvertTo(DateTimeZone.Utc, TimeZones.Kolkata);
+                var end = historyRequest.EndTimeUtc.ConvertTo(DateTimeZone.Utc, TimeZones.Kolkata);
+
+                var history = Enumerable.Empty<BaseData>();
+
+
+                switch (historyRequest.Resolution)
+                {
+                    case Resolution.Minute:
+                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end,historyRequest.Resolution,"minute");
+                        break;
+
+                    case Resolution.Hour:
+                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end,historyRequest.Resolution,"60minute");
+                        break;
+
+                    case Resolution.Daily:
+                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution,"day");
+                        break;
+                }
+
+                foreach (var baseData in history)
+                {
+                    yield return baseData;
+                }
+            }            
+        }
+
+        private IEnumerable<BaseData> GetHistoryForPeriod(Symbol symbol, DateTime start, DateTime end, Resolution resolution,string zerodhaResolution)
+        {
+            Log.Debug("ZerodhaBrokerage.GetHistoryForPeriod();");
+            string scripSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
+            var candles = _kite.GetHistoricalData(scripSymbol, start, end, zerodhaResolution);
+
+            if (!candles.Any())
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "NoHistoricalData",
+                    $"Exchange returned no data for {symbol} on history request " +
+                    $"from {start:s} to {end:s}"));
+            }
+
+            var period = resolution.ToTimeSpan();
+
+            foreach (var candle in candles)
+            {
+                yield return new TradeBar()
+                {
+                    Time = candle.TimeStamp.ConvertFromUtc(TimeZones.Kolkata),
+                    Symbol = symbol,
+                    Low = candle.Low,
+                    High = candle.High,
+                    Open = candle.Open,
+                    Close = candle.Close,
+                    Volume = candle.Volume,
+                    Value = candle.Close,
+                    DataType = MarketDataType.TradeBar,
+                    Period = period,
+                    EndTime = candle.TimeStamp.Add(period).ConvertFromUtc(TimeZones.Kolkata)
+                };
+            }
         }
 
         /// <summary>
@@ -876,7 +939,9 @@ namespace QuantConnect.Brokerages.Zerodha
                     Exchange = symbol.ID.Market,
                     TickType = TickType.Quote,
                     AskSize = askSize,
-                    BidSize = bidSize
+                    BidSize = bidSize,
+                    
+                    
                 };
                 tick.SetValue();
 

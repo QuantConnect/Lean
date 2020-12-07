@@ -27,21 +27,6 @@ namespace QuantConnect.Brokerages.Zerodha
     public class ZerodhaSymbolMapper : ISymbolMapper
     {
 
-        private void SaveStreamAsFile(string filePath, Stream inputStream, string fileName)
-        {
-            DirectoryInfo info = new DirectoryInfo(filePath);
-            if (!info.Exists)
-            {
-                info.Create();
-            }
-
-            string path = Path.Combine(filePath, fileName);
-            using (FileStream outputFileStream = new FileStream(path, FileMode.Create))
-            {
-                inputStream.CopyTo(outputFileStream);
-            }
-        }
-
         /// <summary>
         /// Symbols that are Tradable
         /// </summary>
@@ -243,8 +228,8 @@ namespace QuantConnect.Brokerages.Zerodha
         public uint GetZerodhaInstrumentToken(string brokerageSymbol,string market)
         {
             var symbol = KnownSymbols.Where(s => s.Value == brokerageSymbol.Replace(" ", "").Trim()).FirstOrDefault();
-            uint token;
-            if (ZerodhaInstrumentsList.TryGetValue(symbol.ID.Symbol + "-" + symbol.ID.Market, out token))
+            uint token =0;
+            if (symbol!=null && ZerodhaInstrumentsList.TryGetValue(symbol.ID.Symbol + "-" + symbol.ID.Market, out token))
             {
                 return token;
             }

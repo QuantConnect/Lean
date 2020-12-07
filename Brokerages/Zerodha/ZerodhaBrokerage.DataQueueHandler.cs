@@ -30,7 +30,7 @@ namespace QuantConnect.Brokerages.Zerodha
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
             var symbol = dataConfig.Symbol;
-            if (CanSubscribe(symbol))
+            if (!CanSubscribe(symbol))
             {
                 return Enumerable.Empty<BaseData>().GetEnumerator();
             }

@@ -675,7 +675,6 @@
     <Compile Include="Zerodha\Kite.cs" />
     <Compile Include="Zerodha\ZerodhaBrokerageFactory.cs" />
     <Compile Include="Zerodha\ZerodhaBrokerage.cs" />
-    <Compile Include="Zerodha\ZerodhaBrokerage.HistoryProvider.cs" />
     <Compile Include="Zerodha\Utils.cs" />
     <Compile Include="Zerodha\Exceptions.cs" />
     <Compile Include="Zerodha\ZerodhaWebSocketClientWrapper.cs" />
