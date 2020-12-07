@@ -148,7 +148,6 @@
   // zerodha configuration goto https://kite.trade
   "zerodha-access-token": "",
   "zerodha-api-key": "",
-  "zerodha-api-secret": "",
 
   // parameters to set in the algorithm (the below are just samples)
   "parameters": {
