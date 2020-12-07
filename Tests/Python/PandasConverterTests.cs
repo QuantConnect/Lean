@@ -264,6 +264,56 @@ def Test(dataFrame):
             }
         }
 
+        [Test]
+        public void BreakingOddTickers()
+        {
+            var converter = new PandasConverter();
+            var symbol = Symbols.LOW;
+
+            var rawBars = Enumerable
+                .Range(0, 10)
+                .Select(i => new TradeBar(DateTime.UtcNow.AddMinutes(i), symbol, i + 101m, i + 102m, i + 100m, i + 101m, 0m))
+                .ToArray();
+
+            // GetDataFrame with argument of type IEnumerable<TradeBar>
+            var history = GetHistory(symbol, Resolution.Minute, rawBars);
+            dynamic dataFrame = converter.GetDataFrame(history);
+
+            // Add LOW to our symbol cache
+            SymbolCache.Set("LOW", Symbols.LOW);
+
+            using (Py.GIL())
+            {
+
+                var Test = PythonEngine.ModuleFromString("testModule",
+    $@"
+def Test1(dataFrame):
+    # Should not throw, access LOW ticker data
+    data = dataFrame.loc['LOW']
+def Test2(dataFrame):
+    # Bad accessor, expected to throw
+    data = dataFrame.LOW
+def Test3(dataFrame):
+    # Bad key, expected to throw
+    data = dataFrame.loc['low']
+def Test4(dataFrame):
+    # Should not throw, also access data lows
+    data = dataFrame.low
+");
+
+                dynamic test1 = Test.GetAttr("Test1");
+                dynamic test2 = Test.GetAttr("Test2");
+                dynamic test3 = Test.GetAttr("Test3");
+                dynamic test4 = Test.GetAttr("Test4");
+
+                Assert.DoesNotThrow(() => test1(dataFrame));
+                Assert.Throws<PythonException>(() => test2(dataFrame));
+                Assert.Throws<PythonException>(() => test3(dataFrame));
+                Assert.DoesNotThrow(() => test4(dataFrame));
+
+            }
+        }
+
         [TestCase("'SPY'", true)]
         [TestCase("symbol")]
         [TestCase("str(symbol.ID)")]
