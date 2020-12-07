@@ -25,6 +25,15 @@ namespace QuantConnect.Indicators
         private decimal _lastHigh;
         private decimal _lastLow;
 
+        /// <summary>
+        /// Initializes a new instance of the DeMarkerIndicator class with the specified period
+        /// </summary>
+        /// <param name="period">The period of the  DeMarker Indicator</param>
+        /// <param name="type">The type of moving average to use in calculations</param>
+        public DeMarkerIndicator(int period, MovingAverageType type = MovingAverageType.Simple)
+            : this($"DeM({period},{type})", period)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the DeMarkerIndicator class with the specified name and period
