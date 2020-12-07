@@ -32,6 +32,7 @@ namespace QuantConnect.Algorithm
     {
         private readonly ISecurityValuesProvider _securityValuesProvider;
         private bool _isEmitWarmupInsightWarningSent;
+        private bool _isEmitDelistedInsightWarningSent;
 
         /// <summary>
         /// Enables additional logging of framework models including:
@@ -388,7 +389,11 @@ namespace QuantConnect.Algorithm
             foreach(var insight in insights){
                 if (Securities[insight.Symbol].IsDelisted)
                 {
-                    Error($"QCAlgorithm.EmitInsights(): Cannot emit insight for delisted security {insight.Symbol}");
+                    if (!_isEmitDelistedInsightWarningSent)
+                    {
+                        Error($"QCAlgorithm.EmitInsights(): Warning: cannot emit insights for delisted securities, these will be discarded");
+                        _isEmitDelistedInsightWarningSent = true;
+                    }
                 } 
                 else 
                 {
