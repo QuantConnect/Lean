@@ -118,6 +118,10 @@ namespace QuantConnect
         {
             Guids.Add(guid);
         }
+        
+	/// Unix epoch (1970-01-01 00:00:00.000000000Z)
+        /// </summary>
+        public static DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         /// <summary>
         /// Serialize a list of ticks using protobuf
@@ -1298,14 +1302,13 @@ namespace QuantConnect
         /// <param name="to">The time zone to be converted to</param>
         /// <param name="strict">True for strict conversion, this will throw during ambiguitities, false for lenient conversion</param>
         /// <returns>The time in terms of the to time zone</returns>
-        public static DateTime ConvertTo(this DateTime time, DateTimeZone from, DateTimeZone to, bool strict = false)
+        public static DateTime ConvertTo(this DateTime time, DateTimeZone from, DateTimeZone to)
         {
-            if (strict)
-            {
-                return from.AtStrictly(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
-            }
+            var instant = new Instant(time.Ticks - UnixEpoch.Ticks);
+            var fromOffset = from.GetUtcOffset(instant).ToTimeSpan();
+            var toOffset = to.GetUtcOffset(instant).ToTimeSpan();
 
-            return from.AtLeniently(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
+            return time - (fromOffset - toOffset);
         }
 
         /// <summary>
@@ -1315,10 +1318,11 @@ namespace QuantConnect
         /// <param name="to">The destinatio time zone</param>
         /// <param name="strict">True for strict conversion, this will throw during ambiguitities, false for lenient conversion</param>
         /// <returns>The time in terms of the <paramref name="to"/> time zone</returns>
-        public static DateTime ConvertFromUtc(this DateTime time, DateTimeZone to, bool strict = false)
+        public static DateTime ConvertFromUtc(this DateTime time, DateTimeZone to)
         {
-            return time.ConvertTo(TimeZones.Utc, to, strict);
+            return time + to.GetUtcOffset(new Instant(time.Ticks - UnixEpoch.Ticks)).ToTimeSpan();
         }
+
 
         /// <summary>
         /// Converts the specified time from the <paramref name="from"/> time zone to <see cref="TimeZones.Utc"/>
@@ -1327,14 +1331,9 @@ namespace QuantConnect
         /// <param name="from">The time zone the specified <paramref name="time"/> is in</param>
         /// <param name="strict">True for strict conversion, this will throw during ambiguitities, false for lenient conversion</param>
         /// <returns>The time in terms of the to time zone</returns>
-        public static DateTime ConvertToUtc(this DateTime time, DateTimeZone from, bool strict = false)
+        public static DateTime ConvertToUtc(this DateTime time, DateTimeZone from)
         {
-            if (strict)
-            {
-                return from.AtStrictly(LocalDateTime.FromDateTime(time)).ToDateTimeUtc();
-            }
-
-            return from.AtLeniently(LocalDateTime.FromDateTime(time)).ToDateTimeUtc();
+            return time.Subtract(from.GetUtcOffset(Instant.FromTicksSinceUnixEpoch((time.Ticks - UnixEpoch.Ticks))).ToTimeSpan());
         }
 
         /// <summary>

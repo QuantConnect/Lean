@@ -34,16 +34,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         // performance: these collections are not always used so keep a reference to an empty
         // instance to use and avoid unnecessary constructors and allocations
-        private readonly List<UpdateData<ISecurityPrice>> _emptyCustom = new List<UpdateData<ISecurityPrice>>();
-        private readonly TradeBars _emptyTradeBars = new TradeBars();
-        private readonly QuoteBars _emptyQuoteBars = new QuoteBars();
-        private readonly Ticks _emptyTicks = new Ticks();
-        private readonly Splits _emptySplits = new Splits();
-        private readonly Dividends _emptyDividends = new Dividends();
-        private readonly Delistings _emptyDelistings = new Delistings();
-        private readonly OptionChains _emptyOptionChains = new OptionChains();
-        private readonly FuturesChains _emptyFuturesChains = new FuturesChains();
-        private readonly SymbolChangedEvents _emptySymbolChangedEvents = new SymbolChangedEvents();
+        private static List<UpdateData<ISecurityPrice>> _emptyCustom = new List<UpdateData<ISecurityPrice>>(0);
+        private static TradeBars _emptyTradeBars = new TradeBars();
+        private static QuoteBars _emptyQuoteBars = new QuoteBars();
+        private static Ticks _emptyTicks = new Ticks();
+        private static Splits _emptySplits = new Splits();
+        private static Dividends _emptyDividends = new Dividends();
+        private static Delistings _emptyDelistings = new Delistings();
+        private static OptionChains _emptyOptionChains = new OptionChains();
+        private static FuturesChains _emptyFuturesChains = new FuturesChains();
+        private static SymbolChangedEvents _emptySymbolChangedEvents = new SymbolChangedEvents();
 
         /// <summary>
         /// Creates a new instance
@@ -117,8 +117,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             OptionChains optionChains = null;
             FuturesChains futuresChains = null;
             SymbolChangedEvents symbolChanges = null;
-
-            UpdateEmptyCollections(algorithmTime);
 
             if (universeData.Count > 0)
             {
@@ -360,30 +358,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars ?? _emptyTradeBars, quoteBars ?? _emptyQuoteBars, ticks ?? _emptyTicks, optionChains ?? _emptyOptionChains, futuresChains ?? _emptyFuturesChains, splits ?? _emptySplits, dividends ?? _emptyDividends, delistings ?? _emptyDelistings, symbolChanges ?? _emptySymbolChangedEvents, allDataForAlgorithm.Count > 0);
 
             return new TimeSlice(utcDateTime, count, slice, data, security, consolidator, custom ?? _emptyCustom, changes, universeData);
-        }
-
-        private void UpdateEmptyCollections(DateTime algorithmTime)
-        {
-            // just in case
-            _emptyTradeBars.Clear();
-            _emptyQuoteBars.Clear();
-            _emptyTicks.Clear();
-            _emptySplits.Clear();
-            _emptyDividends.Clear();
-            _emptyDelistings.Clear();
-            _emptyOptionChains.Clear();
-            _emptyFuturesChains.Clear();
-            _emptySymbolChangedEvents.Clear();
-
-            _emptyTradeBars.Time
-                = _emptyQuoteBars.Time
-                = _emptyTicks.Time
-                = _emptySplits.Time
-                = _emptyDividends.Time
-                = _emptyDelistings.Time
-                = _emptyOptionChains.Time
-                = _emptyFuturesChains.Time
-                = _emptySymbolChangedEvents.Time = algorithmTime;
         }
 
         private bool HandleOptionData(DateTime algorithmTime, BaseData baseData, OptionChains optionChains, ISecurityPrice security, Lazy<Slice> sliceFuture, IReadOnlyDictionary<Symbol, BaseData> optionUnderlyingUpdates)

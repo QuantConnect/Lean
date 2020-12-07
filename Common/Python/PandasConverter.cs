@@ -419,19 +419,9 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                 // Related issues:
                 // https://github.com/QuantConnect/Lean/issues/4205
                 // https://github.com/QuantConnect/Lean/issues/4196
-                var symbols = new HashSet<Symbol>();
-                foreach (var symbol in slice.Keys)
-                {
-                    symbols.Add(symbol);
-                }
-                foreach (var symbol in new HashSet<Symbol>(slice.QuoteBars.Keys))
-                {
-                    symbols.Add(symbol);
-                }
-                foreach (var symbol in new HashSet<Symbol>(slice.Ticks.Keys))
-                {
-                    symbols.Add(symbol);
-                }
+                var symbols = slice.Keys.ToHashSet();
+                symbols.UnionWith(slice.QuoteBars.Keys);
+                symbols.UnionWith(slice.Ticks.Keys);
 
                 foreach (var symbol in symbols)
                 {

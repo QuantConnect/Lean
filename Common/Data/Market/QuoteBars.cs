@@ -45,7 +45,7 @@ namespace QuantConnect.Data.Market
         /// </returns>
         /// <param name="ticker">The ticker of the element to get or set.</param>
         /// <remarks>Wraps the base implementation to enable indexing in python algorithms due to pythonnet limitations</remarks>
-        public new QuoteBar this[string ticker] { get { return base[ticker]; } set { base[ticker] = value; } }
+        public new QuoteBar this[string ticker] { get { return base[ticker]; } internal set { base[ticker] = value; } }
 
         /// <summary>
         /// Gets or sets the QuoteBar with the specified Symbol.
@@ -55,6 +55,6 @@ namespace QuantConnect.Data.Market
         /// </returns>
         /// <param name="symbol">The Symbol of the element to get or set.</param>
         /// <remarks>Wraps the base implementation to enable indexing in python algorithms due to pythonnet limitations</remarks>
-        public new QuoteBar this[Symbol symbol] { get { return base[symbol]; } set { base[symbol] = value; } }
+        public new QuoteBar this[Symbol symbol] { get { return base[symbol]; } internal set { base[symbol] = value; } }
     }
 }

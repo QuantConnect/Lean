@@ -54,16 +54,7 @@ namespace QuantConnect.Data.Market
         /// <param name="time">The time this data was emitted.</param>
         public DataDictionary(DateTime time)
         {
-#pragma warning disable 618 // This assignment is left here until the Time property is removed.
-            Time = time;
-#pragma warning restore 618
         }
-
-        /// <summary>
-        /// Gets or sets the time associated with this collection of data
-        /// </summary>
-        [Obsolete("The DataDictionary<T> Time property is now obsolete. All algorithms should use algorithm.Time instead.")]
-        public DateTime Time { get; set; }
 
         /// <summary>
         /// Returns an enumerator that iterates through the collection.

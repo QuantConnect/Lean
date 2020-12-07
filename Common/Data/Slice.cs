@@ -203,15 +203,15 @@ namespace QuantConnect.Data
         /// <param name="time">The timestamp for this slice of data</param>
         /// <param name="data">The raw data in this slice</param>
         public Slice(DateTime time, List<BaseData> data)
-            : this(time, data, CreateCollection<TradeBars, TradeBar>(time, data),
-                CreateCollection<QuoteBars, QuoteBar>(time, data),
-                CreateTicksCollection(time, data),
-                CreateCollection<OptionChains, OptionChain>(time, data),
-                CreateCollection<FuturesChains, FuturesChain>(time, data),
-                CreateCollection<Splits, Split>(time, data),
-                CreateCollection<Dividends, Dividend>(time, data),
-                CreateCollection<Delistings, Delisting>(time, data),
-                CreateCollection<SymbolChangedEvents, SymbolChangedEvent>(time, data))
+            : this(time, data, CreateCollection<TradeBars, TradeBar>(data),
+                CreateCollection<QuoteBars, QuoteBar>(data),
+                CreateTicksCollection(data),
+                CreateCollection<OptionChains, OptionChain>(data),
+                CreateCollection<FuturesChains, FuturesChain>(data),
+                CreateCollection<Splits, Split>(data),
+                CreateCollection<Dividends, Dividend>(data),
+                CreateCollection<Delistings, Delisting>(data),
+                CreateCollection<SymbolChangedEvents, SymbolChangedEvent>(data))
         {
         }
 
@@ -500,9 +500,9 @@ namespace QuantConnect.Data
         /// <summary>
         /// Dynamically produces a <see cref="Ticks"/> data dictionary using the provided data
         /// </summary>
-        private static Ticks CreateTicksCollection(DateTime time, IEnumerable<BaseData> data)
+        private static Ticks CreateTicksCollection(IEnumerable<BaseData> data)
         {
-            var ticks = new Ticks(time);
+            var ticks = new Ticks();
             foreach (var tick in data.OfType<Tick>())
             {
                 List<Tick> listTicks;
@@ -523,16 +523,11 @@ namespace QuantConnect.Data
         /// <param name="time">The current slice time</param>
         /// <param name="data">The data to create the collection</param>
         /// <returns>The data dictionary of <typeparamref name="TItem"/> containing all the data of that type in this slice</returns>
-        private static T CreateCollection<T, TItem>(DateTime time, IEnumerable<BaseData> data)
+        private static T CreateCollection<T, TItem>(IEnumerable<BaseData> data)
             where T : DataDictionary<TItem>, new()
             where TItem : BaseData
         {
-            var collection = new T
-            {
-#pragma warning disable 618 // This assignment is left here until the Time property is removed.
-                Time = time
-#pragma warning restore 618
-            };
+            var collection = new T();
             foreach (var item in data.OfType<TItem>())
             {
                 collection[item.Symbol] = item;
