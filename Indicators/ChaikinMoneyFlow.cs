@@ -40,11 +40,15 @@ namespace QuantConnect.Indicators
         /// </summary>
         private readonly RollingWindow<List<decimal>> _rollingFlow;
 
+        private Sum _flowRatioSum;
+        private Sum _volumeSum;
+
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady => Samples > _period;
         private readonly int _period;
+
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -57,6 +61,8 @@ namespace QuantConnect.Indicators
         public override void Reset()
         {
             _rollingFlow.Reset();
+            _volumeSum.Reset();
+            _flowRatioSum.Reset();
             base.Reset();
         }
 
@@ -71,6 +77,8 @@ namespace QuantConnect.Indicators
             _period = period;
             WarmUpPeriod = period + 1;
             _rollingFlow = new RollingWindow<List<decimal>>(period);
+            _flowRatioSum = new Sum(period);
+            _volumeSum = new Sum(period);
         }
 
 
@@ -84,27 +92,16 @@ namespace QuantConnect.Indicators
         {
             var denominator = (input.High - input.Low);
             var flowRatio = denominator > 0
-                ? input.Volume * (input.Close - input.Low - (input.High - input.Close)) / denominator : 0m;
+                ? input.Volume * (input.Close - input.Low - (input.High - input.Close)) / denominator
+                : 0m;
             var inputVol = input.Volume;
             var addFlow = new List<decimal> {flowRatio, inputVol};
             _rollingFlow.Add(addFlow);
 
-            if (IsReady)
-            {
-                var newFlow = 0m;
-                var newVol = 0m;
+            _flowRatioSum.Update(input.EndTime, flowRatio);
+            _volumeSum.Update(input.EndTime, input.Volume);
 
-                foreach (var flowTerm in _rollingFlow)
-                {
-                    newFlow += flowTerm[0];
-                    newVol += flowTerm[1];
-                }
-
-
-                return newVol > 0m ? newFlow / newVol : 0m;
-            }
-
-            return 0m;
+            return !IsReady || _volumeSum == 0m ? 0m : _flowRatioSum / _volumeSum;
         }
     }
 }
