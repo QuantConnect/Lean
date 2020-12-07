@@ -424,27 +424,30 @@ namespace QuantConnect.Api
                 var updatedCharts = new Dictionary<string, Chart>();
 
                 // Create backtest requests for each chart that is empty
-                foreach (var chart in result.Backtest.Charts.Where(x => x.Value.Series.IsNullOrEmpty()))
+                foreach (var chart in result.Backtest.Charts)
                 {
-                    var chartRequest = new RestRequest("backtests/read", Method.POST)
+                    if (chart.Value.Series == null)
                     {
-                        RequestFormat = DataFormat.Json
-                    };
+                        var chartRequest = new RestRequest("backtests/read", Method.POST)
+                        {
+                            RequestFormat = DataFormat.Json
+                        };
 
-                    chartRequest.AddParameter("application/json", JsonConvert.SerializeObject(new
-                    {
-                        projectId,
-                        backtestId,
-                        chart = chart.Key.Replace(' ', '+')
-                    }), ParameterType.RequestBody);
+                        chartRequest.AddParameter("application/json", JsonConvert.SerializeObject(new
+                        {
+                            projectId,
+                            backtestId,
+                            chart = chart.Key.Replace(' ', '+')
+                        }), ParameterType.RequestBody);
 
-                    BacktestResponseWrapper chartResponse;
-                    ApiConnection.TryRequest(chartRequest, out chartResponse);
+                        BacktestResponseWrapper chartResponse;
+                        ApiConnection.TryRequest(chartRequest, out chartResponse);
 
-                    // Add this chart to our updated collection
-                    if (chartResponse.Success)
-                    {
-                        updatedCharts.Add(chart.Key, chartResponse.Backtest.Charts[chart.Key]);
+                        // Add this chart to our updated collection
+                        if (chartResponse.Success)
+                        {
+                            updatedCharts.Add(chart.Key, chartResponse.Backtest.Charts[chart.Key]);
+                        }
                     }
                 }
 
