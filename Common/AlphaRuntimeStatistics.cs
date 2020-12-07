@@ -58,12 +58,12 @@ namespace QuantConnect
         /// <summary>
         /// Gets the mean scores for the entire population of insights
         /// </summary>
-        public InsightScore MeanPopulationScore { get; } = new InsightScore();
+        public InsightScore MeanPopulationScore { get; set; } = new InsightScore();
 
         /// <summary>
         /// Gets the 100 insight ema of insight scores
         /// </summary>
-        public InsightScore RollingAveragedPopulationScore { get; } = new InsightScore();
+        public InsightScore RollingAveragedPopulationScore { get; set; } = new InsightScore();
 
         /// <summary>
         /// Gets the total number of insights with an up direction
