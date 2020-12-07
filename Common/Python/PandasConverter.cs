@@ -44,7 +44,7 @@ namespace QuantConnect.Python
         private static PyList _defaultIndexes;
         private static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
 
-        private MemoryAllocator _allocator = new NativeMemoryAllocator();
+        private MemoryAllocator _allocator = new PandasArrowMemoryAllocator();
         // Re-use MemoryStream to avoid having to reallocate every time for every new DataFrame we create
         private MemoryStream _ms = new MemoryStream();
 

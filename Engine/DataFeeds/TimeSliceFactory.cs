@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Data;
@@ -31,6 +32,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class TimeSliceFactory
     {
         private readonly DateTimeZone _timeZone;
+        private static readonly ConcurrentDictionary<Symbol, Symbol> _canonicalSymbols = new ConcurrentDictionary<Symbol,Symbol>();
 
         // performance: these collections are not always used so keep a reference to an empty
         // instance to use and avoid unnecessary constructors and allocations
@@ -365,7 +367,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var symbol = baseData.Symbol;
 
             OptionChain chain;
-            var canonical = Symbol.CreateOption(symbol.Underlying, symbol.ID.Market, default(OptionStyle), default(OptionRight), 0, SecurityIdentifier.DefaultDate);
+            Symbol canonical;
+
+            if (!_canonicalSymbols.TryGetValue(symbol, out canonical))
+            {
+                canonical = Symbol.CreateOption(symbol.Underlying, symbol.ID.Market, default(OptionStyle), default(OptionRight), 0, SecurityIdentifier.DefaultDate);
+                _canonicalSymbols.TryAdd(symbol, canonical);
+            }
+
             if (!optionChains.TryGetValue(canonical, out chain))
             {
                 chain = new OptionChain(canonical, algorithmTime);
@@ -472,7 +481,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var symbol = baseData.Symbol;
 
             FuturesChain chain;
-            var canonical = Symbol.Create(symbol.ID.Symbol, SecurityType.Future, symbol.ID.Market);
+            Symbol canonical;
+
+            if (!_canonicalSymbols.TryGetValue(symbol, out canonical))
+            {
+                canonical = Symbol.Create(symbol.ID.Symbol, SecurityType.Future, symbol.ID.Market);
+                _canonicalSymbols.TryAdd(symbol, canonical);
+            }
 
             if (!futuresChains.TryGetValue(canonical, out chain))
             {
