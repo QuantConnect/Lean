@@ -101,7 +101,7 @@ namespace QuantConnect.Api
 
     /// <summary>
     /// Wrapper class for Backtest/* endpoints JSON response
-    /// Currently used by Backtest/Read & Backtest/Create
+    /// Currently used by Backtest/Read and Backtest/Create
     /// </summary>
     public class BacktestResponseWrapper : RestResponse
     {
