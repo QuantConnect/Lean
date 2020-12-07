@@ -20,13 +20,10 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class DeMarkerIndicator : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        private decimal LastHigh;
-        private decimal LastLow;
-        private decimal DeMin;
-        private decimal DeMax;
-        private IndicatorBase<IndicatorDataPoint> _MAmax;
-        private IndicatorBase<IndicatorDataPoint> _MAmin;
-        private int _period;
+        private IndicatorBase<IndicatorDataPoint> _maxMA;
+        private IndicatorBase<IndicatorDataPoint> _minMA;
+        private decimal _lastHigh;
+        private decimal _lastLow;
 
 
         /// <summary>
@@ -35,37 +32,33 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the  DeMarker Indicator</param>
         /// <param name="type">The type of moving average to use in calculations</param>
-        public DeMarkerIndicator(string name, int period, MovingAverageType type = MovingAverageType.Simple )
+        public DeMarkerIndicator(string name, int period, MovingAverageType type = MovingAverageType.Simple)
             : base(name)
         {
-            LastHigh = 0m;
-            LastLow = 0m;
-            _period = period;
-            _MAmax = type.AsIndicator(period);
-            _MAmin = type.AsIndicator(period);
+            var _lastHigh = 0m;
+            var _lastLow = 0m;
+            WarmUpPeriod = period;
+            _maxMA = type.AsIndicator(period);
+            _minMA = type.AsIndicator(period);
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _MAmax.IsReady && _MAmin.IsReady;
+        public override bool IsReady => _maxMA.IsReady && _minMA.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => _period;
+        public int WarmUpPeriod { get; }
 
         /// <summary>
         /// Resets this indicator to its initial state
         /// </summary>
         public override void Reset()
         {
-            LastHigh = 0m;
-            LastLow = 0m;
-            DeMin = 0;
-            DeMax = 0;
-            _MAmax.Reset();
-            _MAmin.Reset();
+            _maxMA.Reset();
+            _minMA.Reset();
             base.Reset();
         }
 
@@ -77,25 +70,27 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
+            var deMax = 0m;
+            var deMin = 0m;
             if (Samples > 1)
             {
                 // By default, DeMin and DeMax must be 0m initially
-                DeMax = Math.Max(input.High - LastHigh, 0);
-                DeMin = Math.Max(LastLow - input.Low, 0);
+                deMax = Math.Max(input.High - _lastHigh, 0);
+                deMin = Math.Max(_lastLow - input.Low, 0);
             }
 
-            _MAmax.Update(input.Time, DeMax);
-            _MAmin.Update(input.Time, DeMin);
-            LastHigh = input.High;
-            LastLow = input.Low;
-            if (IsReady)
+            _maxMA.Update(input.Time, deMax);
+            _minMA.Update(input.Time, deMin);
+            _lastHigh = input.High;
+            _lastLow = input.Low;
+
+            if (!IsReady)
             {
-                var currentValue = _MAmax.Current.Value + _MAmin.Current.Value;
-                var DeMark = currentValue > 0m ? _MAmax.Current.Value / currentValue : 0m;
-                return DeMark;
+                return 0m;
             }
 
-            return 0m;
+            var currentValue = _maxMA + _minMA;
+            return currentValue > 0m ? _maxMA / currentValue : 0m;
         }
     }
 }
