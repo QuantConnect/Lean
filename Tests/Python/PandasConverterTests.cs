@@ -288,7 +288,7 @@ def Test(dataFrame):
                 var Test = PythonEngine.ModuleFromString("testModule",
     $@"
 def Test1(dataFrame):
-    # Should not throw, access LOW ticker data
+    # Should not throw, access all LOW ticker data
     data = dataFrame.loc['LOW']
 def Test2(dataFrame):
     # Bad accessor, expected to throw
@@ -297,7 +297,7 @@ def Test3(dataFrame):
     # Bad key, expected to throw
     data = dataFrame.loc['low']
 def Test4(dataFrame):
-    # Should not throw, also access data lows
+    # Should not throw, access data column low for all tickers
     data = dataFrame.low
 ");
 
