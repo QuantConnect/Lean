@@ -256,7 +256,7 @@ def Test(dataFrame):
     if data.__len__() != 10:
         raise Exception('Expected 10 data points')
     lowData = data.low
-    if data.empty is 0:
+    if lowData.empty:
         raise Exception('LOW history low data is empty')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(dataFrame));
