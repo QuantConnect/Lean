@@ -83,7 +83,8 @@ namespace QuantConnect.Brokerages.Zerodha
         private volatile bool _streamLocked;
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
         //private ZerodhaSubscriptionManager _subscriptionManager;
-        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
+        private readonly DataQueueHandlerSubscriptionManager SubscriptionManager;
+
         private ConcurrentDictionary<string, Symbol> _subscriptionsById = new ConcurrentDictionary<string, Symbol>();
         private readonly ConcurrentQueue<MessageData> _messageBuffer = new ConcurrentQueue<MessageData>();
 
@@ -132,18 +133,19 @@ namespace QuantConnect.Brokerages.Zerodha
             WebSocket.Open += (sender, args) =>
             {
                 Log.Trace($"ZerodhaBrokerage(): WebSocket.Open. Subscribing");
-                //Subscribe(GetSubscribed());
+                Subscribe(GetSubscribed());
             };
             WebSocket.Error += OnError;
             _symbolMapper = new ZerodhaSymbolMapper(_kite);
 
-            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            _subscriptionManager.SubscribeImpl += (s, t) =>
+            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            subscriptionManager.SubscribeImpl += (s, t) =>
             {
                 Subscribe(s);
                 return true;
             };
-            _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
+            subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
+            SubscriptionManager = subscriptionManager;
 
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             Log.Trace("Start Zerodha Brokerage");
@@ -155,6 +157,8 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="symbols">The list of symbols to subscribe</param>
         public void Subscribe(IEnumerable<Symbol> symbols)
         {
+            if (symbols.Count()<=0)
+                return;
             foreach (var symbol in symbols)
             {
                 var instrumentToken = _symbolMapper.GetZerodhaInstrumentToken(symbol.ID.Symbol, symbol.ID.Market);
@@ -182,6 +186,11 @@ namespace QuantConnect.Brokerages.Zerodha
             WebSocket.Send(requestFullMode);
 
 
+        }
+
+        private IEnumerable<Symbol> GetSubscribed()
+        {
+            return SubscriptionManager.GetSubscribedSymbols() ?? Enumerable.Empty<Symbol>();
         }
 
         /// <summary>
@@ -280,7 +289,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 var fillPrice = orderUpdate.Price;
                 var fillQuantity = orderUpdate.FilledQuantity;
                 var direction = fillQuantity < 0 ? OrderDirection.Sell : OrderDirection.Buy;
-                var updTime = orderUpdate.OrderTimestamp.GetValueOrDefault().ConvertFromUtc(TimeZones.Kolkata);
+                var updTime = orderUpdate.OrderTimestamp.GetValueOrDefault();
                 var orderFee = new OrderFee(new CashAmount(
                         20,
                         Currencies.INR
@@ -409,7 +418,7 @@ namespace QuantConnect.Brokerages.Zerodha
             //}
             //else
             //{
-            orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market, order.Symbol.ID.Symbol, "", order.Quantity.ConvertInvariant<int>());
+            orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market.ToUpperInvariant(), order.Symbol.ID.Symbol, order.Direction.ToString(), order.Quantity.ConvertInvariant<int>(),null,ProductType.MIS.ToString(),OrderType.MARKET.ToString());
             //}
             Log.Debug("ZerodhaOrderResponse:");
             Log.Debug(orderResponse.ToString());
@@ -782,7 +791,7 @@ namespace QuantConnect.Brokerages.Zerodha
             {
                 yield return new TradeBar()
                 {
-                    Time = candle.TimeStamp.ConvertFromUtc(TimeZones.Kolkata),
+                    Time = candle.TimeStamp,
                     Symbol = symbol,
                     Low = candle.Low,
                     High = candle.High,
@@ -792,7 +801,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     Value = candle.Close,
                     DataType = MarketDataType.TradeBar,
                     Period = period,
-                    EndTime = candle.TimeStamp.Add(period).ConvertFromUtc(TimeZones.Kolkata)
+                    EndTime = candle.TimeStamp.Add(period)
                 };
             }
         }
@@ -909,7 +918,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     _aggregator.Update(new Tick
                     {
                         Value = price,
-                        Time = time.ConvertFromUtc(TimeZones.Kolkata),
+                        Time = time,
                         Symbol = symbol,
                         TickType = TickType.Trade,
                         Quantity = Math.Abs(amount),
@@ -934,16 +943,14 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     AskPrice = asks.Max(x => x.Price),
                     BidPrice = bids.Max(x => x.Price),
-                    Time = time.ConvertFromUtc(TimeZones.Kolkata),
+                    Time = time,
                     Symbol = symbol,
-                    Exchange = symbol.ID.Market,
                     TickType = TickType.Quote,
                     AskSize = askSize,
                     BidSize = bidSize,
                     
                     
                 };
-                tick.SetValue();
 
                 lock (TickLocker)
                 {

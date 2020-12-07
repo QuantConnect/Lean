@@ -16,6 +16,22 @@
 
 namespace QuantConnect.Brokerages.Zerodha
 {
+
+    public enum ProductType
+    {
+        MIS,
+        CNC,
+        NRML
+    }
+
+    public enum OrderType
+    {
+        MARKET,
+        LIMIT,
+        SLM,
+        SL
+    }
+
     public class Constants
     {
 

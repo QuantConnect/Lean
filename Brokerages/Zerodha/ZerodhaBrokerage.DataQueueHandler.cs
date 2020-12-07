@@ -36,14 +36,14 @@ namespace QuantConnect.Brokerages.Zerodha
             }
 
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
-            _subscriptionManager.Subscribe(dataConfig);
+            SubscriptionManager.Subscribe(dataConfig);
 
             return enumerator;
         }
 
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            _subscriptionManager.Unsubscribe(dataConfig);
+            SubscriptionManager.Unsubscribe(dataConfig);
             _aggregator.Remove(dataConfig);
         }
 
