@@ -78,7 +78,6 @@ namespace QuantConnect.Tests.Algorithm.Framework
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             algorithm.SetStartDate(2007, 5, 16);
-
             algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
 
             var alpha = new FakeAlpha();
@@ -110,7 +109,6 @@ namespace QuantConnect.Tests.Algorithm.Framework
             // Should be zero because security is delisted
             Assert.AreEqual(0, actualInsights.Count);
         }
-
 
         class FakeAlpha : AlphaModel
         {
