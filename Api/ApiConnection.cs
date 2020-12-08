@@ -100,7 +100,7 @@ namespace QuantConnect.Api
                 // Use custom converter for deserializing live results data
                 JsonConvert.DefaultSettings = () => new JsonSerializerSettings
                 {
-                    Converters = { new LiveAlgorithmResultsJsonConverter(), new OrderJsonConverter(), new AlphaRuntimeStatisticsJsonConverter() }
+                    Converters = { new LiveAlgorithmResultsJsonConverter(), new OrderJsonConverter(), new DecimalJsonConverter() }
                 };
 
                 //Verify success

@@ -235,13 +235,13 @@
     <Compile Include="Algorithm\Framework\Alphas\InsightScoreType.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetCollection.cs" />
     <Compile Include="AlphaRuntimeStatistics.cs" />
-    <Compile Include="Api\AlphaRuntimeStatisticsJsonConverter.cs" />
     <Compile Include="Api\Account.cs" />
     <Compile Include="Api\AuthenticationResponse.cs" />
     <Compile Include="Api\Backtest.cs" />
     <Compile Include="Api\Compile.cs" />
     <Compile Include="Api\CompileState.cs" />
     <Compile Include="Api\BacktestReport.cs" />
+    <Compile Include="Api\DecimalJsonConverter.cs" />
     <Compile Include="Api\Dividends.cs" />
     <Compile Include="Api\Link.cs" />
     <Compile Include="Api\LiveAlgorithm.cs" />
