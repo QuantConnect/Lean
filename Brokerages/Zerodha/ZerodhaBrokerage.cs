@@ -34,6 +34,9 @@ using Newtonsoft.Json.Linq;
 using NodaTime;
 using QuantConnect.Data.Market;
 
+using Order = QuantConnect.Orders.Order;
+using OrderType = QuantConnect.Orders.OrderType;
+
 namespace QuantConnect.Brokerages.Zerodha
 {
     /// <summary>
@@ -285,6 +288,11 @@ namespace QuantConnect.Brokerages.Zerodha
                     }
                 }
 
+                if(orderUpdate.Status=="OPEN"&& orderUpdate.Quantity != orderUpdate.FilledQuantity)
+                {
+                    return;
+                }
+
                 var symbol = _symbolMapper.ConvertZerodhaSymbolToLeanSymbol(orderUpdate.InstrumentToken);
                 var fillPrice = orderUpdate.Price;
                 var fillQuantity = orderUpdate.FilledQuantity;
@@ -408,46 +416,58 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         /// <param name="order">The order to be placed</param>
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
-        public override bool PlaceOrder(Orders.Order order)
+        public override bool PlaceOrder(Order order)
         {
             LockStream();
-            Dictionary<string, dynamic> orderResponse;
+            
+            uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
+            JObject orderResponse;
+            decimal? triggerPrice = null;
+
+            if (order.Type == OrderType.StopLimit || order.Type == OrderType.StopMarket || order.Type == OrderType.Limit)
+            {
+                triggerPrice = GetOrderTriggerPrice(order);
+            }
+            decimal? orderPrice = GetOrderPrice(order);
+            var kiteOrderType = ConvertOrderType(order.Type);
             //if (order.Type == OrderType.Bracket)
             //{
             //    orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market, order.Symbol.ID.Symbol,"",order.Quantity.ConvertInvariant<int>());
             //}
             //else
             //{
-            orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market.ToUpperInvariant(), order.Symbol.ID.Symbol, order.Direction.ToString(), order.Quantity.ConvertInvariant<int>(),null,ProductType.MIS.ToString(),OrderType.MARKET.ToString());
+
+            ////TODO: Get the product type from Algo (MIS,NRML,CNC)
+            orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market.ToUpperInvariant(), order.Symbol.ID.Symbol, order.Direction.ToString().ToUpperInvariant(), orderQuantity, orderPrice,KiteProductType.MIS.ToString(), kiteOrderType,null,null,triggerPrice);
             //}
             Log.Debug("ZerodhaOrderResponse:");
             Log.Debug(orderResponse.ToString());
 
-            var orderFee = OrderFee.Zero;
-            if (orderResponse["status"] == "error")
+            var orderFee = new OrderFee(new CashAmount(20, Currencies.INR));
+            if ((string)orderResponse["status"] == "error")
             {
                 var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse["message"]}";
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata), orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
 
                 UnlockStream();
                 return true;
             }
 
-            if (orderResponse["status"] == "success")
+            if ((string)orderResponse["status"] == "success")
             {
 
-                if (string.IsNullOrEmpty(orderResponse["order_id"]))
+                if (string.IsNullOrEmpty((string)orderResponse["data"]["order_id"]))
                 {
-                    var errorMessage = $"Error parsing response from place order: {orderResponse["status_message"]}";
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, orderResponse["status_message"], errorMessage));
+                    var errorMessage = $"Error parsing response from place order: {(string)orderResponse["status_message"]}";
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata), orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (string)orderResponse["status_message"], errorMessage));
 
                     UnlockStream();
                     return true;
                 }
 
-                var brokerId = orderResponse["order_id"];
+                var brokerId = (string)orderResponse["data"]["order_id"];
                 if (CachedOrderIDs.ContainsKey(order.Id))
                 {
                     CachedOrderIDs[order.Id].BrokerId.Clear();
@@ -460,7 +480,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 }
 
                 // Generate submitted event
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Submitted });
+                //OnOrderEvent(new OrderEvent(order, DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata), orderFee, "Zerodha Order Event") { Status = OrderStatus.Submitted });
                 Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
 
                 UnlockStream();
@@ -468,7 +488,7 @@ namespace QuantConnect.Brokerages.Zerodha
             }
 
             var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse["status_message"]}";
-            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
+            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata), orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
             UnlockStream();
@@ -477,28 +497,126 @@ namespace QuantConnect.Brokerages.Zerodha
         }
 
         /// <summary>
+        /// Return a relevant price for order depending on order type
+        /// Price must be positive
+        /// </summary>
+        /// <param name="order"></param>
+        /// <returns></returns>
+        private static decimal? GetOrderPrice(Order order)
+        {
+            switch (order.Type)
+            {
+                case OrderType.Limit:
+                    return ((LimitOrder)order).LimitPrice;
+                case OrderType.Market:
+                    // Order price must be positive for market order too;
+                    // refuses for price = 0
+                    return null;
+                case OrderType.StopLimit:
+                    return ((StopLimitOrder)order).LimitPrice;
+                case OrderType.StopMarket:
+                    return ((StopMarketOrder)order).StopPrice;
+            }
+
+            throw new NotSupportedException($"ZerodhaBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
+        }
+
+        /// <summary>
+        /// Return a relevant price for order depending on order type
+        /// Price must be positive
+        /// </summary>
+        /// <param name="order"></param>
+        /// <returns></returns>
+        private static decimal? GetOrderTriggerPrice(Order order)
+        {
+            switch (order.Type)
+            {
+                case OrderType.Limit:
+                    return ((LimitOrder)order).LimitPrice;
+                case OrderType.Market:
+                    // Order price must be positive for market order too;
+                    // refuses for price = 0
+                    return null;
+                case OrderType.StopLimit:
+                    return ((StopLimitOrder)order).LimitPrice;
+                case OrderType.StopMarket:
+                    return ((StopMarketOrder)order).StopPrice;
+            }
+
+            throw new NotSupportedException($"ZerodhaBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
+        }
+
+        private static string ConvertOrderType(OrderType orderType)
+        {
+
+        //            public const string ORDER_TYPE_MARKET = "MARKET";
+        //public const string ORDER_TYPE_LIMIT = "LIMIT";
+        //public const string ORDER_TYPE_SLM = "SL-M";
+        //public const string ORDER_TYPE_SL = "SL";
+
+            switch (orderType)
+            {
+                case OrderType.Limit:
+                    return "LIMIT";
+                case OrderType.Market:
+                    return "MARKET";
+                case OrderType.StopMarket:
+                    return "SL-M";
+                case OrderType.StopLimit:
+                    return "SL";
+                default:
+                    throw new NotSupportedException($"ZerodhaBrokerage.ConvertOrderType: Unsupported order type: {orderType}");
+            }
+        }
+
+
+        /// <summary>
         /// Updates the order with the same id
         /// </summary>
         /// <param name="order">The new order information</param>
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
-        public override bool UpdateOrder(Orders.Order order)
+        public override bool UpdateOrder(Order order)
         {
             LockStream();
-            var orderResponse = _kite.ModifyOrder(order.Id.ToStringInvariant());
-            var orderFee = OrderFee.Zero;
-            if (orderResponse["status"] == "success")
+
+            uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
+            JObject orderResponse;
+            decimal? triggerPrice = null;
+
+            if (order.Type == OrderType.StopLimit || order.Type == OrderType.StopMarket || order.Type == OrderType.Limit)
             {
-                if (string.IsNullOrEmpty(orderResponse["order_id"]))
+                triggerPrice = GetOrderTriggerPrice(order);
+            }
+            decimal? orderPrice = GetOrderPrice(order);
+            var kiteOrderType = ConvertOrderType(order.Type);
+
+            orderResponse = _kite.ModifyOrder(order.BrokerId[0].ToStringInvariant(),
+                null,
+                order.Symbol.ID.Market.ToUpperInvariant(), 
+                order.Symbol.ID.Symbol, 
+                order.Direction.ToString().ToUpperInvariant(), 
+                orderQuantity,
+                orderPrice,
+                KiteProductType.MIS.ToString(),
+                kiteOrderType,
+                null,
+                null, 
+                triggerPrice
+                );
+            var orderFee = OrderFee.Zero;
+            if ((string)orderResponse["status"] == "success")
+            {
+                if (string.IsNullOrEmpty((string)orderResponse["data"]["order_id"]))
                 {
-                    var errorMessage = $"Error parsing response from place order: {orderResponse["status_message"]}";
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, orderResponse["status"], errorMessage));
+                    var errorMessage = $"Error parsing response from modify order: {orderResponse["status_message"]}";
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning,(string) orderResponse["status"], errorMessage));
 
                     UnlockStream();
                     return true;
                 }
 
-                var brokerId = orderResponse["order_id"];
+                var brokerId = (string)orderResponse["data"]["order_id"];
                 if (CachedOrderIDs.ContainsKey(order.Id))
                 {
                     CachedOrderIDs[order.Id].BrokerId.Clear();
@@ -511,15 +629,15 @@ namespace QuantConnect.Brokerages.Zerodha
                 }
 
                 // Generate submitted event
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.UpdateSubmitted });
-                Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.UpdateSubmitted });
+                Log.Trace($"Order modified successfully - OrderId: {order.Id}");
 
                 UnlockStream();
                 return true;
             }
 
             var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse["status_message"]}";
-            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
+            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.Invalid });
             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
             UnlockStream();
@@ -531,23 +649,26 @@ namespace QuantConnect.Brokerages.Zerodha
         /// </summary>
         /// <param name="order">The order to cancel</param>
         /// <returns>True if the request was submitted for cancellation, false otherwise</returns>
-        public override bool CancelOrder(Orders.Order order)
+        public override bool CancelOrder(Order order)
         {
             LockStream();
-            Dictionary<string, dynamic> orderResponse = null;
             //if (order.Type == OrderType.Bracket)
             //{
             //    orderResponse = _kite.CancelOrder(order.Id.ToStringInvariant());
             //}
             //else
             //{
-            orderResponse = _kite.CancelOrder(order.Id.ToStringInvariant());
+            var orderResponse = _kite.CancelOrder(order.BrokerId[0].ToStringInvariant());
             //}
-            if (orderResponse["status"] == "Success")
+            if ((string)orderResponse["status"] == "success")
             {
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero,"Zerodha Order Cancelled Event") { Status = OrderStatus.Canceled });
                 UnlockStream();
                 return true;
             }
+            var errorMessage = $"Error cancelling order: {orderResponse["status_message"]}";
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (string)orderResponse["status"], errorMessage));
+
             UnlockStream();
             return false;
 
@@ -775,8 +896,8 @@ namespace QuantConnect.Brokerages.Zerodha
         private IEnumerable<BaseData> GetHistoryForPeriod(Symbol symbol, DateTime start, DateTime end, Resolution resolution,string zerodhaResolution)
         {
             Log.Debug("ZerodhaBrokerage.GetHistoryForPeriod();");
-            string scripSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
-            var candles = _kite.GetHistoricalData(scripSymbol, start, end, zerodhaResolution);
+            var scripSymbol = _symbolMapper.GetZerodhaInstrumentToken(symbol,Market.NSE);
+            var candles = _kite.GetHistoricalData(scripSymbol.ToStringInvariant(), start, end, zerodhaResolution);
 
             if (!candles.Any())
             {

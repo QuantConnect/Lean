@@ -45,9 +45,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
 
                     var now = DateTime.UtcNow;
 
-                    var requests = new[]
-                    {
-                    new HistoryRequest(now.Add(-period),
+                    var request = new HistoryRequest(now.Add(-period),
                         now,
                         typeof(QuoteBar),
                         symbol,
@@ -59,28 +57,17 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
                         false,
                         DataNormalizationMode.Adjusted,
                         TickType.Quote)
-                };
+                    { };
 
-                    var history = brokerage.GetHistory(requests, TimeZones.Utc);
+
+                    var history = brokerage.GetHistory(request);
 
                     foreach (var slice in history)
                     {
-                        if (resolution == Resolution.Tick)
-                        {
-                            foreach (var tick in slice.Ticks[symbol])
-                            {
-                                Log.Trace("{0}: {1} - {2} / {3}", tick.Time, tick.Symbol, tick.BidPrice, tick.AskPrice);
-                            }
-                        }
-                        else
-                        {
-                            var bar = slice.Bars[symbol];
-
-                            Log.Trace("{0}: {1} - O={2}, H={3}, L={4}, C={5}, V={6}", bar.Time, bar.Symbol, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume);
-                        }
+                        Log.Trace("{0}: {1} - {2} / {3}", slice.Time, slice.Symbol, slice.Price, slice.IsFillForward);
                     }
 
-                    Log.Trace("Data points retrieved: " + brokerage.DataPointCount);
+                    Log.Trace("Base currency: " + brokerage.AccountBaseCurrency);
                 };
 
                 if (throwsException)

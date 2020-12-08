@@ -17,14 +17,14 @@
 namespace QuantConnect.Brokerages.Zerodha
 {
 
-    public enum ProductType
+    public enum KiteProductType
     {
         MIS,
         CNC,
         NRML
     }
 
-    public enum OrderType
+    public enum KiteOrderType
     {
         MARKET,
         LIMIT,

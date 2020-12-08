@@ -261,11 +261,11 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="Variety">You can place orders of varieties; regular orders, after market orders, cover orders etc. </param>
         /// <param name="Tag">An optional tag to apply to an order to identify it (alphanumeric, max 8 chars)</param>
         /// <returns>Json response in the form of nested string dictionary.</returns>
-        public Dictionary<string, dynamic> PlaceOrder(
+        public JObject PlaceOrder(
             string Exchange,
             string TradingSymbol,
             string TransactionType,
-            int Quantity,
+            uint Quantity,
             decimal? Price = null,
             string Product = null,
             string OrderType = null,
@@ -316,13 +316,13 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="TriggerPrice">For SL, SL-M etc.</param>
         /// <param name="Variety">You can place orders of varieties; regular orders, after market orders, cover orders etc. </param>
         /// <returns>Json response in the form of nested string dictionary.</returns>
-        public Dictionary<string, dynamic> ModifyOrder(
+        public JObject ModifyOrder(
             string OrderId,
             string ParentOrderId = null,
             string Exchange = null,
             string TradingSymbol = null,
             string TransactionType = null,
-            string Quantity = null,
+            uint? Quantity = null,
             decimal? Price = null,
             string Product = null,
             string OrderType = null,
@@ -346,7 +346,7 @@ namespace QuantConnect.Brokerages.Zerodha
 
             if (VarietyString == "bo" && ProductString == "bo")
             {
-                Utils.AddIfNotNull(param, "quantity", Quantity);
+                Utils.AddIfNotNull(param, "quantity", Quantity.ToStringInvariant());
                 Utils.AddIfNotNull(param, "price", Price.ToString());
                 Utils.AddIfNotNull(param, "disclosed_quantity", DisclosedQuantity.ToString());
             }
@@ -355,7 +355,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 Utils.AddIfNotNull(param, "exchange", Exchange);
                 Utils.AddIfNotNull(param, "tradingsymbol", TradingSymbol);
                 Utils.AddIfNotNull(param, "transaction_type", TransactionType);
-                Utils.AddIfNotNull(param, "quantity", Quantity);
+                Utils.AddIfNotNull(param, "quantity", Quantity.ToStringInvariant());
                 Utils.AddIfNotNull(param, "price", Price.ToString());
                 Utils.AddIfNotNull(param, "product", Product);
                 Utils.AddIfNotNull(param, "order_type", OrderType);
@@ -373,7 +373,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="Variety">You can place orders of varieties; regular orders, after market orders, cover orders etc. </param>
         /// <param name="ParentOrderId">Id of the parent order (obtained from the /orders call) as BO is a multi-legged order</param>
         /// <returns>Json response in the form of nested string dictionary.</returns>
-        public Dictionary<string, dynamic> CancelOrder(string OrderId, string Variety = Constants.VARIETY_REGULAR, string ParentOrderId = null)
+        public JObject CancelOrder(string OrderId, string Variety = Constants.VARIETY_REGULAR, string ParentOrderId = null)
         {
             var param = new Dictionary<string, dynamic>();
 
