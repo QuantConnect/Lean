@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             {
                 var zerodha = (ZerodhaBrokerage)Brokerage;
                 var quotes = zerodha.GetQuote(symbol.Value);
-                return quotes.AveragePrice;
+                return quotes.LastPrice;
             }
 
             [Test, TestCaseSource("OrderParameters")]
@@ -110,9 +110,9 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             }
 
             [Test, Ignore("This test exists to manually verify how rejected orders are handled when we don't receive an order ID back from Zerodha.")]
-            public void ShortZnga()
+            public void ShortSbin()
             {
-                PlaceOrderWaitForStatus(new MarketOrder(Symbols.ZNGA, -1, DateTime.Now), OrderStatus.Invalid, allowFailedSubmission: true);
+                PlaceOrderWaitForStatus(new MarketOrder(Symbols.SBIN, -1, DateTime.Now), OrderStatus.Invalid, allowFailedSubmission: true);
 
                 // wait for output to be generated
                 Thread.Sleep(20 * 1000);
