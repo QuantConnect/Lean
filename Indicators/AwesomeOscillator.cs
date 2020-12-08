@@ -55,7 +55,7 @@ namespace QuantConnect.Indicators
         /// <param name="slowPeriod">The period of the slow moving average associated with the AO</param>
         /// <param name="type">The type of moving average used when computing the fast and slow term. Defaults to simple moving average.</param>
         public AwesomeOscillator(int fastPeriod, int slowPeriod, MovingAverageType type=MovingAverageType.Simple)
-            : this($"AO({fastPeriod},{slowPeriod},{type})", slowPeriod, fastPeriod, type)
+            : this($"AO({fastPeriod},{slowPeriod},{type})", fastPeriod, slowPeriod, type)
         {
         }
 
