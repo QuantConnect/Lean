@@ -149,7 +149,8 @@ namespace QuantConnect.Algorithm
             // only fire insights generated event if we actually have insights
             if (insights.Length != 0)
             {
-                OnInsightsGenerated(insights.Select(InitializeInsightFields));
+                insights = InitializeInsights(insights);
+                OnInsightsGenerated(insights);
             }
 
             ProcessInsights(insights);
@@ -228,7 +229,7 @@ namespace QuantConnect.Algorithm
                     Log($"{Time}: RISK ADJUSTED TARGETS: {string.Join(" | ", riskAdjustedTargets.Select(t => t.ToString()).OrderBy(t => t))}");
                 }
             }
-            
+
             Execution.Execute(this, riskAdjustedTargets);
         }
 
@@ -384,27 +385,8 @@ namespace QuantConnect.Algorithm
                 return;
             }
 
-            // Verify insights are valid
-            var validInsights = new List<Insight>();
-            foreach(var insight in insights){
-                if (Securities[insight.Symbol].IsDelisted)
-                {
-                    if (!_isEmitDelistedInsightWarningSent)
-                    {
-                        Error($"QCAlgorithm.EmitInsights(): Warning: cannot emit insights for delisted securities, these will be discarded");
-                        _isEmitDelistedInsightWarningSent = true;
-                    }
-                } 
-                else 
-                {
-                    validInsights.Add(insight);
-                }
-            }
-
-            // Update our insights with our valids ones
-            insights = validInsights.ToArray();
-
-            OnInsightsGenerated(insights.Select(InitializeInsightFields));
+            insights = InitializeInsights(insights);
+            OnInsightsGenerated(insights);
             ProcessInsights(insights);
         }
 
@@ -416,7 +398,35 @@ namespace QuantConnect.Algorithm
         /// <param name="insight">The insight to be emitted</param>
         public void EmitInsights(Insight insight)
         {
-            EmitInsights(new []{insight});
+            EmitInsights(new[] { insight });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="insights"></param>
+        /// <returns></returns>
+        private Insight[] InitializeInsights(Insight[] insights)
+        {
+            // Verify insights are valid and initialize their fields
+            var validInsights = new List<Insight>();
+            foreach (var insight in insights)
+            {
+                if (Securities[insight.Symbol].IsDelisted)
+                {
+                    if (!_isEmitDelistedInsightWarningSent)
+                    {
+                        Error($"QCAlgorithm.EmitInsights(): Warning: cannot emit insights for delisted securities, these will be discarded");
+                        _isEmitDelistedInsightWarningSent = true;
+                    }
+                }
+                else
+                {
+                    // Initialize the fields and add it to our valid insights list
+                    validInsights.Add(InitializeInsightFields(insight));
+                }
+            }
+            return validInsights.ToArray();
         }
 
         /// <summary>
