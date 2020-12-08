@@ -307,6 +307,10 @@ namespace QuantConnect
                 throw new ArgumentNullException(nameof(value));
             }
             ID = sid;
+            if (ID.HasUnderlying)
+            {
+                Underlying = new Symbol(ID.Underlying, ID.Underlying.Symbol);
+            }
 
             Value = value.LazyToUpper();
         }
