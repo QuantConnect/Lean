@@ -320,8 +320,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         // it's interesting that NodaTime  consider next
                         // if time great or equal than 01:00 AM it's considered as "moved" (Standard, not Daylight)
                         // when time less than 01:00 AM it's considered as previous TZ (Standard, not Daylight)
-                        // it's easy to fix this behavior by substract 1 minute  before first convert, and then return it back.
-                        // so we work with 0:59 AM instead.
+                        // it's easy to fix this behavior by substract 1 tick  before first convert, and then return it back.
+                        // so we work with 0:59:59.. AM instead.
                         // but now follow native behavior
                         fillForward.EndTime = (fillForward.Time.ConvertTo(Exchange.TimeZone, _dataTimeZone) + _dataResolution)
                             .ConvertTo(_dataTimeZone, Exchange.TimeZone);
