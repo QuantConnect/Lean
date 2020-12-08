@@ -1030,29 +1030,26 @@ namespace QuantConnect.Lean.Engine
         {
             for (var i = delistings.Count - 1; i >= 0; i--)
             {
-                // check if we are holding position
-                var security = algorithm.Securities[delistings[i].Symbol];
+                var delisting = delistings[i];
+                var security = algorithm.Securities[delisting.Symbol];
                 if (security.Holdings.Quantity == 0)
                 {
                     continue;
                 }
 
-                // check if the time has come for delisting
-                var delistingTime = delistings[i].Time;
-                var nextMarketOpen = security.Exchange.Hours.GetNextMarketOpen(delistingTime, false);
-                var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(nextMarketOpen, false);
-                var futureOrFutureOption = security.Type == SecurityType.Future ||
-                    security.Type == SecurityType.FutureOption;
-
-                // Legacy behavior, we want to liquidate at the next market open for any
-                // non-futures/FOPs assets with an expiry
-                if (!futureOrFutureOption && security.LocalTime < nextMarketClose)
+                var delistingTime = delisting.Time;
+                if (!security.Exchange.Hours.IsOpen(delistingTime, false))
                 {
-                    continue;
+                    // This exists as a defensive measure to ensure that the delisting time
+                    // does not get moved if the market is open. If the market is closed,
+                    // we get the next market open, which will be on the same day if the delisting
+                    // date is a trading day. If the delisting date is after market close, then
+                    // the delisting will be adjusted to the next market open.
+                    delistingTime = security.Exchange.Hours.GetNextMarketOpen(delistingTime, false);
+                    delistingTime = security.Exchange.Hours.GetNextMarketClose(delistingTime, false);
                 }
-                // We want to liquidate during market hours for futures and futures options, so that we're
-                // not left accidentally holding the contract after expiry.
-                if (futureOrFutureOption && (security.LocalTime < delistingTime || !security.Exchange.Hours.IsOpen(security.LocalTime, false)))
+
+                if (security.LocalTime < delistingTime)
                 {
                     continue;
                 }
