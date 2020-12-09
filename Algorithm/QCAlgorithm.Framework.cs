@@ -402,31 +402,45 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// 
+        /// Helper method used to validate insights and prepare them to be emitted
         /// </summary>
-        /// <param name="insights"></param>
-        /// <returns></returns>
+        /// <param name="insights">insights preparing to be emitted</param>
+        /// <returns>Validated insights</returns>
         private Insight[] InitializeInsights(Insight[] insights)
         {
-            // Verify insights are valid and initialize their fields
-            var validInsights = new List<Insight>();
-            foreach (var insight in insights)
+            List<Insight> validInsights = null;
+            for (var i = 0; i < insights.Length; i++)
             {
-                if (Securities[insight.Symbol].IsDelisted)
+                if (Securities[insights[i].Symbol].IsDelisted)
                 {
                     if (!_isEmitDelistedInsightWarningSent)
                     {
                         Error($"QCAlgorithm.EmitInsights(): Warning: cannot emit insights for delisted securities, these will be discarded");
                         _isEmitDelistedInsightWarningSent = true;
                     }
+
+                    // If this is our first invalid insight, create the list and fill it with previous values
+                    if (validInsights == null)
+                    {
+                        validInsights = new List<Insight>() {};
+                        for (var j = 0; j < i; j++)
+                        {
+                            validInsights.Add(insights[j]);
+                        }
+                    }
                 }
                 else
                 {
-                    // Initialize the fields and add it to our valid insights list
-                    validInsights.Add(InitializeInsightFields(insight));
+                    // If we already had an invalid insight this will have been initialized storing the valid ones.
+                    if (validInsights != null)
+                    {
+                        validInsights.Add(insights[i]);
+                    }
                 }
             }
-            return validInsights.ToArray();
+
+            return validInsights == null ? insights : validInsights.ToArray();
+
         }
 
         /// <summary>

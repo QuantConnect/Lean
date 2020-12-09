@@ -71,14 +71,16 @@ namespace QuantConnect.Tests.Algorithm.Framework
             Assert.IsTrue(construction.Insights.All(insight => insight.CloseTimeUtc != default(DateTime)));
         }
 
-        [Test]
-        public void DelistedSecuritiesInsightsTest()
+        [TestCase(true, 0)]
+        [TestCase(false, 2)]
+        public void DelistedSecuritiesInsightsTest(bool isDelisted, int expectedCount)
         {
             var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             algorithm.SetStartDate(2007, 5, 16);
             algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
+            algorithm.SetFinishedWarmingUp();
 
             var alpha = new FakeAlpha();
             algorithm.SetAlpha(alpha);
@@ -98,7 +100,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
             };
 
             security.SetMarketPrice(tick);
-            security.IsDelisted = true;
+            security.IsDelisted = isDelisted;
 
             // Trigger Alpha to emit insight
             algorithm.OnFrameworkData(new Slice(new DateTime(2000, 01, 01), new List<BaseData>() { tick }));
@@ -107,7 +109,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
             algorithm.EmitInsights(Insight.Price(Symbols.SPY, TimeSpan.FromDays(1), InsightDirection.Up, .5, .75));
 
             // Should be zero because security is delisted
-            Assert.AreEqual(0, actualInsights.Count);
+            Assert.AreEqual(expectedCount, actualInsights.Count);
         }
 
         class FakeAlpha : AlphaModel
