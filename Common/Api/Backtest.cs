@@ -16,7 +16,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using QuantConnect.Packets;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Api
 {
@@ -72,6 +72,18 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "created")]
         public DateTime Created;
+
+        /// <summary>
+        /// Rolling window detailed statistics.
+        /// </summary>
+        [JsonProperty(PropertyName = "rollingWindow", NullValueHandling = NullValueHandling.Ignore)]
+        public Dictionary<string, AlgorithmPerformance> RollingWindow;
+
+        /// <summary>
+        /// Rolling window detailed statistics.
+        /// </summary>
+        [JsonProperty(PropertyName = "totalPerformance", NullValueHandling = NullValueHandling.Ignore)]
+        public AlgorithmPerformance TotalPerformance;
 
         /// <summary>
         /// Contains population averages scores over the life of the algorithm
