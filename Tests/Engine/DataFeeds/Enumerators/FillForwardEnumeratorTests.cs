@@ -1604,6 +1604,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 14 })]
         public void FillForwardBarsAroundDaylightMovementForDifferentResolutions_Algorithm(SecurityExchange exchange, DateTimeZone dataTimeZone, Resolution resolution, string dst, DateTime reference, int durationInDays)
         {
+            var logHandler = Log.LogHandler;
             MarketHoursDatabase MarketHours = MarketHoursDatabase.FromDataFolder();
             MarketHours.SetEntry(
                 Market.FXCM,
@@ -1644,6 +1645,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.AreEqual(expected.Length, FillForwardDaylightMovementTestAlgorithm.FillForwardBars.Count);
             Assert.IsTrue(expected.SequenceEqual(FillForwardDaylightMovementTestAlgorithm.FillForwardBars));
+            Log.LogHandler = logHandler;
         }
 
         internal class FillForwardTestAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
@@ -1686,12 +1688,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             public static DateTime RefDateTime { get; set; }
             public static int DurationInDays { get; set; }
 
-            private ILogHandler _originLogHandler;
-
             public override void Initialize()
             {
-                _originLogHandler = QuantConnect.Logging.Log.LogHandler;
-                QuantConnect.Logging.Log.LogHandler = new FunctionalLogHandler();
                 SetStartDate(RefDateTime);
                 SetEndDate(RefDateTime.AddDays(DurationInDays));
                 _symbol = AddForex("EURUSD", Resolution, market: Market.FXCM).Symbol;
@@ -1707,11 +1705,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                         FillForwardBars.Add($"{bar.Time:yyyy.MM.dd H:m:s} - {bar.EndTime:yyyy.MM.dd H:m:s}");
                     }
                 }
-            }
-
-            public override void OnEndOfAlgorithm()
-            {
-                QuantConnect.Logging.Log.LogHandler = _originLogHandler;
             }
         }
 
@@ -1732,6 +1725,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             public override IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
             {
+                Log.LogHandler = new FunctionalLogHandler();
                 Algorithm = TestAlgorithm = new FillForwardDaylightMovementTestAlgorithm();
                 return Algorithm;
             }
