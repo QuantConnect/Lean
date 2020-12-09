@@ -1612,7 +1612,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 dataTimeZone);
             FillForwardDaylightMovementTestAlgorithm.FillForwardBars.Clear();
             FillForwardDaylightMovementTestAlgorithm.Resolution = resolution;
-            FillForwardDaylightMovementTestAlgorithm.StartDate = reference;
+            FillForwardDaylightMovementTestAlgorithm.RefDateTime = reference;
             FillForwardDaylightMovementTestAlgorithm.DurationInDays = durationInDays;
 
             var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(nameof(FillForwardDaylightMovementTestAlgorithm),
@@ -1682,13 +1682,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
         internal class FillForwardDaylightMovementTestAlgorithm : FillForwardTestAlgorithm
         {
-            public static DateTime StartDate { get; set; }
+            public static DateTime RefDateTime { get; set; }
             public static int DurationInDays { get; set; }
 
             public override void Initialize()
             {
-                SetStartDate(StartDate);
-                SetEndDate(StartDate.AddDays(DurationInDays));
+                SetStartDate(RefDateTime);
+                SetEndDate(RefDateTime.AddDays(DurationInDays));
                 _symbol = AddForex("EURUSD", Resolution, market: Market.FXCM).Symbol;
             }
 
