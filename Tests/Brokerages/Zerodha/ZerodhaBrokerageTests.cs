@@ -36,9 +36,9 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
                 return new[]
                 {
                 new TestCaseData(new MarketOrderTestParameters(Symbols.IDEA)).SetName("MarketOrder"),
-                new TestCaseData(new LimitOrderTestParameters(Symbols.IDEA, 10m, 8.65m)).SetName("LimitOrder"),
-                new TestCaseData(new StopMarketOrderTestParameters(Symbols.IDEA, 10m, 8.65m)).SetName("StopMarketOrder"),
-                new TestCaseData(new StopLimitOrderTestParameters(Symbols.IDEA, 10m, 8.65m)).SetName("StopLimitOrder")
+                new TestCaseData(new LimitOrderTestParameters(Symbols.IDEA, 10m, 9.20m)).SetName("LimitOrder"),
+                new TestCaseData(new StopMarketOrderTestParameters(Symbols.IDEA, 10m, 9.20m)).SetName("StopMarketOrder"),
+                new TestCaseData(new StopLimitOrderTestParameters(Symbols.IDEA, 10m, 9.20m)).SetName("StopLimitOrder")
             };
             }
 
