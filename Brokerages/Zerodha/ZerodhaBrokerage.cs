@@ -235,7 +235,8 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns> Quote</returns>
         public Quote GetQuote(Symbol symbol)
         {
-            var instrumentIds = new string[] { symbol.ID.Symbol };
+            var instrument = _symbolMapper.GetZerodhaInstrumentToken(symbol.ID.Symbol, symbol.ID.Market);
+            var instrumentIds = new string[] { instrument.ToStringInvariant() };
             var quotes = _kite.GetQuote(instrumentIds);
             return quotes[symbol.ID.Symbol];
         }
@@ -275,6 +276,7 @@ namespace QuantConnect.Brokerages.Zerodha
             try
             {
                 var brokerId = orderUpdate.OrderId;
+                Log.Trace("EmitFillOrder Broker ID:" + brokerId);
                 var order = CachedOrderIDs
                     .FirstOrDefault(o => o.Value.BrokerId.Contains(brokerId))
                     .Value;
@@ -443,6 +445,7 @@ namespace QuantConnect.Brokerages.Zerodha
             Log.Debug("ZerodhaOrderResponse:");
             Log.Debug(orderResponse.ToString());
 
+            ////TODO: Calculate order fees later
             var orderFee = new OrderFee(new CashAmount(20, Currencies.INR));
             if ((string)orderResponse["status"] == "error")
             {
@@ -480,7 +483,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 }
 
                 // Generate submitted event
-                //OnOrderEvent(new OrderEvent(order, DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata), orderFee, "Zerodha Order Event") { Status = OrderStatus.Submitted });
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata), orderFee, "Zerodha Order Event") { Status = OrderStatus.Submitted });
                 Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
 
                 UnlockStream();
@@ -538,7 +541,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     // refuses for price = 0
                     return null;
                 case OrderType.StopLimit:
-                    return ((StopLimitOrder)order).LimitPrice;
+                    return ((StopLimitOrder)order).StopPrice;
                 case OrderType.StopMarket:
                     return ((StopMarketOrder)order).StopPrice;
             }
@@ -777,21 +780,25 @@ namespace QuantConnect.Brokerages.Zerodha
             }
             foreach (var item in HoldingResponse)
             {
-                //(avgprice - lasttradedprice) * holdingsqty
-                Holding holding = new Holding
+                ////TODO: Handle this later for now ignore CNC holdings since we currently only support MIS
+                if (item.Product == KiteProductType.MIS.ToString().ToUpperInvariant())
                 {
-                    AveragePrice = item.AveragePrice,
-                    Symbol = _symbolMapper.GetLeanSymbol(item.TradingSymbol),
-                    MarketPrice = item.LastPrice,
-                    Quantity = item.Quantity,
-                    Type = SecurityType.Equity,
-                    UnrealizedPnL = item.PNL, //(item.averagePrice - item.lastTradedPrice) * item.holdingsQuantity,
-                    CurrencySymbol = Currencies.GetCurrencySymbol(AccountBaseCurrency),
-                    //TODO:Can be item.holdings value too, need to debug
-                    MarketValue = item.ClosePrice * item.Quantity
+                    //(avgprice - lasttradedprice) * holdingsqty
+                    Holding holding = new Holding
+                    {
+                        AveragePrice = item.AveragePrice,
+                        Symbol = _symbolMapper.GetLeanSymbol(item.TradingSymbol),
+                        MarketPrice = item.LastPrice,
+                        Quantity = item.Quantity,
+                        Type = SecurityType.Equity,
+                        UnrealizedPnL = item.PNL, //(item.averagePrice - item.lastTradedPrice) * item.holdingsQuantity,
+                        CurrencySymbol = Currencies.GetCurrencySymbol(AccountBaseCurrency),
+                        //TODO:Can be item.holdings value too, need to debug
+                        MarketValue = item.ClosePrice * item.Quantity
 
-                };
-                holdingsList.Add(holding);
+                    };
+                    holdingsList.Add(holding);
+                }
             }
             return holdingsList;
         }
