@@ -46,7 +46,7 @@ Before we enable python support, follow the [installation instructions](https://
     ```
     /Users/{your_user_name}/anaconda3/lib/libpython3.6m.dylib
     ```
-2. Open `Lean/Launcher/Common/Python/Python.Runtime.dll.config`, add the following text under `<configuration> ... </configuration>` and save:
+2. Open `Lean/Common/Python/Python.Runtime.dll.config`, add the following text under `<configuration> ... </configuration>` and save:
     ```
         <dllmap dll="python3.6m" target="{the path in step 1 including libpython3.6m.dylib}" os="osx"/>
     ```
