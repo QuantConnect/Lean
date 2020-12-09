@@ -50,6 +50,12 @@ namespace QuantConnect.Packets
         public string AlgorithmId;
 
         /// <summary>
+        /// OptimizationId for this result packet if any
+        /// </summary>
+        [JsonProperty(PropertyName = "sOptimizationID")]
+        public string OptimizationId;
+
+        /// <summary>
         /// Project Id associated with this status packet
         /// </summary>
         [JsonProperty(PropertyName = "iProjectID")]
