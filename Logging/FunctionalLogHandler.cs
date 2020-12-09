@@ -56,10 +56,7 @@ namespace QuantConnect.Logging
         /// <param name="text">The error text to log</param>
         public void Error(string text)
         {
-            if (_error != null)
-            {
-                _error(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " ERROR " + text);
-            }
+            _error?.Invoke(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " ERROR " + text);
         }
 
         /// <summary>
@@ -68,10 +65,7 @@ namespace QuantConnect.Logging
         /// <param name="text">The debug text to log</param>
         public void Debug(string text)
         {
-            if (_debug != null)
-            {
-                _debug(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " DEBUG " + text);
-            }
+            _debug?.Invoke(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " DEBUG " + text);
         }
 
         /// <summary>
@@ -80,10 +74,7 @@ namespace QuantConnect.Logging
         /// <param name="text">The trace text to log</param>
         public void Trace(string text)
         {
-            if (_trace != null)
-            {
-                _trace(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " TRACE " + text);
-            }
+            _trace?.Invoke(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " TRACE " + text);
         }
 
         /// <summary>

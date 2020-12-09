@@ -31,6 +31,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
@@ -1685,8 +1686,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             public static DateTime RefDateTime { get; set; }
             public static int DurationInDays { get; set; }
 
+            private ILogHandler _originLogHandler;
+
             public override void Initialize()
             {
+                _originLogHandler = QuantConnect.Logging.Log.LogHandler;
+                QuantConnect.Logging.Log.LogHandler = new FunctionalLogHandler();
                 SetStartDate(RefDateTime);
                 SetEndDate(RefDateTime.AddDays(DurationInDays));
                 _symbol = AddForex("EURUSD", Resolution, market: Market.FXCM).Symbol;
@@ -1702,6 +1707,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                         FillForwardBars.Add($"{bar.Time:yyyy.MM.dd H:m:s} - {bar.EndTime:yyyy.MM.dd H:m:s}");
                     }
                 }
+            }
+
+            public override void OnEndOfAlgorithm()
+            {
+                QuantConnect.Logging.Log.LogHandler = _originLogHandler;
             }
         }
 
