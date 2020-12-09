@@ -97,6 +97,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 algorithm.Transactions,
                 algorithm.Portfolio,
                 Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider")),
                 account,
                 host,
                 port,
