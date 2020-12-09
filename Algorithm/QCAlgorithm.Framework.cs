@@ -431,7 +431,10 @@ namespace QuantConnect.Algorithm
                 }
                 else
                 {
-                    // If we already had an invalid insight this will have been initialized storing the valid ones.
+                    // Initialize the insight fields
+                    insights[i] = InitializeInsightFields(insights[i]);
+
+                    // If we already had an invalid insight, this will have been initialized storing the valid ones.
                     if (validInsights != null)
                     {
                         validInsights.Add(insights[i]);
