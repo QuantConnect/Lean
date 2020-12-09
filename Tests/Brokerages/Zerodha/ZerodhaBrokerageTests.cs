@@ -84,30 +84,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
                 return quotes.LastPrice;
             }
 
-            [Test, TestCaseSource("OrderParameters")]
-            public void AllowsOneActiveOrderPerSymbol(OrderTestParameters parameters)
-            {
-                bool orderFilledOrCanceled = false;
-                var order = parameters.CreateLongOrder(1);
-                EventHandler<OrderEvent> brokerageOnOrderStatusChanged = (sender, args) =>
-                {
-                    // we expect all orders to be cancelled except for market orders, they may fill before the next order is submitted
-                    if (args.OrderId == order.Id && args.Status == OrderStatus.Canceled || (order is MarketOrder && args.Status == OrderStatus.Filled))
-                    {
-                        orderFilledOrCanceled = true;
-                    }
-                };
-
-                Brokerage.OrderStatusChanged += brokerageOnOrderStatusChanged;
-
-                // starting from zero initiate two long orders and see that the first is canceled
-                PlaceOrderWaitForStatus(order, OrderStatus.Submitted);
-                PlaceOrderWaitForStatus(parameters.CreateLongMarketOrder(1));
-
-                Brokerage.OrderStatusChanged -= brokerageOnOrderStatusChanged;
-
-                Assert.IsTrue(orderFilledOrCanceled);
-            }
+            
 
             [Test, Ignore("This test exists to manually verify how rejected orders are handled when we don't receive an order ID back from Zerodha.")]
             public void ShortSbin()
