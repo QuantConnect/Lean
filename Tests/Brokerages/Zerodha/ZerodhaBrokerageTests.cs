@@ -25,7 +25,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Zerodha
 {
-    [TestFixture, Ignore("This test requires a configured and active Zerodha account")]
+    [TestFixture]
     public class ZerodhaBrokerageTests : BrokerageTests
     {
             /// <summary>
@@ -35,10 +35,10 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             {
                 return new[]
                 {
-                new TestCaseData(new MarketOrderTestParameters(Symbols.SBIN)).SetName("MarketOrder"),
-                new TestCaseData(new LimitOrderTestParameters(Symbols.SBIN, 1000m, 0.01m)).SetName("LimitOrder"),
-                new TestCaseData(new StopMarketOrderTestParameters(Symbols.SBIN, 1000m, 0.01m)).SetName("StopMarketOrder"),
-                new TestCaseData(new StopLimitOrderTestParameters(Symbols.SBIN, 1000m, 0.01m)).SetName("StopLimitOrder")
+                new TestCaseData(new MarketOrderTestParameters(Symbols.IDEA)).SetName("MarketOrder"),
+                new TestCaseData(new LimitOrderTestParameters(Symbols.IDEA, 10m, 8.65m)).SetName("LimitOrder"),
+                new TestCaseData(new StopMarketOrderTestParameters(Symbols.IDEA, 10m, 8.65m)).SetName("StopMarketOrder"),
+                new TestCaseData(new StopLimitOrderTestParameters(Symbols.IDEA, 10m, 8.65m)).SetName("StopLimitOrder")
             };
             }
 
@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             /// <summary>
             /// Gets the symbol to be traded, must be shortable
             /// </summary>
-            protected override Symbol Symbol => Symbols.SBIN;
+            protected override Symbol Symbol => Symbols.IDEA;
 
             /// <summary>
             /// Gets the security type associated with the <see cref="BrokerageTests.Symbol"/>
@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             /// </summary>
             protected override bool IsAsync()
             {
-                return false;
+                return true;
             }
 
             /// <summary>
@@ -87,9 +87,9 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             
 
             [Test, Ignore("This test exists to manually verify how rejected orders are handled when we don't receive an order ID back from Zerodha.")]
-            public void ShortSbin()
+            public void ShortIdea()
             {
-                PlaceOrderWaitForStatus(new MarketOrder(Symbols.SBIN, -1, DateTime.Now), OrderStatus.Invalid, allowFailedSubmission: true);
+                PlaceOrderWaitForStatus(new MarketOrder(Symbols.IDEA, -1, DateTime.Now), OrderStatus.Invalid, allowFailedSubmission: true);
 
                 // wait for output to be generated
                 Thread.Sleep(20 * 1000);
