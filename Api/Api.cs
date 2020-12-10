@@ -383,9 +383,15 @@ namespace QuantConnect.Api
                 backtestName
             }), ParameterType.RequestBody);
 
-            Backtest result;
+            BacktestResponseWrapper result;
             ApiConnection.TryRequest(request, out result);
-            return result;
+
+            // Use API Response values for Backtest Values
+            result.Backtest.Success = result.Success;
+            result.Backtest.Errors = result.Errors;
+
+            // Return only the backtest object
+            return result.Backtest;
         }
 
         /// <summary>
@@ -408,9 +414,56 @@ namespace QuantConnect.Api
                 backtestId
             }), ParameterType.RequestBody);
 
-            Backtest result;
+            BacktestResponseWrapper result;
             ApiConnection.TryRequest(request, out result);
-            return result;
+
+            // Go fetch the charts if the backtest is completed
+            if (result.Backtest.Completed)
+            {
+                // For storing our collected charts
+                var updatedCharts = new Dictionary<string, Chart>();
+
+                // Create backtest requests for each chart that is empty
+                foreach (var chart in result.Backtest.Charts)
+                {
+                    if (chart.Value.Series == null)
+                    {
+                        var chartRequest = new RestRequest("backtests/read", Method.POST)
+                        {
+                            RequestFormat = DataFormat.Json
+                        };
+
+                        chartRequest.AddParameter("application/json", JsonConvert.SerializeObject(new
+                        {
+                            projectId,
+                            backtestId,
+                            chart = chart.Key.Replace(' ', '+')
+                        }), ParameterType.RequestBody);
+
+                        BacktestResponseWrapper chartResponse;
+                        ApiConnection.TryRequest(chartRequest, out chartResponse);
+
+                        // Add this chart to our updated collection
+                        if (chartResponse.Success)
+                        {
+                            updatedCharts.Add(chart.Key, chartResponse.Backtest.Charts[chart.Key]);
+                        }
+                    }
+                }
+
+                // Update our result
+                foreach(var updatedChart in updatedCharts)
+                {
+                    result.Backtest.Charts[updatedChart.Key] = updatedChart.Value;
+                }
+            }
+
+            // Use API Response values for Backtest Values
+            result.Backtest.Success = result.Success;
+            result.Backtest.Errors = result.Errors;
+
+            // Return only the backtest object
+            return result.Backtest;
         }
 
         /// <summary>
