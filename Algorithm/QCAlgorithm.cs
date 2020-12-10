@@ -2286,17 +2286,15 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="insights">The collection of insights generaed at the current time step</param>
         /// <param name="clone">Will emit a clone of the generated insights</param>
-        private void OnInsightsGenerated(IEnumerable<Insight> insights, bool clone = true)
+        private void OnInsightsGenerated(Insight[] insights, bool clone = true)
         {
-            var insightCollection = insights.ToArray();
-
             // debug printing of generated insights
             if (DebugMode)
             {
-                Log($"{Time}: ALPHA: {string.Join(" | ", insightCollection.Select(i => i.ToString()).OrderBy(i => i))}");
+                Log($"{Time}: ALPHA: {string.Join(" | ", insights.Select(i => i.ToString()).OrderBy(i => i))}");
             }
 
-            InsightsGenerated?.Invoke(this, new GeneratedInsightsCollection(UtcTime, insightCollection, clone: clone));
+            InsightsGenerated?.Invoke(this, new GeneratedInsightsCollection(UtcTime, insights, clone: clone));
         }
 
         /// <summary>
