@@ -25,7 +25,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Zerodha
 {
-    [TestFixture]
+    [TestFixture, Ignore("This test requires a configured and active Zerodha account")]
     public class ZerodhaBrokerageTests : BrokerageTests
     {
             /// <summary>
@@ -80,11 +80,9 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             protected override decimal GetAskPrice(Symbol symbol)
             {
                 var zerodha = (ZerodhaBrokerage)Brokerage;
-                var quotes = zerodha.GetQuote(symbol.Value);
+                var quotes = zerodha.GetQuote(symbol);
                 return quotes.LastPrice;
             }
-
-            
 
             [Test, Ignore("This test exists to manually verify how rejected orders are handled when we don't receive an order ID back from Zerodha.")]
             public void ShortIdea()
