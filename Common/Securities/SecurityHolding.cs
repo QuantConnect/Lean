@@ -25,6 +25,11 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityHolding
     {
+        /// <summary>
+        /// Event raised each time the holdings quantity is changed.
+        /// </summary>
+        public event EventHandler<SecurityHoldingQuantityChangedEventArgs> QuantityChanged;
+
         //Working Variables
         private decimal _averagePrice;
         private decimal _quantity;
@@ -407,8 +412,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual void SetHoldings(decimal averagePrice, int quantity)
         {
-            _averagePrice = averagePrice;
-            _quantity = quantity;
+            SetHoldings(averagePrice, (decimal) quantity);
         }
 
         /// <summary>
@@ -416,8 +420,13 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual void SetHoldings(decimal averagePrice, decimal quantity)
         {
-            _averagePrice = averagePrice;
+            var previousQuantity = _quantity;
+            var previousAveragePrice = _averagePrice;
+
             _quantity = quantity;
+            _averagePrice = averagePrice;
+
+            OnQuantityChanged(previousAveragePrice, previousQuantity);
         }
 
         /// <summary>
@@ -469,6 +478,16 @@ namespace QuantConnect.Securities
 
             return (price - AveragePrice) * Quantity * _security.QuoteCurrency.ConversionRate
                 * _security.SymbolProperties.ContractMultiplier - feesInAccountCurrency;
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="QuantityChanged"/> event
+        /// </summary>
+        protected virtual void OnQuantityChanged(decimal previousAveragePrice, decimal previousQuantity)
+        {
+            QuantityChanged?.Invoke(this, new SecurityHoldingQuantityChangedEventArgs(
+                _security, previousAveragePrice, previousQuantity
+            ));
         }
     }
 }
