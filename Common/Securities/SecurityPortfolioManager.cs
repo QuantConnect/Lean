@@ -33,11 +33,12 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityPortfolioManager : ExtendedDictionary<SecurityHolding>, IDictionary<Symbol, SecurityHolding>, ISecurityProvider
     {
-        // flips to true when the user called SetCash(), if true, SetAccountCurrency will throw
-        private bool _setAccountCurrencyWasCalled;
+        private Cash _baseCurrencyCash;
         private bool _setCashWasCalled;
-        private bool _isTotalPortfolioValueValid;
         private decimal _totalPortfolioValue;
+        private bool _isTotalPortfolioValueValid;
+        private bool _setAccountCurrencyWasCalled;
+        private readonly object _unsettledCashAmountsLocker = new object();
 
         /// <summary>
         /// Local access to the securities collection for the portfolio summation.
@@ -64,13 +65,6 @@ namespace QuantConnect.Securities
         /// </summary>
         private readonly List<UnsettledCashAmount> _unsettledCashAmounts;
 
-        // The _unsettledCashAmounts list has to be synchronized because order fills are happening on a separate thread
-        private readonly object _unsettledCashAmountsLocker = new object();
-
-        // Record keeping variables
-        private Cash _baseCurrencyCash;
-        private Cash _baseCurrencyUnsettledCash;
-
         /// <summary>
         /// Initialise security portfolio manager.
         /// </summary>
@@ -85,7 +79,6 @@ namespace QuantConnect.Securities
             _unsettledCashAmounts = new List<UnsettledCashAmount>();
 
             _baseCurrencyCash = CashBook[CashBook.AccountCurrency];
-            _baseCurrencyUnsettledCash = UnsettledCashBook[CashBook.AccountCurrency];
 
             // default to $100,000.00
             _baseCurrencyCash.SetAmount(100000);
@@ -573,7 +566,6 @@ namespace QuantConnect.Securities
             CashBook.AccountCurrency = accountCurrency;
 
             _baseCurrencyCash = CashBook[accountCurrency];
-            _baseCurrencyUnsettledCash = UnsettledCashBook[accountCurrency];
         }
 
         /// <summary>
