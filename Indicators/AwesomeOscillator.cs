@@ -85,7 +85,7 @@ namespace QuantConnect.Indicators
             SlowAo.Update(input.Time, presentValue);
             FastAo.Update(input.Time, presentValue);
 
-            return IsReady ? FastAo.Current.Value - SlowAo.Current.Value : 0m;
+            return IsReady ? FastAo - SlowAo : 0m;
         }
 
         /// <summary>

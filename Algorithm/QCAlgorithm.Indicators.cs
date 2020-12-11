@@ -137,7 +137,7 @@ namespace QuantConnect.Algorithm
         public AwesomeOscillator AO(Symbol symbol, int slowPeriod, int fastPeriod, MovingAverageType type, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"AO({fastPeriod},{slowPeriod},{type})", resolution);
-            var awesomeOscillator = new AwesomeOscillator(name, fastPeriod, slowPeriod);
+            var awesomeOscillator = new AwesomeOscillator(name, fastPeriod, slowPeriod, type);
             RegisterIndicator(symbol, awesomeOscillator, resolution, selector);
 
             if (EnableAutomaticIndicatorWarmUp)
