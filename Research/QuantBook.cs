@@ -331,7 +331,8 @@ namespace QuantConnect.Research
                 if (symbol.SecurityType == SecurityType.Future && symbol.IsCanonical())
                 {
                     throw new ArgumentException("The Future Symbol provided is a canonical Symbol (i.e. a Symbol representing all Futures), which is not supported at this time. " +
-                        "Use the Symbol from `AddFutureContract(...)` instead of the Symbol accessible from `AddFuture(...)`");
+                        "If you are using the Symbol accessible from `AddFuture(...)`, use the Symbol from `AddFutureContract(...)` instead. " +
+                        "You can use `qb.FutureOptionChainProvider(canonicalFuture, datetime)` to get a list of futures contracts for a given date, and add them to your algorithm with `AddFutureContract(symbol, Resolution)`.");
                 }
                 if (symbol.SecurityType == SecurityType.Future && !symbol.IsCanonical())
                 {
