@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
@@ -36,18 +35,16 @@ namespace QuantConnect.Indicators
     public class ChaikinMoneyFlow : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
-        /// Holds the point-wise flow and volume terms. 
+        /// Holds the point-wise flow-sum and volume terms. 
         /// </summary>
-        private readonly RollingWindow<List<decimal>> _rollingFlow;
+        private readonly Sum _flowRatioSum;
 
-        private Sum _flowRatioSum;
-        private Sum _volumeSum;
+        private readonly Sum _volumeSum;
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => Samples > _period;
-        private readonly int _period;
+        public override bool IsReady => _flowRatioSum.IsReady;
 
 
         /// <summary>
@@ -60,7 +57,6 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _rollingFlow.Reset();
             _volumeSum.Reset();
             _flowRatioSum.Reset();
             base.Reset();
@@ -74,9 +70,7 @@ namespace QuantConnect.Indicators
         public ChaikinMoneyFlow(string name, int period)
             : base($"CMF({name})")
         {
-            _period = period;
-            WarmUpPeriod = period + 1;
-            _rollingFlow = new RollingWindow<List<decimal>>(period);
+            WarmUpPeriod = period;
             _flowRatioSum = new Sum(period);
             _volumeSum = new Sum(period);
         }
@@ -94,9 +88,6 @@ namespace QuantConnect.Indicators
             var flowRatio = denominator > 0
                 ? input.Volume * (input.Close - input.Low - (input.High - input.Close)) / denominator
                 : 0m;
-            var inputVol = input.Volume;
-            var addFlow = new List<decimal> {flowRatio, inputVol};
-            _rollingFlow.Add(addFlow);
 
             _flowRatioSum.Update(input.EndTime, flowRatio);
             _volumeSum.Update(input.EndTime, input.Volume);
