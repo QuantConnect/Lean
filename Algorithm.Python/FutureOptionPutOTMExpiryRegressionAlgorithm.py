@@ -28,10 +28,12 @@ from QuantConnect import Market
 
 ### <summary>
 ### This regression algorithm tests Out of The Money (OTM) future option expiry for puts.
-### We expect 1 order from the algorithm, which are:
+### We expect 2 orders from the algorithm, which are:
 ###
 ###   * Initial entry, buy ES Put Option (expiring OTM)
 ###     - contract expires worthless, not exercised, so never opened a position in the underlying
+###   
+###   * Liquidation of worthless ES Put OTM contract 
 ###
 ### Additionally, we test delistings for future options and assert that our
 ### portfolio holdings reflect the orders the algorithm has submitted.

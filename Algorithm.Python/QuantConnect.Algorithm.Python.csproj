@@ -109,6 +109,7 @@
     <Content Include="FutureOptionShortCallOTMExpiryRegressionAlgorithm.py" />
     <Content Include="FutureOptionShortPutITMExpiryRegressionAlgorithm.py" />
     <Content Include="FutureOptionShortPutOTMExpiryRegressionAlgorithm.py" />
+    <Content Include="FuturesAndFuturesOptionsExpiryTimeAndLiquidationRegressionAlgorithm.py" />
     <Content Include="KerasNeuralNetworkAlgorithm.py" />
     <Content Include="CustomDataUsingMapFileRegressionAlgorithm.py" />
     <Content Include="LiquidETFUniverseFrameworkAlgorithm.py" />
