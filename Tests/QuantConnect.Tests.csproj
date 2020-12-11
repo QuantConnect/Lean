@@ -533,6 +533,7 @@
     <Compile Include="Indicators\AdvanceDeclineRatioVolumeTests.cs" />
     <Compile Include="Indicators\AdvanceDeclineRatioTests.cs" />
     <Compile Include="Indicators\ArmsIndexTests.cs" />
+    <Compile Include="Indicators\ChaikinMoneyFlowTests.cs" />
     <Compile Include="Indicators\PythonIndicatorNoinheritanceTestsLegacy.cs" />
     <Compile Include="Indicators\PythonIndicatorNoinheritanceTests.cs" />
     <Compile Include="Indicators\PythonIndicatorTests.cs" />
@@ -989,6 +990,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_atr_wilder.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_cmf.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_hma.txt">
