@@ -120,7 +120,18 @@ namespace QuantConnect.Indicators
                 return Update((T)(object)new IndicatorDataPoint(time, value));
             }
 
-            throw new NotSupportedException($"{GetType().Name} does not support Update(DateTime, decimal) method overload. Use Update({typeof(T).Name}) instead.");
+            var suggestions = new List<string>
+            {
+                "Update(TradeBar)",
+                "Update(QuoteBar)"
+            };
+
+            if (typeof(T) == typeof(IBaseData))
+            {
+                suggestions.Add("Update(Tick)");
+            }
+
+            throw new NotSupportedException($"{GetType().Name} does not support the `Update(DateTime, decimal)` method. Use one of the following methods instead: {string.Join(", ", suggestions)}");
         }
 
         /// <summary>
