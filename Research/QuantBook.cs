@@ -328,6 +328,11 @@ namespace QuantConnect.Research
 
                 // Allow 20 strikes from the money for futures. No expiry filter is applied
                 // so that any future contract provided will have data returned.
+                if (symbol.SecurityType == SecurityType.Future && symbol.IsCanonical())
+                {
+                    throw new ArgumentException("The Future Symbol provided is a canonical Symbol (i.e. a Symbol representing all Futures), which is not supported at this time. " +
+                        "Use the Symbol from `AddFutureContract(...)` instead of the Symbol accessible from `AddFuture(...)`");
+                }
                 if (symbol.SecurityType == SecurityType.Future && !symbol.IsCanonical())
                 {
                     option.SetFilter(universe => universe.Strikes(-10, +10));

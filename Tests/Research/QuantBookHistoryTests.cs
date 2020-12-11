@@ -320,5 +320,17 @@ namespace QuantConnect.Tests.Research
                 Assert.IsTrue((bool)df.index.levels[0].__contains__(expiry.ToStringInvariant("yyyy-MM-dd")).AsManagedObject(typeof(bool)));
             }
         }
+
+        [Test]
+        public void CanoicalFutureCrashesGetOptionHistory()
+        {
+            var qb = new QuantBook();
+            var future = Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
+
+            Assert.Throws<ArgumentException>(() =>
+            {
+                qb.GetOptionHistory(future, default(DateTime), DateTime.MaxValue, Resolution.Minute);
+            });
+        }
     }
 }
