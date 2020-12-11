@@ -270,5 +270,67 @@ namespace QuantConnect.Tests.Research
                 Assert.GreaterOrEqual(startDate.AddDays(-1).Date, firstIndex.Date);
             }
         }
+
+        [Test]
+        public void FuturesOptionsWithFutureContract()
+        {
+            using (Py.GIL())
+            {
+                var qb = new QuantBook();
+                var expiry = new DateTime(2020, 3, 20);
+                var future = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, expiry);
+                var start = new DateTime(2020, 1, 5);
+                var end = new DateTime(2020, 1, 6);
+                var history = qb.GetOptionHistory(future, start, end, Resolution.Minute);
+                dynamic df = history.GetAllData();
+
+                Assert.IsNotNull(df);
+                Assert.IsFalse((bool)df.empty.AsManagedObject(typeof(bool)));
+                Assert.Greater((int)df.__len__().AsManagedObject(typeof(int)), 360);
+                Assert.AreEqual(5, (int)df.index.levels.__len__().AsManagedObject(typeof(int)));
+                Assert.IsTrue((bool)df.index.levels[0].__contains__(expiry.ToStringInvariant("yyyy-MM-dd")).AsManagedObject(typeof(bool)));
+            }
+        }
+
+        [Test]
+        public void FuturesOptionsWithFutureOptionContract()
+        {
+            using (Py.GIL())
+            {
+                var qb = new QuantBook();
+                var expiry = new DateTime(2020, 3, 20);
+                var future = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, expiry);
+                var futureOption = Symbol.CreateOption(
+                    future,
+                    future.ID.Market,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    3300m,
+                    expiry);
+
+                var start = new DateTime(2020, 1, 5);
+                var end = new DateTime(2020, 1, 6);
+                var history = qb.GetOptionHistory(futureOption, start, end, Resolution.Minute);
+                dynamic df = history.GetAllData();
+
+                Assert.IsNotNull(df);
+                Assert.IsFalse((bool)df.empty.AsManagedObject(typeof(bool)));
+                Assert.AreEqual(360, (int)df.__len__().AsManagedObject(typeof(int)));
+                Assert.AreEqual(5, (int)df.index.levels.__len__().AsManagedObject(typeof(int)));
+                Assert.IsTrue((bool)df.index.levels[0].__contains__(expiry.ToStringInvariant("yyyy-MM-dd")).AsManagedObject(typeof(bool)));
+            }
+        }
+
+        [Test]
+        public void CanoicalFutureCrashesGetOptionHistory()
+        {
+            var qb = new QuantBook();
+            var future = Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
+
+            Assert.Throws<ArgumentException>(() =>
+            {
+                qb.GetOptionHistory(future, default(DateTime), DateTime.MaxValue, Resolution.Minute);
+            });
+        }
     }
 }
