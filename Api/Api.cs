@@ -20,6 +20,7 @@ using System.Net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using RestSharp;
 using RestSharp.Extensions;
@@ -819,6 +820,8 @@ namespace QuantConnect.Api
             var response = client.Execute(request);
             if (response.ContentType != "application/zip")
             {
+                var message = JObject.Parse(response.Content)["message"].Value<string>();
+                Log.Trace($"Api.DownloadData(): Failed to download zip for {symbol} {resolution} data for date {date}, Api response: {message}");
                 return false;
             }
             
