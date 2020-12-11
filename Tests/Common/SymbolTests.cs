@@ -587,6 +587,23 @@ namespace QuantConnect.Tests.Common
             Assert.IsTrue(nonCanonicalFutureOption.Value.StartsWith(expectedFutureOptionTicker));
         }
 
+        [Test]
+        public void SymbolWithSidContainingUnderlyingCreatedWithoutNullUnderlying()
+        {
+            var future = Symbol.CreateFuture("ES", Market.CME, new DateTime(2020, 6, 19));
+            var optionSid = SecurityIdentifier.GenerateOption(
+                future.ID.Date,
+                future.ID,
+                future.ID.Market,
+                3500m,
+                OptionRight.Call,
+                OptionStyle.American);
+
+            var option = new Symbol(optionSid, "ES");
+            Assert.IsNotNull(option.Underlying);
+            Assert.AreEqual(future, option.Underlying);
+        }
+
         class OldSymbol
         {
             public string Value { get; set; }

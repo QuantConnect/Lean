@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect
 {
@@ -183,7 +184,7 @@ namespace QuantConnect
         /// It is calculated by taking a portfolio's annualized rate of return and subtracting the risk free rate of return.
         /// </summary>
         /// <remarks>For performance we only truncate when the value is gotten</remarks>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore), JsonConverter(typeof(StringDecimalJsonConverter), true)]
         public decimal SortinoRatio
         {
             get

@@ -16,7 +16,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using QuantConnect.Packets;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Api
 {
@@ -56,12 +56,6 @@ namespace QuantConnect.Api
         public decimal Progress;
 
         /// <summary>
-        /// Result packet for the backtest
-        /// </summary>
-        [JsonProperty(PropertyName = "result")]
-        public BacktestResult Result;
-
-        /// <summary>
         /// Backtest error message
         /// </summary>
         [JsonProperty(PropertyName = "error")]
@@ -78,6 +72,56 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "created")]
         public DateTime Created;
+
+        /// <summary>
+        /// Rolling window detailed statistics.
+        /// </summary>
+        [JsonProperty(PropertyName = "rollingWindow", NullValueHandling = NullValueHandling.Ignore)]
+        public Dictionary<string, AlgorithmPerformance> RollingWindow;
+
+        /// <summary>
+        /// Rolling window detailed statistics.
+        /// </summary>
+        [JsonProperty(PropertyName = "totalPerformance", NullValueHandling = NullValueHandling.Ignore)]
+        public AlgorithmPerformance TotalPerformance;
+
+        /// <summary>
+        /// Contains population averages scores over the life of the algorithm
+        /// </summary>
+        [JsonProperty(PropertyName = "alphaRuntimeStatistics", NullValueHandling = NullValueHandling.Ignore)]
+        public AlphaRuntimeStatistics AlphaRuntimeStatistics;
+
+        /// <summary>
+        /// Charts updates for the live algorithm since the last result packet
+        /// </summary>
+        [JsonProperty(PropertyName = "charts", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, Chart> Charts;
+
+        /// <summary>
+        /// Statistics information sent during the algorithm operations.
+        /// </summary>
+        /// <remarks>Intended for update mode -- send updates to the existing statistics in the result GUI. If statistic key does not exist in GUI, create it</remarks>
+        [JsonProperty(PropertyName = "statistics", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, string> Statistics;
+
+        /// <summary>
+        /// Runtime banner/updating statistics in the title banner of the live algorithm GUI.
+        /// </summary>
+        [JsonProperty(PropertyName = "runtimeStatistics", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, string> RuntimeStatistics;
+    }
+
+    /// <summary>
+    /// Wrapper class for Backtest/* endpoints JSON response
+    /// Currently used by Backtest/Read and Backtest/Create
+    /// </summary>
+    public class BacktestResponseWrapper : RestResponse
+    {
+        /// <summary>
+        /// Backtest Object
+        /// </summary>
+        [JsonProperty(PropertyName = "backtest")]
+        public Backtest Backtest;
     }
 
     /// <summary>

@@ -13,7 +13,7 @@ Before anything we need to ensure a few things have been done:
 
 
 1. Get [Visual Studio Code](https://code.visualstudio.com/download)
-    *   Get the Extension [Mono Debug](https://marketplace.visualstudio.com/items?itemName=ms-vscode.mono-debug) for C# Debugging
+    *   Get the Extension [Mono Debug **15.8**](https://marketplace.visualstudio.com/items?itemName=ms-vscode.mono-debug) for C# Debugging
     *   Get the Extension [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) for Python Debugging
 
 2. Get [Docker](https://docs.docker.com/get-docker/):
@@ -35,7 +35,8 @@ Before anything we need to ensure a few things have been done:
     *   Download the repo or clone it using: _git clone[ https://github.com/QuantConnect/Lean](https://github.com/QuantConnect/Lean)_
     *   Open the folder using VS Code
 
-
+**NOTES**: 
+- Mono Extension Version 16 and greater fails to debug the docker container remotely, please install **Version 15.8**. To install an older version from within VS Code go to the extensions tab, search "Mono Debug", and select "Install Another Version...".
 <br />
 
 <h1>Develop Algorithms Locally, Run in Container</h1>
@@ -111,6 +112,12 @@ In VS Code click on the debug/run icon on the left toolbar, at the top you shoul
     "PYHTON_DIR=${workspaceFolder}/Algorithm.Python"
 
 As defaults these are all great! Feel free to change them as needed for your setup.
+
+**NOTE:** VSCode may try and throw errors when launching this way regarding build on `QuantConnect.csx` and `Config.json` these errors can be ignored by selecting "*Debug Anyway*". To stop this error message in the future select "*Remember my choice in user settings*". 
+
+If using C# algorithms ensure that msbuild can build them successfully.  
+
+
 
 <br />
 
@@ -194,4 +201,6 @@ _Figure 2: Python Debugger Messages_
 <h1>Common Issues</h1>
 Here we will cover some common issues with setting this up. This section will expand as we get user feedback!
 
-*   Error messages about build in VSCode points to comments in JSON. Either select **ignore** or follow steps described [here](https://stackoverflow.com/questions/47834825/in-vs-code-disable-error-comments-are-not-permitted-in-json) to remove the errors entirely.
+*   Any error messages about building in VSCode that point to comments in JSON. Either select **ignore** or follow steps described [here](https://stackoverflow.com/questions/47834825/in-vs-code-disable-error-comments-are-not-permitted-in-json) to remove the errors entirely.
+*   `Errors exist after running preLaunchTask 'run-docker'`This VSCode error appears to warn you of CSharp errors when trying to use `Debug in Container` select "Debug Anyway" as the errors are false flags for JSON comments as well as `QuantConnect.csx` not finding references. Neither of these will impact your debugging. 
+*   `The container name "/LeanEngine" is already in use by container "****"` This Docker error implies that another instance of lean is already running under the container name /LeanEngine. If this error appears either use Docker Desktop to delete the container or use `docker kill LeanEngine` from the command line.

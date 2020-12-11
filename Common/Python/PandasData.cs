@@ -84,6 +84,9 @@ def mapper(key):
     if keyType is Symbol:
         return str(key.ID)
     if keyType is str:
+        reserved = ['high', 'low', 'open', 'close']
+        if key in reserved:
+            return key
         kvp = SymbolCache.TryGetSymbol(key, None)
         if kvp[0]:
             return str(kvp[1].ID)
