@@ -280,7 +280,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 if (item.Balance > 0)
                 {
-                    list.Add(new CashAmount(item.Balance, item.Currency.ToUpperInvariant()));
+                    list.Add(new CashAmount(item.Balance, GetLeanCurrency(item.Currency)));
                 }
             }
 
