@@ -821,7 +821,7 @@ namespace QuantConnect.Api
             if (response.ContentType != "application/zip")
             {
                 var message = JObject.Parse(response.Content)["message"].Value<string>();
-                Log.Trace($"Api.DownloadData(): Failed to download zip for {symbol} {resolution} data for date {date}, Api response: {message}");
+                Log.Error($"Api.DownloadData(): Failed to download zip for {symbol} {resolution} data for date {date}, Api response: {message}");
                 return false;
             }
             
