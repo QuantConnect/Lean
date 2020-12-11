@@ -127,6 +127,28 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Awesome Oscillator from the specified periods.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Awesome Oscillator we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="fastPeriod">The period of the fast moving average associated with the AO</param>
+        /// <param name="slowPeriod">The period of the slow moving average associated with the AO</param>
+        /// <param name="type">The type of moving average used when computing the fast and slow term. Defaults to simple moving average.</param>
+        public AwesomeOscillator AO(Symbol symbol, int slowPeriod, int fastPeriod, MovingAverageType type, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"AO({fastPeriod},{slowPeriod},{type})", resolution);
+            var awesomeOscillator = new AwesomeOscillator(name, fastPeriod, slowPeriod, type);
+            RegisterIndicator(symbol, awesomeOscillator, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, awesomeOscillator, resolution);
+            }
+
+            return awesomeOscillator;
+        }
+        
+        /// <summary>
         /// Creates a new AverageDirectionalMovementIndexRating indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose ADXR we want</param>

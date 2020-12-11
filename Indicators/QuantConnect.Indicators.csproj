@@ -108,6 +108,7 @@
     <Compile Include="ArnaudLegouxMovingAverage.cs" />
     <Compile Include="AverageDirectionalIndex.cs" />
     <Compile Include="AverageDirectionalMovementIndexRating.cs" />
+    <Compile Include="AwesomeOscillator.cs" />
     <Compile Include="BalanceOfPower.cs" />
     <Compile Include="CandlestickPatterns\UpDownGapThreeMethods.cs" />
     <Compile Include="CandlestickPatterns\UpsideGapTwoCrows.cs" />
