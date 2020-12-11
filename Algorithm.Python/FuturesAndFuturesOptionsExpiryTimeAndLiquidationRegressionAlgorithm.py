@@ -97,4 +97,4 @@ class FuturesAndFuturesOptionsExpiryTimeAndLiquidationRegressionAlgorithm(QCAlgo
             raise AssertionError(f"Expected 4 delisting events received, found: {self.delistingsReceived}")
 
         if self.liquidated != 3:
-            raise AssertionError(f"Expected 2 liquidation events, found {self.liquidated}")
+            raise AssertionError(f"Expected 3 liquidation events, found {self.liquidated}")
