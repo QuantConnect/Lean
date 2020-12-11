@@ -814,8 +814,15 @@ namespace QuantConnect.Api
             var uri     = new Uri(link.DataLink);
             var client  = new RestClient(uri.Scheme + "://" + uri.Host);
             var request = new RestRequest(uri.PathAndQuery, Method.GET);
-            client.DownloadData(request).SaveAs(path);
 
+            // If the response is not a zip then it is not data, don't write it.
+            var response = client.Execute(request);
+            if (response.ContentType != "application/zip")
+            {
+                return false;
+            }
+            
+            response.RawBytes.SaveAs(path);
             return true;
         }
 
