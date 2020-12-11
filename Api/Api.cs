@@ -426,7 +426,7 @@ namespace QuantConnect.Api
                 // Create backtest requests for each chart that is empty
                 foreach (var chart in result.Backtest.Charts)
                 {
-                    if (chart.Value.Series.Count != 0)
+                    if (!chart.Value.Series.IsNullOrEmpty())
                     {
                         continue;
                     }
