@@ -41,12 +41,12 @@ Before we enable python support, follow the [installation instructions](https://
 2. Install [pandas=0.25.3](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
 3. Install [wrapt=1.11.2](https://pypi.org/project/wrapt/) module.
 
-*Note:* If you encounter the "System.DllNotFoundException: python3.6m" runtime error when running Python algorithms on macOS:
+*Note:* If you encounter the "System.DllNotFoundException: python3.6m" runtime error when running Python algorithms, or generating reports, on macOS:
 1. Find `libpython3.6m.dylib` in your Python installation folder. If you installed Python with Anaconda, it may be found at
     ```
     /Users/{your_user_name}/anaconda3/lib/libpython3.6m.dylib
     ```
-2. Open `Lean/Launcher/bin/Debug/Python.Runtime.dll.config`, add the following text under `<configuration> ... </configuration>` and save:
+2. Open `Lean/Common/Python/Python.Runtime.dll.config`, add the following text under `<configuration> ... </configuration>` and save:
     ```
         <dllmap dll="python3.6m" target="{the path in step 1 including libpython3.6m.dylib}" os="osx"/>
     ```
@@ -81,7 +81,7 @@ conda install -y wrapt=1.11.2
    conda create -n qc_environment python=3.6.8 cython=0.29.11 pandas=0.25.3 wrapt=1.11.2
 
    ```
-2. Open `Lean/Launcher/bin/Debug/Python.Runtime.dll.config`, add the following text under `<configuration> ... </configuration>` and save:
+2. Open `Lean/Common/Python/Python.Runtime.dll.config`, add the following text under `<configuration> ... </configuration>` and save:
     ```
         <dllmap dll="python3.6m" target="{the path in step 1 including libpython3.6m.so}" os="linux"/>
     ```
