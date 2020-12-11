@@ -390,7 +390,7 @@ namespace QuantConnect.Algorithm
         public DeMarkerIndicator DeM(Symbol symbol, int period, MovingAverageType type, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"DeM({period},{type})", resolution);
-            var deMarkerIndicator = new DeMarkerIndicator(name, period);
+            var deMarkerIndicator = new DeMarkerIndicator(name, period, type);
             RegisterIndicator(symbol, deMarkerIndicator, resolution, selector);
 
             if (EnableAutomaticIndicatorWarmUp)

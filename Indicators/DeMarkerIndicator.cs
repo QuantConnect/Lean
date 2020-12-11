@@ -20,8 +20,8 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class DeMarkerIndicator : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        private IndicatorBase<IndicatorDataPoint> _maxMA;
-        private IndicatorBase<IndicatorDataPoint> _minMA;
+        private readonly IndicatorBase<IndicatorDataPoint> _maxMA;
+        private readonly IndicatorBase<IndicatorDataPoint> _minMA;
         private decimal _lastHigh;
         private decimal _lastLow;
 
@@ -31,7 +31,7 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of the  DeMarker Indicator</param>
         /// <param name="type">The type of moving average to use in calculations</param>
         public DeMarkerIndicator(int period, MovingAverageType type = MovingAverageType.Simple)
-            : this($"DeM({period},{type})", period)
+            : this($"DeM({period},{type})", period, type)
         {
         }
 

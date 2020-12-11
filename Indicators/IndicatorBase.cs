@@ -30,7 +30,7 @@ namespace QuantConnect.Indicators
         where T : IBaseData
     {
         /// <summary>the most recent input that was given to this indicator</summary>
-        private Dictionary<SecurityIdentifier, T> _previousInput = new Dictionary<SecurityIdentifier, T>();
+        protected Dictionary<SecurityIdentifier, T> _previousInput = new Dictionary<SecurityIdentifier, T>();
 
         /// <summary>
         /// Event handler that fires after this indicator is updated
