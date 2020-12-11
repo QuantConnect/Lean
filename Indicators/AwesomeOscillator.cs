@@ -31,12 +31,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the indicators slow period moving average.
         /// </summary>
-        private IndicatorBase<IndicatorDataPoint> SlowAo { get; }
+        public IndicatorBase<IndicatorDataPoint> SlowAo { get; }
 
         /// <summary>
         /// Gets the indicators fast period moving average.
         /// </summary>
-        private IndicatorBase<IndicatorDataPoint> FastAo { get; }
+        public IndicatorBase<IndicatorDataPoint> FastAo { get; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
