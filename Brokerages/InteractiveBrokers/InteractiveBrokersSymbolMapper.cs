@@ -71,8 +71,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The InteractiveBrokers symbol</returns>
         public string GetBrokerageSymbol(Symbol symbol)
         {
-            if (symbol == null)
-                throw new ArgumentException("Invalid symbol: null");
+            if (string.IsNullOrWhiteSpace(symbol?.Value))
+                throw new ArgumentException("Invalid symbol: " + (symbol == null ? "null" : symbol.ToString()));
 
             var ticker = GetMappedTicker(symbol);
 

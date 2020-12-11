@@ -40,7 +40,7 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <returns>The InteractiveBrokers symbol</returns>
         public string GetBrokerageSymbol(Symbol symbol)
         {
-            if (string.IsNullOrEmpty(symbol?.Value))
+            if (string.IsNullOrWhiteSpace(symbol?.Value))
                 throw new ArgumentException("Invalid symbol: " + (symbol == null ? "null" : symbol.ToString()));
 
             if (symbol.SecurityType != SecurityType.Equity)
