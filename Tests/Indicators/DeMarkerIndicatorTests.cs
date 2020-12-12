@@ -24,7 +24,7 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
-            return new DeMarkerIndicator("DeM", 14);
+            return new DeMarkerIndicator("DEM", 14);
         }
         
         protected override string TestFileName => "eurusd60_dem.txt";
@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void TestDivByZero()
         {
-            var cmf = new DeMarkerIndicator("DeM", 3);
+            var dem = new DeMarkerIndicator("DEM", 3);
             foreach (var data in TestHelper.GetDataStream(4))
             {
                 // Should handle High = Low case by returning 0m.
@@ -46,9 +46,9 @@ namespace QuantConnect.Tests.Indicators
                     Low = 1,
                     Volume = 1
                 };
-                cmf.Update(tradeBar); 
+                dem.Update(tradeBar); 
             }
-            Assert.AreEqual(cmf.Current.Value, 0m);
+            Assert.AreEqual(dem.Current.Value, 0m);
         }
     }
 }
