@@ -409,7 +409,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution.</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The DeMarker indicator for the requested symbol.</returns>
-        public DeMarkerIndicator DeM(Symbol symbol, int period, MovingAverageType type, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        public DeMarkerIndicator DEM(Symbol symbol, int period, MovingAverageType type, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"DEM({period},{type})", resolution);
             var deMarkerIndicator = new DeMarkerIndicator(name, period, type);
