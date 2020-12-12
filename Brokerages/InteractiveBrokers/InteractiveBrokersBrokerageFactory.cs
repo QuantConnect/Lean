@@ -47,6 +47,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
             { "ib-account", Config.Get("ib-account") },
+            { "ib-fa-group", Config.Get("ib-fa-group") },
             { "ib-user-name", Config.Get("ib-user-name") },
             { "ib-password", Config.Get("ib-password") },
             { "ib-trading-mode", Config.Get("ib-trading-mode") },
@@ -76,6 +77,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var ibVersion = Config.Get("ib-version", "974");
 
             var account = Read<string>(job.BrokerageData, "ib-account", errors);
+            var faGroup = Read<string>(job.BrokerageData, "ib-fa-group", errors);
             var userId = Read<string>(job.BrokerageData, "ib-user-name", errors);
             var password = Read<string>(job.BrokerageData, "ib-password", errors);
             var tradingMode = Read<string>(job.BrokerageData, "ib-trading-mode", errors);
@@ -98,6 +100,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 algorithm.Portfolio,
                 Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
                 account,
+                faGroup,
                 host,
                 port,
                 twsDirectory,

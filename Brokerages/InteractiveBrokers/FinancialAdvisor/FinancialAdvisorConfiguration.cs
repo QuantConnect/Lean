@@ -49,6 +49,34 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.FinancialAdvisor
         }
 
         /// <summary>
+        /// Returns true if the account is a financial advisor or non-disclosed broker master account
+        /// </summary>
+        /// <param name="account">The account code</param>
+        /// <returns>True if the account is a master account</returns>
+        public static bool IsMasterAccount(string account)
+        {
+            return account.Contains("F") || account.Contains("I");
+        }
+
+        /// <summary>
+        /// Returns a list of sub-accounts included in a FA group
+        /// </summary>
+        /// <param name="faGroup">The group name</param>
+        /// <returns>A list of sub-accounts</returns>
+        public IEnumerable<string> GetSubAccountsInGroup(string faGroup)
+        {
+            foreach (var accountGroup in _accountGroups)
+            {
+                if (accountGroup.Name == faGroup)
+                {
+                    return accountGroup.Accounts.ToList();
+                }
+            }
+
+            return Enumerable.Empty<string>();
+        }
+
+        /// <summary>
         /// Clears this instance of <see cref="FinancialAdvisorConfiguration"/>
         /// </summary>
         public void Clear()
@@ -147,7 +175,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.FinancialAdvisor
             }
 
             // save the master account code
-            var entry = _accountAliases.FirstOrDefault(x => InteractiveBrokersBrokerage.IsMasterAccount(x.Account));
+            var entry = _accountAliases.FirstOrDefault(x => IsMasterAccount(x.Account));
             if (entry == null)
             {
                 throw new Exception("The Financial Advisor master account was not found.");

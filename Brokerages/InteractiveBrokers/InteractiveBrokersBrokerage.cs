@@ -34,6 +34,7 @@ using Order = QuantConnect.Orders.Order;
 using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 using IBApi;
 using NodaTime;
+using QuantConnect.Brokerages.InteractiveBrokers.FinancialAdvisor;
 using QuantConnect.IBAutomater;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
@@ -62,6 +63,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private readonly int _port;
         private readonly string _account;
+        private readonly string _financialAdvisorGroup;
         private readonly string _host;
         private readonly IAlgorithm _algorithm;
         private readonly IOrderProvider _orderProvider;
@@ -87,8 +89,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // tracks commission reports before executions, map: execId -> commission report
         private readonly ConcurrentDictionary<string, CommissionReport> _commissionReports = new ConcurrentDictionary<string, CommissionReport>();
 
-        // holds account properties, cash balances and holdings for the account
-        private readonly InteractiveBrokersAccountData _accountData = new InteractiveBrokersAccountData();
+        // holds account properties, cash balances and holdings for the account and/or sub-accounts
+        private readonly InteractiveBrokersData _ibData = new InteractiveBrokersData();
 
         // holds brokerage state information (connection status, error conditions, etc.)
         private readonly InteractiveBrokersStateManager _stateManager = new InteractiveBrokersStateManager();
@@ -138,17 +140,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Returns true if the connected user is a financial advisor or non-disclosed broker
         /// </summary>
-        public bool IsFinancialAdvisor => IsMasterAccount(_account);
-
-        /// <summary>
-        /// Returns true if the account is a financial advisor or non-disclosed broker master account
-        /// </summary>
-        /// <param name="account">The account code</param>
-        /// <returns>True if the account is a master account</returns>
-        public static bool IsMasterAccount(string account)
-        {
-            return account.Contains("F") || account.Contains("I");
-        }
+        public bool IsFinancialAdvisor => FinancialAdvisorConfiguration.IsMasterAccount(_account);
 
         /// <summary>
         /// Creates a new InteractiveBrokersBrokerage using values from configuration:
@@ -168,6 +160,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 securityProvider,
                 aggregator,
                 Config.Get("ib-account"),
+                Config.Get("ib-fa-group"),
                 Config.Get("ib-host", "LOCALHOST"),
                 Config.GetInt("ib-port", 4001),
                 Config.Get("ib-tws-dir"),
@@ -186,14 +179,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="orderProvider">An instance of IOrderProvider used to fetch Order objects by brokerage ID</param>
         /// <param name="securityProvider">The security provider used to give access to algorithm securities</param>
+        /// <param name="aggregator">consolidate ticks</param>
         /// <param name="account">The account used to connect to IB</param>
-        public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, string account)
+        /// <param name="financialAdvisorGroup">The Financial advisor group to be used (all other sub-accounts will be excluded)</param>
+        public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, string account, string financialAdvisorGroup)
             : this(
                 algorithm,
                 orderProvider,
                 securityProvider,
                 aggregator,
                 account,
+                financialAdvisorGroup,
                 Config.Get("ib-host", "LOCALHOST"),
                 Config.GetInt("ib-port", 4001),
                 Config.Get("ib-tws-dir"),
@@ -214,6 +210,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="securityProvider">The security provider used to give access to algorithm securities</param>
         /// <param name="aggregator">consolidate ticks</param>
         /// <param name="account">The Interactive Brokers account name</param>
+        /// <param name="financialAdvisorGroup">The Financial advisor group to be used (all other sub-accounts will be excluded)</param>
         /// <param name="host">host name or IP address of the machine where TWS is running. Leave blank to connect to the local host.</param>
         /// <param name="port">must match the port specified in TWS on the Configure&gt;API&gt;Socket Port field.</param>
         /// <param name="ibDirectory">The IB Gateway root directory</param>
@@ -228,6 +225,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             ISecurityProvider securityProvider,
             IDataAggregator aggregator,
             string account,
+            string financialAdvisorGroup,
             string host,
             int port,
             string ibDirectory,
@@ -243,6 +241,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _securityProvider = securityProvider;
             _aggregator = aggregator;
             _account = account;
+            _financialAdvisorGroup = financialAdvisorGroup;
             _host = host;
             _port = port;
             _agentDescription = agentDescription;
@@ -274,6 +273,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.AccountSummary += HandleAccountSummary;
             _client.ManagedAccounts += HandleManagedAccounts;
             _client.FamilyCodes += HandleFamilyCodes;
+            _client.AccountUpdateMulti += HandleAccountUpdateMulti;
+            _client.AccountUpdateMultiEnd += HandleAccountUpdateMultiEnd;
+            _client.PositionMulti += HandlePositionMulti;
+            _client.PositionMultiEnd += HandlePositionMultiEnd;
             _client.ExecutionDetails += HandleExecutionDetails;
             _client.CommissionReport += HandleCommissionReport;
             _client.Error += HandleError;
@@ -436,6 +439,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private List<Order> GetOpenOrdersInternal(bool all)
         {
+            //Log.Trace($"InteractiveBrokersBrokerage.GetOpenOrdersInternal({all}) start");
+
             var orders = new List<Order>();
 
             var manualResetEvent = new ManualResetEvent(false);
@@ -474,10 +479,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (all)
             {
+                //Log.Trace($"InteractiveBrokersBrokerage.GetOpenOrdersInternal(true): calling reqAllOpenOrders()");
+
                 _client.ClientSocket.reqAllOpenOrders();
             }
             else
             {
+                //Log.Trace($"InteractiveBrokersBrokerage.GetOpenOrdersInternal(false): calling reqOpenOrders()");
+
                 _client.ClientSocket.reqOpenOrders();
             }
 
@@ -490,12 +499,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (exception != null)
             {
-                throw new Exception("InteractiveBrokersBrokerage.GetOpenOrders(): ", exception);
+                throw new Exception($"InteractiveBrokersBrokerage.GetOpenOrdersInternal({all}): ", exception);
             }
 
             if (timedOut)
             {
-                throw new TimeoutException("InteractiveBrokersBrokerage.GetOpenOrders(): Operation took longer than 15 seconds.");
+                throw new TimeoutException($"InteractiveBrokersBrokerage.GetOpenOrdersInternal({all}): Operation took longer than 15 seconds.");
             }
 
             if (all)
@@ -506,7 +515,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 if (lastOrderId >= _nextValidId)
                 {
-                    Log.Trace($"InteractiveBrokersBrokerage.GetOpenOrders(): Updating nextValidId from {_nextValidId} to {lastOrderId + 1}");
+                    Log.Trace($"InteractiveBrokersBrokerage.GetOpenOrdersInternal(true): Updating nextValidId from {_nextValidId} to {lastOrderId + 1}");
                     _nextValidId = lastOrderId + 1;
                 }
             }
@@ -529,7 +538,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var utcNow = DateTime.UtcNow;
             var holdings = new List<Holding>();
 
-            foreach (var kvp in _accountData.AccountHoldings)
+            foreach (var kvp in _ibData.GetAccountHoldings(_account))
             {
                 var holding = ObjectActivator.Clone(kvp.Value);
 
@@ -576,7 +585,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
             }
 
-            var balances = _accountData.CashBalances.Select(x => new CashAmount(x.Value, x.Key)).ToList();
+            var balances = _ibData.GetAccountCashBalances(_account)
+                .Select(x => new CashAmount(x.Value, x.Key)).ToList();
 
             if (balances.Count == 0)
             {
@@ -649,7 +659,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (IsConnected) return;
 
             // we're going to receive fresh values for all account data, so we clear all
-            _accountData.Clear();
+            _ibData.Clear();
 
             var attempt = 1;
             const int maxAttempts = 5;
@@ -822,8 +832,29 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private bool DownloadFinancialAdvisorAccount(string account)
         {
-            if (!_accountData.FinancialAdvisorConfiguration.Load(_client))
+            if (!_ibData.FinancialAdvisorConfiguration.Load(_client))
+            {
                 return false;
+            }
+
+            var subAccounts = _financialAdvisorGroup.IsNullOrEmpty()
+                ? _ibData.FinancialAdvisorConfiguration.SubAccounts
+                : _ibData.FinancialAdvisorConfiguration.GetSubAccountsInGroup(_financialAdvisorGroup);
+
+            foreach (var subAccount in subAccounts)
+            {
+                if (!DownloadAccountMulti(subAccount))
+                {
+                    return false;
+                }
+
+                if (!DownloadPositionsMulti(subAccount))
+                {
+                    return false;
+                }
+            }
+
+            return true;
 
             // Only one account can be subscribed at a time.
             // With Financial Advisory (FA) account structures there is an alternative way of
@@ -832,7 +863,117 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // https://interactivebrokers.github.io/tws-api/account_updates.html#gsc.tab=0
 
             // subscribe to the FA account
-            return DownloadAccount(account + "A");
+            //return DownloadAccount(account + "A");
+        }
+
+        /// <summary>
+        /// Downloads the account information and subscribes to account updates.
+        /// This method is called upon successful connection.
+        /// </summary>
+        private bool DownloadAccountMulti(string account)
+        {
+            Log.Trace($"InteractiveBrokersBrokerage.DownloadAccountMulti(): Downloading account data for {account}");
+
+            _accountHoldingsLastException = null;
+            _accountHoldingsResetEvent.Reset();
+
+            // define our event handler, this acts as stop to make sure when we leave Connect we have downloaded the full account
+            EventHandler<IB.AccountUpdateMultiEndEventArgs> clientOnAccountUpdateMultiEnd = (sender, args) =>
+            {
+                Log.Trace("InteractiveBrokersBrokerage.DownloadAccountMulti(): Finished account download for " + account);
+                _accountHoldingsResetEvent.Set();
+            };
+            _client.AccountUpdateMultiEnd += clientOnAccountUpdateMultiEnd;
+
+            // we'll wait to get our first account update, we need to be absolutely sure we
+            // have downloaded the entire account before leaving this function
+            var firstAccountUpdateReceived = new ManualResetEvent(false);
+            EventHandler<IB.AccountUpdateMultiEventArgs> clientOnAccountUpdateMulti = (sender, args) =>
+            {
+                firstAccountUpdateReceived.Set();
+            };
+
+            _client.AccountUpdateMulti += clientOnAccountUpdateMulti;
+
+            // first we won't subscribe, wait for this to finish, below we'll subscribe for continuous updates
+            _client.ClientSocket.reqAccountUpdatesMulti(GetNextId(), account, string.Empty, false);
+
+            // wait to see the first account value update
+            firstAccountUpdateReceived.WaitOne(2500);
+
+            // take pause to ensure the account is downloaded before continuing, this was added because running in
+            // linux there appears to be different behavior where the account download end fires immediately.
+            Thread.Sleep(2500);
+
+            if (!_accountHoldingsResetEvent.WaitOne(15000))
+            {
+                // remove our event handlers
+                _client.AccountUpdateMultiEnd -= clientOnAccountUpdateMultiEnd;
+                _client.AccountUpdateMulti -= clientOnAccountUpdateMulti;
+
+                Log.Trace("InteractiveBrokersBrokerage.DownloadAccountMulti(): Operation took longer than 15 seconds.");
+
+                return false;
+            }
+
+            // remove our event handlers
+            _client.AccountUpdateMultiEnd -= clientOnAccountUpdateMultiEnd;
+            _client.AccountUpdateMulti -= clientOnAccountUpdateMulti;
+
+            return _accountHoldingsLastException == null;
+        }
+
+        private bool DownloadPositionsMulti(string account)
+        {
+            Log.Trace($"InteractiveBrokersBrokerage.DownloadPositionsMulti(): Downloading positions for {account}");
+
+            _accountHoldingsLastException = null;
+            _accountHoldingsResetEvent.Reset();
+
+            // define our event handler, this acts as stop to make sure when we leave Connect we have downloaded the full account
+            EventHandler<IB.PositionMultiEndEventArgs> clientOnPositionMultiEnd = (sender, args) =>
+            {
+                Log.Trace("InteractiveBrokersBrokerage.DownloadPositionsMulti(): Finished positions download for " + account);
+                _accountHoldingsResetEvent.Set();
+            };
+            _client.PositionMultiEnd += clientOnPositionMultiEnd;
+
+            // we'll wait to get our first position, we need to be absolutely sure we
+            // have downloaded the entire account before leaving this function
+            var firstPositionReceived = new ManualResetEvent(false);
+            EventHandler<IB.PositionMultiEventArgs> clientOnPositionMulti = (sender, args) =>
+            {
+                firstPositionReceived.Set();
+            };
+
+            _client.PositionMulti += clientOnPositionMulti;
+
+            // first we won't subscribe, wait for this to finish, below we'll subscribe for continuous updates
+            _client.ClientSocket.reqPositionsMulti(GetNextId(), account, string.Empty);
+
+            // wait to see the first position update
+            firstPositionReceived.WaitOne(2500);
+
+            // take pause to ensure the account is downloaded before continuing, this was added because running in
+            // linux there appears to be different behavior where the account download end fires immediately.
+            Thread.Sleep(2500);
+
+            if (!_accountHoldingsResetEvent.WaitOne(15000))
+            {
+                // remove our event handlers
+                _client.PositionMultiEnd -= clientOnPositionMultiEnd;
+                _client.PositionMulti -= clientOnPositionMulti;
+
+                Log.Trace("InteractiveBrokersBrokerage.DownloadPositionsMulti(): Operation took longer than 15 seconds.");
+
+                return false;
+            }
+
+            // remove our event handlers
+            _client.PositionMultiEnd -= clientOnPositionMultiEnd;
+            _client.PositionMulti -= clientOnPositionMulti;
+
+            return _accountHoldingsLastException == null;
         }
 
         /// <summary>
@@ -1353,17 +1494,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandleUpdateAccountValue(object sender, IB.UpdateAccountValueEventArgs e)
         {
-            //Log.Trace($"HandleUpdateAccountValue(): Key:{e.Key} Value:{e.Value} Currency:{e.Currency} AccountName:{e.AccountName}");
+            Log.Trace($"HandleUpdateAccountValue(): Key:{e.Key} Value:{e.Value} Currency:{e.Currency} AccountName:{e.AccountName}");
 
+            SetAccountValue(e);
+        }
+
+        private void SetAccountValue(IB.UpdateAccountValueEventArgs e)
+        {
             try
             {
-                _accountData.AccountProperties[e.Currency + ":" + e.Key] = e.Value;
+                _ibData.SetAccountProperty(e.AccountName, e.Key, e.Value, e.Currency);
 
                 // we want to capture if the user's cash changes so we can reflect it in the algorithm
                 if (e.Key == AccountValueKeys.CashBalance && e.Currency != "BASE")
                 {
                     var cashBalance = decimal.Parse(e.Value, CultureInfo.InvariantCulture);
-                    _accountData.CashBalances.AddOrUpdate(e.Currency, cashBalance);
+                    _ibData.SetAccountCashBalance(e.AccountName, e.Currency, cashBalance);
 
                     OnAccountChanged(new AccountEvent(e.Currency, cashBalance));
                 }
@@ -1633,11 +1779,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandlePortfolioUpdates(object sender, IB.UpdatePortfolioEventArgs e)
         {
+            Log.Trace($"HandlePortfolioUpdates(): AccountName:{e.AccountName} Contract:{e.Contract} Position:{e.Position} MarketPrice:{e.MarketPrice} AverageCost:{e.AverageCost}");
+
+            SetAccountHolding(e);
+        }
+
+        private void SetAccountHolding(IB.UpdatePortfolioEventArgs e)
+        {
             try
             {
                 _accountHoldingsResetEvent.Reset();
                 var holding = CreateHolding(e);
-                _accountData.AccountHoldings[holding.Symbol.Value] = holding;
+                _ibData.SetAccountHolding(e.AccountName, holding);
             }
             catch (Exception exception)
             {
@@ -3191,6 +3344,33 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private void HandleManagedAccounts(object sender, IB.ManagedAccountsEventArgs e)
         {
             Log.Trace($"InteractiveBrokersBrokerage.HandleManagedAccounts(): Account list: {e.AccountList}");
+        }
+
+        private void HandleAccountUpdateMulti(object sender, IB.AccountUpdateMultiEventArgs e)
+        {
+            Log.Trace($"InteractiveBrokersBrokerage.HandleAccountUpdateMulti(): Request id: {e.RequestId}, Account: {e.Account}, ModelCode: {e.ModelCode}, Key: {e.Key}, Value: {e.Value}, Currency: {e.Currency}");
+
+            var update = new IB.UpdateAccountValueEventArgs(e.Key, e.Value, e.Currency, e.Account);
+            SetAccountValue(update);
+        }
+
+        private void HandleAccountUpdateMultiEnd(object sender, IB.AccountUpdateMultiEndEventArgs e)
+        {
+            Log.Trace($"InteractiveBrokersBrokerage.HandleAccountUpdateMultiEnd(): RequestId: {e.RequestId}");
+        }
+
+        private void HandlePositionMulti(object sender, IB.PositionMultiEventArgs e)
+        {
+            Log.Trace($"InteractiveBrokersBrokerage.HandlePositionMulti(): Request id: {e.RequestId}, Account: {e.Account}, ModelCode: {e.ModelCode}, Contract: {e.Contract}, Position: {e.Position}, AverageCost: {e.AverageCost}");
+
+            // TODO: no market price in PositionMulti event
+            var update = new IB.UpdatePortfolioEventArgs(e.Contract, (int)e.Position, 0, 0, e.AverageCost, 0, 0, e.Account);
+            SetAccountHolding(update);
+        }
+
+        private void HandlePositionMultiEnd(object sender, IB.PositionMultiEndEventArgs e)
+        {
+            Log.Trace($"InteractiveBrokersBrokerage.HandlePositionMultiEnd(): RequestId: {e.RequestId}");
         }
 
         private readonly ConcurrentDictionary<Symbol, int> _subscribedSymbols = new ConcurrentDictionary<Symbol, int>();

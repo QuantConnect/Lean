@@ -160,6 +160,26 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         public event EventHandler<FamilyCodesEventArgs> FamilyCodes;
 
+        /// <summary>
+        /// AccountUpdateMulti event handler
+        /// </summary>
+        public event EventHandler<AccountUpdateMultiEventArgs> AccountUpdateMulti;
+
+        /// <summary>
+        /// AccountUpdateMultiEnd event handler
+        /// </summary>
+        public event EventHandler<AccountUpdateMultiEndEventArgs> AccountUpdateMultiEnd;
+
+        /// <summary>
+        /// PositionMulti event handler
+        /// </summary>
+        public event EventHandler<PositionMultiEventArgs> PositionMulti;
+
+        /// <summary>
+        /// PositionMultiEnd event handler
+        /// </summary>
+        public event EventHandler<PositionMultiEndEventArgs> PositionMultiEnd;
+
         #endregion
 
         /// <summary>
@@ -502,6 +522,52 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
             OnFamilyCodes(new FamilyCodesEventArgs(familyCodes));
         }
 
+        /// <summary>
+        /// Provides the account updates
+        /// </summary>
+        /// <param name="requestId">The request id</param>
+        /// <param name="account">The account number</param>
+        /// <param name="modelCode">The model code</param>
+        /// <param name="key">The name of the parameter</param>
+        /// <param name="value">The value of the parameter</param>
+        /// <param name="currency">The currency of the parameter</param>
+        public override void accountUpdateMulti(int requestId, string account, string modelCode, string key, string value, string currency)
+        {
+            OnAccountUpdateMulti(new AccountUpdateMultiEventArgs(requestId, account, modelCode, key, value, currency));
+        }
+
+        /// <summary>
+        /// Indicates all the account updates have been transmitted.
+        /// </summary>
+        /// <param name="requestId">The request id</param>
+        public override void accountUpdateMultiEnd(int requestId)
+        {
+            OnAccountUpdateMultiEnd(new AccountUpdateMultiEndEventArgs(requestId));
+        }
+
+        /// <summary>
+        /// Provides the portfolio's open positions.
+        /// </summary>
+        /// <param name="requestId">The request id</param>
+        /// <param name="account">The account number</param>
+        /// <param name="modelCode">The model code</param>
+        /// <param name="contract">The position's contract</param>
+        /// <param name="pos">The position size</param>
+        /// <param name="avgCost">The average cost of the position</param>
+        public override void positionMulti(int requestId, string account, string modelCode, Contract contract, double pos, double avgCost)
+        {
+            OnPositionMulti(new PositionMultiEventArgs(requestId, account, modelCode, contract, pos, avgCost));
+        }
+
+        /// <summary>
+        /// Indicates all the positions have been transmitted.
+        /// </summary>
+        /// <param name="requestId">The request id</param>
+        public override void positionMultiEnd(int requestId)
+        {
+            OnPositionMultiEnd(new PositionMultiEndEventArgs(requestId));
+        }
+
         #endregion
 
         #region Event Invocators
@@ -720,6 +786,38 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         protected virtual void OnFamilyCodes(FamilyCodesEventArgs e)
         {
             FamilyCodes?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// AccountUpdateMulti event invocator
+        /// </summary>
+        protected virtual void OnAccountUpdateMulti(AccountUpdateMultiEventArgs e)
+        {
+            AccountUpdateMulti?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// AccountUpdateMultiEnd event invocator
+        /// </summary>
+        protected virtual void OnAccountUpdateMultiEnd(AccountUpdateMultiEndEventArgs e)
+        {
+            AccountUpdateMultiEnd?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// PositionMulti event invocator
+        /// </summary>
+        protected virtual void OnPositionMulti(PositionMultiEventArgs e)
+        {
+            PositionMulti?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// PositionMultiEnd event invocator
+        /// </summary>
+        protected virtual void OnPositionMultiEnd(PositionMultiEndEventArgs e)
+        {
+            PositionMultiEnd?.Invoke(this, e);
         }
 
         #endregion

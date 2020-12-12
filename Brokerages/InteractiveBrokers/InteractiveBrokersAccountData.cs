@@ -14,12 +14,11 @@
 */
 
 using System.Collections.Concurrent;
-using QuantConnect.Brokerages.InteractiveBrokers.FinancialAdvisor;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
     /// <summary>
-    /// This class contains account specific data such as properties, cash balances and holdings
+    /// This class contains account data such as properties, cash balances and holdings
     /// </summary>
     public class InteractiveBrokersAccountData
     {
@@ -39,11 +38,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         public ConcurrentDictionary<string, Holding> AccountHoldings { get; } = new ConcurrentDictionary<string, Holding>();
 
         /// <summary>
-        /// The configuration data for the financial advisor account
-        /// </summary>
-        public FinancialAdvisorConfiguration FinancialAdvisorConfiguration { get; } = new FinancialAdvisorConfiguration();
-
-        /// <summary>
         /// Clears this instance of <see cref="InteractiveBrokersAccountData"/>
         /// </summary>
         public void Clear()
@@ -51,7 +45,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             AccountProperties.Clear();
             CashBalances.Clear();
             AccountHoldings.Clear();
-            FinancialAdvisorConfiguration.Clear();
         }
     }
 }

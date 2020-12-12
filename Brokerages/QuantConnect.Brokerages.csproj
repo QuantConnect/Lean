@@ -363,9 +363,14 @@
     <Compile Include="Bitfinex\Converters\TickerConverter.cs" />
     <Compile Include="Bitfinex\Converters\PositionConverter.cs" />
     <Compile Include="Bitfinex\Converters\WalletConverter.cs" />
+    <Compile Include="InteractiveBrokers\Client\PositionMultiEndEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\AccountUpdateMultiEndEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\PositionMultiEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\FamilyCodesEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\AccountSummaryEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\ManagedAccountsEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\AccountUpdateMultiEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\InteractiveBrokersAccountData.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersStateManager.cs" />
     <Compile Include="IOrderBookUpdater.cs" />
     <Compile Include="DefaultOrderBook.cs" />
@@ -428,7 +433,7 @@
     <Compile Include="InteractiveBrokers\FinancialAdvisor\AccountAlias.cs" />
     <Compile Include="InteractiveBrokers\FinancialAdvisor\FinancialAdvisorConfiguration.cs" />
     <Compile Include="InteractiveBrokers\HistoricalDataType.cs" />
-    <Compile Include="InteractiveBrokers\InteractiveBrokersAccountData.cs" />
+    <Compile Include="InteractiveBrokers\InteractiveBrokersData.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerage.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerageFactory.cs" />
     <Compile Include="InteractiveBrokers\Client\InteractiveBrokersClient.cs" />
