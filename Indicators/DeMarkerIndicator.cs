@@ -25,9 +25,9 @@ namespace QuantConnect.Indicators
     /// DeMin = Previous Low - Low
     /// </para>
     /// where, in the prior, if either term is less than zero (DeMax or DeMin), set it to zero.
-    /// We can now define the indicator itself, DeM, as:
+    /// We can now define the indicator itself, DEM, as:
     ///<para>
-    /// DeM = MA(DeMax)/(MA(DeMax)+MA(DeMin))
+    /// DEM = MA(DeMax)/(MA(DeMax)+MA(DeMin))
     ///</para>
     /// where MA denotes a Moving Average of period N.
     /// 
@@ -46,7 +46,7 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of the  DeMarker Indicator</param>
         /// <param name="type">The type of moving average to use in calculations</param>
         public DeMarkerIndicator(int period, MovingAverageType type = MovingAverageType.Simple)
-            : this($"DeM({period},{type})", period, type)
+            : this($"DEM({period},{type})", period, type)
         {
         }
 
