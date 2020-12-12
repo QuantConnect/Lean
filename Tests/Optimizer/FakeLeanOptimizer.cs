@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Parameters;
 
@@ -38,8 +39,7 @@ namespace QuantConnect.Tests.Optimizer
             var id = Guid.NewGuid().ToString();
             _backtests.Add(id);
 
-            Timer timer = null;
-            timer = new Timer(y =>
+            Task.Delay(100).ContinueWith(task =>
             {
                 try
                 {
@@ -53,14 +53,11 @@ namespace QuantConnect.Tests.Optimizer
                         // fail some backtests by passing empty json
                         NewResult(string.Empty, id);
                     }
-
-                    timer.Dispose();
                 }
                 catch
                 {
                 }
             });
-            timer.Change(100, Timeout.Infinite);
 
             return id;
         }

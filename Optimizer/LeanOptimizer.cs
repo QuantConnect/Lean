@@ -19,6 +19,8 @@ using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Configuration;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Globalization;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Optimizer.Strategies;
@@ -276,19 +278,27 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// Returns the current optimization status and strategy estimates
         /// </summary>
-        public OptimizationEstimate GetCurrentEstimate()
+        public int GetCurrentEstimate()
+        {
+            return Strategy.GetTotalBacktestEstimate();
+        }
+
+        /// <summary>
+        /// Get the current runtime statistics
+        /// </summary>
+        public Dictionary<string, string> GetRuntimeStatistics()
         {
             var completedCount = _completedBacktest;
+            var totalCount = completedCount + _failedBacktest;
             var runtime = DateTime.UtcNow - _startedAt;
-            return new OptimizationEstimate
+            return new Dictionary<string, string>
             {
-                TotalBacktest = Strategy.GetTotalBacktestEstimate(),
-                CompletedBacktest = completedCount,
-                FailedBacktest = _failedBacktest,
-                RunningBacktest = RunningParameterSetForBacktest.Count,
-                InQueueBacktest = PendingParameterSet.Count,
-                AverageBacktest = completedCount > 0 ? new TimeSpan(runtime.Ticks / completedCount) : TimeSpan.Zero,
-                TotalRuntime = runtime
+                { "Completed", $"{completedCount}"},
+                { "Failed", $"{_failedBacktest}"},
+                { "Running", $"{RunningParameterSetForBacktest.Count}"},
+                { "In Queue", $"{PendingParameterSet.Count}"},
+                { "Average Length", $"{(totalCount > 0 ? new TimeSpan(runtime.Ticks / totalCount) : TimeSpan.Zero).ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture)}"},
+                { "Total Runtime", $"{runtime.ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture)}" }
             };
         }
 
@@ -301,7 +311,7 @@ namespace QuantConnect.Optimizer
             {
                 return $"OID {NodePacket.OptimizationId}";
             }
-            return $"UI {NodePacket.UserId} PID {NodePacket.ProjectId} OID {NodePacket.OptimizationId}";
+            return $"UI {NodePacket.UserId} PID {NodePacket.ProjectId} OID {NodePacket.OptimizationId} S {Status}";
         }
 
         /// <summary>

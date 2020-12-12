@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using QuantConnect.Optimizer.Parameters;
 using Log = QuantConnect.Logging.Log;
 
@@ -142,7 +143,8 @@ namespace QuantConnect.Optimizer.Launcher
             if (Status != OptimizationStatus.Ended && Status != OptimizationStatus.Aborted)
             {
                 var currentEstimate = GetCurrentEstimate();
-                var message = $"ConsoleLeanOptimizer.SendUpdate(): {currentEstimate}";
+                var stats = GetRuntimeStatistics();
+                var message = $"ConsoleLeanOptimizer.SendUpdate(): {currentEstimate} {string.Join(", ", stats.Select(pair => $"{pair.Key}:{pair.Value}"))}";
                 var currentBestBacktest = Strategy.Solution;
                 if (currentBestBacktest != null)
                 {
