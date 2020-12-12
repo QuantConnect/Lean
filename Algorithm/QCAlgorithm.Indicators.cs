@@ -400,10 +400,10 @@ namespace QuantConnect.Algorithm
         }
         
         ///<summary>
-        /// Creates a new DeMarker Indicator (DeM), an oscillator-type indicator measuring changes in terms of an asset's
+        /// Creates a new DeMarker Indicator (DEM), an oscillator-type indicator measuring changes in terms of an asset's
         /// High and Low tradebar values. 
         ///</summary>
-        /// <param name="symbol">The symbol whose DeM we seek.</param>
+        /// <param name="symbol">The symbol whose DEM we seek.</param>
         /// <param name="period">The period of the moving average implemented</param>
         /// <param name="movingAverageType">Specifies the type of moving average to be used</param>
         /// <param name="resolution">The resolution.</param>
@@ -411,7 +411,7 @@ namespace QuantConnect.Algorithm
         /// <returns>The DeMarker indicator for the requested symbol.</returns>
         public DeMarkerIndicator DeM(Symbol symbol, int period, MovingAverageType type, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"DeM({period},{type})", resolution);
+            var name = CreateIndicatorName(symbol, $"DEM({period},{type})", resolution);
             var deMarkerIndicator = new DeMarkerIndicator(name, period, type);
             RegisterIndicator(symbol, deMarkerIndicator, resolution, selector);
 
