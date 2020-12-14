@@ -15,17 +15,21 @@
 
 using System;
 using System.Threading;
+using Moq;
 using NUnit.Framework;
+using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Zerodha;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Zerodha
 {
-    [TestFixture, Ignore("This test requires a configured and active Zerodha account")]
+    [TestFixture]
     public class ZerodhaBrokerageTests : BrokerageTests
     {
             /// <summary>
@@ -36,9 +40,9 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
                 return new[]
                 {
                 new TestCaseData(new MarketOrderTestParameters(Symbols.IDEA)).SetName("MarketOrder"),
-                new TestCaseData(new LimitOrderTestParameters(Symbols.IDEA, 10m, 9.20m)).SetName("LimitOrder"),
-                new TestCaseData(new StopMarketOrderTestParameters(Symbols.IDEA, 10m, 9.20m)).SetName("StopMarketOrder"),
-                new TestCaseData(new StopLimitOrderTestParameters(Symbols.IDEA, 10m, 9.20m)).SetName("StopLimitOrder")
+                new TestCaseData(new LimitOrderTestParameters(Symbols.IDEA, 10m, 9.70m)).SetName("LimitOrder"),
+                new TestCaseData(new StopMarketOrderTestParameters(Symbols.IDEA, 10m,  9.70m)).SetName("StopMarketOrder"),
+                new TestCaseData(new StopLimitOrderTestParameters(Symbols.IDEA, 10m,  9.70m)).SetName("StopLimitOrder")
             };
             }
 
@@ -49,9 +53,22 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
             {
 
+            var securities = new SecurityManager(new TimeKeeper(DateTime.UtcNow, TimeZones.Kolkata))
+            {
+                { Symbol, CreateSecurity(Symbol) }
+            };
+
+            var transactions = new SecurityTransactionManager(null, securities);
+            transactions.SetOrderProcessor(new FakeOrderProcessor());
+
+            var algorithm = new Mock<IAlgorithm>();
+            algorithm.Setup(a => a.Transactions).Returns(transactions);
+            algorithm.Setup(a => a.BrokerageModel).Returns(new ZerodhaBrokerageModel());
+            algorithm.Setup(a => a.Portfolio).Returns(new SecurityPortfolioManager(securities, transactions));
+
             var accessToken = Config.Get("zerodha-access-token");
             var apiKey = Config.Get("zerodha-api-key");
-            var zerodha = new ZerodhaBrokerage(apiKey,accessToken, null, new AggregationManager());
+            var zerodha = new ZerodhaBrokerage(apiKey,accessToken, algorithm.Object, new AggregationManager());
 
                 return zerodha;
             }
@@ -81,10 +98,11 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             {
                 var zerodha = (ZerodhaBrokerage)Brokerage;
                 var quotes = zerodha.GetQuote(symbol);
+            Log.Trace("GetAskPrice "+quotes.ToString());
                 return quotes.LastPrice;
             }
 
-            [Test, Ignore("This test exists to manually verify how rejected orders are handled when we don't receive an order ID back from Zerodha.")]
+            [Test]
             public void ShortIdea()
             {
                 PlaceOrderWaitForStatus(new MarketOrder(Symbols.IDEA, -1, DateTime.Now), OrderStatus.Invalid, allowFailedSubmission: true);

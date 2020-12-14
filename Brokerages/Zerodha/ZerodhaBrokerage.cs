@@ -160,7 +160,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="symbols">The list of symbols to subscribe</param>
         public void Subscribe(IEnumerable<Symbol> symbols)
         {
-            if (symbols.Count()<=0)
+            if (symbols.Count() <= 0)
                 return;
             foreach (var symbol in symbols)
             {
@@ -238,7 +238,7 @@ namespace QuantConnect.Brokerages.Zerodha
             var instrument = _symbolMapper.GetZerodhaInstrumentToken(symbol.ID.Symbol, symbol.ID.Market);
             var instrumentIds = new string[] { instrument.ToStringInvariant() };
             var quotes = _kite.GetQuote(instrumentIds);
-            return quotes[symbol.ID.Symbol];
+            return quotes[instrument.ToStringInvariant()];
         }
 
 
@@ -280,51 +280,22 @@ namespace QuantConnect.Brokerages.Zerodha
                 var order = CachedOrderIDs
                     .FirstOrDefault(o => o.Value.BrokerId.Contains(brokerId))
                     .Value;
+                Log.Trace("EmitFillOrder order" + order);
                 if (order == null)
                 {
                     order = _algorithm.Transactions.GetOrderByBrokerageId(brokerId);
                     if (order == null)
                     {
-                        // not our order, nothing else to do here
+                        Log.Error($"EmitFillOrder(): order not found: BrokerId: {brokerId}");
                         return;
                     }
                 }
 
-                if(orderUpdate.Status=="OPEN"&& orderUpdate.Quantity != orderUpdate.FilledQuantity)
-                {
-                    return;
-                }
-
-                var symbol = _symbolMapper.ConvertZerodhaSymbolToLeanSymbol(orderUpdate.InstrumentToken);
-                var fillPrice = orderUpdate.Price;
-                var fillQuantity = orderUpdate.FilledQuantity;
-                var direction = fillQuantity < 0 ? OrderDirection.Sell : OrderDirection.Buy;
-                var updTime = orderUpdate.OrderTimestamp.GetValueOrDefault();
-                var orderFee = new OrderFee(new CashAmount(
-                        20,
-                        Currencies.INR
-                    ));
-                var status = OrderStatus.Filled;
-                if (fillQuantity != order.Quantity)
-                {
-                    decimal totalFillQuantity;
-                    _fills.TryGetValue(order.Id, out totalFillQuantity);
-                    totalFillQuantity += fillQuantity;
-                    _fills[order.Id] = totalFillQuantity;
-                    status = totalFillQuantity == order.Quantity
-                        ? OrderStatus.Filled
-                        : OrderStatus.PartiallyFilled;
-                }
-
-                var orderEvent = new OrderEvent
-                (
-                    order.Id, symbol, updTime, status,
-                    direction, fillPrice, fillQuantity,
-                    orderFee, $"Zerodha Order Event {direction}"
-                );
-
-                // if the order is closed, we no longer need it in the active order list
-                if (status == OrderStatus.Filled)
+                //if(orderUpdate.Status=="OPEN"&& orderUpdate.Quantity != orderUpdate.FilledQuantity)
+                //{
+                //    return;
+                //}
+                if (orderUpdate.Status == "CANCELLED")
                 {
                     Orders.Order outOrder;
                     CachedOrderIDs.TryRemove(order.Id, out outOrder);
@@ -332,13 +303,91 @@ namespace QuantConnect.Brokerages.Zerodha
                     _fills.TryRemove(order.Id, out ignored);
                 }
 
-                OnOrderEvent(orderEvent);
+
+                if (orderUpdate.FilledQuantity > 0)
+                {
+                    var symbol = _symbolMapper.ConvertZerodhaSymbolToLeanSymbol(orderUpdate.InstrumentToken);
+                    var fillPrice = orderUpdate.AveragePrice;
+                    var fillQuantity = orderUpdate.FilledQuantity;
+                    var direction = orderUpdate.TransactionType == "SELL" ? OrderDirection.Sell : OrderDirection.Buy;
+                    var updTime = orderUpdate.OrderTimestamp.GetValueOrDefault();
+                    var orderFee = new OrderFee(new CashAmount(
+                            CalculateBrokerageOrderFee(orderUpdate.AveragePrice * orderUpdate.FilledQuantity),
+                            Currencies.INR
+                        ));
+                    if (direction == OrderDirection.Sell)
+                    {
+                        fillQuantity = -1 * fillQuantity;
+                    }
+                    var status = OrderStatus.Filled;
+                    if (fillQuantity != order.Quantity)
+                    {
+                        decimal totalFillQuantity;
+                        _fills.TryGetValue(order.Id, out totalFillQuantity);
+                        totalFillQuantity += fillQuantity;
+                        _fills[order.Id] = totalFillQuantity;
+                        status = totalFillQuantity == order.Quantity
+                            ? OrderStatus.Filled
+                            : OrderStatus.PartiallyFilled;
+                    }
+
+                    var orderEvent = new OrderEvent
+                    (
+                        order.Id, symbol, updTime, status,
+                        direction, fillPrice, fillQuantity,
+                        orderFee, $"Zerodha Order Event {direction}"
+                    );
+
+                    // if the order is closed, we no longer need it in the active order list
+                    if (status == OrderStatus.Filled)
+                    {
+                        Orders.Order outOrder;
+                        CachedOrderIDs.TryRemove(order.Id, out outOrder);
+                        decimal ignored;
+                        _fills.TryRemove(order.Id, out ignored);
+                    }
+
+                    OnOrderEvent(orderEvent);
+                }
             }
             catch (Exception e)
             {
                 Log.Error(e);
                 throw;
             }
+        }
+
+        private decimal CalculateBrokerageOrderFee(decimal orderValue)
+        {
+            bool isSell = orderValue < 0;
+            orderValue = Math.Abs(orderValue);
+            var multiplied = orderValue * 0.0003M;
+            var brokerage = (multiplied > 20) ? 20 : Math.Round(multiplied, 2);
+
+            var turnover = Math.Round(orderValue, 2);
+
+            decimal stt_total = 0;
+            if (isSell)
+            {
+                stt_total = Math.Round(orderValue * 0.00025M, 2);
+            }
+
+            var exc_trans_charge = Math.Round(turnover * 0.0000325M, 2);
+            var cc = 0;
+
+
+            var stax = Math.Round(0.18M * (brokerage + exc_trans_charge), 2);
+
+            var sebi_charges = Math.Round((turnover * 0.000001M), 2);
+            decimal stamp_charges = 0;
+            if (!isSell)
+            {
+                stamp_charges = Math.Round(orderValue * 0.00003M, 2);
+            }
+
+            var total_tax = Math.Round(brokerage + stt_total + exc_trans_charge + stamp_charges + cc + stax + sebi_charges, 2);
+
+            return total_tax;
         }
 
         /// <summary>
@@ -421,7 +470,7 @@ namespace QuantConnect.Brokerages.Zerodha
         public override bool PlaceOrder(Order order)
         {
             LockStream();
-            
+
             uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
             JObject orderResponse;
             decimal? triggerPrice = null;
@@ -440,7 +489,7 @@ namespace QuantConnect.Brokerages.Zerodha
             //{
 
             ////TODO: Get the product type from Algo (MIS,NRML,CNC)
-            orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market.ToUpperInvariant(), order.Symbol.ID.Symbol, order.Direction.ToString().ToUpperInvariant(), orderQuantity, orderPrice,KiteProductType.MIS.ToString(), kiteOrderType,null,null,triggerPrice);
+            orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market.ToUpperInvariant(), order.Symbol.ID.Symbol, order.Direction.ToString().ToUpperInvariant(), orderQuantity, orderPrice, KiteProductType.MIS.ToString(), kiteOrderType, null, null, triggerPrice);
             //}
             Log.Debug("ZerodhaOrderResponse:");
             Log.Debug(orderResponse.ToString());
@@ -552,10 +601,10 @@ namespace QuantConnect.Brokerages.Zerodha
         private static string ConvertOrderType(OrderType orderType)
         {
 
-        //            public const string ORDER_TYPE_MARKET = "MARKET";
-        //public const string ORDER_TYPE_LIMIT = "LIMIT";
-        //public const string ORDER_TYPE_SLM = "SL-M";
-        //public const string ORDER_TYPE_SL = "SL";
+            //            public const string ORDER_TYPE_MARKET = "MARKET";
+            //public const string ORDER_TYPE_LIMIT = "LIMIT";
+            //public const string ORDER_TYPE_SLM = "SL-M";
+            //public const string ORDER_TYPE_SL = "SL";
 
             switch (orderType)
             {
@@ -595,15 +644,15 @@ namespace QuantConnect.Brokerages.Zerodha
 
             orderResponse = _kite.ModifyOrder(order.BrokerId[0].ToStringInvariant(),
                 null,
-                order.Symbol.ID.Market.ToUpperInvariant(), 
-                order.Symbol.ID.Symbol, 
-                order.Direction.ToString().ToUpperInvariant(), 
+                order.Symbol.ID.Market.ToUpperInvariant(),
+                order.Symbol.ID.Symbol,
+                order.Direction.ToString().ToUpperInvariant(),
                 orderQuantity,
                 orderPrice,
                 KiteProductType.MIS.ToString(),
                 kiteOrderType,
                 null,
-                null, 
+                null,
                 triggerPrice
                 );
             var orderFee = OrderFee.Zero;
@@ -613,7 +662,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     var errorMessage = $"Error parsing response from modify order: {orderResponse["status_message"]}";
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning,(string) orderResponse["status"], errorMessage));
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (string)orderResponse["status"], errorMessage));
 
                     UnlockStream();
                     return true;
@@ -665,7 +714,7 @@ namespace QuantConnect.Brokerages.Zerodha
             //}
             if ((string)orderResponse["status"] == "success")
             {
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero,"Zerodha Order Cancelled Event") { Status = OrderStatus.Canceled });
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Zerodha Order Cancelled Event") { Status = OrderStatus.Canceled });
                 UnlockStream();
                 return true;
             }
@@ -770,7 +819,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// Gets all open positions
         /// </summary>
         /// <returns></returns>
-        public override List<Holding> GetAccountHoldings()
+        private  List<Holding> GetHoldings()
         {
             var holdingsList = new List<Holding>();
             var HoldingResponse = _kite.GetHoldings();
@@ -779,6 +828,43 @@ namespace QuantConnect.Brokerages.Zerodha
                 return holdingsList;
             }
             foreach (var item in HoldingResponse)
+            {
+                ////TODO: Handle this later for now ignore CNC holdings since we currently only support MIS
+                if (item.Product == KiteProductType.MIS.ToString().ToUpperInvariant())
+                {
+                    //(avgprice - lasttradedprice) * holdingsqty
+                    Holding holding = new Holding
+                    {
+                        AveragePrice = item.AveragePrice,
+                        Symbol = _symbolMapper.GetLeanSymbol(item.TradingSymbol),
+                        MarketPrice = item.LastPrice,
+                        Quantity = item.Quantity,
+                        Type = SecurityType.Equity,
+                        UnrealizedPnL = item.PNL, //(item.averagePrice - item.lastTradedPrice) * item.holdingsQuantity,
+                        CurrencySymbol = Currencies.GetCurrencySymbol(AccountBaseCurrency),
+                        //TODO:Can be item.holdings value too, need to debug
+                        MarketValue = item.ClosePrice * item.Quantity
+
+                    };
+                    holdingsList.Add(holding);
+                }
+            }
+            return holdingsList;
+        }
+
+        /// <summary>
+        /// Gets all open positions
+        /// </summary>
+        /// <returns></returns>
+        public override List<Holding> GetAccountHoldings()
+        {
+            var holdingsList = new List<Holding>();
+            var HoldingResponse = _kite.GetPositions();
+            if (HoldingResponse.Day.Count==0)
+            {
+                return holdingsList;
+            }
+            foreach (var item in HoldingResponse.Day)
             {
                 ////TODO: Handle this later for now ignore CNC holdings since we currently only support MIS
                 if (item.Product == KiteProductType.MIS.ToString().ToUpperInvariant())
@@ -881,15 +967,15 @@ namespace QuantConnect.Brokerages.Zerodha
                 switch (historyRequest.Resolution)
                 {
                     case Resolution.Minute:
-                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end,historyRequest.Resolution,"minute");
+                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "minute");
                         break;
 
                     case Resolution.Hour:
-                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end,historyRequest.Resolution,"60minute");
+                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "60minute");
                         break;
 
                     case Resolution.Daily:
-                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution,"day");
+                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "day");
                         break;
                 }
 
@@ -897,13 +983,13 @@ namespace QuantConnect.Brokerages.Zerodha
                 {
                     yield return baseData;
                 }
-            }            
+            }
         }
 
-        private IEnumerable<BaseData> GetHistoryForPeriod(Symbol symbol, DateTime start, DateTime end, Resolution resolution,string zerodhaResolution)
+        private IEnumerable<BaseData> GetHistoryForPeriod(Symbol symbol, DateTime start, DateTime end, Resolution resolution, string zerodhaResolution)
         {
             Log.Debug("ZerodhaBrokerage.GetHistoryForPeriod();");
-            var scripSymbol = _symbolMapper.GetZerodhaInstrumentToken(symbol,Market.NSE);
+            var scripSymbol = _symbolMapper.GetZerodhaInstrumentToken(symbol.Value, symbol.ID.Market);
             var candles = _kite.GetHistoricalData(scripSymbol.ToStringInvariant(), start, end, zerodhaResolution);
 
             if (!candles.Any())
@@ -1003,7 +1089,7 @@ namespace QuantConnect.Brokerages.Zerodha
                             {
                                 var symbol = _symbolMapper.ConvertZerodhaSymbolToLeanSymbol(tick.InstrumentToken);
 
-                                EmitQuoteTick(symbol, tick.Bids, tick.BuyQuantity, tick.Offers, tick.SellQuantity,tick.Timestamp.GetValueOrDefault());
+                                EmitQuoteTick(symbol, tick.Bids, tick.BuyQuantity, tick.Offers, tick.SellQuantity, tick.Timestamp.GetValueOrDefault());
                                 EmitTradeTick(symbol, tick.LastTradeTime.GetValueOrDefault(), tick.LastPrice, tick.LastQuantity);
                             }
                         }
@@ -1016,7 +1102,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     JObject messageDict = Utils.JsonDeserialize(message);
                     if ((string)messageDict["type"] == "order")
                     {
-                        
+
                         EmitFillOrder(new Messages.Order(messageDict["data"]));
                     }
                     else if ((string)messageDict["type"] == "error")
@@ -1050,7 +1136,7 @@ namespace QuantConnect.Brokerages.Zerodha
                         Symbol = symbol,
                         TickType = TickType.Trade,
                         Quantity = Math.Abs(amount),
-                        Exchange= symbol.ID.Market
+                        Exchange = symbol.ID.Market
                     });
                 }
             }
@@ -1076,8 +1162,8 @@ namespace QuantConnect.Brokerages.Zerodha
                     TickType = TickType.Quote,
                     AskSize = askSize,
                     BidSize = bidSize,
-                    
-                    
+
+
                 };
 
                 lock (TickLocker)

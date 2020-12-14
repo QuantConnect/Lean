@@ -9,7 +9,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Zerodha
 {
-    [TestFixture, Ignore("This test requires a configured and active Zerodha account")]
+    [TestFixture]
     public class ZerodhaBrokerageHistoryProviderTests
     {
             private static TestCaseData[] TestParameters

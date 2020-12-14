@@ -291,39 +291,39 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
     /// </summary>
     public struct Position
     {
-        public Position(Dictionary<string, dynamic> data)
+        public Position(JObject data)
         {
             try
             {
-                Product = data["product"];
-                OvernightQuantity = data["overnight_quantity"];
-                Exchange = data["exchange"];
-                SellValue = data["sell_value"];
-                BuyM2M = data["buy_m2m"];
-                LastPrice = data["last_price"];
-                TradingSymbol = data["tradingsymbol"];
-                Realised = data["realised"];
-                PNL = data["pnl"];
-                Multiplier = data["multiplier"];
-                SellQuantity = data["sell_quantity"];
-                SellM2M = data["sell_m2m"];
-                BuyValue = data["buy_value"];
-                BuyQuantity = data["buy_quantity"];
-                AveragePrice = data["average_price"];
-                Unrealised = data["unrealised"];
-                Value = data["value"];
-                BuyPrice = data["buy_price"];
-                SellPrice = data["sell_price"];
-                M2M = data["m2m"];
-                InstrumentToken = Convert.ToUInt32(data["instrument_token"]);
-                ClosePrice = data["close_price"];
-                Quantity = data["quantity"];
-                DayBuyQuantity = data["day_buy_quantity"];
-                DayBuyValue = data["day_buy_value"];
-                DayBuyPrice = data["day_buy_price"];
-                DaySellQuantity = data["day_sell_quantity"];
-                DaySellValue = data["day_sell_value"];
-                DaySellPrice = data["day_sell_price"];
+                Product = data["product"].ToString();
+                OvernightQuantity = Convert.ToInt32(data["overnight_quantity"],CultureInfo.InvariantCulture);
+                Exchange = data["exchange"].ToString();
+                SellValue = Convert.ToInt32(data["sell_value"], CultureInfo.InvariantCulture);
+                BuyM2M = Convert.ToInt32(data["buy_m2m"], CultureInfo.InvariantCulture); 
+                LastPrice = (decimal)data["last_price"];
+                TradingSymbol = data["tradingsymbol"].ToString();
+                Realised = (decimal)data["realised"];
+                PNL = (decimal)data["pnl"];
+                Multiplier = Convert.ToInt32(data["multiplier"], CultureInfo.InvariantCulture); 
+                SellQuantity = Convert.ToInt32(data["sell_quantity"], CultureInfo.InvariantCulture); 
+                SellM2M = (decimal)data["sell_m2m"];
+                BuyValue = (decimal)data["buy_value"];
+                BuyQuantity = Convert.ToInt32(data["buy_quantity"], CultureInfo.InvariantCulture); 
+                AveragePrice = (decimal)data["average_price"];
+                Unrealised = (decimal)data["unrealised"];
+                Value = (decimal)data["value"];
+                BuyPrice = (decimal)data["buy_price"];
+                SellPrice = (decimal)data["sell_price"];
+                M2M = (decimal)data["m2m"];
+                InstrumentToken = Convert.ToUInt32(data["instrument_token"],CultureInfo.InvariantCulture);
+                ClosePrice = (decimal)data["close_price"];
+                Quantity = Convert.ToInt32(data["quantity"], CultureInfo.InvariantCulture); 
+                DayBuyQuantity = Convert.ToInt32(data["day_buy_quantity"], CultureInfo.InvariantCulture); 
+                DayBuyValue = (decimal)data["day_buy_value"];
+                DayBuyPrice = (decimal)data["day_buy_price"];
+                DaySellQuantity = Convert.ToInt32(data["day_sell_quantity"],CultureInfo.InvariantCulture);
+                DaySellValue = (decimal)data["day_sell_value"];
+                DaySellPrice = (decimal)data["day_sell_price"];
             }
             catch (Exception e)
             {
@@ -368,14 +368,14 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
     /// </summary>
     public struct PositionResponse
     {
-        public PositionResponse(Dictionary<string, dynamic> data)
+        public PositionResponse(JObject data)
         {
             Day = new List<Position>();
             Net = new List<Position>();
 
-            foreach (Dictionary<string, dynamic> item in data["day"])
+            foreach (JObject item in data["day"])
                 Day.Add(new Position(item));
-            foreach (Dictionary<string, dynamic> item in data["net"])
+            foreach (JObject item in data["net"])
                 Net.Add(new Position(item));
         }
 

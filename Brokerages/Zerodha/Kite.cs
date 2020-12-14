@@ -457,8 +457,9 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <returns>Day and net positions.</returns>
         public PositionResponse GetPositions()
         {
-            var positionsdata = Get("portfolio.positions");
-            return new PositionResponse(positionsdata["data"]);
+            var positionsdata = Get("portfolio.positions")["data"];
+            var positionResponse = new PositionResponse(positionsdata);
+            return positionResponse;
         }
 
         /// <summary>
@@ -993,6 +994,7 @@ namespace QuantConnect.Brokerages.Zerodha
                             if (responseDictionary["message"] != null)
                                 message = (string)responseDictionary["message"];
 
+                            
                             switch (errorType)
                             {
                                 case "GeneralException": throw new GeneralException(message, status);
