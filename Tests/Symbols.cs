@@ -37,6 +37,7 @@ namespace QuantConnect.Tests
         public static readonly Symbol SBIN = CreateEquitySymbol("SBIN",Market.NSE);
         public static readonly Symbol IDEA = CreateEquitySymbol("IDEA", Market.NSE);
 
+        public static readonly Symbol LOW = CreateEquitySymbol("LOW");
 
         public static readonly Symbol USDJPY = CreateForexSymbol("USDJPY");
         public static readonly Symbol EURUSD = CreateForexSymbol("EURUSD");

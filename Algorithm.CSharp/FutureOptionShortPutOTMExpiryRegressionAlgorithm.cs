@@ -26,10 +26,12 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// This regression algorithm tests Out of The Money (OTM) future option expiry for short puts.
-    /// We expect 1 order from the algorithm, which are:
+    /// We expect 2 order from the algorithm, which are:
     ///
     ///   * Initial entry, sell ES Put Option (expiring OTM)
     ///     - Profit the option premium, since the option was not assigned.
+    ///
+    ///   * Liquidation of ES put OTM contract on the last trade date
     ///
     /// Additionally, we test delistings for future options and assert that our
     /// portfolio holdings reflect the orders the algorithm has submitted.
@@ -211,7 +213,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "-418839052"}
+            {"OrderListHash", "1003680014"}
         };
     }
 }

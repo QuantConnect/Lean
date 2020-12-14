@@ -108,6 +108,7 @@
     <Compile Include="ArnaudLegouxMovingAverage.cs" />
     <Compile Include="AverageDirectionalIndex.cs" />
     <Compile Include="AverageDirectionalMovementIndexRating.cs" />
+    <Compile Include="AwesomeOscillator.cs" />
     <Compile Include="BalanceOfPower.cs" />
     <Compile Include="CandlestickPatterns\UpDownGapThreeMethods.cs" />
     <Compile Include="CandlestickPatterns\UpsideGapTwoCrows.cs" />
@@ -173,6 +174,7 @@
     <Compile Include="CandlestickPatterns\ThreeWhiteSoldiers.cs" />
     <Compile Include="CandlestickPatterns\Doji.cs" />
     <Compile Include="CandlestickPatterns\TwoCrows.cs" />
+    <Compile Include="ChaikinMoneyFlow.cs" />
     <Compile Include="ChandeMomentumOscillator.cs" />
     <Compile Include="CoppockCurve.cs" />
     <Compile Include="DetrendedPriceOscillator.cs" />
@@ -183,7 +185,7 @@
     <Compile Include="SchaffTrendCycle.cs" />
     <Compile Include="WilderMovingAverage.cs" />
     <Compile Include="FractalAdaptiveMovingAverage.cs" />
-    <Compile Include="EaseOfMovementValue.cs"/>
+    <Compile Include="EaseOfMovementValue.cs" />
     <Compile Include="FilteredIdentity.cs" />
     <Compile Include="HullMovingAverage.cs" />
     <Compile Include="MassIndex.cs" />

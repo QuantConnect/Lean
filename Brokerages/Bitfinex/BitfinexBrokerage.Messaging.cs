@@ -28,6 +28,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using QuantConnect.Brokerages.Bitfinex.Messages;
 using Order = QuantConnect.Orders.Order;
 
@@ -52,6 +53,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         private readonly ConcurrentDictionary<long, Order> _orderMap = new ConcurrentDictionary<long, Order>();
         private readonly object _clientOrderIdLocker = new object();
         private long _nextClientOrderId;
+
+        // map Bitfinex currency to LEAN currency
+        private readonly Dictionary<string, string> _currencyMap;
 
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
@@ -88,6 +92,15 @@ namespace QuantConnect.Brokerages.Bitfinex
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _algorithm = algorithm;
             _aggregator = aggregator;
+
+            // load currency map
+            using (var wc = new WebClient())
+            {
+                var json = wc.DownloadString("https://api-pub.bitfinex.com/v2/conf/pub:map:currency:sym");
+                var rows = JsonConvert.DeserializeObject<List<List<List<string>>>>(json)[0];
+                _currencyMap = rows
+                    .ToDictionary(row => row[0], row => row[1].ToUpperInvariant());
+            }
 
             WebSocket.Open += (sender, args) =>
             {
@@ -384,7 +397,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 var fillQuantity = update.ExecAmount;
                 var direction = fillQuantity < 0 ? OrderDirection.Sell : OrderDirection.Buy;
                 var updTime = Time.UnixMillisecondTimeStampToDateTime(update.MtsCreate);
-                var orderFee = new OrderFee(new CashAmount(Math.Abs(update.Fee), update.FeeCurrency));
+                var orderFee = new OrderFee(new CashAmount(Math.Abs(update.Fee), GetLeanCurrency(update.FeeCurrency)));
 
                 var status = OrderStatus.Filled;
                 if (fillQuantity != order.Quantity)
@@ -438,6 +451,17 @@ namespace QuantConnect.Brokerages.Bitfinex
                 Log.Error(e);
                 throw;
             }
+        }
+
+        private string GetLeanCurrency(string brokerageCurrency)
+        {
+            string currency;
+            if (!_currencyMap.TryGetValue(brokerageCurrency.ToUpperInvariant(), out currency))
+            {
+                currency = brokerageCurrency.ToUpperInvariant();
+            }
+
+            return currency;
         }
 
         /// <summary>

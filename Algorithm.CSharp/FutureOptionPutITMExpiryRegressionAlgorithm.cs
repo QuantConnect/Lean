@@ -132,12 +132,10 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void AssertFutureOptionOrderExercise(OrderEvent orderEvent, Security future, Security optionContract)
         {
-            // We expect the liquidation to occur on the day of the delisting (while the market is open),
-            // but currently we liquidate at the next market open (AAPL open) which happens to be
-            // at 9:30:00 Eastern Time. For unknown reasons, the delisting happens two minutes after the
-            // market open.
-            // Read more about the issue affecting this test here: https://github.com/QuantConnect/Lean/issues/4980
-            var expectedLiquidationTimeUtc = new DateTime(2020, 6, 22, 13, 32, 0);
+            // For unknown reasons, the delisting happens two minutes after the market open. Most likely
+            // stems from the placement of the ProcessDelistedSymbols and HandleDelistedSymbols methods in relation
+            // to the algorithm time update and the brokerage ProcessSynchronousEvents.
+            var expectedLiquidationTimeUtc = new DateTime(2020, 6, 19, 13, 32, 0);
 
             if (orderEvent.Direction == OrderDirection.Buy && future.Holdings.Quantity != 0)
             {
@@ -214,24 +212,24 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "3"},
-            {"Average Win", "4.18%"},
+            {"Average Win", "4.15%"},
             {"Average Loss", "-8.27%"},
-            {"Compounding Annual Return", "-8.879%"},
-            {"Drawdown", "4.400%"},
-            {"Expectancy", "-0.247"},
-            {"Net Profit", "-4.432%"},
-            {"Sharpe Ratio", "-1.391"},
+            {"Compounding Annual Return", "-8.928%"},
+            {"Drawdown", "4.500%"},
+            {"Expectancy", "-0.249"},
+            {"Net Profit", "-4.457%"},
+            {"Sharpe Ratio", "-1.389"},
             {"Probabilistic Sharpe Ratio", "0.002%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "0.51"},
+            {"Profit-Loss Ratio", "0.50"},
             {"Alpha", "-0.073"},
             {"Beta", "-0.002"},
             {"Annual Standard Deviation", "0.052"},
             {"Annual Variance", "0.003"},
-            {"Information Ratio", "0.863"},
+            {"Information Ratio", "0.861"},
             {"Tracking Error", "0.179"},
-            {"Treynor Ratio", "38.46"},
+            {"Treynor Ratio", "38.365"},
             {"Total Fees", "$7.40"},
             {"Fitness Score", "0.008"},
             {"Kelly Criterion Estimate", "0"},
@@ -252,7 +250,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "-675079082"}
+            {"OrderListHash", "-1705374528"}
         };
     }
 }

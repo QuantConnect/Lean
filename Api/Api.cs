@@ -20,6 +20,7 @@ using System.Net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using RestSharp;
 using RestSharp.Extensions;
@@ -426,28 +427,30 @@ namespace QuantConnect.Api
                 // Create backtest requests for each chart that is empty
                 foreach (var chart in result.Backtest.Charts)
                 {
-                    if (chart.Value.Series == null)
+                    if (!chart.Value.Series.IsNullOrEmpty())
                     {
-                        var chartRequest = new RestRequest("backtests/read", Method.POST)
-                        {
-                            RequestFormat = DataFormat.Json
-                        };
+                        continue;
+                    }
 
-                        chartRequest.AddParameter("application/json", JsonConvert.SerializeObject(new
-                        {
-                            projectId,
-                            backtestId,
-                            chart = chart.Key.Replace(' ', '+')
-                        }), ParameterType.RequestBody);
+                    var chartRequest = new RestRequest("backtests/read", Method.POST)
+                    {
+                        RequestFormat = DataFormat.Json
+                    };
 
-                        BacktestResponseWrapper chartResponse;
-                        ApiConnection.TryRequest(chartRequest, out chartResponse);
+                    chartRequest.AddParameter("application/json", JsonConvert.SerializeObject(new
+                    {
+                        projectId,
+                        backtestId,
+                        chart = chart.Key.Replace(' ', '+')
+                    }), ParameterType.RequestBody);
 
-                        // Add this chart to our updated collection
-                        if (chartResponse.Success)
-                        {
-                            updatedCharts.Add(chart.Key, chartResponse.Backtest.Charts[chart.Key]);
-                        }
+                    BacktestResponseWrapper chartResponse;
+                    ApiConnection.TryRequest(chartRequest, out chartResponse);
+
+                    // Add this chart to our updated collection
+                    if (chartResponse.Success)
+                    {
+                        updatedCharts.Add(chart.Key, chartResponse.Backtest.Charts[chart.Key]);
                     }
                 }
 
@@ -814,8 +817,17 @@ namespace QuantConnect.Api
             var uri     = new Uri(link.DataLink);
             var client  = new RestClient(uri.Scheme + "://" + uri.Host);
             var request = new RestRequest(uri.PathAndQuery, Method.GET);
-            client.DownloadData(request).SaveAs(path);
 
+            // If the response is not a zip then it is not data, don't write it.
+            var response = client.Execute(request);
+            if (response.ContentType != "application/zip")
+            {
+                var message = JObject.Parse(response.Content)["message"].Value<string>();
+                Log.Error($"Api.DownloadData(): Failed to download zip for {symbol} {resolution} data for date {date}, Api response: {message}");
+                return false;
+            }
+            
+            response.RawBytes.SaveAs(path);
             return true;
         }
 

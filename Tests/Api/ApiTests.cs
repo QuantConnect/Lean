@@ -354,6 +354,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(backtestRead.Progress == 1);
             Assert.IsTrue(backtestRead.Name == backtestName);
             Assert.IsTrue(backtestRead.Statistics["Total Trades"] == "1");
+            Assert.IsTrue(backtestRead.Charts["Benchmark"].Series.Count > 0);
 
             // Verify we have the backtest in our project
             var listBacktests = _api.ListBacktests(project.Projects.First().ProjectId);

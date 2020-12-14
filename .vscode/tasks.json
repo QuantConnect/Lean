@@ -21,6 +21,34 @@
             "problemMatcher": "$msCompile"
         },
         {
+            "label": "rebuild",
+            "type": "shell",
+            "command": "msbuild",
+            "args": [
+                "/p:Configuration=Debug",
+                "/p:DebugType=portable",
+                "/t:rebuild",
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "msbuild",
+            "args": [
+                "/t:clean",
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
             "label": "force build linux",
             "type": "shell",
             "command": "msbuild",
