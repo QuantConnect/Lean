@@ -162,6 +162,9 @@ namespace QuantConnect.Packets
         OptimizationEstimate,
 
         /// Optimization work status update
-        OptimizationStatus
+        OptimizationStatus,
+
+        /// Optimization work result
+        OptimizationResult
     }
 }

@@ -1,6 +1,6 @@
 ![alt tag](https://cdn.quantconnect.com/web/i/20180601-1615-lean-logo-small.png) Lean Data ToolBox
 =========
-[![Join the chat at https://gitter.im/QuantConnect/Lean](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/QuantConnect/Lean?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Slack Chat](https://img.shields.io/badge/chat-Slack-53c82b.svg)](https://www.quantconnect.com/slack)
 
 [Lean Home][1] | [Documentation][2] | [Download Lean][3]
 ----------
@@ -35,6 +35,7 @@ Example: --app=YahooDownloader --tickers=SPY,AAPL --resolution=Daily --from-date
 	- IEXDownloader or IEXDL
 	- BitfinexDownloader or BFXDL
 	- BinanceDownloader or MBXDL
+	- PolygonDownloader or PDL
 - **'--from-date=yyyyMMdd-HH:mm:ss'** required
 - **'--tickers=SPY,AAPL,etc'** required, except for QuandlBitfinexDownloader (QBDL)
 - **'--resolution=Tick/Second/Minute/Hour/Daily/All'** required, except for QuandlBitfinexDownloader (QBDL), CryptoiqDownloader (CDL). **Case sensitive. Not all downloaders support all resolutions**, send empty for more information.

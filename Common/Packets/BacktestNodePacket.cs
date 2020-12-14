@@ -45,6 +45,12 @@ namespace QuantConnect.Packets
         public string BacktestId = DefaultId;
 
         /// <summary>
+        /// Optimization Id for this task
+        /// </summary>
+        [JsonProperty(PropertyName = "sOptimizationID")]
+        public string OptimizationId;
+
+        /// <summary>
         /// Backtest start-date as defined in the Initialize() method.
         /// </summary>
         [JsonProperty(PropertyName = "dtPeriodStart")]

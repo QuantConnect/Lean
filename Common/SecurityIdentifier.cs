@@ -240,7 +240,7 @@ namespace QuantConnect
                 {
                     if (SecurityType != SecurityType.Option && SecurityType != SecurityType.FutureOption)
                     {
-                        throw new InvalidOperationException("OptionType is only defined for SecurityType.Option and SecurityType.FutureOption");
+                        throw new InvalidOperationException("StrikePrice is only defined for SecurityType.Option and SecurityType.FutureOption");
                     }
 
                     // performance: lets calculate strike price once
