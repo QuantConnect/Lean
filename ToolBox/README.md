@@ -1,6 +1,6 @@
 ![alt tag](https://cdn.quantconnect.com/web/i/20180601-1615-lean-logo-small.png) Lean Data ToolBox
 =========
-[![Join the chat at https://gitter.im/QuantConnect/Lean](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/QuantConnect/Lean?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Slack Chat](https://img.shields.io/badge/chat-Slack-53c82b.svg)](https://www.quantconnect.com/slack)
 
 [Lean Home][1] | [Documentation][2] | [Download Lean][3]
 ----------
