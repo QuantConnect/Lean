@@ -182,6 +182,7 @@
     <Compile Include="DoubleExponentialMovingAverage.cs" />
     <Compile Include="PythonIndicator.cs" />
     <Compile Include="IntradayVwap.cs" />
+    <Compile Include="RelativeVigorIndex.cs" />
     <Compile Include="SchaffTrendCycle.cs" />
     <Compile Include="WilderMovingAverage.cs" />
     <Compile Include="FractalAdaptiveMovingAverage.cs" />
