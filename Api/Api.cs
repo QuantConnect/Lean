@@ -916,7 +916,7 @@ namespace QuantConnect.Api
                 {
                     return client.DownloadString(address);
                 }
-                catch (Exception exception)
+                catch (WebException exception)
                 {
                     var message = $"Api.Download(): Failed to download data from {address}";
                     if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())
@@ -924,8 +924,7 @@ namespace QuantConnect.Api
                         message += $" with username: {userName} and password {password}";
                     }
 
-                    Log.Error($"{message}. Please verify the source for missing http:// or https://. Api response: {exception.Message}");
-                    return null;
+                    throw new WebException($"{message}. Please verify the source for missing http:// or https://", exception);
                 }
             }
         }

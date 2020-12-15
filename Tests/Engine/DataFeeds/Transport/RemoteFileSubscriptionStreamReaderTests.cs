@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using NUnit.Framework;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
@@ -109,14 +110,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
 
             Assert.IsFalse(remoteReader.EndOfStream);
 
-            var remoteReader2 = new RemoteFileSubscriptionStreamReader(
-                new SingleEntryDataCacheProvider(new DefaultDataProvider()),
-                @"helloworld.com",
-                Globals.Cache,
-                null);
-
             // Fails to get helloworld.com, missing http://
-            Assert.IsTrue(remoteReader2.EndOfStream);
+            Assert.Throws<WebException>(() => new RemoteFileSubscriptionStreamReader(
+                    new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                    @"helloworld.com",
+                    Globals.Cache,
+                    null),
+                "Api.Download(): Failed to download data from helloworld.com. Please verify the source for missing http:// or https://"
+            );
         }
 
         private class TestDownloadProvider : Api.Api
