@@ -24,12 +24,13 @@ namespace QuantConnect.Orders
     public class ZerodhaOrderProperties : OrderProperties
     {
         /// <summary>
-        /// This flag will ensure the order executes only as a maker (no fee) order.
-        /// If part of the order results in taking liquidity rather than providing,
-        /// it will be rejected and no part of the order will execute.
-        /// Note: this flag is only applied to Limit orders.
+        /// Define the Kite Order type that we are targeting (MIS/CNC/NRML).
         /// </summary>
-        public bool PostOnly { get; set; }
+        public enum ProductType {
+            MIS,
+            CNC,
+            NRML
+        }
 
         /// <summary>
         /// Returns a new instance clone of this object
