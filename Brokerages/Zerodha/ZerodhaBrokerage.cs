@@ -431,6 +431,16 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
             JObject orderResponse;
             decimal? triggerPrice = null;
 
+            if(order.Status == OrderStatus.Invalid)
+            {
+                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Invalid order status {order.Status}" ;
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata), new OrderFee(new CashAmount(0,Currencies.INR)), "Zerodha Order Event") { Status = OrderStatus.Invalid });
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
+
+                UnlockStream();
+                return false;
+            }
+
             if (order.Type == OrderType.StopLimit || order.Type == OrderType.StopMarket || order.Type == OrderType.Limit)
             {
                 triggerPrice = GetOrderTriggerPrice(order);
@@ -438,10 +448,18 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
             decimal? orderPrice = GetOrderPrice(order);
             var kiteOrderType = ConvertOrderType(order.Type);
 
+            var orderFee = new OrderFee(new CashAmount(
+                                CalculateBrokerageOrderFee(orderPrice.GetValueOrDefault() * order.AbsoluteQuantity), Currencies.INR));
+
             var orderProperties = order.Properties as ZerodhaOrderProperties;
-            if (orderProperties != null)
+            if (orderProperties == null)
             {
-                var productType = orderProperties.ProductType;
+                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Invalid product type Please set either MIS,CNC or NRML";
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata), orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
+
+                UnlockStream();
+                return false;
             }
 
             //if (order.Type == OrderType.Bracket)
@@ -451,13 +469,12 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
             //else
             //{
 
-            orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market.ToUpperInvariant(), order.Symbol.ID.Symbol, order.Direction.ToString().ToUpperInvariant(), orderQuantity, orderPrice, productType.ToString(), kiteOrderType,null,null,triggerPrice);
+            orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market.ToUpperInvariant(), order.Symbol.ID.Symbol, order.Direction.ToString().ToUpperInvariant(), orderQuantity, orderPrice, orderProperties.ProductType, kiteOrderType,null,null,triggerPrice);
             //}
             Log.Debug("ZerodhaOrderResponse:");
             Log.Debug(orderResponse.ToString());
 
-            ////TODO: Calculate order fees later
-            var orderFee = new OrderFee(new CashAmount(20, Currencies.INR));
+            
             if ((string)orderResponse["status"] == "error")
             {
                 var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse["message"]}";
@@ -666,6 +683,7 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
         public override bool CancelOrder(Order order)
         {
             LockStream();
+            Log.Trace("CancelOrder Order Status "+order.Status.ToString());
             //if (order.Type == OrderType.Bracket)
             //{
             //    orderResponse = _kite.CancelOrder(order.Id.ToStringInvariant());

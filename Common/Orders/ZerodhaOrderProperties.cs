@@ -23,10 +23,17 @@ namespace QuantConnect.Orders
     /// </summary>
     public class ZerodhaOrderProperties : OrderProperties
     {
+        public readonly string ProductType;
+        public ZerodhaOrderProperties(KiteProductType productType)
+        {
+            ProductType = productType.ToStringInvariant();
+        }
+
         /// <summary>
         /// Define the Kite Order type that we are targeting (MIS/CNC/NRML).
         /// </summary>
-        public enum ProductType {
+        public enum KiteProductType
+        {
             MIS,
             CNC,
             NRML
@@ -37,7 +44,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public override IOrderProperties Clone()
         {
-            return (GDAXOrderProperties)MemberwiseClone();
+            return (ZerodhaOrderProperties)MemberwiseClone();
         }
     }
 }

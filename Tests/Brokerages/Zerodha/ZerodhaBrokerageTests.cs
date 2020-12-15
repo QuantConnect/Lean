@@ -32,17 +32,20 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
     [TestFixture]
     public class ZerodhaBrokerageTests : BrokerageTests
     {
-            /// <summary>
-            /// Provides the data required to test each order type in various cases
-            /// </summary>
-            private static TestCaseData[] OrderParameters()
+
+        private static IOrderProperties orderProperties = new ZerodhaOrderProperties(ZerodhaOrderProperties.KiteProductType.MIS);
+
+        /// <summary>
+        /// Provides the data required to test each order type in various cases
+        /// </summary>
+        private static TestCaseData[] OrderParameters()
             {
                 return new[]
                 {
-                new TestCaseData(new MarketOrderTestParameters(Symbols.IDEA)).SetName("MarketOrder"),
-                new TestCaseData(new LimitOrderTestParameters(Symbols.IDEA, 10m, 9.70m)).SetName("LimitOrder"),
-                new TestCaseData(new StopMarketOrderTestParameters(Symbols.IDEA, 10m,  9.70m)).SetName("StopMarketOrder"),
-                new TestCaseData(new StopLimitOrderTestParameters(Symbols.IDEA, 10m,  9.70m)).SetName("StopLimitOrder")
+                new TestCaseData(new MarketOrderTestParameters(Symbols.IDEA,orderProperties)).SetName("MarketOrder"),
+                new TestCaseData(new LimitOrderTestParameters(Symbols.IDEA, 10m, 9.70m,orderProperties)).SetName("LimitOrder"),
+                new TestCaseData(new StopMarketOrderTestParameters(Symbols.IDEA, 10m,  9.70m,orderProperties)).SetName("StopMarketOrder"),
+                new TestCaseData(new StopLimitOrderTestParameters(Symbols.IDEA, 10m,  9.70m,orderProperties)).SetName("StopLimitOrder")
             };
             }
 
@@ -98,14 +101,13 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             {
                 var zerodha = (ZerodhaBrokerage)Brokerage;
                 var quotes = zerodha.GetQuote(symbol);
-            Log.Trace("GetAskPrice "+quotes.ToString());
                 return quotes.LastPrice;
             }
 
             [Test]
             public void ShortIdea()
             {
-                PlaceOrderWaitForStatus(new MarketOrder(Symbols.IDEA, -1, DateTime.Now), OrderStatus.Invalid, allowFailedSubmission: true);
+                PlaceOrderWaitForStatus(new MarketOrder(Symbols.IDEA, -1, DateTime.Now,properties: orderProperties), OrderStatus.Submitted, allowFailedSubmission: true);
 
                 // wait for output to be generated
                 Thread.Sleep(20 * 1000);
