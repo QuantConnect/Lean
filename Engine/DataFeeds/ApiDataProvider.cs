@@ -79,7 +79,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="filepath">Path to the file</param>
         /// <returns>True if the file is out of date</returns>
         /// <remarks>Files are only "out of date" for Hourly/Daily data because this data is stored all in one file</remarks>
-        private bool IsOutOfDate(Resolution resolution, string filepath)
+        public bool IsOutOfDate(Resolution resolution, string filepath)
         {
             return resolution >= Resolution.Hour &&
                 (DateTime.Now - TimeSpan.FromDays(_downloadPeriod)) > File.GetLastWriteTime(filepath);
