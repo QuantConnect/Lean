@@ -420,7 +420,31 @@ namespace QuantConnect.Algorithm
 
             return chandeMomentumOscillator;
         }
+        
+        ///<summary>
+        /// Creates a new DeMarker Indicator (DEM), an oscillator-type indicator measuring changes in terms of an asset's
+        /// High and Low tradebar values. 
+        ///</summary>
+        /// <param name="symbol">The symbol whose DEM we seek.</param>
+        /// <param name="period">The period of the moving average implemented</param>
+        /// <param name="movingAverageType">Specifies the type of moving average to be used</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The DeMarker indicator for the requested symbol.</returns>
+        public DeMarkerIndicator DEM(Symbol symbol, int period, MovingAverageType type, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"DEM({period},{type})", resolution);
+            var deMarkerIndicator = new DeMarkerIndicator(name, period, type);
+            RegisterIndicator(symbol, deMarkerIndicator, resolution, selector);
 
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, deMarkerIndicator, resolution);
+            }
+
+            return deMarkerIndicator;
+        }
+        
         /// <summary>
         /// Creates a new Donchian Channel indicator which will compute the Upper Band and Lower Band.
         /// The indicator will be automatically updated on the given resolution.
