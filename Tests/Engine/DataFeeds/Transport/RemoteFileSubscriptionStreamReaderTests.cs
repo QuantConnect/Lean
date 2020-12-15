@@ -98,6 +98,27 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
             cacheProvider.DisposeSafely();
         }
 
+        [Test]
+        public void InvalidDataSource()
+        {
+            var remoteReader = new RemoteFileSubscriptionStreamReader(
+                new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                @"http://helloworld.com",
+                Globals.Cache,
+                null);
+
+            Assert.IsFalse(remoteReader.EndOfStream);
+
+            var remoteReader2 = new RemoteFileSubscriptionStreamReader(
+                new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                @"helloworld.com",
+                Globals.Cache,
+                null);
+
+            // Fails to get helloworld.com, missing http://
+            Assert.IsTrue(remoteReader2.EndOfStream);
+        }
+
         private class TestDownloadProvider : Api.Api
         {
             public static int DownloadCount { get; set; }
