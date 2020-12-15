@@ -29,8 +29,7 @@ public class AssemblyInitialize
     public void SetLogHandler()
     {
         AdjustCurrentDirectory();
-        // save output to file as well
-        Log.LogHandler = new ConsoleLogHandler();
+        Log.LogHandler = new ConsoleErrorLogHandler();
     }
 
     public static void AdjustCurrentDirectory()
