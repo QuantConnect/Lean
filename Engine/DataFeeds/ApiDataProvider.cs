@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly int _uid = Config.GetInt("job-user-id", 0);
         private readonly string _token = Config.Get("api-access-token", "1");
         private readonly string _dataPath = Config.Get("data-folder", "../../../Data/");
-        private readonly int _downloadPeriod = Config.GetInt("api-data-update-period", 5);
+        private static readonly int DownloadPeriod = Config.GetInt("api-data-update-period", 5);
         private readonly Api.Api _api;
 
         /// <summary>
@@ -79,10 +79,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="filepath">Path to the file</param>
         /// <returns>True if the file is out of date</returns>
         /// <remarks>Files are only "out of date" for Hourly/Daily data because this data is stored all in one file</remarks>
-        public bool IsOutOfDate(Resolution resolution, string filepath)
+        public static bool IsOutOfDate(Resolution resolution, string filepath)
         {
             return resolution >= Resolution.Hour &&
-                (DateTime.Now - TimeSpan.FromDays(_downloadPeriod)) > File.GetLastWriteTime(filepath);
+                (DateTime.Now - TimeSpan.FromDays(DownloadPeriod)) > File.GetLastWriteTime(filepath);
         }
 
         /// <summary>
