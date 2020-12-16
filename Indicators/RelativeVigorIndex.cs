@@ -14,7 +14,6 @@
 */
 
 using QuantConnect.Data.Market;
-using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
 {
@@ -22,9 +21,9 @@ namespace QuantConnect.Indicators
     /// The Relative Vigor Index (RVI) compares the ratio of the closing price of a security to its trading range.
     /// For illustration, let:
     /// <para>a = Close−Open</para>
-    /// <para>b = Close−Open One Bar Prior to a</para>
-    /// <para>c = Close−Open One Bar Prior to b</para>
-    /// <para>d = Close−Open One Bar Prior to c</para>
+    /// <para>b = Close−Open of One Bar Prior to a</para>
+    /// <para>c = Close−Open of One Bar Prior to b</para>
+    /// <para>d = Close−Open of One Bar Prior to c</para>
     /// <para>e = High−Low of Bar a</para>
     /// <para>f = High−Low of Bar b</para>
     /// <para>g = High−Low of Bar c</para>
@@ -76,7 +75,7 @@ namespace QuantConnect.Indicators
         public RelativeVigorIndex(string name, int period, MovingAverageType type = MovingAverageType.Simple)
             : base(name)
         {
-            WarmUpPeriod = 3 + period;
+            _warmUpPeriod = 3 + period;
             CloseBand = type.AsIndicator("_closingBand", period);
             RangeBand = type.AsIndicator("_rangeBand", period);
             _previousInputs = new RollingWindow<IBaseDataBar>(3);
@@ -89,11 +88,11 @@ namespace QuantConnect.Indicators
         /// <param name="signalName">The name of the signal associated with this indicator.</param>
         /// <param name="period">The period for the RelativeVigorIndex.</param>
         /// <param name="type">The type of Moving Average to use</param>
-        public RelativeVigorIndex(string name, string signalName, int period, 
+        public RelativeVigorIndex(string name, string signalName, int period,
             MovingAverageType type = MovingAverageType.Simple)
             : base(name)
         {
-            WarmUpPeriod = 1 + period;
+            _warmUpPeriod = 3 + period;
             CloseBand = type.AsIndicator("_closingBand", period);
             RangeBand = type.AsIndicator("_rangeBand", period);
             _previousInputs = new RollingWindow<IBaseDataBar>(3);
@@ -103,12 +102,16 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => CloseBand.IsReady && RangeBand.IsReady;
+        public override bool IsReady => CloseBand.IsReady && RangeBand.IsReady
+            && (Signal?.IsReady ?? true);
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod { get; }
+        public int WarmUpPeriod => _warmUpPeriod + (Signal?.WarmUpPeriod ?? 0);
+
+        private int _warmUpPeriod;
+
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -117,20 +120,22 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            if (_previousInputs.IsReady){
+            if (_previousInputs.IsReady)
+            {
                 var a = input.Close - input.Open;
-                var b = input.Close - _previousInputs[0].Open;
-                var c = input.Close - _previousInputs[1].Open;
-                var d = input.Close - _previousInputs[2].Open;
+                var b = _previousInputs[0].Close - _previousInputs[0].Open;
+                var c = _previousInputs[1].Close - _previousInputs[1].Open;
+                var d = _previousInputs[2].Close - _previousInputs[2].Open;
                 var e = input.High - input.Low;
-                var f = input.High - _previousInputs[0].Low;
-                var g = input.High - _previousInputs[1].Low;
-                var h = input.High - _previousInputs[2].Low;
+                var f = _previousInputs[0].High - _previousInputs[0].Low;
+                var g = _previousInputs[1].High - _previousInputs[1].Low;
+                var h = _previousInputs[2].High - _previousInputs[2].Low;
                 CloseBand.Update(input.Time, (a + 2 * (b + c) + d) / 6);
                 RangeBand.Update(input.Time, (e + 2 * (f + g) + h) / 6);
             }
+
             _previousInputs.Add(input);
-            if (IsReady)
+            if (CloseBand.IsReady && RangeBand.IsReady)
             {
                 var rvi = CloseBand / RangeBand;
                 Signal?.Update(input.Time, rvi); // Checks for null before updating.
@@ -138,7 +143,6 @@ namespace QuantConnect.Indicators
             }
 
             return 0m;
-            
         }
 
         /// <summary>
@@ -149,13 +153,14 @@ namespace QuantConnect.Indicators
             base.Reset();
             CloseBand.Reset();
             RangeBand.Reset();
+            _previousInputs.Reset();
             Signal?.Reset();
         }
 
         /// <summary>
         /// The signal for the Relative Vigor Index, itself an indicator. 
         /// </summary>
-        public class RviSignal : WindowIndicator<BaseData>, IIndicatorWarmUpPeriodProvider
+        public class RviSignal : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
         {
             /// <summary>
             /// Initializes the signal term.
@@ -167,17 +172,20 @@ namespace QuantConnect.Indicators
                 WarmUpPeriod = 4;
             }
 
+
             /// <summary>
             /// Computes the next value of this indicator from the given state
             /// </summary>
-            /// <param name="window">Window holding the prior data</param>
+            /// <param name="window">Window of prior data</param>
             /// <param name="input">The input given to the indicator</param>
             /// <returns>A new value for this indicator</returns>
-            protected override decimal ComputeNextValue(IReadOnlyWindow<BaseData> window, BaseData input)
+            protected override decimal ComputeNextValue(
+                IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input
+                )
             {
-                return IsReady ? (input.Value + 2 * (window[0].Value + window[1].Value) + window[2].Value)/6 : 0m;
+                return IsReady ? (input.Value + 2 * (window[0] + window[1]) + window[2]) / 6 : 0m;
             }
-            
+
             /// <summary>
             /// Resets this indicator to its initial state
             /// </summary>
