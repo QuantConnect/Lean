@@ -121,7 +121,7 @@ namespace QuantConnect.Tests.Research
                 //2014-05-08 00:00:00        NaN        173.423752
                 //2014-05-08 20:00:00   1.384265               NaN
                 //2014-05-09 00:00:00        NaN        173.229931
-                Log.Trace(periodHistory);
+                Log.Trace(periodHistory.ToString());
 
                 var count = (periodHistory.shape[0] as PyObject).AsManagedObject(typeof(int));
                 Assert.AreEqual(10, count);
