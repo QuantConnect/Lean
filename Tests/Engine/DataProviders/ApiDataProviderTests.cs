@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Engine.DataProviders
 
             File.Create(path).Close();
             File.SetLastWriteTime(path, time);
-            var test = _apiDataProvider.IsOutOfDate(resolution, path);
+            var test = ApiDataProvider.IsOutOfDate(resolution, path);
 
             Assert.AreEqual(expected, test);
             File.Delete(path);
