@@ -2250,6 +2250,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var market = InteractiveBrokersBrokerageModel.DefaultMarketMap[securityType];
             var isFutureOption = contract.SecType == IB.SecurityType.FutureOption;
 
+
             // Handle future options as a Future, up until we actually return the future.
             if (isFutureOption || securityType == SecurityType.Future)
             {
@@ -2260,6 +2261,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     market = defaultMarket;
                 }
 
+                Log.Trace($"Mapping contract {contract} with ticker `{leanSymbol}` and SecurityType `{securityType.ToString()}` with expiry: {contract.LastTradeDateOrContractMonth} to Symbol");
                 var contractExpiryDate = DateTime.ParseExact(contract.LastTradeDateOrContractMonth, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
 
                 if (!isFutureOption)
@@ -2281,6 +2283,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             if (securityType == SecurityType.Option)
             {
+                Log.Trace($"Mapping contract {contract} with ticker `{ibSymbol}` and SecurityType `{securityType.ToString()}` with expiry: {contract.LastTradeDateOrContractMonth} to Symbol");
                 var expiryDate = DateTime.ParseExact(contract.LastTradeDateOrContractMonth, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
                 var right = contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put;
                 var strike = Convert.ToDecimal(contract.Strike);
