@@ -25,6 +25,7 @@ using NUnit.Framework;
 using QuantConnect.Brokerages.Alpaca;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
@@ -162,12 +163,12 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             {
                 var order = new MarketOrder(symbol, 10, DateTime.UtcNow);
                 OrderProvider.Add(order);
-                Console.WriteLine("Buy Order");
+                Log.Trace("Buy Order");
                 alpaca.PlaceOrder(order);
 
                 var orderr = new MarketOrder(symbol, -10, DateTime.UtcNow);
                 OrderProvider.Add(orderr);
-                Console.WriteLine("Sell Order");
+                Log.Trace("Sell Order");
                 alpaca.PlaceOrder(orderr);
             }
 
@@ -291,9 +292,9 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
 
             var tenMinutes = TimeSpan.FromMinutes(10);
 
-            Console.WriteLine("------");
-            Console.WriteLine("Waiting for internet disconnection ");
-            Console.WriteLine("------");
+            Log.Trace("------");
+            Log.Trace("Waiting for internet disconnection ");
+            Log.Trace("------");
 
             // spin while we manually disconnect the internet
             while (brokerage.IsConnected)
@@ -304,9 +305,9 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
 
             var stopwatch = Stopwatch.StartNew();
 
-            Console.WriteLine("------");
-            Console.WriteLine("Trying to reconnect ");
-            Console.WriteLine("------");
+            Log.Trace("------");
+            Log.Trace("Trying to reconnect ");
+            Log.Trace("------");
 
             // spin until we're reconnected
             while (!brokerage.IsConnected && stopwatch.Elapsed < tenMinutes)

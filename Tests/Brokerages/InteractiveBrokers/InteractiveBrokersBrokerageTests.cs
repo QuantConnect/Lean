@@ -447,7 +447,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             foreach (var holding in previousHoldings)
             {
-                Console.WriteLine(holding.Value);
+                Log.Trace(holding.Value.ToString());
             }
 
             var hasSymbol = previousHoldings.ContainsKey(Symbols.USDJPY);
@@ -497,7 +497,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             Assert.IsTrue(cashBalance.Any(x => x.Currency == Currencies.USD));
             foreach (var cash in cashBalance)
             {
-                Console.WriteLine(cash);
+                Log.Trace(cash.ToString());
                 if (cash.Currency == Currencies.USD)
                 {
                     Assert.AreNotEqual(0m, cashBalance.Single(x => x.Currency == Currencies.USD));
@@ -590,7 +590,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             var executions = ib.GetExecutions(null, null, null, DateTime.UtcNow.AddDays(-1), null);
 
             stopwatch.Stop();
-            Console.WriteLine("Total executions fetched: {0}, elapsed time: {1} ms", executions.Count, stopwatch.ElapsedMilliseconds);
+            Log.Trace("Total executions fetched: {0}, elapsed time: {1} ms", executions.Count, stopwatch.ElapsedMilliseconds);
 
             Assert.IsTrue(executions.Any(x => order.BrokerId.Any(id => executions.Any(e => e.Execution.OrderId == Parse.Int(id)))));
         }
@@ -630,9 +630,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             var tenMinutes = TimeSpan.FromMinutes(10);
 
-            Console.WriteLine("------");
-            Console.WriteLine("Waiting for internet disconnection ");
-            Console.WriteLine("------");
+            Log.Trace("------");
+            Log.Trace("Waiting for internet disconnection ");
+            Log.Trace("------");
 
             // spin while we manually disconnect the internet
             while (ib.IsConnected)
@@ -643,9 +643,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             var stopwatch = Stopwatch.StartNew();
 
-            Console.WriteLine("------");
-            Console.WriteLine("Trying to reconnect ");
-            Console.WriteLine("------");
+            Log.Trace("------");
+            Log.Trace("Trying to reconnect ");
+            Log.Trace("------");
 
             // spin until we're reconnected
             while (!ib.IsConnected && stopwatch.Elapsed < tenMinutes)

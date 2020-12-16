@@ -101,14 +101,14 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
                     {
                         foreach (var tick in slice.Ticks[symbol])
                         {
-                            Console.WriteLine($"{tick.Time}: {tick.Symbol} - P={tick.Price}, Q={tick.Quantity}");
+                            Log.Trace($"{tick.Time}: {tick.Symbol} - P={tick.Price}, Q={tick.Quantity}");
                         }
                     }
                     else
                     {
                         var bar = slice.Bars[symbol];
 
-                        Console.WriteLine($"{bar.Time}: {bar.Symbol} - O={bar.Open}, H={bar.High}, L={bar.Low}, C={bar.Close}, V={bar.Volume}");
+                        Log.Trace($"{bar.Time}: {bar.Symbol} - O={bar.Open}, H={bar.High}, L={bar.Low}, C={bar.Close}, V={bar.Volume}");
                     }
                 }
 

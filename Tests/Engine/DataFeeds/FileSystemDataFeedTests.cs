@@ -24,6 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -77,16 +78,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     var elapsed = stopwatch.Elapsed.TotalSeconds;
                     var thousands = count / 1000d;
-                    Console.WriteLine($"{DateTime.Now} - Time: {timeSlice.Time}: KPS: {thousands / elapsed}");
+                    Log.Trace($"{DateTime.Now} - Time: {timeSlice.Time}: KPS: {thousands / elapsed}");
                     lastMonth = timeSlice.Time.Month;
                 }
                 count++;
             }
-            Console.WriteLine("Count: " + count);
+            Log.Trace("Count: " + count);
             stopwatch.Stop();
             feed.Exit();
             dataManager.RemoveAllSubscriptions();
-            Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}   KPS: {count / 1000d / stopwatch.Elapsed.TotalSeconds}");
+            Log.Trace($"Elapsed time: {stopwatch.Elapsed}   KPS: {count / 1000d / stopwatch.Elapsed.TotalSeconds}");
         }
 
         [Test]
@@ -116,7 +117,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var current = enumerator.Current;
                 if (current == null)
                 {
-                    Console.WriteLine("ERROR: Current is null");
+                    Log.Trace("ERROR: Current is null");
                     continue;
                 }
 
@@ -124,17 +125,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     var elapsed = stopwatch.Elapsed.TotalSeconds;
                     var thousands = count / 1000d;
-                    Console.WriteLine($"{DateTime.Now} - Time: {current.Time}: KPS: {thousands / elapsed}");
+                    Log.Trace($"{DateTime.Now} - Time: {current.Time}: KPS: {thousands / elapsed}");
                     lastMonth = current.Time.Month;
                 }
                 count++;
             }
-            Console.WriteLine("Count: " + count);
+            Log.Trace("Count: " + count);
 
             stopwatch.Stop();
             enumerator.Dispose();
             factory.DisposeSafely();
-            Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}   KPS: {count / 1000d / stopwatch.Elapsed.TotalSeconds}");
+            Log.Trace($"Elapsed time: {stopwatch.Elapsed}   KPS: {count / 1000d / stopwatch.Elapsed.TotalSeconds}");
         }
 
         [Test]

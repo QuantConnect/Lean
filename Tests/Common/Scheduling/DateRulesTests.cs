@@ -16,11 +16,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 
@@ -134,7 +136,7 @@ namespace QuantConnect.Tests.Common.Scheduling
                 Assert.AreNotEqual(DayOfWeek.Saturday, date.DayOfWeek);
                 Assert.AreNotEqual(DayOfWeek.Sunday, date.DayOfWeek);
                 Assert.IsTrue(date.Day <= 3);
-                Console.WriteLine(date.Day);
+                Log.Trace(date.Day.ToString(CultureInfo.InvariantCulture));
             }
 
             Assert.AreEqual(12, count);
@@ -154,7 +156,7 @@ namespace QuantConnect.Tests.Common.Scheduling
                 Assert.AreNotEqual(DayOfWeek.Saturday, date.DayOfWeek);
                 Assert.AreNotEqual(DayOfWeek.Sunday, date.DayOfWeek);
                 Assert.IsTrue(date.Day <= 3);
-                Console.WriteLine(date.Day);
+                Log.Trace(date.Day.ToString(CultureInfo.InvariantCulture));
             }
 
             Assert.AreEqual(11, count);
@@ -229,7 +231,7 @@ namespace QuantConnect.Tests.Common.Scheduling
                 Assert.AreNotEqual(DayOfWeek.Saturday, date.DayOfWeek);
                 Assert.AreNotEqual(DayOfWeek.Sunday, date.DayOfWeek);
                 Assert.IsTrue(date.Day >= 28);
-                Console.WriteLine(date + " " + date.DayOfWeek);
+                Log.Trace(date + " " + date.DayOfWeek);
             }
 
             Assert.AreEqual(12, count);

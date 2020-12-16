@@ -22,6 +22,7 @@ using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
@@ -127,7 +128,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                         Assert.AreEqual(OrderStatus.Filled, orderEvent.Status);
                         break;
                 }
-                Console.WriteLine($"{orderEvent}");
+                Log.Trace($"{orderEvent}");
             };
 
             var ticket = transactionHandler.Process(orderRequest);
@@ -207,7 +208,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                         Assert.AreEqual(OrderStatus.Filled, orderEvent.Status);
                         break;
                 }
-                Console.WriteLine($"{orderEvent}");
+                Log.Trace($"{orderEvent}");
             };
 
             var ticket = transactionHandler.Process(orderRequest);
