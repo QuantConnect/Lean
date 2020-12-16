@@ -89,18 +89,9 @@ namespace QuantConnect.Tests
 
                 var debugEnabled = Log.DebuggingEnabled;
 
-                // Define log handlers for running algorithms
-                ILogHandler[] logHandlers;
-                if (TestContext.Parameters.Exists("log-handler"))
-                {
-                    // Use the log handlers already loaded in by test assembly, this is selected in AssemblyInitialize.InitializeTestEnvironment()
-                    logHandlers = new ILogHandler[] { Log.LogHandler };
-                }
-                else
-                {
-                    logHandlers = new ILogHandler[] { new ConsoleLogHandler(), new FileLogHandler(logFile, false) };
-                }
-
+                // Use already defined LogHandler and FileLogHandler (required for some tests)
+                var logHandlers = new ILogHandler[] { Log.LogHandler, new FileLogHandler(logFile, false) };
+                    
                 using (Log.LogHandler = new CompositeLogHandler(logHandlers))
                 using (var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance))
                 using (var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance))
