@@ -42,8 +42,6 @@ namespace QuantConnect.Securities
     /// </remarks>
     public class Security : ISecurityPrice
     {
-        private readonly ICurrencyConverter _currencyConverter;
-
         private LocalTimeKeeper _localTimeKeeper;
         // using concurrent bag to avoid list enumeration threading issues
         protected readonly ConcurrentBag<SubscriptionDataConfig> SubscriptionsBag;
@@ -370,8 +368,6 @@ namespace QuantConnect.Securities
             {
                 throw new ArgumentException("symbolProperties.QuoteCurrency must match the quoteCurrency.Symbol");
             }
-
-            this._currencyConverter = currencyConverter;
 
             Symbol = symbol;
             SubscriptionsBag = new ConcurrentBag<SubscriptionDataConfig>();
