@@ -29,7 +29,27 @@ public class AssemblyInitialize
     public void SetLogHandler()
     {
         AdjustCurrentDirectory();
-        Log.LogHandler = new ConsoleErrorLogHandler();
+        
+        if (TestContext.Parameters.Exists("log-handler"))
+        {
+            var logHandler = TestContext.Parameters["log-handler"];
+            Log.Trace($"QuantConnect.Tests.AssemblyInitialize(): Log handler test parameter loaded {logHandler}");
+
+            // Use the parameter to assign our log handler
+            switch (logHandler)
+            {
+                case "ConsoleErrorLogHandler":
+                    Log.LogHandler = new ConsoleErrorLogHandler();
+                    break;
+                default:
+                    Log.LogHandler = new ConsoleLogHandler();
+                    break;
+            }
+        }
+        else
+        {
+            Log.LogHandler = new ConsoleLogHandler();
+        }
     }
 
     public static void AdjustCurrentDirectory()
