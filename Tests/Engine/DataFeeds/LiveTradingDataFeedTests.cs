@@ -1812,7 +1812,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void HandlesFutureAndOptionChainUniverse(SecurityType securityType)
         {
             Log.DebuggingEnabled = LogsEnabled;
-            Log.LogHandler = new ConsoleLogHandler();
 
             // startDate and endDate are in algorithm time zone
             var startDate = new DateTime(2019, 11, 19, 4, 0, 0);

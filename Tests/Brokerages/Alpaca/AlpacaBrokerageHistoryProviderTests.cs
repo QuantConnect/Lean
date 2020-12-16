@@ -62,8 +62,6 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
         [Test, TestCaseSource(nameof(TestParameters))]
         public void GetsHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool shouldBeEmpty)
         {
-            Log.LogHandler = new ConsoleLogHandler();
-
             var keyId = Config.Get("alpaca-key-id");
             var secretKey = Config.Get("alpaca-secret-key");
             var tradingMode = Config.Get("alpaca-trading-mode");
