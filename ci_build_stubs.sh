@@ -29,18 +29,18 @@ function ensure_repo_up_to_date {
 }
 
 function install_dotnet {
-    wget https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+    wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
     sudo dpkg -i packages-microsoft-prod.deb
     rm packages-microsoft-prod.deb
 
-    sudo apt-get update
-    sudo apt-get install -y apt-transport-https
-    sudo apt-get update
-    sudo apt-get install -y dotnet-sdk-3.1
+    sudo apt-get update -q
+    sudo apt-get install -y -q apt-transport-https
+    sudo apt-get update -q
+    sudo apt-get install -y -q dotnet-sdk-3.1
 }
 
 function install_twine {
-    pip install -U twine
+    pip install -U twine -q
 }
 
 function generate_stubs {
