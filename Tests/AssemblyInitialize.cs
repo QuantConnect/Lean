@@ -26,7 +26,7 @@ using QuantConnect.Python;
 public class AssemblyInitialize
 {
     [OneTimeSetUp]
-    public void SetLogHandler()
+    public void InitializeTestEnvironment()
     {
         AdjustCurrentDirectory();
         

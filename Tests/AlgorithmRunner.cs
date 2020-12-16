@@ -93,7 +93,7 @@ namespace QuantConnect.Tests
                 ILogHandler[] logHandlers;
                 if (TestContext.Parameters.Exists("log-handler"))
                 {
-                    // Use the log handlers already loaded in by test assembly, this is selected in AssemblyInitialize()
+                    // Use the log handlers already loaded in by test assembly, this is selected in AssemblyInitialize.InitializeTestEnvironment()
                     logHandlers = new ILogHandler[] { Log.LogHandler };
                 }
                 else
