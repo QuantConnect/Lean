@@ -42,6 +42,8 @@ namespace QuantConnect.Lean.Engine.Results
         private static readonly TextWriter StandardOut = Console.Out;
         private static readonly TextWriter StandardError = Console.Error;
 
+        private string _hostName;
+
         /// <summary>
         /// The main loop update interval
         /// </summary>
@@ -232,6 +234,7 @@ namespace QuantConnect.Lean.Engine.Results
         protected virtual Dictionary<string, string> GetServerStatistics(DateTime utcNow)
         {
             var serverStatistics = OS.GetServerStatistics();
+            serverStatistics["Hostname"] = _hostName;
             var upTime = utcNow - StartTime;
             serverStatistics["Up Time"] = $"{upTime.Days}d {upTime:hh\\:mm\\:ss}";
             serverStatistics["Total RAM (MB)"] = RamAllocation;
@@ -305,6 +308,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="transactionHandler">The transaction handler used to get the algorithms <see cref="Order"/> information</param>
         public virtual void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler)
         {
+            _hostName = job.HostName ?? Environment.MachineName;
             MessagingHandler = messagingHandler;
             TransactionHandler = transactionHandler;
             CompileId = job.CompileId;

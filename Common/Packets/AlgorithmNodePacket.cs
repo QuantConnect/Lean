@@ -34,6 +34,12 @@ namespace QuantConnect.Packets
         { }
 
         /// <summary>
+        /// The host name to use if any
+        /// </summary>
+        [JsonProperty(PropertyName = "sHostName")]
+        public string HostName;
+
+        /// <summary>
         /// User Id placing request
         /// </summary>
         [JsonProperty(PropertyName = "iUserID")]
