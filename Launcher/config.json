@@ -181,6 +181,9 @@
     "ema-slow": 20
   },
 
+  // specify supported languages when running regression tests
+  "regression-test-languages": ["CSharp", "Python"],
+
   "environments": {
 
     // defines the 'backtesting' environment
