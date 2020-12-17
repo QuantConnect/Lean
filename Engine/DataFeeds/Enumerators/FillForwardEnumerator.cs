@@ -278,6 +278,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             foreach (var item in GetSortedReferenceDateIntervals(previous, fillForwardResolution, _dataResolution))
             {
+                // issue GH 4925 , more description https://github.com/QuantConnect/Lean/pull/4941
                 // To build Time/EndTime we always use '+'/'-' dataResolution
                 // DataTime TZ = UTC -5; Exchange TZ = America/New York (-5/-4)
                 // Standard TimeZone    00:00:00 + 1 day = 1.00:00:00
