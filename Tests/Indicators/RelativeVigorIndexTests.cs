@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Indicators
                 TestFileName,
                 "RVI_S",
                 (ind, expected) => Assert.AreEqual(
-                    ind.IsReady ? expected : 0,
+                    expected,
                     (double) ((RelativeVigorIndex) ind).Signal.Current.Value,
                     delta: 0.06
                 ));
