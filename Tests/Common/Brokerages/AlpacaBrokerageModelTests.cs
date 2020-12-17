@@ -23,6 +23,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.TransactionHandlers;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
@@ -76,7 +77,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             if (!isValid)
             {
-                Console.WriteLine(messageEvent.Message);
+                Log.Trace(messageEvent.Message);
                 Assert.That(messageEvent.Message.Contains(errorMessage));
             }
         }

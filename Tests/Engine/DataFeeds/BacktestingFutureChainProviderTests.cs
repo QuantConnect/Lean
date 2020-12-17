@@ -28,16 +28,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private ILogHandler _logHandler;
         private BacktestingFutureChainProvider _provider;
 
-        [SetUp]
+        [OneTimeSetUp]
         public void SetUp()
         {
+            // Store initial Log Handler
             _logHandler = Log.LogHandler;
             _provider = new BacktestingFutureChainProvider();
         }
 
-        [TearDown]
+        [OneTimeTearDown]
         public void TearDown()
         {
+            // Restore intial Log Handler
             Log.LogHandler = _logHandler;
         }
 

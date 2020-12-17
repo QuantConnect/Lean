@@ -31,8 +31,6 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [Test]
         public void CreatesExpectedFuturesContracts()
         {
-            Log.LogHandler = new ConsoleLogHandler();
-
             var symbolMapper = new InteractiveBrokersSymbolMapper();
 
             using (var ib = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(), new SecurityProvider(), new AggregationManager()))

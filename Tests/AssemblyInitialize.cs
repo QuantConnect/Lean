@@ -21,16 +21,27 @@ using QuantConnect;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Python;
+using QuantConnect.Util;
 
 [SetUpFixture]
 public class AssemblyInitialize
 {
     [OneTimeSetUp]
-    public void SetLogHandler()
+    public void InitializeTestEnvironment()
     {
         AdjustCurrentDirectory();
-        // save output to file as well
-        Log.LogHandler = new ConsoleLogHandler();
+        
+        if (TestContext.Parameters.Exists("log-handler"))
+        {
+            var logHandler = TestContext.Parameters["log-handler"];
+            Log.Trace($"QuantConnect.Tests.AssemblyInitialize(): Log handler test parameter loaded {logHandler}");
+
+            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(logHandler);
+        }
+        else
+        {
+            Log.LogHandler = new ConsoleLogHandler();
+        }
     }
 
     public static void AdjustCurrentDirectory()

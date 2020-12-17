@@ -20,6 +20,7 @@ using System.Net;
 using System.Text;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -149,7 +150,7 @@ namespace QuantConnect.Tests.Common.Securities
                 }
             }
 
-            Console.WriteLine(sb.ToString());
+            Log.Trace(sb.ToString());
         }
 
         private class GdaxCurrency
@@ -273,19 +274,19 @@ namespace QuantConnect.Tests.Common.Securities
                     else
                     {
                         // should never happen
-                        Console.WriteLine($"Skipping pair with unknown format: {pair}");
+                        Log.Trace($"Skipping pair with unknown format: {pair}");
                         continue;
                     }
 
                     string baseDescription, quoteDescription;
                     if (!currencyLabels.TryGetValue(baseCurrency, out baseDescription))
                     {
-                        Console.WriteLine($"Base currency description not found: {baseCurrency}");
+                        Log.Trace($"Base currency description not found: {baseCurrency}");
                         baseDescription = baseCurrency;
                     }
                     if (!currencyLabels.TryGetValue(quoteCurrency, out quoteDescription))
                     {
-                        Console.WriteLine($"Quote currency description not found: {quoteCurrency}");
+                        Log.Trace($"Quote currency description not found: {quoteCurrency}");
                         quoteDescription = quoteCurrency;
                     }
 
@@ -329,7 +330,7 @@ namespace QuantConnect.Tests.Common.Securities
                 }
             }
 
-            Console.WriteLine(sb.ToString());
+            Log.Trace(sb.ToString());
         }
 
         private class BitfinexSymbolDetails

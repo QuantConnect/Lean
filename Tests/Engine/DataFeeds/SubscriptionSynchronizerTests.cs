@@ -23,6 +23,7 @@ using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -98,7 +99,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
 
             // log what we're doing
-            Console.WriteLine($"Running {subscriptions.Count()} subscriptions with a total of {totalDataPoints} data points. Start: {algorithm.StartDate:yyyy-MM-dd} End: {algorithm.EndDate:yyyy-MM-dd}");
+            Log.Trace($"Running {subscriptions.Count()} subscriptions with a total of {totalDataPoints} data points. Start: {algorithm.StartDate:yyyy-MM-dd} End: {algorithm.EndDate:yyyy-MM-dd}");
 
             var count = 0;
             DateTime currentTime = DateTime.MaxValue;
@@ -119,7 +120,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             enumerator.DisposeSafely();
 
             var kps = count / 1000d / stopwatch.Elapsed.TotalSeconds;
-            Console.WriteLine($"Current Time: {currentTime:u}  Elapsed time: {(int)stopwatch.Elapsed.TotalSeconds,4}s  KPS: {kps,7:.00}  COUNT: {count,10}");
+            Log.Trace($"Current Time: {currentTime:u}  Elapsed time: {(int)stopwatch.Elapsed.TotalSeconds,4}s  KPS: {kps,7:.00}  COUNT: {count,10}");
             Assert.GreaterOrEqual(count, 100); // this assert is for sanity purpose
             dataManager.RemoveAllSubscriptions();
         }

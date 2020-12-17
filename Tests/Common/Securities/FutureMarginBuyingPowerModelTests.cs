@@ -22,6 +22,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
@@ -533,7 +534,7 @@ namespace QuantConnect.Tests.Common.Securities
             var expected = (algorithm.Portfolio.TotalPortfolioValue * Math.Abs(target) - model.GetInitialMarginRequirement(futureSecurity, futureSecurity.Holdings.AbsoluteQuantity))
                            / model.InitialOvernightMarginRequirement - 1 * Math.Abs(target); // -1 fees
             expected -= expected % futureSecurity.SymbolProperties.LotSize;
-            Console.WriteLine($"Expected {expected}");
+            Log.Trace($"Expected {expected}");
 
             Assert.AreEqual(expected * Math.Sign(target), quantity);
 
@@ -574,7 +575,7 @@ namespace QuantConnect.Tests.Common.Securities
             var expected = (algorithm.Portfolio.TotalPortfolioValue * Math.Abs(target) + model.GetInitialMarginRequirement(futureSecurity, futureSecurity.Holdings.AbsoluteQuantity))
                            / model.InitialOvernightMarginRequirement - 1 * Math.Abs(target); // -1 fees
             expected -= expected % futureSecurity.SymbolProperties.LotSize;
-            Console.WriteLine($"Expected {expected}");
+            Log.Trace($"Expected {expected}");
 
             Assert.AreEqual(expected * Math.Sign(target), quantity);
 

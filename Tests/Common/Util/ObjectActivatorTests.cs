@@ -22,6 +22,7 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Util
@@ -41,7 +42,7 @@ namespace QuantConnect.Tests.Common.Util
             }
             stopwatch.Stop();
             var elapsed1 = stopwatch.Elapsed;
-            Console.WriteLine(elapsed1.TotalMilliseconds);
+            Log.Trace(elapsed1.TotalMilliseconds.ToStringInvariant());
 
             stopwatch.Reset();
             stopwatch.Start();
@@ -51,7 +52,7 @@ namespace QuantConnect.Tests.Common.Util
             }
             stopwatch.Stop();
             var elapsed2 = stopwatch.Elapsed;
-            Console.WriteLine(elapsed2.TotalMilliseconds);
+            Log.Trace(elapsed2.TotalMilliseconds.ToStringInvariant());
             Assert.Less(elapsed2, elapsed1);
         }
 

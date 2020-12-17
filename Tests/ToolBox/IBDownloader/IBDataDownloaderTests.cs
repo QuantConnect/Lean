@@ -26,12 +26,6 @@ namespace QuantConnect.Tests.ToolBox.IBDownloader
     [Ignore("These tests require the IBGateway to be installed.")]
     public class IBDataDownloaderTests
     {
-        [SetUp]
-        public void Setup()
-        {
-            Log.LogHandler = new ConsoleLogHandler();
-        }
-
         [TestCase("ES", Resolution.Daily, 15)]
         [TestCase("ES", Resolution.Hour, 15)]
         [TestCase("ES", Resolution.Minute, 15)]

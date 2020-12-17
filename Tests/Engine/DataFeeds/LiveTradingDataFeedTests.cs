@@ -145,7 +145,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var securitiesCount = _algorithm.Securities.Count;
             var expected = _algorithm.Securities.Keys.ToHashSet();
-            Console.WriteLine("Securities.Count: " + securitiesCount);
+            Log.Trace("Securities.Count: " + securitiesCount);
 
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
@@ -159,14 +159,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             });
             stopwatch.Stop();
 
-            Console.WriteLine("Total ticks: " + count.Value);
+            Log.Trace("Total ticks: " + count.Value);
             Assert.GreaterOrEqual(count.Value, 700000);
-            Console.WriteLine("Elapsed time: " + stopwatch.Elapsed);
+            Log.Trace("Elapsed time: " + stopwatch.Elapsed);
             var ticksPerSec = count.Value / stopwatch.Elapsed.TotalSeconds;
-            Console.WriteLine("Ticks/sec: " + ticksPerSec);
+            Log.Trace("Ticks/sec: " + ticksPerSec);
             Assert.GreaterOrEqual(ticksPerSec, 70000);
             var ticksPerSecPerSymbol = (count.Value / stopwatch.Elapsed.TotalSeconds) / symbolCount;
-            Console.WriteLine("Ticks/sec/symbol: " + ticksPerSecPerSymbol);
+            Log.Trace("Ticks/sec/symbol: " + ticksPerSecPerSymbol);
             Assert.GreaterOrEqual(ticksPerSecPerSymbol, 100);
         }
 
@@ -260,7 +260,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             }, endDate: endDate);
 
-            Console.WriteLine("newDataCount: " + newDataCount);
+            Log.Trace("newDataCount: " + newDataCount);
             Assert.AreEqual(2, securityChanges);
 
             Assert.GreaterOrEqual(newDataCount, 5);
@@ -320,7 +320,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             }, endDate: endDate);
 
-            Console.WriteLine("newDataCount: " + newDataCount);
+            Log.Trace("newDataCount: " + newDataCount);
             Assert.AreEqual(3, securityChanges);
 
             Assert.GreaterOrEqual(newDataCount, 5);
@@ -501,7 +501,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 var avg = ticks / 20m;
                 Interlocked.Exchange(ref ticks, 0);
-                Console.WriteLine("Average ticks per symbol: " + avg.SmartRounding());
+                Log.Trace("Average ticks per symbol: " + avg.SmartRounding());
                 averages.Add(avg);
             }, null, Time.OneSecond, Time.OneSecond);
 
@@ -512,7 +512,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             timer.Dispose();
             var average = averages.Average();
-            Console.WriteLine("\r\nAverage ticks per symbol per second: " + average);
+            Log.Trace("\r\nAverage ticks per symbol per second: " + average);
             Assert.That(average, Is.GreaterThan(40));
         }
 
@@ -554,7 +554,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var stopwatch = Stopwatch.StartNew();
 
             var previousTime = DateTime.Now;
-            Console.WriteLine("start: " + previousTime.ToStringInvariant("o"));
+            Log.Trace("start: " + previousTime.ToStringInvariant("o"));
             ConsumeBridge(feed, TimeSpan.FromSeconds(3), false, ts =>
             {
                 // because this is a remote file we may skip data points while the newest
@@ -575,8 +575,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 );
             });
 
-            Console.WriteLine("Count: " + count);
-            Console.WriteLine("Spool up time: " + stopwatch.Elapsed);
+            Log.Trace("Count: " + count);
+            Log.Trace("Spool up time: " + stopwatch.Elapsed);
 
             Assert.That(count, Is.GreaterThan(5));
             Assert.IsTrue(emittedData);
@@ -600,7 +600,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             TestCustomData.ThrowException = throwsException;
             ConsumeBridge(feed, TimeSpan.FromSeconds(2), false, ts =>
             {
-                Console.WriteLine("Emitted data");
+                Log.Trace("Emitted data");
             });
 
             Assert.AreEqual(1, TestCustomData.ReaderCallsCount);
@@ -641,7 +641,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsTrue(receivedData);
             Assert.That(RestApiBaseData.ReaderCount, Is.LessThanOrEqualTo(30)); // we poll at 10x frequency
 
-            Console.WriteLine("Count: " + count + " ReaderCount: " + RestApiBaseData.ReaderCount);
+            Log.Trace("Count: " + count + " ReaderCount: " + RestApiBaseData.ReaderCount);
         }
 
         [Test]
@@ -651,7 +651,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             CustomMockedFileBaseData.StartDate = _startDate;
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
 
-            Console.WriteLine($"StartTime {_manualTimeProvider.GetUtcNow()}");
+            Log.Trace($"StartTime {_manualTimeProvider.GetUtcNow()}");
 
             // we just want to emit one single coarse data packet
             var feed = RunDataFeed(getNextTicksFunction: fdqh => Enumerable.Empty<BaseData>());
@@ -667,7 +667,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     ts.UniverseData.First().Value.Data.First() is CoarseFundamental)
                 {
                     var now = _manualTimeProvider.GetUtcNow();
-                    Console.WriteLine($"Received BaseDataCollection {now}");
+                    Log.Trace($"Received BaseDataCollection {now}");
 
                     // Assert data got hold until time was right
                     Assert.IsTrue(now.Hour < 23 && now.Hour > 5, $"Unexpected now value: {now}");
@@ -681,7 +681,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 secondsTimeStep: 3600,
                 endDate: _startDate.AddDays(1));
 
-            Console.WriteLine($"EndTime {_manualTimeProvider.GetUtcNow()}");
+            Log.Trace($"EndTime {_manualTimeProvider.GetUtcNow()}");
 
             Assert.IsTrue(receivedCoarseData, "Did not receive Coarse data.");
         }
@@ -1254,7 +1254,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             if (LogsEnabled)
             {
-                Console.WriteLine(line);
+                Log.Trace(line);
             }
         }
 
@@ -1812,7 +1812,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void HandlesFutureAndOptionChainUniverse(SecurityType securityType)
         {
             Log.DebuggingEnabled = LogsEnabled;
-            Log.LogHandler = new ConsoleLogHandler();
 
             // startDate and endDate are in algorithm time zone
             var startDate = new DateTime(2019, 11, 19, 4, 0, 0);

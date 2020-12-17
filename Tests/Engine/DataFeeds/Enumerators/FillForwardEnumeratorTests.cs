@@ -25,6 +25,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
@@ -791,7 +792,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             int hourlyBars = 0;
             while (fillForwardEnumerator.MoveNext())
             {
-                Console.WriteLine(fillForwardEnumerator.Current.EndTime);
+                Log.Trace(fillForwardEnumerator.Current.EndTime.ToStringInvariant());
                 if (fillForwardEnumerator.Current.Time.TimeOfDay == TimeSpan.Zero)
                 {
                     dailyBars++;
@@ -848,7 +849,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             while (fillForwardEnumerator.MoveNext())
             {
                 fillForwardBars.Add(fillForwardEnumerator.Current);
-                Console.WriteLine(fillForwardEnumerator.Current.Time.DayOfWeek + " " + fillForwardEnumerator.Current.Time + " - " + fillForwardEnumerator.Current.EndTime.DayOfWeek + " " + fillForwardEnumerator.Current.EndTime);
+                Log.Trace(fillForwardEnumerator.Current.Time.DayOfWeek + " " + fillForwardEnumerator.Current.Time + " - " + fillForwardEnumerator.Current.EndTime.DayOfWeek + " " + fillForwardEnumerator.Current.EndTime);
                 dailyBarsEmitted++;
             }
 
@@ -892,7 +893,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             while (fillForwardEnumerator.MoveNext())
             {
                 fillForwardBars.Add(fillForwardEnumerator.Current);
-                Console.WriteLine(fillForwardEnumerator.Current.Time.DayOfWeek + " " + fillForwardEnumerator.Current.Time + " - " + fillForwardEnumerator.Current.EndTime.DayOfWeek + " " + fillForwardEnumerator.Current.EndTime);
+                Log.Trace(fillForwardEnumerator.Current.Time.DayOfWeek + " " + fillForwardEnumerator.Current.Time + " - " + fillForwardEnumerator.Current.EndTime.DayOfWeek + " " + fillForwardEnumerator.Current.EndTime);
                 dailyBarsEmitted++;
             }
 
@@ -924,7 +925,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             while (fillForwardEnumerator.MoveNext())
             {
                 fillForwardBars.Add(fillForwardEnumerator.Current);
-                Console.WriteLine(fillForwardEnumerator.Current.Time.DayOfWeek + " " + fillForwardEnumerator.Current.Time + " - " + fillForwardEnumerator.Current.EndTime.DayOfWeek + " " + fillForwardEnumerator.Current.EndTime + " " + fillForwardEnumerator.Current.IsFillForward);
+                Log.Trace(fillForwardEnumerator.Current.Time.DayOfWeek + " " + fillForwardEnumerator.Current.Time + " - " + fillForwardEnumerator.Current.EndTime.DayOfWeek + " " + fillForwardEnumerator.Current.EndTime + " " + fillForwardEnumerator.Current.IsFillForward);
                 dailyBarsEmitted++;
             }
 

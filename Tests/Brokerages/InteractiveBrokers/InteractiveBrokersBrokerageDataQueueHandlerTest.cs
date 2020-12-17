@@ -137,7 +137,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 }
                 catch (Exception err)
                 {
-                    Console.WriteLine(err.Message);
+                    QuantConnect.Logging.Log.Error(err.Message);
                 }
             });
         }
@@ -146,7 +146,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             if (tick != null)
             {
-                Console.WriteLine("{0}: {1} - {2} @ {3}", tick.Time, tick.Symbol, tick.Price, ((Tick)tick).Quantity);
+                QuantConnect.Logging.Log.Trace("{0}: {1} - {2} @ {3}", tick.Time, tick.Symbol, tick.Price, ((Tick)tick).Quantity);
             }
         }
     }
