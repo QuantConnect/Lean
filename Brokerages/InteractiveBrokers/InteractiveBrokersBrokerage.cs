@@ -2295,9 +2295,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market);
             }
-            catch
+            catch (Exception error)
             {
-                throw new Exception($"InteractiveBrokersBrokerage.MapSymbol(): Failed to convert contract for {contract.Symbol}, contract description: {GetContractDescription(contract)}");
+                throw new Exception($"InteractiveBrokersBrokerage.MapSymbol(): Failed to convert contract for {contract.Symbol}; Contract description: {GetContractDescription(contract)}; Error: {error.Message}");
             }
         }
 
