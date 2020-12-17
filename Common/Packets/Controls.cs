@@ -146,8 +146,8 @@ namespace QuantConnect.Packets
         /// <summary>
         /// The cost associated with running this job
         /// </summary>
-        [JsonProperty(PropertyName = "iCreditCost")]
-        public uint CreditCost;
+        [JsonProperty(PropertyName = "dCreditCost")]
+        public decimal CreditCost;
 
         /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class
