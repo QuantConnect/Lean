@@ -55,7 +55,7 @@ function generate_stubs {
 
     NO_DEBUG="true" \
     STUBS_VERSION="$TRAVIS_TAG" \
-    dotnet run $LEAN_DIR $RUNTIME_DIR $STUBS_DIR
+    dotnet run -v q $LEAN_DIR $RUNTIME_DIR $STUBS_DIR
 
     if [ $? -ne 0 ]; then
         echo "Generation of stubs failed"
