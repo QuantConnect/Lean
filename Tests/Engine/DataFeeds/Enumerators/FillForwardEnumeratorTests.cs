@@ -31,7 +31,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
@@ -1604,7 +1603,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 14 })]
         public void FillForwardBarsAroundDaylightMovementForDifferentResolutions_Algorithm(SecurityExchange exchange, DateTimeZone dataTimeZone, Resolution resolution, string dst, DateTime reference, int durationInDays)
         {
-            var logHandler = Log.LogHandler;
             MarketHoursDatabase MarketHours = MarketHoursDatabase.FromDataFolder();
             MarketHours.SetEntry(
                 Market.FXCM,
@@ -1645,7 +1643,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.AreEqual(expected.Length, FillForwardDaylightMovementTestAlgorithm.FillForwardBars.Count);
             Assert.IsTrue(expected.SequenceEqual(FillForwardDaylightMovementTestAlgorithm.FillForwardBars));
-            Log.LogHandler = logHandler;
         }
 
         internal class FillForwardTestAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
@@ -1725,7 +1722,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             public override IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
             {
-                Log.LogHandler = new FunctionalLogHandler();
                 Algorithm = TestAlgorithm = new FillForwardDaylightMovementTestAlgorithm();
                 return Algorithm;
             }
