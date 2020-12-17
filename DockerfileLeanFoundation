@@ -25,10 +25,10 @@ RUN apt-fast install -y git bzip2 clang cmake curl unzip wget python3-pip python
     openjdk-8-jdk openjdk-8-jre
 
 # Install IB Gateway: Installs to ~/Jts
-RUN wget http://cdn.quantconnect.com/interactive/ibgateway-stable-standalone-linux-x64-v978.2c.sh && \
+RUN wget https://cdn.quantconnect.com/interactive/ibgateway-stable-standalone-linux-x64-v978.2c.sh && \
     chmod 777 ibgateway-stable-standalone-linux-x64-v978.2c.sh && \
     ./ibgateway-stable-standalone-linux-x64-v978.2c.sh -q && \
-    wget -O ~/Jts/jts.ini http://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v974.4g.jts.ini && \
+    wget -O ~/Jts/jts.ini https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v974.4g.jts.ini && \
     rm ibgateway-stable-standalone-linux-x64-v978.2c.sh
 
 # Mono C# for LEAN:
@@ -147,7 +147,7 @@ RUN pip install --no-cache-dir      \
     scikit-tda==0.0.3               \
     ta==0.5.25
 
-RUN wget -O mlfinlab.zip http://cdn.quantconnect.com/mlfinlab/mlfinlab-0.9.3.zip && \
+RUN wget -O mlfinlab.zip https://cdn.quantconnect.com/mlfinlab/mlfinlab-0.9.3.zip && \
     unzip -q mlfinlab.zip && \
     mkdir -p /opt/miniconda3/lib/python3.6/site-packages/ && \
     mv mlfinlab /opt/miniconda3/lib/python3.6/site-packages/
@@ -172,41 +172,51 @@ RUN python -m nltk.downloader -d /usr/share/nltk_data vader_lexicon
 
 # Update ODO
 RUN conda remove --force-remove -y odo
-RUN pip install git+git://github.com/blaze/odo.git@9fce6690b3666160681833540de6c55e922de5eb
+RUN wget https://cdn.quantconnect.com/odo/odo-master-9fce669.zip && \
+    unzip -q odo-master-9fce669.zip && cd odo-master && \
+    pip install . && cd .. && rm -rf odo-master
 
 # Install DX Analytics
-RUN pip install git+git://github.com/yhilpisch/dx.git@4c47c258acddf966be5082530764d8115831dcb3
+RUN wget https://cdn.quantconnect.com/dx/dx-master-4c47c25.zip && \
+    unzip -q dx-master-4c47c25.zip && cd dx-master && \
+    pip install . && cd .. && rm -rf dx-master
 
 # Install Auto-KS
-RUN pip install git+git://github.com/cvxgrp/auto_ks.git@b39e8f39eec33d6c55a92e2a781d62a8439f32a6
+RUN wget https://cdn.quantconnect.com/auto_ks/auto_ks-master-b39e8f3.zip && \
+    unzip -q auto_ks-master-b39e8f3.zip && cd auto_ks-master && \
+    pip install . && cd .. && rm -rf auto_ks-master
 
 # Install Pyrb
-RUN pip install git+git://github.com/jcrichard/pyrb.git@d02b56ae91f67b73f39e5e474fa90b0523f6638b
+RUN wget https://cdn.quantconnect.com/pyrb/pyrb-master-d02b56a.zip && \
+    unzip -q pyrb-master-d02b56a.zip && cd pyrb-master && \
+    pip install . && cd .. && rm -rf pyrb-master
 
 # Install SSM
-RUN pip install git+git://github.com/slinderman/ssm.git@9fd66aeddf74059c934c8b214f8f7757b9bef214
+RUN wget https://cdn.quantconnect.com/ssm/ssm-9fd66aed.zip && \
+    unzip -q ssm-9fd66aed.zip && cd ssm && \
+    pip install . && cd .. && rm -rf ssm
 
 # Install TA-lib for python
-RUN wget http://cdn.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \
+RUN wget https://cdn.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     tar -zxvf ta-lib-0.4.0-src.tar.gz && cd ta-lib && \
     ./configure --prefix=/usr && make && make install && \
-    wget https://github.com/mrjbq7/ta-lib/archive/TA_Lib-0.4.18.zip && \
+    wget https://cdn.quantconnect.com/ta-lib/TA_Lib-0.4.18.zip && \
     unzip -q TA_Lib-0.4.18.zip && cd ta-lib-TA_Lib-0.4.18 && \
     python setup.py install && cd ../.. && rm -irf ta-lib
 
 # Install py-earth
-RUN wget https://github.com/scikit-learn-contrib/py-earth/archive/0.1.0.zip && \
-    unzip -q 0.1.0.zip && cd py-earth-0.1.0 && \
+RUN wget https://cdn.quantconnect.com/py-earth/py-earth-0.1.0.zip && \
+    unzip -q py-earth-0.1.0.zip && cd py-earth-0.1.0 && \
     python setup.py install && cd .. && rm -irf py-earth-0.1.0
 
 # Install fastText
-RUN wget https://github.com/facebookresearch/fastText/archive/v0.9.2.zip && \
-    unzip -q v0.9.2.zip && cd fastText-0.9.2 && \
-    python setup.py install && cd .. && rm -irf fastText-0.9.2
+RUN wget https://cdn.quantconnect.com/fastText/fastText-0.9.2.zip && \
+    unzip -q fastText-0.9.2.zip && cd fastText-0.9.2 && \
+    pip install . && cd .. && rm -rf fastText-0.9.2
 
 # Install Tigramite
-RUN wget https://github.com/jakobrunge/tigramite/archive/4.1.zip && \
-    unzip -q 4.1.zip && cd tigramite-4.1 && \
+RUN wget https://cdn.quantconnect.com/tigramite/tigramite-4.1.zip && \
+    unzip -q tigramite-4.1.zip && cd tigramite-4.1 && \
     python setup.py install && cd .. && rm -irf tigramite-4.1
 
 # Install H2O: https://www.h2o.ai/download/
