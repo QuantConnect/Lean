@@ -2150,8 +2150,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 previous = fillForwardEnumerator.Current;
             }
 
+            // '+1' means receiving both Auxiliary and not-Auxiliary data on last day of period
             Assert.AreEqual(
-                (int)(data.Last().EndTime - data[0].EndTime).TotalDays,
+                (int)(data.Last().EndTime - data[1].EndTime).TotalDays + 1,
                 counter);
 
             fillForwardEnumerator.Dispose();
