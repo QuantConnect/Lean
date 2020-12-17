@@ -15,9 +15,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using NUnit.Framework;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
@@ -81,6 +81,10 @@ namespace QuantConnect.Tests
                 {"WarmUpAfterInitializeRegression", AlgorithmStatus.RuntimeError }
             };
 
+            var languages = Config.GetValue("regression-test-languages", JArray.FromObject(new[] {"CSharp", "Python"}))
+                .Select(str => Parse.Enum<Language>(str.Value<string>()))
+                .ToHashSet();
+
             // find all regression algorithms in Algorithm.CSharp
             return (
                 from type in typeof(BasicTemplateAlgorithm).Assembly.GetTypes()
@@ -90,7 +94,7 @@ namespace QuantConnect.Tests
                 let instance = (IRegressionAlgorithmDefinition) Activator.CreateInstance(type)
                 let status = nonDefaultStatuses.GetValueOrDefault(type.Name, AlgorithmStatus.Completed)
                 where instance.CanRunLocally                   // open source has data to run this algorithm
-                from language in instance.Languages
+                from language in instance.Languages.Where(languages.Contains)
                 select new AlgorithmStatisticsTestParameters(type.Name, instance.ExpectedStatistics, language, status)
             )
             .OrderBy(x => x.Language).ThenBy(x => x.Algorithm)
