@@ -482,7 +482,7 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
 
                 UnlockStream();
-                return true;
+                return false;
             }
 
             if ((string)orderResponse["status"] == "success")
@@ -495,7 +495,7 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (string)orderResponse["status_message"], errorMessage));
 
                     UnlockStream();
-                    return true;
+                    return false;
                 }
 
                 var brokerId = (string)orderResponse["data"]["order_id"];
@@ -523,7 +523,7 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
             UnlockStream();
-            return true;
+            return false;
 
         }
 
@@ -610,6 +610,25 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
         {
             LockStream();
 
+            if(order.Status==OrderStatus.PartiallyFilled || order.Status == OrderStatus.Filled)
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "error", "Order is already being processed"));
+                UnlockStream();
+                return false;
+            }
+
+
+            var orderProperties = order.Properties as ZerodhaOrderProperties;
+            if (orderProperties == null)
+            {
+                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Invalid product type Please set either MIS,CNC or NRML";
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
+
+                UnlockStream();
+                return false;
+            }
+
+
             uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
             JObject orderResponse;
             decimal? triggerPrice = null;
@@ -628,7 +647,7 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
                 order.Direction.ToString().ToUpperInvariant(), 
                 orderQuantity,
                 orderPrice,
-                KiteProductType.MIS.ToString(),
+                orderProperties.ProductType,
                 kiteOrderType,
                 null,
                 null, 
@@ -690,7 +709,20 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
             //}
             //else
             //{
-            var orderResponse = _kite.CancelOrder(order.BrokerId[0].ToStringInvariant());
+            JObject orderResponse = new JObject();
+            if (order.Status!=OrderStatus.Filled)
+            {
+                orderResponse = _kite.CancelOrder(order.BrokerId[0].ToStringInvariant());
+            }
+            else
+            {
+                //Verify this
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error,500, $"Error cancelling open order"));
+
+                UnlockStream();
+                return false;
+            }
+            
             //}
             if ((string)orderResponse["status"] == "success")
             {
