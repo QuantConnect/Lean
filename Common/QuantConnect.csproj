@@ -273,6 +273,8 @@
     <Compile Include="Chart.cs" />
     <Compile Include="ChartPoint.cs" />
     <Compile Include="Data\Channel.cs" />
+    <Compile Include="Data\Consolidators\BaseRenkoConsolidator.cs" />
+    <Compile Include="Data\Consolidators\WickedRenkoConsolidator.cs" />
     <Compile Include="Data\Custom\Quiver\Congress.cs" />
     <Compile Include="Data\Custom\Quiver\QuiverCongress.cs" />
     <Compile Include="Data\Custom\Quiver\QuiverEventsBeta.cs" />
