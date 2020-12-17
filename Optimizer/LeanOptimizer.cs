@@ -40,6 +40,10 @@ namespace QuantConnect.Optimizer
         private int _failedBacktest;
         private int _completedBacktest;
         private volatile bool _disposed;
+
+        /// <summary>
+        /// Lock to update optimization status
+        /// </summary>
         private object _statusLock = new object();
 
         /// <summary>
@@ -329,7 +333,7 @@ namespace QuantConnect.Optimizer
         /// Sets the current optimization status
         /// </summary>
         /// <param name="optimizationStatus">The new optimization status</param>
-        protected void SetOptimizationStatus(OptimizationStatus optimizationStatus)
+        protected virtual void SetOptimizationStatus(OptimizationStatus optimizationStatus)
         {
             lock (_statusLock)
             {
