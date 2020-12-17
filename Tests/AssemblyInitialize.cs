@@ -21,6 +21,7 @@ using QuantConnect;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Python;
+using QuantConnect.Util;
 
 [SetUpFixture]
 public class AssemblyInitialize
@@ -35,16 +36,7 @@ public class AssemblyInitialize
             var logHandler = TestContext.Parameters["log-handler"];
             Log.Trace($"QuantConnect.Tests.AssemblyInitialize(): Log handler test parameter loaded {logHandler}");
 
-            // Use the parameter to assign our log handler
-            switch (logHandler)
-            {
-                case "ConsoleErrorLogHandler":
-                    Log.LogHandler = new ConsoleErrorLogHandler();
-                    break;
-                default:
-                    Log.LogHandler = new ConsoleLogHandler();
-                    break;
-            }
+            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(logHandler);
         }
         else
         {
