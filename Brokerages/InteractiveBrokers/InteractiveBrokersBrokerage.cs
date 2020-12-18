@@ -2295,8 +2295,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             catch (Exception error)
             {
-                Log.Error($"InteractiveBrokersBrokerage.MapSymbol(): Failed to convert contract for {contract.Symbol}; Contract description: {GetContractDescription(contract)}; Error: {error.Message}");
-                throw error;
+                throw new Exception($"InteractiveBrokersBrokerage.MapSymbol(): Failed to convert contract for {contract.Symbol}; Contract description: {GetContractDescription(contract)}", error);
             }
         }
 
