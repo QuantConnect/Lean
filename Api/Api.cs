@@ -419,8 +419,13 @@ namespace QuantConnect.Api
             BacktestResponseWrapper result;
             ApiConnection.TryRequest(request, out result);
 
-            // Go fetch the charts if the backtest is completed
-            if (getCharts && result.Backtest.Completed)
+            if (!result.Success)
+            {
+                // place an empty place holder so we can return any errors back to the user and not just null
+                result.Backtest = new Backtest { BacktestId = backtestId };
+            }
+            // Go fetch the charts if the backtest is completed and success
+            else if (getCharts && result.Backtest.Completed)
             {
                 // For storing our collected charts
                 var updatedCharts = new Dictionary<string, Chart>();
