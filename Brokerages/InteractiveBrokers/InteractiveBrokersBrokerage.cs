@@ -2262,7 +2262,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         market = defaultMarket;
                     }
 
-                    Log.Trace($"Mapping contract {contract} with ticker `{leanSymbol}` and SecurityType `{securityType.ToString()}` with expiry: {contract.LastTradeDateOrContractMonth} to Symbol");
                     var contractExpiryDate = DateTime.ParseExact(contract.LastTradeDateOrContractMonth, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
 
                     if (!isFutureOption)
@@ -2285,7 +2284,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 if (securityType == SecurityType.Option)
                 {
-                    Log.Trace($"Mapping contract {contract} with ticker `{ibSymbol}` and SecurityType `{securityType.ToString()}` with expiry: {contract.LastTradeDateOrContractMonth} to Symbol");
                     var expiryDate = DateTime.ParseExact(contract.LastTradeDateOrContractMonth, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
                     var right = contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put;
                     var strike = Convert.ToDecimal(contract.Strike);
@@ -2297,7 +2295,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             catch (Exception error)
             {
-                throw new Exception($"InteractiveBrokersBrokerage.MapSymbol(): Failed to convert contract for {contract.Symbol}; Contract description: {GetContractDescription(contract)}; Error: {error.Message}");
+                Log.Error($"InteractiveBrokersBrokerage.MapSymbol(): Failed to convert contract for {contract.Symbol}; Contract description: {GetContractDescription(contract)}; Error: {error.Message}");
+                throw error;
             }
         }
 
