@@ -30,7 +30,7 @@ namespace QuantConnect.Data.Consolidators
         internal DateTime CloseOn;
         internal decimal CloseRate;
         internal RenkoBar CurrentBar;
-        internal DataConsolidatedHandler DataConsolidatedHandler;
+        private DataConsolidatedHandler _dataConsolidatedHandler;
         internal bool FirstTick = true;
         internal decimal HighRate;
         internal RenkoBar LastWicko;
@@ -39,17 +39,17 @@ namespace QuantConnect.Data.Consolidators
         internal decimal OpenRate;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
+        /// Initializes a new instance of the <see cref="WickedRenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
         /// </summary>
         /// <param name="barSize">The constant value size of each bar</param>
-        protected BaseRenkoConsolidator(decimal barSize)    // For use with WickedType, primarily.
+        protected BaseRenkoConsolidator(decimal barSize)    // For use with WickedType
         {
             BarSize = barSize;
             Type = RenkoType.Wicked;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
+        /// Initializes a new instance of the <see cref="ClassicRenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
         /// The value selector will by default select <see cref="IBaseData.Value"/>
         /// The volume selector will by default select zero.
         /// </summary>
@@ -66,7 +66,7 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RenkoConsolidator" /> class.
+        /// Initializes a new instance of the <see cref="ClassicRenkoConsolidator" /> class.
         /// </summary>
         /// <param name="barSize">The size of each bar in units of the value produced by <paramref name="selector"/></param>
         /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RenkoBar"/>. The default
@@ -90,7 +90,7 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RenkoConsolidator" /> class.
+        /// Initializes a new instance of the <see cref="ClassicRenkoConsolidator" /> class.
         /// </summary>
         /// <param name="barSize">The size of each bar in units of the value produced by <paramref name="selector"/></param>
         /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RenkoBar"/>. The default
@@ -140,7 +140,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Gets the bar size used by this consolidator
         /// </summary>
-        public decimal BarSize { get; }
+        protected decimal BarSize { get; }
 
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
@@ -184,7 +184,7 @@ namespace QuantConnect.Data.Consolidators
         public void Dispose()
         {
             DataConsolidated = null;
-            DataConsolidatedHandler = null;
+            _dataConsolidatedHandler = null;
         }
 
         /// <summary>
@@ -207,16 +207,14 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         event DataConsolidatedHandler IDataConsolidator.DataConsolidated
         {
-            add { DataConsolidatedHandler += value; }
-            remove { DataConsolidatedHandler -= value; }
+            add { _dataConsolidatedHandler += value; }
+            remove { _dataConsolidatedHandler -= value; }
         }
         // Used for unit tests
         internal RenkoBar OpenRenkoBar =>
             new RenkoBar(null, OpenOn, CloseOn, BarSize, OpenRate, HighRate, LowRate, CloseRate);
 
-
-
-
+        
         /// <summary>
         /// Event invocator for the DataConsolidated event. This should be invoked
         /// by derived classes when they have consolidated a new piece of data.
@@ -226,7 +224,7 @@ namespace QuantConnect.Data.Consolidators
         {
             DataConsolidated?.Invoke(this, consolidated);
 
-            DataConsolidatedHandler?.Invoke(this, consolidated);
+            _dataConsolidatedHandler?.Invoke(this, consolidated);
 
             Consolidated = consolidated;
         }

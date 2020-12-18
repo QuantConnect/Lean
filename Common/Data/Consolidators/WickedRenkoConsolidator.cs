@@ -152,35 +152,21 @@ namespace QuantConnect.Data.Consolidators
             }
         }
     }
-
-    /*/// <summary>
-    /// Provides a type safe wrapper on the RenkoConsolidator class of "<see cref="RenkoType.Wicked"/>" type.
+    /// <summary>
+    /// Provides a type safe wrapper on the WickedRenkoConsolidator class. This just allows us to define our selector functions with the real type they'll be receiving
     /// </summary>
-    public class WickedRenkoConsolidator<TInput> : BaseRenkoConsolidator
+    /// <typeparam name="TInput"></typeparam>
+    public class WickedRenkoConsolidator<TInput> : WickedRenkoConsolidator
         where TInput : IBaseData
-
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class of "<see cref="RenkoType.Wicked"/>"
-        /// type using the specified <paramref name="barSize"/>.
+        /// Initializes a new instance of the <see cref="WickedRenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
         /// </summary>
         /// <param name="barSize">The constant value size of each bar</param>
         public WickedRenkoConsolidator(decimal barSize)
             : base(barSize)
         {
         }
-
-
-        /// <summary>
-        /// Updates this consolidator with the specified data.
-        /// </summary>
-        /// <remarks>
-        /// Type safe shim method.
-        /// </remarks>
-        /// <param name="data">The new data for the consolidator</param>
-        public void Update(TInput data)
-        {
-            base.Update(data);
-        }
-    }*/
+        
+    }
 }

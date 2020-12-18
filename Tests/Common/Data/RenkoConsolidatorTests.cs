@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void ClassicOutputTypeIsRenkoBar()
         {
-            var consolidator = new RenkoConsolidator(10, x => x.Value, x => 0);
+            var consolidator = new ClassicRenkoConsolidator(10, x => x.Value, x => 0);
             Assert.AreEqual(typeof(RenkoBar), consolidator.OutputType);
         }
 
@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Data
         public void ClassicConsolidatesOnBrickHigh()
         {
             RenkoBar bar = null;
-            var consolidator = new RenkoConsolidator(10, x => x.Value, x => 0);
+            var consolidator = new ClassicRenkoConsolidator(10, x => x.Value, x => 0);
             consolidator.DataConsolidated += (sender, consolidated) =>
             {
                 bar = consolidated;
@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Common.Data
         public void ClassicConsolidatesOnBrickLow()
         {
             RenkoBar bar = null;
-            var consolidator = new RenkoConsolidator(10, x => x.Value, x => 0);
+            var consolidator = new ClassicRenkoConsolidator(10, x => x.Value, x => 0);
             consolidator.DataConsolidated += (sender, consolidated) =>
             {
                 bar = consolidated;
@@ -87,7 +87,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             RenkoBar bar = null;
             int rcount = 0;
-            var consolidator = new RenkoConsolidator(1m, x => x.Value, x => 0);
+            var consolidator = new ClassicRenkoConsolidator(1m, x => x.Value, x => 0);
             consolidator.DataConsolidated += (sender, consolidated) =>
             {
                 rcount++;
