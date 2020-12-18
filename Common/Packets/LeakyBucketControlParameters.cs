@@ -31,9 +31,9 @@ namespace QuantConnect.Packets
         // rounded up to 18 to prevent a very small decrease in refilling, IOW, if it's defaulting to 17, then
         // after 7 days have passed, we'll end up being at 119 and not completely refilled, but at 18, on the 6th
         // day we'll reach 108 and on the seventh day it will top off at 120 since it's not permitted to exceed the max
-        public static int DefaultCapacity => Config.GetInt("scheduled-event-leaky-bucket-capacity", 2 * 60);
-        public static int DefaultTimeInterval => Config.GetInt("scheduled-event-leaky-bucket-time-interval-minutes", 1440);
-        public static int DefaultRefillAmount => Config.GetInt("scheduled-event-leaky-bucket-refill-amount", (int)Math.Ceiling(DefaultCapacity/7.0));
+        public static int DefaultCapacity = Config.GetInt("scheduled-event-leaky-bucket-capacity", 2 * 60);
+        public static int DefaultTimeInterval = Config.GetInt("scheduled-event-leaky-bucket-time-interval-minutes", 1440);
+        public static int DefaultRefillAmount = Config.GetInt("scheduled-event-leaky-bucket-refill-amount", (int)Math.Ceiling(DefaultCapacity/7.0));
 
         /// <summary>
         /// Sets the total capacity of the bucket in a leaky bucket algorithm. This is the maximum
