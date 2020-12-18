@@ -114,6 +114,10 @@ namespace QuantConnect.Optimizer.Strategies
                         }
                     }
 
+                    foreach (var staticParam in OptimizationParameters.OfType<StaticOptimizationParameter>())
+                    {
+                        boundaries.Add(staticParam);
+                    }
                     OptimizationParameters = boundaries;
                 }
                 else if (!ReferenceEquals(result, OptimizationResult.Initial))

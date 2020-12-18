@@ -51,7 +51,8 @@ namespace QuantConnect.Tests.Optimizer
                 OptimizationParameters = new HashSet<OptimizationParameter>()
                 {
                     new OptimizationStepParameter("ema-slow", 1, 100, 1m),
-                    new OptimizationStepParameter("ema-fast", -10, 0, 0.5m)
+                    new OptimizationStepParameter("ema-fast", -10, 0, 0.5m),
+                    new StaticOptimizationParameter("pinocho", "11")
                 },
                 MaximumConcurrentBacktests = 10,
                 OptimizationStrategySettings = (OptimizationStrategySettings)Activator.CreateInstance(settingType)
@@ -75,6 +76,15 @@ namespace QuantConnect.Tests.Optimizer
                 Assert.AreEqual(expected.MinValue, actual.MinValue);
                 Assert.AreEqual(expected.MaxValue, actual.MaxValue);
                 Assert.AreEqual(expected.Step, actual.Step);
+            }
+
+            // assert optimization parameters
+            var staticOptimizationParameters = optimizationNodePacket.OptimizationParameters.OfType<StaticOptimizationParameter>().ToList();
+            Assert.AreEqual(1, staticOptimizationParameters.Count);
+            foreach (var parameter in staticOptimizationParameters)
+            {
+                Assert.AreEqual("11", parameter.Value);
+                Assert.AreEqual("pinocho", parameter.Name);
             }
 
             // assert target

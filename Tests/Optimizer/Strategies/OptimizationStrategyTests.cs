@@ -30,8 +30,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
     public abstract class OptimizationStrategyTests
     {
         protected IOptimizationStrategy Strategy;
-        protected static Func<ParameterSet, decimal> _profit = parameterSet => parameterSet.Value.Sum(arg => arg.Value.ToDecimal());
-        protected static Func<ParameterSet, decimal> _drawdown = parameterSet => parameterSet.Value.Sum(arg => arg.Value.ToDecimal()) / 100.0m;
+        protected static Func<ParameterSet, decimal> _profit = parameterSet => parameterSet.Value.Where(pair => pair.Key != "skipFromResultSum").Sum(arg => arg.Value.ToDecimal());
+        protected static Func<ParameterSet, decimal> _drawdown = parameterSet => parameterSet.Value.Where(pair => pair.Key != "skipFromResultSum").Sum(arg => arg.Value.ToDecimal()) / 100.0m;
         protected static Func<string, string, decimal> _parse = (dump, parameter) => JObject.Parse(dump).SelectToken($"Statistics.{parameter}").Value<decimal>();
         protected static Func<decimal, decimal, string> _stringify = (profit, drawdown) => BacktestResult.Create(profit, drawdown).ToJson();
 
@@ -97,7 +97,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         protected static HashSet<OptimizationParameter> OptimizationMixedParameters = new HashSet<OptimizationParameter>
         {
             new OptimizationStepParameter("ema-slow", 1, 5, 1),
-            new OptimizationStepParameter("ema-fast", 3, 6.75m, 2,0.1m)
+            new OptimizationStepParameter("ema-fast", 3, 6.75m, 2,0.1m),
+            new StaticOptimizationParameter("skipFromResultSum", "SPY")
         };
 
         public virtual void StepInsideNoTargetNoConstraints(Extremum extremum, HashSet<OptimizationParameter> optimizationParameters, ParameterSet solution)

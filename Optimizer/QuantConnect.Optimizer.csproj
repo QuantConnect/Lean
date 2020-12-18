@@ -59,6 +59,7 @@
     <Compile Include="Parameters\OptimizationStepParameterEnumerator.cs" />
     <Compile Include="Parameters\OptimizationStepParameter.cs" />
     <Compile Include="Parameters\OptimizationParameterJsonConverter.cs" />
+    <Compile Include="Parameters\StaticOptimizationParameter.cs" />
     <Compile Include="Strategies\StepBaseOptimizationStrategySettings.cs" />
     <Compile Include="Strategies\OptimizationStrategySettings.cs" />
     <Compile Include="Strategies\StepBaseOptimizationStrategy.cs" />
