@@ -400,9 +400,10 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id to read</param>
         /// <param name="backtestId">Specific backtest id to read</param>
+        /// <param name="getCharts">True will return backtest charts</param>
         /// <returns><see cref="Backtest"/></returns>
 
-        public Backtest ReadBacktest(int projectId, string backtestId)
+        public Backtest ReadBacktest(int projectId, string backtestId, bool getCharts = true)
         {
             var request = new RestRequest("backtests/read", Method.POST)
             {
@@ -418,8 +419,13 @@ namespace QuantConnect.Api
             BacktestResponseWrapper result;
             ApiConnection.TryRequest(request, out result);
 
-            // Go fetch the charts if the backtest is completed
-            if (result.Backtest.Completed)
+            if (!result.Success)
+            {
+                // place an empty place holder so we can return any errors back to the user and not just null
+                result.Backtest = new Backtest { BacktestId = backtestId };
+            }
+            // Go fetch the charts if the backtest is completed and success
+            else if (getCharts && result.Backtest.Completed)
             {
                 // For storing our collected charts
                 var updatedCharts = new Dictionary<string, Chart>();
