@@ -42,6 +42,11 @@ namespace QuantConnect.Optimizer
         private volatile bool _disposed;
 
         /// <summary>
+        /// The total completed backtests count
+        /// </summary>
+        protected int CompletedBacktests => _failedBacktest + _completedBacktest;
+
+        /// <summary>
         /// Lock to update optimization status
         /// </summary>
         private object _statusLock = new object();
@@ -293,17 +298,19 @@ namespace QuantConnect.Optimizer
         public Dictionary<string, string> GetRuntimeStatistics()
         {
             var completedCount = _completedBacktest;
-            var totalCount = completedCount + _failedBacktest;
+            var totalEndedCount = completedCount + _failedBacktest;
             var runtime = DateTime.UtcNow - _startedAt;
-            return new Dictionary<string, string>
+            var result = new Dictionary<string, string>
             {
                 { "Completed", $"{completedCount}"},
                 { "Failed", $"{_failedBacktest}"},
                 { "Running", $"{RunningParameterSetForBacktest.Count}"},
                 { "In Queue", $"{PendingParameterSet.Count}"},
-                { "Average Length", $"{(totalCount > 0 ? new TimeSpan(runtime.Ticks / totalCount) : TimeSpan.Zero).ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture)}"},
+                { "Average Length", $"{(totalEndedCount > 0 ? new TimeSpan(runtime.Ticks / totalEndedCount) : TimeSpan.Zero).ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture)}"},
                 { "Total Runtime", $"{runtime.ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture)}" }
             };
+
+            return result;
         }
 
         /// <summary>

@@ -112,7 +112,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             public void Estimate1D(decimal min, decimal max, decimal step)
             {
                 var param = new OptimizationStepParameter("ema-fast", min, max, step);
-                var set = new HashSet<OptimizationParameter>() { param };
+                var staticParam = new StaticOptimizationParameter("pepe", "SPY");
+                var set = new HashSet<OptimizationParameter> { param, staticParam };
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set, new StepBaseOptimizationStrategySettings());
 
                 Assert.AreEqual(Math.Floor(Math.Abs(max - min) / Math.Abs(step)) + 1, _strategy.GetTotalBacktestEstimate());
@@ -193,12 +194,13 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 var args = new HashSet<OptimizationParameter>()
                 {
                     new OptimizationStepParameter("ema-fast", data[0,0], data[0,1], data[0,2]),
-                    new OptimizationStepParameter("ema-slow", data[1,0], data[1,1], data[1,2])
+                    new OptimizationStepParameter("ema-slow", data[1,0], data[1,1], data[1,2]),
+                    new StaticOptimizationParameter("pepe", "SPY")
                 };
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), args, new StepBaseOptimizationStrategySettings());
 
                 var total = 1m;
-                foreach (var arg in args.Cast<OptimizationStepParameter>())
+                foreach (var arg in args.OfType<OptimizationStepParameter>())
                 {
                     total *= Math.Floor((arg.MaxValue - arg.MinValue) / arg.Step.Value) + 1;
                 }
@@ -213,7 +215,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 {
                     new OptimizationStepParameter("ema-fast", 10, 100, 1),
                     new OptimizationStepParameter("ema-slow", 20, 200, 4),
-                    new OptimizationStepParameter("ema-custom", 30, 300, 2)
+                    new OptimizationStepParameter("ema-custom", 30, 300, 2),
+                    new StaticOptimizationParameter("pepe", "SPY")
                 };
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), null, args, new StepBaseOptimizationStrategySettings());
                 var counter = 0;
@@ -252,15 +255,16 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                                             counter++;
                                             Assert.IsTrue(enumerator.MoveNext());
 
-                                            var suggestion = enumerator.Current;
+                                            var parameterSet = enumerator.Current;
 
-                                            Assert.IsNotNull(suggestion);
-                                            Assert.IsTrue(suggestion.Value.All(s =>
+                                            Assert.IsNotNull(parameterSet);
+                                            Assert.IsTrue(parameterSet.Value.All(s =>
                                                 args.Any(arg => arg.Name == s.Key)));
-                                            Assert.AreEqual(3, suggestion.Value.Count());
-                                            Assert.AreEqual(fast, suggestion.Value["ema-fast"]);
-                                            Assert.AreEqual(slow, suggestion.Value["ema-slow"]);
-                                            Assert.AreEqual(custom, suggestion.Value["ema-custom"]);
+                                            Assert.AreEqual(4, parameterSet.Value.Count());
+                                            Assert.AreEqual(fast, parameterSet.Value["ema-fast"]);
+                                            Assert.AreEqual(slow, parameterSet.Value["ema-slow"]);
+                                            Assert.AreEqual(custom, parameterSet.Value["ema-custom"]);
+                                            Assert.AreEqual("SPY", parameterSet.Value["pepe"]);
                                         }
                                     }
                                 }
@@ -274,7 +278,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 Assert.Greater(counter, 0);
 
                 var total = 1m;
-                foreach (var arg in args.Cast<OptimizationStepParameter>())
+                foreach (var arg in args.OfType<OptimizationStepParameter>())
                 {
                     total *= (arg.MaxValue - arg.MinValue) / arg.Step.Value + 1;
                 }
@@ -374,8 +378,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         {
             new TestCaseData(new Maximization(), OptimizationStepParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "5"}, { "ema-fast" , "5"} })),
             new TestCaseData(new Minimization(), OptimizationStepParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"} })),
-            new TestCaseData(new Maximization(), OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "5"}, { "ema-fast" , "5"} })),
-            new TestCaseData(new Minimization(), OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"} }))
+            new TestCaseData(new Maximization(), OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "5"}, { "ema-fast" , "5"}, { "skipFromResultSum", "SPY" } })),
+            new TestCaseData(new Minimization(), OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"}, { "skipFromResultSum", "SPY" } }))
         };
 
         [Test, TestCaseSource(nameof(StrategySettings))]
@@ -388,8 +392,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         {
             new TestCaseData(0.05m, OptimizationStepParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"} })),
             new TestCaseData(0.06m, OptimizationStepParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "2"}, { "ema-fast" , "3"} })),
-            new TestCaseData(0.05m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"} })),
-            new TestCaseData(0.06m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "2"}, { "ema-fast" , "3"} }))
+            new TestCaseData(0.05m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"}, { "skipFromResultSum", "SPY" } })),
+            new TestCaseData(0.06m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "2"}, { "ema-fast" , "3"}, { "skipFromResultSum", "SPY" } }))
         };
         [Test, TestCaseSource(nameof(OptimizeWithConstraint))]
         public override void StepInsideWithConstraints(decimal drawdown, HashSet<OptimizationParameter> optimizationParameters, ParameterSet solution)
@@ -403,9 +407,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             new TestCaseData(4m, OptimizationStepParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"} })),
             new TestCaseData(5m, OptimizationStepParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "5"} })),
             new TestCaseData(8m, OptimizationStepParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "3"}, { "ema-fast" , "5"} })),
-            new TestCaseData(0m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"} })),
-            new TestCaseData(5m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "5"} })),
-            new TestCaseData(8m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "3"}, { "ema-fast" , "5"} }))
+            new TestCaseData(0m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "3"}, { "skipFromResultSum", "SPY" } })),
+            new TestCaseData(5m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "1"}, { "ema-fast" , "5"}, { "skipFromResultSum", "SPY" } })),
+            new TestCaseData(8m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "3"}, { "ema-fast" , "5"}, { "skipFromResultSum", "SPY" } }))
         };
         [Test, TestCaseSource(nameof(OptimizeWithTarget))]
         public override void StepInsideWithTarget(decimal targetValue, HashSet<OptimizationParameter> optimizationParameters, ParameterSet solution)
@@ -416,7 +420,7 @@ namespace QuantConnect.Tests.Optimizer.Strategies
         private static TestCaseData[] OptimizeWithTargetNotReached => new[]
         {
             new TestCaseData(15m, OptimizationStepParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "5"}, { "ema-fast" , "5"} })),
-            new TestCaseData(155m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "5"}, { "ema-fast" , "5"} }))
+            new TestCaseData(155m, OptimizationMixedParameters, new ParameterSet(-1, new Dictionary<string, string>{{"ema-slow", "5"}, { "ema-fast" , "5"}, { "skipFromResultSum", "SPY" } }))
         };
 
         [Test, TestCaseSource(nameof(OptimizeWithTargetNotReached))]

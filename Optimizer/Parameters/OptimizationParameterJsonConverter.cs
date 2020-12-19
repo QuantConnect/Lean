@@ -16,7 +16,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 
 namespace QuantConnect.Optimizer.Parameters
@@ -61,15 +60,15 @@ namespace QuantConnect.Optimizer.Parameters
                 throw new ArgumentException("Optimization parameter name is not specified.");
             }
 
-            JToken main;
+            JToken value;
             JToken minToken;
             JToken maxToken;
             OptimizationParameter optimizationParameter = null;
-            if (token.TryGetValue("values", StringComparison.OrdinalIgnoreCase, out main))
+            if (token.TryGetValue("value", StringComparison.OrdinalIgnoreCase, out value))
             {
-                throw new InvalidOperationException("OptimizationParameterJsonConverter.ReadJson: values of array type is not supported.");
+                optimizationParameter = new StaticOptimizationParameter(parameterName, value.Value<string>());
             }
-            if (token.TryGetValue("min", StringComparison.OrdinalIgnoreCase, out minToken) &&
+            else if (token.TryGetValue("min", StringComparison.OrdinalIgnoreCase, out minToken) &&
                 token.TryGetValue("max", StringComparison.OrdinalIgnoreCase, out maxToken))
             {
                 var stepToken = token.GetValue("step", StringComparison.OrdinalIgnoreCase)?.Value<decimal>();

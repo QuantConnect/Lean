@@ -30,13 +30,6 @@ namespace QuantConnect.Tests.Optimizer.Parameters
         [TestFixture]
         public class StepParameter
         {
-            private static TestCaseData[] SegmentBasedOptimizationParameters => new[]
-            {
-                new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100), 10),
-                new TestCaseData(new OptimizationStepParameter("ema-fast", -10, -10), 5),
-                new TestCaseData(new OptimizationStepParameter("ema-fast", -100, -1), 4)
-            };
-
             private static TestCaseData[] OptimizationParameters => new[]
             {
                 new TestCaseData(new OptimizationStepParameter("ema-fast", 1, 100, 1m)),
@@ -126,6 +119,22 @@ namespace QuantConnect.Tests.Optimizer.Parameters
                 Assert.AreEqual(parameterSet.MaxValue, parsed.MaxValue);
                 Assert.AreEqual(parameterSet.Step, parsed.Step);
                 Assert.AreEqual(parameterSet.MinStep, parsed.MinStep);
+            }
+
+            [Test]
+            public void StaticParameterRoundTripSerialization()
+            {
+                var expected = "{\"value\":\"50.0\",\"name\":\"ema-fast\"}";
+
+                var staticParameter = JsonConvert.DeserializeObject<StaticOptimizationParameter>(expected);
+
+                Assert.IsNotNull(staticParameter);
+                Assert.AreEqual("50.0", staticParameter.Value);
+                Assert.AreEqual("ema-fast", staticParameter.Name);
+
+                var serialized = JsonConvert.SerializeObject(staticParameter);
+
+                Assert.AreEqual(expected, serialized);
             }
 
             [Test]
@@ -232,7 +241,7 @@ namespace QuantConnect.Tests.Optimizer.Parameters
                         ""values"": [""a"",""b"",""c"",""d""]
                     }";
 
-                Assert.Throws<InvalidOperationException>(() =>
+                Assert.Throws<ArgumentException>(() =>
                 {
                     JsonConvert.DeserializeObject<OptimizationParameter>(json);
                 });
