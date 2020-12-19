@@ -140,7 +140,7 @@ namespace QuantConnect.Optimizer.Launcher
         protected override void SendUpdate()
         {
             // end handler will already log a nice message on end
-            if (Status != OptimizationStatus.Ended && Status != OptimizationStatus.Aborted)
+            if (Status != OptimizationStatus.Completed && Status != OptimizationStatus.Aborted)
             {
                 var currentEstimate = GetCurrentEstimate();
                 var stats = GetRuntimeStatistics();
