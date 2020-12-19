@@ -133,8 +133,8 @@ namespace QuantConnect.Optimizer
         Running,
 
         /// <summary>
-        /// We ended
+        /// Optimization job has completed
         /// </summary>
-        Ended
+        Completed
     }
 }
