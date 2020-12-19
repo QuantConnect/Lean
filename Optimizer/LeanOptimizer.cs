@@ -165,7 +165,7 @@ namespace QuantConnect.Optimizer
             {
                 return;
             }
-            SetOptimizationStatus(OptimizationStatus.Ended);
+            SetOptimizationStatus(OptimizationStatus.Completed);
 
             var result = Strategy.Solution;
             if (result != null)
@@ -345,7 +345,7 @@ namespace QuantConnect.Optimizer
             lock (_statusLock)
             {
                 // we never come back from an aborted/ended status
-                if (Status != OptimizationStatus.Aborted && Status != OptimizationStatus.Ended)
+                if (Status != OptimizationStatus.Aborted && Status != OptimizationStatus.Completed)
                 {
                     Status = optimizationStatus;
                 }
@@ -385,7 +385,7 @@ namespace QuantConnect.Optimizer
 
         private void LaunchLeanForParameterSet(ParameterSet parameterSet)
         {
-            if (_disposed || Status == OptimizationStatus.Ended || Status == OptimizationStatus.Aborted)
+            if (_disposed || Status == OptimizationStatus.Completed || Status == OptimizationStatus.Aborted)
             {
                 return;
             }
