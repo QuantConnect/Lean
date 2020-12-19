@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data.Consolidators
@@ -23,6 +24,16 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     public class WickedRenkoConsolidator : BaseRenkoConsolidator
     {
+        private DateTime _closeOn;
+        private decimal _closeRate;
+        private bool _firstTick = true;
+        private decimal _highRate;
+        private RenkoBar _lastWicko;
+        private decimal _lowRate;
+        private DateTime _openOn;
+        private decimal _openRate;
+
+
         /// <summary>
         /// Initializes a new instance of the <see cref="WickedRenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
         /// </summary>
@@ -32,6 +43,10 @@ namespace QuantConnect.Data.Consolidators
         {
         }
 
+        // Used for unit tests
+        internal RenkoBar OpenRenkoBar =>
+            new RenkoBar(null, _openOn, _closeOn, BarSize, _openRate, _highRate, _lowRate, _closeRate);
+
         /// <summary>
         /// Updates this consolidator with the specified data
         /// </summary>
@@ -40,75 +55,75 @@ namespace QuantConnect.Data.Consolidators
         {
             var rate = data.Price;
 
-            if (FirstTick)
+            if (_firstTick)
             {
-                FirstTick = false;
+                _firstTick = false;
 
-                OpenOn = data.Time;
-                CloseOn = data.Time;
-                OpenRate = rate;
-                HighRate = rate;
-                LowRate = rate;
-                CloseRate = rate;
+                _openOn = data.Time;
+                _closeOn = data.Time;
+                _openRate = rate;
+                _highRate = rate;
+                _lowRate = rate;
+                _closeRate = rate;
             }
             else
             {
-                CloseOn = data.Time;
+                _closeOn = data.Time;
 
-                if (rate > HighRate) HighRate = rate;
+                if (rate > _highRate) _highRate = rate;
 
-                if (rate < LowRate) LowRate = rate;
+                if (rate < _lowRate) _lowRate = rate;
 
-                CloseRate = rate;
+                _closeRate = rate;
 
-                if (CloseRate > OpenRate)
+                if (_closeRate > _openRate)
                 {
-                    if (LastWicko == null || LastWicko.Direction == BarDirection.Rising)
+                    if (_lastWicko == null || _lastWicko.Direction == BarDirection.Rising)
                     {
                         Rising(data);
                         return;
                     }
 
-                    var limit = LastWicko.Open + BarSize;
+                    var limit = _lastWicko.Open + BarSize;
 
-                    if (CloseRate > limit)
+                    if (_closeRate > limit)
                     {
-                        var wicko = new RenkoBar(data.Symbol, OpenOn, CloseOn, BarSize, LastWicko.Open, limit,
-                            LowRate, limit);
+                        var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn, BarSize, _lastWicko.Open, limit,
+                            _lowRate, limit);
 
-                        LastWicko = wicko;
+                        _lastWicko = wicko;
 
                         OnDataConsolidated(wicko);
 
-                        OpenOn = CloseOn;
-                        OpenRate = limit;
-                        LowRate = limit;
+                        _openOn = _closeOn;
+                        _openRate = limit;
+                        _lowRate = limit;
 
                         Rising(data);
                     }
                 }
-                else if (CloseRate < OpenRate)
+                else if (_closeRate < _openRate)
                 {
-                    if (LastWicko == null || LastWicko.Direction == BarDirection.Falling)
+                    if (_lastWicko == null || _lastWicko.Direction == BarDirection.Falling)
                     {
                         Falling(data);
                         return;
                     }
 
-                    var limit = LastWicko.Open - BarSize;
+                    var limit = _lastWicko.Open - BarSize;
 
-                    if (CloseRate < limit)
+                    if (_closeRate < limit)
                     {
-                        var wicko = new RenkoBar(data.Symbol, OpenOn, CloseOn, BarSize, LastWicko.Open, HighRate,
+                        var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn, BarSize, _lastWicko.Open, _highRate,
                             limit, limit);
 
-                        LastWicko = wicko;
+                        _lastWicko = wicko;
 
                         OnDataConsolidated(wicko);
 
-                        OpenOn = CloseOn;
-                        OpenRate = limit;
-                        HighRate = limit;
+                        _openOn = _closeOn;
+                        _openRate = limit;
+                        _highRate = limit;
 
                         Falling(data);
                     }
@@ -120,17 +135,17 @@ namespace QuantConnect.Data.Consolidators
         {
             decimal limit;
 
-            while (CloseRate > (limit = OpenRate + BarSize))
+            while (_closeRate > (limit = _openRate + BarSize))
             {
-                var wicko = new RenkoBar(data.Symbol, OpenOn, CloseOn, BarSize, OpenRate, limit, LowRate, limit);
+                var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn, BarSize, _openRate, limit, _lowRate, limit);
 
-                LastWicko = wicko;
+                _lastWicko = wicko;
 
                 OnDataConsolidated(wicko);
 
-                OpenOn = CloseOn;
-                OpenRate = limit;
-                LowRate = limit;
+                _openOn = _closeOn;
+                _openRate = limit;
+                _lowRate = limit;
             }
         }
 
@@ -138,20 +153,21 @@ namespace QuantConnect.Data.Consolidators
         {
             decimal limit;
 
-            while (CloseRate < (limit = OpenRate - BarSize))
+            while (_closeRate < (limit = _openRate - BarSize))
             {
-                var wicko = new RenkoBar(data.Symbol, OpenOn, CloseOn, BarSize, OpenRate, HighRate, limit, limit);
+                var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn, BarSize, _openRate, _highRate, limit, limit);
 
-                LastWicko = wicko;
+                _lastWicko = wicko;
 
                 OnDataConsolidated(wicko);
 
-                OpenOn = CloseOn;
-                OpenRate = limit;
-                HighRate = limit;
+                _openOn = _closeOn;
+                _openRate = limit;
+                _highRate = limit;
             }
         }
     }
+
     /// <summary>
     /// Provides a type safe wrapper on the WickedRenkoConsolidator class. This just allows us to define our selector functions with the real type they'll be receiving
     /// </summary>
@@ -167,6 +183,5 @@ namespace QuantConnect.Data.Consolidators
             : base(barSize)
         {
         }
-        
     }
 }
