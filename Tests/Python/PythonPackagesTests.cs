@@ -882,6 +882,7 @@ def RunTest():
         [TestCase("cntk", "2.7", "__version__")]
         [TestCase("featuretools", "0.13.4", "__version__")]
         [TestCase("pennylane", "0.8.1", "version()")]
+        [TestCase("modin", "0.8.2", "version()")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
             AssetCode(

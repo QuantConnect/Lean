@@ -1,5 +1,5 @@
 #
-#   LEAN Foundation Docker Container 20200428
+#   LEAN Foundation Docker Container 20201221
 #   Cross platform deployment for multiple brokerages
 #   Intended to be used in conjunction with Dockerfile. This is just the foundation common OS+Dependencies required.
 #
@@ -119,7 +119,8 @@ RUN conda install -y -c conda-forge \
     tslearn=0.3.1                   \
     tweepy=3.8.0                    \
     pywavelets=1.1.1                \
-    umap-learn=0.4.1
+    umap-learn=0.4.1                \
+    modin=0.8.2                     \
 
 # Install math/ML from pytorch
 RUN conda install -y -c pytorch     \
