@@ -2244,54 +2244,59 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private Symbol MapSymbol(Contract contract)
         {
-            var securityType = ConvertSecurityType(contract);
-            var ibSymbol = securityType == SecurityType.Forex ? contract.Symbol + contract.Currency : contract.Symbol;
-
-            var market = InteractiveBrokersBrokerageModel.DefaultMarketMap[securityType];
-            var isFutureOption = contract.SecType == IB.SecurityType.FutureOption;
-
-
-            // Handle future options as a Future, up until we actually return the future.
-            if (isFutureOption || securityType == SecurityType.Future)
+            try
             {
-                var leanSymbol = _symbolMapper.GetLeanRootSymbol(ibSymbol);
-                var defaultMarket = market;
-                if (!_symbolPropertiesDatabase.TryGetMarket(leanSymbol, SecurityType.Future, out market))
+                var securityType = ConvertSecurityType(contract);
+                var ibSymbol = securityType == SecurityType.Forex ? contract.Symbol + contract.Currency : contract.Symbol;
+
+                var market = InteractiveBrokersBrokerageModel.DefaultMarketMap[securityType];
+                var isFutureOption = contract.SecType == IB.SecurityType.FutureOption;
+
+                // Handle future options as a Future, up until we actually return the future.
+                if (isFutureOption || securityType == SecurityType.Future)
                 {
-                    market = defaultMarket;
+                    var leanSymbol = _symbolMapper.GetLeanRootSymbol(ibSymbol);
+                    var defaultMarket = market;
+                    if (!_symbolPropertiesDatabase.TryGetMarket(leanSymbol, SecurityType.Future, out market))
+                    {
+                        market = defaultMarket;
+                    }
+
+                    var contractExpiryDate = DateTime.ParseExact(contract.LastTradeDateOrContractMonth, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+
+                    if (!isFutureOption)
+                    {
+                        return _symbolMapper.GetLeanSymbol(ibSymbol, SecurityType.Future, market, contractExpiryDate);
+                    }
+
+                    // Create a canonical future Symbol for lookup in the FuturesExpiryFunctions helper class.
+                    // We then get the delta between the futures option's expiry month vs. the future's expiry month.
+                    var canonicalFutureSymbol = _symbolMapper.GetLeanSymbol(ibSymbol, SecurityType.Future, market, SecurityIdentifier.DefaultDate);
+                    var futureExpiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFutureSymbol);
+                    var futureContractExpiryDate = futureExpiryFunction(FuturesOptionsExpiryFunctions.GetFutureContractMonth(canonicalFutureSymbol, contractExpiryDate));
+                    var futureSymbol = Symbol.CreateFuture(canonicalFutureSymbol.ID.Symbol, canonicalFutureSymbol.ID.Market, futureContractExpiryDate);
+
+                    var right = contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put;
+                    var strike = Convert.ToDecimal(contract.Strike);
+
+                    return Symbol.CreateOption(futureSymbol, market, OptionStyle.American, right, strike, contractExpiryDate);
                 }
 
-                Log.Trace($"Mapping contract {contract} with ticker `{leanSymbol}` and SecurityType `{securityType.ToString()}` with expiry: {contract.LastTradeDateOrContractMonth} to Symbol");
-                var contractExpiryDate = DateTime.ParseExact(contract.LastTradeDateOrContractMonth, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
-
-                if (!isFutureOption)
+                if (securityType == SecurityType.Option)
                 {
-                    return _symbolMapper.GetLeanSymbol(ibSymbol, SecurityType.Future, market, contractExpiryDate);
+                    var expiryDate = DateTime.ParseExact(contract.LastTradeDateOrContractMonth, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                    var right = contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put;
+                    var strike = Convert.ToDecimal(contract.Strike);
+
+                    return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market, expiryDate, strike, right);
                 }
 
-                // Create a canonical future Symbol for lookup in the FuturesExpiryFunctions helper class.
-                // We then get the delta between the futures option's expiry month vs. the future's expiry month.
-                var canonicalFutureSymbol = _symbolMapper.GetLeanSymbol(ibSymbol, SecurityType.Future, market, SecurityIdentifier.DefaultDate);
-                var futureExpiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFutureSymbol);
-                var futureContractExpiryDate = futureExpiryFunction(FuturesOptionsExpiryFunctions.GetFutureContractMonth(canonicalFutureSymbol, contractExpiryDate));
-                var futureSymbol = Symbol.CreateFuture(canonicalFutureSymbol.ID.Symbol, canonicalFutureSymbol.ID.Market, futureContractExpiryDate);
-
-                var right = contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put;
-                var strike = Convert.ToDecimal(contract.Strike);
-
-                return Symbol.CreateOption(futureSymbol, market, OptionStyle.American, right, strike, contractExpiryDate);
+                return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market);
             }
-            if (securityType == SecurityType.Option)
+            catch (Exception error)
             {
-                Log.Trace($"Mapping contract {contract} with ticker `{ibSymbol}` and SecurityType `{securityType.ToString()}` with expiry: {contract.LastTradeDateOrContractMonth} to Symbol");
-                var expiryDate = DateTime.ParseExact(contract.LastTradeDateOrContractMonth, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
-                var right = contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put;
-                var strike = Convert.ToDecimal(contract.Strike);
-
-                return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market, expiryDate, strike, right);
+                throw new Exception($"InteractiveBrokersBrokerage.MapSymbol(): Failed to convert contract for {contract.Symbol}; Contract description: {GetContractDescription(contract)}", error);
             }
-
-            return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market);
         }
 
         private static decimal RoundPrice(decimal input, decimal minTick)
