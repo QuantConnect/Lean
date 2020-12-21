@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,6 +26,7 @@ using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -104,6 +105,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Log.Trace(eurusd.ToString());
         }
+
         [Test]
         public void FuturesSecurityIdReturnsProperties()
         {
@@ -572,6 +574,20 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(0, fails.Count, $"The following option Symbols were not found in the expected chain:    \n{string.Join("\n", fails.Select(x => x.ID.ToString()))}");
             Assert.IsTrue(expectedChains.All(kvp => kvp.Value), $"The following option Symbols were not loaded:    \n{string.Join("\n", expectedChains.Where(kvp => !kvp.Value).Select(x => x.Key))}");
+        }
+
+        [Test]
+        public void SortsAccordingToStringRepresentation()
+        {
+            var sids = Symbols.All.ToList(s => s.ID);
+            var expected = sids
+                .Select(sid => new {symbol = sid, str = sid.ToString()})
+                .OrderBy(item => item.str)
+                .ToList(item => item.symbol);
+
+            sids.Sort();
+
+            CollectionAssert.AreEqual(expected, sids);
         }
 
         class Container
