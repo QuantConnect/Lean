@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 
 namespace QuantConnect.Tests.Brokerages.Zerodha
 {
+    [TestFixture, Ignore("This test requires a configured and active Zerodha account")]
     public class ZerodhaBrokerageTests
     {
 
@@ -223,7 +224,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
                 new TestCaseData(new MarketOrderTestParameters(Symbols.IDEA,orderProperties)).SetName("MarketOrder"),
                 new TestCaseData(new LimitOrderTestParameters(Symbols.IDEA, 9.00m, 9.30m,orderProperties)).SetName("LimitOrder"),
                 new TestCaseData(new StopMarketOrderTestParameters(Symbols.IDEA, 10.50m,  9.50m,orderProperties)).SetName("StopMarketOrder"),
-                new TestCaseData(new StopLimitOrderTestParameters(Symbols.IDEA, 10.50m,  9.00m,orderProperties)).SetName("StopLimitOrder")
+                //new TestCaseData(new StopLimitOrderTestParameters(Symbols.IDEA,  9.00m, 10.50m,orderProperties)).SetName("StopLimitOrder")
             };
         }
 
@@ -291,7 +292,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             return quotes.LastPrice;
         }
 
-        [Test, TestCaseSource(nameof(OrderParameters))]
+        [Test]
         public void ShortIdea()
         {
             PlaceZerodhaOrderWaitForStatus(new MarketOrder(Symbols.IDEA, -1, DateTime.Now, properties: orderProperties), OrderStatus.Submitted, allowFailedSubmission: true);
@@ -341,23 +342,63 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
             var cancelledOrder = openOrders.FirstOrDefault(x => x.Id == order.Id);
             Assert.IsNull(cancelledOrder);
 
-            canceledOrderStatusEvent.Reset();
+            //canceledOrderStatusEvent.Reset();
 
-            var cancelResultSecondTime = false;
-            try
-            {
-                cancelResultSecondTime = Brokerage.CancelOrder(order);
-            }
-            catch (Exception exception)
-            {
-                Log.Error(exception);
-            }
-            Assert.AreEqual(IsCancelAsync(), cancelResultSecondTime);
-            // We do NOT expect the OrderStatus.Canceled event
-            Assert.IsFalse(canceledOrderStatusEvent.WaitOne(new TimeSpan(0, 0, 10)));
+            //var cancelResultSecondTime = false;
+            //try
+            //{
+            //    cancelResultSecondTime = Brokerage.CancelOrder(order);
+            //}
+            //catch (Exception exception)
+            //{
+            //    Log.Error(exception);
+            //}
+            //Assert.AreEqual(IsCancelAsync(), cancelResultSecondTime);
+            //// We do NOT expect the OrderStatus.Canceled event
+            //Assert.IsFalse(canceledOrderStatusEvent.WaitOne(new TimeSpan(0, 0, 10)));
 
-            Brokerage.OrderStatusChanged -= orderStatusCallback;
+            //Brokerage.OrderStatusChanged -= orderStatusCallback;
         }
+
+
+        [Test]
+        public void ValidateStopLimitOrders()
+        {
+            var zerodha = (ZerodhaBrokerage)Brokerage;
+            var symbol = Symbol;
+            var lastPrice = GetAskPrice(symbol.Value);
+
+            // Buy StopLimit order below market TODO: This might not work because of the Zerodha structure. Verify this.
+            //var stopPrice = lastPrice - 0.10m; 
+            //var limitPrice = stopPrice + 0.10m;
+            //var order = new StopLimitOrder(symbol, 1, stopPrice, limitPrice, DateTime.UtcNow, properties: orderProperties);
+            //Assert.IsTrue(zerodha.PlaceOrder(order));
+
+            // Buy StopLimit order above market
+            var stopPrice = lastPrice + 0.20m;
+            var limitPrice = stopPrice + 0.25m;
+            var order = new StopLimitOrder(symbol, 1, stopPrice, limitPrice, DateTime.UtcNow, properties: orderProperties);
+            Assert.IsTrue(zerodha.PlaceOrder(order));
+
+            // In case there is no position, the following sell orders would not be placed
+            // So build a position for them.
+            var marketOrder = new MarketOrder(symbol, 2, DateTime.UtcNow, properties: orderProperties);
+            Assert.IsTrue(zerodha.PlaceOrder(marketOrder));
+
+            Thread.Sleep(20000);
+            // Sell StopLimit order below market
+            stopPrice = lastPrice - 0.25m;
+            limitPrice = stopPrice - 0.5m;
+            order = new StopLimitOrder(symbol, -1, stopPrice, limitPrice, DateTime.UtcNow, properties: orderProperties);
+            Assert.IsTrue(zerodha.PlaceOrder(order));
+
+            // Sell StopLimit order above market. TODO: This might not work because of the Zerodha structure. Verify this 
+            //stopPrice = lastPrice + 0.5m;
+            //limitPrice = stopPrice - 0.25m ;
+            //order = new StopLimitOrder(symbol, -1, stopPrice, limitPrice, DateTime.UtcNow, properties: orderProperties);
+            //Assert.IsTrue(zerodha.PlaceOrder(order));
+        }
+
 
         [Test, TestCaseSource(nameof(OrderParameters))]
         public void LongFromZero(OrderTestParameters parameters)
@@ -558,19 +599,10 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
                 Assert.Fail("Brokerage failed to place the order: " + order);
             }
 
-            // This is due to IB simulating stop orders https://www.interactivebrokers.com/en/trading/orders/stop.php
-            // which causes the Status.Submitted order event to never be set
-            bool assertOrderEventStatus = !(Brokerage.Name == "Interactive Brokers Brokerage"
-                                            && new[] { OrderType.StopMarket, OrderType.StopLimit }.Contains(order.Type));
-            if (assertOrderEventStatus)
-            {
-                requiredStatusEvent.WaitOneAssertFail((int)(1000 * secondsTimeout), "Expected every order to fire a submitted or invalid status event");
-                desiredStatusEvent.WaitOneAssertFail((int)(1000 * secondsTimeout), "OrderStatus " + expectedStatus + " was not encountered within the timeout. Order Id:" + order.Id);
-            }
-            else
-            {
-                requiredStatusEvent.WaitOne((int)(1000 * secondsTimeout));
-            }
+
+            requiredStatusEvent.WaitOneAssertFail((int)(1000 * secondsTimeout), "Expected every order to fire a submitted or invalid status event");
+            desiredStatusEvent.WaitOneAssertFail((int)(1000 * secondsTimeout), "OrderStatus " + expectedStatus + " was not encountered within the timeout. Order Id:" + order.Id);
+            
 
             Brokerage.OrderStatusChanged -= brokerageOnOrderStatusChanged;
 
@@ -652,7 +684,7 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
         /// </summary>
         protected bool IsCancelAsync()
         {
-            return IsAsync();
+            return false;
         }
 
 

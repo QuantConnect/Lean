@@ -58,7 +58,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <summary>
         /// A list of currently active orders
         /// </summary>
-        public ConcurrentDictionary<int, Orders.Order> CachedOrderIDs = new ConcurrentDictionary<int, Orders.Order>();
+        public ConcurrentDictionary<int, Order> CachedOrderIDs = new ConcurrentDictionary<int, Order>();
         /// <summary>
         /// A list of currently subscribed channels
         /// </summary>
@@ -254,12 +254,20 @@ namespace QuantConnect.Brokerages.Zerodha
 
                 if (orderUpdate.Status == "CANCELLED")
                 {
-                    Orders.Order outOrder;
+                    Order outOrder;
                     CachedOrderIDs.TryRemove(order.Id, out outOrder);
                     decimal ignored;
                     _fills.TryRemove(order.Id, out ignored);
                 }
 
+                if (orderUpdate.Status == "REJECTED")
+                {
+                    Order outOrder;
+                    CachedOrderIDs.TryRemove(order.Id, out outOrder);
+                    decimal ignored;
+                    _fills.TryRemove(order.Id, out ignored);
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Zerodha Order Rejected Event: "+ orderUpdate.StatusMessage) { Status = OrderStatus.Canceled });
+                }
 
                 if (orderUpdate.FilledQuantity > 0)
                 {
@@ -298,7 +306,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     // if the order is closed, we no longer need it in the active order list
                     if (status == OrderStatus.Filled)
                     {
-                        Orders.Order outOrder;
+                        Order outOrder;
                         CachedOrderIDs.TryRemove(order.Id, out outOrder);
                         decimal ignored;
                         _fills.TryRemove(order.Id, out ignored);
@@ -441,11 +449,14 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
                 return false;
             }
 
+
+
             if (order.Type == OrderType.StopLimit || order.Type == OrderType.StopMarket || order.Type == OrderType.Limit)
             {
                 triggerPrice = GetOrderTriggerPrice(order);
             }
             decimal? orderPrice = GetOrderPrice(order);
+
             var kiteOrderType = ConvertOrderType(order.Type);
 
             var orderFee = new OrderFee(new CashAmount(
@@ -462,28 +473,23 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
                 return false;
             }
 
-            //if (order.Type == OrderType.Bracket)
-            //{
-            //    orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market, order.Symbol.ID.Symbol,"",order.Quantity.ConvertInvariant<int>());
-            //}
-            //else
-            //{
 
-            orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market.ToUpperInvariant(), order.Symbol.ID.Symbol, order.Direction.ToString().ToUpperInvariant(), orderQuantity, orderPrice, orderProperties.ProductType, kiteOrderType,null,null,triggerPrice);
-            //}
-            Log.Debug("ZerodhaOrderResponse:");
-            Log.Debug(orderResponse.ToString());
-
-            
-            if ((string)orderResponse["status"] == "error")
+            try
             {
-                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {orderResponse["message"]}";
+                orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market.ToUpperInvariant(), order.Symbol.ID.Symbol, order.Direction.ToString().ToUpperInvariant(), 
+                    orderQuantity, orderPrice, orderProperties.ProductType, kiteOrderType, null, null, triggerPrice);
+            }
+            catch (Exception ex)
+            {
+
+                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}";
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata), orderFee, "Zerodha Order Event") { Status = OrderStatus.Invalid });
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
 
                 UnlockStream();
                 return false;
             }
+
 
             if ((string)orderResponse["status"] == "success")
             {
@@ -640,20 +646,33 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
             decimal? orderPrice = GetOrderPrice(order);
             var kiteOrderType = ConvertOrderType(order.Type);
 
-            orderResponse = _kite.ModifyOrder(order.BrokerId[0].ToStringInvariant(),
+            var orderFee = OrderFee.Zero;
+            try
+            {
+                orderResponse = _kite.ModifyOrder(order.BrokerId[0].ToStringInvariant(),
                 null,
-                order.Symbol.ID.Market.ToUpperInvariant(), 
-                order.Symbol.ID.Symbol, 
-                order.Direction.ToString().ToUpperInvariant(), 
+                order.Symbol.ID.Market.ToUpperInvariant(),
+                order.Symbol.ID.Symbol,
+                order.Direction.ToString().ToUpperInvariant(),
                 orderQuantity,
                 orderPrice,
                 orderProperties.ProductType,
                 kiteOrderType,
                 null,
-                null, 
+                null,
                 triggerPrice
                 );
-            var orderFee = OrderFee.Zero;
+            }
+            catch (Exception ex)
+            {
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.Invalid });
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {ex.Message}"));
+
+                UnlockStream();
+                return false;
+            }
+            
+            
             if ((string)orderResponse["status"] == "success")
             {
                 if (string.IsNullOrEmpty((string)orderResponse["data"]["order_id"]))
@@ -691,7 +710,7 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
             UnlockStream();
-            return true;
+            return false;
         }
 
         /// <summary>
@@ -710,15 +729,23 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
             //else
             //{
             JObject orderResponse = new JObject();
-            if (order.Status!=OrderStatus.Filled)
+            if (order.Status!=OrderStatus.Filled && order.Status!= OrderStatus.PartiallyFilled && order.Status!=OrderStatus.Invalid)
             {
-                orderResponse = _kite.CancelOrder(order.BrokerId[0].ToStringInvariant());
+                try
+                {
+                    orderResponse = _kite.CancelOrder(order.BrokerId[0].ToStringInvariant());
+                }
+                catch (Exception ex)
+                {
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (string)orderResponse["status"], $"Error cancelling order: {orderResponse["status_message"]}"));
+                    UnlockStream();
+                    return false;
+                }
             }
             else
             {
                 //Verify this
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error,500, $"Error cancelling open order"));
-
                 UnlockStream();
                 return false;
             }
@@ -744,10 +771,10 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
         /// Gets all orders not yet closed
         /// </summary>
         /// <returns></returns>
-        public override List<Orders.Order> GetOpenOrders()
+        public override List<Order> GetOpenOrders()
         {
             var allOrders = _kite.GetOrders();
-            List<Orders.Order> list = new List<Orders.Order>();
+            List<Order> list = new List<Order>();
             //Only loop if there are any actual orders inside response
             if (allOrders.Count > 0)
             {
@@ -755,7 +782,7 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
                 foreach (var item in allOrders.Where(z => z.Status == "filled"))
                 {
 
-                    Orders.Order order;
+                    Order order;
                     if (item.OrderType.ToLowerInvariant() == "MKT")
                     {
                         order = new MarketOrder { Price = Convert.ToDecimal(item.Price, CultureInfo.InvariantCulture) };

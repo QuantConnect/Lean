@@ -386,6 +386,7 @@
     <Compile Include="Brokerages\Paper\PaperBrokerageTests.cs" />
     <Compile Include="AlgorithmRunnerResults.cs" />
     <Compile Include="Brokerages\SymbolPropertiesDatabaseSymbolMapperTests.cs" />
+    <Compile Include="Brokerages\Zerodha\ZerodhaBrokerageTests.cs" />
     <Compile Include="Common\Benchmarks\SecurityBenchmarkTests.cs" />
     <Compile Include="Common\BinaryComparisonTests.cs" />
     <Compile Include="Common\Brokerages\AlpacaBrokerageModelTests.cs" />
@@ -1032,13 +1033,11 @@
     <None Include="TestData\spy_with_keltner.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Compile Include="Brokerages\Zerodha\ZerodhaBrokerageTests.cs" />
     <Compile Include="Brokerages\Zerodha\ZerodhaBrokerageHistoryProviderTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Adapters\" />
     <Folder Include="Tasks\" />
-    <Folder Include="Brokerages\Zerodha\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj">
