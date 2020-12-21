@@ -180,6 +180,8 @@ namespace QuantConnect.Optimizer
                 Log.Trace($"LeanOptimizer.TriggerOnEndEvent({GetLogDetails()}): Optimization has ended. Result was not reached");
             }
 
+            // we clean up before we send an update so that the runtime stats are updated
+            CleanUpRunningInstance();
             ProcessUpdate(forceSend: true);
 
             Ended?.Invoke(this, result);
@@ -261,27 +263,7 @@ namespace QuantConnect.Optimizer
                 return;
             }
             _disposed = true;
-
-            PendingParameterSet.Clear();
-
-            lock (RunningParameterSetForBacktest)
-            {
-                foreach (var backtestId in RunningParameterSetForBacktest.Keys)
-                {
-                    ParameterSet parameterSet;
-                    if (RunningParameterSetForBacktest.TryRemove(backtestId, out parameterSet))
-                    {
-                        try
-                        {
-                            AbortLean(backtestId);
-                        }
-                        catch
-                        {
-                            // pass
-                        }
-                    }
-                }
-            }
+            CleanUpRunningInstance();
         }
 
         /// <summary>
@@ -326,7 +308,7 @@ namespace QuantConnect.Optimizer
         }
 
         /// <summary>
-        /// Handles breaking Lean process
+        /// Handles stopping Lean process
         /// </summary>
         /// <param name="backtestId">Specified backtest id</param>
         protected abstract void AbortLean(string backtestId);
@@ -348,6 +330,34 @@ namespace QuantConnect.Optimizer
                 if (Status != OptimizationStatus.Aborted && Status != OptimizationStatus.Completed)
                 {
                     Status = optimizationStatus;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Clean up any pending or running lean instance
+        /// </summary>
+        private void CleanUpRunningInstance()
+        {
+            PendingParameterSet.Clear();
+
+            lock (RunningParameterSetForBacktest)
+            {
+                foreach (var backtestId in RunningParameterSetForBacktest.Keys)
+                {
+                    ParameterSet parameterSet;
+                    if (RunningParameterSetForBacktest.TryRemove(backtestId, out parameterSet))
+                    {
+                        Interlocked.Increment(ref _failedBacktest);
+                        try
+                        {
+                            AbortLean(backtestId);
+                        }
+                        catch
+                        {
+                            // pass
+                        }
+                    }
                 }
             }
         }
