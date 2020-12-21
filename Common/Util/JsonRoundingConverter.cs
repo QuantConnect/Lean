@@ -14,6 +14,7 @@
 */
 
 using System;
+using ExchangeSharp;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Util
@@ -33,7 +34,7 @@ namespace QuantConnect.Util
         /// Will always return false.
         /// Gets a value indicating whether this <see cref="T:Newtonsoft.Json.JsonConverter" /> can read JSON.
         /// </summary>
-        public override bool CanRead => false;
+        public override bool CanRead => true;
 
         /// <summary>
         /// Determines whether this instance can convert the specified object type.
@@ -55,7 +56,14 @@ namespace QuantConnect.Util
         /// <param name="serializer">The calling serializer.</param>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            if (objectType == typeof(double))
+            {
+                return Double.Parse(existingValue.ToStringInvariant(), System.Globalization.CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                return Decimal.Parse(existingValue.ToStringInvariant(), System.Globalization.CultureInfo.InvariantCulture);
+            }
         }
 
         /// <summary>
@@ -66,15 +74,31 @@ namespace QuantConnect.Util
         /// <param name="serializer">The calling serializer.</param>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            if (value is double)
+            if (value is double @double)
             {
-                var rounded = Math.Round((double)value, FractionalDigits);
-                writer.WriteValue(rounded);
+                var rounded = Math.Round(@double, FractionalDigits);
+
+                if (rounded == double.MaxValue || rounded == double.MinValue)
+                {
+                    writer.WriteValue(rounded.ToStringInvariant());
+                }
+                else
+                {
+                    writer.WriteValue(rounded);
+                }
             }
             else
             {
                 var rounded = Math.Round((decimal)value, FractionalDigits);
-                writer.WriteValue(rounded);
+
+                if (rounded == decimal.MaxValue || rounded == decimal.MinValue)
+                {
+                    writer.WriteValue(rounded.ToStringInvariant());
+                }
+                else
+                {
+                    writer.WriteValue(rounded);
+                }
             }
         }
     }
