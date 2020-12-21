@@ -165,6 +165,9 @@ def mapper(key):
     if keyType is Symbol:
         return str(key.ID)
     if keyType is str:
+        reserved = ['high', 'low', 'open', 'close']
+        if key in reserved:
+            return key
         kvp = SymbolCache.TryGetSymbol(key, None)
         if kvp[0]:
             return str(kvp[1].ID)
@@ -451,7 +454,8 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         _tradeBarSymbols.Append(sid);
                         _tradeBarTimes.Append(new DateTimeOffset(tradeBar.EndTime.Ticks, TimeSpan.Zero));
 
-                        if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
+                        if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option ||
+                            symbol.SecurityType == SecurityType.FutureOption)
                         {
                             hasExpiry = true;
                             _tradeBarExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
@@ -460,7 +464,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         {
                             _tradeBarExpiry.AppendNull();
                         }
-                        if (symbol.SecurityType == SecurityType.Option)
+                        if (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.FutureOption)
                         {
                             hasOption = true;
                             _tradeBarStrike.Append((double) symbol.ID.StrikePrice);
@@ -488,7 +492,8 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             _tradeBarSymbols.Append(sid);
                             _tradeBarTimes.Append(new DateTimeOffset(quoteBar.EndTime.Ticks, TimeSpan.Zero));
 
-                            if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
+                            if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option ||
+                                symbol.SecurityType == SecurityType.FutureOption)
                             {
                                 hasExpiry = true;
                                 _tradeBarExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
@@ -497,7 +502,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                             {
                                 _tradeBarExpiry.AppendNull();
                             }
-                            if (symbol.SecurityType == SecurityType.Option)
+                            if (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.FutureOption)
                             {
                                 hasOption = true;
                                 _tradeBarStrike.Append((double) symbol.ID.StrikePrice);
@@ -548,7 +553,8 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         _quoteBarSymbols.Append(sid);
                         _quoteBarTimes.Append(new DateTimeOffset(quoteBar.EndTime.Ticks, TimeSpan.Zero));
 
-                        if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
+                        if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option || 
+                            symbol.SecurityType == SecurityType.FutureOption)
                         {
                             hasExpiry = true;
                             _quoteBarExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
@@ -557,7 +563,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                         {
                             _quoteBarExpiry.AppendNull();
                         }
-                        if (symbol.SecurityType == SecurityType.Option)
+                        if (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.FutureOption)
                         {
                             hasOption = true;
                             _quoteBarStrike.Append((double) symbol.ID.StrikePrice);
@@ -580,7 +586,8 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                 _tickTimes.Append(new DateTimeOffset(tick.EndTime.Ticks, TimeSpan.Zero));
                                 _tickValue.Append((double) tick.Value);
 
-                                if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
+                                if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option ||
+                                    symbol.SecurityType == SecurityType.FutureOption)
                                 {
                                     hasExpiry = true;
                                     _tickExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
@@ -589,7 +596,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                 {
                                     _tickExpiry.AppendNull();
                                 }
-                                if (symbol.SecurityType == SecurityType.Option)
+                                if (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.FutureOption)
                                 {
                                     hasOption = true;
                                     _tickStrike.Append((double) symbol.ID.StrikePrice);
@@ -642,7 +649,8 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                 _openInterestSymbols.Append(sid);
                                 _openInterestValue.Append((double)tick.Value);
 
-                                if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option)
+                                if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.Option || 
+                                    symbol.SecurityType == SecurityType.FutureOption)
                                 {
                                     hasExpiry = true;
                                     _openInterestExpiry.Append(new DateTimeOffset(symbol.ID.Date.Ticks, TimeSpan.Zero));
@@ -651,7 +659,7 @@ setattr(modules[__name__], 'concat', wrap_function(pd.concat))");
                                 {
                                     _openInterestExpiry.AppendNull();
                                 }
-                                if (symbol.SecurityType == SecurityType.Option)
+                                if (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.FutureOption)
                                 {
                                     hasOption = true;
                                     _openInterestStrike.Append((double) symbol.ID.StrikePrice);
