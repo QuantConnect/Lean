@@ -420,6 +420,9 @@ namespace QuantConnect.Optimizer
                     }
                     else
                     {
+                        Interlocked.Increment(ref _failedBacktest);
+                        // always notify the strategy
+                        Strategy.PushNewResults(new OptimizationResult(null, parameterSet, backtestId));
                         Log.Error($"LeanOptimizer.LaunchLeanForParameterSet({GetLogDetails()}): Initial/null optimization compute job could not be placed into the queue");
                     }
 
