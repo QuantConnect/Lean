@@ -1,4 +1,4 @@
-﻿using MachinaEngine.Statistics;
+﻿using QuantConnect.Statistics;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MachinaEngine.Tests.Common.Util
+namespace QuantConnect.Tests.Common.Util
 {
     [TestFixture]
     public class JsonRoundingConverterTests
