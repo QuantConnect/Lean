@@ -14,7 +14,6 @@
 */
 
 using System;
-using ExchangeSharp;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Util
@@ -58,11 +57,11 @@ namespace QuantConnect.Util
         {
             if (objectType == typeof(double))
             {
-                return Double.Parse(existingValue.ToStringInvariant(), System.Globalization.CultureInfo.InvariantCulture);
+                return Double.Parse(existingValue.ToString(), System.Globalization.CultureInfo.InvariantCulture);
             }
             else
             {
-                return Decimal.Parse(existingValue.ToStringInvariant(), System.Globalization.CultureInfo.InvariantCulture);
+                return Decimal.Parse(existingValue.ToString(), System.Globalization.CultureInfo.InvariantCulture);
             }
         }
 
@@ -80,11 +79,11 @@ namespace QuantConnect.Util
 
                 if (rounded == double.MaxValue || rounded == double.MinValue)
                 {
-                    writer.WriteValue(rounded.ToStringInvariant());
+                    writer.WriteValue(rounded.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 }
                 else
                 {
-                    writer.WriteValue(rounded);
+                    writer.WriteValue(rounded.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 }
             }
             else
@@ -93,7 +92,7 @@ namespace QuantConnect.Util
 
                 if (rounded == decimal.MaxValue || rounded == decimal.MinValue)
                 {
-                    writer.WriteValue(rounded.ToStringInvariant());
+                    writer.WriteValue(rounded.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 }
                 else
                 {
