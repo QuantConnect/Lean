@@ -40,8 +40,10 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
                 TestDelegate test = () =>
                 {
                     var accessToken = Config.Get("zerodha-access-token");
-                    var apiKey = Config.Get("zerodha-api-key");
-                    var brokerage = new ZerodhaBrokerage(apiKey, accessToken,null,null);
+                    var apiKey = Config.Get("zerodha-api-key"); 
+                    var tradingSegment = Config.Get("zerodha-trading-segment");
+                    var productType = Config.Get("zerodha-product-type");
+                    var brokerage = new ZerodhaBrokerage(tradingSegment, productType, apiKey, accessToken, null,null);
 
                     var now = DateTime.UtcNow;
 

@@ -250,7 +250,9 @@ namespace QuantConnect.Tests.Brokerages.Zerodha
 
             var accessToken = Config.Get("zerodha-access-token");
             var apiKey = Config.Get("zerodha-api-key");
-            var zerodha = new ZerodhaBrokerage(apiKey, accessToken, algorithm.Object, new AggregationManager());
+            var tradingSegment = Config.Get("zerodha-trading-segment");
+            var productType = Config.Get("zerodha-product-type");
+            var zerodha = new ZerodhaBrokerage(tradingSegment, productType, apiKey, accessToken, algorithm.Object, new AggregationManager());
 
             return zerodha;
         }

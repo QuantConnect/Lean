@@ -111,6 +111,11 @@ namespace QuantConnect.Brokerages.Zerodha
         private readonly string _accessToken;
         private readonly string _wssUrl = "wss://ws.kite.trade/";
         private readonly string RestApiUrl = "https://api.kite.trade";
+
+        private readonly string _tradingSegment;
+        private readonly string _zerodhaProductType;
+
+        private DateTime _lastTradeTickTime;
         #endregion
 
 
@@ -121,9 +126,11 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
-        public ZerodhaBrokerage(string apiKey, string accessToken, IAlgorithm algorithm, IDataAggregator aggregator)
+        public ZerodhaBrokerage(string tradingSegment, string zerodhaProductType, string apiKey, string accessToken, IAlgorithm algorithm, IDataAggregator aggregator)
             : base("Zerodha")
         {
+            _tradingSegment = tradingSegment;
+            _zerodhaProductType = zerodhaProductType;
             _algorithm = algorithm;
             _aggregator = aggregator;
             _kite = new Kite(apiKey, accessToken);
@@ -160,7 +167,7 @@ namespace QuantConnect.Brokerages.Zerodha
         /// <param name="symbols">The list of symbols to subscribe</param>
         public void Subscribe(IEnumerable<Symbol> symbols)
         {
-            if (symbols.Count()<=0)
+            if (symbols.Count() <= 0)
                 return;
             foreach (var symbol in symbols)
             {
@@ -266,7 +273,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     CachedOrderIDs.TryRemove(order.Id, out outOrder);
                     decimal ignored;
                     _fills.TryRemove(order.Id, out ignored);
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Zerodha Order Rejected Event: "+ orderUpdate.StatusMessage) { Status = OrderStatus.Canceled });
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Zerodha Order Rejected Event: " + orderUpdate.StatusMessage) { Status = OrderStatus.Canceled });
                 }
 
                 if (orderUpdate.FilledQuantity > 0)
@@ -322,7 +329,7 @@ namespace QuantConnect.Brokerages.Zerodha
             }
         }
 
-private decimal CalculateBrokerageOrderFee(decimal orderValue)
+        private decimal CalculateBrokerageOrderFee(decimal orderValue)
         {
             bool isSell = orderValue < 0;
             orderValue = Math.Abs(orderValue);
@@ -434,15 +441,15 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
         public override bool PlaceOrder(Order order)
         {
             LockStream();
-            
+
             uint orderQuantity = Convert.ToUInt32(Math.Abs(order.Quantity));
             JObject orderResponse;
             decimal? triggerPrice = null;
 
-            if(order.Status == OrderStatus.Invalid)
+            if (order.Status == OrderStatus.Invalid)
             {
-                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Invalid order status {order.Status}" ;
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata), new OrderFee(new CashAmount(0,Currencies.INR)), "Zerodha Order Event") { Status = OrderStatus.Invalid });
+                var errorMessage = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: Invalid order status {order.Status}";
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata), new OrderFee(new CashAmount(0, Currencies.INR)), "Zerodha Order Event") { Status = OrderStatus.Invalid });
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, errorMessage));
 
                 UnlockStream();
@@ -476,7 +483,7 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
 
             try
             {
-                orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market.ToUpperInvariant(), order.Symbol.ID.Symbol, order.Direction.ToString().ToUpperInvariant(), 
+                orderResponse = _kite.PlaceOrder(order.Symbol.ID.Market.ToUpperInvariant(), order.Symbol.ID.Symbol, order.Direction.ToString().ToUpperInvariant(),
                     orderQuantity, orderPrice, orderProperties.ProductType, kiteOrderType, null, null, triggerPrice);
             }
             catch (Exception ex)
@@ -586,10 +593,10 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
         private static string ConvertOrderType(OrderType orderType)
         {
 
-        //            public const string ORDER_TYPE_MARKET = "MARKET";
-        //public const string ORDER_TYPE_LIMIT = "LIMIT";
-        //public const string ORDER_TYPE_SLM = "SL-M";
-        //public const string ORDER_TYPE_SL = "SL";
+            //            public const string ORDER_TYPE_MARKET = "MARKET";
+            //public const string ORDER_TYPE_LIMIT = "LIMIT";
+            //public const string ORDER_TYPE_SLM = "SL-M";
+            //public const string ORDER_TYPE_SL = "SL";
 
             switch (orderType)
             {
@@ -616,7 +623,7 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
         {
             LockStream();
 
-            if(order.Status==OrderStatus.PartiallyFilled || order.Status == OrderStatus.Filled)
+            if (!order.Status.IsOpen())
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "error", "Order is already being processed"));
                 UnlockStream();
@@ -671,15 +678,15 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
                 UnlockStream();
                 return false;
             }
-            
-            
+
+
             if ((string)orderResponse["status"] == "success")
             {
                 if (string.IsNullOrEmpty((string)orderResponse["data"]["order_id"]))
                 {
                     var errorMessage = $"Error parsing response from modify order: {orderResponse["status_message"]}";
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Zerodha Update Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning,(string) orderResponse["status"], errorMessage));
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (string)orderResponse["status"], errorMessage));
 
                     UnlockStream();
                     return true;
@@ -721,15 +728,9 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
         public override bool CancelOrder(Order order)
         {
             LockStream();
-            Log.Trace("CancelOrder Order Status "+order.Status.ToString());
-            //if (order.Type == OrderType.Bracket)
-            //{
-            //    orderResponse = _kite.CancelOrder(order.Id.ToStringInvariant());
-            //}
-            //else
-            //{
+
             JObject orderResponse = new JObject();
-            if (order.Status!=OrderStatus.Filled && order.Status!= OrderStatus.PartiallyFilled && order.Status!=OrderStatus.Invalid)
+            if (order.Status.IsOpen())
             {
                 try
                 {
@@ -745,15 +746,14 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
             else
             {
                 //Verify this
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error,500, $"Error cancelling open order"));
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, 500, $"Error cancelling open order"));
                 UnlockStream();
                 return false;
             }
-            
-            //}
+
             if ((string)orderResponse["status"] == "success")
             {
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero,"Zerodha Order Cancelled Event") { Status = OrderStatus.Canceled });
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Zerodha Order Cancelled Event") { Status = OrderStatus.Canceled });
                 UnlockStream();
                 return true;
             }
@@ -779,21 +779,25 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
             if (allOrders.Count > 0)
             {
 
-                foreach (var item in allOrders.Where(z => z.Status == "filled"))
+                foreach (var item in allOrders.Where(z => z.Status == "COMPLETE"))
                 {
 
                     Order order;
-                    if (item.OrderType.ToLowerInvariant() == "MKT")
+                    if (item.OrderType.ToUpperInvariant() == "MARKET")
                     {
                         order = new MarketOrder { Price = Convert.ToDecimal(item.Price, CultureInfo.InvariantCulture) };
                     }
-                    else if (item.OrderType.ToLowerInvariant() == "L")
+                    else if (item.OrderType.ToUpperInvariant() == "LIMIT")
                     {
                         order = new LimitOrder { LimitPrice = Convert.ToDecimal(item.Price, CultureInfo.InvariantCulture) };
                     }
-                    else if (item.OrderType.ToLowerInvariant() == "SL-M")
+                    else if (item.OrderType.ToUpperInvariant() == "SL-M")
                     {
                         order = new StopMarketOrder { StopPrice = Convert.ToDecimal(item.Price, CultureInfo.InvariantCulture) };
+                    }
+                    else if (item.OrderType.ToUpperInvariant() == "SL")
+                    {
+                        order = new StopLimitOrder { StopPrice = Convert.ToDecimal(item.TriggerPrice, CultureInfo.InvariantCulture), LimitPrice = Convert.ToDecimal(item.Price, CultureInfo.InvariantCulture) };
                     }
                     else
                     {
@@ -834,7 +838,7 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
             var filledQty = Convert.ToInt32(orderDetails.FilledQuantity, CultureInfo.InvariantCulture);
             var pendingQty = Convert.ToInt32(orderDetails.PendingQuantity, CultureInfo.InvariantCulture);
             var orderDetail = _kite.GetOrderHistory(orderDetails.OrderId);
-            if (orderDetails.Status != "complete" && filledQty == 0)
+            if (orderDetails.Status.ToLowerInvariant() != "complete" && filledQty == 0)
             {
                 return OrderStatus.Submitted;
             }
@@ -854,61 +858,25 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
             return OrderStatus.None;
         }
 
+
+
         /// <summary>
-        /// Gets all open positions
-        /// </summary>
-        /// <returns></returns>
-        private List<Holding> GetHoldings()
-        {
-            var holdingsList = new List<Holding>();
-            var HoldingResponse = _kite.GetHoldings();
-            if (HoldingResponse == null)
-            {
-                return holdingsList;
-            }
-            foreach (var item in HoldingResponse)
-            {
-                ////TODO: Handle this later for now ignore CNC holdings since we currently only support MIS
-                if (item.Product == KiteProductType.MIS.ToString().ToUpperInvariant())
-                {
-                    //(avgprice - lasttradedprice) * holdingsqty
-                    Holding holding = new Holding
-                    {
-                        AveragePrice = item.AveragePrice,
-                        Symbol = _symbolMapper.GetLeanSymbol(item.TradingSymbol),
-                        MarketPrice = item.LastPrice,
-                        Quantity = item.Quantity,
-                        Type = SecurityType.Equity,
-                        UnrealizedPnL = item.PNL, //(item.averagePrice - item.lastTradedPrice) * item.holdingsQuantity,
-                        CurrencySymbol = Currencies.GetCurrencySymbol(AccountBaseCurrency),
-                        //TODO:Can be item.holdings value too, need to debug
-                        MarketValue = item.ClosePrice * item.Quantity
-
-                    };
-                    holdingsList.Add(holding);
-                }
-            }
-            return holdingsList;
-        }
-
-/// <summary>
         /// Gets all open positions
         /// </summary>
         /// <returns></returns>
         public override List<Holding> GetAccountHoldings()
         {
             var holdingsList = new List<Holding>();
-            var HoldingResponse = _kite.GetPositions();
-            if (HoldingResponse.Day.Count==0)
+            if (_zerodhaProductType.ToUpperInvariant() == KiteProductType.MIS.ToString().ToUpperInvariant())
             {
-                return holdingsList;
-            }
-            foreach (var item in HoldingResponse.Day)
-            {
-                ////TODO: Handle this later for now ignore CNC holdings since we currently only support MIS
-                if (item.Product == KiteProductType.MIS.ToString().ToUpperInvariant())
+                var HoldingResponse = _kite.GetPositions();
+                if (HoldingResponse.Day.Count == 0)
                 {
-                    //(avgprice - lasttradedprice) * holdingsqty
+                    return holdingsList;
+                }
+                foreach (var item in HoldingResponse.Day)
+                {
+
                     Holding holding = new Holding
                     {
                         AveragePrice = item.AveragePrice,
@@ -918,13 +886,43 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
                         Type = SecurityType.Equity,
                         UnrealizedPnL = item.PNL, //(item.averagePrice - item.lastTradedPrice) * item.holdingsQuantity,
                         CurrencySymbol = Currencies.GetCurrencySymbol(AccountBaseCurrency),
-                        //TODO:Can be item.holdings value too, need to debug
+                        MarketValue = item.ClosePrice * item.Quantity
+
+                    };
+                    holdingsList.Add(holding);
+                }
+
+            }
+            else if (_zerodhaProductType.ToUpperInvariant() == KiteProductType.CNC.ToString().ToUpperInvariant())
+            {
+                var HoldingResponse = _kite.GetHoldings();
+                if (HoldingResponse == null)
+                {
+                    return holdingsList;
+                }
+                foreach (var item in HoldingResponse)
+                {
+
+                    Holding holding = new Holding
+                    {
+                        AveragePrice = item.AveragePrice,
+                        Symbol = _symbolMapper.GetLeanSymbol(item.TradingSymbol),
+                        MarketPrice = item.LastPrice,
+                        Quantity = item.Quantity,
+                        Type = SecurityType.Equity,
+                        UnrealizedPnL = item.PNL, //(item.averagePrice - item.lastTradedPrice) * item.holdingsQuantity,
+                        CurrencySymbol = Currencies.GetCurrencySymbol(AccountBaseCurrency),
                         MarketValue = item.ClosePrice * item.Quantity
 
                     };
                     holdingsList.Add(holding);
                 }
             }
+            else
+            {
+                //TODO: Pending for the NRML product type
+            }
+
             return holdingsList;
         }
         /// <summary>
@@ -933,9 +931,17 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
         /// <returns></returns>
         public override List<CashAmount> GetCashBalance()
         {
+            decimal amt = 0m;
             var list = new List<CashAmount>();
             var response = _kite.GetMargins();
-            decimal amt = Convert.ToDecimal(response.Equity.Net, CultureInfo.InvariantCulture);
+            if (_tradingSegment == "EQUITY")
+            {
+                amt = Convert.ToDecimal(response.Equity.Net, CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                amt = Convert.ToDecimal(response.Commodity.Net, CultureInfo.InvariantCulture);
+            }
             list.Add(new CashAmount(amt, AccountBaseCurrency));
             return list;
         }
@@ -1005,15 +1011,15 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
                 switch (historyRequest.Resolution)
                 {
                     case Resolution.Minute:
-                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end,historyRequest.Resolution,"minute");
+                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "minute");
                         break;
 
                     case Resolution.Hour:
-                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end,historyRequest.Resolution,"60minute");
+                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "60minute");
                         break;
 
                     case Resolution.Daily:
-                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution,"day");
+                        history = GetHistoryForPeriod(historyRequest.Symbol, start, end, historyRequest.Resolution, "day");
                         break;
                 }
 
@@ -1021,10 +1027,10 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
                 {
                     yield return baseData;
                 }
-            }            
+            }
         }
 
-        private IEnumerable<BaseData> GetHistoryForPeriod(Symbol symbol, DateTime start, DateTime end, Resolution resolution,string zerodhaResolution)
+        private IEnumerable<BaseData> GetHistoryForPeriod(Symbol symbol, DateTime start, DateTime end, Resolution resolution, string zerodhaResolution)
         {
             Log.Debug("ZerodhaBrokerage.GetHistoryForPeriod();");
             var scripSymbol = _symbolMapper.GetZerodhaInstrumentToken(symbol.Value, symbol.ID.Market);
@@ -1127,8 +1133,12 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
                             {
                                 var symbol = _symbolMapper.ConvertZerodhaSymbolToLeanSymbol(tick.InstrumentToken);
 
-                                EmitQuoteTick(symbol, tick.Bids, tick.BuyQuantity, tick.Offers, tick.SellQuantity,tick.Timestamp.GetValueOrDefault());
-                                EmitTradeTick(symbol, tick.LastTradeTime.GetValueOrDefault(), tick.LastPrice, tick.LastQuantity);
+                                EmitQuoteTick(symbol, tick.Bids, tick.BuyQuantity, tick.Offers, tick.SellQuantity, tick.Timestamp.GetValueOrDefault());
+                                if (_lastTradeTickTime != tick.LastTradeTime.GetValueOrDefault())
+                                {
+                                    EmitTradeTick(symbol, tick.LastTradeTime.GetValueOrDefault(), tick.LastPrice, tick.LastQuantity);
+                                    _lastTradeTickTime = tick.LastTradeTime.GetValueOrDefault();
+                                }
                             }
                         }
                     }
@@ -1140,7 +1150,7 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
                     JObject messageDict = Utils.JsonDeserialize(message);
                     if ((string)messageDict["type"] == "order")
                     {
-                        
+
                         EmitFillOrder(new Messages.Order(messageDict["data"]));
                     }
                     else if ((string)messageDict["type"] == "error")
@@ -1174,7 +1184,7 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
                         Symbol = symbol,
                         TickType = TickType.Trade,
                         Quantity = Math.Abs(amount),
-                        Exchange= symbol.ID.Market
+                        Exchange = symbol.ID.Market
                     });
                 }
             }
@@ -1200,8 +1210,8 @@ private decimal CalculateBrokerageOrderFee(decimal orderValue)
                     TickType = TickType.Quote,
                     AskSize = askSize,
                     BidSize = bidSize,
-                    
-                    
+
+
                 };
 
                 lock (TickLocker)
