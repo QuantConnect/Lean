@@ -3,7 +3,7 @@
   <component name="RunManager" selected="Python Debug Server.Debug in Container">
     <configuration name="Debug Local" type="PyRemoteDebugConfigurationType" factoryName="Python Remote Debug">
       <module name="LEAN" />
-      <option name="PORT" value="5678" />
+      <option name="PORT" value="6000" />
       <option name="HOST" value="localhost" />
       <PathMappingSettings>
         <option name="pathMappings">
@@ -16,7 +16,7 @@
     </configuration>
     <configuration name="Debug in Container" type="PyRemoteDebugConfigurationType" factoryName="Python Remote Debug">
       <module name="LEAN" />
-      <option name="PORT" value="5678" />
+      <option name="PORT" value="6000" />
       <option name="HOST" value="localhost" />
       <PathMappingSettings>
         <option name="pathMappings">
