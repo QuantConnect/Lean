@@ -17,12 +17,14 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Interfaces;
 using QuantConnect;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Python;
 using QuantConnect.Util;
 
+[assembly: MaintainLogHandler()]
 [SetUpFixture]
 public class AssemblyInitialize
 {
@@ -30,18 +32,6 @@ public class AssemblyInitialize
     public void InitializeTestEnvironment()
     {
         AdjustCurrentDirectory();
-        
-        if (TestContext.Parameters.Exists("log-handler"))
-        {
-            var logHandler = TestContext.Parameters["log-handler"];
-            Log.Trace($"QuantConnect.Tests.AssemblyInitialize(): Log handler test parameter loaded {logHandler}");
-
-            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(logHandler);
-        }
-        else
-        {
-            Log.LogHandler = new ConsoleLogHandler();
-        }
     }
 
     public static void AdjustCurrentDirectory()
@@ -70,3 +60,43 @@ public class AssemblyInitialize
             });
     }
 }
+
+[AttributeUsage(AttributeTargets.Assembly)]
+public class MaintainLogHandlerAttribute : Attribute, ITestAction
+{
+    private ILogHandler _logHandler;
+
+    public MaintainLogHandlerAttribute()
+    {
+        if (TestContext.Parameters.Exists("log-handler"))
+        {
+            var logHandler = TestContext.Parameters["log-handler"];
+            Log.Trace($"QuantConnect.Tests.AssemblyInitialize(): Log handler test parameter loaded {logHandler}");
+
+            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(logHandler);
+        }
+        else
+        {
+            Log.LogHandler = new ConsoleLogHandler();
+        }
+
+        _logHandler = Log.LogHandler;
+    }
+
+    public void BeforeTest(ITest details)
+    {
+        Log.LogHandler = _logHandler;
+    }
+
+    public void AfterTest(ITest details)
+    {
+        //NOP
+    }
+
+    public ActionTargets Targets
+    {   // Set only to act on test fixture not individual tests
+        get { return ActionTargets.Suite; }
+    }
+}
+
+
