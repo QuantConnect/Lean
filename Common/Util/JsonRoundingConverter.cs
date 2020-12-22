@@ -73,9 +73,9 @@ namespace QuantConnect.Util
         /// <param name="serializer">The calling serializer.</param>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            if (value is double @double)
+            if (value is double)
             {
-                var rounded = Math.Round(@double, FractionalDigits);
+                var rounded = Math.Round((double)value, FractionalDigits);
 
                 if (rounded == double.MaxValue || rounded == double.MinValue)
                 {
