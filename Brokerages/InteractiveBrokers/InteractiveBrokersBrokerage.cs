@@ -2382,7 +2382,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             // we ignore futures canonical symbol
                             if (symbol.ID.SecurityType == SecurityType.Future && symbol.IsCanonical())
                             {
-                                return false;
+                                continue;
                             }
 
                             var id = GetNextId();
@@ -2409,10 +2409,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             _subscribedTickers[id] = new SubscriptionEntry { Symbol = subscribeSymbol };
 
                             Log.Trace($"InteractiveBrokersBrokerage.Subscribe(): Subscribe Processed: {symbol.Value} ({GetContractDescription(contract)}) # {id}");
-                            return true;
                         }
                     }
                 }
+                return true;
             }
             catch (Exception err)
             {
