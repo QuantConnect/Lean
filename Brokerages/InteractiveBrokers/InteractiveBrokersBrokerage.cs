@@ -2382,7 +2382,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             // we ignore futures canonical symbol
                             if (symbol.ID.SecurityType == SecurityType.Future && symbol.IsCanonical())
                             {
-                                return false;
+                                continue;
                             }
 
                             var id = GetNextId();
