@@ -2409,10 +2409,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             _subscribedTickers[id] = new SubscriptionEntry { Symbol = subscribeSymbol };
 
                             Log.Trace($"InteractiveBrokersBrokerage.Subscribe(): Subscribe Processed: {symbol.Value} ({GetContractDescription(contract)}) # {id}");
-                            return true;
                         }
                     }
                 }
+                return true;
             }
             catch (Exception err)
             {
