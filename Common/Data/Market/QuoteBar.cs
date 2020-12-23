@@ -727,7 +727,12 @@ namespace QuantConnect.Data.Market
                 return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.Streaming);
             }
 
-            var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
+            var rootPath = Globals.DataFolder;
+            if (config.Resolution >= Resolution.Minute)
+            {
+                rootPath = Globals.CacheDataFolder;
+            }
+            var source = LeanData.GenerateZipFilePath(rootPath, config.Symbol, date, config.Resolution, config.TickType);
             if (config.SecurityType == SecurityType.Future || config.SecurityType.IsOption())
             {
                 source += "#" + LeanData.GenerateZipEntryName(config.Symbol, date, config.Resolution, config.TickType);

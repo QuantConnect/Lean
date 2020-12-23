@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,7 +14,9 @@
  *
 */
 
+using System.IO;
 using System.Reflection;
+using QuantConnect.Logging;
 using QuantConnect.Configuration;
 
 namespace QuantConnect
@@ -49,6 +51,11 @@ namespace QuantConnect
             }
 
             CacheDataFolder = Config.Get("cache-location", DataFolder);
+            if (string.IsNullOrEmpty(CacheDataFolder) || !Directory.Exists(CacheDataFolder))
+            {
+                Log.Error("Globals.Reset(): Cache folder not found, will use data folder instead");
+                CacheDataFolder = DataFolder;
+            }
         }
 
         /// <summary>
