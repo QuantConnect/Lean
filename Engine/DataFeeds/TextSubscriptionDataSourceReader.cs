@@ -14,13 +14,12 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System.Runtime.Caching;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -39,18 +38,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly SubscriptionDataConfig _config;
         private BaseData _factory;
         private bool _shouldCacheDataPoints;
-        private static readonly MemoryCache BaseDataSourceCache = new MemoryCache("BaseDataSourceCache",
-            new NameValueCollection
-            {
-                { "CacheMemoryLimitMegabytes", "250" },
-                { "PhysicalMemoryLimitPercentage", "10" },
-                { "PollingInterval", TimeSpan.FromMilliseconds(15000).ToString() }
-            });
-        private static readonly CacheItemPolicy CachePolicy = new CacheItemPolicy
-        {
-            // Cache entry should be evicted if it has not been accessed in given span of time:
-            SlidingExpiration = TimeSpan.FromMinutes(1)
-        };
+
+        private static readonly Dictionary<string, List<BaseData>> BaseDataSourceCache = new Dictionary<string, List<BaseData>>();
+        private static readonly Queue<string> CacheKeys = new Queue<string>();
 
         /// <summary>
         /// Event fired when the specified source is considered invalid, this may
@@ -109,13 +99,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
         public override IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
-            List<BaseData> cache;
+            List<BaseData> cache = null;
             _shouldCacheDataPoints = _shouldCacheDataPoints &&
                 // only cache local files
                 source.TransportMedium == SubscriptionTransportMedium.LocalFile;
-            var cacheItem = _shouldCacheDataPoints
-                ? BaseDataSourceCache.GetCacheItem(source.Source + _config.Type) : null;
-            if (cacheItem == null)
+
+            string cacheKey = null;
+            if (_shouldCacheDataPoints)
+            {
+                cacheKey = source.Source + _config.Type;
+                lock (BaseDataSourceCache)
+                {
+                    BaseDataSourceCache.TryGetValue(cacheKey, out cache);
+                }
+            }
+            if (cache == null)
             {
                 cache = new List<BaseData>();
                 using (var reader = CreateStreamReader(source))
@@ -178,14 +176,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     yield break;
                 }
 
-                cacheItem = new CacheItem(source.Source + _config.Type, cache);
-                BaseDataSourceCache.Add(cacheItem, CachePolicy);
+                lock (BaseDataSourceCache)
+                {
+                    BaseDataSourceCache[cacheKey] = cache;
+                    CacheKeys.Enqueue(cacheKey);
+                    if (CacheKeys.Count > 100)
+                    {
+                        BaseDataSourceCache.Remove(CacheKeys.Dequeue());
+                    }
+                }
             }
-            cache = cacheItem.Value as List<BaseData>;
+
             if (cache == null)
             {
-                throw new InvalidOperationException("CacheItem can not be cast into expected type. " +
-                    $"Type is: {cacheItem.Value.GetType()}");
+                throw new InvalidOperationException($"CacheItem can not be cast into expected type. Key: {cacheKey}");
             }
             // Find the first data point 10 days (just in case) before the desired date
             // and subtract one item (just in case there was a time gap and data.Time is after _date)
