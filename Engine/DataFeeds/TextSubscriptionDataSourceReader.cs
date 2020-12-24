@@ -14,14 +14,15 @@
 */
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Threading;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -39,8 +40,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private BaseData _factory;
         private bool _shouldCacheDataPoints;
 
-        private static readonly Dictionary<string, List<BaseData>> BaseDataSourceCache = new Dictionary<string, List<BaseData>>();
-        private static readonly Queue<string> CacheKeys = new Queue<string>();
+        private static int CacheSize = 100;
+        private static volatile Dictionary<string, List<BaseData>> BaseDataSourceCache = new Dictionary<string, List<BaseData>>();
+        private static ConcurrentQueue<string> CacheKeys = new ConcurrentQueue<string>();
 
         /// <summary>
         /// Event fired when the specified source is considered invalid, this may
@@ -108,10 +110,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (_shouldCacheDataPoints)
             {
                 cacheKey = source.Source + _config.Type;
-                lock (BaseDataSourceCache)
-                {
-                    BaseDataSourceCache.TryGetValue(cacheKey, out cache);
-                }
+                BaseDataSourceCache.TryGetValue(cacheKey, out cache);
             }
             if (cache == null)
             {
@@ -176,14 +175,41 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     yield break;
                 }
 
-                lock (BaseDataSourceCache)
+                CacheKeys.Enqueue(cacheKey);
+                if (BaseDataSourceCache.Count > CacheSize)
+                {
+                    var orgCache = BaseDataSourceCache;
+                    // only one thread will enter here and remove the first 33% items from the cache & queue
+                    if (Monitor.TryEnter(orgCache))
+                    {
+                        try
+                        {
+                            // we create a new dictionary so we don't have to take locks and add our new item
+                            var newCache = new Dictionary<string, List<BaseData>>(BaseDataSourceCache) { [cacheKey] = cache };
+
+                            string key;
+                            var removeCount = 0;
+                            // we remove a portion of the first entries
+                            while (CacheKeys.TryDequeue(out key) && ++removeCount < (CacheSize / 3))
+                            {
+                                newCache.Remove(key);
+                            }
+                            // update the cache instance
+                            BaseDataSourceCache = newCache;
+                        }
+                        finally
+                        {
+                            Monitor.Exit(orgCache);
+                        }
+                    }
+                    else
+                    {
+                        BaseDataSourceCache[cacheKey] = cache;
+                    }
+                }
+                else
                 {
                     BaseDataSourceCache[cacheKey] = cache;
-                    CacheKeys.Enqueue(cacheKey);
-                    if (CacheKeys.Count > 100)
-                    {
-                        BaseDataSourceCache.Remove(CacheKeys.Dequeue());
-                    }
                 }
             }
 
