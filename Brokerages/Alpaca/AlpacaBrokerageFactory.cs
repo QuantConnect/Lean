@@ -19,6 +19,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Alpaca
 {
@@ -92,7 +93,8 @@ namespace QuantConnect.Brokerages.Alpaca
 
             return new AlpacaBrokerage(
                 algorithm.Transactions, 
-                algorithm.Portfolio, 
+                algorithm.Portfolio,
+                Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider")),
                 keyId, 
                 secretKey, 
                 tradingMode);

@@ -16,6 +16,7 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Brokerages.InteractiveBrokers;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
@@ -25,7 +26,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [Test]
         public void ReturnsCorrectLeanSymbol()
         {
-            var mapper = new InteractiveBrokersSymbolMapper();
+            var mapper = new InteractiveBrokersSymbolMapper(new LocalDiskMapFileProvider());
 
             var symbol = mapper.GetLeanSymbol("EURUSD", SecurityType.Forex, Market.FXCM);
             Assert.AreEqual("EURUSD", symbol.Value);
@@ -46,7 +47,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [Test]
         public void ReturnsCorrectBrokerageSymbol()
         {
-            var mapper = new InteractiveBrokersSymbolMapper();
+            var mapper = new InteractiveBrokersSymbolMapper(new LocalDiskMapFileProvider());
 
             var symbol = Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM);
             var brokerageSymbol = mapper.GetBrokerageSymbol(symbol);
@@ -61,10 +62,22 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             Assert.AreEqual("BRK B", brokerageSymbol);
         }
 
+        [TestCase("AAPL", "AAPL")]
+        [TestCase("AOL", "TWX")]
+        [TestCase("NWSA", "FOXA")]
+        public void MapCorrectBrokerageSymbol(string ticker, string ibSymbol)
+        {
+            var mapper = new InteractiveBrokersSymbolMapper(new LocalDiskMapFileProvider());
+
+            var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+            var brokerageSymbol = mapper.GetBrokerageSymbol(symbol);
+            Assert.AreEqual(ibSymbol, brokerageSymbol);
+        }
+
         [Test]
         public void ThrowsOnNullOrEmptyOrInvalidSymbol()
         {
-            var mapper = new InteractiveBrokersSymbolMapper();
+            var mapper = new InteractiveBrokersSymbolMapper(new LocalDiskMapFileProvider());
 
             Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(null, SecurityType.Forex, Market.FXCM));
 

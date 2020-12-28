@@ -373,6 +373,7 @@
     <Compile Include="Algorithm\Framework\Selection\OpenInterestFutureUniverseSelectionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Selection\QC500UniverseSelectionModelTests.cs" />
     <Compile Include="Api\NodeTests.cs" />
+    <Compile Include="Brokerages\Alpaca\AlpacaSymbolMapperTests.cs" />
     <Compile Include="Brokerages\BrokerageFactoryTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageAdditionalTests.cs" />
     <Compile Include="Brokerages\Binance\BinanceBrokerageHistoryProviderTests.cs" />

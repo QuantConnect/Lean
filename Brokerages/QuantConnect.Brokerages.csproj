@@ -195,6 +195,7 @@
     <Compile Include="Alpaca\AlpacaBrokerage.cs" />
     <Compile Include="Alpaca\AlpacaBrokerage.Utility.cs" />
     <Compile Include="Alpaca\AlpacaBrokerageFactory.cs" />
+    <Compile Include="Alpaca\AlpacaSymbolMapper.cs" />
     <Compile Include="Alpaca\Markets\AlpacaTradingClient.cs" />
     <Compile Include="Alpaca\Markets\AlpacaTradingClient.General.cs" />
     <Compile Include="Alpaca\Markets\AlpacaTradingClient.Orders.cs" />

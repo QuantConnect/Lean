@@ -14,12 +14,13 @@
 */
 
 using Newtonsoft.Json;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities.Future;
+using QuantConnect.Securities.FutureOption;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using QuantConnect.Securities.Future;
-using QuantConnect.Securities.FutureOption;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -28,6 +29,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     /// </summary>
     public class InteractiveBrokersSymbolMapper : ISymbolMapper
     {
+        private readonly IMapFileProvider _mapFileProvider;
+
         // we have a special treatment of futures, because IB renamed several exchange tickers (like GBP instead of 6B). We fix this:
         // We map those tickers back to their original names using the map below
         private readonly Dictionary<string, string> _ibNameMap = new Dictionary<string, string>();
@@ -35,9 +38,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Constructs InteractiveBrokersSymbolMapper. Default parameters are used.
         /// </summary>
-        public InteractiveBrokersSymbolMapper():
+        public InteractiveBrokersSymbolMapper(IMapFileProvider mapFileProvider) :
             this(Path.Combine("InteractiveBrokers", "IB-symbol-map.json"))
         {
+            _mapFileProvider = mapFileProvider;
         }
 
         /// <summary>
@@ -67,8 +71,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The InteractiveBrokers symbol</returns>
         public string GetBrokerageSymbol(Symbol symbol)
         {
-            if (symbol == null || string.IsNullOrWhiteSpace(symbol.Value))
+            if (string.IsNullOrWhiteSpace(symbol?.Value))
                 throw new ArgumentException("Invalid symbol: " + (symbol == null ? "null" : symbol.ToString()));
+
+            var ticker = GetMappedTicker(symbol);
+
+            if (string.IsNullOrWhiteSpace(ticker))
+                throw new ArgumentException("Invalid symbol: " + symbol.ToString());
 
             if (symbol.ID.SecurityType != SecurityType.Forex &&
                 symbol.ID.SecurityType != SecurityType.Equity &&
@@ -77,7 +86,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 symbol.ID.SecurityType != SecurityType.Future)
                 throw new ArgumentException("Invalid security type: " + symbol.ID.SecurityType);
 
-            if (symbol.ID.SecurityType == SecurityType.Forex && symbol.Value.Length != 6)
+            if (symbol.ID.SecurityType == SecurityType.Forex && ticker.Length != 6)
                 throw new ArgumentException("Forex symbol length must be equal to 6: " + symbol.Value);
 
             switch (symbol.ID.SecurityType)
@@ -85,7 +94,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case SecurityType.Option:
                     // Final case is for equities. We use the mapped value to select
                     // the equity we want to trade.
-                    return symbol.Underlying.Value;
+                    return GetMappedTicker(symbol.Underlying);
 
                 case SecurityType.FutureOption:
                     // We use the underlying Future Symbol since IB doesn't use
@@ -97,10 +106,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return GetBrokerageRootSymbol(symbol.ID.Symbol);
 
                 case SecurityType.Equity:
-                    return symbol.Value.Replace(".", " ");
+                    return ticker.Replace(".", " ");
             }
 
-            return symbol.Value;
+            return ticker;
         }
 
         /// <summary>
@@ -173,7 +182,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             var brokerageSymbol = _ibNameMap.FirstOrDefault(kv => kv.Value == rootSymbol);
 
-            return brokerageSymbol.Key??rootSymbol;
+            return brokerageSymbol.Key ?? rootSymbol;
         }
 
         /// <summary>
@@ -186,5 +195,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return _ibNameMap.ContainsKey(brokerageRootSymbol) ? _ibNameMap[brokerageRootSymbol] : brokerageRootSymbol;
         }
 
+        private string GetMappedTicker(Symbol symbol)
+        {
+            var ticker = symbol.Value;
+            if (symbol.ID.SecurityType == SecurityType.Equity)
+            {
+                var mapFile = _mapFileProvider.Get(symbol.ID.Market).ResolveMapFile(symbol.ID.Symbol, symbol.ID.Date);
+                ticker = mapFile.GetMappedSymbol(DateTime.UtcNow, symbol.Value);
+            }
+
+            return ticker;
+        }
     }
 }
