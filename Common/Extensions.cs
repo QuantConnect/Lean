@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -2944,6 +2944,104 @@ namespace QuantConnect
 
             // If we made it here then only filter it if its an InternalFeed
             return !config.IsInternalFeed;
+        }
+
+        /// Gets the <see cref="OrderDirection"/> that corresponds to the specified <paramref name="side"/>
+        /// </summary>
+        /// <param name="side">The position side to be converted</param>
+        /// <returns>The order direction that maps from the provided position side</returns>
+        public static OrderDirection ToOrderDirection(this PositionSide side)
+        {
+            switch (side)
+            {
+                case PositionSide.Short: return OrderDirection.Sell;
+                case PositionSide.None:  return OrderDirection.Hold;
+                case PositionSide.Long:  return OrderDirection.Buy;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(side), side, null);
+            }
+        }
+
+        /// <summary>
+        /// Determines if an order with the specified <paramref name="direction"/> would close a position with the
+        /// specified <paramref name="side"/>
+        /// </summary>
+        /// <param name="direction">The direction of the order, buy/sell</param>
+        /// <param name="side">The side of the position, long/short</param>
+        /// <returns>True if the order direction would close the position, otherwise false</returns>
+        public static bool Closes(this OrderDirection direction, PositionSide side)
+        {
+            switch (side)
+            {
+                case PositionSide.Short:
+                    switch (direction)
+                    {
+                        case OrderDirection.Buy:  return true;
+                        case OrderDirection.Sell: return false;
+                        case OrderDirection.Hold: return false;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+                    }
+
+                case PositionSide.Long:
+                    switch (direction)
+                    {
+                        case OrderDirection.Buy:  return false;
+                        case OrderDirection.Sell: return true;
+                        case OrderDirection.Hold: return false;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+                    }
+
+                case PositionSide.None:
+                    return false;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(side), side, null);
+            }
+        }
+
+        /// <summary>
+        /// Determines if the two lists are equal, including all items at the same indices.
+        /// </summary>
+        /// <typeparam name="T">The element type</typeparam>
+        /// <param name="left">The left list</param>
+        /// <param name="right">The right list</param>
+        /// <returns>True if the two lists have the same counts and items at each index evaluate as equal</returns>
+        public static bool ListEquals<T>(this IReadOnlyList<T> left, IReadOnlyList<T> right)
+        {
+            var count = left.Count;
+            if (count != right.Count)            
+            for (int i = 0; i < count; i++)
+            {
+                if (!left[i].Equals(right[i]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Computes a deterministic hash code based on the items in the list. This hash code is dependent on the
+        /// ordering of items.
+        /// </summary>
+        /// <typeparam name="T">The element type</typeparam>
+        /// <param name="list">The list</param>
+        /// <returns>A hash code dependent on the ordering of elements in the list</returns>
+        public static int GetListHashCode<T>(this IReadOnlyList<T> list)
+        {
+            unchecked
+            {
+                var hashCode = 17;
+                for (int i = 0; i < list.Count; i++)
+                {
+                    hashCode += (hashCode * 397) ^ list[i].GetHashCode();
+                }
+
+                return hashCode;
+            }
         }
     }
 }
