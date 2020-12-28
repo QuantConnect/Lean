@@ -105,7 +105,7 @@ COMMAND="docker run --rm \
     -v $RESULTS_DIR:/Results \
     --name $CONTAINER_NAME \
     -p 5678:5678 \
-    --expose 6000 -add-host=host.docker.internal:$(ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+') "
+    --expose 6000 --add-host=host.docker.internal:$(ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+') "
 
 # If the csharp dll and pdb are present, mount them
 if [ ! -f "$CSHARP_DLL" ]; then
