@@ -64,7 +64,7 @@ public class AssemblyInitialize
 [AttributeUsage(AttributeTargets.Assembly)]
 public class MaintainLogHandlerAttribute : Attribute, ITestAction
 {
-    private ILogHandler _logHandler;
+    private static ILogHandler _logHandler;
 
     public MaintainLogHandlerAttribute()
     {
@@ -81,6 +81,11 @@ public class MaintainLogHandlerAttribute : Attribute, ITestAction
         }
 
         _logHandler = Log.LogHandler;
+    }
+
+    public static ILogHandler GetLogHandler()
+    {
+        return _logHandler;
     }
 
     public void BeforeTest(ITest details)
