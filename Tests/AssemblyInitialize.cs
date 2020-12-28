@@ -64,33 +64,35 @@ public class AssemblyInitialize
 [AttributeUsage(AttributeTargets.Assembly)]
 public class MaintainLogHandlerAttribute : Attribute, ITestAction
 {
-    private static ILogHandler _logHandler;
+    private static ILogHandler logHandler;
 
     public MaintainLogHandlerAttribute()
+    {
+        logHandler = GetLogHandler();
+    }
+
+    /// <summary>
+    /// Get the log handler defined by test context parameters. Defaults to ConsoleLogHandler if no
+    /// "log-handler" parameter is found.
+    /// </summary>
+    /// <returns>A new LogHandler</returns>
+    public static ILogHandler GetLogHandler()
     {
         if (TestContext.Parameters.Exists("log-handler"))
         {
             var logHandler = TestContext.Parameters["log-handler"];
             Log.Trace($"QuantConnect.Tests.AssemblyInitialize(): Log handler test parameter loaded {logHandler}");
 
-            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(logHandler);
+            return Composer.Instance.GetExportedValueByTypeName<ILogHandler>(logHandler);
         }
-        else
-        {
-            Log.LogHandler = new ConsoleLogHandler();
-        }
-
-        _logHandler = Log.LogHandler;
-    }
-
-    public static ILogHandler GetLogHandler()
-    {
-        return _logHandler;
+        
+        // If no parameter just use ConsoleLogHandler
+        return new ConsoleLogHandler();
     }
 
     public void BeforeTest(ITest details)
     {
-        Log.LogHandler = _logHandler;
+        Log.LogHandler = logHandler;
     }
 
     public void AfterTest(ITest details)
