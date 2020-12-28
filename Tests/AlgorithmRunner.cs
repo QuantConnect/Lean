@@ -91,7 +91,7 @@ namespace QuantConnect.Tests
                 var initialDebugEnabled = Log.DebuggingEnabled;
 
                 // Log handlers specific to this test function
-                var newLogHandlers = new ILogHandler[] { new ConsoleErrorLogHandler(), new FileLogHandler(logFile, false) };
+                var newLogHandlers = new ILogHandler[] { new ConsoleLogHandler(), new FileLogHandler(logFile, false) };
 
                 using (Log.LogHandler = new CompositeLogHandler(newLogHandlers))
                 using (var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance))
