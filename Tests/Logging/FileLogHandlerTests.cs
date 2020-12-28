@@ -57,12 +57,11 @@ namespace QuantConnect.Tests.Logging
             }
 
             var contents = File.ReadAllText(Log.FilePath);
+            File.Delete(Log.FilePath);
             Log.FilePath = previous;
 
             Assert.IsNotNull(contents);
             Assert.IsTrue(contents.Contains(debugMessage));
-
-            File.Delete(Log.FilePath);
         }
     }
 }

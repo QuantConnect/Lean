@@ -152,13 +152,13 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"reference-final\":0.0," +
             "\"direction\":\"up\"," +
             "\"period\":5.0," +
-            "\"magnitude\":0.025," +
+            "\"magnitude\":\"0.025\"," +
             "\"confidence\":null," +
             "\"weight\":null," +
             "\"score-final\":false," +
-            "\"score-magnitude\":0.0," +
-            "\"score-direction\":0.0," +
-            "\"estimated-value\":0.0}";
+            "\"score-magnitude\":\"0\"," +
+            "\"score-direction\":\"0\"," +
+            "\"estimated-value\":\"0\"}";
 
         private const string jsonWithScore =
             "{" +
@@ -175,13 +175,13 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"reference-final\":9243.53," +
             "\"direction\":\"up\"," +
             "\"period\":5.0," +
-            "\"magnitude\":0.025," +
+            "\"magnitude\":\"0.025\"," +
             "\"confidence\":null," +
             "\"weight\":null," +
             "\"score-final\":true," +
-            "\"score-magnitude\":1.0," +
-            "\"score-direction\":1.0," +
-            "\"estimated-value\":1113.2484}";
+            "\"score-magnitude\":\"1\"," +
+            "\"score-direction\":\"1\"," +
+            "\"estimated-value\":\"1113.2484\"}";
 
         private const string jsonWithMissingCreatedTime =
             "{" +
@@ -201,9 +201,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"confidence\":null," +
             "\"weight\":null," +
             "\"score-final\":true," +
-            "\"score-magnitude\":1.0," +
-            "\"score-direction\":1.0," +
-            "\"estimated-value\":1113.2484}";
+            "\"score-magnitude\":\"1\"," +
+            "\"score-direction\":\"1\"," +
+            "\"estimated-value\":\"1113.2484\"}";
 
         private const string jsonWithExpectedOutputFromMissingCreatedTimeValue =
             "{" +
@@ -220,13 +220,13 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"reference-final\":9243.53," +
             "\"direction\":\"up\"," +
             "\"period\":5.0," +
-            "\"magnitude\":0.025," +
+            "\"magnitude\":\"0.025\"," +
             "\"confidence\":null," +
             "\"weight\":null," +
             "\"score-final\":true," +
-            "\"score-magnitude\":1.0," +
-            "\"score-direction\":1.0," +
-            "\"estimated-value\":1113.2484}";
+            "\"score-magnitude\":\"1\"," +
+            "\"score-direction\":\"1\"," +
+            "\"estimated-value\":\"1113.2484\"}";
     }
 
 }

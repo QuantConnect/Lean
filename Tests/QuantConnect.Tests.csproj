@@ -479,6 +479,7 @@
     <Compile Include="Common\StringExtensionsTests.cs" />
     <Compile Include="Common\Util\ComparisonOperatorTests.cs" />
     <Compile Include="Common\Util\ConcurrentSetTests.cs" />
+    <Compile Include="Common\Util\JsonRoundingConverterTests.cs" />
     <Compile Include="Common\Util\PythonUtilTests.cs" />
     <Compile Include="Common\Util\RateGateTests.cs" />
     <Compile Include="Common\Util\ListComparerTests.cs" />
