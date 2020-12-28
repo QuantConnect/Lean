@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -1249,6 +1249,64 @@ actualDictionary.update({'IBM': 5})
                     }
                 }
             }
+        }
+
+        [Test]
+        [TestCase(PositionSide.Long, OrderDirection.Buy)]
+        [TestCase(PositionSide.Short, OrderDirection.Sell)]
+        [TestCase(PositionSide.None, OrderDirection.Hold)]
+        public void ToOrderDirection(PositionSide side, OrderDirection expected)
+        {
+            Assert.AreEqual(expected, side.ToOrderDirection());
+        }
+
+        [Test]
+        [TestCase(OrderDirection.Buy, PositionSide.Long, false)]
+        [TestCase(OrderDirection.Buy, PositionSide.Short, true)]
+        [TestCase(OrderDirection.Buy, PositionSide.None, false)]
+        [TestCase(OrderDirection.Sell, PositionSide.Long, true)]
+        [TestCase(OrderDirection.Sell, PositionSide.Short, false)]
+        [TestCase(OrderDirection.Sell, PositionSide.None, false)]
+        [TestCase(OrderDirection.Hold, PositionSide.Long, false)]
+        [TestCase(OrderDirection.Hold, PositionSide.Short, false)]
+        [TestCase(OrderDirection.Hold, PositionSide.None, false)]
+        public void Closes(OrderDirection direction, PositionSide side, bool expected)
+        {
+            Assert.AreEqual(expected, direction.Closes(side));
+        }
+
+        [Test]
+        public void ListEquals()
+        {
+            var left = new[] {1, 2, 3};
+            var right = new[] {1, 2, 3};
+            Assert.IsTrue(left.ListEquals(right));
+
+            right[2] = 4;
+            Assert.IsFalse(left.ListEquals(right));
+        }
+
+        [Test]
+        public void GetListHashCode()
+        {
+            var ints1 = new[] {1, 2, 3};
+            var ints2 = new[] {1, 3, 2};
+            var longs = new[] {1L, 2L, 3L};
+            var decimals = new[] {1m, 2m, 3m};
+
+            // ordering dependent
+            Assert.AreNotEqual(ints1.GetListHashCode(), ints2.GetListHashCode());
+
+            // type dependent [ dependency on typeof(T).GetHashCode() ]
+            Assert.AreNotEqual(ints1.GetListHashCode(), decimals.GetListHashCode());
+
+            // known type collision - long has same hash code as int within the int range
+            // we could take a hash of typeof(T) but this would require ListEquals to enforce exact types
+            // and we would prefer to allow typeof(T)'s GetHashCode and Equals to make this determination.
+            Assert.AreEqual(ints1.GetListHashCode(), longs.GetListHashCode());
+
+            // deterministic
+            Assert.AreEqual(ints1.GetListHashCode(), new[] {1, 2, 3}.GetListHashCode());
         }
 
         private PyObject ConvertToPyObject(object value)

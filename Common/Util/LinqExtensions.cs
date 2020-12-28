@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -90,12 +91,38 @@ namespace QuantConnect.Util
         /// </summary>
         /// <typeparam name="T">The item type of the source enumerable</typeparam>
         /// <typeparam name="TResult">The type of the items in the output <see cref="List{T}"/></typeparam>
-        /// <param name="enumerable">The items to be placed into the enumerable</param>
+        /// <param name="enumerable">The items to be placed into the list</param>
         /// <param name="selector">Selects items from the enumerable to be placed into the <see cref="List{T}"/></param>
         /// <returns>A new <see cref="List{T}"/> containing the items in the enumerable</returns>
         public static List<TResult> ToList<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector)
         {
             return enumerable.Select(selector).ToList();
+        }
+
+        /// <summary>
+        /// Creates a new array from the projected elements in the specified enumerable
+        /// </summary>
+        /// <typeparam name="T">The item type of the source enumerable</typeparam>
+        /// <typeparam name="TResult">The type of the items in the output array</typeparam>
+        /// <param name="enumerable">The items to be placed into the array</param>
+        /// <param name="selector">Selects items from the enumerable to be placed into the array</param>
+        /// <returns>A new array containing the items in the enumerable</returns>
+        public static TResult[] ToArray<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector)
+        {
+            return enumerable.Select(selector).ToArray();
+        }
+
+        /// <summary>
+        /// Creates a new immutable array from the projected elements in the specified enumerable
+        /// </summary>
+        /// <typeparam name="T">The item type of the source enumerable</typeparam>
+        /// <typeparam name="TResult">The type of the items in the output array</typeparam>
+        /// <param name="enumerable">The items to be placed into the array</param>
+        /// <param name="selector">Selects items from the enumerable to be placed into the array</param>
+        /// <returns>A new array containing the items in the enumerable</returns>
+        public static ImmutableArray<TResult> ToImmutableArray<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector)
+        {
+            return enumerable.Select(selector).ToImmutableArray();
         }
 
         /// <summary>
