@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Globalization;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Util
@@ -33,7 +34,7 @@ namespace QuantConnect.Util
         /// Will always return false.
         /// Gets a value indicating whether this <see cref="T:Newtonsoft.Json.JsonConverter" /> can read JSON.
         /// </summary>
-        public override bool CanRead => true;
+        public override bool CanRead => false;
 
         /// <summary>
         /// Determines whether this instance can convert the specified object type.
@@ -55,14 +56,7 @@ namespace QuantConnect.Util
         /// <param name="serializer">The calling serializer.</param>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            if (objectType == typeof(double))
-            {
-                return Double.Parse(existingValue.ToString(), System.Globalization.CultureInfo.InvariantCulture);
-            }
-            else
-            {
-                return Decimal.Parse(existingValue.ToString(), System.Globalization.CultureInfo.InvariantCulture);
-            }
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -76,28 +70,13 @@ namespace QuantConnect.Util
             if (value is double)
             {
                 var rounded = Math.Round((double)value, FractionalDigits);
-
-                if (rounded == double.MaxValue || rounded == double.MinValue)
-                {
-                    writer.WriteValue(rounded.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                }
-                else
-                {
-                    writer.WriteValue(rounded.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                }
+                writer.WriteValue(rounded.ToString(CultureInfo.InvariantCulture));
             }
             else
             {
+                // we serialize decimal as string so that json doesn't use exponential notation which actually will lose precision
                 var rounded = Math.Round((decimal)value, FractionalDigits);
-
-                if (rounded == decimal.MaxValue || rounded == decimal.MinValue)
-                {
-                    writer.WriteValue(rounded.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                }
-                else
-                {
-                    writer.WriteValue(rounded);
-                }
+                writer.WriteValue(rounded.ToString(CultureInfo.InvariantCulture));
             }
         }
     }
