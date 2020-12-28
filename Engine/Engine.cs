@@ -91,6 +91,7 @@ namespace QuantConnect.Lean.Engine
 
             try
             {
+                TextSubscriptionDataSourceReader.SetCacheSize((int) (job.RamAllocation * 0.2));
 
                 //Reset thread holders.
                 var initializeComplete = false;
