@@ -172,9 +172,24 @@ namespace QuantConnect.Securities
         {
             dataTimeZone = dataTimeZone ?? exchangeHours.TimeZone;
             var key = new SecurityDatabaseKey(market, symbol, securityType);
-            var entry = new Entry(dataTimeZone, exchangeHours);
+            var entry = new Entry(dataTimeZone, exchangeHours); 
             _entries[key] = entry;
             return entry;
+        }
+
+        /// <summary>
+        /// Add a entry for custom data into the database
+        /// </summary>
+        /// <param name="ticker">Ticker that will be used for the data</param>
+        /// <param name="dataType">The typeof() custom data class</param>
+        /// <param name="exchangeHours">The hours of this tickers exchange</param>
+        /// <param name="dataTimeZone">The timezone of the incoming data</param>
+        /// <returns></returns>
+        public Entry AddCustomEntry(string ticker, Type dataType, SecurityExchangeHours exchangeHours, DateTimeZone dataTimeZone = null)
+        {
+            // Use SecurityIdentifier to determine what the custom data will be stored as.
+            var baseSymbol = SecurityIdentifier.GenerateBaseSymbol(dataType, ticker);
+            return SetEntry(Market.USA, baseSymbol, SecurityType.Base, exchangeHours, dataTimeZone);
         }
 
         /// <summary>

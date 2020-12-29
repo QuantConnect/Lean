@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using Fasterflect;
 
 namespace QuantConnect.Securities
 {
@@ -30,7 +29,7 @@ namespace QuantConnect.Securities
         private static SymbolPropertiesDatabase _dataFolderSymbolPropertiesDatabase;
         private static readonly object DataFolderSymbolPropertiesDatabaseLock = new object();
 
-        private readonly IReadOnlyDictionary<SecurityDatabaseKey, SymbolProperties> _entries;
+        private readonly Dictionary<SecurityDatabaseKey, SymbolProperties> _entries;
         private readonly IReadOnlyDictionary<SecurityDatabaseKey, SecurityDatabaseKey> _keyBySecurityType;
 
         private SymbolPropertiesDatabase(string file)
@@ -183,6 +182,35 @@ namespace QuantConnect.Securities
                     yield return new KeyValuePair<SecurityDatabaseKey, SymbolProperties>(key, symbolProperties);
                 }
             }
+        }
+
+        /// <summary>
+        /// Set SymbolProperties entry for a particular market, symbol and security type.
+        /// </summary>
+        /// <param name="market">Market of the entry</param>
+        /// <param name="symbol">Symbol of the entry</param>
+        /// <param name="securityType">Type of security for the entry</param>
+        /// <param name="properties">The new symbol properties to store</param>
+        /// <returns>True if successful</returns>
+        public bool SetEntry(string market, string symbol, SecurityType securityType, SymbolProperties properties)
+        {
+            var key = new SecurityDatabaseKey(market, symbol, securityType);
+            _entries[key] = properties;
+            return true;
+        }
+
+        /// <summary>
+        /// Add a entry for custom data into the database
+        /// </summary>
+        /// <param name="ticker">Ticker that will be used for the data</param>
+        /// <param name="dataType">The typeof() custom data class</param>
+        /// <param name="properties">The properties of this custom entry</param>
+        /// <returns></returns>
+        public bool AddCustomEntry(string ticker, Type dataType, SymbolProperties properties)
+        {
+            // Use SecurityIdentifier to determine what the custom data will be stored as.
+            var baseSymbol = SecurityIdentifier.GenerateBaseSymbol(dataType, ticker);
+            return SetEntry(Market.USA, baseSymbol, SecurityType.Base, properties);
         }
 
         /// <summary>

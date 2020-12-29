@@ -17,6 +17,7 @@ using System;
 using System.Globalization;
 using Newtonsoft.Json;
 using QuantConnect.Data;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -41,7 +42,15 @@ namespace QuantConnect.Algorithm.CSharp
             //Set the cash for the strategy:
             SetCash(100000);
 
-            //Define the symbol and "type" of our generic data:
+            // Add some custom properties for our new data
+            var properties = new SymbolProperties("Bitcoin", "USD", 1, (decimal)0.01, (decimal)0.01, "BTC");
+            SymbolPropertiesDatabase.AddCustomEntry("BTC", typeof(Bitcoin), properties);
+
+            // Add MarketHours for our new data 
+            var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
+            MarketHoursDatabase.AddCustomEntry("BTC", typeof(Bitcoin), exchangeHours);
+
+            // Add the custom data to our algorithm
             AddData<Bitcoin>("BTC");
         }
 
