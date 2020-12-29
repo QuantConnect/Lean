@@ -107,6 +107,10 @@ COMMAND="docker run --rm \
     -p 5678:5678 \
     --expose 6000 "
 
+if [[ "$(uname)" == "Linux" ]]; then
+  COMMAND+="--add-host=host.docker.internal:$(ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+') "
+fi
+
 # If the csharp dll and pdb are present, mount them
 if [ ! -f "$CSHARP_DLL" ]; then
   echo "Csharp file at '$CSHARP_DLL' does not exist; no CSharp files will be mounted"
