@@ -779,7 +779,7 @@ namespace QuantConnect.Brokerages.Zerodha
             if (allOrders.Count > 0)
             {
 
-                foreach (var item in allOrders.Where(z => z.Status == "COMPLETE"))
+                foreach (var item in allOrders.Where(z => z.Status == "OPEN"))
                 {
 
                     Order order;
@@ -810,7 +810,7 @@ namespace QuantConnect.Brokerages.Zerodha
                     var originalQty = item.Quantity;
                     order.Quantity = item.TransactionType.ToLowerInvariant() == "sell" ? -itemTotalQty : originalQty;
                     order.BrokerId = new List<string> { item.OrderId };
-                    order.Symbol = _symbolMapper.GetLeanSymbol(item.InstrumentToken.ToStringInvariant());
+                    order.Symbol = _symbolMapper.ConvertZerodhaSymbolToLeanSymbol(item.InstrumentToken);
                     order.Time = (DateTime)item.OrderTimestamp;
                     order.Status = ConvertOrderStatus(item);
                     order.Price = item.Price;

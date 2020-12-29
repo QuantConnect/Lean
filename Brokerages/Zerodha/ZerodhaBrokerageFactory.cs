@@ -48,7 +48,9 @@ namespace QuantConnect.Brokerages.Zerodha
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
             { "zerodha-api-key", Config.Get("zerodha-api-key")},
-            { "zerodha-access-token", Config.Get("zerodha-access-token")}
+            { "zerodha-access-token", Config.Get("zerodha-access-token")},
+            { "zerodha-trading-segment", Config.Get("zerodha-trading-segment")},
+            { "zerodha-product-type", Config.Get("zerodha-product-type")},
         };
 
         /// <summary>
