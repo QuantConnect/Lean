@@ -27,11 +27,15 @@ namespace QuantConnect.Tests.Research
     [TestFixture]
     public class QuantBookHistoryTests
     {
+        private ILogHandler _logHandler;
         dynamic _module;
 
-        [SetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
+            // Store initial handler
+            _logHandler = Log.LogHandler;
+
             SymbolCache.Clear();
             MarketHoursDatabase.Reset();
 
@@ -39,6 +43,13 @@ namespace QuantConnect.Tests.Research
             {
                 _module = Py.Import("Test_QuantBookHistory");
             }
+        }
+
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            // Reset to initial handler
+            Log.LogHandler = _logHandler;
         }
 
         [Test]

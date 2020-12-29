@@ -18,6 +18,7 @@ using Python.Runtime;
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 using QuantConnect.Research;
 using QuantConnect.Securities;
 
@@ -29,10 +30,14 @@ namespace QuantConnect.Tests.Research
         private dynamic _module;
         private DateTime _startDate;
         private DateTime _endDate;
+        private ILogHandler _logHandler;
 
-        [SetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
+            // Store initial handler
+            _logHandler = Log.LogHandler;
+
             SymbolCache.Clear();
             MarketHoursDatabase.Reset();
 
@@ -44,6 +49,13 @@ namespace QuantConnect.Tests.Research
             {
                 _module = Py.Import("Test_QuantBookHistory");
             }
+        }
+
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            // Reset to initial handler
+            Log.LogHandler = _logHandler;
         }
 
         [TestCaseSource(nameof(DataTestCases))]
