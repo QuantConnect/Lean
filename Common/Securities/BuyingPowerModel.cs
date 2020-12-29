@@ -236,14 +236,15 @@ namespace QuantConnect.Securities
             // short circuit the div 0 case
             if (parameters.Order.Quantity == 0)
             {
-                return new HasSufficientBuyingPowerForOrderResult(true);
+                return parameters.Sufficient();
             }
 
             var ticket = parameters.Portfolio.Transactions.GetOrderTicket(parameters.Order.Id);
             if (ticket == null)
             {
-                var reason = $"Null order ticket for id: {parameters.Order.Id}";
-                return new HasSufficientBuyingPowerForOrderResult(false, reason);
+                return parameters.Insufficient(
+                    $"Null order ticket for id: {parameters.Order.Id}"
+                );
             }
 
             if (parameters.Order.Type == OrderType.OptionExercise)
@@ -267,23 +268,24 @@ namespace QuantConnect.Securities
 
                     // we continue with this call for underlying
                     return underlying.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
-                        new HasSufficientBuyingPowerForOrderParameters(parameters.Portfolio, underlying, newOrder));
+                        parameters.ForUnderlying(newOrder)
+                    );
                 }
 
-                return new HasSufficientBuyingPowerForOrderResult(true);
+                return parameters.Sufficient();
             }
 
             // When order only reduces or closes a security position, capital is always sufficient
             if (parameters.Security.Holdings.Quantity * parameters.Order.Quantity < 0 && Math.Abs(parameters.Security.Holdings.Quantity) >= Math.Abs(parameters.Order.Quantity))
             {
-                return new HasSufficientBuyingPowerForOrderResult(true);
+                return parameters.Sufficient();
             }
 
             var freeMargin = GetMarginRemaining(parameters.Portfolio, parameters.Security, parameters.Order.Direction);
             var initialMarginRequiredForOrder = GetInitialMarginRequiredForOrder(
-                new InitialMarginRequiredForOrderParameters(parameters.Portfolio.CashBook,
-                    parameters.Security,
-                    parameters.Order));
+                new InitialMarginRequiredForOrderParameters(
+                    parameters.Portfolio.CashBook, parameters.Security, parameters.Order
+            ));
 
             // pro-rate the initial margin required for order based on how much has already been filled
             var percentUnfilled = (Math.Abs(parameters.Order.Quantity) - Math.Abs(ticket.QuantityFilled)) / Math.Abs(parameters.Order.Quantity);
@@ -291,14 +293,13 @@ namespace QuantConnect.Securities
 
             if (Math.Abs(initialMarginRequiredForRemainderOfOrder) > freeMargin)
             {
-                var reason = Invariant($"Id: {parameters.Order.Id}, ") +
+                return parameters.Insufficient(Invariant($"Id: {parameters.Order.Id}, ") +
                     Invariant($"Initial Margin: {initialMarginRequiredForRemainderOfOrder.Normalize()}, ") +
-                    Invariant($"Free Margin: {freeMargin.Normalize()}");
-
-                return new HasSufficientBuyingPowerForOrderResult(false, reason);
+                    Invariant($"Free Margin: {freeMargin.Normalize()}")
+                );
             }
 
-            return new HasSufficientBuyingPowerForOrderResult(true);
+            return parameters.Sufficient();
         }
 
         /// <summary>

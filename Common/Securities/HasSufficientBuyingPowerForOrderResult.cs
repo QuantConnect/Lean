@@ -21,12 +21,12 @@ namespace QuantConnect.Securities
     public class HasSufficientBuyingPowerForOrderResult
     {
         /// <summary>
-        /// Returns true if there is sufficient buying power to execute an order
+        /// Gets true if there is sufficient buying power to execute an order
         /// </summary>
         public bool IsSufficient { get; }
 
         /// <summary>
-        /// Returns the reason for insufficient buying power to execute an order
+        /// Gets the reason for insufficient buying power to execute an order
         /// </summary>
         public string Reason { get; }
 

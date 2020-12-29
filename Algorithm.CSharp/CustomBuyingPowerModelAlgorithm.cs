@@ -74,7 +74,11 @@ namespace QuantConnect.Algorithm.CSharp
             public override HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(
                 HasSufficientBuyingPowerForOrderParameters parameters)
             {
-                return new HasSufficientBuyingPowerForOrderResult(true);
+                // if portfolio doesn't have enough buying power:
+                //     parameters.Insufficient()
+
+                // this model never allows a lack of funds get in the way of buying securities
+                return parameters.Sufficient();
             }
         }
 
