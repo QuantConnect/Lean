@@ -2073,7 +2073,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         {
             var exchange = new OptionExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
             DateTimeZone dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
-            var reference = new DateTime(2014, 6, 5, 10, 10, 0)
+            var reference = new DateTime(2014, 6, 5)
                 .ConvertTo(dataTimeZone, exchange.TimeZone);
             var dataResolution = Time.OneDay;
             var expiry = new DateTime(2014, 6, 15)
@@ -2138,7 +2138,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             while (fillForwardEnumerator.MoveNext())
             {
                 Assert.NotNull(fillForwardEnumerator.Current);
-                Assert.Greater(fillForwardEnumerator.Current.Time, previous?.Time ?? DateTime.MinValue);
+                Assert.GreaterOrEqual(fillForwardEnumerator.Current.Time, previous?.Time ?? DateTime.MinValue);
                 Assert.AreEqual(
                     fillForwardEnumerator.Current.DataType != MarketDataType.Auxiliary,
                     fillForwardEnumerator.Current.IsFillForward);
@@ -2150,9 +2150,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 previous = fillForwardEnumerator.Current;
             }
 
-            // '+1' means receiving both Auxiliary and not-Auxiliary data on last day of period
             Assert.AreEqual(
-                (int)(data.Last().EndTime - data[1].EndTime).TotalDays + 1,
+                (int)(data.Last().EndTime - data[1].EndTime).TotalDays,
                 counter);
 
             fillForwardEnumerator.Dispose();

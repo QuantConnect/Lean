@@ -309,7 +309,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // to avoid duality it's necessary to compare potentialBarEndTime with
                 // next.EndTime calculated as Time + resolution,
                 // and both should be based on the same TZ (for example UTC)
-                if (potentialBarEndTime < (next.Time.ConvertToUtc(Exchange.TimeZone) + _dataResolution))
+                var nextEndTimeUTC = next.Time.ConvertToUtc(Exchange.TimeZone) + _dataResolution;
+                if (potentialBarEndTime < nextEndTimeUTC)
                 {
                     // to check open hours we need to convert potential
                     // bar EndTime into exchange time zone
