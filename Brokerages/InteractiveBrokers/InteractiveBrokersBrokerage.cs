@@ -2293,6 +2293,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 if (securityType == SecurityType.Option)
                 {
+                    if (contract.LastTradeDateOrContractMonth == "0")
+                    {
+                        // Try our best to recover from a malformed contract.
+                        // You can read more about malformed contracts at the ParseMalformedContract method's documentation.
+                        contract = InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(contract);
+                    }
+
                     var expiryDate = DateTime.ParseExact(contract.LastTradeDateOrContractMonth, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
                     var right = contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put;
                     var strike = Convert.ToDecimal(contract.Strike);
