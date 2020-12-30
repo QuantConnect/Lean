@@ -234,7 +234,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </remarks>
         public static Contract ParseMalformedContractOptionSymbol(Contract malformedContract, string exchange = "Smart")
         {
-            Log.Trace($"InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(): Parsing malformed contract: \"{malformedContract}\" with config: {InteractiveBrokersBrokerage.GetContractDescription(malformedContract)} and trading class: \"{malformedContract.TradingClass}\"");
+            Log.Trace($"InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(): Parsing malformed contract: {InteractiveBrokersBrokerage.GetContractDescription(malformedContract)} with trading class: \"{malformedContract.TradingClass}\"");
 
             var contractInfoSplit = malformedContract.Symbol.Substring(malformedContract.Symbol.IndexOf('['))
                 .Replace("[", "")
