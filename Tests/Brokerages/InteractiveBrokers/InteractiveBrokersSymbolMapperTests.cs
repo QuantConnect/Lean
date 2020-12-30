@@ -117,13 +117,13 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 LastTradeDateOrContractMonth = "20210618",
                 Right = IB.RightType.Put,
                 Strike = 345.0,
-                Exchange = "SMART",
+                Exchange = "Smart",
                 SecType = IB.SecurityType.Option,
                 IncludeExpired = false,
                 Currency = "USD"
             };
 
-            var actualContract = InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(malformedContract);
+            var actualContract = InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(malformedContract, IB.SecurityType.Option);
 
             Assert.AreEqual(expectedContract.Symbol, actualContract.Symbol);
             Assert.AreEqual(expectedContract.Multiplier, actualContract.Multiplier);

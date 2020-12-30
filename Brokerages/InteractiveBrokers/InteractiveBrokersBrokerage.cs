@@ -2261,11 +2261,24 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var market = InteractiveBrokersBrokerageModel.DefaultMarketMap[securityType];
                 var isFutureOption = contract.SecType == IB.SecurityType.FutureOption;
 
+                if ((isFutureOption || securityType == SecurityType.Option) &&
+                    contract.LastTradeDateOrContractMonth == "0")
+                {
+                    // Try our best to recover from a malformed contract.
+                    // You can read more about malformed contracts at the ParseMalformedContract method's documentation.
+                    var ibSecurityType = ConvertSecurityType(securityType);
+                    var exchange = GetSymbolExchange(securityType, market);
+
+                    contract = InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(contract, ibSecurityType, exchange);
+                    ibSymbol = contract.Symbol;
+                }
+
                 // Handle future options as a Future, up until we actually return the future.
                 if (isFutureOption || securityType == SecurityType.Future)
                 {
                     var leanSymbol = _symbolMapper.GetLeanRootSymbol(ibSymbol);
                     var defaultMarket = market;
+
                     if (!_symbolPropertiesDatabase.TryGetMarket(leanSymbol, SecurityType.Future, out market))
                     {
                         market = defaultMarket;
@@ -2293,13 +2306,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 if (securityType == SecurityType.Option)
                 {
-                    if (contract.LastTradeDateOrContractMonth == "0")
-                    {
-                        // Try our best to recover from a malformed contract.
-                        // You can read more about malformed contracts at the ParseMalformedContract method's documentation.
-                        contract = InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(contract);
-                    }
-
                     var expiryDate = DateTime.ParseExact(contract.LastTradeDateOrContractMonth, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
                     var right = contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put;
                     var strike = Convert.ToDecimal(contract.Strike);
@@ -3111,10 +3117,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Gets the exchange the Symbol should be routed to
         /// </summary>
-        /// <param name="symbol">Symbol to route</param>
-        private string GetSymbolExchange(Symbol symbol)
+        /// <param name="securityType">SecurityType of the Symbol</param>
+        /// <param name="market">Market of the Symbol</param>
+        private string GetSymbolExchange(SecurityType securityType, string market)
         {
-            switch (symbol.SecurityType)
+            switch (securityType)
             {
                 case SecurityType.Option:
                     // Regular equity options uses default, in this case "Smart"
@@ -3123,13 +3130,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // Futures options share the same market as the underlying Symbol
                 case SecurityType.FutureOption:
                 case SecurityType.Future:
-                    return _futuresExchanges.ContainsKey(symbol.ID.Market)
-                        ? _futuresExchanges[symbol.ID.Market]
-                        : symbol.ID.Market;
+                    return _futuresExchanges.ContainsKey(market)
+                        ? _futuresExchanges[market]
+                        : market;
 
                 default:
                     return "Smart";
             }
+        }
+
+        /// <summary>
+        /// Gets the exchange the Symbol should be routed to
+        /// </summary>
+        /// <param name="symbol">Symbol to route</param>
+        private string GetSymbolExchange(Symbol symbol)
+        {
+            return GetSymbolExchange(symbol.SecurityType, symbol.ID.Market);
         }
 
         /// <summary>

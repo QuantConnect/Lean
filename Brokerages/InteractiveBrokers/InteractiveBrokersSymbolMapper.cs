@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using IBApi;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -230,8 +231,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         ///
         /// [SYMBOL YY_MM_DD_OPTIONRIGHT_STRIKE(divide by 1000) MULTIPLIER]
         /// </remarks>
-        public static Contract ParseMalformedContractOptionSymbol(Contract malformedContract)
+        public static Contract ParseMalformedContractOptionSymbol(Contract malformedContract, string ibSecurityType, string exchange = "Smart")
         {
+            Log.Trace($"InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(): Parsing malformed contract: \"{malformedContract}\" for SecType: \"{malformedContract.SecType}\" on exchange: \"{malformedContract.Exchange}\" with Symbol: \"{malformedContract.Symbol}\" and trading class: \"{malformedContract.TradingClass}\"");
+
             var contractInfoSplit = malformedContract.Symbol.Substring(malformedContract.Symbol.IndexOf('['))
                 .Replace("[", "")
                 .Replace("]", "")
@@ -253,10 +256,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 LastTradeDateOrContractMonth = year + month + day,
                 Right = contractRight,
                 Strike = contractStrike,
-                Exchange = "SMART",
-                SecType = IB.SecurityType.Option,
+                Exchange = exchange,
+                SecType = ibSecurityType,
                 IncludeExpired = false,
-                Currency = "USD"
+                Currency = malformedContract.Currency
             };
         }
     }
