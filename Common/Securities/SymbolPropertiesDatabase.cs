@@ -194,7 +194,7 @@ namespace QuantConnect.Securities
         /// <returns>True if successful</returns>
         public bool SetEntry(string market, string symbol, SecurityType securityType, SymbolProperties properties)
         {
-            var key = new SecurityDatabaseKey(market, MarketHoursDatabase.GetDatabaseSymbolKey(symbol, securityType, market), securityType);
+            var key = new SecurityDatabaseKey(market, symbol, securityType);
             _entries[key] = properties;
             return true;
         }

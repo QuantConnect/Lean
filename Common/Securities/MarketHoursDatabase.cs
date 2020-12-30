@@ -171,7 +171,7 @@ namespace QuantConnect.Securities
         public virtual Entry SetEntry(string market, string symbol, SecurityType securityType, SecurityExchangeHours exchangeHours, DateTimeZone dataTimeZone = null)
         {
             dataTimeZone = dataTimeZone ?? exchangeHours.TimeZone;
-            var key = new SecurityDatabaseKey(market, GetDatabaseSymbolKey(symbol, securityType, market), securityType);
+            var key = new SecurityDatabaseKey(market, symbol, securityType);
             var entry = new Entry(dataTimeZone, exchangeHours); 
             _entries[key] = entry;
             return entry;
@@ -306,22 +306,6 @@ namespace QuantConnect.Securities
             }
 
             return stringSymbol;
-        }
-
-        /// <summary>
-        /// For finding the database symbol key when we only have the ticker and type
-        /// </summary>
-        /// <param name="ticker"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static string GetDatabaseSymbolKey(string ticker, SecurityType type, string market)
-        {
-            if (ticker == null)
-            {
-                return null;
-            }
-
-            return GetDatabaseSymbolKey(Symbol.Create(ticker, type, market));
         }
 
         /// <summary>
