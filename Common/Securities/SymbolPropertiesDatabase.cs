@@ -194,23 +194,9 @@ namespace QuantConnect.Securities
         /// <returns>True if successful</returns>
         public bool SetEntry(string market, string symbol, SecurityType securityType, SymbolProperties properties)
         {
-            var key = new SecurityDatabaseKey(market, symbol, securityType);
+            var key = new SecurityDatabaseKey(market, MarketHoursDatabase.GetDatabaseSymbolKey(symbol, securityType, market), securityType);
             _entries[key] = properties;
             return true;
-        }
-
-        /// <summary>
-        /// Add a entry for custom data into the database
-        /// </summary>
-        /// <param name="ticker">Ticker that will be used for the data</param>
-        /// <param name="dataType">The typeof() custom data class</param>
-        /// <param name="properties">The properties of this custom entry</param>
-        /// <returns></returns>
-        public bool AddCustomEntry(string ticker, Type dataType, SymbolProperties properties)
-        {
-            // Use SecurityIdentifier to determine what the custom data will be stored as.
-            var baseSymbol = SecurityIdentifier.GenerateBaseSymbol(dataType, ticker);
-            return SetEntry(Market.USA, baseSymbol, SecurityType.Base, properties);
         }
 
         /// <summary>

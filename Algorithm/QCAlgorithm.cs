@@ -1994,8 +1994,8 @@ namespace QuantConnect.Algorithm
             where T : IBaseData, new()
         {
             // Add entries to our Symbol Properties DB and MarketHours DB
-            SymbolPropertiesDatabase.AddCustomEntry("BTC", typeof(T), properties);
-            MarketHoursDatabase.AddCustomEntry("BTC", typeof(T), exchangeHours);
+            SymbolPropertiesDatabase.SetEntry(Market.USA, ticker, SecurityType.Base, properties);
+            MarketHoursDatabase.SetEntry(Market.USA, ticker, SecurityType.Base, exchangeHours);
 
             // Then add the data
             return AddData(typeof(T), ticker, resolution, timeZone, fillDataForward, leverage);

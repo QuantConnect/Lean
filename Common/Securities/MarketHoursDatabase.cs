@@ -171,25 +171,10 @@ namespace QuantConnect.Securities
         public virtual Entry SetEntry(string market, string symbol, SecurityType securityType, SecurityExchangeHours exchangeHours, DateTimeZone dataTimeZone = null)
         {
             dataTimeZone = dataTimeZone ?? exchangeHours.TimeZone;
-            var key = new SecurityDatabaseKey(market, symbol, securityType);
+            var key = new SecurityDatabaseKey(market, GetDatabaseSymbolKey(symbol, securityType, market), securityType);
             var entry = new Entry(dataTimeZone, exchangeHours); 
             _entries[key] = entry;
             return entry;
-        }
-
-        /// <summary>
-        /// Add a entry for custom data into the database
-        /// </summary>
-        /// <param name="ticker">Ticker that will be used for the data</param>
-        /// <param name="dataType">The typeof() custom data class</param>
-        /// <param name="exchangeHours">The hours of this tickers exchange</param>
-        /// <param name="dataTimeZone">The timezone of the incoming data</param>
-        /// <returns></returns>
-        public Entry AddCustomEntry(string ticker, Type dataType, SecurityExchangeHours exchangeHours, DateTimeZone dataTimeZone = null)
-        {
-            // Use SecurityIdentifier to determine what the custom data will be stored as.
-            var baseSymbol = SecurityIdentifier.GenerateBaseSymbol(dataType, ticker);
-            return SetEntry(Market.USA, baseSymbol, SecurityType.Base, exchangeHours, dataTimeZone);
         }
 
         /// <summary>
@@ -310,12 +295,10 @@ namespace QuantConnect.Securities
                     case SecurityType.FutureOption:
                         stringSymbol = symbol.HasUnderlying ? symbol.ID.Symbol : string.Empty;
                         break;
-
-                    case SecurityType.Base:
                     case SecurityType.Future:
                         stringSymbol = symbol.ID.Symbol;
                         break;
-
+                    case SecurityType.Base:
                     default:
                         stringSymbol = symbol.Value;
                         break;
@@ -323,6 +306,22 @@ namespace QuantConnect.Securities
             }
 
             return stringSymbol;
+        }
+
+        /// <summary>
+        /// For finding the database symbol key when we only have the ticker and type
+        /// </summary>
+        /// <param name="ticker"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static string GetDatabaseSymbolKey(string ticker, SecurityType type, string market)
+        {
+            if (ticker == null)
+            {
+                return null;
+            }
+
+            return GetDatabaseSymbolKey(Symbol.Create(ticker, type, market));
         }
 
         /// <summary>
