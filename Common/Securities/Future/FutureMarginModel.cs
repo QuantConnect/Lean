@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -120,7 +120,7 @@ namespace QuantConnect.Securities.Future
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the order</param>
         /// <returns>The total margin in terms of the currency quoted in the order</returns>
-        protected override decimal GetInitialMarginRequiredForOrder(
+        public override decimal GetInitialMarginRequiredForOrder(
             InitialMarginRequiredForOrderParameters parameters)
         {
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
@@ -142,7 +142,7 @@ namespace QuantConnect.Securities.Future
         /// </summary>
         /// <param name="security">The security to compute maintenance margin for</param>
         /// <returns>The maintenance margin required for the </returns>
-        protected override decimal GetMaintenanceMargin(Security security)
+        public override decimal GetMaintenanceMargin(Security security)
         {
             if (security?.GetLastData() == null || security.Holdings.HoldingsCost == 0m)
                 return 0m;
@@ -163,7 +163,7 @@ namespace QuantConnect.Securities.Future
         /// <summary>
         /// The margin that must be held in order to increase the position by the provided quantity
         /// </summary>
-        protected override decimal GetInitialMarginRequirement(Security security, decimal quantity)
+        public override decimal GetInitialMarginRequirement(Security security, decimal quantity)
         {
             if (security?.GetLastData() == null || quantity == 0m)
                 return 0m;

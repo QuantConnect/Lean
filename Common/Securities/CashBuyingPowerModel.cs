@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,6 +27,14 @@ namespace QuantConnect.Securities
     public class CashBuyingPowerModel : BuyingPowerModel
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="CashBuyingPowerModel"/> class
+        /// </summary>
+        public CashBuyingPowerModel()
+            : base(1m, 0m, 0m)
+        {
+        }
+
+        /// <summary>
         /// Gets the current leverage of the security
         /// </summary>
         /// <param name="security">The security to get leverage for</param>
@@ -51,6 +59,20 @@ namespace QuantConnect.Securities
             {
                 throw new InvalidOperationException("CashBuyingPowerModel does not allow setting leverage. Cash accounts have no leverage.");
             }
+        }
+
+        /// <summary>
+        /// The margin that must be held in order to increase the position by the provided quantity
+        /// </summary>
+        /// <param name="parameters">An object containing the security and quantity of shares</param>
+        public override InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
+        {
+            var security = parameters.Security;
+            var quantity = parameters.Quantity;
+            return security.QuoteCurrency.ConversionRate
+                * security.SymbolProperties.ContractMultiplier
+                * security.Price
+                * quantity;
         }
 
         /// <summary>
@@ -305,7 +327,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the buying power available for a trade
         /// </summary>
-        /// <param name="parameters">A parameters object containing the algorithm's potrfolio, security, and order direction</param>
+        /// <param name="parameters">A parameters object containing the algorithm's portfolio, security, and order direction</param>
         /// <returns>The buying power available for the trade</returns>
         public override BuyingPower GetBuyingPower(BuyingPowerParameters parameters)
         {

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -35,29 +35,6 @@ namespace QuantConnect.Tests.Common.Securities
     public class FutureMarginBuyingPowerModelTests
     {
         // Test class to enable calling protected methods
-        public class TestFutureMarginModel : FutureMarginModel
-        {
-            public TestFutureMarginModel(Security security = null)
-                : base(security: security)
-            {
-            }
-
-            public new decimal GetMaintenanceMargin(Security security)
-            {
-                return base.GetMaintenanceMargin(security);
-            }
-
-            public new decimal GetInitialMarginRequirement(Security security, decimal quantity)
-            {
-                return base.GetInitialMarginRequirement(security, quantity);
-            }
-
-            public new decimal GetInitialMarginRequiredForOrder(
-                InitialMarginRequiredForOrderParameters parameters)
-            {
-                return base.GetInitialMarginRequiredForOrder(parameters);
-            }
-        }
 
         [Test]
         public void TestMarginForSymbolWithOneLinerHistory()
@@ -82,7 +59,7 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
 
-            var buyingPowerModel = new TestFutureMarginModel(futureSecurity);
+            var buyingPowerModel = new FutureMarginModel(0, futureSecurity);
             Assert.AreEqual(buyingPowerModel.MaintenanceOvernightMarginRequirement, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
         }
 
@@ -107,7 +84,7 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
 
-            var buyingPowerModel = new TestFutureMarginModel();
+            var buyingPowerModel = new FutureMarginModel();
             Assert.AreEqual(0m, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
         }
 
@@ -134,7 +111,7 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
 
-            var buyingPowerModel = new TestFutureMarginModel(futureSecurity);
+            var buyingPowerModel = new FutureMarginModel(0, futureSecurity);
             Assert.AreEqual(buyingPowerModel.MaintenanceOvernightMarginRequirement,
                 buyingPowerModel.GetMaintenanceMargin(futureSecurity));
 
@@ -162,7 +139,7 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal price = 1.2345m;
             var time = new DateTime(2013, 1, 1);
             var futureSecurity = algorithm.AddFuture(ticker);
-            var buyingPowerModel = new TestFutureMarginModel(futureSecurity);
+            var buyingPowerModel = new FutureMarginModel(0, futureSecurity);
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, quantity);
 
@@ -186,7 +163,7 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal price = 1.2345m;
             var time = new DateTime(2013, 1, 1);
             var futureSecurity = algorithm.AddFuture(ticker);
-            var buyingPowerModel = new TestFutureMarginModel();
+            var buyingPowerModel = new FutureMarginModel();
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, quantity);
 
@@ -209,7 +186,7 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal price = 1.2345m;
             var time = new DateTime(2013, 1, 1);
             var futureSecurity = algorithm.AddFuture(ticker);
-            var buyingPowerModel = new TestFutureMarginModel(futureSecurity);
+            var buyingPowerModel = new FutureMarginModel(0, futureSecurity);
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
 
@@ -526,7 +503,7 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.Holdings.SetHoldings(100, 10 * Math.Sign(target));
             Update(futureSecurity, 100, algorithm);
 
-            var model = new TestFutureMarginModel(futureSecurity);
+            var model = new FutureMarginModel(0, futureSecurity);
             futureSecurity.BuyingPowerModel = model;
 
             var quantity = algorithm.CalculateOrderQuantity(futureSecurity.Symbol, target);
@@ -567,7 +544,7 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.Holdings.SetHoldings(100, 10 * -1 * Math.Sign(target));
             Update(futureSecurity, 100, algorithm);
 
-            var model = new TestFutureMarginModel(futureSecurity);
+            var model = new FutureMarginModel(0, futureSecurity);
             futureSecurity.BuyingPowerModel = model;
 
             var quantity = algorithm.CalculateOrderQuantity(futureSecurity.Symbol, target);

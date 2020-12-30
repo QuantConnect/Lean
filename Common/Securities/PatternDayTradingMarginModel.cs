@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -67,7 +67,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
         /// </summary>
-        protected override decimal GetInitialMarginRequirement(Security security, decimal quantity)
+        public override decimal GetInitialMarginRequirement(Security security, decimal quantity)
         {
             return base.GetInitialMarginRequirement(security, quantity) * GetMarginCorrectionFactor(security);
         }
@@ -75,7 +75,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
         /// </summary>
-        protected override decimal GetMaintenanceMargin(Security security)
+        public override decimal GetMaintenanceMargin(Security security)
         {
             return base.GetMaintenanceMargin(security)*GetMarginCorrectionFactor(security);
         }
