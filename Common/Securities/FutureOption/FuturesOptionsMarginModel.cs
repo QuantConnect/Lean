@@ -46,7 +46,7 @@ namespace QuantConnect.Securities.Option
         /// run when it comes to calculating the different market scenarios attempting to simulate VaR, resulting
         /// in a margin greater than the underlying's margin.
         /// </remarks>
-        protected override decimal GetMaintenanceMargin(Security security)
+        public override decimal GetMaintenanceMargin(Security security)
         {
             return base.GetMaintenanceMargin(((Option)security).Underlying) * FixedMarginMultiplier;
         }
@@ -62,7 +62,7 @@ namespace QuantConnect.Securities.Option
         /// run when it comes to calculating the different market scenarios attempting to simulate VaR, resulting
         /// in a margin greater than the underlying's margin.
         /// </remarks>
-        protected override decimal GetInitialMarginRequirement(Security security, decimal quantity)
+        public override decimal GetInitialMarginRequirement(Security security, decimal quantity)
         {
             return base.GetInitialMarginRequirement(((Option)security).Underlying, quantity) * FixedMarginMultiplier;
         }

@@ -38,6 +38,27 @@ namespace QuantConnect.Securities
         void SetLeverage(Security security, decimal leverage);
 
         /// <summary>
+        /// Gets the margin currently allocated to the specified holding
+        /// </summary>
+        /// <param name="security">The security to compute maintenance margin for</param>
+        /// <returns>The maintenance margin required for the security holdings quantity/cost/value</returns>
+        decimal GetMaintenanceMargin(Security security);
+
+        /// <summary>
+        /// The margin that must be held in order to increase the position by the provided quantity
+        /// </summary>
+        /// <param name="security">The security to compute initial margin for</param>
+        /// <param name="quantity">The change in the contemplated change in shares</param>
+        decimal GetInitialMarginRequirement(Security security, decimal quantity);
+
+        /// <summary>
+        /// Gets the total margin required to execute the specified order in units of the account currency including fees
+        /// </summary>
+        /// <param name="parameters">An object containing the portfolio, the security and the order</param>
+        /// <returns>The total margin in terms of the currency quoted in the order</returns>
+        decimal GetInitialMarginRequiredForOrder(InitialMarginRequiredForOrderParameters parameters);
+
+        /// <summary>
         /// Check if there is sufficient buying power to execute this order.
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the order</param>

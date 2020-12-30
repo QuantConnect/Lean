@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -28,30 +28,6 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class PatternDayTradingMarginBuyingPowerModelTests
     {
-        // Test class to enable calling protected methods
-        public class TestPatternDayTradingMarginModel : PatternDayTradingMarginModel
-        {
-            public TestPatternDayTradingMarginModel()
-            {
-            }
-
-            public TestPatternDayTradingMarginModel(decimal closedMarketLeverage, decimal openMarketLeverage)
-                : base(closedMarketLeverage, openMarketLeverage)
-            {
-            }
-
-            public new decimal GetInitialMarginRequiredForOrder(
-                InitialMarginRequiredForOrderParameters parameters)
-            {
-                return base.GetInitialMarginRequiredForOrder(parameters);
-            }
-
-            public new decimal GetMaintenanceMargin(Security security)
-            {
-                return base.GetMaintenanceMargin(security);
-            }
-        }
-
         private static readonly DateTime Noon = new DateTime(2016, 02, 16, 12, 0, 0);
         private static readonly DateTime Midnight = new DateTime(2016, 02, 16, 0, 0, 0);
         private static readonly DateTime NoonWeekend = new DateTime(2016, 02, 14, 12, 0, 0);
@@ -103,7 +79,7 @@ namespace QuantConnect.Tests.Common.Securities
             var leverage = 4m;
             var expected = 100 * 100m / leverage + 1;
 
-            var model = new TestPatternDayTradingMarginModel();
+            var model = new PatternDayTradingMarginModel();
             var security = CreateSecurity(Noon);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
@@ -120,7 +96,7 @@ namespace QuantConnect.Tests.Common.Securities
             var leverage = 5m;
             var expected = 100 * 100m / leverage + 1;
 
-            var model = new TestPatternDayTradingMarginModel(2m, leverage);
+            var model = new PatternDayTradingMarginModel(2m, leverage);
             var security = CreateSecurity(Noon);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
@@ -135,7 +111,7 @@ namespace QuantConnect.Tests.Common.Securities
             var leverage = 2m;
             var expected = 100 * 100m / leverage + 1;
 
-            var model = new TestPatternDayTradingMarginModel();
+            var model = new PatternDayTradingMarginModel();
 
             // Market is Closed on Tuesday, Feb, 16th 2016 at Midnight
             var security = CreateSecurity(Midnight);
@@ -168,7 +144,7 @@ namespace QuantConnect.Tests.Common.Securities
             var leverage = 3m;
             var expected = 100 * 100m / leverage + 1;
 
-            var model = new TestPatternDayTradingMarginModel(leverage, 4m);
+            var model = new PatternDayTradingMarginModel(leverage, 4m);
 
             // Market is Closed on Tuesday, Feb, 16th 2016 at Midnight
             var security = CreateSecurity(Midnight);
@@ -201,7 +177,7 @@ namespace QuantConnect.Tests.Common.Securities
             var closedLeverage = 2m;
             var openLeverage = 5m;
 
-            var model = new TestPatternDayTradingMarginModel(closedLeverage, openLeverage);
+            var model = new PatternDayTradingMarginModel(closedLeverage, openLeverage);
 
             // Market is Closed on Tuesday, Feb, 16th 2016 at 16
             var security = CreateSecurity(new DateTime(2016, 2, 16, 15, 49, 0));
@@ -220,7 +196,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void VerifyMaintenaceMargin()
         {
-            var model = new TestPatternDayTradingMarginModel();
+            var model = new PatternDayTradingMarginModel();
 
             // Open Market
             var security = CreateSecurity(Noon);
