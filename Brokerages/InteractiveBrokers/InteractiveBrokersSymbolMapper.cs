@@ -222,6 +222,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// parsed to construct the clean contract, which is done by this method.
         /// </summary>
         /// <param name="malformedContract">Malformed contract (for options), i.e. a contract with invalid values ("0") in some of its fields</param>
+        /// <param name="exchange">Exchange that the contract's asset lives on/where orders will be routed through</param>
         /// <returns>Clean Contract for the option</returns>
         /// <remarks>
         /// The malformed contract returns data similar to the following when calling <see cref="InteractiveBrokersBrokerage.GetContractDetails"/>:
@@ -231,9 +232,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         ///
         /// [SYMBOL YY_MM_DD_OPTIONRIGHT_STRIKE(divide by 1000) MULTIPLIER]
         /// </remarks>
-        public static Contract ParseMalformedContractOptionSymbol(Contract malformedContract, string ibSecurityType, string exchange = "Smart")
+        public static Contract ParseMalformedContractOptionSymbol(Contract malformedContract, string exchange = "Smart")
         {
-            Log.Trace($"InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(): Parsing malformed contract: \"{malformedContract}\" for SecType: \"{malformedContract.SecType}\" on exchange: \"{malformedContract.Exchange}\" with Symbol: \"{malformedContract.Symbol}\" and trading class: \"{malformedContract.TradingClass}\"");
+            Log.Trace($"InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(): Parsing malformed contract: \"{malformedContract}\" with config: {InteractiveBrokersBrokerage.GetContractDescription(malformedContract)} and trading class: \"{malformedContract.TradingClass}\"");
 
             var contractInfoSplit = malformedContract.Symbol.Substring(malformedContract.Symbol.IndexOf('['))
                 .Replace("[", "")
@@ -243,9 +244,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var contractSymbol = contractInfoSplit[0];
             var contractSpecification = contractInfoSplit[1];
             var multiplier = contractInfoSplit[2];
-            var year = "20" + contractSpecification.Substring(0, 2);
-            var month = contractSpecification.Substring(2, 2);
-            var day = contractSpecification.Substring(4, 2);
+            var expiryDate = "20" + contractSpecification.Substring(0, 6);
             var contractRight = contractSpecification[6] == 'C' ? IB.RightType.Call : IB.RightType.Put;
             var contractStrike = long.Parse(contractSpecification.Substring(7), CultureInfo.InvariantCulture) / 1000.0;
 
@@ -253,11 +252,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Symbol = contractSymbol,
                 Multiplier = multiplier,
-                LastTradeDateOrContractMonth = year + month + day,
+                LastTradeDateOrContractMonth = expiryDate,
                 Right = contractRight,
                 Strike = contractStrike,
                 Exchange = exchange,
-                SecType = ibSecurityType,
+                SecType = malformedContract.SecType,
                 IncludeExpired = false,
                 Currency = malformedContract.Currency
             };

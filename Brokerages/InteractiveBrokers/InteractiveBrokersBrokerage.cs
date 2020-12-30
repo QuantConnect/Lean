@@ -999,7 +999,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return $"{contract.ToString().ToUpperInvariant()} {contract.LastTradeDateOrContractMonth.ToStringInvariant()} {contract.Strike.ToStringInvariant()} {contract.Right}";
         }
 
-        private static string GetContractDescription(Contract contract)
+        public static string GetContractDescription(Contract contract)
         {
             return $"{contract} {contract.PrimaryExch ?? string.Empty} {contract.LastTradeDateOrContractMonth.ToStringInvariant()} {contract.Strike.ToStringInvariant()} {contract.Right}";
         }
@@ -2266,10 +2266,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 {
                     // Try our best to recover from a malformed contract.
                     // You can read more about malformed contracts at the ParseMalformedContract method's documentation.
-                    var ibSecurityType = ConvertSecurityType(securityType);
                     var exchange = GetSymbolExchange(securityType, market);
 
-                    contract = InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(contract, ibSecurityType, exchange);
+                    contract = InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(contract, exchange);
                     ibSymbol = contract.Symbol;
                 }
 

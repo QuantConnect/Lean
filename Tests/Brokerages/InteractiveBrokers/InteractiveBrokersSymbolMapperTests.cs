@@ -123,7 +123,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 Currency = "USD"
             };
 
-            var actualContract = InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(malformedContract, IB.SecurityType.Option);
+            var actualContract = InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(malformedContract);
 
             Assert.AreEqual(expectedContract.Symbol, actualContract.Symbol);
             Assert.AreEqual(expectedContract.Multiplier, actualContract.Multiplier);
