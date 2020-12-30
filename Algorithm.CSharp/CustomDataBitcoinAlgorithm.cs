@@ -42,16 +42,12 @@ namespace QuantConnect.Algorithm.CSharp
             //Set the cash for the strategy:
             SetCash(100000);
 
-            // Add some custom properties for our new data
+            // Define our custom data properties and exchange hours
             var properties = new SymbolProperties("Bitcoin", "USD", 1, (decimal)0.01, (decimal)0.01, "BTC");
-            SymbolPropertiesDatabase.AddCustomEntry("BTC", typeof(Bitcoin), properties);
-
-            // Add MarketHours for our new data 
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
-            MarketHoursDatabase.AddCustomEntry("BTC", typeof(Bitcoin), exchangeHours);
 
             // Add the custom data to our algorithm
-            AddData<Bitcoin>("BTC");
+            AddData<Bitcoin>("BTC", properties, exchangeHours);
         }
 
         /// <summary>
