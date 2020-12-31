@@ -406,6 +406,7 @@
     <Compile Include="Common\Data\Fundamental\CoarseFundamentalTests.cs" />
     <Compile Include="Common\Data\Fundamental\FineFundamentalTests.cs" />
     <Compile Include="Common\Data\PeriodCountConsolidatorTests.cs" />
+    <Compile Include="Common\Data\Shortable\ShortableProviderTests.cs" />
     <Compile Include="Common\Orders\Fills\EquityFillModelTests.cs" />
     <Compile Include="Common\Orders\OrderEventTests.cs" />
     <Compile Include="Common\ExtendedDictionaryTests.cs" />
@@ -913,6 +914,18 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\arms_data.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\equity\usa\shortable\testbrokerage\dates\20201221.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\equity\usa\shortable\testbrokerage\dates\20201222.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\equity\usa\shortable\testbrokerage\symbols\aapl.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\equity\usa\shortable\testbrokerage\symbols\goog.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\eurusd60_dem.txt">
