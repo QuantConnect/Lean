@@ -17,10 +17,14 @@ using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
+using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using IBApi;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -205,6 +209,57 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             return ticker;
+        }
+
+        /// <summary>
+        /// Parses a contract for options with malformed data.
+        /// Malformed data usually manifests itself by having "0" assigned to some values
+        /// we expect, like the contract's expiry date. The contract is returned by IB
+        /// like this, usually due to a high amount of data subscriptions that are active
+        /// in an account, surpassing IB's imposed limit. Read more about this here: https://interactivebrokers.github.io/tws-api/rtd_fqa_errors.html#rtd_common_errors_maxmktdata
+        ///
+        /// We are provided a string in the Symbol in malformed contracts that can be
+        /// parsed to construct the clean contract, which is done by this method.
+        /// </summary>
+        /// <param name="malformedContract">Malformed contract (for options), i.e. a contract with invalid values ("0") in some of its fields</param>
+        /// <param name="exchange">Exchange that the contract's asset lives on/where orders will be routed through</param>
+        /// <returns>Clean Contract for the option</returns>
+        /// <remarks>
+        /// The malformed contract returns data similar to the following when calling <see cref="InteractiveBrokersBrokerage.GetContractDetails"/>:
+        /// OPT SPY JUN2021 350 P [SPY 210618P00350000 100] USD 0 0 0
+        ///
+        /// ... which the contents inside [] follow the pattern:
+        ///
+        /// [SYMBOL YY_MM_DD_OPTIONRIGHT_STRIKE(divide by 1000) MULTIPLIER]
+        /// </remarks>
+        public static Contract ParseMalformedContractOptionSymbol(Contract malformedContract, string exchange = "Smart")
+        {
+            Log.Trace($"InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(): Parsing malformed contract: {InteractiveBrokersBrokerage.GetContractDescription(malformedContract)} with trading class: \"{malformedContract.TradingClass}\"");
+
+            var contractInfoSplit = malformedContract.Symbol.Substring(malformedContract.Symbol.IndexOf('['))
+                .Replace("[", "")
+                .Replace("]", "")
+                .Split(' ');
+
+            var contractSymbol = contractInfoSplit[0];
+            var contractSpecification = contractInfoSplit[1];
+            var multiplier = contractInfoSplit[2];
+            var expiryDate = "20" + contractSpecification.Substring(0, 6);
+            var contractRight = contractSpecification[6] == 'C' ? IB.RightType.Call : IB.RightType.Put;
+            var contractStrike = long.Parse(contractSpecification.Substring(7), CultureInfo.InvariantCulture) / 1000.0;
+
+            return new Contract
+            {
+                Symbol = contractSymbol,
+                Multiplier = multiplier,
+                LastTradeDateOrContractMonth = expiryDate,
+                Right = contractRight,
+                Strike = contractStrike,
+                Exchange = exchange,
+                SecType = malformedContract.SecType,
+                IncludeExpired = false,
+                Currency = malformedContract.Currency
+            };
         }
     }
 }

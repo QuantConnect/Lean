@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,9 +14,11 @@
 */
 
 using System;
+using IBApi;
 using NUnit.Framework;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Data.Auxiliary;
+using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
@@ -96,5 +98,42 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(symbol));
         }
 
+        [Test]
+        public void MalformedContractSymbolCreatesOptionContract()
+        {
+            var malformedContract = new Contract
+            {
+                IncludeExpired = false,
+                Currency = "USD",
+                Multiplier = "100",
+                Symbol = "SPY JUN2021 345 P [SPY 210618P00345000 100]",
+                SecType = IB.SecurityType.Option,
+            };
+
+            var expectedContract = new Contract
+            {
+                Symbol = "SPY",
+                Multiplier = "100",
+                LastTradeDateOrContractMonth = "20210618",
+                Right = IB.RightType.Put,
+                Strike = 345.0,
+                Exchange = "Smart",
+                SecType = IB.SecurityType.Option,
+                IncludeExpired = false,
+                Currency = "USD"
+            };
+
+            var actualContract = InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(malformedContract);
+
+            Assert.AreEqual(expectedContract.Symbol, actualContract.Symbol);
+            Assert.AreEqual(expectedContract.Multiplier, actualContract.Multiplier);
+            Assert.AreEqual(expectedContract.LastTradeDateOrContractMonth, actualContract.LastTradeDateOrContractMonth);
+            Assert.AreEqual(expectedContract.Right, actualContract.Right);
+            Assert.AreEqual(expectedContract.Strike, actualContract.Strike);
+            Assert.AreEqual(expectedContract.Exchange, actualContract.Exchange);
+            Assert.AreEqual(expectedContract.SecType, actualContract.SecType);
+            Assert.AreEqual(expectedContract.IncludeExpired, actualContract.IncludeExpired);
+            Assert.AreEqual(expectedContract.Currency, actualContract.Currency);
+        }
     }
 }
