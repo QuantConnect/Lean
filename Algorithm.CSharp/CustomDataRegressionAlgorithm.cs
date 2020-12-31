@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class CustomDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// Initialize the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
