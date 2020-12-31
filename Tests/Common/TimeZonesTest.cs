@@ -16,6 +16,7 @@
 using System;
 using NodaTime;
 using NUnit.Framework;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Common
 {
@@ -31,7 +32,7 @@ namespace QuantConnect.Tests.Common
                 var value = field.GetValue(null);
                 Assert.IsNotNull(value);
                 Assert.IsInstanceOf(typeof (DateTimeZone), value);
-                Console.WriteLine(((DateTimeZone)value).Id);
+                Log.Trace(((DateTimeZone)value).Id);
             }
         }
     }

@@ -19,6 +19,7 @@ using NUnit.Framework;
 using QuantConnect.Securities.Option.StrategyMatcher;
 using static QuantConnect.Tests.Common.Securities.Options.StrategyMatcher.Option;
 using static QuantConnect.Securities.Option.StrategyMatcher.OptionStrategyDefinitions;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
 {
@@ -76,7 +77,7 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             var match = matcher.MatchOnce(positions);
             foreach (var strategy in match.Strategies)
             {
-                Console.WriteLine($"{strategy.Name}");
+                Log.Trace($"{strategy.Name}");
                 foreach (var leg in strategy.OptionLegs)
                 {
                     // steal OptionPosition's ToString() implementation

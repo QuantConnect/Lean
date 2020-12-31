@@ -109,6 +109,7 @@
     </Compile>
     <Compile Include="CompositeLogHandler.cs" />
     <Compile Include="CompositeNLogHandler.cs" />
+    <Compile Include="ConsoleErrorLogHandler.cs" />
     <Compile Include="NLogHandler.cs" />
     <Compile Include="QueueLogHandler.cs" />
     <Compile Include="FunctionalLogHandler.cs" />

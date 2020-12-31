@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Parameters;
@@ -43,7 +42,7 @@ namespace QuantConnect.Tests.Optimizer
             {
                 try
                 {
-                    var sum = parameterSet.Value.Sum(s => s.Value.ToDecimal());
+                    var sum = parameterSet.Value.Where(pair => pair.Key != "skipFromResultSum").Sum(s => s.Value.ToDecimal());
                     if (sum != 29)
                     {
                         NewResult(BacktestResult.Create(sum, sum / 100).ToJson(), id);

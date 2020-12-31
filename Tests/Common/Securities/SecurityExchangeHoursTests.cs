@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using DayOfWeek = System.DayOfWeek;
 
@@ -308,7 +309,7 @@ namespace QuantConnect.Tests.Common.Securities
             }
             stopwatch.Stop();
 
-            Console.WriteLine("forex1: " + stopwatch.Elapsed);
+            Log.Trace("forex1: " + stopwatch.Elapsed);
         }
 
         [Test]

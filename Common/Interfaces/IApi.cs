@@ -139,8 +139,9 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="projectId">Project id for the backtest we'd like to read</param>
         /// <param name="backtestId">Backtest id for the backtest we'd like to read</param>
+        /// <param name="getCharts">True will return backtest charts</param>
         /// <returns>Backtest result object</returns>
-        Backtest ReadBacktest(int projectId, string backtestId);
+        Backtest ReadBacktest(int projectId, string backtestId, bool getCharts = true);
 
         /// <summary>
         /// Update the backtest name

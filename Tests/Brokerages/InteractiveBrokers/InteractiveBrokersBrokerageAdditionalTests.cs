@@ -25,8 +25,10 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using Order = QuantConnect.Orders.Order;
@@ -68,7 +70,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                     var stopwatch = Stopwatch.StartNew();
                     var value = (ContractDetails)method.Invoke(brokerage, parameters);
                     stopwatch.Stop();
-                    Console.WriteLine($"{DateTime.UtcNow:O} Response time: {stopwatch.Elapsed}");
+                    Log.Trace($"{DateTime.UtcNow:O} Response time: {stopwatch.Elapsed}");
                 });
                 while (!result.IsCompleted) Thread.Sleep(1000);
             }
@@ -140,7 +142,8 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 new QCAlgorithm(), 
                 new OrderProvider(_orders), 
                 securityProvider,
-                new AggregationManager());
+                new AggregationManager(),
+                new LocalDiskMapFileProvider());
             brokerage.Connect();
 
             return brokerage;

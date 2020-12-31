@@ -15,6 +15,7 @@
 
 using NUnit.Framework;
 using QuantConnect.Indicators;
+using QuantConnect.Logging;
 using System;
 using System.Collections;
 using System.Linq;
@@ -104,7 +105,7 @@ namespace QuantConnect.Tests.Indicators
                 momersion.Update(time.AddMinutes(i), _prices[i]);
                 actual[i] = Math.Round(momersion.Current.Value, 2);
 
-                Console.WriteLine($"Bar : {i} | {momersion}, Is ready? {momersion.IsReady}");
+                Log.Trace($"Bar : {i} | {momersion}, Is ready? {momersion.IsReady}");
             }
             Assert.AreEqual(expected, actual);
         }

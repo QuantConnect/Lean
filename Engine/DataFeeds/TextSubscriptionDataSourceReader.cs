@@ -14,16 +14,15 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System.Runtime.Caching;
-using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
+using System.Collections.Generic;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -39,14 +38,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly SubscriptionDataConfig _config;
         private BaseData _factory;
         private bool _shouldCacheDataPoints;
-        private static readonly MemoryCache BaseDataSourceCache = new MemoryCache("BaseDataSourceCache",
-            // Cache can use up to 70% of the installed physical memory
-            new NameValueCollection { { "physicalMemoryLimitPercentage", "70" } });
-        private static readonly CacheItemPolicy CachePolicy = new CacheItemPolicy
-        {
-            // Cache entry should be evicted if it has not been accessed in given span of time:
-            SlidingExpiration = TimeSpan.FromMinutes(5)
-        };
+
+        private static int CacheSize = 100;
+        private static volatile Dictionary<string, List<BaseData>> BaseDataSourceCache = new Dictionary<string, List<BaseData>>(100);
+        private static Queue<string> CacheKeys = new Queue<string>(100);
 
         /// <summary>
         /// Event fired when the specified source is considered invalid, this may
@@ -105,15 +100,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
         public override IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
-            List<BaseData> cache;
+            List<BaseData> cache = null;
             _shouldCacheDataPoints = _shouldCacheDataPoints &&
                 // only cache local files
                 source.TransportMedium == SubscriptionTransportMedium.LocalFile;
-            var cacheItem = _shouldCacheDataPoints
-                ? BaseDataSourceCache.GetCacheItem(source.Source + _config.Type) : null;
-            if (cacheItem == null)
+
+            string cacheKey = null;
+            if (_shouldCacheDataPoints)
             {
-                cache = new List<BaseData>();
+                cacheKey = source.Source + _config.Type;
+                BaseDataSourceCache.TryGetValue(cacheKey, out cache);
+            }
+            if (cache == null)
+            {
+                cache = _shouldCacheDataPoints ? new List<BaseData>(30000) : null;
                 using (var reader = CreateStreamReader(source))
                 {
                     // if the reader doesn't have data then we're done with this subscription
@@ -174,14 +174,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     yield break;
                 }
 
-                cacheItem = new CacheItem(source.Source + _config.Type, cache);
-                BaseDataSourceCache.Add(cacheItem, CachePolicy);
+                lock (CacheKeys)
+                {
+                    CacheKeys.Enqueue(cacheKey);
+                    // we create a new dictionary, so we don't have to take locks when reading, and add our new item
+                    var newCache = new Dictionary<string, List<BaseData>>(BaseDataSourceCache) { [cacheKey] = cache };
+
+                    if (BaseDataSourceCache.Count > CacheSize)
+                    {
+                        var removeCount = 0;
+                        // we remove a portion of the first in entries
+                        while (++removeCount < (CacheSize / 4))
+                        {
+                            newCache.Remove(CacheKeys.Dequeue());
+                        }
+                        // update the cache instance
+                        BaseDataSourceCache = newCache;
+                    }
+                    else
+                    {
+                        // update the cache instance
+                        BaseDataSourceCache = newCache;
+                    }
+                }
             }
-            cache = cacheItem.Value as List<BaseData>;
+
             if (cache == null)
             {
-                throw new InvalidOperationException("CacheItem can not be cast into expected type. " +
-                    $"Type is: {cacheItem.Value.GetType()}");
+                throw new InvalidOperationException($"Cache should not be null. Key: {cacheKey}");
             }
             // Find the first data point 10 days (just in case) before the desired date
             // and subtract one item (just in case there was a time gap and data.Time is after _date)
@@ -227,6 +247,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var handler = CreateStreamReaderError;
             if (handler != null) handler(this, new CreateStreamReaderErrorEventArgs(date, source));
+        }
+
+        /// <summary>
+        /// Set the cache size to use
+        /// </summary>
+        /// <remarks>How to size this cache: Take worst case scenario, BTCUSD hour, 60k QuoteBar entries, which are roughly 200 bytes in size -> 11 MB * CacheSize</remarks>
+        public static void SetCacheSize(int megaBytesToUse)
+        {
+            if (megaBytesToUse != 0)
+            {
+                // we take worst case scenario, each entry is 12 MB
+                CacheSize = megaBytesToUse / 12;
+                Log.Trace($"TextSubscriptionDataSourceReader.SetCacheSize(): Setting cache size to {CacheSize} items");
+            }
         }
     }
 }

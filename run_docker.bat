@@ -93,7 +93,8 @@ set COMMAND=docker run --rm^
     -v %DATA_DIR%:/Data:ro^
     -v %RESULTS_DIR%:/Results^
     --name %CONTAINER_NAME%^
-    -p 5678:5678
+    -p 5678:5678^
+    --expose 6000
 
 REM If DOCKER_PARAMS exist, add them to docker COMMAND
 if not "%DOCKER_PARAMS%" == "" (

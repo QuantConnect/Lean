@@ -22,6 +22,7 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -219,7 +220,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             var splitsAndDividends = factorFile.GetSplitsAndDividends(Symbols.AAPL, exchangeHours).ToList();
             foreach (var sad in splitsAndDividends)
             {
-                Console.WriteLine($"{sad.Time.Date:yyyy-MM-dd}: {sad}");
+                Log.Trace($"{sad.Time.Date:yyyy-MM-dd}: {sad}");
             }
             var splits = splitsAndDividends.OfType<Split>().ToList();
             var dividends = splitsAndDividends.OfType<Dividend>().ToList();
@@ -248,7 +249,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
 
             foreach (var item in factorFileAfterDividend.Reverse().Zip(actual.Reverse(), (a,e) => new{actual=a, expected=e}))
             {
-                Console.WriteLine($"expected: {item.expected} actual: {item.actual}  diff: {100* (1 - item.actual.PriceFactor/item.expected.PriceFactor):0.0000}%");
+                Log.Trace($"expected: {item.expected} actual: {item.actual}  diff: {100* (1 - item.actual.PriceFactor/item.expected.PriceFactor):0.0000}%");
                 Assert.AreEqual(item.expected.Date, item.actual.Date);
                 Assert.AreEqual(item.expected.ReferencePrice, item.actual.ReferencePrice);
                 Assert.AreEqual(item.expected.SplitFactor, item.actual.SplitFactor);
@@ -276,7 +277,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             Assert.True(actual.First().SplitFactor == 25m, "Factor File split factor is not computed correctly");
             foreach (var item in actual.Reverse().Zip(factorFileAfterSplit.Reverse(), (a, e) => new { actual = a, expected = e }))
             {
-                Console.WriteLine($"expected: {item.expected} actual: {item.actual}  diff: {100 * (1 - item.actual.PriceFactor / item.expected.PriceFactor):0.0000}%");
+                Log.Trace($"expected: {item.expected} actual: {item.actual}  diff: {100 * (1 - item.actual.PriceFactor / item.expected.PriceFactor):0.0000}%");
                 Assert.AreEqual(item.expected.Date, item.actual.Date);
                 Assert.AreEqual(item.expected.ReferencePrice, item.actual.ReferencePrice);
                 Assert.AreEqual(item.expected.SplitFactor, item.actual.SplitFactor);
@@ -305,7 +306,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             Assert.True(actual.First().SplitFactor == 25m, "Factor File split factor is not computed correctly");
             foreach (var item in actual.Reverse().Zip(factorFileAfterSplit.Reverse(), (a, e) => new { actual = a, expected = e }))
             {
-                Console.WriteLine($"expected: {item.expected} actual: {item.actual}  diff: {100 * (1 - item.actual.PriceFactor / item.expected.PriceFactor):0.0000}%");
+                Log.Trace($"expected: {item.expected} actual: {item.actual}  diff: {100 * (1 - item.actual.PriceFactor / item.expected.PriceFactor):0.0000}%");
                 Assert.AreEqual(item.expected.Date, item.actual.Date);
                 Assert.AreEqual(item.expected.ReferencePrice, item.actual.ReferencePrice);
                 Assert.AreEqual(item.expected.SplitFactor, item.actual.SplitFactor);
@@ -333,7 +334,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
 
             foreach (var item in actual.Reverse().Zip(expected.Reverse(), (a, e) => new {actual = a, expected = e}))
             {
-                Console.WriteLine($"expected: {item.expected} actual: {item.actual}  diff: {100 * (1 - item.actual.PriceFactor / item.expected.PriceFactor):0.0000}%");
+                Log.Trace($"expected: {item.expected} actual: {item.actual}  diff: {100 * (1 - item.actual.PriceFactor / item.expected.PriceFactor):0.0000}%");
                 Assert.AreEqual(item.expected.Date, item.actual.Date);
                 Assert.AreEqual(item.expected.ReferencePrice, item.actual.ReferencePrice);
                 Assert.AreEqual(item.expected.SplitFactor, item.actual.SplitFactor);

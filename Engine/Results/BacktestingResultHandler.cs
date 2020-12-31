@@ -361,13 +361,16 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     result = BacktestResultPacket.CreateEmpty(_job);
                 }
-                result.ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds;
+
+                var utcNow = DateTime.UtcNow;
+                result.ProcessingTime = (utcNow - StartTime).TotalSeconds;
                 result.DateFinished = DateTime.Now;
                 result.Progress = 1;
 
                 //Place result into storage.
                 StoreResult(result);
 
+                result.Results.ServerStatistics = GetServerStatistics(utcNow);
                 //Second, send the truncated packet:
                 MessagingHandler.Send(result);
 

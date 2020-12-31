@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Logging;
 using QuantConnect.Securities.Option.StrategyMatcher;
 using static QuantConnect.Securities.Option.StrategyMatcher.OptionPositionCollection;
 using static QuantConnect.Securities.Option.StrategyMatcher.OptionStrategyDefinitions;
@@ -35,7 +36,7 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             var result = test.Definition.Match(test.Positions).ToList();
             foreach (var match in result)
             {
-                Console.WriteLine(string.Join(";", match.Legs.Select(leg => String(leg.Position))));
+                Log.Trace(string.Join(";", match.Legs.Select(leg => String(leg.Position))));
             }
 
             test.AssertMatch(result);

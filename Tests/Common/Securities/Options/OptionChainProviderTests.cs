@@ -21,6 +21,7 @@ using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Tests.Common.Securities.Options
 {
@@ -111,13 +112,24 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void LiveOptionChainProviderReturnsFutureOptionData()
         {
             var now = DateTime.Now;
-            var december = now.AddMonths(-now.Month).AddMonths(12);
-            var underlyingFuture = Symbol.CreateFuture("ES", Market.CME, december);
+            var december = new DateTime(now.Year, 12, 1);
+            var canonicalFuture = Symbol.Create("ES", SecurityType.Future, Market.CME);
+            var expiry = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFuture)(december);
 
+            // When the current year's december contract expires, the test starts failing.
+            // This will happen around the last 10 days of December, but will start working
+            // once we've crossed into the new year.
+            // Let's try the next listed contract, which is in March of the next year if this is the case.
+            if (now >= expiry)
+            {
+                expiry = now.AddMonths(-now.Month).AddYears(1).AddMonths(3);
+            }
+
+            var underlyingFuture = Symbol.CreateFuture("ES", Market.CME, expiry);
             var provider = new LiveOptionChainProvider();
-            var result = provider.GetOptionContractList(underlyingFuture, december);
+            var result = provider.GetOptionContractList(underlyingFuture, now).ToList();
 
-            Assert.AreNotEqual(0, result.Count());
+            Assert.AreNotEqual(0, result.Count);
 
             foreach (var symbol in result)
             {

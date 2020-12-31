@@ -19,11 +19,13 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Accord;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -53,7 +55,7 @@ namespace QuantConnect.Tests.Common.Securities
             var sid1 = SPY;
             var sid2 = SPY;
             Assert.AreEqual(sid1, sid2);
-            Console.WriteLine(sid1);
+            Log.Trace(sid1.ToString());
         }
 
         [Test]
@@ -72,7 +74,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(spyPut.HasUnderlying);
             Assert.AreEqual(SPY, spyPut.Underlying);
 
-            Console.WriteLine(SPY_Put_19550);
+            Log.Trace(SPY_Put_19550.ToString());
         }
 
         [Test]
@@ -86,7 +88,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(SecurityType.Equity, sid1.SecurityType);
             Assert.AreEqual("SPY", sid1.Symbol);
 
-            Console.WriteLine(sid1);
+            Log.Trace(sid1.ToString());
         }
 
         [Test]
@@ -100,7 +102,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(SecurityType.Forex, eurusd.SecurityType);
             Assert.AreEqual("EURUSD", eurusd.Symbol);
 
-            Console.WriteLine(eurusd);
+            Log.Trace(eurusd.ToString());
         }
         [Test]
         public void FuturesSecurityIdReturnsProperties()
@@ -111,7 +113,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(SecurityType.Future, ED_Dec_2020.SecurityType);
             Assert.AreEqual("ED", ED_Dec_2020.Symbol);
 
-            Console.WriteLine(ED_Dec_2020);
+            Log.Trace(ED_Dec_2020.ToString());
         }
 
         [Test]
@@ -119,14 +121,14 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var sid1 = SecurityIdentifier.GenerateBase(null, "123456789012", Market.USA);
             Assert.AreEqual("123456789012", sid1.Symbol);
-            Console.WriteLine(sid1);
+            Log.Trace(sid1.ToString());
         }
 
         [Test]
         public void ParsedToStringEqualsValue()
         {
             var value = SPY_Put_19550.ToString();
-            Console.WriteLine(value);
+            Log.Trace(value);
             var sid2 = SecurityIdentifier.Parse(value);
             Assert.AreEqual(SPY_Put_19550, sid2);
         }
@@ -330,7 +332,7 @@ namespace QuantConnect.Tests.Common.Securities
                 SecurityIdentifier.TryParse(value, out sid);
             }
             stopwatch.Stop();
-            Console.WriteLine("Elapsed: " + stopwatch.Elapsed);
+            Log.Trace("Elapsed: " + stopwatch.Elapsed);
 
             Assert.Less(stopwatch.Elapsed, TimeSpan.FromSeconds(2));
         }

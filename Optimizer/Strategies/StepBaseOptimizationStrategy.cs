@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
@@ -125,6 +126,11 @@ namespace QuantConnect.Optimizer.Strategies
         /// </summary>
         private int Estimate(OptimizationParameter parameter)
         {
+            if (parameter is StaticOptimizationParameter)
+            {
+                return 1;
+            }
+
             var stepParameter = parameter as OptimizationStepParameter;
             if (stepParameter == null)
             {
@@ -229,6 +235,12 @@ namespace QuantConnect.Optimizer.Strategies
 
         private IEnumerator<string> GetEnumerator(OptimizationParameter parameter)
         {
+            var staticOptimizationParameter = parameter as StaticOptimizationParameter;
+            if (staticOptimizationParameter != null)
+            {
+                return new List<string> { staticOptimizationParameter.Value }.GetEnumerator();
+            }
+
             var stepParameter = parameter as OptimizationStepParameter;
             if (stepParameter == null)
             {

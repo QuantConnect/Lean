@@ -40,6 +40,15 @@ namespace QuantConnect.Optimizer
         private int _failedBacktest;
         private int _completedBacktest;
         private volatile bool _disposed;
+
+        /// <summary>
+        /// The total completed backtests count
+        /// </summary>
+        protected int CompletedBacktests => _failedBacktest + _completedBacktest;
+
+        /// <summary>
+        /// Lock to update optimization status
+        /// </summary>
         private object _statusLock = new object();
 
         /// <summary>
@@ -156,7 +165,7 @@ namespace QuantConnect.Optimizer
             {
                 return;
             }
-            SetOptimizationStatus(OptimizationStatus.Ended);
+            SetOptimizationStatus(OptimizationStatus.Completed);
 
             var result = Strategy.Solution;
             if (result != null)
@@ -171,6 +180,8 @@ namespace QuantConnect.Optimizer
                 Log.Trace($"LeanOptimizer.TriggerOnEndEvent({GetLogDetails()}): Optimization has ended. Result was not reached");
             }
 
+            // we clean up before we send an update so that the runtime stats are updated
+            CleanUpRunningInstance();
             ProcessUpdate(forceSend: true);
 
             Ended?.Invoke(this, result);
@@ -252,27 +263,7 @@ namespace QuantConnect.Optimizer
                 return;
             }
             _disposed = true;
-
-            PendingParameterSet.Clear();
-
-            lock (RunningParameterSetForBacktest)
-            {
-                foreach (var backtestId in RunningParameterSetForBacktest.Keys)
-                {
-                    ParameterSet parameterSet;
-                    if (RunningParameterSetForBacktest.TryRemove(backtestId, out parameterSet))
-                    {
-                        try
-                        {
-                            AbortLean(backtestId);
-                        }
-                        catch
-                        {
-                            // pass
-                        }
-                    }
-                }
-            }
+            CleanUpRunningInstance();
         }
 
         /// <summary>
@@ -289,17 +280,19 @@ namespace QuantConnect.Optimizer
         public Dictionary<string, string> GetRuntimeStatistics()
         {
             var completedCount = _completedBacktest;
-            var totalCount = completedCount + _failedBacktest;
+            var totalEndedCount = completedCount + _failedBacktest;
             var runtime = DateTime.UtcNow - _startedAt;
-            return new Dictionary<string, string>
+            var result = new Dictionary<string, string>
             {
                 { "Completed", $"{completedCount}"},
                 { "Failed", $"{_failedBacktest}"},
                 { "Running", $"{RunningParameterSetForBacktest.Count}"},
                 { "In Queue", $"{PendingParameterSet.Count}"},
-                { "Average Length", $"{(totalCount > 0 ? new TimeSpan(runtime.Ticks / totalCount) : TimeSpan.Zero).ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture)}"},
+                { "Average Length", $"{(totalEndedCount > 0 ? new TimeSpan(runtime.Ticks / totalEndedCount) : TimeSpan.Zero).ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture)}"},
                 { "Total Runtime", $"{runtime.ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture)}" }
             };
+
+            return result;
         }
 
         /// <summary>
@@ -315,7 +308,7 @@ namespace QuantConnect.Optimizer
         }
 
         /// <summary>
-        /// Handles breaking Lean process
+        /// Handles stopping Lean process
         /// </summary>
         /// <param name="backtestId">Specified backtest id</param>
         protected abstract void AbortLean(string backtestId);
@@ -329,14 +322,42 @@ namespace QuantConnect.Optimizer
         /// Sets the current optimization status
         /// </summary>
         /// <param name="optimizationStatus">The new optimization status</param>
-        protected void SetOptimizationStatus(OptimizationStatus optimizationStatus)
+        protected virtual void SetOptimizationStatus(OptimizationStatus optimizationStatus)
         {
             lock (_statusLock)
             {
                 // we never come back from an aborted/ended status
-                if (Status != OptimizationStatus.Aborted && Status != OptimizationStatus.Ended)
+                if (Status != OptimizationStatus.Aborted && Status != OptimizationStatus.Completed)
                 {
                     Status = optimizationStatus;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Clean up any pending or running lean instance
+        /// </summary>
+        private void CleanUpRunningInstance()
+        {
+            PendingParameterSet.Clear();
+
+            lock (RunningParameterSetForBacktest)
+            {
+                foreach (var backtestId in RunningParameterSetForBacktest.Keys)
+                {
+                    ParameterSet parameterSet;
+                    if (RunningParameterSetForBacktest.TryRemove(backtestId, out parameterSet))
+                    {
+                        Interlocked.Increment(ref _failedBacktest);
+                        try
+                        {
+                            AbortLean(backtestId);
+                        }
+                        catch
+                        {
+                            // pass
+                        }
+                    }
                 }
             }
         }
@@ -374,7 +395,7 @@ namespace QuantConnect.Optimizer
 
         private void LaunchLeanForParameterSet(ParameterSet parameterSet)
         {
-            if (_disposed || Status == OptimizationStatus.Ended || Status == OptimizationStatus.Aborted)
+            if (_disposed || Status == OptimizationStatus.Completed || Status == OptimizationStatus.Aborted)
             {
                 return;
             }
@@ -399,6 +420,9 @@ namespace QuantConnect.Optimizer
                     }
                     else
                     {
+                        Interlocked.Increment(ref _failedBacktest);
+                        // always notify the strategy
+                        Strategy.PushNewResults(new OptimizationResult(null, parameterSet, backtestId));
                         Log.Error($"LeanOptimizer.LaunchLeanForParameterSet({GetLogDetails()}): Initial/null optimization compute job could not be placed into the queue");
                     }
 

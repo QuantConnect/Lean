@@ -97,7 +97,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 catch (Exception err)
                 {
-                    Console.WriteLine(err.Message);
+                    Log.Error(err.Message);
                 }
             });
         }
@@ -125,7 +125,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         if (tick != null)
                         {
-                            Console.WriteLine(tick.ToString());
+                            Log.Trace(tick.ToString());
                         }
                     });
             });
@@ -158,7 +158,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 if (tick == null)
                     return;
 
-                Console.WriteLine(tick.ToString());
+                Log.Trace(tick.ToString());
                 if (unsubscribed && tick.Symbol.Value == "MBLY")
                 {
                     Assert.Fail("Should not receive data for unsubscribed symbol");
@@ -181,7 +181,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             iex.Unsubscribe(Enumerable.First(configs, c => string.Equals(c.Symbol.Value, "MBLY")));
 
-            Console.WriteLine("Unsubscribing");
+            Log.Trace("Unsubscribing");
             Thread.Sleep(2000);
             // some messages could be inflight, but after a pause all MBLY messages must have beed consumed by ProcessFeed
             unsubscribed = true;

@@ -19,6 +19,7 @@ using NUnit.Framework;
 using QuantConnect.Brokerages.Alpaca;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
@@ -62,13 +63,11 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
         [Test, TestCaseSource(nameof(TestParameters))]
         public void GetsHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool shouldBeEmpty)
         {
-            Log.LogHandler = new ConsoleLogHandler();
-
             var keyId = Config.Get("alpaca-key-id");
             var secretKey = Config.Get("alpaca-secret-key");
             var tradingMode = Config.Get("alpaca-trading-mode");
 
-            using (var brokerage = new AlpacaBrokerage(null, null, keyId, secretKey, tradingMode))
+            using (var brokerage = new AlpacaBrokerage(null, null, new LocalDiskMapFileProvider(), keyId, secretKey, tradingMode))
             {
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);
@@ -101,14 +100,14 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
                     {
                         foreach (var tick in slice.Ticks[symbol])
                         {
-                            Console.WriteLine($"{tick.Time}: {tick.Symbol} - P={tick.Price}, Q={tick.Quantity}");
+                            Log.Trace($"{tick.Time}: {tick.Symbol} - P={tick.Price}, Q={tick.Quantity}");
                         }
                     }
                     else
                     {
                         var bar = slice.Bars[symbol];
 
-                        Console.WriteLine($"{bar.Time}: {bar.Symbol} - O={bar.Open}, H={bar.High}, L={bar.Low}, C={bar.Close}, V={bar.Volume}");
+                        Log.Trace($"{bar.Time}: {bar.Symbol} - O={bar.Open}, H={bar.High}, L={bar.Low}, C={bar.Close}, V={bar.Volume}");
                     }
                 }
 

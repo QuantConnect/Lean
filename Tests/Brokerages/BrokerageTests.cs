@@ -461,7 +461,7 @@ namespace QuantConnect.Tests.Brokerages
                 lock (sync)
                 {
                     remaining -= orderEvent.FillQuantity;
-                    Console.WriteLine("Remaining: " + remaining + " FillQuantity: " + orderEvent.FillQuantity);
+                    Log.Trace("Remaining: " + remaining + " FillQuantity: " + orderEvent.FillQuantity);
                     if (orderEvent.Status == OrderStatus.Filled)
                     {
                         manualResetEvent.Set();
@@ -480,7 +480,7 @@ namespace QuantConnect.Tests.Brokerages
             manualResetEvent.WaitOne(2500);
             manualResetEvent.WaitOne(2500);
 
-            Console.WriteLine("Remaining: " + remaining);
+            Log.Trace("Remaining: " + remaining);
             Assert.AreEqual(0, remaining);
         }
 
@@ -636,7 +636,7 @@ namespace QuantConnect.Tests.Brokerages
                 }
                 catch (Exception err)
                 {
-                    Console.WriteLine(err.Message);
+                    Log.Error(err.Message);
                 }
             }, cancellationToken.Token);
         }
