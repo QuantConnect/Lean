@@ -172,7 +172,7 @@ namespace QuantConnect.Securities
         {
             dataTimeZone = dataTimeZone ?? exchangeHours.TimeZone;
             var key = new SecurityDatabaseKey(market, symbol, securityType);
-            var entry = new Entry(dataTimeZone, exchangeHours); 
+            var entry = new Entry(dataTimeZone, exchangeHours);
             _entries[key] = entry;
             return entry;
         }
@@ -298,6 +298,7 @@ namespace QuantConnect.Securities
                     case SecurityType.Future:
                         stringSymbol = symbol.ID.Symbol;
                         break;
+                    // For ease of setting base entries in the DB we will make it just the ticker (GH #5100)
                     case SecurityType.Base:
                     default:
                         stringSymbol = symbol.Value;
