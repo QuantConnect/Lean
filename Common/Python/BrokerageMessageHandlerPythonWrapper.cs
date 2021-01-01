@@ -31,9 +31,7 @@ namespace QuantConnect.Python
         /// <param name="model">The python implementation of <see cref="IBrokerageMessageHandler"/></param>
         public BrokerageMessageHandlerPythonWrapper(PyObject model)
         {
-            model.ValidateImplementationOf<IBrokerageMessageHandler>();
-
-            _model = model;
+            _model = model.ValidateImplementationOf<IBrokerageMessageHandler>();
         }
 
         /// <summary>
