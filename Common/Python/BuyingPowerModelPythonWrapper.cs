@@ -15,7 +15,6 @@
 
 using Python.Runtime;
 using QuantConnect.Securities;
-using System;
 
 namespace QuantConnect.Python
 {
@@ -27,22 +26,12 @@ namespace QuantConnect.Python
         private readonly dynamic _model;
 
         /// <summary>
-        /// Constructor for initialising the <see cref="BuyingPowerModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
+        /// Constructor for initializing the <see cref="BuyingPowerModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Represents a security's model of buying power</param>
         public BuyingPowerModelPythonWrapper(PyObject model)
         {
-            using (Py.GIL())
-            {
-                foreach (var attributeName in new[] { "GetBuyingPower", "GetMaximumOrderQuantityForDeltaBuyingPower", "GetLeverage", "GetMaximumOrderQuantityForTargetBuyingPower", "GetReservedBuyingPowerForPosition", "HasSufficientBuyingPowerForOrder", "SetLeverage" })
-                {
-                    if (!model.HasAttr(attributeName))
-                    {
-                        throw new NotImplementedException($"IBuyingPowerModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
-                    }
-                }
-            }
-            _model = model;
+            _model = model.ValidateImplementationOf<IBuyingPowerModel>();
         }
 
         /// <summary>

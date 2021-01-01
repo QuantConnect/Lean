@@ -30,9 +30,9 @@ namespace QuantConnect.Python
         /// <summary>
         /// Validates that the specified <see cref="PyObject"/> completely implements the provided interface type
         /// </summary>
-        /// <typeparam name="TInterface">The inteface type</typeparam>
+        /// <typeparam name="TInterface">The interface type</typeparam>
         /// <param name="model">The model implementing the interface type</param>
-        public static void ValidateImplementationOf<TInterface>(this PyObject model)
+        public static PyObject ValidateImplementationOf<TInterface>(this PyObject model)
         {
             if (!typeof(TInterface).IsInterface)
             {
@@ -51,10 +51,15 @@ namespace QuantConnect.Python
                     }
                 }
             }
+
             if (missingMembers.Any())
             {
-                throw new NotImplementedException($"{nameof(TInterface)} must be fully implemented. Missing implementations: {string.Join(", ", missingMembers)}");
+                throw new NotImplementedException($"{nameof(TInterface)} must be fully implemented. Please implement " +
+                    $"these missing methods on {model.GetPythonType()}: {string.Join(", ", missingMembers)}"
+                );
             }
+
+            return model;
         }
     }
 }
