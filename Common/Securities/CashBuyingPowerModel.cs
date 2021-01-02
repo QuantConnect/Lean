@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
@@ -81,6 +82,11 @@ namespace QuantConnect.Securities
                 orderQuantity = parameters.Order.AbsoluteQuantity;
             }
 
+            var amountPrecision = parameters.Security.SymbolProperties.LotSize.GetDecimalPlaces();
+
+            totalQuantity = Math.Round(totalQuantity, amountPrecision);
+            orderQuantity = Math.Round(orderQuantity, amountPrecision);
+
             // calculate reserved quantity for open orders (in quote or base currency depending on direction)
             var openOrdersReservedQuantity = GetOpenOrdersReservedQuantity(parameters.Portfolio, parameters.Security, parameters.Order);
 
@@ -89,7 +95,8 @@ namespace QuantConnect.Securities
             if (parameters.Order.Direction == OrderDirection.Sell)
             {
                 // can sell available and non-reserved quantities
-                isSufficient = orderQuantity <= totalQuantity - openOrdersReservedQuantity;
+                var availableQuantity = Math.Round(totalQuantity - openOrdersReservedQuantity, amountPrecision);
+                isSufficient = orderQuantity <= availableQuantity;
                 if (!isSufficient)
                 {
                     reason = Invariant($"Your portfolio holds {totalQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}, {openOrdersReservedQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol} of which are reserved for open orders, but your Sell order is for {orderQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}. Cash Modeling trading does not permit short holdings so ensure you only sell what you have, including any additional open orders.");
@@ -118,6 +125,8 @@ namespace QuantConnect.Securities
                     GetMaximumOrderQuantityForTargetBuyingPower(
                         new GetMaximumOrderQuantityForTargetBuyingPowerParameters(parameters.Portfolio, parameters.Security, targetPercent)).Quantity * GetOrderPrice(parameters.Security, parameters.Order);
 
+                maximumQuantity = Math.Round(maximumQuantity, amountPrecision);
+
                 isSufficient = orderQuantity <= Math.Abs(maximumQuantity);
                 if (!isSufficient)
                 {
@@ -140,7 +149,9 @@ namespace QuantConnect.Securities
                         parameters.Security.QuoteCurrency.Symbol);
             }
 
-            isSufficient = orderQuantity <= totalQuantity - openOrdersReservedQuantity - orderFee;
+            var availableQuantityIncludingFees = Math.Round(totalQuantity - openOrdersReservedQuantity - orderFee, amountPrecision);
+
+            isSufficient = orderQuantity <= availableQuantityIncludingFees;
             if (!isSufficient)
             {
                 reason = Invariant($"Your portfolio holds {totalQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, {openOrdersReservedQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol} of which are reserved for open orders, but your Buy order is for {parameters.Order.AbsoluteQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}. Your order requires a total value of {orderQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, but only a total value of {(totalQuantity - openOrdersReservedQuantity - orderFee).Normalize()} {parameters.Security.QuoteCurrency.Symbol} is available.");

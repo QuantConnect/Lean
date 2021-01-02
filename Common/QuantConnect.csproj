@@ -888,6 +888,7 @@
     <Compile Include="Util\FuncTextWriter.cs" />
     <Compile Include="Util\JsonRoundingConverter.cs" />
     <Compile Include="Util\ComparisonOperatorTypes.cs" />
+    <Compile Include="Util\NumberUtils.cs" />
     <Compile Include="Util\RateLimit\BusyWaitSleepStrategy.cs" />
     <Compile Include="Util\RateLimit\FixedIntervalRefillStrategy.cs" />
     <Compile Include="Util\RateLimit\IRefillStrategy.cs" />
