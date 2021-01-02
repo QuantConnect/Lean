@@ -11,7 +11,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
 using System;
@@ -19,63 +18,49 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm which reproduces GH issue 4446
+    /// Regression test algorithm simply fetch and compare data of minute resolution around daylight saving period
+    /// reproduces issue reported in GB issue GH issue https://github.com/QuantConnect/Lean/issues/4925
+    /// related issues https://github.com/QuantConnect/Lean/issues/3707; https://github.com/QuantConnect/Lean/issues/4630
     /// </summary>
-    public class DelistedFutureLiquidateRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FillForwardEnumeratorOutOfOrderBarRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _contractSymbol;
+        private decimal _exptectedClose = 84.09m;
+        private DateTime _exptectedTime = new DateTime(2008, 3, 10, 9, 30, 0);
+        private Symbol _shy;
 
         /// <summary>
-        /// Initialize your algorithm and add desired assets.
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 08);
-            SetEndDate(2013, 12, 30);
-
-            var futureSP500 = AddFuture(Futures.Indices.SP500EMini);
-            futureSP500.SetFilter(0, 182);
+            SetStartDate(2008, 3, 7);
+            SetEndDate(2008, 3, 10);
+            _shy = AddEquity("SHY", Resolution.Minute).Symbol;
+            // just to make debugging easier, less subscriptions
+            SetBenchmark(time => 1);
         }
 
-        /// <summary>
-        /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
-        /// </summary>
-        /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
-            if (_contractSymbol == null)
+            var trackingBar = slice.Bars.Values.FirstOrDefault(s => s.Time.Equals(_exptectedTime));
+
+            if (trackingBar != null)
             {
-                foreach (var chain in slice.FutureChains)
+                if (!Portfolio.Invested)
                 {
-                    var contract = chain.Value.OrderBy(x => x.Expiry).FirstOrDefault();
-                    // if found, trade it
-                    if (contract != null)
-                    {
-                        _contractSymbol = contract.Symbol;
-                        MarketOrder(_contractSymbol, 1);
-                    }
+                    SetHoldings(_shy, 1);
+                }
+
+                if (trackingBar.Close != _exptectedClose)
+                {
+                    throw new Exception(
+                        $"Bar at {_exptectedTime.ToStringInvariant()} closed at price {trackingBar.Close.ToStringInvariant()}; expected {_exptectedClose.ToStringInvariant()}");
                 }
             }
-        }
-
-        public override void OnEndOfAlgorithm()
-        {
-            Log($"{_contractSymbol}: {Securities[_contractSymbol].Invested}");
-            if (Securities[_contractSymbol].Invested)
-            {
-                throw new Exception($"Position should be closed when {_contractSymbol} got delisted {_contractSymbol.ID.Date}");
-            }
-        }
-
-        public override void OnOrderEvent(OrderEvent orderEvent)
-        {
-            Log($"{orderEvent}. Delisting on: {_contractSymbol.ID.Date}");
         }
 
         /// <summary>
@@ -93,32 +78,32 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "2"},
-            {"Average Win", "1.63%"},
+            {"Total Trades", "1"},
+            {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "7.292%"},
-            {"Drawdown", "1.300%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Net Profit", "1.634%"},
-            {"Sharpe Ratio", "2.495"},
-            {"Probabilistic Sharpe Ratio", "92.298%"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
+            {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.006"},
-            {"Beta", "0.158"},
-            {"Annual Standard Deviation", "0.033"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "-4.942"},
-            {"Tracking Error", "0.08"},
-            {"Treynor Ratio", "0.517"},
-            {"Total Fees", "$3.70"},
-            {"Fitness Score", "0.019"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$5.93"},
+            {"Fitness Score", "0.499"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "1.362"},
-            {"Return Over Maximum Drawdown", "9.699"},
-            {"Portfolio Turnover", "0.023"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "-105.726"},
+            {"Portfolio Turnover", "0.998"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -132,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "490786648"}
+            {"OrderListHash", "-850144190"}
         };
     }
 }

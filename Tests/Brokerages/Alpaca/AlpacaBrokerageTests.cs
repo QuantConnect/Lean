@@ -24,6 +24,7 @@ using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Alpaca;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -44,7 +45,13 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
             var secretKey = Config.Get("alpaca-secret-key");
             var tradingMode = Config.Get("alpaca-trading-mode");
 
-            return new AlpacaBrokerage(orderProvider, securityProvider, keyId, secretKey, tradingMode);
+            return new AlpacaBrokerage(
+                orderProvider,
+                securityProvider,
+                new LocalDiskMapFileProvider(),
+                keyId,
+                secretKey,
+                tradingMode);
         }
 
         /// <summary>

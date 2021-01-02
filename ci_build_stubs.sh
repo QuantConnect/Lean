@@ -55,7 +55,7 @@ function generate_stubs {
 
     NO_DEBUG="true" \
     STUBS_VERSION="$TRAVIS_TAG" \
-    dotnet run $LEAN_DIR $RUNTIME_DIR $STUBS_DIR
+    dotnet run -v q $LEAN_DIR $RUNTIME_DIR $STUBS_DIR
 
     if [ $? -ne 0 ]; then
         echo "Generation of stubs failed"
@@ -68,12 +68,12 @@ function publish_stubs {
     # This API token should be valid for the current $PYPI_REPO and should include the "pypi-" prefix
 
     cd $STUBS_DIR
-    python setup.py sdist bdist_wheel
+    python setup.py --quiet sdist bdist_wheel
 
     TWINE_USERNAME="__token__" \
     TWINE_PASSWORD="$PYPI_API_TOKEN" \
     TWINE_REPOSITORY="$PYPI_REPO" \
-    twine upload "$STUBS_DIR/dist/*"
+    twine upload "$STUBS_DIR/dist/*" > /dev/null
 
     if [ $? -ne 0 ]; then
         echo "PyPI publishing failed"

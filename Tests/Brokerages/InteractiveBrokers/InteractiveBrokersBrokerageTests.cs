@@ -22,6 +22,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
@@ -70,7 +71,8 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 new QCAlgorithm(), 
                 new OrderProvider(_orders), 
                 securityProvider,
-                new AggregationManager());
+                new AggregationManager(),
+                new LocalDiskMapFileProvider());
             _interactiveBrokersBrokerage.Connect();
         }
 
