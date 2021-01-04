@@ -212,7 +212,8 @@ namespace QuantConnect.Indicators
                     appendedData.Add(doubles.ToArray());
                 }
 
-                var maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(_p).ToArray(), method: DirectRegressionMethod.NormalEquations,
+                var maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(_p).ToArray(),
+                    method: DirectRegressionMethod.NormalEquations,
                     intercept: _intercept);
                 for (var i = size; i < data.Length; i++) // Calculate the error assoc. with model.
                 {
