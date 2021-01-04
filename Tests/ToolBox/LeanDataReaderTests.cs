@@ -26,6 +26,7 @@ using QuantConnect.ToolBox;
 using QuantConnect.Util;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.ToolBox
 {
@@ -36,7 +37,94 @@ namespace QuantConnect.Tests.ToolBox
         DateTime _fromDate = new DateTime(2013, 10, 7);
         DateTime _toDate = new DateTime(2013, 10, 11);
 
+        [Test]
+        public void LoadsEquity_Daily_SingleEntryZip()
+        {
+            var leanDataReader = new LeanDataReader("..\\..\\..\\Data\\equity\\usa\\daily\\aapl.zip");
+            var data = leanDataReader.Parse().ToList();
+
+            Assert.AreEqual(5580, data.Count);
+            Assert.IsTrue(data.All(baseData => baseData.Symbol == Symbols.AAPL && baseData is TradeBar));
+        }
+
         #region futures
+
+        [Test]
+        public void ReadsEntireZipFileEntries_OpenInterest()
+        {
+            var leanDataReader = new LeanDataReader("..\\..\\..\\Data\\future\\cme\\minute\\es\\20131006_openinterest.zip");
+
+            var data = leanDataReader.Parse()
+                .ToList()
+                .GroupBy(baseData => baseData.Symbol)
+                .Select(grp => grp.ToList())
+                .OrderBy(list => list[0].Symbol)
+                .ToList();
+
+            Assert.AreEqual(5, data.Count);
+            Assert.IsTrue(data.All(kvp => kvp.Count == 1));
+
+            foreach (var dataForSymbol in data)
+            {
+                Assert.IsTrue(dataForSymbol[0] is OpenInterest);
+                Assert.IsFalse(dataForSymbol[0].Symbol.IsCanonical());
+                Assert.AreEqual(Futures.Indices.SP500EMini, dataForSymbol[0].Symbol.ID.Symbol);
+                Assert.AreNotEqual(0, dataForSymbol[0]);
+            }
+        }
+
+        [Test]
+        public void ReadsEntireZipFileEntries_Trade()
+        {
+            var leanDataReader = new LeanDataReader("..\\..\\..\\Data\\future\\cme\\minute\\es\\20131006_trade.zip");
+
+            var data = leanDataReader.Parse()
+                .ToList()
+                .GroupBy(baseData => baseData.Symbol)
+                .Select(grp => grp.ToList())
+                .OrderBy(list => list[0].Symbol)
+                .ToList();
+
+            Assert.AreEqual(2, data.Count);
+
+            foreach (var dataForSymbol in data)
+            {
+                Assert.IsTrue(dataForSymbol[0] is TradeBar);
+                Assert.IsFalse(dataForSymbol[0].Symbol.IsCanonical());
+                Assert.AreEqual(Futures.Indices.SP500EMini, dataForSymbol[0].Symbol.ID.Symbol);
+            }
+
+            Assert.AreEqual(118, data[0].Count);
+            Assert.AreEqual(10, data[1].Count);
+        }
+
+        [Test]
+        public void ReadsEntireZipFileEntries_Quote()
+        {
+            var leanDataReader = new LeanDataReader("..\\..\\..\\Data\\future\\cme\\minute\\es\\20131006_quote.zip");
+
+            var data = leanDataReader.Parse()
+                .ToList()
+                .GroupBy(baseData => baseData.Symbol)
+                .Select(grp => grp.ToList())
+                .OrderBy(list => list[0].Symbol)
+                .ToList();
+
+            Assert.AreEqual(5, data.Count);
+
+            foreach (var dataForSymbol in data)
+            {
+                Assert.IsTrue(dataForSymbol[0] is QuoteBar);
+                Assert.IsFalse(dataForSymbol[0].Symbol.IsCanonical());
+                Assert.AreEqual(Futures.Indices.SP500EMini, dataForSymbol[0].Symbol.ID.Symbol);
+            }
+
+            Assert.AreEqual(10, data[0].Count);
+            Assert.AreEqual(13, data[1].Count);
+            Assert.AreEqual(52, data[2].Count);
+            Assert.AreEqual(155, data[3].Count);
+            Assert.AreEqual(100, data[4].Count);
+        }
 
         [Test]
         public void ReadFutureChainData()
