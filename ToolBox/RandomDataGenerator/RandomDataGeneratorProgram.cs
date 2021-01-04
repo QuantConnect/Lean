@@ -93,7 +93,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 // This is done so that we can update the symbol in the case of a rename event
                 TimeSpan span = settings.End.Subtract(settings.Start);
                 double diff_span = -(span.Minutes/2);
-                var delistDate = randomValueGenerator.NextDate(settings.End.AddMinutes(Math.Round(diff_span, 2, MidpointRounding.ToEven)), settings.End, null);
+                DateTime start_time = settings.End.AddMinutes(Math.Round(diff_span, 2, MidpointRounding.ToEven));
+                var delistDate = randomValueGenerator.NextDate(start_time, settings.End, null);
                 var symbol = currentSymbol;
                 var willBeDelisted = randomValueGenerator.NextBool(1.0);
                 var monthsTrading = 0;
