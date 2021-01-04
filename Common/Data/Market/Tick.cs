@@ -29,6 +29,7 @@ namespace QuantConnect.Data.Market
     /// which implements IDictionary and passed into an OnData event handler.
     /// </summary>
     [ProtoContract(SkipConstructor = true)]
+    [ProtoInclude(1000, typeof(OpenInterest))]
     public class Tick : BaseData
     {
         private uint? _parsedSaleCondition;
