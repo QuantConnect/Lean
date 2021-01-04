@@ -111,24 +111,12 @@ namespace QuantConnect.Algorithm
         /// <param name="d">Difference order</param>
         /// <param name="q">MA order</param>
         /// <param name="period">Size of the rolling series to fit onto</param>
-        /// <param name="arMethod">Method to use when fitting the AR model</param>
-        /// <param name="maMethod">Method to use when fitting the MA model</param>
         /// <param name="resolution">The resolution</param>
-        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <returns>The AccumulationDistributionOscillator indicator for the requested symbol over the speified period</returns>
-        public ArimaIndicator ARIMA(
-            Symbol symbol,
-            int p,
-            int d,
-            int q,
-            int period,
-            MathNet.Numerics.LinearRegression.DirectRegressionMethod maMethod,
-            MathNet.Numerics.LinearRegression.DirectRegressionMethod arMethod,
-            Resolution? resolution = null
-            )
+        /// <returns>The ARIMA indicator for the requested symbol over the specified period</returns>
+        public ArimaIndicator ARIMA(Symbol symbol, int p, int d, int q, int period, Resolution? resolution = null)
         {
-            var name = CreateIndicatorName(symbol, $"ARIMA(({p},{d},{q}),({period},{arMethod},{maMethod}))", resolution);
-            var arimaIndicator = new ArimaIndicator(name, p, d, q, period, arMethod, maMethod);
+            var name = CreateIndicatorName(symbol, $"ARIMA({p},{d},{q},{period})", resolution);
+            var arimaIndicator = new ArimaIndicator(name, p, d, q, period);
             RegisterIndicator(symbol, arimaIndicator, resolution);
 
             if (EnableAutomaticIndicatorWarmUp)

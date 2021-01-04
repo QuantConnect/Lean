@@ -33,8 +33,6 @@ namespace QuantConnect.Indicators
     public class ArimaIndicator : TimeSeriesIndicator, IIndicatorWarmUpPeriodProvider
 
     {
-        private readonly DirectRegressionMethod _arMethod;
-        private readonly DirectRegressionMethod _maMethod;
         private readonly RollingWindow<double> _rollingData;
 
         /// <summary>
@@ -76,8 +74,6 @@ namespace QuantConnect.Indicators
         /// <param name="d">Difference order</param>
         /// <param name="q">MA order</param>
         /// <param name="period">Size of the rolling series to fit onto</param>
-        /// <param name="maMethod">Method to use when fitting the MA model</param>
-        /// <param name="arMethod">Method to use when fitting the AR model</param>
         /// <param name="intercept">Whether ot not to include the intercept term</param>
         public ArimaIndicator(
             string name,
@@ -85,8 +81,6 @@ namespace QuantConnect.Indicators
             int d,
             int q,
             int period,
-            DirectRegressionMethod maMethod = DirectRegressionMethod.NormalEquations,
-            DirectRegressionMethod arMethod = DirectRegressionMethod.NormalEquations,
             bool intercept = true
             )
             : base(name)
@@ -97,45 +91,8 @@ namespace QuantConnect.Indicators
                 _q = q;
                 _d = d;
                 WarmUpPeriod = period;
-                _maMethod = maMethod;
-                _arMethod = arMethod;
                 _rollingData = new RollingWindow<double>(period);
                 _intercept = intercept;
-            }
-            else
-            {
-                throw new ArgumentException("Period must exceed both p and q");
-            }
-        }
-
-        /// <summary>
-        ///     Fits an ARIMA(p,d,q) model of form (after differencing it <see cref="_d" /> times):
-        ///     <para>
-        ///         Xₜ = c + εₜ + ΣᵢφᵢXₜ₋ᵢ +  Σᵢθᵢεₜ₋ᵢ
-        ///     </para>
-        ///     where the first sum has an upper limit of <see cref="_p" /> and the second <see cref="_q" />.
-        ///     This particular constructor fits the model by means of <see cref="TwoStepFit" />.
-        /// </summary>
-        /// <param name="p">AR order</param>
-        /// <param name="d">Difference order</param>
-        /// <param name="q">MA order</param>
-        /// <param name="period">Size of the rolling series to fit onto</param>
-        /// <param name="maMethod">Method to use when fitting the MA model</param>
-        /// <param name="arMethod">Method to use when fitting the AR model</param>
-        public ArimaIndicator(int p, int d, int q, int period,
-            DirectRegressionMethod maMethod = DirectRegressionMethod.NormalEquations,
-            DirectRegressionMethod arMethod = DirectRegressionMethod.NormalEquations)
-            : this($"ARIMA(({p},{d},{q}),({period},{arMethod},{maMethod}))", p, d, q, period, arMethod, maMethod)
-        {
-            if (period >= Math.Max(p, q))
-            {
-                _p = p;
-                _q = q;
-                _d = d;
-                WarmUpPeriod = period;
-                _maMethod = maMethod;
-                _arMethod = arMethod;
-                _rollingData = new RollingWindow<double>(period);
             }
             else
             {
@@ -163,8 +120,6 @@ namespace QuantConnect.Indicators
                 _p = p;
                 _q = q;
                 _d = d;
-                _maMethod = DirectRegressionMethod.NormalEquations;
-                _arMethod = DirectRegressionMethod.NormalEquations;
                 WarmUpPeriod = period;
                 _rollingData = new RollingWindow<double>(period);
             }
@@ -216,7 +171,7 @@ namespace QuantConnect.Indicators
             if (_p > 0)
             {
                 // The function (lags[time][lagged X]) |---> ΣᵢφᵢXₜ₋ᵢ 
-                arFits = Fit.MultiDim(lags, data.Skip(_p).ToArray(), method: _arMethod);
+                arFits = Fit.MultiDim(lags, data.Skip(_p).ToArray(), method: DirectRegressionMethod.NormalEquations);
                 var fittedVec = Vector.Build.Dense(arFits);
 
                 for (var i = 0; i < data.Length; i++) // Calculate the error assoc. with model.
@@ -257,7 +212,7 @@ namespace QuantConnect.Indicators
                     appendedData.Add(doubles.ToArray());
                 }
 
-                var maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(_p).ToArray(), method: _maMethod,
+                var maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(_p).ToArray(), method: DirectRegressionMethod.NormalEquations,
                     intercept: _intercept);
                 for (var i = size; i < data.Length; i++) // Calculate the error assoc. with model.
                 {
