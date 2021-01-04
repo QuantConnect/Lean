@@ -104,6 +104,42 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new ARIMA indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose ARIMA indicator we want</param>
+        /// <param name="p">AR order</param>
+        /// <param name="d">Difference order</param>
+        /// <param name="q">MA order</param>
+        /// <param name="period">Size of the rolling series to fit onto</param>
+        /// <param name="arMethod">Method to use when fitting the AR model</param>
+        /// <param name="maMethod">Method to use when fitting the MA model</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The AccumulationDistributionOscillator indicator for the requested symbol over the speified period</returns>
+        public ArimaIndicator ARIMA(
+            Symbol symbol,
+            int p,
+            int d,
+            int q,
+            int period,
+            MathNet.Numerics.LinearRegression.DirectRegressionMethod maMethod,
+            MathNet.Numerics.LinearRegression.DirectRegressionMethod arMethod,
+            Resolution? resolution = null
+            )
+        {
+            var name = CreateIndicatorName(symbol, $"ARIMA(({p},{d},{q}),({period},{arMethod},{maMethod}))", resolution);
+            var arimaIndicator = new ArimaIndicator(name, p, d, q, period, arMethod, maMethod);
+            RegisterIndicator(symbol, arimaIndicator, resolution);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, arimaIndicator, resolution);
+            }
+
+            return arimaIndicator;
+        }
+
+        /// <summary>
         /// Creates a new Average Directional Index indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
