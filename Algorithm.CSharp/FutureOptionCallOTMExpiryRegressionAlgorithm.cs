@@ -51,11 +51,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2020, 1, 5);
             SetEndDate(2020, 6, 30);
 
-            // We add AAPL as a temporary workaround for https://github.com/QuantConnect/Lean/issues/4872
-            // which causes delisting events to never be processed, thus leading to options that might never
-            // be exercised until the next data point arrives.
-            AddEquity("AAPL", Resolution.Daily);
-
             _es19m20 = AddFutureContract(
                 QuantConnect.Symbol.CreateFuture(
                     Futures.Indices.SP500EMini,

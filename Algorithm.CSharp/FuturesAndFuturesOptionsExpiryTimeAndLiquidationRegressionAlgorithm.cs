@@ -36,18 +36,13 @@ namespace QuantConnect.Algorithm.CSharp
 
         private readonly DateTime _expectedExpiryWarningTime = new DateTime(2020, 6, 19);
         private readonly DateTime _expectedExpiryDelistingTime = new DateTime(2020, 6, 20);
-        private readonly DateTime _expectedLiquidationTime = new DateTime(2020, 6, 19, 9, 32, 0);
+        private readonly DateTime _expectedLiquidationTime = new DateTime(2020, 6, 19, 0, 2, 0);
 
         public override void Initialize()
         {
             SetStartDate(2020, 1, 5);
             SetEndDate(2020, 12, 1);
             SetCash(100000);
-
-            // To ensure that the expiry liquidations are ran for the Futures and FOPs, we
-            // add AAPL to pump a data point through on liquidation date so that the liquidation goes through
-            // at AAPL market open. See issue for more details: https://github.com/QuantConnect/Lean/issues/4872
-            AddEquity("AAPL", Resolution.Daily);
 
             var es = QuantConnect.Symbol.CreateFuture(
                 Futures.Indices.SP500EMini,
