@@ -1549,14 +1549,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 {
                     Time = reference.ConvertTo(dataTimeZone, exchange.TimeZone),
                     Value = 0,
-                    Period = fillforwardResolution.ToTimeSpan(),
+                    Period = resolution.ToTimeSpan(),
                     Volume = 100
                 },
                 new TradeBar
                 {
                     Time = reference.AddDays(durationInDays).ConvertTo(dataTimeZone, exchange.TimeZone),
                     Value = 1,
-                    Period = fillforwardResolution.ToTimeSpan(),
+                    Period = resolution.ToTimeSpan(),
                     Volume = 100
                 }
             }.ToList();
