@@ -91,9 +91,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             foreach (var currentSymbol in symbolGenerator.GenerateRandomSymbols())
             {
                 // This is done so that we can update the symbol in the case of a rename event
+                TimeSpan span = settings.End.Subtract(settings.Start);
+                double diff_span = -(span.Minutes/2);
+                var delistDate = randomValueGenerator.NextDate(settings.End.AddMinutes(Math.Round(diff_span, 2, MidpointRounding.ToEven)), settings.End, null);
                 var symbol = currentSymbol;
                 var willBeDelisted = randomValueGenerator.NextBool(1.0);
-                var delistDate = randomValueGenerator.NextDate(settings.Start.AddMonths(6), settings.End, null);
                 var monthsTrading = 0;
 
                 // Keep track of renamed symbols and the time they were renamed. 
