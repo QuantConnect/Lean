@@ -219,7 +219,27 @@ namespace QuantConnect.Tests.Common
                     Assert.AreEqual(i, result.Value);
                     Assert.AreEqual(i, result.BidPrice);
                     Assert.AreEqual(i, result.BidSize);
+                    Assert.IsNull(result.Symbol);
                 }
+            }
+        }
+
+        [Test]
+        public void OpenInterestSerializationRoundTrip()
+        {
+            var openInterest = new OpenInterest(DateTime.UtcNow, Symbols.AAPL, 10);
+
+            var serializedTick = openInterest.ProtobufSerialize();
+
+            // verify its correct
+            using (var stream = new MemoryStream(serializedTick))
+            {
+                var result = (Tick)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+
+                Assert.IsNull(result.Symbol);
+                Assert.AreEqual(openInterest.Time, result.Time);
+                Assert.AreEqual(openInterest.EndTime, result.EndTime);
+                Assert.AreEqual(openInterest.Value, result.Value);
             }
         }
 
