@@ -2284,6 +2284,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     contract = InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(contract, exchange);
                     ibSymbol = contract.Symbol;
                 }
+                else if (securityType == SecurityType.Future && contract.LastTradeDateOrContractMonth == "0")
+                {
+                    contract = _symbolMapper.ParseMalformedContractFutureSymbol(contract, _symbolPropertiesDatabase);
+                    ibSymbol = contract.Symbol;
+                }
 
                 // Handle future options as a Future, up until we actually return the future.
                 if (isFutureOption || securityType == SecurityType.Future)
