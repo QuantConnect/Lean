@@ -22,7 +22,6 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Data import SubscriptionDataSource
 from QuantConnect.Python import PythonData
 from datetime import date, timedelta, datetime
-import decimal
 import numpy as np
 import math
 import json
@@ -42,8 +41,13 @@ class CustomDataNIFTYAlgorithm(QCAlgorithm):
         self.SetCash(100000)
 
         # Define the symbol and "type" of our generic data:
-        self.AddData(DollarRupee, "USDINR")
-        self.AddData(Nifty, "NIFTY")
+        rupee = self.AddData(DollarRupee, "USDINR", Resolution.Daily).Symbol
+        nifty = self.AddData(Nifty, "NIFTY", Resolution.Daily).Symbol
+
+        self.EnableAutomaticIndicatorWarmUp = True
+        rupeeSma = self.SMA(rupee, 20)
+        niftySma = self.SMA(rupee, 20)
+        self.Log(f"SMA - Is ready? USDINR: {rupeeSma.IsReady} NIFTY: {niftySma.IsReady}")
 
         self.minimumCorrelationHistory = 50
         self.today = CorrelationPair()
@@ -68,7 +72,7 @@ class CustomDataNIFTYAlgorithm(QCAlgorithm):
         if self.Time.weekday() != 2: return
 
         cur_qnty = self.Portfolio["NIFTY"].Quantity
-        quantity = decimal.Decimal(math.floor(self.Portfolio.MarginRemaining * decimal.Decimal(0.9) / data["NIFTY"].Close))
+        quantity = math.floor(self.Portfolio.MarginRemaining * 0.9) / data["NIFTY"].Close
         hi_nifty = max(price.NiftyPrice for price in self.prices)
         lo_nifty = min(price.NiftyPrice for price in self.prices)
 
@@ -99,7 +103,7 @@ class Nifty(PythonData):
             # 2011-09-13  7792.9    7799.9     7722.65    7748.7    116534670    6107.78
             data = line.split(',')
             index.Time = datetime.strptime(data[0], "%Y-%m-%d")
-            index.Value = decimal.Decimal(data[4])
+            index.Value = data[4]
             index["Open"] = float(data[1])
             index["High"] = float(data[2])
             index["Low"] = float(data[3])
@@ -128,7 +132,7 @@ class DollarRupee(PythonData):
         try:
             data = line.split(',')
             currency.Time = datetime.strptime(data[0], "%Y-%m-%d")
-            currency.Value = decimal.Decimal(data[1])
+            currency.Value = data[1]
             currency["Close"] = float(data[1])
 
         except ValueError:

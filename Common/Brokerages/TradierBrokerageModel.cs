@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
@@ -62,7 +61,7 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     "This model only supports equities."
-                    );
+                );
 
                 return false;
             }
@@ -71,7 +70,7 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     "Tradier brokerage only supports Market orders. MarketOnOpen and MarketOnClose orders not supported."
-                    );
+                );
 
                 return false;
             }
@@ -80,7 +79,7 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ExtendedMarket",
                     "Tradier does not support extended market hours trading.  Your order will be processed at market open."
-                    );
+                );
             }
 
             // tradier order limits
@@ -104,7 +103,7 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateRejected",
                     "Traider does not support updating order quantities."
-                    );
+                );
 
                 return false;
             }
@@ -157,16 +156,6 @@ namespace QuantConnect.Brokerages
             {
                 base.ApplySplit(tickets, split);
             }
-        }
-
-        /// <summary>
-        /// Gets a new fill model that represents this brokerage's fill behavior
-        /// </summary>
-        /// <param name="security">The security to get fill model for</param>
-        /// <returns>The new fill model for this brokerage</returns>
-        public override IFillModel GetFillModel(Security security)
-        {
-            return new ImmediateFillModel();
         }
 
         /// <summary>

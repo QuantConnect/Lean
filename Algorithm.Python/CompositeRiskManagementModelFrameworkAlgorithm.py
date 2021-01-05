@@ -33,7 +33,7 @@ from datetime import timedelta
 ### <summary>
 ### Show cases how to use the CompositeRiskManagementModel.
 ### </summary>
-class CompositeRiskManagementModelFrameworkAlgorithm(QCAlgorithmFramework):
+class CompositeRiskManagementModelFrameworkAlgorithm(QCAlgorithm):
     '''Show cases how to use the CompositeRiskManagementModel.'''
 
     def Initialize(self):

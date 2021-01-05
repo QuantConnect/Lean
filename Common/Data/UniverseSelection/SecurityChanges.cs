@@ -39,11 +39,26 @@ namespace QuantConnect.Data.UniverseSelection
         public int Count => _addedSecurities.Count + _removedSecurities.Count;
 
         /// <summary>
+        /// True will filter out custom securities from the
+        /// <see cref="AddedSecurities"/> and <see cref="RemovedSecurities"/> properties
+        /// </summary>
+        /// <remarks>This allows us to filter but also to disable
+        /// the filtering if desired</remarks>
+        public bool FilterCustomSecurities { get; set; }
+
+        /// <summary>
         /// Gets the symbols that were added by universe selection
         /// </summary>
+        /// <remarks>Will use <see cref="FilterCustomSecurities"/> value
+        /// to determine if custom securities should be filtered</remarks>
         public IReadOnlyList<Security> AddedSecurities
         {
-            get { return _addedSecurities.OrderBy(x => x.Symbol.Value).ToList(); }
+            get
+            {
+                return _addedSecurities.OrderBy(x => x.Symbol.Value)
+                    .Where(security => !FilterCustomSecurities || security.Type != SecurityType.Base)
+                    .ToList();
+            }
         }
 
         /// <summary>
@@ -51,9 +66,16 @@ namespace QuantConnect.Data.UniverseSelection
         /// include symbols that were removed, but are still receiving data due to
         /// existing holdings or open orders
         /// </summary>
+        /// <remarks>Will use <see cref="FilterCustomSecurities"/> value
+        /// to determine if custom securities should be filtered</remarks>
         public IReadOnlyList<Security> RemovedSecurities
         {
-            get { return _removedSecurities.OrderBy(x => x.Symbol.Value).ToList(); }
+            get
+            {
+                return _removedSecurities.OrderBy(x => x.Symbol.Value)
+                    .Where(security => !FilterCustomSecurities || security.Type != SecurityType.Base)
+                    .ToList();
+            }
         }
 
         /// <summary>
@@ -65,6 +87,17 @@ namespace QuantConnect.Data.UniverseSelection
         {
             _addedSecurities = addedSecurities.ToHashSet();
             _removedSecurities = removedSecurities.ToHashSet();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecurityChanges"/> class
+        /// as a shallow clone of a given instance, sharing the same collections
+        /// </summary>
+        /// <param name="changes">The instance to clone</param>
+        public SecurityChanges(SecurityChanges changes)
+        {
+            _addedSecurities = changes._addedSecurities;
+            _removedSecurities = changes._removedSecurities;
         }
 
         /// <summary>
@@ -101,8 +134,9 @@ namespace QuantConnect.Data.UniverseSelection
             if (left == None) return right;
             if (right == None) return left;
 
-            var additions = left.AddedSecurities.Union(right.AddedSecurities).ToList();
-            var removals = left.RemovedSecurities.Union(right.RemovedSecurities).Where(x => !additions.Contains(x)).ToList();
+            // perf: no need to use Union here, SecurityChanges.Constructor will use hashset
+            var additions = left.AddedSecurities.Concat(right.AddedSecurities).ToHashSet();
+            var removals = left.RemovedSecurities.Concat(right.RemovedSecurities).Where(x => !additions.Contains(x));
             return new SecurityChanges(additions, removals);
         }
 
@@ -117,22 +151,23 @@ namespace QuantConnect.Data.UniverseSelection
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            if (AddedSecurities.Count == 0 && RemovedSecurities.Count == 0)
+            if (Count == 0)
             {
                 return "SecurityChanges: None";
             }
+
             var added = string.Empty;
             if (AddedSecurities.Count != 0)
             {
-                added = " Added: " + string.Join(",", AddedSecurities.Select(x => x.Symbol.ID));
+                added = $" Added: {string.Join(",", AddedSecurities.Select(x => x.Symbol.ID))}";
             }
             var removed = string.Empty;
             if (RemovedSecurities.Count != 0)
             {
-                removed = " Removed: " + string.Join(",", RemovedSecurities.Select(x => x.Symbol.ID));
+                removed = $" Removed: {string.Join(",", RemovedSecurities.Select(x => x.Symbol.ID))}";
             }
 
-            return "SecurityChanges: " + added + removed;
+            return $"SecurityChanges: {added}{removed}";
         }
 
         #endregion

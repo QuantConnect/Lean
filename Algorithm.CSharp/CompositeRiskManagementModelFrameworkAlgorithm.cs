@@ -14,7 +14,6 @@
 */
 
 using System.Collections.Generic;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -27,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Show cases how to use the <see cref="CompositeRiskManagementModel"/> to define
     /// </summary>
-    public class CompositeRiskManagementModelFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    public class CompositeRiskManagementModelFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -67,37 +66,45 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "7"},
-            {"Average Win", "1.00%"},
-            {"Average Loss", "-1.03%"},
-            {"Compounding Annual Return", "190.425%"},
-            {"Drawdown", "2.300%"},
-            {"Expectancy", "0.314"},
-            {"Net Profit", "1.372%"},
-            {"Sharpe Ratio", "3.771"},
+            {"Average Win", "1.02%"},
+            {"Average Loss", "-1.01%"},
+            {"Compounding Annual Return", "205.606%"},
+            {"Drawdown", "2.200%"},
+            {"Expectancy", "0.339"},
+            {"Net Profit", "1.439%"},
+            {"Sharpe Ratio", "7.166"},
+            {"Probabilistic Sharpe Ratio", "64.794%"},
             {"Loss Rate", "33%"},
             {"Win Rate", "67%"},
-            {"Profit-Loss Ratio", "0.97"},
-            {"Alpha", "0.007"},
-            {"Beta", "62.953"},
-            {"Annual Standard Deviation", "0.186"},
-            {"Annual Variance", "0.035"},
-            {"Information Ratio", "3.713"},
-            {"Tracking Error", "0.186"},
-            {"Treynor Ratio", "0.011"},
+            {"Profit-Loss Ratio", "1.01"},
+            {"Alpha", "-0.341"},
+            {"Beta", "0.968"},
+            {"Annual Standard Deviation", "0.213"},
+            {"Annual Variance", "0.045"},
+            {"Information Ratio", "-46.719"},
+            {"Tracking Error", "0.009"},
+            {"Treynor Ratio", "1.575"},
             {"Total Fees", "$22.77"},
+            {"Fitness Score", "0.999"},
+            {"Kelly Criterion Estimate", "38.64"},
+            {"Kelly Criterion Probability Value", "0.229"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "69.159"},
+            {"Portfolio Turnover", "1.242"},
             {"Total Insights Generated", "100"},
             {"Total Insights Closed", "99"},
             {"Total Insights Analysis Completed", "99"},
             {"Long Insight Count", "100"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$158418.3850"},
-            {"Total Accumulated Estimated Alpha Value", "$25522.9620"},
-            {"Mean Population Estimated Insight Value", "$257.8077"},
+            {"Estimated Monthly Alpha Value", "$126657.6305"},
+            {"Total Accumulated Estimated Alpha Value", "$20405.9516"},
+            {"Mean Population Estimated Insight Value", "$206.1207"},
             {"Mean Population Direction", "54.5455%"},
             {"Mean Population Magnitude", "54.5455%"},
             {"Rolling Averaged Population Direction", "59.8056%"},
-            {"Rolling Averaged Population Magnitude", "59.8056%"}
+            {"Rolling Averaged Population Magnitude", "59.8056%"},
+            {"OrderListHash", "-1225025518"}
         };
     }
 }

@@ -105,5 +105,29 @@ namespace QuantConnect.Data
                 subscription.DataNormalizationMode = mode;
             }
         }
+
+        /// <summary>
+        /// Will determine if mapping should be used for this subscription configuration
+        /// </summary>
+        /// <param name="config">The subscription data configuration we are processing</param>
+        /// <remarks>One of the objectives of this method is to normalize the 'use mapping'
+        /// check and void code duplication and related issues</remarks>
+        /// <returns>True if ticker should be mapped</returns>
+        public static bool TickerShouldBeMapped(this SubscriptionDataConfig config)
+        {
+            // we create an instance of the data type, if it is a custom type
+            // it can override RequiresMapping else it will use security type\
+            return config.GetBaseDataInstance().RequiresMapping();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BaseData"/> type defined in <paramref name="config"/> with the symbol properly set
+        /// </summary>
+        public static BaseData GetBaseDataInstance(this SubscriptionDataConfig config)
+        {
+            var instance = config.Type.GetBaseDataInstance();
+            instance.Symbol = config.Symbol;
+            return instance;
+        }
     }
 }

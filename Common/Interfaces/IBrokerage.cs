@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
@@ -27,7 +26,7 @@ namespace QuantConnect.Interfaces
     /// Brokerage interface that defines the operations all brokerages must implement. The IBrokerage implementation
     /// must have a matching IBrokerageFactory implementation.
     /// </summary>
-    public interface IBrokerage : IDisposable
+    public interface IBrokerage : IBrokerageCashSynchronizer, IDisposable
     {
         /// <summary>
         /// Event that fires each time an order is filled
@@ -112,6 +111,11 @@ namespace QuantConnect.Interfaces
         /// Specifies whether the brokerage will instantly update account balances
         /// </summary>
         bool AccountInstantlyUpdated { get; }
+
+        /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
+        string AccountBaseCurrency { get; }
 
         /// <summary>
         /// Gets the history for the requested security

@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 var symbol = kvp.Key;
                 var tradeBar = kvp.Value;
-                Debug($"OnData(Slice): {Time}: {symbol}: {tradeBar.Close.ToString("0.00")}");
+                Debug($"OnData(Slice): {Time}: {symbol}: {tradeBar.Close.ToStringInvariant("0.00")}");
             }
 
             // the slice can also contain delisting data: data.Delistings in a dictionary string->Delisting
@@ -80,11 +80,8 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("Securities must be marked as tradable until they're delisted or removed from the universe");
             }
-        }
 
-        public void OnData(Delistings data)
-        {
-            foreach (var kvp in data)
+            foreach (var kvp in data.Delistings)
             {
                 var symbol = kvp.Key;
                 var delisting = kvp.Value;
@@ -143,25 +140,46 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "2"},
+            {"Total Trades", "3"},
             {"Average Win", "0%"},
-            {"Average Loss", "-5.58%"},
-            {"Compounding Annual Return", "-87.694%"},
-            {"Drawdown", "5.600%"},
+            {"Average Loss", "-3.23%"},
+            {"Compounding Annual Return", "-79.990%"},
+            {"Drawdown", "4.300%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-5.578%"},
-            {"Sharpe Ratio", "-10.227"},
+            {"Net Profit", "-4.312%"},
+            {"Sharpe Ratio", "-5.958"},
+            {"Probabilistic Sharpe Ratio", "0.000%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-1.953"},
-            {"Beta", "23.587"},
-            {"Annual Standard Deviation", "0.156"},
-            {"Annual Variance", "0.024"},
-            {"Information Ratio", "-10.33"},
-            {"Tracking Error", "0.156"},
-            {"Treynor Ratio", "-0.067"},
-            {"Total Fees", "$36.70"}
+            {"Alpha", "-0.685"},
+            {"Beta", "-0.445"},
+            {"Annual Standard Deviation", "0.119"},
+            {"Annual Variance", "0.014"},
+            {"Information Ratio", "-4.887"},
+            {"Tracking Error", "0.155"},
+            {"Treynor Ratio", "1.589"},
+            {"Total Fees", "$55.05"},
+            {"Fitness Score", "0.002"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "-15.687"},
+            {"Return Over Maximum Drawdown", "-18.549"},
+            {"Portfolio Turnover", "0.334"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "-2022527947"}
         };
     }
 }

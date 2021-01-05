@@ -79,7 +79,13 @@ namespace QuantConnect.Statistics
         /// </summary>
         public List<Trade> ClosedTrades
         {
-            get { return _closedTrades; }
+            get
+            {
+                lock (_closedTrades)
+                {
+                    return new List<Trade>(_closedTrades);
+                }
+            }
         }
 
         /// <summary>
@@ -202,8 +208,9 @@ namespace QuantConnect.Statistics
                 while (position.PendingTrades.Count > 0 && Math.Abs(totalExecutedQuantity) < fill.AbsoluteFillQuantity)
                 {
                     var trade = position.PendingTrades[index];
+                    var absoluteUnexecutedQuantity = fill.AbsoluteFillQuantity - Math.Abs(totalExecutedQuantity);
 
-                    if (fill.AbsoluteFillQuantity >= trade.Quantity)
+                    if (absoluteUnexecutedQuantity >= trade.Quantity)
                     {
                         totalExecutedQuantity -= trade.Quantity * (trade.Direction == TradeDirection.Long ? +1 : -1);
                         position.PendingTrades.RemoveAt(index);
@@ -222,8 +229,8 @@ namespace QuantConnect.Statistics
                     }
                     else
                     {
-                        totalExecutedQuantity += fill.FillQuantity;
-                        trade.Quantity -= fill.AbsoluteFillQuantity;
+                        totalExecutedQuantity += absoluteUnexecutedQuantity * (trade.Direction == TradeDirection.Long ? -1 : +1);
+                        trade.Quantity -= absoluteUnexecutedQuantity;
 
                         AddNewTrade(new Trade
                         {
@@ -231,13 +238,13 @@ namespace QuantConnect.Statistics
                             EntryTime = trade.EntryTime,
                             EntryPrice = trade.EntryPrice,
                             Direction = trade.Direction,
-                            Quantity = fill.AbsoluteFillQuantity,
+                            Quantity = absoluteUnexecutedQuantity,
                             ExitTime = fill.UtcTime,
                             ExitPrice = fill.FillPrice,
-                            ProfitLoss = Math.Round((fill.FillPrice - trade.EntryPrice) * fill.AbsoluteFillQuantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier, 2),
+                            ProfitLoss = Math.Round((fill.FillPrice - trade.EntryPrice) * absoluteUnexecutedQuantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier, 2),
                             TotalFees = trade.TotalFees + (orderFeeAssigned ? 0 : orderFee),
-                            MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * fill.AbsoluteFillQuantity * conversionRate * multiplier, 2),
-                            MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * fill.AbsoluteFillQuantity * conversionRate * multiplier, 2)
+                            MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
+                            MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2)
                         });
 
                         trade.TotalFees = 0;
@@ -299,7 +306,7 @@ namespace QuantConnect.Statistics
             else
             {
                 // execution has opposite direction of trade
-                if (position.PendingFills.Sum(x => x.FillQuantity) + fill.FillQuantity == 0 || fill.AbsoluteFillQuantity > Math.Abs(position.PendingFills.Sum(x => x.FillQuantity)))
+                if (position.PendingFills.Aggregate(0m, (d, x) => d + x.FillQuantity) + fill.FillQuantity == 0 || fill.AbsoluteFillQuantity > Math.Abs(position.PendingFills.Aggregate(0m, (d, x) => d + x.FillQuantity)))
                 {
                     // trade closed
                     position.PendingFills.Add(fill);
@@ -411,7 +418,8 @@ namespace QuantConnect.Statistics
 
                 while (position.PendingFills.Count > 0 && Math.Abs(totalExecutedQuantity) < fill.AbsoluteFillQuantity)
                 {
-                    if (fill.AbsoluteFillQuantity >= Math.Abs(position.PendingFills[index].FillQuantity))
+                    var absoluteUnexecutedQuantity = fill.AbsoluteFillQuantity - Math.Abs(totalExecutedQuantity);
+                    if (absoluteUnexecutedQuantity >= Math.Abs(position.PendingFills[index].FillQuantity))
                     {
                         if (_matchingMethod == FillMatchingMethod.LIFO)
                             entryTime = position.PendingFills[index].UtcTime;
@@ -424,9 +432,10 @@ namespace QuantConnect.Statistics
                     }
                     else
                     {
-                        totalExecutedQuantity += fill.FillQuantity;
-                        entryPrice += (position.PendingFills[index].FillPrice - entryPrice) * fill.FillQuantity / totalExecutedQuantity;
-                        position.PendingFills[index].FillQuantity += fill.FillQuantity;
+                        var executedQuantity = absoluteUnexecutedQuantity * Math.Sign(fill.FillQuantity);
+                        totalExecutedQuantity += executedQuantity;
+                        entryPrice += (position.PendingFills[index].FillPrice - entryPrice) * executedQuantity / totalExecutedQuantity;
+                        position.PendingFills[index].FillQuantity += executedQuantity;
                     }
                 }
 
@@ -471,24 +480,26 @@ namespace QuantConnect.Statistics
         /// </summary>
         private void AddNewTrade(Trade trade)
         {
-            _closedTrades.Add(trade);
-
-            // Due to memory constraints in live mode, we cap the number of trades
-            if (!_liveMode)
-                return;
-
-            // maximum number of trades
-            if (_closedTrades.Count > LiveModeMaxTradeCount)
+            lock (_closedTrades)
             {
-                _closedTrades.RemoveRange(0, _closedTrades.Count - LiveModeMaxTradeCount);
-            }
+                _closedTrades.Add(trade);
 
-            // maximum age of trades
-            while (_closedTrades.Count > 0 && _closedTrades[0].ExitTime.Date.AddMonths(LiveModeMaxTradeAgeMonths) < DateTime.Today)
-            {
-                _closedTrades.RemoveAt(0);
+                // Due to memory constraints in live mode, we cap the number of trades
+                if (!_liveMode)
+                    return;
+
+                // maximum number of trades
+                if (_closedTrades.Count > LiveModeMaxTradeCount)
+                {
+                    _closedTrades.RemoveRange(0, _closedTrades.Count - LiveModeMaxTradeCount);
+                }
+
+                // maximum age of trades
+                while (_closedTrades.Count > 0 && _closedTrades[0].ExitTime.Date.AddMonths(LiveModeMaxTradeAgeMonths) < DateTime.Today)
+                {
+                    _closedTrades.RemoveAt(0);
+                }
             }
         }
-
     }
 }

@@ -20,7 +20,6 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Tests.Common.Securities;
 
@@ -52,7 +51,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 null,
                 new ITradableDateEventProvider[] { eventProvider },
                 _tradableDayNotifier,
-                true
+                true,
+                DateTime.UtcNow
             );
 
             eventProvider.Data.Enqueue(_delistingEvent);
@@ -69,6 +69,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.Null(enumerator.Current);
+
+            enumerator.Dispose();
         }
     }
 
@@ -81,7 +83,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             yield return Data.Dequeue();
         }
 
-        public void Initialize(SubscriptionDataConfig config, FactorFile factorFile, MapFile mapFile)
+        public void Initialize(SubscriptionDataConfig config, FactorFile factorFile, MapFile mapFile, DateTime startTime)
         {
         }
     }
@@ -95,7 +97,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
         public void TriggerEvent()
         {
-            NewTradableDate?.Invoke(this, new NewTradableDateEventArgs(TradableDate, LastBaseData, Symbol));
+            NewTradableDate?.Invoke(this, new NewTradableDateEventArgs(TradableDate, LastBaseData, Symbol, null));
         }
     }
 }

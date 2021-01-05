@@ -16,7 +16,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
 
@@ -60,11 +62,24 @@ namespace QuantConnect.Algorithm.CSharp
                             contract.Symbol.ID.OptionRight == OptionRight.Call &&
                             contract.Symbol.ID.Date == new DateTime(2016, 01, 15))
                         {
-                            if (slice.Time.Date == new DateTime(2014, 06, 05) && contract.OpenInterest != 50)
+                            var history = History<OpenInterest>(contract.Symbol, TimeSpan.FromDays(1)).ToList();
+                            if (history.Count == 0)
+                            {
+                                throw new Exception("Regression test failed: open interest history request is empty");
+                            }
+
+                            var security = Securities[contract.Symbol];
+                            var openInterestCache = security.Cache.GetData<OpenInterest>();
+                            if (openInterestCache == null)
+                            {
+                                throw new Exception("Regression test failed: current open interest isn't in the security cache");
+                            }
+
+                            if (slice.Time.Date == new DateTime(2014, 06, 05) && (contract.OpenInterest != 50 || security.OpenInterest != 50))
                             {
                                 throw new Exception("Regression test failed: current open interest was not correctly loaded and is not equal to 50");
                             }
-                            if (slice.Time.Date == new DateTime(2014, 06, 06) && contract.OpenInterest != 70)
+                            if (slice.Time.Date == new DateTime(2014, 06, 06) && (contract.OpenInterest != 70 || security.OpenInterest != 70))
                             {
                                 throw new Exception("Regression test failed: current open interest was not correctly loaded and is not equal to 70");
                             }
@@ -106,23 +121,44 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "-2.072%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "-1"},
-            {"Net Profit", "-0.010%"},
-            {"Sharpe Ratio", "-11.225"},
-            {"Loss Rate", "100%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0"},
-            {"Beta", "-0.036"},
-            {"Annual Standard Deviation", "0.001"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-11.225"},
-            {"Tracking Error", "0.033"},
-            {"Treynor Ratio", "0.355"},
-            {"Total Fees", "$2.00"}
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$2.00"},
+            {"Fitness Score", "0"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "-254.23"},
+            {"Portfolio Turnover", "0"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "1708084857"}
         };
     }
 }

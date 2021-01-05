@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -33,9 +34,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// </summary>
     public class FineFundamentalSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
+        private static readonly ConcurrentDictionary<int, List<DateTime>> FineFilesCache
+            = new ConcurrentDictionary<int, List<DateTime>>();
+        // creating a fine fundamental instance is expensive (its massive) so we keep our factory instance
+        private static readonly FineFundamental FineFundamental = new FineFundamental();
+
         private readonly bool _isLiveMode;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
-        private string _lastUsedFileName;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FineFundamentalSubscriptionEnumeratorFactory"/> class.
@@ -61,28 +66,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             {
                 var tradableDays = _tradableDaysProvider(request);
 
-                var fineFundamental = new FineFundamental();
                 var fineFundamentalConfiguration = new SubscriptionDataConfig(request.Configuration, typeof(FineFundamental), request.Security.Symbol);
 
                 foreach (var date in tradableDays)
                 {
-                    var fineFundamentalSource = GetSource(fineFundamental, fineFundamentalConfiguration, date);
-                    var fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode);
-                    var fineFundamentalForDate = (FineFundamental) fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault();
+                    var fineFundamentalSource = GetSource(FineFundamental, fineFundamentalConfiguration, date);
+                    var fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode, FineFundamental);
+                    var fineFundamentalForDate = (FineFundamental)fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault();
 
-                    yield return new FineFundamental
+                    // directly do not emit null points. Null points won't happen when used with Coarse data since we are pre filtering based on Coarse.HasFundamentalData
+                    // but could happen when fine filtering custom universes
+                    if (fineFundamentalForDate != null)
                     {
-                        DataType = MarketDataType.Auxiliary,
-                        Symbol = request.Configuration.Symbol,
-                        Time = date,
-                        CompanyReference = fineFundamentalForDate != null ? fineFundamentalForDate.CompanyReference : new CompanyReference(),
-                        SecurityReference = fineFundamentalForDate != null ? fineFundamentalForDate.SecurityReference : new SecurityReference(),
-                        FinancialStatements = fineFundamentalForDate != null ? fineFundamentalForDate.FinancialStatements : new FinancialStatements(),
-                        EarningReports = fineFundamentalForDate != null ? fineFundamentalForDate.EarningReports : new EarningReports(),
-                        OperationRatios = fineFundamentalForDate != null ? fineFundamentalForDate.OperationRatios : new OperationRatios(),
-                        EarningRatios = fineFundamentalForDate != null ? fineFundamentalForDate.EarningRatios : new EarningRatios(),
-                        ValuationRatios = fineFundamentalForDate != null ? fineFundamentalForDate.ValuationRatios : new ValuationRatios()
-                    };
+                        yield return new FineFundamental
+                        {
+                            DataType = MarketDataType.Auxiliary,
+                            Symbol = request.Configuration.Symbol,
+                            Time = date,
+                            CompanyReference = fineFundamentalForDate.CompanyReference,
+                            SecurityReference = fineFundamentalForDate.SecurityReference,
+                            FinancialStatements = fineFundamentalForDate.FinancialStatements,
+                            EarningReports = fineFundamentalForDate.EarningReports,
+                            OperationRatios = fineFundamentalForDate.OperationRatios,
+                            EarningRatios = fineFundamentalForDate.EarningRatios,
+                            ValuationRatios = fineFundamentalForDate.ValuationRatios,
+                            AssetClassification = fineFundamentalForDate.AssetClassification,
+                            CompanyProfile = fineFundamentalForDate.CompanyProfile
+                        };
+                    }
                 }
             }
         }
@@ -95,59 +106,115 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         {
             var source = fine.GetSource(config, date, _isLiveMode);
 
-            var fileName = date.ToString("yyyyMMdd");
-
-            if (!File.Exists(source.Source))
+            if (File.Exists(source.Source))
             {
-                if (_lastUsedFileName == null)
+                return source;
+            }
+
+            if (_isLiveMode)
+            {
+                var result = DailyBackwardsLoop(fine, config, date, source);
+                // if we didn't fine any file we just fallback into listing the directory
+                if (result != null)
                 {
-                    // find first file date
-                    var path = Path.GetDirectoryName(source.Source) ?? string.Empty;
-                    if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
-                        return source;
-
-                    var firstFileName = Path.GetFileNameWithoutExtension(Directory.GetFiles(path, "*.zip").OrderBy(x => x).First());
-                    var firstDate = DateTime.ParseExact(firstFileName, "yyyyMMdd", CultureInfo.InvariantCulture);
-
-                    // requested date before first date, return current invalid source anyway
-                    if (date < firstDate)
-                        return source;
-
-                    // requested date after first date, save date of first existing file
-                    _lastUsedFileName = firstFileName;
-
-                    // loop back in time until we find an existing file
-                    while (string.CompareOrdinal(fileName, _lastUsedFileName) > 0)
-                    {
-                        // get previous date
-                        date = date.AddDays(-1);
-
-                        // get file name for this date
-                        source = fine.GetSource(config, date, _isLiveMode);
-                        fileName = Path.GetFileNameWithoutExtension(source.Source);
-
-                        if (!File.Exists(source.Source))
-                            continue;
-
-                        // we found the file, save its name and return the source
-                        _lastUsedFileName = fileName;
-
-                        break;
-                    }
-                }
-                else
-                {
-                    // return source for last existing file date
-                    date = DateTime.ParseExact(_lastUsedFileName, "yyyyMMdd", CultureInfo.InvariantCulture);
-                    source = fine.GetSource(config, date, _isLiveMode);
+                    return result;
                 }
             }
-            else
+
+            var cacheKey = config.Symbol.Value.ToLowerInvariant().GetHashCode();
+            List<DateTime> availableDates;
+
+            // only use cache in backtest, since in live mode new fine files are added
+            // we still didn't load available fine dates for this symbol
+            if (_isLiveMode || !FineFilesCache.TryGetValue(cacheKey, out availableDates))
             {
-                _lastUsedFileName = fileName;
+                try
+                {
+                    var path = Path.GetDirectoryName(source.Source) ?? string.Empty;
+                    availableDates = Directory.GetFiles(path, "*.zip")
+                        .Select(
+                            filePath =>
+                            {
+                                try
+                                {
+                                    return DateTime.ParseExact(
+                                        Path.GetFileNameWithoutExtension(filePath),
+                                        "yyyyMMdd",
+                                        CultureInfo.InvariantCulture
+                                    );
+                                }
+                                catch
+                                {
+                                    // just in case...
+                                    return DateTime.MaxValue;
+                                }
+                            }
+                        )
+                        .Where(time => time != DateTime.MaxValue)
+                        .OrderBy(x => x)
+                        .ToList();
+                }
+                catch
+                {
+                    // directory doesn't exist or path is null
+                    if (!_isLiveMode)
+                    {
+                        // only add to cache if not live mode
+                        FineFilesCache[cacheKey] = new List<DateTime>();
+                    }
+                    return source;
+                }
+
+                if (!_isLiveMode)
+                {
+                    // only add to cache if not live mode
+                    FineFilesCache[cacheKey] = availableDates;
+                }
+            }
+
+            // requested date before first date, return null source
+            if (availableDates.Count == 0 || date < availableDates[0])
+            {
+                return source;
+            }
+            for (var i = availableDates.Count - 1; i >= 0; i--)
+            {
+                // we iterate backwards ^ and find the first data point before 'date'
+                if (availableDates[i] <= date)
+                {
+                    return fine.GetSource(config, availableDates[i], _isLiveMode);
+                }
             }
 
             return source;
+        }
+
+        private SubscriptionDataSource DailyBackwardsLoop(FineFundamental fine, SubscriptionDataConfig config, DateTime date, SubscriptionDataSource source)
+        {
+            var path = Path.GetDirectoryName(source.Source) ?? string.Empty;
+            if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
+            {
+                // directory does not exist
+                return source;
+            }
+
+            // loop back in time, for 10 days, until we find an existing file
+            var count = 10;
+            do
+            {
+                // get previous date
+                date = date.AddDays(-1);
+
+                // get file name for this date
+                source = fine.GetSource(config, date, _isLiveMode);
+                if (File.Exists(source.Source))
+                {
+                    break;
+                }
+            }
+            while (--count > 0);
+
+            return count == 0 ? null : source;
         }
     }
 }

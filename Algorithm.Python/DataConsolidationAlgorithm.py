@@ -43,7 +43,7 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
         self.SetStartDate(DateTime(2013, 10, 7, 9, 30, 0))  #Set Start Date
-        self.SetEndDate(self.StartDate + timedelta(1))           #Set End Date
+        self.SetEndDate(self.StartDate + timedelta(60))          #Set End Date
         # Find more symbols here: http://quantconnect.com/data
         self.AddEquity("SPY")
         self.AddForex("EURUSD", Resolution.Hour)
@@ -83,10 +83,31 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         # this call adds our 3 day to the manager to receive updates from the engine
         self.SubscriptionManager.AddConsolidator("SPY", three_oneDayBar)
 
+        # Custom monthly consolidator
+        customMonthlyConsolidator = TradeBarConsolidator(self.CustomMonthly)
+        customMonthlyConsolidator.DataConsolidated += self.CustomMonthlyHandler
+        self.SubscriptionManager.AddConsolidator("SPY", customMonthlyConsolidator)
+
         # API convenience method for easily receiving consolidated data
         self.Consolidate("SPY", timedelta(minutes=45), self.FortyFiveMinuteBarHandler)
         self.Consolidate("SPY", Resolution.Hour, self.HourBarHandler)
         self.Consolidate("EURUSD", Resolution.Daily, self.DailyEurUsdBarHandler)
+
+        # API convenience method for easily receiving weekly-consolidated data
+        self.Consolidate("SPY", Calendar.Weekly, self.CalendarTradeBarHandler)
+        self.Consolidate("EURUSD", Calendar.Weekly, self.CalendarQuoteBarHandler)
+
+        # API convenience method for easily receiving monthly-consolidated data
+        self.Consolidate("SPY", Calendar.Monthly, self.CalendarTradeBarHandler);
+        self.Consolidate("EURUSD", Calendar.Monthly, self.CalendarQuoteBarHandler);
+
+        # API convenience method for easily receiving quarterly-consolidated data
+        self.Consolidate("SPY", Calendar.Quarterly, self.CalendarTradeBarHandler)
+        self.Consolidate("EURUSD", Calendar.Quarterly, self.CalendarQuoteBarHandler)
+
+        # API convenience method for easily receiving yearly-consolidated data
+        self.Consolidate("SPY", Calendar.Yearly, self.CalendarTradeBarHandler);
+        self.Consolidate("EURUSD", Calendar.Yearly, self.CalendarQuoteBarHandler);
 
         # some securities may have trade and quote data available, so we can choose it based on TickType:
         #self.Consolidate("BTCUSD", Resolution.Hour, TickType.Trade, self.HourBarHandler)   # to get TradeBar
@@ -105,7 +126,6 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         # close up shop each day and reset our 'last' value so we start tomorrow fresh
         self.Liquidate("SPY")
         self.__last = None
-
 
     def ThirtyMinuteBarHandler(self, sender, consolidated):
         '''This is our event handler for our 30 minute trade bar defined above in Initialize(). So each time the
@@ -128,7 +148,7 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         consolidator produces a new 3 day bar, this function will be called automatically. The 'sender' parameter
         will be the instance of the IDataConsolidator that invoked the event, but you'll almost never need that!'''
         self.Log(f"{consolidated.Time} >> Plotting!")
-        self.Plot(consolidated.Symbol, "3HourBar", consolidated.Close)
+        self.Plot(consolidated.Symbol.Value, "3HourBar", consolidated.Close)
 
     def FortyFiveMinuteBarHandler(self, consolidated):
         ''' This is our event handler for our 45 minute consolidated defined using the Consolidate method'''
@@ -143,6 +163,23 @@ class DataConsolidationAlgorithm(QCAlgorithm):
     def DailyEurUsdBarHandler(self, consolidated):
         '''This is our event handler for our daily consolidated defined using the Consolidate method'''
         self.Log(f"{consolidated.EndTime} EURUSD Daily consolidated.")
+
+    def CalendarTradeBarHandler(self, tradeBar):
+        self.Log(f'{self.Time} :: {tradeBar.Time} {tradeBar.Close}')
+
+    def CalendarQuoteBarHandler(self, quoteBar):
+        self.Log(f'{self.Time} :: {quoteBar.Time} {quoteBar.Close}')
+
+    def CustomMonthly(self, dt):
+        '''Custom Monthly Func'''
+        start = dt.replace(day=1).date()
+        end = dt.replace(day=28) + timedelta(4)
+        end = (end - timedelta(end.day-1)).date()
+        return CalendarInfo(start, end - start)
+
+    def CustomMonthlyHandler(self, sender, consolidated):
+        '''This is our event handler Custom Monthly function'''
+        self.Log(f"{consolidated.Time} >> CustomMonthlyHandler >> {consolidated.Close}")
 
     def OnEndOfAlgorithm(self):
         if not self.consolidatedHour:

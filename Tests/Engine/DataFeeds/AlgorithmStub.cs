@@ -23,7 +23,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
     /// <summary>
-    /// This type allows tests to easily create an algorith that is mostly initialized in one line
+    /// This type allows tests to easily create an algorithm that is mostly initialized in one line
     /// </summary>
     internal class AlgorithmStub : QCAlgorithm
     {
@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             SubscriptionManager.SetDataManager(DataManager);
         }
 
-        public void AddSecurities(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null)
+        public void AddSecurities(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null, List<string> crypto = null)
         {
             foreach (var ticker in equities ?? new List<string>())
             {
@@ -56,8 +56,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             foreach (var ticker in forex ?? new List<string>())
             {
                 AddSecurity(SecurityType.Forex, ticker, resolution);
+            }
+            foreach (var ticker in crypto ?? new List<string>())
+            {
+                AddSecurity(SecurityType.Crypto, ticker, resolution);
                 var symbol = SymbolCache.GetSymbol(ticker);
-                Securities[symbol].Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard));
+                Securities[symbol].Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.Utc));
             }
         }
 

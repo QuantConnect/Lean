@@ -33,7 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateFuturesConsolidationAlgorithm : QCAlgorithm
     {
         private const string RootSP500 = Futures.Indices.SP500EMini;
-        public Symbol SP500 = QuantConnect.Symbol.Create(RootSP500, SecurityType.Future, Market.USA);
+        public Symbol SP500 = QuantConnect.Symbol.Create(RootSP500, SecurityType.Future, Market.CME);
         private HashSet<Symbol> _futureContracts = new HashSet<Symbol>();
 
         public override void Initialize()
@@ -43,7 +43,11 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(1000000);
 
             var futureSP500 = AddFuture(RootSP500);
-            futureSP500.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
+            // set our expiry filter for this future chain
+            // SetFilter method accepts TimeSpan objects or integer for days.
+            // The following statements yield the same filtering criteria
+            futureSP500.SetFilter(0, 182);
+            // futureSP500.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
 
             SetBenchmark(x => 0);
         }

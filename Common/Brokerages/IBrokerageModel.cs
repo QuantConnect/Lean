@@ -163,10 +163,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Creates a new <see cref="IBrokerageModel"/> for the specified <see cref="BrokerageName"/>
         /// </summary>
+        /// <param name="orderProvider">The order provider</param>
         /// <param name="brokerage">The name of the brokerage</param>
         /// <param name="accountType">The account type</param>
         /// <returns>The model for the specified brokerage</returns>
-        public static IBrokerageModel Create(BrokerageName brokerage, AccountType accountType)
+        public static IBrokerageModel Create(IOrderProvider orderProvider, BrokerageName brokerage, AccountType accountType)
         {
             switch (brokerage)
             {
@@ -188,11 +189,17 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.Bitfinex:
                     return new BitfinexBrokerageModel(accountType);
 
+                case BrokerageName.Binance:
+                    return new BinanceBrokerageModel(accountType);
+
                 case BrokerageName.GDAX:
                     return new GDAXBrokerageModel(accountType);
 
                 case BrokerageName.Alpaca:
-                    return new AlpacaBrokerageModel(accountType);
+                    return new AlpacaBrokerageModel(orderProvider, accountType);
+
+                case BrokerageName.AlphaStreams:
+                    return new AlphaStreamsBrokerageModel(accountType);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);

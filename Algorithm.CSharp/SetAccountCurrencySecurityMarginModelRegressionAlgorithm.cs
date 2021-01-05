@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -99,7 +99,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void UpdateExpectedOrderQuantity(decimal target)
         {
-            _expectedOrderQuantity = (Portfolio.TotalPortfolioValue * target * (1 - Settings.FreePortfolioValuePercentage) - _spy.Holdings.HoldingsValue)
+            _expectedOrderQuantity = ((Portfolio.TotalPortfolioValue - Settings.FreePortfolioValue) * target - _spy.Holdings.HoldingsValue)
                 / (_spy.Price * _spy.QuoteCurrency.ConversionRate);
             _expectedOrderQuantity--; // minus 1 per fees
             _expectedOrderQuantity -= _expectedOrderQuantity % _spy.SymbolProperties.LotSize;
@@ -116,8 +116,8 @@ namespace QuantConnect.Algorithm.CSharp
                 - Portfolio.CashBook.Convert(Portfolio.TotalFees, "EUR", "USD");
             var amount = Portfolio.CashBook["USD"].Amount;
             // there could be a small difference due to conversion rates
-            // leave 0.5% for error
-            if (Math.Abs(expectedAmount - amount) > Math.Abs(expectedAmount) * 0.005m)
+            // leave 1% for error
+            if (Math.Abs(expectedAmount - amount) > Math.Abs(expectedAmount) * 0.01m)
             {
                 throw new Exception($"Unexpected USD ending cash amount: {amount}. Expected {expectedAmount}");
             }
@@ -195,24 +195,45 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "6"},
-            {"Average Win", "0.41%"},
+            {"Average Win", "0.40%"},
             {"Average Loss", "-0.86%"},
-            {"Compounding Annual Return", "-16.861%"},
+            {"Compounding Annual Return", "-15.825%"},
             {"Drawdown", "1.100%"},
-            {"Expectancy", "-0.262"},
-            {"Net Profit", "-0.456%"},
-            {"Sharpe Ratio", "-1.529"},
+            {"Expectancy", "-0.266"},
+            {"Net Profit", "-0.463%"},
+            {"Sharpe Ratio", "-1.475"},
+            {"Probabilistic Sharpe Ratio", "33.116%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "0.48"},
-            {"Alpha", "-0.125"},
-            {"Beta", "-0.001"},
-            {"Annual Standard Deviation", "0.082"},
+            {"Profit-Loss Ratio", "0.47"},
+            {"Alpha", "-0.196"},
+            {"Beta", "0.123"},
+            {"Annual Standard Deviation", "0.081"},
             {"Annual Variance", "0.007"},
-            {"Information Ratio", "-1.698"},
-            {"Tracking Error", "0.082"},
-            {"Treynor Ratio", "92.89"},
-            {"Total Fees", "$12.97"}
+            {"Information Ratio", "-4.271"},
+            {"Tracking Error", "0.174"},
+            {"Treynor Ratio", "-0.972"},
+            {"Total Fees", "$12.99"},
+            {"Fitness Score", "0.031"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "-3.46"},
+            {"Return Over Maximum Drawdown", "-14.323"},
+            {"Portfolio Turnover", "0.445"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "€0"},
+            {"Total Accumulated Estimated Alpha Value", "€0"},
+            {"Mean Population Estimated Insight Value", "€0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "-304070777"}
         };
     }
 }

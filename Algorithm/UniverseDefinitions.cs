@@ -26,18 +26,22 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Specifies that universe selection should not make changes on this iteration
         /// </summary>
-        public Universe.UnchangedUniverse Unchanged
-        {
-            get { return Universe.Unchanged; }
-        }
+        public Universe.UnchangedUniverse Unchanged => Universe.Unchanged;
 
         /// <summary>
         /// Gets a helper that provides methods for creating universes based on daily dollar volumes
         /// </summary>
-        public DollarVolumeUniverseDefinitions DollarVolume
-        {
-            get; private set;
-        }
+        public DollarVolumeUniverseDefinitions DollarVolume { get; private set; }
+
+        /// <summary>
+        /// Gets a helper that provides methods for creating universes based on index definitions
+        /// </summary>
+        public IndexUniverseDefinitions Index { get; private set; }
+
+        /// <summary>
+        /// Gets a helper that provides methods for creating constituent universes
+        /// </summary>
+        public ConstituentUniverseDefinitions Constituent { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseDefinitions"/> class
@@ -46,6 +50,8 @@ namespace QuantConnect.Algorithm
         public UniverseDefinitions(QCAlgorithm algorithm)
         {
             DollarVolume = new DollarVolumeUniverseDefinitions(algorithm);
+            Index = new IndexUniverseDefinitions(algorithm);
+            Constituent = new ConstituentUniverseDefinitions(algorithm);
         }
     }
 }

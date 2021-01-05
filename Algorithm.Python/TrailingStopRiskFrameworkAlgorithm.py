@@ -30,7 +30,7 @@ from Risk.TrailingStopRiskManagementModel import TrailingStopRiskManagementModel
 from datetime import timedelta
 
 
-class TrailingStopRiskFrameworkAlgorithm(QCAlgorithmFramework):
+class TrailingStopRiskFrameworkAlgorithm(QCAlgorithm):
     '''Show example of how to use the TrailingStopRiskManagementModel'''
 
     def Initialize(self):

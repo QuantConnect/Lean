@@ -28,7 +28,7 @@ using QuantConnect.Data;
 
 namespace QuantConnect.Tests.Engine
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class BasicOptionAssignmentSimulationTests
     {
         private static readonly SecurityExchangeHours SecurityExchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
@@ -53,7 +53,9 @@ namespace QuantConnect.Tests.Engine
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
@@ -66,7 +68,8 @@ namespace QuantConnect.Tests.Engine
                     CreateTradeBarDataConfig(SecurityType.Equity, option1),
                     new Cash(Currencies.USD, 0, 1m),
                     new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 )
             );
 
@@ -78,7 +81,8 @@ namespace QuantConnect.Tests.Engine
                     CreateTradeBarDataConfig(SecurityType.Equity, option2),
                     new Cash(Currencies.USD, 0, 1m),
                     new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 )
             );
 
@@ -90,7 +94,8 @@ namespace QuantConnect.Tests.Engine
                     CreateTradeBarDataConfig(SecurityType.Equity, option3),
                     new Cash(Currencies.USD, 0, 1m),
                     new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 )
             );
 
@@ -160,7 +165,8 @@ namespace QuantConnect.Tests.Engine
                         CreateTradeBarDataConfig(SecurityType.Option, symbol),
                         new Cash(Currencies.USD, 0, 1m),
                         new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                        ErrorCurrencyConverter.Instance
+                        ErrorCurrencyConverter.Instance,
+                        RegisteredSecurityDataTypesProvider.Null
                     );
                     securities.Add(symbol, option);
 
@@ -177,7 +183,9 @@ namespace QuantConnect.Tests.Engine
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities[Symbols.SPY].SetMarketPrice(new Tick { Symbol = Symbols.SPY, AskPrice = 217.94m, BidPrice = 217.86m, Value = 217.90m, Time = securities.UtcTime });

@@ -17,6 +17,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using com.fxcm.external.api.transport;
 using com.fxcm.external.api.transport.listeners;
@@ -42,6 +43,7 @@ namespace QuantConnect.Brokerages.Fxcm
     {
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;
+        private readonly IDataAggregator _aggregator;
         private readonly string _server;
         private readonly string _terminal;
         private readonly string _userName;
@@ -55,9 +57,12 @@ namespace QuantConnect.Brokerages.Fxcm
         private DateTime _lastReadyMessageTime;
         private volatile bool _connectionLost;
 
+        // tracks requested order updates, so we can flag Submitted order events as updates
+        private readonly ConcurrentDictionary<int, int> _orderUpdates = new ConcurrentDictionary<int, int>();
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly ConcurrentQueue<OrderEvent> _orderEventQueue = new ConcurrentQueue<OrderEvent>();
         private readonly FxcmSymbolMapper _symbolMapper = new FxcmSymbolMapper();
+        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         private readonly IList<BaseData> _lastHistoryChunk = new List<BaseData>();
 
@@ -80,25 +85,40 @@ namespace QuantConnect.Brokerages.Fxcm
         public bool EnableOnlyHistoryRequests { get; set; }
 
         /// <summary>
+        /// Static constructor for the <see cref="FxcmBrokerage"/> class
+        /// </summary>
+        static FxcmBrokerage()
+        {
+            // FXCM requires TLS 1.2 since 6/16/2019
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+        }
+
+        /// <summary>
         /// Creates a new instance of the <see cref="FxcmBrokerage"/> class
         /// </summary>
         /// <param name="orderProvider">The order provider</param>
         /// <param name="securityProvider">The holdings provider</param>
+        /// <param name="aggregator">Consolidate ticks</param>
         /// <param name="server">The url of the server</param>
         /// <param name="terminal">The terminal name</param>
         /// <param name="userName">The user name (login id)</param>
         /// <param name="password">The user password</param>
         /// <param name="accountId">The account id</param>
-        public FxcmBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string server, string terminal, string userName, string password, string accountId)
+        public FxcmBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, string server, string terminal, string userName, string password, string accountId)
             : base("FXCM Brokerage")
         {
             _orderProvider = orderProvider;
             _securityProvider = securityProvider;
+            _aggregator = aggregator;
             _server = server;
             _terminal = terminal;
             _userName = userName;
             _password = password;
             _accountId = accountId;
+
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager.SubscribeImpl += (s, t) => Subscribe(s);
+            _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
 
             HistoryResponseTimeout = 5000;
             MaximumHistoryRetryAttempts = 1;
@@ -179,7 +199,12 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 var message =
                     err.Message.Contains("ORA-20101") ? "Incorrect login credentials" :
-                    err.Message.Contains("ORA-20003") ? "API connections are not available on Mini accounts. If you have a standard account contact api@fxcm.com to enable API access" :
+                    err.Message.Contains("ORA-20003") ? "Contact api@fxcm.com to enable API access, below is a template email. " + Environment.NewLine +
+                        "Email: api@fxcm.com " + Environment.NewLine +
+                        "Template: " + Environment.NewLine +
+                        "Hello FXCM staff, " + Environment.NewLine +
+                        "Please enable Java API for all accounts which are associated with this email address. " + Environment.NewLine +
+                        "Also, please respond to this email address once Java API has been enabled, letting me know that the change was done successfully." :
                     err.Message;
 
                 _cancellationTokenSource.Cancel();
@@ -342,7 +367,7 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>The open orders returned from FXCM</returns>
         public override List<Order> GetOpenOrders()
         {
-            Log.Trace(string.Format("FxcmBrokerage.GetOpenOrders(): Located {0} orders", _openOrders.Count));
+            Log.Trace($"FxcmBrokerage.GetOpenOrders(): Located {_openOrders.Count.ToStringInvariant()} orders");
             var orders = _openOrders.Values.ToList()
                 .Where(x => OrderIsOpen(x.getFXCMOrdStatus().getCode()))
                 .Select(ConvertOrder)
@@ -406,52 +431,60 @@ namespace QuantConnect.Brokerages.Fxcm
 
             //Adds the account currency to the cashbook.
             cashBook.Add(new CashAmount(Convert.ToDecimal(_accounts[_accountId].getCashOutstanding()),
-                _fxcmAccountCurrency));
+                AccountBaseCurrency));
 
+            // include cash balances from currency swaps for open Forex positions
             foreach (var trade in _openPositions.Values)
             {
-                //settlement price for the trade
-                var settlementPrice = Convert.ToDecimal(trade.getSettlPrice());
-                //direction of trade
-                var direction = trade.getPositionQty().getLongQty() > 0 ? 1 : -1;
-                //quantity of the asset
-                var quantity = Convert.ToDecimal(trade.getPositionQty().getQty());
-                //quantity of base currency
-                var baseQuantity = direction * quantity;
-                //quantity of quote currency
-                var quoteQuantity = -direction * quantity * settlementPrice;
-                //base currency
-                var baseCurrency = trade.getCurrency();
-                //quote currency
-                var quoteCurrency = FxcmSymbolMapper.ConvertFxcmSymbolToLeanSymbol(trade.getInstrument().getSymbol());
-                quoteCurrency = quoteCurrency.Substring(quoteCurrency.Length - 3);
+                var brokerageSymbol = trade.getInstrument().getSymbol();
+                var ticker = FxcmSymbolMapper.ConvertFxcmSymbolToLeanSymbol(brokerageSymbol);
+                var securityType = _symbolMapper.GetBrokerageSecurityType(brokerageSymbol);
 
-                var baseCurrencyAmount = cashBook.FirstOrDefault(x => x.Currency == baseCurrency);
-                //update the value of the base currency
-                if (baseCurrencyAmount != default(CashAmount))
+                if (securityType == SecurityType.Forex)
                 {
-                    cashBook.Remove(baseCurrencyAmount);
-                    cashBook.Add(new CashAmount(baseQuantity + baseCurrencyAmount.Amount, baseCurrency));
-                }
-                else
-                {
-                    //add the base currency if not present
-                    cashBook.Add(new CashAmount(baseQuantity, baseCurrency));
-                }
+                    //settlement price for the trade
+                    var settlementPrice = Convert.ToDecimal(trade.getSettlPrice());
+                    //direction of trade
+                    var direction = trade.getPositionQty().getLongQty() > 0 ? 1 : -1;
+                    //quantity of the asset
+                    var quantity = Convert.ToDecimal(trade.getPositionQty().getQty());
+                    //quantity of base currency
+                    var baseQuantity = direction * quantity;
+                    //quantity of quote currency
+                    var quoteQuantity = -direction * quantity * settlementPrice;
+                    //base currency
+                    var baseCurrency = trade.getCurrency();
+                    //quote currency
+                    var quoteCurrency = ticker.Substring(ticker.Length - 3);
 
-                var quoteCurrencyAmount = cashBook.Find(x => x.Currency == quoteCurrency);
-                //update the value of the quote currency
-                if (quoteCurrencyAmount != default(CashAmount))
-                {
-                    cashBook.Remove(quoteCurrencyAmount);
-                    cashBook.Add(new CashAmount(quoteQuantity + quoteCurrencyAmount.Amount, quoteCurrency));
-                }
-                else
-                {
-                    //add the quote currency if not present
-                    cashBook.Add(new CashAmount(quoteQuantity, quoteCurrency));
+                    var baseCurrencyAmount = cashBook.FirstOrDefault(x => x.Currency == baseCurrency);
+                    //update the value of the base currency
+                    if (baseCurrencyAmount != default(CashAmount))
+                    {
+                        cashBook.Remove(baseCurrencyAmount);
+                        cashBook.Add(new CashAmount(baseQuantity + baseCurrencyAmount.Amount, baseCurrency));
+                    }
+                    else
+                    {
+                        //add the base currency if not present
+                        cashBook.Add(new CashAmount(baseQuantity, baseCurrency));
+                    }
+
+                    var quoteCurrencyAmount = cashBook.Find(x => x.Currency == quoteCurrency);
+                    //update the value of the quote currency
+                    if (quoteCurrencyAmount != default(CashAmount))
+                    {
+                        cashBook.Remove(quoteCurrencyAmount);
+                        cashBook.Add(new CashAmount(quoteQuantity + quoteCurrencyAmount.Amount, quoteCurrency));
+                    }
+                    else
+                    {
+                        //add the quote currency if not present
+                        cashBook.Add(new CashAmount(quoteQuantity, quoteCurrency));
+                    }
                 }
             }
+
             return cashBook;
         }
 
@@ -509,7 +542,9 @@ namespace QuantConnect.Brokerages.Fxcm
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
             if (!autoResetEvent.WaitOne(ResponseTimeout))
-                throw new TimeoutException(string.Format("FxcmBrokerage.PlaceOrder(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
+                throw new TimeoutException("FxcmBrokerage.PlaceOrder(): Operation took longer than " +
+                    $"{((decimal) ResponseTimeout / 1000).ToStringInvariant()} seconds."
+                );
 
             return !_isOrderSubmitRejected;
         }
@@ -533,7 +568,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 return false;
             }
 
-            var fxcmOrderId = order.BrokerId[0].ToString();
+            var fxcmOrderId = order.BrokerId[0].ToStringInvariant();
 
             ExecutionReport fxcmOrder;
             if (!_openOrders.TryGetValue(fxcmOrderId, out fxcmOrder))
@@ -562,12 +597,15 @@ namespace QuantConnect.Brokerages.Fxcm
             AutoResetEvent autoResetEvent;
             lock (_locker)
             {
+                _orderUpdates[order.Id] = order.Id;
                 _currentRequest = _gateway.sendMessage(orderReplaceRequest);
                 autoResetEvent = new AutoResetEvent(false);
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
             if (!autoResetEvent.WaitOne(ResponseTimeout))
-                throw new TimeoutException(string.Format("FxcmBrokerage.UpdateOrder(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
+                throw new TimeoutException("FxcmBrokerage.UpdateOrder(): Operation took longer than " +
+                    $"{((decimal) ResponseTimeout / 1000).ToStringInvariant()} seconds."
+                );
 
             return !_isOrderUpdateOrCancelRejected;
         }
@@ -591,7 +629,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 return false;
             }
 
-            var fxcmOrderId = order.BrokerId[0].ToString();
+            var fxcmOrderId = order.BrokerId[0].ToStringInvariant();
 
             ExecutionReport fxcmOrder;
             if (!_openOrders.TryGetValue(fxcmOrderId, out fxcmOrder))
@@ -607,7 +645,9 @@ namespace QuantConnect.Brokerages.Fxcm
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
             if (!autoResetEvent.WaitOne(ResponseTimeout))
-                throw new TimeoutException(string.Format("FxcmBrokerage.CancelOrder(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
+                throw new TimeoutException("FxcmBrokerage.CancelOrder(): Operation took longer than " +
+                    $"{((decimal) ResponseTimeout / 1000).ToStringInvariant()} seconds."
+                );
 
             return !_isOrderUpdateOrCancelRejected;
         }
@@ -644,7 +684,7 @@ namespace QuantConnect.Brokerages.Fxcm
             var attempt = 1;
             while (end > request.StartTimeUtc)
             {
-                Log.Debug(string.Format("FxcmBrokerage.GetHistory(): Requesting {0:O} to {1:O}", end, request.StartTimeUtc));
+                Log.Debug($"FxcmBrokerage.GetHistory(): Requesting {end.ToIso8601Invariant()} to {request.StartTimeUtc.ToIso8601Invariant()}");
                 _lastHistoryChunk.Clear();
 
                 var mdr = new MarketDataRequest();
@@ -688,7 +728,9 @@ namespace QuantConnect.Brokerages.Fxcm
                     // 5% of the time its because of an internet / time of day / api settings / timeout: throw if this is the *second* attempt.
                     if (EnableOnlyHistoryRequests && lastEndTime != DateTime.MinValue)
                     {
-                        throw new TimeoutException(string.Format("FxcmBrokerage.GetHistory(): History operation ending in {0:O} took longer than {1} seconds. This may be because there is no data, retrying...", end, (decimal)HistoryResponseTimeout / 1000));
+                        throw new TimeoutException("FxcmBrokerage.GetHistory(): History operation ending in {end:O} took longer than " +
+                            $"{((decimal) HistoryResponseTimeout / 1000).ToStringInvariant()} seconds. This may be because there is no data, retrying..."
+                        );
                     }
 
                     // Assuming Timeout: If we've already retried quite a few times, lets bail.
@@ -700,7 +742,9 @@ namespace QuantConnect.Brokerages.Fxcm
 
                     // Assuming Timeout: Save end time and if have the same endtime next time, break since its likely there's no data after that time.
                     lastEndTime = end;
-                    Log.Trace("FxcmBrokerage.GetHistory(): Attempt " + attempt + " for: " + request.Symbol.Value + " ended at " + lastEndTime.ToString("O"));
+                    Log.Trace($"FxcmBrokerage.GetHistory(): Attempt {attempt.ToStringInvariant()} for: " +
+                        $"{request.Symbol.Value} ended at {lastEndTime.ToIso8601Invariant()}"
+                    );
                     continue;
                 }
 

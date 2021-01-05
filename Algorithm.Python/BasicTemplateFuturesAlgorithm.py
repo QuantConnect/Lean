@@ -37,12 +37,17 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
         self.SetEndDate(2013, 10, 10)
         self.SetCash(1000000)
 
-        # Subscribe and set our expiry filter for the futures chain
-        futureES = self.AddFuture(Futures.Indices.SP500EMini)
-        futureES.SetFilter(timedelta(0), timedelta(182))
+        self.contractSymbol = None
 
-        futureGC = self.AddFuture(Futures.Metals.Gold)
-        futureGC.SetFilter(timedelta(0), timedelta(182))
+        # Subscribe and set our expiry filter for the futures chain
+        futureSP500 = self.AddFuture(Futures.Indices.SP500EMini)
+        futureGold = self.AddFuture(Futures.Metals.Gold)
+
+        # set our expiry filter for this futures chain
+        # SetFilter method accepts timedelta objects or integer for days.
+        # The following statements yield the same filtering criteria 
+        futureSP500.SetFilter(timedelta(0), timedelta(182))
+        futureGold.SetFilter(0, 182)
 
         benchmark = self.AddEquity("SPY");
         self.SetBenchmark(benchmark.Symbol);
@@ -57,10 +62,20 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
                 # if there is any contract, trade the front contract
                 if len(contracts) == 0: continue
                 front = sorted(contracts, key = lambda x: x.Expiry, reverse=True)[0]
+
+                self.contractSymbol = front.Symbol
                 self.MarketOrder(front.Symbol , 1)
         else:
             self.Liquidate()
 
+    def OnEndOfAlgorithm(self):
+        # Get the margin requirements
+        buyingPowerModel = self.Securities[self.contractSymbol].BuyingPowerModel
+        name = type(buyingPowerModel).__name__
+        if name != 'FutureMarginModel':
+            raise Exception(f"Invalid buying power model. Found: {name}. Expected: FutureMarginModel")
 
-    def OnOrderEvent(self, orderEvent):
-        self.Log(str(orderEvent))
+        initialOvernight = buyingPowerModel.InitialOvernightMarginRequirement
+        maintenanceOvernight = buyingPowerModel.MaintenanceOvernightMarginRequirement
+        initialIntraday = buyingPowerModel.InitialIntradayMarginRequirement
+        maintenanceIntraday = buyingPowerModel.MaintenanceIntradayMarginRequirement

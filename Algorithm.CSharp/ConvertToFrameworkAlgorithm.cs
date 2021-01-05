@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -26,14 +25,14 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Demonstration algorithm showing how to easily convert an old algorithm into the framework.
     ///
-    /// 1. Make class derive from QCAlgorithmFrameworkBridge instead of QCAlgorithm.
-    /// 2. When making orders, also create insights for the correct direction (up/down), can also set insight prediction period/magnitude/direction
-    /// 3. Profit :)
+    ///  1. When making orders, also create insights for the correct direction (up/down/flat), can also set insight prediction period/magnitude/direction
+    ///  2. Emit insights before placing any trades
+    ///  3. Profit :)
     /// </summary>
     /// <meta name="tag" content="indicators" />
     /// <meta name="tag" content="indicator classes" />
     /// <meta name="tag" content="plotting indicators" />
-    public class ConvertToFrameworkAlgorithm : QCAlgorithmFrameworkBridge, IRegressionAlgorithmDefinition  // 1. Derive from QCAlgorithmFrameworkBridge
+    public class ConvertToFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private MovingAverageConvergenceDivergence _macd;
         private readonly string _symbol = "SPY";
@@ -72,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
             // if our macd is greater than our signal, then let's go long
             if (holding.Quantity <= 0 && signalDeltaPercent > tolerance)
             {
-                // 2. Call EmitInsights with insights created in correct direction, here we're going long
+                // 1. Call EmitInsights with insights created in correct direction, here we're going long
                 //    The EmitInsights method can accept multiple insights separated by commas
                 EmitInsights(
                     // Creates an insight for our symbol, predicting that it will move up within the fast ema period number of days
@@ -85,7 +84,7 @@ namespace QuantConnect.Algorithm.CSharp
             // if our macd is less than our signal, then let's go short
             else if (holding.Quantity >= 0 && signalDeltaPercent < -tolerance)
             {
-                // 2. Call EmitInsights with insights created in correct direction, here we're going short
+                // 1. Call EmitInsights with insights created in correct direction, here we're going short
                 //    The EmitInsights method can accept multiple insights separated by commas
                 EmitInsights(
                     // Creates an insight for our symbol, predicting that it will move down within the fast ema period number of days
@@ -95,6 +94,16 @@ namespace QuantConnect.Algorithm.CSharp
                 // shortterm says sell as well
                 SetHoldings(_symbol, -1.0);
             }
+
+            // if we wanted to liquidate our positions
+            // 1. Call EmitInsights with insights create in the correct direction -- Flat
+        
+            // EmitInsights(
+                   // Creates an insight for our symbol, predicting that it will move down or up within the fast ema period number of days, depending on our current position
+                   // Insight.Price(_symbol, TimeSpan.FromDays(FastEmaPeriod), InsightDirection.Flat);
+            // );
+        
+            // Liquidate();
 
             // plot both lines
             Plot("MACD", _macd, _macd.Signal);
@@ -120,35 +129,43 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "85"},
             {"Average Win", "4.85%"},
             {"Average Loss", "-4.21%"},
-            {"Compounding Annual Return", "-3.105%"},
+            {"Compounding Annual Return", "-3.100%"},
             {"Drawdown", "52.900%"},
-            {"Expectancy", "-0.053"},
-            {"Net Profit", "-29.335%"},
-            {"Sharpe Ratio", "-0.084"},
+            {"Expectancy", "-0.052"},
+            {"Net Profit", "-29.298%"},
+            {"Sharpe Ratio", "-0.076"},
+            {"Probabilistic Sharpe Ratio", "0.004%"},
             {"Loss Rate", "56%"},
             {"Win Rate", "44%"},
             {"Profit-Loss Ratio", "1.15"},
-            {"Alpha", "0.046"},
-            {"Beta", "-3.04"},
-            {"Annual Standard Deviation", "0.181"},
-            {"Annual Variance", "0.033"},
-            {"Information Ratio", "-0.194"},
-            {"Tracking Error", "0.181"},
-            {"Treynor Ratio", "0.005"},
-            {"Total Fees", "$755.20"},
+            {"Alpha", "-0.013"},
+            {"Beta", "0.009"},
+            {"Annual Standard Deviation", "0.164"},
+            {"Annual Variance", "0.027"},
+            {"Information Ratio", "-0.391"},
+            {"Tracking Error", "0.239"},
+            {"Treynor Ratio", "-1.416"},
+            {"Total Fees", "$755.29"},
+            {"Fitness Score", "0.024"},
+            {"Kelly Criterion Estimate", "-0.84"},
+            {"Kelly Criterion Probability Value", "0.53"},
+            {"Sortino Ratio", "-0.224"},
+            {"Return Over Maximum Drawdown", "-0.058"},
+            {"Portfolio Turnover", "0.05"},
             {"Total Insights Generated", "85"},
             {"Total Insights Closed", "85"},
             {"Total Insights Analysis Completed", "85"},
             {"Long Insight Count", "42"},
             {"Short Insight Count", "43"},
             {"Long/Short Ratio", "97.67%"},
-            {"Estimated Monthly Alpha Value", "$-607698.1"},
-            {"Total Accumulated Estimated Alpha Value", "$-81395260"},
-            {"Mean Population Estimated Insight Value", "$-957591.3"},
-            {"Mean Population Direction", "50.5882%"},
+            {"Estimated Monthly Alpha Value", "$-617339.2"},
+            {"Total Accumulated Estimated Alpha Value", "$-82686580"},
+            {"Mean Population Estimated Insight Value", "$-972783.3"},
+            {"Mean Population Direction", "51.7647%"},
             {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "46.5677%"},
-            {"Rolling Averaged Population Magnitude", "0%"}
+            {"Rolling Averaged Population Direction", "48.2217%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "1370210213"}
         };
     }
 }

@@ -150,12 +150,12 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>A symbol for user defined universe of the specified security type and market</returns>
         public static Symbol CreateSymbol(SecurityType securityType, string market)
         {
-            var ticker = string.Format("qc-universe-userdefined-{0}-{1}", market.ToLower(), securityType);
+            var ticker = $"qc-universe-userdefined-{market.ToLowerInvariant()}-{securityType}";
             SecurityIdentifier sid;
             switch (securityType)
             {
                 case SecurityType.Base:
-                    sid = SecurityIdentifier.GenerateBase(ticker, market);
+                    sid = SecurityIdentifier.GenerateBase(null, ticker, market);
                     break;
 
                 case SecurityType.Equity:
@@ -165,6 +165,11 @@ namespace QuantConnect.Data.UniverseSelection
                 case SecurityType.Option:
                     var underlying = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
                     sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlying, market, 0, 0, 0);
+                    break;
+
+                case SecurityType.FutureOption:
+                    var underlyingFuture = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, ticker, market);
+                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlyingFuture, market, 0, 0, 0);
                     break;
 
                 case SecurityType.Forex:
@@ -185,7 +190,7 @@ namespace QuantConnect.Data.UniverseSelection
 
                 case SecurityType.Commodity:
                 default:
-                    throw new NotImplementedException("The specified security type is not implemented yet: " + securityType);
+                    throw new NotImplementedException($"The specified security type is not implemented yet: {securityType}");
             }
 
             return new Symbol(sid, ticker);
@@ -239,7 +244,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Returns the symbols defined by the user for this universe
         /// </summary>
-        /// <param name="utcTime">The curren utc time</param>
+        /// <param name="utcTime">The current utc time</param>
         /// <param name="data">The symbols to remain in the universe</param>
         /// <returns>The data that passes the filter</returns>
         public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
@@ -278,8 +283,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="e">The notify collection changed event arguments</param>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            var handler = CollectionChanged;
-            if (handler != null) handler(this, e);
+            CollectionChanged?.Invoke(this, e);
         }
 
         /// <summary>

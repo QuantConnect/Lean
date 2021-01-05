@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,7 +13,11 @@
  * limitations under the License.
 */
 
+using System;
+using System.IO;
+using System.Text;
 using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Common.Data.Market
@@ -92,6 +96,106 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual(-5, bar.Low);
             Assert.AreEqual(50, bar.Close);
             Assert.AreEqual(410, bar.Volume);
+        }
+
+        [Test]
+        public void TradeBarParseScalesOptionsWithEquityUnderlying()
+        {
+            var factory = new TradeBar();
+            var underlying = Symbol.Create("SPY", SecurityType.Equity, QuantConnect.Market.USA);
+            var optionSymbol = Symbol.CreateOption(
+                underlying,
+                QuantConnect.Market.CME,
+                OptionStyle.American,
+                OptionRight.Put,
+                4200m,
+                SecurityIdentifier.DefaultDate);
+
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                optionSymbol,
+                Resolution.Minute,
+                TimeZones.Chicago,
+                TimeZones.Chicago,
+                true,
+                false,
+                false,
+                false,
+                TickType.Trade,
+                true,
+                DataNormalizationMode.Raw);
+
+            var tradeLine = "40560000,10000,15000,10000,15000,90";
+            var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(tradeLine)));
+
+            var tradeBarFromLine = (TradeBar)factory.Reader(config, tradeLine, new DateTime(2020, 9, 22), false);
+            var tradeBarFromStream = (TradeBar)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
+
+            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 17, 0), tradeBarFromLine.EndTime);
+            Assert.AreEqual(optionSymbol, tradeBarFromLine.Symbol);
+            Assert.AreEqual(1m, tradeBarFromLine.Open);
+            Assert.AreEqual(1.5m, tradeBarFromLine.High);
+            Assert.AreEqual(1m, tradeBarFromLine.Low);
+            Assert.AreEqual(1.5m, tradeBarFromLine.Close);
+            Assert.AreEqual(90m, tradeBarFromLine.Volume);
+
+            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 17, 0), tradeBarFromStream.EndTime);
+            Assert.AreEqual(optionSymbol, tradeBarFromStream.Symbol);
+            Assert.AreEqual(1m, tradeBarFromStream.Open);
+            Assert.AreEqual(1.5m, tradeBarFromStream.High);
+            Assert.AreEqual(1m, tradeBarFromStream.Low);
+            Assert.AreEqual(1.5m, tradeBarFromStream.Close);
+            Assert.AreEqual(90m, tradeBarFromStream.Volume);
+        }
+
+        [Test]
+        public void TradeBarParseDoesNotScaleOptionsWithNonEquityUnderlying()
+        {
+            var factory = new TradeBar();
+            var underlying = Symbol.CreateFuture("ES", QuantConnect.Market.CME, new DateTime(2021, 3, 19));
+            var optionSymbol = Symbol.CreateOption(
+                underlying,
+                QuantConnect.Market.CME,
+                OptionStyle.American,
+                OptionRight.Put,
+                4200m,
+                SecurityIdentifier.DefaultDate);
+
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                optionSymbol,
+                Resolution.Minute,
+                TimeZones.Chicago,
+                TimeZones.Chicago,
+                true,
+                false,
+                false,
+                false,
+                TickType.Trade,
+                true,
+                DataNormalizationMode.Raw);
+
+            var tradeLine = "40560000,1.0,1.5,1.0,1.5,90.0";
+            var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(tradeLine)));
+
+            var unscaledTradeBarFromLine = (TradeBar)factory.Reader(config, tradeLine, new DateTime(2020, 9, 22), false);
+            var unscaledTradeBarFromStream = (TradeBar)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
+
+            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 17, 0), unscaledTradeBarFromLine.EndTime);
+            Assert.AreEqual(optionSymbol, unscaledTradeBarFromLine.Symbol);
+            Assert.AreEqual(1m, unscaledTradeBarFromLine.Open);
+            Assert.AreEqual(1.5m, unscaledTradeBarFromLine.High);
+            Assert.AreEqual(1m, unscaledTradeBarFromLine.Low);
+            Assert.AreEqual(1.5m, unscaledTradeBarFromLine.Close);
+            Assert.AreEqual(90m, unscaledTradeBarFromLine.Volume);
+
+            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 17, 0), unscaledTradeBarFromStream.EndTime);
+            Assert.AreEqual(optionSymbol, unscaledTradeBarFromStream.Symbol);
+            Assert.AreEqual(1m, unscaledTradeBarFromStream.Open);
+            Assert.AreEqual(1.5m, unscaledTradeBarFromStream.High);
+            Assert.AreEqual(1m, unscaledTradeBarFromStream.Low);
+            Assert.AreEqual(1.5m, unscaledTradeBarFromStream.Close);
+            Assert.AreEqual(90m, unscaledTradeBarFromStream.Volume);
         }
     }
 }

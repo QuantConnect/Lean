@@ -15,7 +15,6 @@
 
 using System.Linq;
 using System.Collections.Generic;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -26,7 +25,7 @@ using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    public class BlackLittermanPortfolioOptimizationFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    public class BlackLittermanPortfolioOptimizationFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private IEnumerable<Symbol> _symbols = (new string[] { "AIG", "BAC", "IBM", "SPY" }).Select(s => QuantConnect.Symbol.Create(s, SecurityType.Equity, Market.USA));
 
@@ -75,38 +74,46 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "21"},
+            {"Total Trades", "18"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.38%"},
-            {"Compounding Annual Return", "-82.823%"},
-            {"Drawdown", "4.300%"},
+            {"Average Loss", "-0.16%"},
+            {"Compounding Annual Return", "72.164%"},
+            {"Drawdown", "1.100%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-2.384%"},
-            {"Sharpe Ratio", "-6.465"},
+            {"Net Profit", "0.747%"},
+            {"Sharpe Ratio", "4.086"},
+            {"Probabilistic Sharpe Ratio", "61.091%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "-87.084"},
-            {"Annual Standard Deviation", "0.155"},
-            {"Annual Variance", "0.024"},
-            {"Information Ratio", "-6.536"},
-            {"Tracking Error", "0.155"},
-            {"Treynor Ratio", "0.011"},
-            {"Total Fees", "$72.41"},
-            {"Total Insights Generated", "14"},
-            {"Total Insights Closed", "11"},
-            {"Total Insights Analysis Completed", "11"},
+            {"Alpha", "-0.305"},
+            {"Beta", "0.564"},
+            {"Annual Standard Deviation", "0.113"},
+            {"Annual Variance", "0.013"},
+            {"Information Ratio", "-10.007"},
+            {"Tracking Error", "0.09"},
+            {"Treynor Ratio", "0.82"},
+            {"Total Fees", "$41.70"},
+            {"Fitness Score", "0.634"},
+            {"Kelly Criterion Estimate", "13.656"},
+            {"Kelly Criterion Probability Value", "0.228"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "80.05"},
+            {"Portfolio Turnover", "0.634"},
+            {"Total Insights Generated", "17"},
+            {"Total Insights Closed", "14"},
+            {"Total Insights Analysis Completed", "14"},
             {"Long Insight Count", "6"},
-            {"Short Insight Count", "4"},
-            {"Long/Short Ratio", "150.0%"},
-            {"Estimated Monthly Alpha Value", "$-85612.32"},
-            {"Total Accumulated Estimated Alpha Value", "$-14744.34"},
-            {"Mean Population Estimated Insight Value", "$-1340.395"},
-            {"Mean Population Direction", "27.2727%"},
-            {"Mean Population Magnitude", "27.2727%"},
-            {"Rolling Averaged Population Direction", "5.8237%"},
-            {"Rolling Averaged Population Magnitude", "5.8237%"}
+            {"Short Insight Count", "7"},
+            {"Long/Short Ratio", "85.71%"},
+            {"Estimated Monthly Alpha Value", "$72447.6813"},
+            {"Total Accumulated Estimated Alpha Value", "$12477.1007"},
+            {"Mean Population Estimated Insight Value", "$891.2215"},
+            {"Mean Population Direction", "50%"},
+            {"Mean Population Magnitude", "50%"},
+            {"Rolling Averaged Population Direction", "12.6429%"},
+            {"Rolling Averaged Population Magnitude", "12.6429%"},
+            {"OrderListHash", "-2004493274"}
         };
     }
 }

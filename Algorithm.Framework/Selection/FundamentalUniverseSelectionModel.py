@@ -42,7 +42,6 @@ class FundamentalUniverseSelectionModel:
         Returns:
             The universe defined by this model'''
         universe = self.CreateCoarseFundamentalUniverse(algorithm)
-        print(universe)
         if self.filterFineData:
             universe = FineFundamentalFilteredUniverse(universe, lambda fine: self.SelectFine(algorithm, fine))
         return [universe]

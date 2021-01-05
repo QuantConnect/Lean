@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Risk
 {
@@ -50,7 +49,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The current portfolio targets to be assessed for risk</param>
-        public override IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
+        public override IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithm algorithm, IPortfolioTarget[] targets)
         {
             var currentValue = algorithm.Portfolio.TotalPortfolioValue;
 
@@ -68,9 +67,11 @@ namespace QuantConnect.Algorithm.Framework.Risk
             }
 
             var pnl = GetTotalDrawdownPercent(currentValue);
-            if (pnl < _maximumDrawdownPercent)
+            if (pnl < _maximumDrawdownPercent && targets.Length != 0)
             {
-                foreach(var target in targets)
+                // reset the trailing high value for restart investing on next rebalcing period
+                _initialised = false;
+                foreach (var target in targets)
                     yield return new PortfolioTarget(target.Symbol, 0);
             }
         }

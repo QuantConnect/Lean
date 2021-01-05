@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,6 +28,9 @@ namespace QuantConnect.Data
     /// <remarks>Intended for use with Quandl class.</remarks>
     public abstract class DynamicData : BaseData, IDynamicMetaObjectProvider
     {
+        private static readonly MethodInfo SetPropertyMethodInfo = typeof(DynamicData).GetMethod("SetProperty");
+        private static readonly MethodInfo GetPropertyMethodInfo = typeof(DynamicData).GetMethod("GetProperty");
+
         private readonly IDictionary<string, object> _storage = new Dictionary<string, object>();
 
         /// <summary>
@@ -35,7 +38,7 @@ namespace QuantConnect.Data
         /// </summary>
         public DynamicMetaObject GetMetaObject(Expression parameter)
         {
-            return new DynamicDataMetaObject(parameter, this);
+            return new GetSetPropertyDynamicMetaObject(parameter, this, SetPropertyMethodInfo, GetPropertyMethodInfo);
         }
 
         /// <summary>
@@ -46,7 +49,7 @@ namespace QuantConnect.Data
         /// <returns>Returns the input value back to the caller</returns>
         public object SetProperty(string name, object value)
         {
-            name = name.ToLower();
+            name = name.ToLowerInvariant();
 
             if (name == "time")
             {
@@ -83,7 +86,7 @@ namespace QuantConnect.Data
         /// <returns>object value of BaseData</returns>
         public object GetProperty(string name)
         {
-            name = name.ToLower();
+            name = name.ToLowerInvariant();
 
             // redirect these calls to the base types properties
             if (name == "time")
@@ -107,7 +110,9 @@ namespace QuantConnect.Data
             if (!_storage.TryGetValue(name, out value))
             {
                 // let the user know the property name that we couldn't find
-                throw new Exception("Property with name '" + name + "' does not exist. Properties: Time, Symbol, Value " + string.Join(", ", _storage.Keys));
+                throw new KeyNotFoundException(
+                    $"Property with name \'{name}\' does not exist. Properties: Time, Symbol, Value {string.Join(", ", _storage.Keys)}"
+                );
             }
 
             return value;
@@ -121,7 +126,7 @@ namespace QuantConnect.Data
         /// <returns>True if the property exists, false otherwise</returns>
         public bool HasProperty(string name)
         {
-            return _storage.ContainsKey(name.ToLower());
+            return _storage.ContainsKey(name.ToLowerInvariant());
         }
 
         /// <summary>
@@ -150,62 +155,6 @@ namespace QuantConnect.Data
                 clone._storage.Add(kvp);
             }
             return clone;
-        }
-
-        /// <summary>
-        /// Custom implementation of Dynamic Data MetaObject
-        /// </summary>
-        private class DynamicDataMetaObject : DynamicMetaObject
-        {
-            private static readonly MethodInfo SetPropertyMethodInfo = typeof(DynamicData).GetMethod("SetProperty");
-            private static readonly MethodInfo GetPropertyMethodInfo = typeof(DynamicData).GetMethod("GetProperty");
-
-            public DynamicDataMetaObject(Expression expression, DynamicData instance)
-                : base(expression, BindingRestrictions.Empty, instance)
-            {
-            }
-
-            public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value)
-            {
-                // we need to build up an expression tree that represents accessing our instance
-                var restrictions = BindingRestrictions.GetTypeRestriction(Expression, LimitType);
-
-                var args = new Expression[]
-                {
-                    // this is the name of the property to set
-                    Expression.Constant(binder.Name),
-
-                    // this is the value
-                    Expression.Convert(value.Expression, typeof (object))
-                };
-
-                // set the 'this' reference
-                var self = Expression.Convert(Expression, LimitType);
-
-                var call = Expression.Call(self, SetPropertyMethodInfo, args);
-
-                return new DynamicMetaObject(call, restrictions);
-            }
-
-            public override DynamicMetaObject BindGetMember(GetMemberBinder binder)
-            {
-                // we need to build up an expression tree that represents accessing our instance
-                var restrictions = BindingRestrictions.GetTypeRestriction(Expression, LimitType);
-
-                // arguments for 'call'
-                var args = new Expression[]
-                {
-                    // this is the name of the property to set
-                    Expression.Constant(binder.Name)
-                };
-
-                // set the 'this' reference
-                var self = Expression.Convert(Expression, LimitType);
-
-                var call = Expression.Call(self, GetPropertyMethodInfo, args);
-
-                return new DynamicMetaObject(call, restrictions);
-            }
         }
     }
 }

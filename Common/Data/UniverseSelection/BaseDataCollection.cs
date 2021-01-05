@@ -68,11 +68,23 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="symbol">A common identifier for all data in this packet</param>
         /// <param name="data">The data to add to this collection</param>
         public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, IEnumerable<BaseData> data = null)
+            : this(time, endTime, symbol, data != null ? data.ToList() : new List<BaseData>())
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BaseDataCollection"/> class
+        /// </summary>
+        /// <param name="time">The start time of this data</param>
+        /// <param name="endTime">The end time of this data</param>
+        /// <param name="symbol">A common identifier for all data in this packet</param>
+        /// <param name="data">The data to add to this collection</param>
+        public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, List<BaseData> data)
         {
             Symbol = symbol;
             Time = time;
             _endTime = endTime;
-            Data = data != null ? data.ToList() : new List<BaseData>();
+            Data = data ?? new List<BaseData>();
         }
 
         /// <summary>

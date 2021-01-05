@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,35 +24,27 @@ namespace QuantConnect.Indicators
     {
         /// <summary>
         /// Initializes a new instance of the StandardDeviation class with the specified period.
-        /// 
-        /// Evaluates the standard deviation of samples in the lookback period. 
-        /// On a dataset of size N will use an N normalizer and would thus be biased if applied to a subset.
+        ///
+        /// Evaluates the standard deviation of samples in the look-back period. 
+        /// On a data set of size N will use an N normalizer and would thus be biased if applied to a subset.
         /// </summary>
         /// <param name="period">The sample size of the standard deviation</param>
         public StandardDeviation(int period)
-            : this("STD" + period, period)
+            : this($"STD({period})", period)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the StandardDeviation class with the specified name and period.
         /// 
-        /// Evaluates the standard deviation of samples in the lookback period. 
-        /// On a dataset of size N will use an N normalizer and would thus be biased if applied to a subset.
+        /// Evaluates the standard deviation of samples in the look-back period.
+        /// On a data set of size N will use an N normalizer and would thus be biased if applied to a subset.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The sample size of the standard deviation</param>
         public StandardDeviation(string name, int period)
             : base(name, period)
         {
-        }
-
-        /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady
-        {
-            get { return Samples >= Period; }
         }
 
         /// <summary>
@@ -63,7 +55,7 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            return (decimal)Math.Sqrt((double)base.ComputeNextValue(window, input));
+            return (decimal) Math.Sqrt((double) base.ComputeNextValue(window, input));
         }
     }
 }

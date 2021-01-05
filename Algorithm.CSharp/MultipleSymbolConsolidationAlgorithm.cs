@@ -181,7 +181,7 @@ namespace QuantConnect.Algorithm.CSharp
             /// </summary>
             public readonly RollingWindow<IBaseDataBar> Bars;
             /// <summary>
-            /// The period used when population the Bars rolling window.
+            /// The period used when populating the Bars rolling window.
             /// </summary>
             public readonly TimeSpan BarPeriod;
             /// <summary>
@@ -208,8 +208,8 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             /// <summary>
-            /// Returns true if the most recent trade bar time matches the current time minus the bar's period, this
-            /// indicates that update was just called on this instance
+            /// Returns true if the most recent trade bar time matches the current time minus the bar's period; this
+            /// indicates that Update() was just called on this instance.
             /// </summary>
             /// <param name="current">The current algorithm time</param>
             /// <returns>True if this instance was just updated with new data, false otherwise</returns>

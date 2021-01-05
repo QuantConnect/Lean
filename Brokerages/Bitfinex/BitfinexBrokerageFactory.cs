@@ -15,10 +15,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 using QuantConnect.Util;
-using RestSharp;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -46,8 +48,6 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
-            { "bitfinex-rest" , Config.Get("bitfinex-rest", "https://api.bitfinex.com")},
-            { "bitfinex-url" , Config.Get("bitfinex-url", "wss://api.bitfinex.com/ws")},
             { "bitfinex-api-key", Config.Get("bitfinex-api-key")},
             { "bitfinex-api-secret", Config.Get("bitfinex-api-secret")}
         };
@@ -55,7 +55,8 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <summary>
         /// The brokerage model
         /// </summary>
-        public override IBrokerageModel BrokerageModel => new BitfinexBrokerageModel();
+        /// <param name="orderProvider">The order provider</param>
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new BitfinexBrokerageModel();
 
         /// <summary>
         /// Create the Brokerage instance
@@ -65,7 +66,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public override IBrokerage CreateBrokerage(Packets.LiveNodePacket job, IAlgorithm algorithm)
         {
-            var required = new[] { "bitfinex-rest", "bitfinex-url", "bitfinex-api-secret", "bitfinex-api-key" };
+            var required = new[] { "bitfinex-api-secret", "bitfinex-api-key" };
 
             foreach (var item in required)
             {
@@ -76,12 +77,11 @@ namespace QuantConnect.Brokerages.Bitfinex
             var priceProvider = new ApiPriceProvider(job.UserId, job.UserToken);
 
             var brokerage = new BitfinexBrokerage(
-                job.BrokerageData["bitfinex-url"],
-                job.BrokerageData["bitfinex-rest"],
                 job.BrokerageData["bitfinex-api-key"],
                 job.BrokerageData["bitfinex-api-secret"],
                 algorithm,
-                priceProvider);
+                priceProvider,
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")));
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;

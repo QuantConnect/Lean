@@ -26,6 +26,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 {
@@ -67,12 +68,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     exchangeHours,
                     quoteCurrency,
                     SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 );
                 var request = new SubscriptionRequest(false, null, security, config, _referenceUtc.AddSeconds(-1), _referenceUtc.AddDays(1));
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
                 _enumerator = factory.CreateEnumerator(request, null);
+            }
+
+            [TearDown]
+            public void TearDown()
+            {
+                _enumerator?.DisposeSafely();
             }
 
             [Test]
@@ -141,12 +150,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     exchangeHours,
                     quoteCurrency,
                     SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 );
                 var request = new SubscriptionRequest(false, null, security, config, _referenceUtc.AddSeconds(-4), _referenceUtc.AddDays(1));
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
                 _enumerator = factory.CreateEnumerator(request, null);
+            }
+
+            [TearDown]
+            public void TearDown()
+            {
+                _enumerator?.DisposeSafely();
             }
 
             [Test]
@@ -222,12 +239,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     exchangeHours,
                     quoteCurrency,
                     SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 );
                 var request = new SubscriptionRequest(false, null, security, config, _referenceUtc.AddSeconds(-6), _referenceUtc.AddDays(1));
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
                 _enumerator = factory.CreateEnumerator(request, null);
+            }
+
+            [TearDown]
+            public void TearDown()
+            {
+                _enumerator?.DisposeSafely();
             }
 
             [Test]
@@ -298,12 +323,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     exchangeHours,
                     quoteCurrency,
                     SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 );
                 var request = new SubscriptionRequest(false, null, security, config, _referenceUtc.AddDays(-2), _referenceUtc.AddDays(1));
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
                 _enumerator = factory.CreateEnumerator(request, null);
+            }
+
+            [TearDown]
+            public void TearDown()
+            {
+                _enumerator?.DisposeSafely();
             }
 
             [Test]
@@ -458,7 +491,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             protected override ISubscriptionDataSourceReader GetSubscriptionDataSourceReader(SubscriptionDataSource source,
                 IDataCacheProvider dataCacheProvider,
                 SubscriptionDataConfig config,
-                DateTime date)
+                DateTime date,
+                BaseData baseData)
             {
                 return _dataSourceReader;
             }

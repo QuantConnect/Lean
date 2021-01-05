@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
     ///             Stop losses are maintained at a fixed global percentage to
     ///             limit maximum losses per day, while also a trailing stop
     ///             loss is implemented using the parabolic stop and reverse
-    ///             in order to gauge exit points
+    ///             in order to gauge exit points.
     ///
     /// </summary>
     /// <meta name="tag" content="strategy example" />
@@ -258,7 +258,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            // now that we have our opening bar, test to see if we're already in a positio
+            // now that we have our opening bar, test to see if we're already in a position
             if (!Security.Invested)
             {
                 ScanForEntrance();

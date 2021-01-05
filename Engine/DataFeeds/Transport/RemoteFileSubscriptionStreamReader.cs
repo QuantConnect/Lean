@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
@@ -29,6 +28,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     public class RemoteFileSubscriptionStreamReader : IStreamReader
     {
         private readonly IStreamReader _streamReader;
+        private static IDownloadProvider _downloader;
+        // lock for multi thread scenarios where we are sharing the same cached file
+        private static readonly object _fileSystemLock = new object();
+
+        /// <summary>
+        /// Gets whether or not this stream reader should be rate limited
+        /// </summary>
+        public bool ShouldBeRateLimited => false;
+
+        /// <summary>
+        /// Direct access to the StreamReader instance
+        /// </summary>
+        public StreamReader StreamReader => _streamReader.StreamReader;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RemoteFileSubscriptionStreamReader"/> class.
@@ -39,26 +51,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <param name="headers">Defines header values to add to the request</param>
         public RemoteFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, string downloadDirectory, IEnumerable<KeyValuePair<string, string>> headers)
         {
+            // don't use cache if data is ephemeral
+            // will be false for live history requests and live subscriptions
+            var useCache = !dataCacheProvider.IsDataEphemeral;
+
             // create a hash for a new filename
-            var filename = Guid.NewGuid() + source.GetExtension();
+            var filename = (useCache ? source.ToMD5() : Guid.NewGuid().ToString())  + source.GetExtension();
             var destination = Path.Combine(downloadDirectory, filename);
 
-            using (var client = new WebClient())
+            string contents = null;
+            if (useCache)
             {
-                client.Proxy = WebRequest.GetSystemWebProxy();
-                if (headers != null)
+                lock (_fileSystemLock)
                 {
-                    foreach (var header in headers)
+                    if (!File.Exists(destination))
                     {
-                        client.Headers.Add(header.Key, header.Value);
+                        contents = _downloader.Download(source, headers, null, null);
+                        File.WriteAllText(destination, contents);
                     }
                 }
-
-                client.DownloadFile(source, destination);
+            }
+            else
+            {
+                contents = _downloader.Download(source, headers, null, null);
+                File.WriteAllText(destination, contents);
             }
 
-            // Send the file to the dataCacheProvider so it is available when the streamReader asks for it
-            dataCacheProvider.Store(destination, File.ReadAllBytes(destination));
+            if (contents != null)
+            {
+                // Send the file to the dataCacheProvider so it is available when the streamReader asks for it
+                dataCacheProvider.Store(destination, System.Text.Encoding.UTF8.GetBytes(contents));
+            }
 
             // now we can just use the local file reader
             _streamReader = new LocalFileSubscriptionStreamReader(dataCacheProvider, destination);
@@ -94,6 +117,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         public void Dispose()
         {
             _streamReader.Dispose();
+        }
+
+        /// <summary>
+        /// Save reference to the download system.
+        /// </summary>
+        /// <param name="downloader">Downloader provider for the remote file fetching.</param>
+        public static void SetDownloadProvider(IDownloadProvider downloader)
+        {
+            _downloader = downloader;
         }
     }
 }

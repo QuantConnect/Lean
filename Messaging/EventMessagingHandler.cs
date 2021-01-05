@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -172,11 +171,6 @@ namespace QuantConnect.Messaging
                     OnBacktestResultEvent(result);
                     break;
             }
-
-            if (StreamingApi.IsEnabled)
-            {
-                StreamingApi.Transmit(_job.UserId, _job.Channel, packet);
-            }
         }
 
         /// <summary>
@@ -265,6 +259,13 @@ namespace QuantConnect.Messaging
             {
                 handler(packet);
             }
+        }
+
+        /// <summary>
+        /// Dispose of any resources
+        /// </summary>
+        public virtual void Dispose()
+        {
         }
     }
 }

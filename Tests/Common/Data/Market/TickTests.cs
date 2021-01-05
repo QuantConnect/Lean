@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.IO;
+using System.Text;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -67,7 +69,7 @@ namespace QuantConnect.Tests.Common.Data.Market
             const string line = "86399572,52.62,5,usa,,0,False";
 
             var baseDate = new DateTime(2013, 10, 08);
-            var symbol = Symbol.CreateFuture(Futures.Energies.CrudeOilWTI, QuantConnect.Market.USA, new DateTime(2017, 2, 28));
+            var symbol = Symbol.CreateFuture(Futures.Energies.CrudeOilWTI, QuantConnect.Market.NYMEX, new DateTime(2017, 2, 28));
             var config = new SubscriptionDataConfig(typeof(Tick), symbol, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
             var tick = new Tick(config, line, baseDate);
 
@@ -78,6 +80,128 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual("usa", tick.Exchange);
             Assert.AreEqual("", tick.SaleCondition);
             Assert.AreEqual(false, tick.Suspicious);
+        }
+
+        [TestCase("14400135,0,0,1680000,400,NASDAQ,00000001,0", 0, 0, 168, 400)]
+        [TestCase("14400135,10000,10,0,0,NASDAQ,00000001,0", 1, 10, 0, 0)]
+        [TestCase("14400135,10000,10,20000,20,NASDAQ,00000001,0", 1, 10, 2, 20)]
+        public void EquityQuoteTick(string line, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
+        {
+            var baseDate = new DateTime(2013, 10, 08);
+            var config = new SubscriptionDataConfig(typeof(Tick),
+                Symbols.SPY,
+                Resolution.Tick,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false,
+                false,
+                TickType.Quote);
+            var tick = new Tick(config, line, baseDate);
+
+            var expectedValue = (askPrice + bidPrice) / 2;
+            if (askPrice == 0 || bidPrice == 0)
+            {
+                expectedValue = askPrice + bidPrice;
+            }
+
+            var ms = (tick.Time - baseDate).TotalMilliseconds;
+            Assert.AreEqual(14400135, ms);
+            Assert.AreEqual(expectedValue, tick.Value);
+            Assert.AreEqual(expectedValue, tick.LastPrice);
+            Assert.AreEqual(0, tick.Quantity);
+            Assert.AreEqual(askPrice, tick.AskPrice);
+            Assert.AreEqual(askSize, tick.AskSize);
+            Assert.AreEqual(bidPrice, tick.BidPrice);
+            Assert.AreEqual(bidSize, tick.BidSize);
+            Assert.AreEqual("NASDAQ", tick.Exchange);
+            Assert.AreEqual("00000001", tick.SaleCondition);
+            Assert.IsFalse(tick.Suspicious);
+        }
+
+        [Test]
+        public void OptionWithUnderlyingEquityScaled()
+        {
+            var factory = new Tick();
+            var tickLine = "40560000,10000,10,NYSE,00000001,0";
+            var underlying = Symbol.Create("SPY", SecurityType.Equity, QuantConnect.Market.USA);
+            var optionSymbol = Symbol.CreateOption(
+                underlying,
+                QuantConnect.Market.USA,
+                OptionStyle.American,
+                OptionRight.Put,
+                4200m,
+                SecurityIdentifier.DefaultDate);
+
+            var config = new SubscriptionDataConfig(
+                typeof(Tick),
+                optionSymbol,
+                Resolution.Tick,
+                TimeZones.Chicago,
+                TimeZones.Chicago,
+                true,
+                false,
+                false,
+                false,
+                TickType.Trade,
+                true,
+                DataNormalizationMode.Raw);
+
+            var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(tickLine)));
+
+            var tickFromLine = (Tick)factory.Reader(config, tickLine, new DateTime(2020, 9, 22), false);
+            var tickFromStream = (Tick)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
+
+            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 16, 0), tickFromLine.Time);
+            Assert.AreEqual(1m, tickFromLine.Price);
+            Assert.AreEqual(10, tickFromLine.Quantity);
+
+            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 16, 0), tickFromStream.Time);
+            Assert.AreEqual(1m, tickFromStream.Price);
+            Assert.AreEqual(10, tickFromStream.Quantity);
+        }
+
+        [Test]
+        public void OptionWithUnderlyingFutureNotScaled()
+        {
+            var factory = new Tick();
+            var tickLine = "40560000,10000,10,CME,00000001,0";
+            var underlying = Symbol.CreateFuture("ES", QuantConnect.Market.CME, new DateTime(2021, 3, 19));
+            var optionSymbol = Symbol.CreateOption(
+                underlying,
+                QuantConnect.Market.CME,
+                OptionStyle.American,
+                OptionRight.Put,
+                4200m,
+                SecurityIdentifier.DefaultDate);
+
+            var config = new SubscriptionDataConfig(
+                typeof(Tick),
+                optionSymbol,
+                Resolution.Tick,
+                TimeZones.Chicago,
+                TimeZones.Chicago,
+                true,
+                false,
+                false,
+                false,
+                TickType.Trade,
+                true,
+                DataNormalizationMode.Raw);
+
+            var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(tickLine)));
+
+            var tickFromLine = (Tick)factory.Reader(config, tickLine, new DateTime(2020, 9, 22), false);
+            var tickFromStream = (Tick)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
+
+            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 16, 0), tickFromLine.Time);
+            Assert.AreEqual(10000m, tickFromLine.Price);
+            Assert.AreEqual(10, tickFromLine.Quantity);
+
+            Assert.AreEqual(new DateTime(2020, 9, 22, 11, 16, 0), tickFromStream.Time);
+            Assert.AreEqual(10000m, tickFromStream.Price);
+            Assert.AreEqual(10, tickFromStream.Quantity);
         }
     }
 }

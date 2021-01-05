@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Common.Util
         private FactorFileGenerator _factorFileGenerator;
         private YahooDataDownloader _yahooDataDownloader;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             _factorFileGenerator = new FactorFileGenerator(_symbol, _dataPath);
@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void FactorFile_CanBeCreatedFromYahooData_Successfully()
         {
-            var yahooEvents = _yahooDataDownloader.DownloadSplitAndDividendData(_symbol, DateTime.Parse("01/01/1980"), DateTime.MaxValue);
+            var yahooEvents = _yahooDataDownloader.DownloadSplitAndDividendData(_symbol, Parse.DateTime("01/01/1980"), DateTime.MaxValue);
             var factorFile = _factorFileGenerator.CreateFactorFile(yahooEvents.ToList());
 
             Assert.IsTrue(factorFile.Permtick == _symbol.Value);
@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Common.Util
         public void FactorFiles_CanBeGenerated_Accurately()
         {
             // Arrange
-            var yahooEvents = _yahooDataDownloader.DownloadSplitAndDividendData(_symbol, DateTime.Parse("01/01/1970"), DateTime.MaxValue);
+            var yahooEvents = _yahooDataDownloader.DownloadSplitAndDividendData(_symbol, Parse.DateTime("01/01/1970"), DateTime.MaxValue);
             var filePath = LeanData.GenerateRelativeFactorFilePath(_symbol);
             var tolerance = 0.00001m;
 
@@ -80,8 +80,11 @@ namespace QuantConnect.Tests.Common.Util
 
             var originalFactorFileInstance = FactorFile.Read(PermTick, Market);
 
+            // we limit events to the penultimate time in our factor file (last one is 2050)
+            var lastValidRow = originalFactorFileInstance.SortedFactorFileData.Reverse().Skip(1).First();
+
             // Act
-            var newFactorFileInstance = _factorFileGenerator.CreateFactorFile(yahooEvents.ToList());
+            var newFactorFileInstance = _factorFileGenerator.CreateFactorFile(yahooEvents.Where(data => data.Time.AddDays(-1) <= lastValidRow.Key).ToList());
 
             var earliestDate = originalFactorFileInstance.SortedFactorFileData.First().Key;
             var latestDate = originalFactorFileInstance.SortedFactorFileData.Last().Key;

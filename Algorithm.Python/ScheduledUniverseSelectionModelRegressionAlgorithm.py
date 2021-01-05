@@ -29,7 +29,7 @@ from datetime import datetime, timedelta
 ### <summary>
 ### Regression algorithm for testing ScheduledUniverseSelectionModel scheduling functions.
 ### </summary>
-class ScheduledUniverseSelectionModelRegressionAlgorithm(QCAlgorithmFramework):
+class ScheduledUniverseSelectionModelRegressionAlgorithm(QCAlgorithm):
     '''Regression algorithm for testing ScheduledUniverseSelectionModel scheduling functions.'''
 
     def Initialize(self):
@@ -66,12 +66,12 @@ class ScheduledUniverseSelectionModelRegressionAlgorithm(QCAlgorithmFramework):
             symbols.append(Symbol.Create('IBM', SecurityType.Equity, Market.USA))
 
         if weekday == 1 or weekday == 3:
-            symbols.append(Symbol.Create('EURUSD', SecurityType.Forex, Market.FXCM))
+            symbols.append(Symbol.Create('EURUSD', SecurityType.Forex, Market.Oanda))
         elif weekday == 4:
             # given the date/time rules specified in Initialize, this symbol will never be selected (every 6 hours never lands on hour==1)
-            symbols.append(Symbol.Create('EURGBP', SecurityType.Forex, Market.FXCM))
+            symbols.append(Symbol.Create('EURGBP', SecurityType.Forex, Market.Oanda))
         else:
-            symbols.append(Symbol.Create('NZDUSD', SecurityType.Forex, Market.FXCM))
+            symbols.append(Symbol.Create('NZDUSD', SecurityType.Forex, Market.Oanda))
 
         return symbols
 

@@ -35,7 +35,7 @@ from datetime import timedelta
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="trading and orders" />
-class VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm(QCAlgorithmFramework):
+class VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm(QCAlgorithm):
     '''Regression algorithm for the VolumeWeightedAveragePriceExecutionModel.
     This algorithm shows how the execution model works to split up orders and
     submit them only when the price is on the favorable side of the intraday VWAP.'''

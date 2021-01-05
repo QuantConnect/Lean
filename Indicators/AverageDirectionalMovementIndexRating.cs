@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
@@ -23,10 +22,9 @@ namespace QuantConnect.Indicators
     /// The Average Directional Movement Index Rating is calculated with the following formula:
     /// ADXR[i] = (ADX[i] + ADX[i - period + 1]) / 2
     /// </summary>
-    public class AverageDirectionalMovementIndexRating : BarIndicator
+    public class AverageDirectionalMovementIndexRating : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         private readonly int _period;
-        private readonly AverageDirectionalIndex _adx;
         private readonly RollingWindow<decimal> _adxHistory;
 
         /// <summary>
@@ -38,7 +36,7 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             _period = period;
-            _adx = new AverageDirectionalIndex(name + "_ADX", period);
+            ADX = new AverageDirectionalIndex(name + "_ADX", period);
             _adxHistory = new RollingWindow<decimal>(period);
         }
 
@@ -47,14 +45,24 @@ namespace QuantConnect.Indicators
         /// </summary> 
         /// <param name="period">The period of the ADXR</param>
         public AverageDirectionalMovementIndexRating(int period)
-            : this("ADXR" + period, period)
+            : this($"ADXR({period})", period)
         {
         }
+
+        /// <summary>
+        /// The Average Directional Index indicator instance being used
+        /// </summary>
+        public AverageDirectionalIndex ADX { get; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady => _adxHistory.IsReady;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => _period * 3 - 1;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -63,14 +71,14 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            _adx.Update(input);
+            ADX.Update(input);
 
-            if (_adx.IsReady)
+            if (ADX.IsReady)
             {
-                _adxHistory.Add(_adx);
+                _adxHistory.Add(ADX.Current.Value);
             }
 
-            return IsReady ? (_adx + _adxHistory[_period - 1]) / 2 : 50m;
+            return IsReady ? (ADX.Current.Value + _adxHistory[_period - 1]) / 2 : 50m;
         }
 
         /// <summary>
@@ -78,7 +86,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _adx.Reset();
+            ADX.Reset();
             _adxHistory.Reset();
             base.Reset();
         }

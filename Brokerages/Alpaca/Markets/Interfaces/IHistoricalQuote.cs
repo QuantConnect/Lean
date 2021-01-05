@@ -1,50 +1,29 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
+ * Changes from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.5.5
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
     /// <summary>
     /// Encapsulates historical quote information from Polygon REST API.
     /// </summary>
-    public interface IHistoricalQuote
+    // ReSharper disable once PossibleInterfaceMemberAmbiguity
+    public interface IHistoricalQuote : IQuoteBase<String>, IQuoteBase<Int64>, ITimestamps, IHistoricalBase
     {
-        /// <summary>
-        /// Gets bid source exchange.
-        /// </summary>
-        String BidExchange { get; }
-
-        /// <summary>
-        /// Gets ask source exchange.
-        /// </summary>
-        String AskExchange { get; }
-
         /// <summary>
         /// Gets time offset of quote.
         /// </summary>
+        [Obsolete("TimeOffset is deprecated in API v2, use Timestamp instead", true)]
         Int64 TimeOffset { get; }
 
         /// <summary>
-        /// Gets bid price level.
+        /// Gets indicators.
         /// </summary>
-        Decimal BidPrice { get; }
-
-        /// <summary>
-        /// Gets ask price level.
-        /// </summary>
-        Decimal AskPrice { get; }
-
-        /// <summary>
-        /// Gets bid quantity.
-        /// </summary>
-        Int64 BidSize { get; }
-
-        /// <summary>
-        /// Gets ask quantity.
-        /// </summary>
-        Int64 AskSize { get; }
+        IReadOnlyList<Int64> Indicators { get; }
     }
 }

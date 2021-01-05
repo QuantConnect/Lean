@@ -14,16 +14,96 @@
  *
 */
 
+using System;
+using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Interfaces;
+using QuantConnect;
+using QuantConnect.Configuration;
 using QuantConnect.Logging;
+using QuantConnect.Python;
+using QuantConnect.Util;
 
+[assembly: MaintainLogHandler()]
 [SetUpFixture]
 public class AssemblyInitialize
 {
-    [SetUp]
-    public void SetLogHandler()
+    [OneTimeSetUp]
+    public void InitializeTestEnvironment()
     {
-        // save output to file as well
-        Log.LogHandler = new ConsoleLogHandler();
+        AdjustCurrentDirectory();
+    }
+
+    public static void AdjustCurrentDirectory()
+    {
+        // nunit 3 sets the current folder to a temp folder we need it to be the test bin output folder
+        var dir = TestContext.CurrentContext.TestDirectory;
+        Environment.CurrentDirectory = dir;
+        Directory.SetCurrentDirectory(dir);
+        Config.Reset();
+        Globals.Reset();
+        PythonInitializer.SetPythonPathEnvironmentVariable(
+            new[]
+            {
+                "./Alphas",
+                "./Execution",
+                "./Portfolio",
+                "./Risk",
+                "./Selection",
+                "./RegressionAlgorithms",
+                "./Research/RegressionScripts",
+                "../../../Algorithm",
+                "../../../Algorithm/Selection",
+                "../../../Algorithm.Framework",
+                "../../../Algorithm.Framework/Selection",
+                "../../../Algorithm.Python"
+            });
     }
 }
+
+[AttributeUsage(AttributeTargets.Assembly)]
+public class MaintainLogHandlerAttribute : Attribute, ITestAction
+{
+    private static ILogHandler logHandler;
+
+    public MaintainLogHandlerAttribute()
+    {
+        logHandler = GetLogHandler();
+    }
+
+    /// <summary>
+    /// Get the log handler defined by test context parameters. Defaults to ConsoleLogHandler if no
+    /// "log-handler" parameter is found.
+    /// </summary>
+    /// <returns>A new LogHandler</returns>
+    public static ILogHandler GetLogHandler()
+    {
+        if (TestContext.Parameters.Exists("log-handler"))
+        {
+            var logHandler = TestContext.Parameters["log-handler"];
+            Log.Trace($"QuantConnect.Tests.AssemblyInitialize(): Log handler test parameter loaded {logHandler}");
+
+            return Composer.Instance.GetExportedValueByTypeName<ILogHandler>(logHandler);
+        }
+        
+        // If no parameter just use ConsoleLogHandler
+        return new ConsoleLogHandler();
+    }
+
+    public void BeforeTest(ITest details)
+    {
+        Log.LogHandler = logHandler;
+    }
+
+    public void AfterTest(ITest details)
+    {
+        //NOP
+    }
+
+    public ActionTargets Targets
+    {   // Set only to act on test fixture not individual tests
+        get { return ActionTargets.Suite; }
+    }
+}
+
+

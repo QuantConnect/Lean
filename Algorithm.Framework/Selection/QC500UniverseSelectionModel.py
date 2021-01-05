@@ -14,62 +14,45 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Algorithm.Framework")
 
 from QuantConnect.Data.UniverseSelection import *
-from QuantConnect.Indicators import ExponentialMovingAverage
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
-from itertools import chain
+from itertools import groupby
 from math import ceil
 
 class QC500UniverseSelectionModel(FundamentalUniverseSelectionModel):
     '''Defines the QC500 universe as a universe selection model for framework algorithm
     For details: https://github.com/QuantConnect/Lean/pull/1663'''
 
-    def __init__(self,
-                 filterFineData = True,
-                 universeSettings = None, 
-                 securityInitializer = None):
+    def __init__(self, filterFineData = True, universeSettings = None, securityInitializer = None):
         '''Initializes a new default instance of the QC500UniverseSelectionModel'''
         super().__init__(filterFineData, universeSettings, securityInitializer)
-        self.NumberOfSymbolsCoarse = 1000
-        self.NumberOfSymbolsFine = 500
-        self.lastMonth = -1
+        self.numberOfSymbolsCoarse = 1000
+        self.numberOfSymbolsFine = 500
         self.dollarVolumeBySymbol = {}
-        self.symbols = []
+        self.lastMonth = -1
 
     def SelectCoarse(self, algorithm, coarse):
         '''Performs coarse selection for the QC500 constituents.
         The stocks must have fundamental data
         The stock must have positive previous-day close price
         The stock must have positive volume on the previous trading day'''
-        coarse = list(coarse)
+        if algorithm.Time.month == self.lastMonth:
+            return Universe.Unchanged
 
-        if len(coarse) == 0:
-            return self.symbols
+        sortedByDollarVolume = sorted([x for x in coarse if x.HasFundamentalData and x.Volume > 0 and x.Price > 0],
+                                     key = lambda x: x.DollarVolume, reverse=True)[:self.numberOfSymbolsCoarse]
 
-        month = coarse[0].EndTime.month
-        if month == self.lastMonth:
-            return self.symbols
+        self.dollarVolumeBySymbol = {x.Symbol:x.DollarVolume for x in sortedByDollarVolume}
 
-        self.lastMonth = month
+        # If no security has met the QC500 criteria, the universe is unchanged.
+        # A new selection will be attempted on the next trading day as self.lastMonth is not updated
+        if len(self.dollarVolumeBySymbol) == 0:
+            return Universe.Unchanged
 
-        # The stocks must have fundamental data
-        # The stock must have positive previous-day close price
-        # The stock must have positive volume on the previous trading day
-        filtered = [x for x in coarse if x.HasFundamentalData
-                                      and x.Volume > 0
-                                      and x.Price > 0]
-        # sort the stocks by dollar volume and take the top 1000
-        top = sorted(filtered, key=lambda x: x.DollarVolume, reverse=True)[:self.NumberOfSymbolsCoarse]
-
-        self.dollarVolumeBySymbol = { i.Symbol: i.DollarVolume for i in top }
-
-        self.symbols = list(self.dollarVolumeBySymbol.keys())
-
-        return self.symbols
-
+        # return the symbol objects our sorted collection
+        return list(self.dollarVolumeBySymbol.keys())
 
     def SelectFine(self, algorithm, fine):
         '''Performs fine selection for the QC500 constituents
@@ -78,27 +61,30 @@ class QC500UniverseSelectionModel(FundamentalUniverseSelectionModel):
         At least half a year since its initial public offering
         The stock's market cap must be greater than 500 million'''
 
-        # The company's headquarter must in the U.S.
-        # The stock must be traded on either the NYSE or NASDAQ
-        # At least half a year since its initial public offering
-        # The stock's market cap must be greater than 500 million
-        filteredFine = [x for x in fine if x.CompanyReference.CountryId == "USA"
-                                        and (x.CompanyReference.PrimaryExchangeID == "NYS" or x.CompanyReference.PrimaryExchangeID == "NAS")
+        sortedBySector = sorted([x for x in fine if x.CompanyReference.CountryId == "USA"
+                                        and x.CompanyReference.PrimaryExchangeID in ["NYS","NAS"]
                                         and (algorithm.Time - x.SecurityReference.IPODate).days > 180
-                                        and x.EarningReports.BasicAverageShares.ThreeMonths * x.EarningReports.BasicEPS.TwelveMonths * x.ValuationRatios.PERatio > 5e8]
-        count = len(filteredFine)
-        if count == 0: return []
+                                        and x.MarketCap > 5e8],
+                               key = lambda x: x.CompanyReference.IndustryTemplateCode)
 
-        myDict = dict()
-        percent = float(self.NumberOfSymbolsFine / count)
+        count = len(sortedBySector)
+
+        # If no security has met the QC500 criteria, the universe is unchanged.
+        # A new selection will be attempted on the next trading day as self.lastMonth is not updated
+        if count == 0:
+            return Universe.Unchanged
+
+        # Update self.lastMonth after all QC500 criteria checks passed
+        self.lastMonth = algorithm.Time.month
+
+        percent = self.numberOfSymbolsFine / count
+        sortedByDollarVolume = []
 
         # select stocks with top dollar volume in every single sector
-        for key in ["N", "M", "U", "T", "B", "I"]:
-            value = [x for x in filteredFine if x.CompanyReference.IndustryTemplateCode == key]
-            value = sorted(value, key=lambda x: self.dollarVolumeBySymbol[x.Symbol], reverse = True)
-            myDict[key] = value[:ceil(len(value) * percent)]
+        for code, g in groupby(sortedBySector, lambda x: x.CompanyReference.IndustryTemplateCode):
+            y = sorted(g, key = lambda x: self.dollarVolumeBySymbol[x.Symbol], reverse = True)
+            c = ceil(len(y) * percent)
+            sortedByDollarVolume.extend(y[:c])
 
-        topFine = list(chain.from_iterable(myDict.values()))[:self.NumberOfSymbolsFine]
-        self.symbols = [f.Symbol for f in topFine]
-
-        return self.symbols
+        sortedByDollarVolume = sorted(sortedByDollarVolume, key = lambda x: self.dollarVolumeBySymbol[x.Symbol], reverse=True)
+        return [x.Symbol for x in sortedByDollarVolume[:self.numberOfSymbolsFine]]

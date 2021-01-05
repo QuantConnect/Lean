@@ -1,4 +1,6 @@
-*/packages/*
-*/.git/*
-*/.vs/*
-*/.nuget/*
+packages/*
+.git/*
+.github/*
+.vs/*
+.nuget/*
+Tests/*

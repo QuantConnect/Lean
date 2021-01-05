@@ -22,10 +22,12 @@ using QuantConnect.Configuration;
 using Moq;
 using QuantConnect.Brokerages;
 using QuantConnect.Tests.Common.Securities;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {
-    [TestFixture, Ignore("This test requires a configured and testable Oanda practice account")]
+    [TestFixture]
+    [Explicit("This test requires a configured Bitfinex account")]
     public partial class BitfinexBrokerageTests : BrokerageTests
     {
         /// <summary>
@@ -36,33 +38,36 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         /// <returns></returns>
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
-            var securities = new SecurityManager(new TimeKeeper(DateTime.UtcNow, new[] { TimeZones.NewYork }));
-            securities.Add(Symbol, CreateSecurity(Symbol));
+            var securities = new SecurityManager(new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork))
+            {
+                {Symbol, CreateSecurity(Symbol)}
+            };
+
             var transactions = new SecurityTransactionManager(null, securities);
             transactions.SetOrderProcessor(new FakeOrderProcessor());
 
             var algorithm = new Mock<IAlgorithm>();
             algorithm.Setup(a => a.Transactions).Returns(transactions);
-            algorithm.Setup(a => a.BrokerageModel).Returns(new BitfinexBrokerageModel(AccountType.Margin));
+            algorithm.Setup(a => a.BrokerageModel).Returns(new BitfinexBrokerageModel());
             algorithm.Setup(a => a.Portfolio).Returns(new SecurityPortfolioManager(securities, transactions));
 
             var priceProvider = new Mock<IPriceProvider>();
             priceProvider.Setup(a => a.GetLastPrice(It.IsAny<Symbol>())).Returns(1.234m);
 
             return new BitfinexBrokerage(
-                    Config.Get("bitfinex-url", "wss://api.bitfinex.com/ws"),
-                    Config.Get("bitfinex-rest", "https://api.bitfinex.com"),
                     Config.Get("bitfinex-api-key"),
                     Config.Get("bitfinex-api-secret"),
                     algorithm.Object,
-                    priceProvider.Object
+                    priceProvider.Object,
+                    new AggregationManager()
                 );
         }
 
         /// <summary>
         /// Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected override Symbol Symbol => Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);
+        protected override Symbol Symbol => StaticSymbol;
+        private static Symbol StaticSymbol => Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);
 
         /// <summary>
         /// Gets the security type associated with the <see cref="BrokerageTests.Symbol" />
@@ -70,40 +75,77 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         protected override SecurityType SecurityType => SecurityType.Crypto;
 
         //no stop limit support in v1
-        public override TestCaseData[] OrderParameters => new[]
+        private static TestCaseData[] OrderParameters => new[]
         {
-            new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
-            new TestCaseData(new StopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder"),
+            new TestCaseData(new MarketOrderTestParameters(StaticSymbol)).SetName("MarketOrder"),
+            new TestCaseData(new LimitOrderTestParameters(StaticSymbol, 1000m, 100m)).SetName("LimitOrder"),
+            new TestCaseData(new StopMarketOrderTestParameters(StaticSymbol, 1000m, 100m)).SetName("StopMarketOrder"),
         };
-
-        /// <summary>
-        /// Gets a high price for the specified symbol so a limit sell won't fill
-        /// </summary>
-        protected override decimal HighPrice => 1000m;
-
-        /// <summary>
-        /// Gets a low price for the specified symbol so a limit buy won't fill
-        /// </summary>
-        protected override decimal LowPrice => 100m;
 
         /// <summary>
         /// Gets the current market price of the specified security
         /// </summary>
         protected override decimal GetAskPrice(Symbol symbol)
         {
-            var tick = ((BitfinexBrokerage)this.Brokerage).GetTick(symbol);
+            var tick = ((BitfinexBrokerage)Brokerage).GetTick(symbol);
             return tick.AskPrice;
         }
 
         /// <summary>
-        /// Returns wether or not the brokers order methods implementation are async
+        /// Returns whether or not the brokers order methods implementation are async
         /// </summary>
-        protected override bool IsAsync() => false;
+        protected override bool IsAsync() => true;
+
+        /// <summary>
+        /// Returns whether or not the brokers order cancel method implementation is async
+        /// </summary>
+        protected override bool IsCancelAsync() => true;
 
         /// <summary>
         /// Gets the default order quantity
         /// </summary>
         protected override decimal GetDefaultQuantity() => 0.04m;
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CancelOrders(OrderTestParameters parameters)
+        {
+            base.CancelOrders(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromZero(OrderTestParameters parameters)
+        {
+            base.LongFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromLong(OrderTestParameters parameters)
+        {
+            base.CloseFromLong(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromZero(OrderTestParameters parameters)
+        {
+            base.ShortFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromShort(OrderTestParameters parameters)
+        {
+            base.CloseFromShort(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromLong(OrderTestParameters parameters)
+        {
+            base.ShortFromLong(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromShort(OrderTestParameters parameters)
+        {
+            base.LongFromShort(parameters);
+        }
     }
 }

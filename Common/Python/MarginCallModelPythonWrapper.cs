@@ -36,7 +36,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                foreach (var attributeName in new[] { "ExecuteMarginCall", "GenerateMarginCallOrder", "GetMarginCallOrders" })
+                foreach (var attributeName in new[] { "ExecuteMarginCall", "GetMarginCallOrders" })
                 {
                     if (!model.HasAttr(attributeName))
                     {
@@ -62,32 +62,19 @@ namespace QuantConnect.Python
                 // Since ExecuteMarginCall may return a python list
                 // Need to convert to C# list
                 var tickets = new List<OrderTicket>();
-                foreach (PyObject pyObject in marginCalls)
+                var iterator = marginCalls.GetIterator();
+                foreach (PyObject pyObject in iterator)
                 {
                     OrderTicket ticket;
                     if (pyObject.TryConvert(out ticket))
                     {
                         tickets.Add(ticket);
                     }
+                    pyObject.Dispose();
                 }
+                iterator.Dispose();
+                marginCalls.Dispose();
                 return tickets;
-            }
-        }
-
-        /// <summary>
-        /// Generates a new order for the specified security taking into account the total margin
-        /// used by the account. Returns null when no margin call is to be issued.
-        /// </summary>
-        /// <param name="security">The security to generate a margin call order for</param>
-        /// <param name="netLiquidationValue">The net liquidation value for the entire account</param>
-        /// <param name="totalMargin">The totl margin used by the account in units of base currency</param>
-        /// <param name="maintenanceMarginRequirement">The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call</param>
-        /// <returns>An order object representing a liquidation order to be executed to bring the account within margin requirements</returns>
-        public SubmitOrderRequest GenerateMarginCallOrder(Security security, decimal netLiquidationValue, decimal totalMargin, decimal maintenanceMarginRequirement)
-        {
-            using (Py.GIL())
-            {
-                return _model.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin, maintenanceMarginRequirement);
             }
         }
 
@@ -103,7 +90,7 @@ namespace QuantConnect.Python
             {
                 var value = _model.GetMarginCallOrders(out issueMarginCallWarning);
 
-                // Since pythonnet does not support out parameters, the methods return 
+                // Since pythonnet does not support out parameters, the methods return
                 // a tuple where the out parameter comes after the other returned values
                 if (!PyTuple.IsTupleType(value))
                 {
@@ -111,9 +98,9 @@ namespace QuantConnect.Python
                 }
 
                 // In this case, the first item holds the list of margin calls
-                // and the second the out parameter 'issueMarginCallWarning' 
+                // and the second the out parameter 'issueMarginCallWarning'
                 var marginCallOrders = value[0] as PyObject;
-                issueMarginCallWarning = value[1];
+                issueMarginCallWarning = (value[1] as PyObject).GetAndDispose<bool>();
 
                 // Since GetMarginCallOrders may return a python list
                 // Need to convert to C# list
@@ -127,6 +114,8 @@ namespace QuantConnect.Python
                     }
                 }
                 issueMarginCallWarning |= requests.Count > 0;
+                marginCallOrders.Dispose();
+                (value as PyObject).Dispose();
                 return requests;
             }
         }

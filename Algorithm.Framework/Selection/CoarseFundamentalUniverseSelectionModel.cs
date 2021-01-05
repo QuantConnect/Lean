@@ -22,7 +22,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.Framework.Selection
 {
     /// <summary>
-    /// Portoflio selection model that uses coarse selectors. For US equities only.
+    /// Portfolio selection model that uses coarse selectors. For US equities only.
     /// </summary>
     public class CoarseFundamentalUniverseSelectionModel : FundamentalUniverseSelectionModel
     {
@@ -56,15 +56,15 @@ namespace QuantConnect.Algorithm.Framework.Selection
             )
             : base(false, universeSettings, securityInitializer)
         {
-            Func<IEnumerable<CoarseFundamental>, Symbol[]> func;
+            Func<IEnumerable<CoarseFundamental>, object> func;
             if (coarseSelector.TryConvertToDelegate(out func))
             {
-                _coarseSelector = func;
+                _coarseSelector = func.ConvertToUniverseSelectionSymbolDelegate();
             }
         }
 
         /// <inheritdoc />
-        public override IEnumerable<Symbol> SelectCoarse(QCAlgorithmFramework algorithm, IEnumerable<CoarseFundamental> coarse)
+        public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
         {
             return _coarseSelector(coarse);
         }

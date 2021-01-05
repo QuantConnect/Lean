@@ -1647,6 +1647,294 @@ namespace QuantConnect.Tests.Common.Statistics
         [TestCase(FillGroupingMethod.FlatToFlat, FillMatchingMethod.LIFO)]
         [TestCase(FillGroupingMethod.FlatToReduced, FillMatchingMethod.FIFO)]
         [TestCase(FillGroupingMethod.FlatToReduced, FillMatchingMethod.LIFO)]
+        public void ScaleInScaleOut4Long(FillGroupingMethod groupingMethod, FillMatchingMethod matchingMethod)
+        {
+            // Buy 1k, Buy 1k, Sell 1.5k, Sell 0.5k
+
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var time = _startTime;
+
+            // Buy 1k
+            builder.ProcessFill(new OrderEvent(1, Symbols.EURUSD, time, OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.07m, fillQuantity: 1000, orderFee: _orderFee), ConversionRate, _orderFee.Value.Amount);
+
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
+
+            builder.SetMarketPrice(Symbols.EURUSD, 1.075m);
+
+            // Buy 1k
+            builder.ProcessFill(new OrderEvent(2, Symbols.EURUSD, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: _orderFee), ConversionRate, _orderFee.Value.Amount);
+
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
+
+            builder.SetMarketPrice(Symbols.EURUSD, 1.065m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.10m);
+
+            // Sell 1.5k
+            builder.ProcessFill(new OrderEvent(3, Symbols.EURUSD, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -1500, orderFee: _orderFee), ConversionRate, _orderFee.Value.Amount);
+
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
+
+            // Sell 0.5k
+            builder.ProcessFill(new OrderEvent(4, Symbols.EURUSD, time.AddMinutes(30), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.10m, fillQuantity: -500, orderFee: _orderFee), ConversionRate, _orderFee.Value.Amount);
+
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.EURUSD));
+
+            switch (groupingMethod)
+            {
+                case FillGroupingMethod.FillToFill:
+                    {
+                        Assert.AreEqual(3, builder.ClosedTrades.Count);
+
+                        var trade1 = builder.ClosedTrades[0];
+
+                        Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.08m, trade1.EntryPrice);
+                        Assert.AreEqual(TradeDirection.Long, trade1.Direction);
+                        Assert.AreEqual(1000, trade1.Quantity);
+                        Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
+                        Assert.AreEqual(1.09m, trade1.ExitPrice);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 20 : 10, trade1.ProfitLoss);
+                        Assert.AreEqual(2, trade1.TotalFees);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -5 : -15, trade1.MAE);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 30 : 20, trade1.MFE);
+
+                        var trade2 = builder.ClosedTrades[1];
+
+                        Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time, trade2.EntryTime);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.07m, trade2.EntryPrice);
+                        Assert.AreEqual(TradeDirection.Long, trade2.Direction);
+                        Assert.AreEqual(500, trade2.Quantity);
+                        Assert.AreEqual(time.AddMinutes(20), trade2.ExitTime);
+                        Assert.AreEqual(1.09m, trade2.ExitPrice);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 5 : 10, trade2.ProfitLoss);
+                        Assert.AreEqual(1, trade2.TotalFees);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -7.5 : -2.5, trade2.MAE);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 10 : 15, trade2.MFE);
+
+                        var trade3 = builder.ClosedTrades[2];
+
+                        Assert.AreEqual(Symbols.EURUSD, trade3.Symbol);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time, trade3.EntryTime);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.07m, trade3.EntryPrice);
+                        Assert.AreEqual(TradeDirection.Long, trade3.Direction);
+                        Assert.AreEqual(500, trade3.Quantity);
+                        Assert.AreEqual(time.AddMinutes(30), trade3.ExitTime);
+                        Assert.AreEqual(1.10m, trade3.ExitPrice);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 10 : 15, trade3.ProfitLoss);
+                        Assert.AreEqual(1, trade3.TotalFees);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -7.5 : -2.5, trade3.MAE);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 10 : 15, trade3.MFE);
+                    }
+                    break;
+
+                case FillGroupingMethod.FlatToFlat:
+                    {
+                        Assert.AreEqual(1, builder.ClosedTrades.Count);
+
+                        var trade = builder.ClosedTrades[0];
+
+                        Assert.AreEqual(Symbols.EURUSD, trade.Symbol);
+                        Assert.AreEqual(time, trade.EntryTime);
+                        Assert.AreEqual(1.075m, trade.EntryPrice);
+                        Assert.AreEqual(TradeDirection.Long, trade.Direction);
+                        Assert.AreEqual(2000, trade.Quantity);
+                        Assert.AreEqual(time.AddMinutes(30), trade.ExitTime);
+                        Assert.AreEqual(1.0925m, trade.ExitPrice);
+                        Assert.AreEqual(35, trade.ProfitLoss);
+                        Assert.AreEqual(4, trade.TotalFees);
+                        Assert.AreEqual(-20, trade.MAE);
+                        Assert.AreEqual(50, trade.MFE);
+                    }
+                    break;
+
+                case FillGroupingMethod.FlatToReduced:
+                    {
+                        Assert.AreEqual(2, builder.ClosedTrades.Count);
+
+                        var trade1 = builder.ClosedTrades[0];
+
+                        Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.0733333333333333333333333333m : 1.0766666666666666666666666667m, trade1.EntryPrice);
+                        Assert.AreEqual(TradeDirection.Long, trade1.Direction);
+                        Assert.AreEqual(1500, trade1.Quantity);
+                        Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
+                        Assert.AreEqual(1.09m, trade1.ExitPrice);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 25 : 20, trade1.ProfitLoss);
+                        Assert.AreEqual(3, trade1.TotalFees);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -12.5 : -17.5, trade1.MAE);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 40 : 35, trade1.MFE);
+
+                        var trade2 = builder.ClosedTrades[1];
+
+                        Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time, trade2.EntryTime);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.07m, trade2.EntryPrice);
+                        Assert.AreEqual(TradeDirection.Long, trade2.Direction);
+                        Assert.AreEqual(500, trade2.Quantity);
+                        Assert.AreEqual(time.AddMinutes(30), trade2.ExitTime);
+                        Assert.AreEqual(1.10m, trade2.ExitPrice);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 10 : 15, trade2.ProfitLoss);
+                        Assert.AreEqual(1, trade2.TotalFees);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -7.5 : -2.5, trade2.MAE);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 10 : 15, trade2.MFE);
+                    }
+                    break;
+            }
+        }
+
+        [TestCase(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO)]
+        [TestCase(FillGroupingMethod.FillToFill, FillMatchingMethod.LIFO)]
+        [TestCase(FillGroupingMethod.FlatToFlat, FillMatchingMethod.FIFO)]
+        [TestCase(FillGroupingMethod.FlatToFlat, FillMatchingMethod.LIFO)]
+        [TestCase(FillGroupingMethod.FlatToReduced, FillMatchingMethod.FIFO)]
+        [TestCase(FillGroupingMethod.FlatToReduced, FillMatchingMethod.LIFO)]
+        public void ScaleInScaleOut4Short(FillGroupingMethod groupingMethod, FillMatchingMethod matchingMethod)
+        {
+            // Sell 1k, Sell 1k, Buy 1.5k, Buy 0.5k
+
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var time = _startTime;
+
+            // Sell 1k
+            builder.ProcessFill(new OrderEvent(1, Symbols.EURUSD, time, OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.07m, fillQuantity: -1000, orderFee: _orderFee), ConversionRate, _orderFee.Value.Amount);
+
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
+
+            builder.SetMarketPrice(Symbols.EURUSD, 1.075m);
+
+            // Sell 1k
+            builder.ProcessFill(new OrderEvent(2, Symbols.EURUSD, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: -1000, orderFee: _orderFee), ConversionRate, _orderFee.Value.Amount);
+
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
+
+            builder.SetMarketPrice(Symbols.EURUSD, 1.065m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.10m);
+
+            // Buy 1.5k
+            builder.ProcessFill(new OrderEvent(3, Symbols.EURUSD, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: 1500, orderFee: _orderFee), ConversionRate, _orderFee.Value.Amount);
+
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
+
+            // Buy 0.5k
+            builder.ProcessFill(new OrderEvent(4, Symbols.EURUSD, time.AddMinutes(30), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.10m, fillQuantity: 500, orderFee: _orderFee), ConversionRate, _orderFee.Value.Amount);
+
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.EURUSD));
+
+            switch (groupingMethod)
+            {
+                case FillGroupingMethod.FillToFill:
+                    {
+                        Assert.AreEqual(3, builder.ClosedTrades.Count);
+
+                        var trade1 = builder.ClosedTrades[0];
+
+                        Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.08m, trade1.EntryPrice);
+                        Assert.AreEqual(TradeDirection.Short, trade1.Direction);
+                        Assert.AreEqual(1000, trade1.Quantity);
+                        Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
+                        Assert.AreEqual(1.09m, trade1.ExitPrice);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -20 : -10, trade1.ProfitLoss);
+                        Assert.AreEqual(2, trade1.TotalFees);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -30 : -20, trade1.MAE);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 5 : 15, trade1.MFE);
+
+                        var trade2 = builder.ClosedTrades[1];
+
+                        Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time, trade2.EntryTime);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.07m, trade2.EntryPrice);
+                        Assert.AreEqual(TradeDirection.Short, trade2.Direction);
+                        Assert.AreEqual(500, trade2.Quantity);
+                        Assert.AreEqual(time.AddMinutes(20), trade2.ExitTime);
+                        Assert.AreEqual(1.09m, trade2.ExitPrice);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -5 : -10, trade2.ProfitLoss);
+                        Assert.AreEqual(1, trade2.TotalFees);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -10 : -15, trade2.MAE);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 7.5 : 2.5, trade2.MFE);
+
+                        var trade3 = builder.ClosedTrades[2];
+
+                        Assert.AreEqual(Symbols.EURUSD, trade3.Symbol);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time, trade3.EntryTime);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.07m, trade3.EntryPrice);
+                        Assert.AreEqual(TradeDirection.Short, trade3.Direction);
+                        Assert.AreEqual(500, trade3.Quantity);
+                        Assert.AreEqual(time.AddMinutes(30), trade3.ExitTime);
+                        Assert.AreEqual(1.10m, trade3.ExitPrice);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -10 : -15, trade3.ProfitLoss);
+                        Assert.AreEqual(1, trade3.TotalFees);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -10 : -15, trade3.MAE);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 7.5 : 2.5, trade3.MFE);
+                    }
+                    break;
+
+                case FillGroupingMethod.FlatToFlat:
+                    {
+                        Assert.AreEqual(1, builder.ClosedTrades.Count);
+
+                        var trade = builder.ClosedTrades[0];
+
+                        Assert.AreEqual(Symbols.EURUSD, trade.Symbol);
+                        Assert.AreEqual(time, trade.EntryTime);
+                        Assert.AreEqual(1.075m, trade.EntryPrice);
+                        Assert.AreEqual(TradeDirection.Short, trade.Direction);
+                        Assert.AreEqual(2000, trade.Quantity);
+                        Assert.AreEqual(time.AddMinutes(30), trade.ExitTime);
+                        Assert.AreEqual(1.0925m, trade.ExitPrice);
+                        Assert.AreEqual(-35, trade.ProfitLoss);
+                        Assert.AreEqual(4, trade.TotalFees);
+                        Assert.AreEqual(-50, trade.MAE);
+                        Assert.AreEqual(20, trade.MFE);
+                    }
+                    break;
+
+                case FillGroupingMethod.FlatToReduced:
+                    {
+                        Assert.AreEqual(2, builder.ClosedTrades.Count);
+
+                        var trade1 = builder.ClosedTrades[0];
+
+                        Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.0733333333333333333333333333m : 1.0766666666666666666666666667m, trade1.EntryPrice);
+                        Assert.AreEqual(TradeDirection.Short, trade1.Direction);
+                        Assert.AreEqual(1500, trade1.Quantity);
+                        Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
+                        Assert.AreEqual(1.09m, trade1.ExitPrice);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -25 : -20, trade1.ProfitLoss);
+                        Assert.AreEqual(3, trade1.TotalFees);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -40 : -35, trade1.MAE);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 12.5 : 17.5, trade1.MFE);
+
+                        var trade2 = builder.ClosedTrades[1];
+
+                        Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time, trade2.EntryTime);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.07m, trade2.EntryPrice);
+                        Assert.AreEqual(TradeDirection.Short, trade2.Direction);
+                        Assert.AreEqual(500, trade2.Quantity);
+                        Assert.AreEqual(time.AddMinutes(30), trade2.ExitTime);
+                        Assert.AreEqual(1.10m, trade2.ExitPrice);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -10 : -15, trade2.ProfitLoss);
+                        Assert.AreEqual(1, trade2.TotalFees);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -10 : -15, trade2.MAE);
+                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 7.5 : 2.5, trade2.MFE);
+                    }
+                    break;
+            }
+        }
+
+        [TestCase(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO)]
+        [TestCase(FillGroupingMethod.FillToFill, FillMatchingMethod.LIFO)]
+        [TestCase(FillGroupingMethod.FlatToFlat, FillMatchingMethod.FIFO)]
+        [TestCase(FillGroupingMethod.FlatToFlat, FillMatchingMethod.LIFO)]
+        [TestCase(FillGroupingMethod.FlatToReduced, FillMatchingMethod.FIFO)]
+        [TestCase(FillGroupingMethod.FlatToReduced, FillMatchingMethod.LIFO)]
         public void AllInAllOutLongWithMultiplier(FillGroupingMethod groupingMethod, FillMatchingMethod matchingMethod)
         {
             var multiplier = 10;

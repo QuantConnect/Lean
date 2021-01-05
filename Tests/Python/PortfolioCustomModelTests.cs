@@ -17,7 +17,6 @@
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using QuantConnect.Securities;
@@ -52,10 +51,6 @@ namespace QuantConnect.Tests.Python
 
             portfolio.SetMarginCallModel(CreateCustomMarginCallModel(code, portfolio));
             Assert.IsAssignableFrom<MarginCallModelPythonWrapper>(portfolio.MarginCallModel);
-
-            var marginCallOrder = portfolio.MarginCallModel.GenerateMarginCallOrder(spy, 0m, 0m, 0m);
-            Assert.IsNotNull(marginCallOrder);
-            Assert.AreEqual(0, marginCallOrder.Quantity);
 
             bool issueMarginCallWarning;
             var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);

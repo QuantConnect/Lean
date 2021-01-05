@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
     [TestFixture, Ignore("This test requires a configured and testable Oanda practice account")]
     public class OandaBrokerageHistoryProviderTests
     {
-        public TestCaseData[] TestParameters
+        private static TestCaseData[] TestParameters
         {
             get
             {
@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             }
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void GetsHistory(Symbol symbol, Resolution resolution, TimeSpan period, bool throwsException)
         {
             TestDelegate test = () =>
@@ -68,11 +68,11 @@ namespace QuantConnect.Tests.Brokerages.Oanda
                 var accessToken = Config.Get("oanda-access-token");
                 var accountId = Config.Get("oanda-account-id");
 
-                var brokerage = new OandaBrokerage(null, null, environment, accessToken, accountId);
+                var brokerage = new OandaBrokerage(null, null, null, environment, accessToken, accountId);
 
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);
-                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null));
+                historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, null));
 
                 var now = DateTime.UtcNow;
 

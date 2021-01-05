@@ -18,156 +18,158 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using NodaTime;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
     /// Implementation of the <see cref="ISynchronizer"/> interface which provides the mechanism to stream data to the algorithm
     /// </summary>
-    public class Synchronizer : ISynchronizer, IDataFeedTimeProvider
+    public class Synchronizer : ISynchronizer, IDataFeedTimeProvider, IDisposable
     {
-        private SubscriptionSynchronizer _subscriptionSynchronizer;
-        private IDataFeedSubscriptionManager _subscriptionManager;
-        private TimeSliceFactory _timeSliceFactory;
-        private IAlgorithm _algorithm;
         private DateTimeZone _dateTimeZone;
-        private bool _liveMode;
 
         /// <summary>
-        /// Continuous UTC time provider
+        /// The algorithm instance
         /// </summary>
-        public ITimeProvider TimeProvider { get; private set; }
+        protected IAlgorithm Algorithm;
+
+        /// <summary>
+        /// The subscription manager
+        /// </summary>
+        protected IDataFeedSubscriptionManager SubscriptionManager;
+
+        /// <summary>
+        /// The subscription synchronizer
+        /// </summary>
+        protected SubscriptionSynchronizer SubscriptionSynchronizer;
+
+        /// <summary>
+        /// The time slice factory
+        /// </summary>
+        protected TimeSliceFactory TimeSliceFactory;
+
+        /// <summary>
+        /// Continuous UTC time provider, only valid for live trading see <see cref="LiveSynchronizer"/>
+        /// </summary>
+        public virtual ITimeProvider TimeProvider => null;
 
         /// <summary>
         /// Time provider which returns current UTC frontier time
         /// </summary>
-        public ITimeProvider FrontierTimeProvider => _subscriptionSynchronizer;
+        public ITimeProvider FrontierTimeProvider => SubscriptionSynchronizer;
 
         /// <summary>
         /// Initializes the instance of the Synchronizer class
         /// </summary>
-        public void Initialize(
+        public virtual void Initialize(
             IAlgorithm algorithm,
-            IDataFeedSubscriptionManager dataFeedSubscriptionManager,
-            bool liveMode)
+            IDataFeedSubscriptionManager dataFeedSubscriptionManager)
         {
-            _subscriptionManager = dataFeedSubscriptionManager;
-            _algorithm = algorithm;
-            _liveMode = liveMode;
-            _subscriptionSynchronizer = new SubscriptionSynchronizer(
-                _subscriptionManager.UniverseSelection);
-
-            if (_liveMode)
-            {
-                TimeProvider = GetTimeProvider();
-                _subscriptionSynchronizer.SetTimeProvider(TimeProvider);
-            }
+            SubscriptionManager = dataFeedSubscriptionManager;
+            Algorithm = algorithm;
+            SubscriptionSynchronizer = new SubscriptionSynchronizer(
+                SubscriptionManager.UniverseSelection);
         }
 
         /// <summary>
         /// Returns an enumerable which provides the data to stream to the algorithm
         /// </summary>
-        public IEnumerable<TimeSlice> StreamData(CancellationToken cancellationToken)
+        public virtual IEnumerable<TimeSlice> StreamData(CancellationToken cancellationToken)
         {
             PostInitialize();
 
-            var shouldSendExtraEmptyPacket = false;
-            var nextEmit = DateTime.MinValue;
+            // GetTimeProvider() will call GetInitialFrontierTime() which
+            // will consume added subscriptions so we need to do this after initialization
+            SubscriptionSynchronizer.SetTimeProvider(GetTimeProvider());
+
             var previousEmitTime = DateTime.MaxValue;
+
+            var enumerator = SubscriptionSynchronizer
+                .Sync(SubscriptionManager.DataFeedSubscriptions, cancellationToken)
+                .GetEnumerator();
+            var previousWasTimePulse = false;
+            // this is a just in case flag to stop looping if time does not advance
+            var retried = false;
             while (!cancellationToken.IsCancellationRequested)
             {
                 TimeSlice timeSlice;
                 try
                 {
-                    timeSlice = _subscriptionSynchronizer.Sync(_subscriptionManager.DataFeedSubscriptions);
+                    if (!enumerator.MoveNext())
+                    {
+                        // the enumerator ended
+                        break;
+                    }
+                    timeSlice = enumerator.Current;
                 }
                 catch (Exception err)
                 {
                     Log.Error(err);
                     // notify the algorithm about the error, so it can be reported to the user
-                    _algorithm.RunTimeError = err;
-                    _algorithm.Status = AlgorithmStatus.RuntimeError;
-                    shouldSendExtraEmptyPacket = _liveMode;
+                    Algorithm.RunTimeError = err;
+                    Algorithm.Status = AlgorithmStatus.RuntimeError;
                     break;
                 }
 
                 // check for cancellation
-                if (cancellationToken.IsCancellationRequested) break;
+                if (timeSlice == null || cancellationToken.IsCancellationRequested) break;
 
-                if (_liveMode)
+                if (timeSlice.IsTimePulse && Algorithm.UtcTime == timeSlice.Time)
                 {
-                    var frontierUtc = FrontierTimeProvider.GetUtcNow();
-                    // emit on data or if we've elapsed a full second since last emit or there are security changes
-                    if (timeSlice.SecurityChanges != SecurityChanges.None
-                        || timeSlice.Data.Count != 0
-                        || frontierUtc >= nextEmit)
-                    {
-                        yield return timeSlice;
-                        // force emitting every second since the data feed is
-                        // the heartbeat of the application
-                        nextEmit = frontierUtc.RoundDown(Time.OneSecond).Add(Time.OneSecond);
-                    }
-                    // take a short nap
-                    Thread.Sleep(1);
+                    previousWasTimePulse = timeSlice.IsTimePulse;
+                    // skip time pulse when algorithms already at that time
+                    continue;
+                }
+
+                // SubscriptionFrontierTimeProvider will return twice the same time if there are no more subscriptions or if Subscription.Current is null
+                if (timeSlice.Time != previousEmitTime || previousWasTimePulse || timeSlice.UniverseData.Count != 0)
+                {
+                    previousEmitTime = timeSlice.Time;
+                    previousWasTimePulse = timeSlice.IsTimePulse;
+                    // if we emitted, clear retry flag
+                    retried = false;
+                    yield return timeSlice;
                 }
                 else
                 {
-                    // SubscriptionFrontierTimeProvider will return twice the same time if there are no more subscriptions or if Subscription.Current is null
-                    if (timeSlice.Time != previousEmitTime)
-                    {
-                        previousEmitTime = timeSlice.Time;
-                        yield return timeSlice;
-                    }
-                    else if (timeSlice.SecurityChanges == SecurityChanges.None)
+                    // if the slice has data lets retry just once more... this could happen
+                    // with subscriptions added after initialize using algorithm.AddSecurity() API,
+                    // where the subscription start time is the current time loop (but should just happen once)
+                    if (!timeSlice.Slice.HasData || retried)
                     {
                         // there's no more data to pull off, we're done (frontier is max value and no security changes)
                         break;
                     }
+                    retried = true;
                 }
             }
-            if (shouldSendExtraEmptyPacket)
-            {
-                // send last empty packet list before terminating,
-                // so the algorithm manager has a chance to detect the runtime error
-                // and exit showing the correct error instead of a timeout
-                nextEmit = FrontierTimeProvider.GetUtcNow().RoundDown(Time.OneSecond);
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    var timeSlice = _timeSliceFactory.Create(
-                        nextEmit,
-                        new List<DataFeedPacket>(),
-                        SecurityChanges.None,
-                        new Dictionary<Universe, BaseDataCollection>());
-                    yield return timeSlice;
-                }
-            }
+
+            enumerator.DisposeSafely();
             Log.Trace("Synchronizer.GetEnumerator(): Exited thread.");
         }
 
-        private void PostInitialize()
+        /// <summary>
+        /// Performs additional initialization steps after algorithm initialization
+        /// </summary>
+        protected virtual void PostInitialize()
         {
-            _subscriptionSynchronizer.SubscriptionFinished += (sender, subscription) =>
+            SubscriptionSynchronizer.SubscriptionFinished += (sender, subscription) =>
             {
-                _subscriptionManager.RemoveSubscription(subscription.Configuration);
-                Log.Debug("Synchronizer.SubscriptionFinished(): Finished subscription:" +
-                    $"{subscription.Configuration} at {FrontierTimeProvider.GetUtcNow()} UTC");
+                SubscriptionManager.RemoveSubscription(subscription.Configuration);
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug("Synchronizer.SubscriptionFinished(): Finished subscription:" +
+                              $"{subscription.Configuration} at {FrontierTimeProvider.GetUtcNow()} UTC");
+                }
             };
 
             // this is set after the algorithm initializes
-            _dateTimeZone = _algorithm.TimeZone;
-            _timeSliceFactory = new TimeSliceFactory(_dateTimeZone);
-            _subscriptionSynchronizer.SetTimeSliceFactory(_timeSliceFactory);
-
-            if (!_liveMode)
-            {
-                // GetTimeProvider() will call GetInitialFrontierTime() which
-                // will consume added subscriptions so we need to do this after initialization
-                TimeProvider = GetTimeProvider();
-                _subscriptionSynchronizer.SetTimeProvider(TimeProvider);
-            }
+            _dateTimeZone = Algorithm.TimeZone;
+            TimeSliceFactory = new TimeSliceFactory(_dateTimeZone);
+            SubscriptionSynchronizer.SetTimeSliceFactory(TimeSliceFactory);
         }
 
         /// <summary>
@@ -177,17 +179,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The <see cref="ITimeProvider"/> to use</returns>
         protected virtual ITimeProvider GetTimeProvider()
         {
-            if (_liveMode)
-            {
-                return new RealTimeProvider();
-            }
-            return new SubscriptionFrontierTimeProvider(GetInitialFrontierTime(), _subscriptionManager);
+            return new SubscriptionFrontierTimeProvider(GetInitialFrontierTime(), SubscriptionManager);
         }
 
         private DateTime GetInitialFrontierTime()
         {
             var frontier = DateTime.MaxValue;
-            foreach (var subscription in _subscriptionManager.DataFeedSubscriptions)
+            foreach (var subscription in SubscriptionManager.DataFeedSubscriptions)
             {
                 var current = subscription.Current;
                 if (current == null)
@@ -210,9 +208,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             if (frontier == DateTime.MaxValue)
             {
-                frontier = _algorithm.StartDate.ConvertToUtc(_dateTimeZone);
+                frontier = Algorithm.StartDate.ConvertToUtc(_dateTimeZone);
             }
             return frontier;
+        }
+
+        /// <summary>
+        /// Free resources
+        /// </summary>
+        public virtual void Dispose()
+        {
         }
     }
 }

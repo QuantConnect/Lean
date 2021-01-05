@@ -27,7 +27,7 @@ from QuantConnect.Algorithm.Framework.Portfolio import *
 from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Data import *
-from QuantConnect.Python import PythonData, PythonQuandl
+from QuantConnect.Python import *
 from datetime import datetime
 import decimal
 

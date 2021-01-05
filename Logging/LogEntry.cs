@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Globalization;
 
 namespace QuantConnect.Logging
 {
@@ -53,11 +54,11 @@ namespace QuantConnect.Logging
         /// Create a log entry at a specific time in the analysis (for a backtest).
         /// </summary>
         /// <param name="message">Message for log</param>
-        /// <param name="time">Time of the message</param>
+        /// <param name="time">Utc time of the message</param>
         /// <param name="type">Type of the log entry</param>
         public LogEntry(string message, DateTime time, LogType type = LogType.Trace)
         {
-            Time = time.ToUniversalTime();
+            Time = time;
             Message = message;
             MessageType = type;
         }
@@ -68,7 +69,7 @@ namespace QuantConnect.Logging
         /// <returns></returns>
         public override string ToString()
         {
-            return string.Format("{0} {1} {2}", Time.ToString("o"), MessageType, Message);
+            return $"{Time.ToString("o", CultureInfo.InvariantCulture)} {MessageType} {Message}";
         }
     }
 }

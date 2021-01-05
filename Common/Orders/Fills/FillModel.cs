@@ -34,7 +34,9 @@ namespace QuantConnect.Orders.Fills
         protected FillModelParameters Parameters { get; set; }
 
         /// <summary>
-        /// This is required due to a limitation in PythonNet to resolved overriden methods
+        /// This is required due to a limitation in PythonNet to resolved overriden methods.
+        /// When Python calls a C# method that calls a method that's overriden in python it won't
+        /// run the python implementation unless the call is performed through python too.
         /// </summary>
         protected FillModelPythonWrapper PythonWrapper;
 
@@ -114,8 +116,17 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
+            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
+            var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+
+            // if the order is filled on stale (fill-forward) data, set a warning message on the order event
+            if (pricesEndTimeUtc.Add(Parameters.StalePriceTimeSpan) < order.Time)
+            {
+                fill.Message = $"Warning: fill at stale price ({prices.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone})";
+            }
+
             //Order [fill]price for a market order model is the current security price
-            fill.FillPrice = GetPricesCheckingPythonWrapper(asset, order.Direction).Current;
+            fill.FillPrice = prices.Current;
             fill.Status = OrderStatus.Filled;
 
             //Calculate the model slippage: e.g. 0.01c
@@ -249,10 +260,10 @@ namespace QuantConnect.Orders.Fills
 
                         // Fill the limit order, using closing price of bar:
                         // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
-                        if (asset.Price < order.LimitPrice)
+                        if (prices.Current < order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            fill.FillPrice = order.LimitPrice;
+                            fill.FillPrice = Math.Min(prices.High, order.LimitPrice);
                             // assume the order completely filled
                             fill.FillQuantity = order.Quantity;
                         }
@@ -267,10 +278,10 @@ namespace QuantConnect.Orders.Fills
 
                         // Fill the limit order, using minimum price of the bar
                         // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
-                        if (asset.Price > order.LimitPrice)
+                        if (prices.Current > order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            fill.FillPrice = order.LimitPrice; // Fill at limit price not asset price.
+                            fill.FillPrice = Math.Max(prices.Low, order.LimitPrice);
                             // assume the order completely filled
                             fill.FillQuantity = order.Quantity;
                         }
@@ -487,7 +498,7 @@ namespace QuantConnect.Orders.Fills
                 .Select(x => x.Type).ToList();
             // Tick
             var tick = asset.Cache.GetData<Tick>();
-            if (subscriptionTypes.Contains(typeof(Tick)) && tick != null)
+            if (tick != null && subscriptionTypes.Contains(typeof(Tick)))
             {
                 var price = direction == OrderDirection.Sell ? tick.BidPrice : tick.AskPrice;
                 if (price != 0m)
@@ -505,7 +516,7 @@ namespace QuantConnect.Orders.Fills
 
             // Quote
             var quoteBar = asset.Cache.GetData<QuoteBar>();
-            if (subscriptionTypes.Contains(typeof(QuoteBar)) && quoteBar != null)
+            if (quoteBar != null && subscriptionTypes.Contains(typeof(QuoteBar)))
             {
                 var bar = direction == OrderDirection.Sell ? quoteBar.Bid : quoteBar.Ask;
                 if (bar != null)
@@ -516,7 +527,7 @@ namespace QuantConnect.Orders.Fills
 
             // Trade
             var tradeBar = asset.Cache.GetData<TradeBar>();
-            if (subscriptionTypes.Contains(typeof(TradeBar)) && tradeBar != null)
+            if (tradeBar != null && subscriptionTypes.Contains(typeof(TradeBar)))
             {
                 return new Prices(tradeBar);
             }
@@ -527,7 +538,7 @@ namespace QuantConnect.Orders.Fills
         /// <summary>
         /// Determines if the exchange is open using the current time of the asset
         /// </summary>
-        private static bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
+        protected static bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
         {
             if (!asset.Exchange.DateTimeIsOpen(asset.LocalTime))
             {

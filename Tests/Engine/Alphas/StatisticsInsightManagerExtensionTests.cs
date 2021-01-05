@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Engine.Alphas
         {
             var time = new DateTime(2000, 01, 01);
             var stats = new StatisticsInsightManagerExtension(new TestAccountCurrencyProvider());
-            var insight = Insight.Price(Symbols.SPY, Time.OneDay, InsightDirection.Up);
+            var insight = Insight.Price(Symbols.SPY, Time.OneDay, InsightDirection.Up, magnitude: 1.0);
             var spySecurityValues = new SecurityValues(insight.Symbol, time, SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), 100m, 1m, 125000, 1m);
             var context = new InsightAnalysisContext(insight, spySecurityValues, insight.Period);
             context.Score.SetScore(InsightScoreType.Direction, .55, time);
@@ -47,6 +47,28 @@ namespace QuantConnect.Tests.Engine.Alphas
             stats.OnInsightAnalysisCompleted(context);
             Assert.AreEqual(context.Score.Direction, stats.Statistics.RollingAveragedPopulationScore.Direction);
             Assert.AreEqual(context.Score.Magnitude, stats.Statistics.RollingAveragedPopulationScore.Magnitude);
+        }
+
+        [TestCase(InsightScoreType.Direction, InsightType.Price, null)]
+        [TestCase(InsightScoreType.Magnitude, InsightType.Price, null)]
+        [TestCase(InsightScoreType.Direction, InsightType.Volatility, null)]
+        [TestCase(InsightScoreType.Magnitude, InsightType.Volatility, null)]
+        [TestCase(InsightScoreType.Direction, InsightType.Price, 1.0)]
+        [TestCase(InsightScoreType.Magnitude, InsightType.Price, 1.0)]
+        [TestCase(InsightScoreType.Direction, InsightType.Volatility, 1.0)]
+        [TestCase(InsightScoreType.Magnitude, InsightType.Volatility, 1.0)]
+        public void IgnoresFlatInsightsWithScore(InsightScoreType scoreType, InsightType insightType, double? magnitude)
+        {
+            var time = new DateTime(2000, 01, 01);
+            var stats = new StatisticsInsightManagerExtension(new TestAccountCurrencyProvider());
+            var insight = new Insight(Symbols.SPY, TimeSpan.FromDays(1), insightType, InsightDirection.Flat, magnitude, null);
+            var spySecurityValues = new SecurityValues(insight.Symbol, time, SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), 100m, 1m, 125000, 1m);
+            var context = new InsightAnalysisContext(insight, spySecurityValues, insight.Period);
+            context.Score.SetScore(InsightScoreType.Direction, .55, time);
+            context.Score.SetScore(InsightScoreType.Magnitude, .25, time);
+            stats.OnInsightAnalysisCompleted(context);
+            Assert.AreEqual(0.0, stats.Statistics.RollingAveragedPopulationScore.Direction);
+            Assert.AreEqual(0.0, stats.Statistics.RollingAveragedPopulationScore.Magnitude);
         }
     }
 }

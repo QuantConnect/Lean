@@ -16,7 +16,6 @@
 
 using System;
 using System.IO;
-using QuantConnect.Data;
 
 namespace QuantConnect.Interfaces
 {
@@ -25,6 +24,11 @@ namespace QuantConnect.Interfaces
     /// </summary>
     public interface IDataCacheProvider : IDisposable
     {
+        /// <summary>
+        /// Property indicating the data is temporary in nature and should not be cached
+        /// </summary>
+        bool IsDataEphemeral { get; }
+
         /// <summary>
         /// Fetch data from the cache
         /// </summary>

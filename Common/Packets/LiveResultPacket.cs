@@ -98,7 +98,7 @@ namespace QuantConnect.Packets
             }
             catch (Exception err)
             {
-                Log.Trace("LiveResultPacket(): Error converting json: " + err);
+                Log.Trace($"LiveResultPacket(): Error converting json: {err}");
             }
         }
 
@@ -125,6 +125,20 @@ namespace QuantConnect.Packets
                 Log.Error(err);
             }
         }
+
+        /// <summary>
+        /// Creates an empty result packet, useful when the algorithm fails to initialize
+        /// </summary>
+        /// <param name="job">The associated job packet</param>
+        /// <returns>An empty result packet</returns>
+        public static LiveResultPacket CreateEmpty(LiveNodePacket job)
+        {
+            return new LiveResultPacket(job, new LiveResult(new LiveResultParameters(
+                new Dictionary<string, Chart>(), new Dictionary<int, Order>(), new Dictionary<DateTime, decimal>(),
+                new Dictionary<string, Holding>(), new CashBook(), new Dictionary<string, string>(),
+                new Dictionary<string, string>(), new List<OrderEvent>(), new Dictionary<string, string>(),
+                new AlphaRuntimeStatistics())));
+        }
     } // End Queue Packet:
 
 
@@ -136,17 +150,14 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Holdings dictionary of algorithm holdings information
         /// </summary>
-        public IDictionary<string, Holding> Holdings = new Dictionary<string, Holding>();
+        [JsonProperty(PropertyName = "Holdings", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, Holding> Holdings;
 
         /// <summary>
         /// Cashbook for the algorithm's live results.
         /// </summary>
+        [JsonProperty(PropertyName = "Cash", NullValueHandling = NullValueHandling.Ignore)]
         public CashBook Cash;
-
-        /// <summary>
-        /// Server status information, including CPU/RAM usage, ect...
-        /// </summary>
-        public IDictionary<string, string> ServerStatistics = new Dictionary<string, string>();
 
         /// <summary>
         /// Default Constructor
@@ -157,18 +168,18 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Constructor for the result class for dictionary objects
         /// </summary>
-        public LiveResult(bool isFrameworkAlgorithm, IDictionary<string, Chart> charts, IDictionary<int, Order> orders, IDictionary<DateTime, decimal> profitLoss, IDictionary<string, Holding> holdings, CashBook cashbook, IDictionary<string, string> statistics, IDictionary<string, string> runtime, IDictionary<string, string> serverStatistics = null)
+        public LiveResult(LiveResultParameters parameters)
         {
-            Charts = charts;
-            Orders = orders;
-            ProfitLoss = profitLoss;
-            Statistics = statistics;
-            Holdings = holdings;
-            Cash = cashbook;
-            RuntimeStatistics = runtime;
-            ServerStatistics = serverStatistics ?? OS.GetServerStatistics();
-            IsFrameworkAlgorithm = isFrameworkAlgorithm;
+            Charts = parameters.Charts;
+            Orders = parameters.Orders;
+            ProfitLoss = parameters.ProfitLoss;
+            Statistics = parameters.Statistics;
+            Holdings = parameters.Holdings;
+            Cash = parameters.CashBook;
+            RuntimeStatistics = parameters.RuntimeStatistics;
+            OrderEvents = parameters.OrderEvents;
+            ServerStatistics = parameters.ServerStatistics;
+            AlphaRuntimeStatistics = parameters.AlphaRuntimeStatistics;
         }
     }
-
 } // End of Namespace:

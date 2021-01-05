@@ -25,6 +25,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
 {
@@ -34,6 +35,12 @@ namespace QuantConnect.Securities
     public class CashBook : IDictionary<string, Cash>, ICurrencyConverter
     {
         private string _accountCurrency;
+
+        /// <summary>
+        /// Event fired when a <see cref="Cash"/> instance is added or removed, and when
+        /// the <see cref="Cash.Updated"/> is triggered for the currently hold instances
+        /// </summary>
+        public event EventHandler<UpdateType> Updated;
 
         /// <summary>
         /// Gets the base currency used
@@ -54,7 +61,7 @@ namespace QuantConnect.Securities
                 }
 
                 // add new account currency using same amount as previous
-                _accountCurrency = value.ToUpper();
+                _accountCurrency = value.LazyToUpper();
                 Add(_accountCurrency, new Cash(_accountCurrency, amount, 1.0m));
             }
         }
@@ -66,13 +73,8 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal TotalValueInAccountCurrency
         {
-            get { return _currencies.Sum(x => x.Value.ValueInAccountCurrency); }
+            get { return _currencies.Aggregate(0m, (d, pair) => d + pair.Value.ValueInAccountCurrency); }
         }
-
-        /// <summary>
-        /// Event fired when a <see cref="Cash"/> is added
-        /// </summary>
-        public event EventHandler<Cash> CashAdded;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CashBook"/> class.
@@ -104,12 +106,14 @@ namespace QuantConnect.Securities
         /// <param name="marketMap">The market map that decides which market the new security should be in</param>
         /// <param name="changes">Will be used to consume <see cref="SecurityChanges.AddedSecurities"/></param>
         /// <param name="securityService">Will be used to create required new <see cref="Security"/></param>
+        /// <param name="defaultResolution">The default resolution to use for the internal subscriptions</param>
         /// <returns>Returns a list of added currency <see cref="SubscriptionDataConfig"/></returns>
         public List<SubscriptionDataConfig> EnsureCurrencyDataFeeds(SecurityManager securities,
             SubscriptionManager subscriptions,
             IReadOnlyDictionary<SecurityType, string> marketMap,
             SecurityChanges changes,
-            ISecurityService securityService)
+            ISecurityService securityService,
+            Resolution defaultResolution = Resolution.Minute)
         {
             var addedSubscriptionDataConfigs = new List<SubscriptionDataConfig>();
             foreach (var kvp in _currencies)
@@ -122,7 +126,8 @@ namespace QuantConnect.Securities
                     marketMap,
                     changes,
                     securityService,
-                    AccountCurrency);
+                    AccountCurrency,
+                    defaultResolution);
                 if (subscriptionDataConfig != null)
                 {
                     addedSubscriptionDataConfigs.Add(subscriptionDataConfig);
@@ -150,12 +155,12 @@ namespace QuantConnect.Securities
 
             if (source.ConversionRate == 0)
             {
-                throw new Exception($"The conversion rate for {sourceCurrency} is not available.");
+                throw new ArgumentException($"The conversion rate for {sourceCurrency} is not available.");
             }
 
             if (destination.ConversionRate == 0)
             {
-                throw new Exception($"The conversion rate for {destinationCurrency} is not available.");
+                throw new ArgumentException($"The conversion rate for {destinationCurrency} is not available.");
             }
 
             var conversionRate = source.ConversionRate / destination.ConversionRate;
@@ -187,16 +192,16 @@ namespace QuantConnect.Securities
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.AppendLine(string.Format("{0} {1,13}    {2,10} = {3}", "Symbol", "Quantity", "Conversion", "Value in " + AccountCurrency));
+            sb.AppendLine(Invariant($"Symbol {"Quantity",13}    {"Conversion",10} = Value in {AccountCurrency}"));
             foreach (var value in _currencies.Select(x => x.Value))
             {
-                sb.AppendLine(value.ToString());
+                sb.AppendLine(value.ToString(AccountCurrency));
             }
             sb.AppendLine("-------------------------------------------------");
-            sb.AppendLine(string.Format("CashBook Total Value:                {0}{1}",
-                Currencies.GetCurrencySymbol(AccountCurrency),
-                Math.Round(TotalValueInAccountCurrency, 2))
-                );
+            sb.AppendLine("CashBook Total Value:                " +
+                Invariant($"{Currencies.GetCurrencySymbol(AccountCurrency)}") +
+                Invariant($"{Math.Round(TotalValueInAccountCurrency, 2).ToStringInvariant()}")
+            );
 
             return sb.ToString();
         }
@@ -238,13 +243,15 @@ namespace QuantConnect.Securities
             {
                 return;
             }
+            // we link our Updated event with underlying cash instances
+            // so interested listeners just subscribe to our event
+            value.Updated += OnCashUpdate;
 
-            var alreadyExisted = _currencies.ContainsKey(symbol);
+            var alreadyExisted = Remove(symbol, calledInternally: true);
+
             _currencies.AddOrUpdate(symbol, value);
-            if (!alreadyExisted)
-            {
-                OnCashAdded(value);
-            }
+
+            OnUpdate(alreadyExisted ? UpdateType.Updated : UpdateType.Added);
         }
 
         /// <summary>
@@ -253,6 +260,7 @@ namespace QuantConnect.Securities
         public void Clear()
         {
             _currencies.Clear();
+            OnUpdate(UpdateType.Removed);
         }
 
         /// <summary>
@@ -261,13 +269,7 @@ namespace QuantConnect.Securities
         /// <param name="symbol">The symbolto be removed</param>
         public bool Remove(string symbol)
         {
-            Cash cash = null;
-            var removed = _currencies.TryRemove(symbol, out cash);
-            if (!removed)
-            {
-                Log.Error(string.Format("CashBook.Remove(): Failed to remove the cash book record for symbol {0}", symbol));
-            }
-            return removed;
+            return Remove(symbol, calledInternally: false);
         }
 
         /// <summary>
@@ -276,13 +278,7 @@ namespace QuantConnect.Securities
         /// <param name="item">Item.</param>
         public bool Remove(KeyValuePair<string, Cash> item)
         {
-            Cash cash = null;
-            var removed = _currencies.TryRemove(item.Key, out cash);
-            if (!removed)
-            {
-                Log.Error(string.Format("CashBook.Remove(): Failed to remove the cash book record for symbol {0} - {1}", item.Key, item.Value != null ? item.Value.ToString() : "(null)"));
-            }
-            return removed;
+            return Remove(item.Key);
         }
 
         /// <summary>
@@ -342,7 +338,7 @@ namespace QuantConnect.Securities
                 Cash cash;
                 if (!_currencies.TryGetValue(symbol, out cash))
                 {
-                    throw new Exception("This cash symbol (" + symbol + ") was not found in your cash book.");
+                    throw new KeyNotFoundException($"This cash symbol ({symbol}) was not found in your cash book.");
                 }
                 return cash;
             }
@@ -400,13 +396,55 @@ namespace QuantConnect.Securities
 
         #endregion
 
-        /// <summary>
-        /// Event invocator for the <see cref="CashAdded"/> event
-        /// </summary>
-        protected virtual void OnCashAdded(Cash cash)
+        private bool Remove(string symbol, bool calledInternally)
         {
-            var handler = CashAdded;
-            handler?.Invoke(this, cash);
+            Cash cash = null;
+            var removed = _currencies.TryRemove(symbol, out cash);
+            if (!removed)
+            {
+                if (!calledInternally)
+                {
+                    Log.Error($"CashBook.Remove(): Failed to remove the cash book record for symbol {symbol}");
+                }
+            }
+            else
+            {
+                cash.Updated -= OnCashUpdate;
+                if (!calledInternally)
+                {
+                    OnUpdate(UpdateType.Removed);
+                }
+            }
+            return removed;
+        }
+
+        private void OnCashUpdate(object sender, EventArgs eventArgs)
+        {
+            OnUpdate(UpdateType.Updated);
+        }
+
+        private void OnUpdate(UpdateType updateType)
+        {
+            Updated?.Invoke(this, updateType);
+        }
+
+        /// <summary>
+        /// The different types of <see cref="Updated"/> events
+        /// </summary>
+        public enum UpdateType
+        {
+            /// <summary>
+            /// A new <see cref="Cash.Symbol"/> was added
+            /// </summary>
+            Added,
+            /// <summary>
+            /// One or more <see cref="Cash"/> instances were removed
+            /// </summary>
+            Removed,
+            /// <summary>
+            /// An existing <see cref="Cash.Symbol"/> was updated
+            /// </summary>
+            Updated
         }
     }
 }

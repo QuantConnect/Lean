@@ -27,13 +27,18 @@ using QuantConnect.Util;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Represents the data required for a data feed to process a single subsciption
+    /// Represents the data required for a data feed to process a single subscription
     /// </summary>
     public class Subscription : IEnumerator<SubscriptionData>
     {
         private bool _removedFromUniverse;
         private readonly IEnumerator<SubscriptionData> _enumerator;
         private List<SubscriptionRequest> _subscriptionRequests;
+
+        /// <summary>
+        /// Event fired when a new data point is available
+        /// </summary>
+        public event EventHandler NewDataAvailable;
 
         /// <summary>
         /// Gets the universe for this subscription
@@ -175,7 +180,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // if the security is no longer a member of the universe, then mark the subscription properly
                 // universe may be null for internal currency conversion feeds
                 // TODO : Put currency feeds in their own internal universe
-                if (!removedUniverses.Any(x => x.Members.ContainsKey(Configuration.Symbol)))
+                if (!removedUniverses.Any(x => x.Securities.ContainsKey(Configuration.Symbol)))
                 {
                     MarkAsRemovedFromUniverse();
                 }
@@ -282,6 +287,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public override string ToString()
         {
             return Configuration.ToString();
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="NewDataAvailable"/> event
+        /// </summary>
+        public void OnNewDataAvailable()
+        {
+            NewDataAvailable?.Invoke(this, EventArgs.Empty);
         }
     }
 }

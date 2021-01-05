@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Alpaca
@@ -59,7 +60,8 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <summary>
         /// Gets a new instance of the <see cref="AlpacaBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel => new AlpacaBrokerageModel();
+        /// <param name="orderProvider">The order provider</param>
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new AlpacaBrokerageModel(orderProvider);
 
         /// <summary>
         /// Creates a new <see cref="IBrokerage"/> instance
@@ -82,18 +84,20 @@ namespace QuantConnect.Brokerages.Alpaca
                 throw new Exception(string.Join(Environment.NewLine, errors));
             }
 
-            tradingMode = tradingMode.ToLower();
+            tradingMode = tradingMode.ToLowerInvariant();
             if (!tradingMode.Equals("live") && !tradingMode.Equals("paper"))
             {
                 // if the trading mode is invalid, do not proceed further
                 throw new Exception("Available trading mode: paper/live");
             }
 
-            var brokerage = new AlpacaBrokerage(algorithm.Transactions, algorithm.Portfolio, keyId, secretKey, tradingMode);
-            Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
-
-            return brokerage;
+            return new AlpacaBrokerage(
+                algorithm.Transactions, 
+                algorithm.Portfolio,
+                Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider")),
+                keyId, 
+                secretKey, 
+                tradingMode);
         }
-
     }
 }

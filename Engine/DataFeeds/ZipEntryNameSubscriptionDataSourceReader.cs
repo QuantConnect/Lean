@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using Ionic.Zip;
 using QuantConnect.Data;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -48,7 +47,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _config = config;
             _date = date;
             _isLiveMode = isLiveMode;
-            _factory = _factory = (BaseData)ObjectActivator.GetActivator(config.Type).Invoke(new object[] { config.Type });
+            _factory = _factory = config.GetBaseDataInstance();
         }
 
         /// <summary>

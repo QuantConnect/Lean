@@ -76,7 +76,7 @@ namespace QuantConnect.Scheduling
         public string Name { get; }
 
         /// <summary>
-        /// Initalizes a new instance of the <see cref="ScheduledEvent"/> class
+        /// Initializes a new instance of the <see cref="ScheduledEvent"/> class
         /// </summary>
         /// <param name="name">An identifier for this event</param>
         /// <param name="eventUtcTime">The date time the event should fire</param>
@@ -87,7 +87,7 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
-        /// Initalizes a new instance of the <see cref="ScheduledEvent"/> class
+        /// Initializes a new instance of the <see cref="ScheduledEvent"/> class
         /// </summary>
         /// <param name="name">An identifier for this event</param>
         /// <param name="orderedEventUtcTimes">An enumerable that emits event times</param>
@@ -98,7 +98,7 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
-        /// Initalizes a new instance of the <see cref="ScheduledEvent"/> class
+        /// Initializes a new instance of the <see cref="ScheduledEvent"/> class
         /// </summary>
         /// <param name="name">An identifier for this event</param>
         /// <param name="orderedEventUtcTimes">An enumerator that emits event times</param>
@@ -152,14 +152,14 @@ namespace QuantConnect.Scheduling
                     {
                         if (IsLoggingEnabled)
                         {
-                            Log.Trace(string.Format("ScheduledEvent.{0}: Completed scheduled events.", Name));
+                            Log.Trace($"ScheduledEvent.{Name}: Completed scheduled events.");
                         }
                         _endOfScheduledEvents = true;
                         return;
                     }
                     if (IsLoggingEnabled)
                     {
-                        Log.Trace(string.Format("ScheduledEvent.{0}: Next event: {1} UTC", Name, _orderedEventUtcTimes.Current.ToString(DateFormat.UI)));
+                        Log.Trace($"ScheduledEvent.{Name}: Next event: {_orderedEventUtcTimes.Current.ToStringInvariant(DateFormat.UI)} UTC");
                     }
                 }
 
@@ -168,10 +168,9 @@ namespace QuantConnect.Scheduling
                 {
                     if (IsLoggingEnabled)
                     {
-                        Log.Trace(string.Format("ScheduledEvent.{0}: Firing at {1} UTC Scheduled at {2} UTC", Name,
-                            utcTime.ToString(DateFormat.UI),
-                            _orderedEventUtcTimes.Current.ToString(DateFormat.UI))
-                            );
+                        Log.Trace($"ScheduledEvent.{Name}: Firing at {utcTime.ToStringInvariant(DateFormat.UI)} UTC " +
+                            $"Scheduled at {_orderedEventUtcTimes.Current.ToStringInvariant(DateFormat.UI)} UTC"
+                        );
                     }
                     // fire the event
                     OnEventFired(_orderedEventUtcTimes.Current);
@@ -196,7 +195,7 @@ namespace QuantConnect.Scheduling
         internal void SkipEventsUntil(DateTime utcTime)
         {
             // check if our next event is in the past
-            if (utcTime < _orderedEventUtcTimes.Current) return;
+            if (utcTime <= _orderedEventUtcTimes.Current) return;
 
             while (_orderedEventUtcTimes.MoveNext())
             {
@@ -208,19 +207,16 @@ namespace QuantConnect.Scheduling
 
                     if (IsLoggingEnabled)
                     {
-                        Log.Trace(string.Format("ScheduledEvent.{0}: Skipped events before {1}. Next event: {2}", Name,
-                            utcTime.ToString(DateFormat.UI),
-                            _orderedEventUtcTimes.Current.ToString(DateFormat.UI)
-                            ));
+                        Log.Trace($"ScheduledEvent.{Name}: Skipped events before {utcTime.ToStringInvariant(DateFormat.UI)}. " +
+                            $"Next event: {_orderedEventUtcTimes.Current.ToStringInvariant(DateFormat.UI)}"
+                        );
                     }
                     return;
                 }
             }
             if (IsLoggingEnabled)
             {
-                Log.Trace(string.Format("ScheduledEvent.{0}: Exhausted event stream during skip until {1}", Name,
-                    utcTime.ToString(DateFormat.UI)
-                    ));
+                Log.Trace($"ScheduledEvent.{Name}: Exhausted event stream during skip until {utcTime.ToStringInvariant(DateFormat.UI)}");
             }
             _endOfScheduledEvents = true;
         }
@@ -253,12 +249,8 @@ namespace QuantConnect.Scheduling
                 // don't fire the event if we're turned off
                 if (!Enabled) return;
 
-                if (_callback != null)
-                {
-                    _callback(Name, _orderedEventUtcTimes.Current);
-                }
-                var handler = EventFired;
-                if (handler != null) handler(Name, triggerTime);
+                _callback?.Invoke(Name, _orderedEventUtcTimes.Current);
+                EventFired?.Invoke(Name, triggerTime);
             }
             catch (Exception ex)
             {
@@ -268,28 +260,6 @@ namespace QuantConnect.Scheduling
                 _needsMoveNext = true;
                 throw new ScheduledEventException(Name, ex.Message, ex);
             }
-        }
-    }
-
-    /// <summary>
-    /// Throw this if there is an exception in the callback function of the scheduled event
-    /// </summary>
-    public class ScheduledEventException : Exception
-    {
-        /// <summary>
-        /// Gets the name of the scheduled event
-        /// </summary>
-        public string ScheduledEventName { get; }
-
-        /// <summary>
-        /// ScheduledEventException constructor
-        /// </summary>
-        /// <param name="name">The name of the scheduled event</param>
-        /// <param name="message">The exception as a string</param>
-        /// <param name="innerException">The exception that is the cause of the current exception</param>
-        public ScheduledEventException(string name, string message, Exception innerException) : base(message, innerException)
-        {
-            ScheduledEventName = name;
         }
     }
 }

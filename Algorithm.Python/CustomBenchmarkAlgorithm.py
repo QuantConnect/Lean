@@ -35,11 +35,19 @@ class CustomBenchmarkAlgorithm(QCAlgorithm):
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
         self.AddEquity("SPY", Resolution.Second)
-
-        self.SetBenchmark("SPY")
+        
+        # Disabling the benchmark / setting to a fixed value 
+        # self.SetBenchmark(lambda x: 0)
+        
+        # Set the benchmark to AAPL US Equity
+        self.SetBenchmark(Symbol.Create("AAPL", SecurityType.Equity, Market.USA))
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         if not self.Portfolio.Invested:
             self.SetHoldings("SPY", 1)
             self.Debug("Purchased Stock")
+
+        tupleResult = SymbolCache.TryGetSymbol("AAPL", None)
+        if tupleResult[0]:
+            raise Exception("Benchmark Symbol is not expected to be added to the Symbol cache")

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,9 +15,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Statistics
 {
@@ -39,13 +39,13 @@ namespace QuantConnect.Statistics
         /// <param name="totalTransactions">The total number of transactions</param>
         /// <returns>Returns a <see cref="StatisticsResults"/> object</returns>
         public static StatisticsResults Generate(
-            List<Trade> trades, 
+            List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
-            List<ChartPoint> pointsEquity, 
-            List<ChartPoint> pointsPerformance, 
-            List<ChartPoint> pointsBenchmark, 
-            decimal startingCapital, 
-            decimal totalFees, 
+            List<ChartPoint> pointsEquity,
+            List<ChartPoint> pointsPerformance,
+            List<ChartPoint> pointsBenchmark,
+            decimal startingCapital,
+            decimal totalFees,
             int totalTransactions)
         {
             var equity = ChartPointToDictionary(pointsEquity);
@@ -73,36 +73,48 @@ namespace QuantConnect.Statistics
         /// <param name="startingCapital">The algorithm starting capital</param>
         /// <returns>The algorithm performance</returns>
         private static AlgorithmPerformance GetAlgorithmPerformance(
-            DateTime fromDate, 
-            DateTime toDate, 
-            List<Trade> trades, 
-            SortedDictionary<DateTime, decimal> profitLoss, 
-            SortedDictionary<DateTime, decimal> equity, 
-            List<ChartPoint> pointsPerformance, 
-            List<ChartPoint> pointsBenchmark, 
+            DateTime fromDate,
+            DateTime toDate,
+            List<Trade> trades,
+            SortedDictionary<DateTime, decimal> profitLoss,
+            SortedDictionary<DateTime, decimal> equity,
+            List<ChartPoint> pointsPerformance,
+            List<ChartPoint> pointsBenchmark,
             decimal startingCapital)
         {
-            var periodTrades = trades.Where(x => x.ExitTime.Date >= fromDate && x.ExitTime < toDate.AddDays(1)).ToList();
-            var periodProfitLoss = new SortedDictionary<DateTime, decimal>(profitLoss.Where(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
             var periodEquity = new SortedDictionary<DateTime, decimal>(equity.Where(x => x.Key.Date >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
 
-            var benchmark = ChartPointToDictionary(pointsBenchmark, fromDate, toDate);
-            var performance = ChartPointToDictionary(pointsPerformance, fromDate, toDate);
-
-            // we need to have the same dates in the performance and benchmark dictionaries,
-            // so we add missing dates with zero value
-            var missingPerformanceDates = benchmark.Keys.Where(x => !performance.ContainsKey(x));
-            foreach (var date in missingPerformanceDates)
+            // No portfolio equity for the period means that there is no performance to be computed
+            if (periodEquity.IsNullOrEmpty())
             {
-                performance.Add(date, 0m);
+                return new AlgorithmPerformance();
             }
 
-            var listPerformance = new List<double>();
-            performance.Values.ToList().ForEach(i => listPerformance.Add((double)(i / 100)));
+            var periodTrades = trades.Where(x => x.ExitTime.Date >= fromDate && x.ExitTime < toDate.AddDays(1)).ToList();
+            var periodProfitLoss = new SortedDictionary<DateTime, decimal>(profitLoss.Where(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
 
-            var listBenchmark = CreateBenchmarkDifferences(benchmark, periodEquity);
+            // In very rare circumstances, we might have multiple entries for a single day in backtesting.
+            // These multiple entries will all be located at the end of the `pointsBenchmark` and `pointsPerformance`
+            // collections, since we force sample at the end of the algorithm.
+            // For good measure and to put any alignment issues to rest, let's resample both collections
+            // to daily resolution just in case.
+            var benchmark = ResampleDaily(ChartPointToDictionary(pointsBenchmark, fromDate, toDate));
+            var performance = ResampleDaily(ChartPointToDictionary(pointsPerformance, fromDate, toDate));
 
-            EnsureSameLength(listPerformance, listBenchmark);
+            // Because the `CreateBenchmarkDifferences(...)` method omits the first value from the
+            // series, we have to also remove the first value from the performance series to re-align
+            // the two series.
+            if (benchmark.Count == performance.Count)
+            {
+                performance.Remove(performance.Keys.FirstOrDefault());
+            }
+            else
+            {
+                throw new Exception($"Benchmark and performance series has {Math.Abs(benchmark.Count - performance.Count)} misaligned values.");
+            }
+
+            var listPerformance = performance.Values.Select(x => (double)(x / 100)).ToList();
+            var listBenchmark = CreateDifferences(benchmark, fromDate, toDate);
 
             var runningCapital = equity.Count == periodEquity.Count ? startingCapital : periodEquity.Values.FirstOrDefault();
 
@@ -122,17 +134,17 @@ namespace QuantConnect.Statistics
         /// <param name="startingCapital">The algorithm starting capital</param>
         /// <returns>A dictionary with the rolling performances</returns>
         private static Dictionary<string, AlgorithmPerformance> GetRollingPerformances(
-            DateTime firstDate, 
-            DateTime lastDate, 
-            List<Trade> trades, 
-            SortedDictionary<DateTime, decimal> profitLoss, 
-            SortedDictionary<DateTime, decimal> equity, 
-            List<ChartPoint> pointsPerformance, 
-            List<ChartPoint> pointsBenchmark, 
+            DateTime firstDate,
+            DateTime lastDate,
+            List<Trade> trades,
+            SortedDictionary<DateTime, decimal> profitLoss,
+            SortedDictionary<DateTime, decimal> equity,
+            List<ChartPoint> pointsPerformance,
+            List<ChartPoint> pointsBenchmark,
             decimal startingCapital)
         {
             var rollingPerformances = new Dictionary<string, AlgorithmPerformance>();
-            
+
             var monthPeriods = new[] { 1, 3, 6, 12 };
             foreach (var monthPeriod in monthPeriods)
             {
@@ -140,7 +152,7 @@ namespace QuantConnect.Statistics
 
                 foreach (var period in ranges)
                 {
-                    var key = "M" + monthPeriod + "_" + period.EndDate.ToString("yyyyMMdd");
+                    var key = $"M{monthPeriod}_{period.EndDate.ToStringInvariant("yyyyMMdd")}";
                     var periodPerformance = GetAlgorithmPerformance(period.StartDate, period.EndDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, startingCapital);
                     rollingPerformances[key] = periodPerformance;
                 }
@@ -154,35 +166,29 @@ namespace QuantConnect.Statistics
         /// </summary>
         private static Dictionary<string, string> GetSummary(AlgorithmPerformance totalPerformance, decimal totalFees, int totalTransactions)
         {
-            return new Dictionary<string, string> 
-            { 
-                { "Total Trades", totalTransactions.ToString(CultureInfo.InvariantCulture) },
-                { "Average Win", Math.Round(totalPerformance.PortfolioStatistics.AverageWinRate.SafeMultiply100(), 2).ToString(CultureInfo.InvariantCulture) + "%"  },
-                { "Average Loss", Math.Round(totalPerformance.PortfolioStatistics.AverageLossRate.SafeMultiply100(), 2).ToString(CultureInfo.InvariantCulture) + "%" },
-                { "Compounding Annual Return", Math.Round(totalPerformance.PortfolioStatistics.CompoundingAnnualReturn.SafeMultiply100(), 3).ToString(CultureInfo.InvariantCulture) + "%" },
-                { "Drawdown", Math.Round(totalPerformance.PortfolioStatistics.Drawdown.SafeMultiply100(), 3).ToString(CultureInfo.InvariantCulture) + "%" },
-                { "Expectancy", Math.Round(totalPerformance.PortfolioStatistics.Expectancy, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Net Profit", Math.Round(totalPerformance.PortfolioStatistics.TotalNetProfit.SafeMultiply100(), 3).ToString(CultureInfo.InvariantCulture) + "%"},
-                { "Sharpe Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.SharpeRatio, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Loss Rate", Math.Round(totalPerformance.PortfolioStatistics.LossRate.SafeMultiply100()).ToString(CultureInfo.InvariantCulture) + "%" },
-                { "Win Rate", Math.Round(totalPerformance.PortfolioStatistics.WinRate.SafeMultiply100()).ToString(CultureInfo.InvariantCulture) + "%" }, 
-                { "Profit-Loss Ratio", Math.Round(totalPerformance.PortfolioStatistics.ProfitLossRatio, 2).ToString(CultureInfo.InvariantCulture) },
-                { "Alpha", Math.Round((double)totalPerformance.PortfolioStatistics.Alpha, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Beta", Math.Round((double)totalPerformance.PortfolioStatistics.Beta, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Annual Standard Deviation", Math.Round((double)totalPerformance.PortfolioStatistics.AnnualStandardDeviation, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Annual Variance", Math.Round((double)totalPerformance.PortfolioStatistics.AnnualVariance, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Information Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.InformationRatio, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Tracking Error", Math.Round((double)totalPerformance.PortfolioStatistics.TrackingError, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Treynor Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.TreynorRatio, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Total Fees", "$" + totalFees.ToString("0.00", CultureInfo.InvariantCulture) }
+            return new Dictionary<string, string>
+            {
+                { "Total Trades", totalTransactions.ToStringInvariant() },
+                { "Average Win", Math.Round(totalPerformance.PortfolioStatistics.AverageWinRate.SafeMultiply100(), 2).ToStringInvariant() + "%"  },
+                { "Average Loss", Math.Round(totalPerformance.PortfolioStatistics.AverageLossRate.SafeMultiply100(), 2).ToStringInvariant() + "%" },
+                { "Compounding Annual Return", Math.Round(totalPerformance.PortfolioStatistics.CompoundingAnnualReturn.SafeMultiply100(), 3).ToStringInvariant() + "%" },
+                { "Drawdown", Math.Round(totalPerformance.PortfolioStatistics.Drawdown.SafeMultiply100(), 3).ToStringInvariant() + "%" },
+                { "Expectancy", Math.Round(totalPerformance.PortfolioStatistics.Expectancy, 3).ToStringInvariant() },
+                { "Net Profit", Math.Round(totalPerformance.PortfolioStatistics.TotalNetProfit.SafeMultiply100(), 3).ToStringInvariant() + "%"},
+                { "Sharpe Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.SharpeRatio, 3).ToStringInvariant() },
+                { "Probabilistic Sharpe Ratio", Math.Round(totalPerformance.PortfolioStatistics.ProbabilisticSharpeRatio.SafeMultiply100(), 3).ToStringInvariant() + "%"},
+                { "Loss Rate", Math.Round(totalPerformance.PortfolioStatistics.LossRate.SafeMultiply100()).ToStringInvariant() + "%" },
+                { "Win Rate", Math.Round(totalPerformance.PortfolioStatistics.WinRate.SafeMultiply100()).ToStringInvariant() + "%" },
+                { "Profit-Loss Ratio", Math.Round(totalPerformance.PortfolioStatistics.ProfitLossRatio, 2).ToStringInvariant() },
+                { "Alpha", Math.Round((double)totalPerformance.PortfolioStatistics.Alpha, 3).ToStringInvariant() },
+                { "Beta", Math.Round((double)totalPerformance.PortfolioStatistics.Beta, 3).ToStringInvariant() },
+                { "Annual Standard Deviation", Math.Round((double)totalPerformance.PortfolioStatistics.AnnualStandardDeviation, 3).ToStringInvariant() },
+                { "Annual Variance", Math.Round((double)totalPerformance.PortfolioStatistics.AnnualVariance, 3).ToStringInvariant() },
+                { "Information Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.InformationRatio, 3).ToStringInvariant() },
+                { "Tracking Error", Math.Round((double)totalPerformance.PortfolioStatistics.TrackingError, 3).ToStringInvariant() },
+                { "Treynor Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.TreynorRatio, 3).ToStringInvariant() },
+                { "Total Fees", "$" + totalFees.ToStringInvariant("0.00") }
             };
-        }
-
-        private static decimal SafeMultiply100(this decimal value)
-        {
-            const decimal max = decimal.MaxValue/100m;
-            if (value >= max) return decimal.MaxValue;
-            return value*100m;
         }
 
         /// <summary>
@@ -194,7 +200,6 @@ namespace QuantConnect.Statistics
             internal DateTime EndDate { get; set; }
         }
 
-        // 
         /// <summary>
         /// Gets a list of date ranges for the requested monthly period
         /// </summary>
@@ -249,7 +254,7 @@ namespace QuantConnect.Statistics
 
                 if (fromDate != null && x.Date < fromDate) continue;
                 if (toDate != null && x.Date >= ((DateTime)toDate).AddDays(1)) break;
-                    
+
                 dictionary[x] = point.y;
             }
 
@@ -257,65 +262,45 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
-        /// Creates a list of benchmark differences for the period
+        /// Creates a list of percentage change for the period
         /// </summary>
-        /// <param name="benchmark">The benchmark values</param>
-        /// <param name="equity">The equity values</param>
-        /// <returns>The list of benchmark differences</returns>
-        private static List<double> CreateBenchmarkDifferences(SortedDictionary<DateTime, decimal> benchmark, SortedDictionary<DateTime, decimal> equity)
+        /// <param name="points">The values to calculate percentage change for</param>
+        /// <param name="fromDate">Starting date (inclusive)</param>
+        /// <param name="toDate">Ending date (inclusive)</param>
+        /// <returns>The list of percentage change</returns>
+        private static List<double> CreateDifferences(SortedDictionary<DateTime, decimal> points, DateTime fromDate, DateTime toDate)
         {
-            // to find the delta in benchmark for first day, we need to know the price at
-            // the opening moment of the day, but since we cannot find this, we cannot find
-            // the first benchmark's delta, so we start looking for data in a inexistent day. 
-            // If running a short backtest this will skew results, longer backtests will not be affected much
             var dtPrevious = new DateTime();
+            var listPercentage = new List<double>();
 
-            var listBenchmark = new List<double>();
-
-            var minDate = equity.Keys.FirstOrDefault().AddDays(-1);
-            var maxDate = equity.Keys.LastOrDefault();
-
-            // Get benchmark performance array for same period:
-            benchmark.Keys.ToList().ForEach(dt =>
+            // Get points performance array for the given period:
+            foreach (var dt in points.Keys.Where(dt => dt >= fromDate.Date && dt.Date <= toDate))
             {
-                if (dt >= minDate && dt <= maxDate)
+                decimal previous;
+                var hasPrevious = points.TryGetValue(dtPrevious, out previous);
+                if (hasPrevious && previous != 0)
                 {
-                    decimal previous;
-                    if (benchmark.TryGetValue(dtPrevious, out previous) && previous != 0)
-                    {
-                        var deltaBenchmark = (benchmark[dt] - previous) / previous;
-                        listBenchmark.Add((double)deltaBenchmark);
-                    }
-                    else
-                    {
-                        listBenchmark.Add(0);
-                    }
-                    dtPrevious = dt;
+                    var deltaPercentage = (points[dt] - previous) / previous;
+                    listPercentage.Add((double)deltaPercentage);
                 }
-            });
+                else if (hasPrevious)
+                {
+                    listPercentage.Add(0);
+                }
+                dtPrevious = dt;
+            }
 
-            return listBenchmark;
+            return listPercentage;
         }
 
-        /// <summary>
-        /// Ensures the performance list and benchmark list have the same length, padding with trailing zeros
-        /// </summary>
-        /// <param name="listPerformance">The performance list</param>
-        /// <param name="listBenchmark">The benchmark list</param>
-        private static void EnsureSameLength(List<double> listPerformance, List<double> listBenchmark)
+        private static SortedDictionary<DateTime, T> ResampleDaily<T>(SortedDictionary<DateTime, T> points)
         {
-            // THIS SHOULD NEVER HAPPEN --> But if it does, log it and fail silently.
-            while (listPerformance.Count < listBenchmark.Count)
-            {
-                listPerformance.Add(0);
-                Log.Trace("StatisticsBuilder.EnsureSameLength(): Padded Performance");
-            }
-            while (listPerformance.Count > listBenchmark.Count)
-            {
-                listBenchmark.Add(0);
-                Log.Trace("StatisticsBuilder.EnsureSameLength(): Padded Benchmark");
-            }
+            // GroupBy(...) is guaranteed to preserve the order the elements are in.
+            // See http://msdn.microsoft.com/en-us/library/bb534501 for more information.
+            return new SortedDictionary<DateTime, T>(
+                points.GroupBy(kvp => kvp.Key.Date)
+                    .Select(x => x.Last())
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
         }
-
     }
 }

@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
@@ -40,7 +39,7 @@ namespace QuantConnect.ToolBox.IBDownloader
             }
             try
             {
-                var allResolutions = resolution.ToLower() == "all";
+                var allResolutions = resolution.ToLowerInvariant() == "all";
                 var castResolution = allResolutions ? Resolution.Second : (Resolution)Enum.Parse(typeof(Resolution), resolution);
                 var startDate = fromDate.ConvertToUtc(TimeZones.NewYork);
                 var endDate = toDate.ConvertToUtc(TimeZones.NewYork);
@@ -68,9 +67,6 @@ namespace QuantConnect.ToolBox.IBDownloader
 
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-folder", "../../../Data");
-
-                // Create IB Broker Gateway Runner
-                InteractiveBrokersGatewayRunner.StartFromConfiguration();
 
                 // Only FOREX for now
                 SecurityType securityType = SecurityType.Forex;
@@ -127,15 +123,6 @@ namespace QuantConnect.ToolBox.IBDownloader
             {
                 Log.Error(err);
             }
-            finally
-            {
-
-                if (InteractiveBrokersGatewayRunner.IsRunning())
-                {
-                    InteractiveBrokersGatewayRunner.Stop();
-                }
-            }
-
         }
     }
 }

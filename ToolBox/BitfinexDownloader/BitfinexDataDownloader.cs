@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,15 +16,13 @@
 
 using NodaTime;
 using QuantConnect.Brokerages.Bitfinex;
-using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using QuantConnect.Brokerages;
 
 namespace QuantConnect.ToolBox.BitfinexDownloader
 {
@@ -34,16 +32,14 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
     public class BitfinexDataDownloader : IDataDownloader, IDisposable
     {
         private readonly BitfinexBrokerage _brokerage;
-        private readonly BitfinexSymbolMapper _symbolMapper = new BitfinexSymbolMapper();
-        private const string _wss = "wss://api.bitfinex.com/ws";
-        private const string _rest = "https://api.bitfinex.com";
+        private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.Bitfinex);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BitfinexDataDownloader"/> class
         /// </summary>
         public BitfinexDataDownloader()
         {
-            _brokerage = new BitfinexBrokerage(_wss, _rest, null, null, null, null);
+            _brokerage = new BitfinexBrokerage(null, null, null, null, null);
             _brokerage.Connect();
         }
 
@@ -93,12 +89,12 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
         /// <returns></returns>
         internal Symbol GetSymbol(string ticker)
         {
-            return _symbolMapper.GetLeanSymbol(ticker);
+            return _symbolMapper.GetLeanSymbol(ticker, SecurityType.Crypto, Market.Bitfinex);
         }
-        
+
         /// <summary>
         /// Aggregates a list of minute bars at the requested resolution
-        /// Warning. 
+        /// Warning.
         /// Aggregated data is not used as Volume of aggregated data doesn't match to Bitfinex API Response for same period of higher resolution.
         /// Example:
         /// https://api.bitfinex.com/v2/candles/trade:1h:tBTCUSD/hist?limit=1000&sort=1&start=1533150000000&end=1533153540000
@@ -133,7 +129,7 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
         #region Console Helper
 
         /// <summary>
-        /// Draw a progress bar 
+        /// Draw a progress bar
         /// </summary>
         /// <param name="complete"></param>
         /// <param name="maxVal"></param>
@@ -148,7 +144,7 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
             bar = bar.PadLeft(chars, progressCharacter);
             bar = bar.PadRight(Convert.ToInt32(barSize) - 1);
 
-            Console.Write(string.Format("\r[{0}] {1}%", bar, (p * 100).ToString("N2")));
+            Console.Write($"\r[{bar}] {(p * 100).ToStringInvariant("N2")}%");
         }
 
         public void Dispose()

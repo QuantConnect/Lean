@@ -25,7 +25,6 @@ from datetime import date, timedelta, datetime
 from System.Collections.Generic import List
 from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data.UniverseSelection import *
-import decimal as d
 import numpy as np
 import math
 import json
@@ -44,11 +43,11 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
 
         self.UniverseSettings.Resolution = Resolution.Daily
 
-        self.SetStartDate(2013,1,1)
-        self.SetEndDate(2013,12,31)
-        
+        self.SetStartDate(2017, 7, 4)
+        self.SetEndDate(2018, 7, 4)
+
         self.AddUniverse(StockDataSource, "my-stock-data-source", self.stockDataSource)
-    
+
     def stockDataSource(self, data):
         list = []
         for item in data:
@@ -60,34 +59,34 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
 
         if slice.Bars.Count == 0: return
         if self._changes is None: return
-        
+
         # start fresh
         self.Liquidate()
 
-        percentage = 1 / d.Decimal(slice.Bars.Count)
+        percentage = 1 / slice.Bars.Count
         for tradeBar in slice.Bars.Values:
             self.SetHoldings(tradeBar.Symbol, percentage)
-        
+
         # reset changes
         self._changes = None
-    
+
     def OnSecuritiesChanged(self, changes):
         self._changes = changes
-        
+
 class StockDataSource(PythonData):
-    
+
     def GetSource(self, config, date, isLiveMode):
-        url = "https://www.dropbox.com/s/2az14r5xbx4w5j6/daily-stock-picker-live.csv?dl=1" if isLiveMode else \
-            "https://www.dropbox.com/s/rmiiktz0ntpff3a/daily-stock-picker-backtest.csv?dl=1"
+        url = "https://www.dropbox.com/s/2l73mu97gcehmh7/daily-stock-picker-live.csv?dl=1" if isLiveMode else \
+            "https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1"
 
         return SubscriptionDataSource(url, SubscriptionTransportMedium.RemoteFile)
-    
+
     def Reader(self, config, line, date, isLiveMode):
         if not (line.strip() and line[0].isdigit()): return None
-        
+
         stocks = StockDataSource()
         stocks.Symbol = config.Symbol
-        
+
         csv = line.split(',')
         if isLiveMode:
             stocks.Time = date

@@ -23,7 +23,7 @@ with open('README.rst') as f:
 
 setup(
      name='quantconnect',
-     version='0.1',
+     version='0.2',
      description = 'QuantConnect API',
      long_description=readme,
      author = 'QuantConnect Python Team',

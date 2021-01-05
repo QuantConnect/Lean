@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,26 +13,23 @@
  * limitations under the License.
 */
 
-using NodaTime;
-using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Logging;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.ToolBox.IEX
 {
     public class IEXDataDownloader : IDataDownloader, IDisposable
     {
-        private IEXDataQueueHandler _handler;
+        private readonly IEXDataQueueHandler _handler;
 
         public IEXDataDownloader()
         {
-            _handler = new IEXDataQueueHandler(false);
+            _handler = new IEXDataQueueHandler();
         }
+
         public void Dispose()
         {
             _handler.Dispose();
@@ -57,16 +54,16 @@ namespace QuantConnect.ToolBox.IEX
             var historyRequests = new[] {
                 new HistoryRequest(startUtc,
                                    endUtc,
-                                   typeof(QuoteBar),
+                                   typeof(TradeBar),
                                    symbol,
                                    resolution,
-                                   SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard),
-                                   DateTimeZone.Utc,
+                                   SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                                   TimeZones.NewYork,
                                    resolution,
+                                   true,
                                    false,
-                                   false,
-                                   DataNormalizationMode.Adjusted,
-                                   TickType.Quote)
+                                   DataNormalizationMode.Raw,
+                                   TickType.Trade)
             };
 
             foreach (var slice in _handler.GetHistory(historyRequests, TimeZones.EasternStandard))

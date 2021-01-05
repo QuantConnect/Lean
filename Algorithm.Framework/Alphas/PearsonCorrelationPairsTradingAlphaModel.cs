@@ -16,7 +16,6 @@
 using MathNet.Numerics.Statistics;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +23,7 @@ using System.Linq;
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// This alpha model is designed to rank every pair combination by its pearson correlation 
+    /// This alpha model is designed to rank every pair combination by its pearson correlation
     /// and trade the pair with the hightest correlation
     /// This model generates alternating long ratio/short ratio insights emitted as a group
     /// </summary>
@@ -55,7 +54,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
             NotifiedSecurityChanges.UpdateCollection(Securities, changes);
 
@@ -91,7 +90,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="asset1">The first asset's symbol in the pair</param>
         /// <param name="asset2">The second asset's symbol in the pair</param>
         /// <returns>True if the statistical test for the pair is successful</returns>
-        public override bool HasPassedTest(QCAlgorithmFramework algorithm, Symbol asset1, Symbol asset2)
+        public override bool HasPassedTest(QCAlgorithm algorithm, Symbol asset1, Symbol asset2)
         {
             return _bestPair != null && asset1 == _bestPair.Item1 && asset2 == _bestPair.Item2;
         }

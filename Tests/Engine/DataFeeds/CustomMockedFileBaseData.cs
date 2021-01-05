@@ -24,12 +24,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     /// </summary>
     public class CustomMockedFileBaseData : BaseData
     {
-        private int _minutesToAdd;
+        private int _incrementsToAdd;
         public static DateTime StartDate;
 
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            var start = StartDate.Add(TimeSpan.FromMinutes(_minutesToAdd++)).ConvertFromUtc(config.DataTimeZone);
+            var start = StartDate.AddTicks(config.Increment.Ticks * _incrementsToAdd++).ConvertFromUtc(config.DataTimeZone);
             return new CustomMockedFileBaseData
             {
                 Symbol = config.Symbol,

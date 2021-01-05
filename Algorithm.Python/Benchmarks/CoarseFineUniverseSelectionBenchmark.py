@@ -28,21 +28,21 @@ class CoarseFineUniverseSelectionBenchmark(QCAlgorithm):
 
     def Initialize(self):
 
-        self.SetStartDate(2017, 1, 1)  
-        self.SetEndDate(2018, 1, 1)    
-        self.SetCash(50000)            
+        self.SetStartDate(2017, 11, 1)
+        self.SetEndDate(2018, 1, 1)
+        self.SetCash(50000)
 
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.UniverseSettings.Resolution = Resolution.Minute
 
         self.AddUniverse(self.CoarseSelectionFunction, self.FineSelectionFunction)
 
-        self.numberOfSymbols = 30
-        self.numberOfSymbolsFine = 2
+        self.numberOfSymbols = 150
+        self.numberOfSymbolsFine = 40
         self._changes = None
 
     # sort the data by daily dollar volume and take the top 'NumberOfSymbols'
     def CoarseSelectionFunction(self, coarse):
-        
+
         selected = [x for x in coarse if (x.HasFundamentalData)]
         # sort descending by daily dollar volume
         sortedByDollarVolume = sorted(selected, key=lambda x: x.DollarVolume, reverse=True)
@@ -67,7 +67,7 @@ class CoarseFineUniverseSelectionBenchmark(QCAlgorithm):
                 self.Liquidate(security.Symbol)
 
         for security in self._changes.AddedSecurities:
-            self.SetHoldings(security.Symbol, 0.5)
+            self.SetHoldings(security.Symbol, 0.02)
         self._changes = None;
 
     def OnSecuritiesChanged(self, changes):

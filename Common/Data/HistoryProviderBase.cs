@@ -36,6 +36,11 @@ namespace QuantConnect.Data
         public event EventHandler<NumericalPrecisionLimitedEventArgs> NumericalPrecisionLimited;
 
         /// <summary>
+        /// Event fired when the start date has been limited
+        /// </summary>
+        public event EventHandler<StartDateLimitedEventArgs> StartDateLimited;
+
+        /// <summary>
         /// Event fired when there was an error downloading a remote file
         /// </summary>
         public event EventHandler<DownloadFailedEventArgs> DownloadFailed;
@@ -98,6 +103,15 @@ namespace QuantConnect.Data
         protected virtual void OnReaderErrorDetected(ReaderErrorDetectedEventArgs e)
         {
             ReaderErrorDetected?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="StartDateLimited"/> event
+        /// </summary>
+        /// <param name="e">Event arguments for the <see cref="StartDateLimited"/> event</param>
+        protected virtual void OnStartDateLimited(StartDateLimitedEventArgs e)
+        {
+            StartDateLimited?.Invoke(this, e);
         }
     }
 }

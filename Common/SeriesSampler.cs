@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Util;
 
 namespace QuantConnect
 {
@@ -40,8 +41,9 @@ namespace QuantConnect
         /// <param name="series">The series to be sampled</param>
         /// <param name="start">The date to start sampling, if before start of data then start of data will be used</param>
         /// <param name="stop">The date to stop sampling, if after stop of data, then stop of data will be used</param>
+        /// <param name="truncateValues">True will truncate values to integers</param>
         /// <returns>The sampled series</returns>
-        public Series Sample(Series series, DateTime start, DateTime stop)
+        public Series Sample(Series series, DateTime start, DateTime stop, bool truncateValues = false)
         {
             var sampled = new Series(series.Name, series.SeriesType, series.Index, series.Unit);
 
@@ -58,7 +60,13 @@ namespace QuantConnect
                 {
                     if (point.x >= nextSample && point.x <= unixStopDate)
                     {
-                        sampled.Values.Add(point);
+                        var samplePoint = point;
+                        if (truncateValues)
+                        {
+                            // let's not modify the original
+                            samplePoint = new ChartPoint(samplePoint) { y = Math.Truncate(samplePoint.y) };
+                        }
+                        sampled.Values.Add(samplePoint);
                     }
                 }
                 return sampled;
@@ -105,7 +113,12 @@ namespace QuantConnect
                 while (nextSample <= current.x && nextSample <= unixStopDate)
                 {
                     var value = Interpolate(previous, current, (long) nextSample);
-                    sampled.Values.Add(new ChartPoint {x = (long) nextSample, y = value});
+                    var point = new ChartPoint {x = (long) nextSample, y = value};
+                    if (truncateValues)
+                    {
+                        point.y = Math.Truncate(point.y);
+                    }
+                    sampled.Values.Add(point);
                     nextSample += _seconds;
                 }
 
@@ -117,6 +130,7 @@ namespace QuantConnect
             }
             while (true);
 
+            enumerator.DisposeSafely();
             return sampled;
         }
 

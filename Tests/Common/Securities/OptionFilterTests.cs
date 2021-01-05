@@ -324,7 +324,7 @@ namespace QuantConnect.Tests.Common.Securities
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe;
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
-                universe => universeFunc(universe as OptionFilterUniverse).ApplyOptionTypesFilter();
+                universe => universeFunc(universe as OptionFilterUniverse).ApplyTypesFilter();
 
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
@@ -365,7 +365,7 @@ namespace QuantConnect.Tests.Common.Securities
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe;
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
-                universe => universeFunc(universe as OptionFilterUniverse).ApplyOptionTypesFilter();
+                universe => universeFunc(universe as OptionFilterUniverse).ApplyTypesFilter();
 
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
@@ -402,7 +402,7 @@ namespace QuantConnect.Tests.Common.Securities
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe.WeeklysOnly();
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
-                universe => universeFunc(universe as OptionFilterUniverse).ApplyOptionTypesFilter();
+                universe => universeFunc(universe as OptionFilterUniverse).ApplyTypesFilter();
 
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]
@@ -436,7 +436,7 @@ namespace QuantConnect.Tests.Common.Securities
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe.IncludeWeeklys();
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
-                universe => universeFunc(universe as OptionFilterUniverse).ApplyOptionTypesFilter();
+                universe => universeFunc(universe as OptionFilterUniverse).ApplyTypesFilter();
 
             var filter = new FuncSecurityDerivativeFilter(func);
             var symbols = new[]

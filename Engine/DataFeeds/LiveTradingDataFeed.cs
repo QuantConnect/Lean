@@ -16,14 +16,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
+using QuantConnect.Data.Custom.Fred;
 using QuantConnect.Data.Custom.Tiingo;
+using QuantConnect.Data.Custom.TradingEconomics;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -43,20 +43,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class LiveTradingDataFeed : IDataFeed
     {
-        private static readonly Symbol DataQueueHandlerSymbol = Symbol.Create("data-queue-handler-symbol", SecurityType.Base, Market.USA);
-
         private LiveNodePacket _job;
-        private IAlgorithm _algorithm;
         // used to get current time
         private ITimeProvider _timeProvider;
         private ITimeProvider _frontierTimeProvider;
         private IDataProvider _dataProvider;
         private IDataQueueHandler _dataQueueHandler;
-        private BaseDataExchange _exchange;
         private BaseDataExchange _customExchange;
         private SubscriptionCollection _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-        private UniverseSelection _universeSelection;
+        private IDataChannelProvider _channelProvider;
 
         /// <summary>
         /// Public flag indicator that the thread is still busy.
@@ -76,7 +72,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IFactorFileProvider factorFileProvider,
             IDataProvider dataProvider,
             IDataFeedSubscriptionManager subscriptionManager,
-            IDataFeedTimeProvider dataFeedTimeProvider)
+            IDataFeedTimeProvider dataFeedTimeProvider,
+            IDataChannelProvider dataChannelProvider)
         {
             if (!(job is LiveNodePacket))
             {
@@ -85,25 +82,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _cancellationTokenSource = new CancellationTokenSource();
 
-            _algorithm = algorithm;
             _job = (LiveNodePacket) job;
-
             _timeProvider = dataFeedTimeProvider.TimeProvider;
-            _dataQueueHandler = GetDataQueueHandler();
             _dataProvider = dataProvider;
+            _channelProvider = dataChannelProvider;
 
             _frontierTimeProvider = dataFeedTimeProvider.FrontierTimeProvider;
             _customExchange = new BaseDataExchange("CustomDataExchange") {SleepInterval = 10};
-            // sleep is controlled on this exchange via the GetNextTicksEnumerator
-            _exchange = new BaseDataExchange("DataQueueExchange"){SleepInterval = 0};
-            _exchange.AddEnumerator(DataQueueHandlerSymbol, GetNextTicksEnumerator());
             _subscriptions = subscriptionManager.DataFeedSubscriptions;
 
-            _universeSelection = subscriptionManager.UniverseSelection;
+            _dataQueueHandler = GetDataQueueHandler();
+            _dataQueueHandler?.SetJob(_job);
 
-            // run the exchanges
-            Task.Run(() => _exchange.Start(_cancellationTokenSource.Token));
-            Task.Run(() => _customExchange.Start(_cancellationTokenSource.Token));
+            // run the custom data exchange
+            var manualEvent = new ManualResetEventSlim(false);
+            Task.Factory.StartNew(() =>
+            {
+                manualEvent.Set();
+                _customExchange.Start(_cancellationTokenSource.Token);
+            }, TaskCreationOptions.LongRunning);
+            manualEvent.Wait();
+            manualEvent.DisposeSafely();
 
             IsActive = true;
         }
@@ -120,17 +119,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 ? CreateUniverseSubscription(request)
                 : CreateDataSubscription(request);
 
-            // check if we could create the subscription
-            if (subscription != null)
-            {
-                // send the subscription for the new symbol through to the data queuehandler
-                // unless it is custom data, custom data is retrieved using the same as backtest
-                if (!subscription.Configuration.IsCustomData)
-                {
-                    _dataQueueHandler.Subscribe(_job, new[] { request.Security.Symbol });
-                }
-            }
-
             return subscription;
         }
 
@@ -143,29 +131,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var symbol = subscription.Configuration.Symbol;
 
             // remove the subscriptions
-            if (subscription.Configuration.IsCustomData)
+            if (!_channelProvider.ShouldStreamSubscription(_job, subscription.Configuration))
             {
                 _customExchange.RemoveEnumerator(symbol);
                 _customExchange.RemoveDataHandler(symbol);
             }
             else
             {
-                _dataQueueHandler.Unsubscribe(_job, new[] { symbol });
-                _exchange.RemoveDataHandler(symbol);
+                _dataQueueHandler.Unsubscribe(subscription.Configuration);
+                if (subscription.Configuration.SecurityType == SecurityType.Equity && !subscription.Configuration.IsInternalFeed)
+                {
+                    _dataQueueHandler.Unsubscribe(new SubscriptionDataConfig(subscription.Configuration, typeof(Dividend)));
+                    _dataQueueHandler.Unsubscribe(new SubscriptionDataConfig(subscription.Configuration, typeof(Split)));
+                }
             }
         }
 
         /// <summary>
         /// External controller calls to signal a terminate of the thread.
         /// </summary>
-        public void Exit()
+        public virtual void Exit()
         {
             if (IsActive)
             {
                 IsActive = false;
                 Log.Trace("LiveTradingDataFeed.Exit(): Start. Setting cancellation token...");
                 _cancellationTokenSource.Cancel();
-                _exchange?.Stop();
                 _customExchange?.Stop();
                 Log.Trace("LiveTradingDataFeed.Exit(): Exit Finished.");
             }
@@ -190,13 +181,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected Subscription CreateDataSubscription(SubscriptionRequest request)
         {
             Subscription subscription = null;
+
             try
             {
                 var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
                 var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
                 IEnumerator<BaseData> enumerator;
-                if (request.Configuration.IsCustomData)
+                if (!_channelProvider.ShouldStreamSubscription(_job, request.Configuration))
                 {
                     if (!Quandl.IsAuthCodeSet)
                     {
@@ -210,6 +202,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         Tiingo.SetAuthCode(Config.Get("tiingo-auth-token"));
                     }
 
+                    if (!USEnergyAPI.IsAuthCodeSet)
+                    {
+                        // we're not using the SubscriptionDataReader, so be sure to set the auth token here
+                        USEnergyAPI.SetAuthCode(Config.Get("us-energy-information-auth-token"));
+                    }
+
+                    if (!FredApi.IsAuthCodeSet)
+                    {
+                        // we're not using the SubscriptionDataReader, so be sure to set the auth token here
+                        FredApi.SetAuthCode(Config.Get("fred-auth-token"));
+                    }
+
+                    if (!TradingEconomicsCalendar.IsAuthCodeSet)
+                    {
+                        // we're not using the SubscriptionDataReader, so be sure to set the auth token here
+                        TradingEconomicsCalendar.SetAuthCode(Config.Get("trading-economics-auth-token"));
+                    }
+
                     var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider);
                     var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
 
@@ -220,105 +230,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         enqueable.Enqueue(data);
 
-                        UpdateSubscriptionRealTimePrice(
-                            subscription,
-                            timeZoneOffsetProvider,
-                            request.Security.Exchange.Hours,
-                            data);
+                        subscription.OnNewDataAvailable();
                     });
                     enumerator = enqueable;
                 }
-                else if (request.Configuration.Resolution != Resolution.Tick)
-                {
-                    // this enumerator allows the exchange to pump ticks into the 'back' of the enumerator,
-                    // and the time sync loop can pull aggregated trade bars off the front
-                    switch (request.Configuration.TickType)
-                    {
-                        case TickType.Quote:
-                            var quoteBarAggregator = new QuoteBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
-                            _exchange.AddDataHandler(request.Configuration.Symbol, data =>
-                            {
-                                var tick = data as Tick;
-
-                                if (tick.TickType == TickType.Quote)
-                                {
-                                    quoteBarAggregator.ProcessData(tick);
-
-                                    UpdateSubscriptionRealTimePrice(
-                                        subscription,
-                                        timeZoneOffsetProvider,
-                                        request.Security.Exchange.Hours,
-                                        data);
-                                }
-                            });
-                            enumerator = quoteBarAggregator;
-                            break;
-
-                        case TickType.Trade:
-                        default:
-                            var tradeBarAggregator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
-                            var auxDataEnumerator = new EnqueueableEnumerator<BaseData>();
-
-                            _exchange.AddDataHandler(request.Configuration.Symbol, data =>
-                            {
-                                if (data.DataType == MarketDataType.Auxiliary)
-                                {
-                                    auxDataEnumerator.Enqueue(data);
-                                }
-                                else
-                                {
-                                    var tick = data as Tick;
-                                    if (tick.TickType == TickType.Trade)
-                                    {
-                                        tradeBarAggregator.ProcessData(tick);
-
-                                        UpdateSubscriptionRealTimePrice(
-                                            subscription,
-                                            timeZoneOffsetProvider,
-                                            request.Security.Exchange.Hours,
-                                            data);
-                                    }
-                                }
-                            });
-
-                            enumerator = request.Configuration.SecurityType == SecurityType.Equity
-                                ? (IEnumerator<BaseData>) new LiveBaseDataSynchronizingEnumerator(_frontierTimeProvider, request.Security.Exchange.TimeZone, auxDataEnumerator, tradeBarAggregator)
-                                : tradeBarAggregator;
-                            break;
-
-                        case TickType.OpenInterest:
-                            var oiAggregator = new OpenInterestEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
-                            _exchange.AddDataHandler(request.Configuration.Symbol, data =>
-                            {
-                                var tick = data as Tick;
-
-                                if (tick.TickType == TickType.OpenInterest)
-                                {
-                                    oiAggregator.ProcessData(tick);
-                                }
-                            });
-                            enumerator = oiAggregator;
-                            break;
-                    }
-                }
                 else
                 {
-                    // tick subscriptions can pass right through
-                    var tickEnumerator = new EnqueueableEnumerator<BaseData>();
-                    _exchange.SetDataHandler(request.Configuration.Symbol, data =>
-                    {
-                        tickEnumerator.Enqueue(data);
+                    EventHandler handler = (sender, args) => subscription?.OnNewDataAvailable();
+                    enumerator = _dataQueueHandler.Subscribe(request.Configuration, handler);
 
-                        if (data.DataType != MarketDataType.Auxiliary)
-                        {
-                            UpdateSubscriptionRealTimePrice(
-                                subscription,
-                                timeZoneOffsetProvider,
-                                request.Security.Exchange.Hours,
-                                data);
-                        }
-                    });
-                    enumerator = tickEnumerator;
+                    if (request.Configuration.SecurityType == SecurityType.Equity && CorporateEventEnumeratorFactory.ShouldEmitAuxiliaryBaseData(request.Configuration))
+                    {
+                        var dividends = _dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Dividend)), handler);
+                        var splits = _dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Split)), handler);
+
+                        enumerator = new LiveEquityDataSynchronizingEnumerator(_timeProvider, request.Configuration.ExchangeTimeZone, enumerator, dividends, splits);
+                    }
                 }
 
                 if (request.Configuration.FillDataForward)
@@ -331,13 +258,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // define market hours and user filters to incoming data
                 if (request.Configuration.IsFilteredSubscription)
                 {
-                    enumerator = new SubscriptionFilterEnumerator(enumerator, request.Security, localEndTime);
+                    enumerator = new SubscriptionFilterEnumerator(enumerator, request.Security, localEndTime, request.Configuration.ExtendedMarketHours, true);
                 }
 
                 // finally, make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
 
-                var subscriptionDataEnumerator = SubscriptionData.Enumerator(request.Configuration, request.Security, timeZoneOffsetProvider, enumerator);
+                var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, timeZoneOffsetProvider, enumerator);
                 subscription = new Subscription(request, subscriptionDataEnumerator, timeZoneOffsetProvider);
             }
             catch (Exception err)
@@ -354,6 +281,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="request">The subscription request</param>
         private Subscription CreateUniverseSubscription(SubscriptionRequest request)
         {
+            Subscription subscription = null;
+
             // TODO : Consider moving the creating of universe subscriptions to a separate, testable class
 
             // grab the relevant exchange hours
@@ -361,15 +290,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
             var tzOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
-            IEnumerator<BaseData> enumerator;
+            IEnumerator<BaseData> enumerator = null;
 
             var timeTriggered = request.Universe as ITimeTriggeredUniverse;
             if (timeTriggered != null)
             {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating user defined universe: " + config.Symbol.ToString());
+                Log.Trace($"LiveTradingDataFeed.CreateUniverseSubscription(): Creating user defined universe: {config.Symbol.ID}");
 
                 // spoof a tick on the requested interval to trigger the universe selection function
-                var enumeratorFactory = new TimeTriggeredUniverseSubscriptionEnumeratorFactory(timeTriggered, MarketHoursDatabase.FromDataFolder());
+                var enumeratorFactory = new TimeTriggeredUniverseSubscriptionEnumeratorFactory(timeTriggered, MarketHoursDatabase.FromDataFolder(), _frontierTimeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
 
                 enumerator = new FrontierAwareEnumerator(enumerator, _timeProvider, tzOffsetProvider);
@@ -377,64 +306,47 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enqueueable = new EnqueueableEnumerator<BaseData>();
                 _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, enumerator, enqueueable));
                 enumerator = enqueueable;
-
-                // Trigger universe selection when security added/removed after Initialize
-                if (timeTriggered is UserDefinedUniverse)
-                {
-                    var userDefined = (UserDefinedUniverse) timeTriggered;
-                    userDefined.CollectionChanged += (sender, args) =>
-                    {
-                        var items =
-                            args.Action == NotifyCollectionChangedAction.Add ? args.NewItems :
-                            args.Action == NotifyCollectionChangedAction.Remove ? args.OldItems : null;
-
-                        var currentFrontierUtcTime = _frontierTimeProvider.GetUtcNow();
-                        if (items == null || currentFrontierUtcTime == DateTime.MinValue) return;
-
-                        var symbol = items.OfType<Symbol>().FirstOrDefault();
-                        if (symbol == null) return;
-
-                        var collection = new BaseDataCollection(currentFrontierUtcTime, symbol);
-                        var changes = _universeSelection.ApplyUniverseSelection(userDefined, currentFrontierUtcTime, collection);
-                        _algorithm.OnSecuritiesChanged(changes);
-                    };
-                }
             }
             else if (config.Type == typeof (CoarseFundamental))
             {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating coarse universe: " + config.Symbol.ToString());
+                Log.Trace($"LiveTradingDataFeed.CreateUniverseSubscription(): Creating coarse universe: {config.Symbol.ID}");
 
-                // since we're binding to the data queue exchange we'll need to let him
-                // know that we expect this data
-                _dataQueueHandler.Subscribe(_job, new[] {request.Security.Symbol});
+                // we subscribe using a normalized symbol, without a random GUID,
+                // since the ticker plant will send the coarse data using this symbol
+                var normalizedSymbol = CoarseFundamental.CreateUniverseSymbol(config.Symbol.ID.Market, false);
+
+                // Will try to pull coarse data from the data folder every 30min, file with today's date.
+                // If lean is started today it will trigger initial coarse universe selection
+                var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider,
+                    // we adjust time to the previous tradable date
+                    time => Time.GetStartTimeForTradeBars(request.Security.Exchange.Hours, time, Time.OneDay, 1, false, config.DataTimeZone)
+                );
+                var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
+
+                // aggregates each coarse data point into a single BaseDataCollection
+                var aggregator = new BaseDataCollectionAggregatorEnumerator(enumeratorStack, normalizedSymbol, true);
+                _customExchange.AddEnumerator(normalizedSymbol, aggregator);
 
                 var enqueable = new EnqueueableEnumerator<BaseData>();
-                _exchange.SetDataHandler(config.Symbol, data =>
+                _customExchange.SetDataHandler(normalizedSymbol, data =>
                 {
-                    enqueable.Enqueue(data);
+                    var coarseData = data as BaseDataCollection;
+                    enqueable.Enqueue(new BaseDataCollection(coarseData.Time, config.Symbol, coarseData.Data));
+                    subscription.OnNewDataAvailable();
                 });
-                enumerator = enqueable;
+                enumerator = GetConfiguredFrontierAwareEnumerator(enqueable, tzOffsetProvider,
+                    // advance time if before 23pm or after 5am and not on Saturdays
+                    time => time.Hour < 23 && time.Hour > 5 && time.DayOfWeek != DayOfWeek.Saturday);
             }
             else if (request.Universe is OptionChainUniverse)
             {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating option chain universe: " + config.Symbol.ToString());
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating option chain universe: " + config.Symbol.ID);
 
-                Func<SubscriptionRequest, IEnumerator<BaseData>, IEnumerator<BaseData>> configure = (subRequest, input) =>
+                Func<SubscriptionRequest, IEnumerator<BaseData>> configure = (subRequest) =>
                 {
-                    // we check if input enumerator is an underlying enumerator. If yes, we subscribe it to the data.
-                    var aggregator = input as TradeBarBuilderEnumerator;
-
-                    if (aggregator != null)
-                    {
-                        _exchange.SetDataHandler(request.Configuration.Symbol, data =>
-                        {
-                            aggregator.ProcessData((Tick)data);
-                        });
-                    }
-
-                    var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(request.Configuration);
-
-                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, request.Security.Exchange, fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone);
+                    var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(subRequest.Configuration);
+                    var input = _dataQueueHandler.Subscribe(subRequest.Configuration, (sender, args) => subscription.OnNewDataAvailable());
+                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution, subRequest.Configuration.ExtendedMarketHours, localEndTime, subRequest.Configuration.Increment, subRequest.Configuration.DataTimeZone);
                 };
 
                 var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
@@ -443,14 +355,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     throw new NotSupportedException("The DataQueueHandler does not support Options.");
                 }
 
-                var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, _timeProvider);
+                var timeProvider = new PredicateTimeProvider(_timeProvider,
+                    time => symbolUniverse.CanAdvanceTime(config.SecurityType));
+
+                var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
 
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
             }
             else if (request.Universe is FuturesChainUniverse)
             {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating futures chain universe: " + config.Symbol.ToString());
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating futures chain universe: " + config.Symbol.ID);
 
                 var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
                 if (symbolUniverse == null)
@@ -458,18 +373,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     throw new NotSupportedException("The DataQueueHandler does not support Futures.");
                 }
 
-                var enumeratorFactory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, _timeProvider);
+                var timeProvider = new PredicateTimeProvider(_timeProvider,
+                    time => symbolUniverse.CanAdvanceTime(config.SecurityType));
+
+                var enumeratorFactory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
 
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
             }
             else
             {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating custom universe: " + config.Symbol.ToString());
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating custom universe: " + config.Symbol.ID);
 
                 var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider);
                 var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
-                enumerator = new BaseDataCollectionAggregatorEnumerator(enumeratorStack, config.Symbol);
+                enumerator = new BaseDataCollectionAggregatorEnumerator(enumeratorStack, config.Symbol, liveMode:true);
 
                 var enqueueable = new EnqueueableEnumerator<BaseData>();
                 _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, enumerator, enqueueable));
@@ -477,58 +395,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // create the subscription
-            var subscriptionDataEnumerator = SubscriptionData.Enumerator(request.Configuration, request.Security, tzOffsetProvider, enumerator);
-            var subscription = new Subscription(request, subscriptionDataEnumerator, tzOffsetProvider);
+            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, tzOffsetProvider, enumerator);
+            subscription = new Subscription(request, subscriptionDataEnumerator, tzOffsetProvider);
+
+            // send the subscription for the new symbol through to the data queuehandler
+            if (_channelProvider.ShouldStreamSubscription(_job, subscription.Configuration))
+            {
+                _dataQueueHandler.Subscribe(request.Configuration, (sender, args) => subscription.OnNewDataAvailable());
+            }
 
             return subscription;
         }
 
         /// <summary>
-        /// Updates the subscription RealTimePrice if the exchange is open
+        /// Will wrap the provided enumerator with a <see cref="FrontierAwareEnumerator"/>
+        /// using a <see cref="PredicateTimeProvider"/> that will advance time based on the provided
+        /// function
         /// </summary>
-        /// <param name="subscription">The <see cref="Subscription"/></param>
-        /// <param name="timeZoneOffsetProvider">The <see cref="TimeZoneOffsetProvider"/> used to convert now into the timezone of the exchange</param>
-        /// <param name="exchangeHours">The <see cref="SecurityExchangeHours"/> used to determine
-        /// if the exchange is open and we should update</param>
-        /// <param name="data">The <see cref="BaseData"/> used to update the real time price</param>
-        /// <returns>True if the real time price was updated</returns>
-        protected bool UpdateSubscriptionRealTimePrice(
-            Subscription subscription,
-            TimeZoneOffsetProvider timeZoneOffsetProvider,
-            SecurityExchangeHours exchangeHours,
-            BaseData data)
+        /// <remarks>Won't advance time if now.Hour is bigger or equal than 23pm, less or equal than 5am or Saturday.
+        /// This is done to prevent universe selection occurring in those hours so that the subscription changes
+        /// are handled correctly.</remarks>
+        private IEnumerator<BaseData> GetConfiguredFrontierAwareEnumerator(
+            IEnumerator<BaseData> enumerator,
+            TimeZoneOffsetProvider tzOffsetProvider,
+            Func<DateTime, bool> customStepEvaluator)
         {
-            if (subscription != null &&
-                exchangeHours.IsOpen(
-                    timeZoneOffsetProvider.ConvertFromUtc(_timeProvider.GetUtcNow()),
-                    subscription.Configuration.ExtendedMarketHours))
-            {
-                subscription.RealtimePrice = data.Value;
-                return true;
-            }
+            var stepTimeProvider = new PredicateTimeProvider(_frontierTimeProvider, customStepEvaluator);
 
-            return false;
-        }
-
-        /// <summary>
-        /// Provides an <see cref="IEnumerator{BaseData}"/> that will continually dequeue data
-        /// from the data queue handler while we're not cancelled
-        /// </summary>
-        /// <returns></returns>
-        private IEnumerator<BaseData> GetNextTicksEnumerator()
-        {
-            while (!_cancellationTokenSource.IsCancellationRequested)
-            {
-                int ticks = 0;
-                foreach (var data in _dataQueueHandler.GetNextTicks())
-                {
-                    ticks++;
-                    yield return data;
-                }
-                if (ticks == 0) Thread.Sleep(1);
-            }
-
-            Log.Trace("LiveTradingDataFeed.GetNextTicksEnumerator(): Exiting enumerator thread...");
+            return new FrontierAwareEnumerator(enumerator, stepTimeProvider, tzOffsetProvider);
         }
 
         /// <summary>

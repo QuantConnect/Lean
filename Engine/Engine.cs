@@ -15,11 +15,11 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -32,8 +32,8 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Statistics;
 using QuantConnect.Util;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -45,126 +45,140 @@ namespace QuantConnect.Lean.Engine
     /// </summary>
     public class Engine
     {
+        private bool _historyStartDateLimitedWarningEmitted;
         private readonly bool _liveMode;
-        private readonly LeanEngineSystemHandlers _systemHandlers;
-        private readonly LeanEngineAlgorithmHandlers _algorithmHandlers;
-        private readonly StackExceptionInterpreter _exceptionInterpreter = StackExceptionInterpreter.CreateFromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
+        private readonly Lazy<StackExceptionInterpreter> _exceptionInterpreter;
 
         /// <summary>
         /// Gets the configured system handlers for this engine instance
         /// </summary>
-        public LeanEngineSystemHandlers SystemHandlers
-        {
-            get { return _systemHandlers; }
-        }
+        public LeanEngineSystemHandlers SystemHandlers { get; }
 
         /// <summary>
         /// Gets the configured algorithm handlers for this engine instance
         /// </summary>
-        public LeanEngineAlgorithmHandlers AlgorithmHandlers
-        {
-            get { return _algorithmHandlers;}
-        }
+        public LeanEngineAlgorithmHandlers AlgorithmHandlers { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Engine"/> class using the specified handlers
         /// </summary>
         /// <param name="systemHandlers">The system handlers for controlling acquisition of jobs, messaging, and api calls</param>
         /// <param name="algorithmHandlers">The algorithm handlers for managing algorithm initialization, data, results, transaction, and real time events</param>
-        /// <param name="liveMode">True when running in live mode, false otherwises</param>
+        /// <param name="liveMode">True when running in live mode, false otherwise</param>
         public Engine(LeanEngineSystemHandlers systemHandlers, LeanEngineAlgorithmHandlers algorithmHandlers, bool liveMode)
         {
             _liveMode = liveMode;
-            _systemHandlers = systemHandlers;
-            _algorithmHandlers = algorithmHandlers;
+            SystemHandlers = systemHandlers;
+            AlgorithmHandlers = algorithmHandlers;
+            // this is slow, so we will do it on demand
+            _exceptionInterpreter = new Lazy<StackExceptionInterpreter>(() =>
+                    StackExceptionInterpreter.CreateFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
         }
 
         /// <summary>
         /// Runs a single backtest/live job from the job queue
         /// </summary>
         /// <param name="job">The algorithm job to be processed</param>
-        /// <param name="manager"></param>
+        /// <param name="manager">The algorithm manager instance</param>
         /// <param name="assemblyPath">The path to the algorithm's assembly</param>
-        public void Run(AlgorithmNodePacket job, AlgorithmManager manager, string assemblyPath)
+        /// <param name="workerThread">The worker thread instance</param>
+        public void Run(AlgorithmNodePacket job, AlgorithmManager manager, string assemblyPath, WorkerThread workerThread)
         {
+            var marketHoursDatabaseTask = Task.Run(() => StaticInitializations());
+
             var algorithm = default(IAlgorithm);
             var algorithmManager = manager;
 
             try
             {
+                TextSubscriptionDataSourceReader.SetCacheSize((int) (job.RamAllocation * 0.4));
+
                 //Reset thread holders.
                 var initializeComplete = false;
-                Thread threadTransactions = null;
-                Thread threadResults = null;
-                Thread threadRealTime = null;
-                Thread threadAlphas = null;
 
                 //-> Initialize messaging system
-                _systemHandlers.Notify.SetAuthentication(job);
+                SystemHandlers.Notify.SetAuthentication(job);
 
                 //-> Set the result handler type for this algorithm job, and launch the associated result thread.
-                _algorithmHandlers.Results.Initialize(job, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.Setup, _algorithmHandlers.Transactions);
-
-                threadResults = new Thread(_algorithmHandlers.Results.Run, 0) { IsBackground = true, Name = "Result Thread" };
-                threadResults.Start();
+                AlgorithmHandlers.Results.Initialize(job, SystemHandlers.Notify, SystemHandlers.Api, AlgorithmHandlers.Transactions);
 
                 IBrokerage brokerage = null;
                 DataManager dataManager = null;
-                var synchronizer = new Synchronizer();
+                IDataCacheProvider historyDataCacheProvider = null;
+                var synchronizer = _liveMode ? new LiveSynchronizer() : new Synchronizer();
                 try
                 {
+                    // we get the mhdb before creating the algorithm instance,
+                    // since the algorithm constructor will use it
+                    var marketHoursDatabase = marketHoursDatabaseTask.Result;
+
+                    AlgorithmHandlers.Setup.WorkerThread = workerThread;
+
                     // Save algorithm to cache, load algorithm instance:
-                    algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(job, assemblyPath);
+                    algorithm = AlgorithmHandlers.Setup.CreateAlgorithmInstance(job, assemblyPath);
 
                     // Set algorithm in ILeanManager
-                    _systemHandlers.LeanManager.SetAlgorithm(algorithm);
+                    SystemHandlers.LeanManager.SetAlgorithm(algorithm);
 
                     // initialize the alphas handler with the algorithm instance
-                    _algorithmHandlers.Alphas.Initialize(job, algorithm, _systemHandlers.Notify, _systemHandlers.Api);
+                    AlgorithmHandlers.Alphas.Initialize(job, algorithm, SystemHandlers.Notify, SystemHandlers.Api, AlgorithmHandlers.Transactions);
+
+                    // initialize the object store
+                    AlgorithmHandlers.ObjectStore.Initialize(algorithm.Name, job.UserId, job.ProjectId, job.UserToken, job.Controls);
+
+                    // initialize the data permission manager
+                    AlgorithmHandlers.DataPermissionsManager.Initialize(job);
+
+                    // notify the user of any errors w/ object store persistence
+                    AlgorithmHandlers.ObjectStore.ErrorRaised += (sender, args) => algorithm.Debug($"ObjectStore Persistence Error: {args.Error.Message}");
 
                     // Initialize the brokerage
                     IBrokerageFactory factory;
-                    brokerage = _algorithmHandlers.Setup.CreateBrokerage(job, algorithm, out factory);
+                    brokerage = AlgorithmHandlers.Setup.CreateBrokerage(job, algorithm, out factory);
 
-                    var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
                     var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
+                    var registeredTypesProvider = new RegisteredSecurityDataTypesProvider();
                     var securityService = new SecurityService(algorithm.Portfolio.CashBook,
                         marketHoursDatabase,
                         symbolPropertiesDatabase,
-                        (ISecurityInitializerProvider)algorithm);
+                        algorithm,
+                        registeredTypesProvider,
+                        new SecurityCacheProvider(algorithm.Portfolio));
 
                     algorithm.Securities.SetSecurityService(securityService);
 
-                    dataManager = new DataManager(_algorithmHandlers.DataFeed,
+                    dataManager = new DataManager(AlgorithmHandlers.DataFeed,
                         new UniverseSelection(
                             algorithm,
-                            securityService),
+                            securityService,
+                            AlgorithmHandlers.DataPermissionsManager,
+                            AlgorithmHandlers.DataProvider),
                         algorithm,
                         algorithm.TimeKeeper,
-                        marketHoursDatabase);
+                        marketHoursDatabase,
+                        _liveMode,
+                        registeredTypesProvider,
+                        AlgorithmHandlers.DataPermissionsManager);
 
-                    _algorithmHandlers.Results.SetDataManager(dataManager);
                     algorithm.SubscriptionManager.SetDataManager(dataManager);
 
-                    synchronizer.Initialize(
-                        algorithm,
-                        dataManager,
-                        _liveMode);
+                    synchronizer.Initialize(algorithm, dataManager);
 
                     // Initialize the data feed before we initialize so he can intercept added securities/universes via events
-                    _algorithmHandlers.DataFeed.Initialize(
+                    AlgorithmHandlers.DataFeed.Initialize(
                         algorithm,
                         job,
-                        _algorithmHandlers.Results,
-                        _algorithmHandlers.MapFileProvider,
-                        _algorithmHandlers.FactorFileProvider,
-                        _algorithmHandlers.DataProvider,
+                        AlgorithmHandlers.Results,
+                        AlgorithmHandlers.MapFileProvider,
+                        AlgorithmHandlers.FactorFileProvider,
+                        AlgorithmHandlers.DataProvider,
                         dataManager,
-                        (IDataFeedTimeProvider) synchronizer);
+                        (IDataFeedTimeProvider) synchronizer,
+                        AlgorithmHandlers.DataPermissionsManager.DataChannelProvider);
 
                     // set the order processor on the transaction manager (needs to be done before initializing BrokerageHistoryProvider)
-                    algorithm.Transactions.SetOrderProcessor(_algorithmHandlers.Transactions);
+                    algorithm.Transactions.SetOrderProcessor(AlgorithmHandlers.Transactions);
 
                     // set the history provider before setting up the algorithm
                     var historyProvider = GetHistoryProvider(job.HistoryProvider);
@@ -173,84 +187,88 @@ namespace QuantConnect.Lean.Engine
                         (historyProvider as BrokerageHistoryProvider).SetBrokerage(brokerage);
                     }
 
-                    var historyDataCacheProvider = new ZipDataCacheProvider(_algorithmHandlers.DataProvider);
+                    historyDataCacheProvider = new ZipDataCacheProvider(AlgorithmHandlers.DataProvider, isDataEphemeral:_liveMode);
                     historyProvider.Initialize(
                         new HistoryProviderInitializeParameters(
                             job,
-                            _systemHandlers.Api,
-                            _algorithmHandlers.DataProvider,
+                            SystemHandlers.Api,
+                            AlgorithmHandlers.DataProvider,
                             historyDataCacheProvider,
-                            _algorithmHandlers.MapFileProvider,
-                            _algorithmHandlers.FactorFileProvider,
+                            AlgorithmHandlers.MapFileProvider,
+                            AlgorithmHandlers.FactorFileProvider,
                             progress =>
                             {
                                 // send progress updates to the result handler only during initialization
                                 if (!algorithm.GetLocked() || algorithm.IsWarmingUp)
                                 {
-                                    _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.History,
-                                        string.Format("Processing history {0}%...", progress));
+                                    AlgorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.History,
+                                        Invariant($"Processing history {progress}%..."));
                                 }
-                            }
+                            },
+                            // disable parallel history requests for live trading
+                            parallelHistoryRequestsEnabled: !_liveMode,
+                            dataPermissionManager: AlgorithmHandlers.DataPermissionsManager
                         )
                     );
 
-                    historyProvider.InvalidConfigurationDetected += (sender, args) => { _algorithmHandlers.Results.ErrorMessage(args.Message); };
-                    historyProvider.NumericalPrecisionLimited += (sender, args) => { _algorithmHandlers.Results.DebugMessage(args.Message); };
-                    historyProvider.DownloadFailed += (sender, args) => { _algorithmHandlers.Results.ErrorMessage(args.Message, args.StackTrace); };
-                    historyProvider.ReaderErrorDetected += (sender, args) => { _algorithmHandlers.Results.RuntimeError(args.Message, args.StackTrace); };
+                    historyProvider.InvalidConfigurationDetected += (sender, args) => { AlgorithmHandlers.Results.ErrorMessage(args.Message); };
+                    historyProvider.NumericalPrecisionLimited += (sender, args) => { AlgorithmHandlers.Results.DebugMessage(args.Message); };
+                    historyProvider.DownloadFailed += (sender, args) => { AlgorithmHandlers.Results.ErrorMessage(args.Message, args.StackTrace); };
+                    historyProvider.ReaderErrorDetected += (sender, args) => { AlgorithmHandlers.Results.RuntimeError(args.Message, args.StackTrace); };
 
                     algorithm.HistoryProvider = historyProvider;
 
                     // initialize the default brokerage message handler
-                    algorithm.BrokerageMessageHandler = factory.CreateBrokerageMessageHandler(algorithm, job, _systemHandlers.Api);
+                    algorithm.BrokerageMessageHandler = factory.CreateBrokerageMessageHandler(algorithm, job, SystemHandlers.Api);
 
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
-                    initializeComplete = _algorithmHandlers.Setup.Setup(new SetupHandlerParameters(dataManager.UniverseSelection, algorithm, brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime));
+                    initializeComplete = AlgorithmHandlers.Setup.Setup(new SetupHandlerParameters(dataManager.UniverseSelection, algorithm, brokerage, job, AlgorithmHandlers.Results, AlgorithmHandlers.Transactions, AlgorithmHandlers.RealTime, AlgorithmHandlers.ObjectStore));
 
                     // set this again now that we've actually added securities
-                    _algorithmHandlers.Results.SetAlgorithm(algorithm);
+                    AlgorithmHandlers.Results.SetAlgorithm(algorithm, AlgorithmHandlers.Setup.StartingPortfolioValue);
 
                     // alpha handler needs start/end dates to determine sample step sizes
-                    _algorithmHandlers.Alphas.OnAfterAlgorithmInitialized(algorithm);
+                    AlgorithmHandlers.Alphas.OnAfterAlgorithmInitialized(algorithm);
 
                     //If there are any reasons it failed, pass these back to the IDE.
-                    if (!initializeComplete || algorithm.ErrorMessages.Count > 0 || _algorithmHandlers.Setup.Errors.Count > 0)
+                    if (!initializeComplete || algorithm.ErrorMessages.Count > 0 || AlgorithmHandlers.Setup.Errors.Count > 0)
                     {
                         initializeComplete = false;
                         //Get all the error messages: internal in algorithm and external in setup handler.
-                        var errorMessage = String.Join(",", algorithm.ErrorMessages);
-                        errorMessage += String.Join(",", _algorithmHandlers.Setup.Errors.Select(e =>
+                        var errorMessage = string.Join(",", algorithm.ErrorMessages);
+                        errorMessage += string.Join(",", AlgorithmHandlers.Setup.Errors.Select(e =>
                         {
                             var message = e.Message;
                             if (e.InnerException != null)
                             {
-                                var err = _exceptionInterpreter.Interpret(e.InnerException, _exceptionInterpreter);
-                                message += _exceptionInterpreter.GetExceptionMessageHeader(err);
+                                var err = _exceptionInterpreter.Value.Interpret(e.InnerException, _exceptionInterpreter.Value);
+                                message += _exceptionInterpreter.Value.GetExceptionMessageHeader(err);
                             }
                             return message;
                         }));
                         Log.Error("Engine.Run(): " + errorMessage);
-                        _algorithmHandlers.Results.RuntimeError(errorMessage);
-                        _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, errorMessage);
+                        AlgorithmHandlers.Results.RuntimeError(errorMessage);
+                        SystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, errorMessage);
                     }
                 }
                 catch (Exception err)
                 {
                     Log.Error(err);
                     var runtimeMessage = "Algorithm.Initialize() Error: " + err.Message + " Stack Trace: " + err;
-                    _algorithmHandlers.Results.RuntimeError(runtimeMessage, err.ToString());
-                    _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, runtimeMessage);
+                    AlgorithmHandlers.Results.RuntimeError(runtimeMessage, err.ToString());
+                    SystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, runtimeMessage);
                 }
 
 
                 // log the job endpoints
                 Log.Trace("JOB HANDLERS: ");
-                Log.Trace("         DataFeed:     " + _algorithmHandlers.DataFeed.GetType().FullName);
-                Log.Trace("         Setup:        " + _algorithmHandlers.Setup.GetType().FullName);
-                Log.Trace("         RealTime:     " + _algorithmHandlers.RealTime.GetType().FullName);
-                Log.Trace("         Results:      " + _algorithmHandlers.Results.GetType().FullName);
-                Log.Trace("         Transactions: " + _algorithmHandlers.Transactions.GetType().FullName);
-                Log.Trace("         Alpha:        " + _algorithmHandlers.Alphas.GetType().FullName);
+                Log.Trace("         DataFeed:     " + AlgorithmHandlers.DataFeed.GetType().FullName);
+                Log.Trace("         Setup:        " + AlgorithmHandlers.Setup.GetType().FullName);
+                Log.Trace("         RealTime:     " + AlgorithmHandlers.RealTime.GetType().FullName);
+                Log.Trace("         Results:      " + AlgorithmHandlers.Results.GetType().FullName);
+                Log.Trace("         Transactions: " + AlgorithmHandlers.Transactions.GetType().FullName);
+                Log.Trace("         Alpha:        " + AlgorithmHandlers.Alphas.GetType().FullName);
+                Log.Trace("         ObjectStore:  " + AlgorithmHandlers.ObjectStore.GetType().FullName);
                 if (algorithm?.HistoryProvider != null)
                 {
                     Log.Trace("         History Provider:     " + algorithm.HistoryProvider.GetType().FullName);
@@ -261,18 +279,18 @@ namespace QuantConnect.Lean.Engine
                 if (initializeComplete)
                 {
                     // notify the LEAN manager that the algorithm is initialized and starting
-                    _systemHandlers.LeanManager.OnAlgorithmStart();
+                    SystemHandlers.LeanManager.OnAlgorithmStart();
 
                     //-> Reset the backtest stopwatch; we're now running the algorithm.
-                    var startTime = DateTime.Now;
+                    var startTime = DateTime.UtcNow;
 
                     //Set algorithm as locked; set it to live mode if we're trading live, and set it to locked for no further updates.
                     algorithm.SetAlgorithmId(job.AlgorithmId);
                     algorithm.SetLocked();
 
                     //Load the associated handlers for transaction and realtime events:
-                    _algorithmHandlers.Transactions.Initialize(algorithm, brokerage, _algorithmHandlers.Results);
-                    _algorithmHandlers.RealTime.Setup(algorithm, job, _algorithmHandlers.Results, _systemHandlers.Api);
+                    AlgorithmHandlers.Transactions.Initialize(algorithm, brokerage, AlgorithmHandlers.Results);
+                    AlgorithmHandlers.RealTime.Setup(algorithm, job, AlgorithmHandlers.Results, SystemHandlers.Api, algorithmManager.TimeLimit);
 
                     // wire up the brokerage message handler
                     brokerage.Message += (sender, message) =>
@@ -293,20 +311,11 @@ namespace QuantConnect.Lean.Engine
                     };
 
                     //Send status to user the algorithm is now executing.
-                    _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.Running);
-
-                    //Launch the data, transaction and realtime handlers into dedicated threads
-                    threadTransactions = new Thread(_algorithmHandlers.Transactions.Run) { IsBackground = true, Name = "Transaction Thread" };
-                    threadRealTime = new Thread(_algorithmHandlers.RealTime.Run) { IsBackground = true, Name = "RealTime Thread" };
-                    threadAlphas = new Thread(() => _algorithmHandlers.Alphas.Run()) {IsBackground = true, Name = "Alpha Thread" };
-
-                    //Launch the data feed, result sending, and transaction models/handlers in separate threads.
-                    threadTransactions.Start(); // Transaction modeller scanning new order requests
-                    threadRealTime.Start(); // RealTime scan time for time based events:
-                    threadAlphas.Start(); // Alpha thread for processing algorithm alpha insights
+                    AlgorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.Running);
 
                     // Result manager scanning message queue: (started earlier)
-                    _algorithmHandlers.Results.DebugMessage(string.Format("Launching analysis for {0} with LEAN Engine v{1}", job.AlgorithmId, Globals.Version));
+                    AlgorithmHandlers.Results.DebugMessage(
+                        $"Launching analysis for {job.AlgorithmId} with LEAN Engine v{Globals.Version}");
 
                     try
                     {
@@ -314,7 +323,7 @@ namespace QuantConnect.Lean.Engine
                         var isolator = new Isolator();
 
                         // Execute the Algorithm Code:
-                        var complete = isolator.ExecuteWithTimeLimit(_algorithmHandlers.Setup.MaximumRuntime, algorithmManager.TimeLoopWithinLimits, () =>
+                        var complete = isolator.ExecuteWithTimeLimit(AlgorithmHandlers.Setup.MaximumRuntime, algorithmManager.TimeLimit.IsWithinLimit, () =>
                         {
                             try
                             {
@@ -322,7 +331,7 @@ namespace QuantConnect.Lean.Engine
                                 // -> Using this Data Feed,
                                 // -> Send Orders to this TransactionHandler,
                                 // -> Send Results to ResultHandler.
-                                algorithmManager.Run(job, algorithm, synchronizer, _algorithmHandlers.Transactions, _algorithmHandlers.Results, _algorithmHandlers.RealTime, _systemHandlers.LeanManager, _algorithmHandlers.Alphas, isolator.CancellationToken);
+                                algorithmManager.Run(job, algorithm, synchronizer, AlgorithmHandlers.Transactions, AlgorithmHandlers.Results, AlgorithmHandlers.RealTime, SystemHandlers.LeanManager, AlgorithmHandlers.Alphas, isolator.CancellationToken);
                             }
                             catch (Exception err)
                             {
@@ -334,12 +343,12 @@ namespace QuantConnect.Lean.Engine
                             }
 
                             Log.Trace("Engine.Run(): Exiting Algorithm Manager");
-                        }, job.Controls.RamAllocation);
+                        }, job.Controls.RamAllocation, workerThread:workerThread);
 
                         if (!complete)
                         {
-                            Log.Error("Engine.Main(): Failed to complete in time: " + _algorithmHandlers.Setup.MaximumRuntime.ToString("F"));
-                            throw new Exception("Failed to complete algorithm within " + _algorithmHandlers.Setup.MaximumRuntime.ToString("F")
+                            Log.Error("Engine.Main(): Failed to complete in time: " + AlgorithmHandlers.Setup.MaximumRuntime.ToStringInvariant("F"));
+                            throw new Exception("Failed to complete algorithm within " + AlgorithmHandlers.Setup.MaximumRuntime.ToStringInvariant("F")
                                 + " seconds. Please make it run faster.");
                         }
 
@@ -352,81 +361,30 @@ namespace QuantConnect.Lean.Engine
                     catch (Exception err)
                     {
                         //Error running the user algorithm: purge datafeed, send error messages, set algorithm status to failed.
+                        algorithm.RunTimeError = err;
+                        algorithm.SetStatus(AlgorithmStatus.RuntimeError);
                         HandleAlgorithmError(job, err);
                     }
 
                     // notify the LEAN manager that the algorithm has finished
-                    _systemHandlers.LeanManager.OnAlgorithmEnd();
+                    SystemHandlers.LeanManager.OnAlgorithmEnd();
 
                     try
                     {
-                        var trades = algorithm.TradeBuilder.ClosedTrades;
-                        var charts = new Dictionary<string, Chart>(_algorithmHandlers.Results.Charts);
-                        var orders = new Dictionary<int, Order>(_algorithmHandlers.Transactions.Orders);
-                        var holdings = new Dictionary<string, Holding>();
-                        var banner = new Dictionary<string, string>();
-                        var statisticsResults = new StatisticsResults();
-
                         var csvTransactionsFileName = Config.Get("transaction-log");
                         if (!string.IsNullOrEmpty(csvTransactionsFileName))
                         {
-                            SaveListOfTrades(_algorithmHandlers.Transactions, csvTransactionsFileName);
+                            SaveListOfTrades(AlgorithmHandlers.Transactions, csvTransactionsFileName);
                         }
-
-                        try
-                        {
-                            //Generates error when things don't exist (no charting logged, runtime errors in main algo execution)
-                            const string strategyEquityKey = "Strategy Equity";
-                            const string equityKey = "Equity";
-                            const string dailyPerformanceKey = "Daily Performance";
-                            const string benchmarkKey = "Benchmark";
-
-                            // make sure we've taken samples for these series before just blindly requesting them
-                            if (charts.ContainsKey(strategyEquityKey) &&
-                                charts[strategyEquityKey].Series.ContainsKey(equityKey) &&
-                                charts[strategyEquityKey].Series.ContainsKey(dailyPerformanceKey) &&
-                                charts.ContainsKey(benchmarkKey) &&
-                                charts[benchmarkKey].Series.ContainsKey(benchmarkKey)
-                            )
-                            {
-                                var equity = charts[strategyEquityKey].Series[equityKey].Values;
-                                var performance = charts[strategyEquityKey].Series[dailyPerformanceKey].Values;
-                                var profitLoss = new SortedDictionary<DateTime, decimal>(algorithm.Transactions.TransactionRecord);
-                                var totalTransactions = algorithm.Transactions.GetOrders(x => x.Status.IsFill()).Count();
-                                var benchmark = charts[benchmarkKey].Series[benchmarkKey].Values;
-
-                                statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity, performance, benchmark,
-                                    _algorithmHandlers.Setup.StartingPortfolioValue, algorithm.Portfolio.TotalFees, totalTransactions);
-
-                                //Some users have $0 in their brokerage account / starting cash of $0. Prevent divide by zero errors
-                                var netReturn = _algorithmHandlers.Setup.StartingPortfolioValue > 0 ?
-                                                (algorithm.Portfolio.TotalPortfolioValue - _algorithmHandlers.Setup.StartingPortfolioValue) / _algorithmHandlers.Setup.StartingPortfolioValue
-                                                : 0;
-
-                                //Add other fixed parameters.
-                                banner.Add("Unrealized", "$" + algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"));
-                                banner.Add("Fees", "-$" + algorithm.Portfolio.TotalFees.ToString("N2"));
-                                banner.Add("Net Profit", "$" + algorithm.Portfolio.TotalProfit.ToString("N2"));
-                                banner.Add("Return", netReturn.ToString("P"));
-                                banner.Add("Equity", "$" + algorithm.Portfolio.TotalPortfolioValue.ToString("N2"));
-                            }
-                        }
-                        catch (Exception err)
-                        {
-                            Log.Error(err, "Error generating statistics packet");
-                        }
-
-                        //Diagnostics Completed, Send Result Packet:
-                        var totalSeconds = (DateTime.Now - startTime).TotalSeconds;
-                        var dataPoints = algorithmManager.DataPoints + algorithm.HistoryProvider.DataPointCount;
 
                         if (!_liveMode)
                         {
+                            //Diagnostics Completed, Send Result Packet:
+                            var totalSeconds = (DateTime.UtcNow - startTime).TotalSeconds;
+                            var dataPoints = algorithmManager.DataPoints + algorithm.HistoryProvider.DataPointCount;
                             var kps = dataPoints / (double) 1000 / totalSeconds;
-                            _algorithmHandlers.Results.DebugMessage($"Algorithm Id:({job.AlgorithmId}) completed in {totalSeconds:F2} seconds at {kps:F0}k data points per second. Processing total of {dataPoints:N0} data points.");
+                            AlgorithmHandlers.Results.DebugMessage($"Algorithm Id:({job.AlgorithmId}) completed in {totalSeconds:F2} seconds at {kps:F0}k data points per second. Processing total of {dataPoints:N0} data points.");
                         }
-
-                        _algorithmHandlers.Results.SendFinalResult(job, orders, algorithm.Transactions.TransactionRecord, holdings, algorithm.Portfolio.CashBook, statisticsResults, banner);
                     }
                     catch (Exception err)
                     {
@@ -434,33 +392,37 @@ namespace QuantConnect.Lean.Engine
                     }
 
                     //Before we return, send terminate commands to close up the threads
-                    _algorithmHandlers.Transactions.Exit();
-                    _algorithmHandlers.DataFeed.Exit();
-                    _algorithmHandlers.RealTime.Exit();
-                    _algorithmHandlers.Alphas.Exit();
+                    AlgorithmHandlers.Transactions.Exit();
+                    AlgorithmHandlers.RealTime.Exit();
                     dataManager?.RemoveAllSubscriptions();
+                    workerThread?.Dispose();
                 }
+
+                synchronizer.DisposeSafely();
+                // Close data feed, alphas. Could be running even if algorithm initialization failed
+                AlgorithmHandlers.DataFeed.Exit();
+                AlgorithmHandlers.Alphas.Exit();
 
                 //Close result handler:
-                _algorithmHandlers.Results.Exit();
+                AlgorithmHandlers.Results.Exit();
 
                 //Wait for the threads to complete:
-                var ts = Stopwatch.StartNew();
-                while ((_algorithmHandlers.Results.IsActive
-                    || (_algorithmHandlers.Transactions != null && _algorithmHandlers.Transactions.IsActive)
-                    || (_algorithmHandlers.DataFeed != null && _algorithmHandlers.DataFeed.IsActive)
-                    || (_algorithmHandlers.RealTime != null && _algorithmHandlers.RealTime.IsActive)
-                    || (_algorithmHandlers.Alphas != null && _algorithmHandlers.Alphas.IsActive))
-                    && ts.ElapsedMilliseconds < 30*1000)
+                var millisecondInterval = 10;
+                var millisecondTotalWait = 0;
+                while ((AlgorithmHandlers.Results.IsActive
+                    || (AlgorithmHandlers.Transactions != null && AlgorithmHandlers.Transactions.IsActive)
+                    || (AlgorithmHandlers.DataFeed != null && AlgorithmHandlers.DataFeed.IsActive)
+                    || (AlgorithmHandlers.RealTime != null && AlgorithmHandlers.RealTime.IsActive)
+                    || (AlgorithmHandlers.Alphas != null && AlgorithmHandlers.Alphas.IsActive))
+                    && millisecondTotalWait < 30*1000)
                 {
-                    Thread.Sleep(100);
-                    Log.Trace("Waiting for threads to exit...");
+                    Thread.Sleep(millisecondInterval);
+                    if (millisecondTotalWait % (millisecondInterval * 10) == 0)
+                    {
+                        Log.Trace("Waiting for threads to exit...");
+                    }
+                    millisecondTotalWait += millisecondInterval;
                 }
-
-                //Terminate threads still in active state.
-                if (threadTransactions != null && threadTransactions.IsAlive) threadTransactions.Abort();
-                if (threadResults != null && threadResults.IsAlive) threadResults.Abort();
-                if (threadAlphas != null && threadAlphas.IsAlive) threadAlphas.Abort();
 
                 if (brokerage != null)
                 {
@@ -468,11 +430,13 @@ namespace QuantConnect.Lean.Engine
                     brokerage.Disconnect();
                     brokerage.Dispose();
                 }
-                if (_algorithmHandlers.Setup != null)
+                if (AlgorithmHandlers.Setup != null)
                 {
                     Log.Trace("Engine.Run(): Disposing of setup handler...");
-                    _algorithmHandlers.Setup.Dispose();
+                    AlgorithmHandlers.Setup.Dispose();
                 }
+
+                historyDataCacheProvider.DisposeSafely();
                 Log.Trace("Engine.Main(): Analysis Completed and Results Posted.");
             }
             catch (Exception err)
@@ -483,12 +447,12 @@ namespace QuantConnect.Lean.Engine
             {
                 //No matter what for live mode; make sure we've set algorithm status in the API for "not running" conditions:
                 if (_liveMode && algorithmManager.State != AlgorithmStatus.Running && algorithmManager.State != AlgorithmStatus.RuntimeError)
-                    _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, algorithmManager.State);
+                    SystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, algorithmManager.State);
 
-                _algorithmHandlers.Results.Exit();
-                _algorithmHandlers.DataFeed.Exit();
-                _algorithmHandlers.Transactions.Exit();
-                _algorithmHandlers.RealTime.Exit();
+                AlgorithmHandlers.Results.Exit();
+                AlgorithmHandlers.DataFeed.Exit();
+                AlgorithmHandlers.Transactions.Exit();
+                AlgorithmHandlers.RealTime.Exit();
             }
         }
 
@@ -500,17 +464,17 @@ namespace QuantConnect.Lean.Engine
         private void HandleAlgorithmError(AlgorithmNodePacket job, Exception err)
         {
             Log.Error(err, "Breaking out of parent try catch:");
-            if (_algorithmHandlers.DataFeed != null) _algorithmHandlers.DataFeed.Exit();
-            if (_algorithmHandlers.Results != null)
+            if (AlgorithmHandlers.DataFeed != null) AlgorithmHandlers.DataFeed.Exit();
+            if (AlgorithmHandlers.Results != null)
             {
                 // perform exception interpretation
-                err = _exceptionInterpreter.Interpret(err, _exceptionInterpreter);
+                err = _exceptionInterpreter.Value.Interpret(err, _exceptionInterpreter.Value);
 
-                var message = "Runtime Error: " + _exceptionInterpreter.GetExceptionMessageHeader(err);
+                var message = "Runtime Error: " + _exceptionInterpreter.Value.GetExceptionMessageHeader(err);
                 Log.Trace("Engine.Run(): Sending runtime error to user...");
-                _algorithmHandlers.Results.LogMessage(message);
-                _algorithmHandlers.Results.RuntimeError(message, err.ToString());
-                _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, message + " Stack Trace: " + err);
+                AlgorithmHandlers.Results.LogMessage(message);
+                AlgorithmHandlers.Results.RuntimeError(message, err.ToString());
+                SystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, message + " Stack Trace: " + err);
             }
         }
 
@@ -523,7 +487,22 @@ namespace QuantConnect.Lean.Engine
             {
                 historyProvider = Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider");
             }
-            return Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(historyProvider);
+            var provider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(historyProvider);
+
+            provider.InvalidConfigurationDetected += (sender, args) => { AlgorithmHandlers.Results.ErrorMessage(args.Message); };
+            provider.NumericalPrecisionLimited += (sender, args) => { AlgorithmHandlers.Results.DebugMessage(args.Message); };
+            provider.StartDateLimited += (sender, args) =>
+            {
+                if (!_historyStartDateLimitedWarningEmitted)
+                {
+                    _historyStartDateLimitedWarningEmitted = true;
+                    AlgorithmHandlers.Results.DebugMessage("Warning: when performing history requests, the start date will be adjusted if it is before the first known date for the symbol.");
+                }
+            };
+            provider.DownloadFailed += (sender, args) => { AlgorithmHandlers.Results.ErrorMessage(args.Message, args.StackTrace); };
+            provider.ReaderErrorDetected += (sender, args) => { AlgorithmHandlers.Results.RuntimeError(args.Message, args.StackTrace); };
+
+            return provider;
         }
 
         /// <summary>
@@ -543,15 +522,24 @@ namespace QuantConnect.Lean.Engine
             {
                 foreach (var order in orders)
                 {
-                    var line = string.Format("{0},{1},{2},{3},{4}",
-                        order.Time.ToString("yyyy-MM-dd HH:mm:ss"),
-                        order.Symbol.Value,
-                        order.Direction,
-                        order.Quantity,
-                        order.Price);
+                    var line = Invariant($"{order.Time.ToStringInvariant("yyyy-MM-dd HH:mm:ss")},") +
+                               Invariant($"{order.Symbol.Value},{order.Direction},{order.Quantity},{order.Price}");
                     writer.WriteLine(line);
                 }
             }
         }
+
+        /// <summary>
+        /// Initialize slow static variables
+        /// </summary>
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        private static MarketHoursDatabase StaticInitializations()
+        {
+            // This is slow because it create all static timezones
+            var nyTime = TimeZones.NewYork;
+            // slow because if goes to disk and parses json
+            return MarketHoursDatabase.FromDataFolder();
+        }
+
     } // End Algorithm Node Core Thread
 } // End Namespace

@@ -16,21 +16,19 @@ namespace QuantConnect.Configuration
         private const string ApplicationHelpText =
             "If you are looking for help, please go to https://www.quantconnect.com/lean/docs";
 
-        /// <summary>
-        /// Configuration file path
-        /// </summary>
-        private const string OptionConfig = "-c|--config";
-
-        private static readonly string[] AdvancedProperties =
-        {
-            "parameters",
-            "environments"
-        };
-
         private static readonly List<CommandLineOption> Options = new List<CommandLineOption>
             {
+                // the location of the configuration to use
                 new CommandLineOption("config", CommandOptionType.SingleValue),
-                new CommandLineOption("output", CommandOptionType.SingleValue),
+
+                // true will close lean console automatically without waiting for input
+                new CommandLineOption("close-automatically", CommandOptionType.SingleValue),
+
+                // the result destination folder this algorithm should use for logging and result.json
+                new CommandLineOption("results-destination-folder", CommandOptionType.SingleValue),
+
+                // the unique algorithm id
+                new CommandLineOption("algorithm-id", CommandOptionType.SingleValue),
 
                 // Options grabbed from json file
                 new CommandLineOption("environment", CommandOptionType.SingleValue),
@@ -44,7 +42,7 @@ namespace QuantConnect.Configuration
                 //Physical DLL location
                 new CommandLineOption("algorithm-location", CommandOptionType.SingleValue),
 
-                //Jupyter notebook
+                //Research notebook
                 new CommandLineOption("composer-dll-directory", CommandOptionType.SingleValue),
 
                 // engine
@@ -87,10 +85,8 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("ib-host", CommandOptionType.SingleValue),
                 new CommandLineOption("ib-port", CommandOptionType.SingleValue),
                 new CommandLineOption("ib-agent-description", CommandOptionType.SingleValue),
-                new CommandLineOption("ib-use-tws", CommandOptionType.NoValue),
                 new CommandLineOption("ib-tws-dir", CommandOptionType.SingleValue),
                 new CommandLineOption("ib-trading-mode", CommandOptionType.SingleValue),
-                new CommandLineOption("ib-controller-dir", CommandOptionType.SingleValue),
 
                 // tradier configuration
                 new CommandLineOption("tradier-account-id", CommandOptionType.SingleValue),

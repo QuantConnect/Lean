@@ -76,6 +76,7 @@ namespace QuantConnect.Orders.TimeInForces
                 case SecurityType.Equity:
                 case SecurityType.Option:
                 case SecurityType.Future:
+                case SecurityType.FutureOption:
                 default:
                     // expires at market close of expiry date
                     expired = time >= exchangeHours.GetNextMarketClose(Expiry.Date, false);

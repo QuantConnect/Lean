@@ -27,12 +27,21 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.GDAX
 {
     public partial class GDAXBrokerage : BaseWebsocketsBrokerage
     {
         private const int MaxDataPointsPerHistoricalRequest = 300;
+
+        // These are the only currencies accepted for fiat deposits
+        private static readonly HashSet<string> FiatCurrencies = new List<string>
+        {
+            Currencies.EUR,
+            Currencies.GBP,
+            Currencies.USD
+        }.ToHashSet();
 
         #region IBrokerage
         /// <summary>
@@ -47,17 +56,23 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns></returns>
         public override bool PlaceOrder(Order order)
         {
-            LockStream();
-
             var req = new RestRequest("/orders", Method.POST);
 
             dynamic payload = new ExpandoObject();
 
             payload.size = Math.Abs(order.Quantity);
-            payload.side = order.Direction.ToString().ToLower();
+            payload.side = order.Direction.ToLower();
             payload.type = ConvertOrderType(order.Type);
-            payload.price = (order as LimitOrder)?.LimitPrice ?? ((order as StopMarketOrder)?.StopPrice ?? 0);
-            payload.product_id = ConvertSymbol(order.Symbol);
+
+            if (order.Type != OrderType.Market)
+            {
+                payload.price =
+                    (order as LimitOrder)?.LimitPrice ??
+                    (order as StopLimitOrder)?.LimitPrice ??
+                    (order as StopMarketOrder)?.StopPrice ?? 0;
+            }
+
+            payload.product_id = _symbolMapper.GetBrokerageSymbol(order.Symbol);
 
             if (_algorithm.BrokerageModel.AccountType == AccountType.Margin)
             {
@@ -73,7 +88,15 @@ namespace QuantConnect.Brokerages.GDAX
                 }
             }
 
-            req.AddJsonBody(payload);
+            if (order.Type == OrderType.StopLimit)
+            {
+                payload.stop = order.Direction == OrderDirection.Buy ? "entry" : "loss";
+                payload.stop_price = (order as StopLimitOrder).StopPrice;
+            }
+
+            var json = JsonConvert.SerializeObject(payload);
+            Log.Trace($"GDAXBrokerage.PlaceOrder(): {json}");
+            req.AddJsonBody(json);
 
             GetAuthenticationToken(req);
             var response = ExecuteRestRequest(req, GdaxEndpointType.Private);
@@ -88,7 +111,6 @@ namespace QuantConnect.Brokerages.GDAX
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
 
-                    UnlockStream();
                     return true;
                 }
 
@@ -98,7 +120,6 @@ namespace QuantConnect.Brokerages.GDAX
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "GDAX Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
 
-                    UnlockStream();
                     return true;
                 }
 
@@ -120,7 +141,9 @@ namespace QuantConnect.Brokerages.GDAX
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "GDAX Order Event") { Status = OrderStatus.Submitted });
                 Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
 
-                UnlockStream();
+                _pendingOrders.TryAdd(brokerId, order);
+                _fillMonitorResetEvent.Set();
+
                 return true;
             }
 
@@ -128,7 +151,6 @@ namespace QuantConnect.Brokerages.GDAX
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "GDAX Order Event") { Status = OrderStatus.Invalid });
             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
-            UnlockStream();
             return true;
         }
 
@@ -163,6 +185,9 @@ namespace QuantConnect.Brokerages.GDAX
                         DateTime.UtcNow,
                         OrderFee.Zero,
                         "GDAX Order Event") { Status = OrderStatus.Canceled });
+
+                    Order orderRemoved;
+                    _pendingOrders.TryRemove(id, out orderRemoved);
                 }
             }
 
@@ -170,12 +195,24 @@ namespace QuantConnect.Brokerages.GDAX
         }
 
         /// <summary>
+        /// Connects the client to the broker's remote servers
+        /// </summary>
+        public override void Connect()
+        {
+            base.Connect();
+
+            AccountBaseCurrency = GetAccountBaseCurrency();
+        }
+
+        /// <summary>
         /// Closes the websockets connection
         /// </summary>
         public override void Disconnect()
         {
-            base.Disconnect();
-
+            if (!_canceller.IsCancellationRequested)
+            {
+                _canceller.Cancel();
+            }
             WebSocket.Close();
         }
 
@@ -187,7 +224,7 @@ namespace QuantConnect.Brokerages.GDAX
         {
             var list = new List<Order>();
 
-            var req = new RestRequest("/orders?status=open&status=pending", Method.GET);
+            var req = new RestRequest("/orders?status=open&status=pending&status=active", Method.GET);
             GetAuthenticationToken(req);
             var response = ExecuteRestRequest(req, GdaxEndpointType.Private);
 
@@ -203,6 +240,10 @@ namespace QuantConnect.Brokerages.GDAX
                 if (item.Type == "market")
                 {
                     order = new MarketOrder { Price = item.Price };
+                }
+                else if (!string.IsNullOrEmpty(item.Stop))
+                {
+                    order = new StopLimitOrder { StopPrice = item.StopPrice, LimitPrice = item.Price };
                 }
                 else if (item.Type == "limit")
                 {
@@ -221,7 +262,7 @@ namespace QuantConnect.Brokerages.GDAX
 
                 order.Quantity = item.Side == "sell" ? -item.Size : item.Size;
                 order.BrokerId = new List<string> { item.Id };
-                order.Symbol = ConvertProductId(item.ProductId);
+                order.Symbol = _symbolMapper.GetLeanSymbol(item.ProductId, SecurityType.Crypto, Market.GDAX);
                 order.Time = DateTime.UtcNow;
                 order.Status = ConvertOrderStatus(item);
                 order.Price = item.Price;
@@ -278,7 +319,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 if (item.Balance > 0)
                 {
-                    list.Add(new CashAmount(item.Balance, item.Currency.ToUpper()));
+                    list.Add(new CashAmount(item.Balance, item.Currency.ToUpperInvariant()));
                 }
             }
 
@@ -295,6 +336,13 @@ namespace QuantConnect.Brokerages.GDAX
             // GDAX API only allows us to support history requests for TickType.Trade
             if (request.TickType != TickType.Trade)
             {
+                yield break;
+            }
+
+            if (!_symbolMapper.IsKnownLeanSymbol(request.Symbol))
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidSymbol",
+                    $"Unknown symbol: {request.Symbol.Value}, no history returned"));
                 yield break;
             }
 
@@ -326,7 +374,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="request">The history request instance</param>
         private IEnumerable<TradeBar> GetHistoryFromCandles(HistoryRequest request)
         {
-            var productId = ConvertSymbol(request.Symbol);
+            var productId = _symbolMapper.GetBrokerageSymbol(request.Symbol);
             var granularity = Convert.ToInt32(request.Resolution.ToTimeSpan().TotalSeconds);
 
             var startTime = request.StartTimeUtc;
@@ -411,10 +459,41 @@ namespace QuantConnect.Brokerages.GDAX
         #endregion
 
         /// <summary>
+        /// Gets the account base currency
+        /// </summary>
+        private string GetAccountBaseCurrency()
+        {
+            var req = new RestRequest("/accounts", Method.GET);
+            GetAuthenticationToken(req);
+            var response = ExecuteRestRequest(req, GdaxEndpointType.Private);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception($"GDAXBrokerage.GetAccountBaseCurrency(): request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+            }
+
+            foreach (var item in JsonConvert.DeserializeObject<Messages.Account[]>(response.Content))
+            {
+                if (FiatCurrencies.Contains(item.Currency))
+                {
+                    return item.Currency;
+                }
+            }
+
+            return Currencies.USD;
+        }
+
+        /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public override void Dispose()
         {
+            _ctsFillMonitor.Cancel();
+            _fillMonitorTask.Wait(TimeSpan.FromSeconds(5));
+
+            _canceller.DisposeSafely();
+            _aggregator.DisposeSafely();
+
             _publicEndpointRateLimiter.Dispose();
             _privateEndpointRateLimiter.Dispose();
         }

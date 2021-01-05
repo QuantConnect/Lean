@@ -33,10 +33,5 @@ namespace QuantConnect.Interfaces
         ///     Returns the amount of data config subscriptions processed for the SubscriptionManager
         /// </summary>
         int SubscriptionManagerCount();
-
-        /// <summary>
-        ///     Flags the existence of custom data in the subscriptions
-        /// </summary>
-        bool HasCustomData { get; set; }
     }
 }

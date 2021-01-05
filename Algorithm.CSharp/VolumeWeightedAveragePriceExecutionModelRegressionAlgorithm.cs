@@ -15,7 +15,6 @@
 */
 
 using System.Collections.Generic;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -30,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// This algorithm shows how the execution model works to split up orders and submit them only when
     /// the price is on the favorable side of the intraday VWAP.
     /// </summary>
-    public class VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    public class VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -75,38 +74,46 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "394"},
-            {"Average Win", "0.03%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "608.511%"},
-            {"Drawdown", "1.000%"},
-            {"Expectancy", "5.981"},
-            {"Net Profit", "2.535%"},
-            {"Sharpe Ratio", "6.099"},
-            {"Loss Rate", "35%"},
-            {"Win Rate", "65%"},
-            {"Profit-Loss Ratio", "9.79"},
-            {"Alpha", "0"},
-            {"Beta", "116.165"},
-            {"Annual Standard Deviation", "0.21"},
-            {"Annual Variance", "0.044"},
-            {"Information Ratio", "6.049"},
-            {"Tracking Error", "0.21"},
-            {"Treynor Ratio", "0.011"},
-            {"Total Fees", "$506.02"},
+            {"Total Trades", "268"},
+            {"Average Win", "0.04%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "453.616%"},
+            {"Drawdown", "1.200%"},
+            {"Expectancy", "2.224"},
+            {"Net Profit", "2.212%"},
+            {"Sharpe Ratio", "12.474"},
+            {"Probabilistic Sharpe Ratio", "71.923%"},
+            {"Loss Rate", "31%"},
+            {"Win Rate", "69%"},
+            {"Profit-Loss Ratio", "3.67"},
+            {"Alpha", "1.052"},
+            {"Beta", "1.041"},
+            {"Annual Standard Deviation", "0.245"},
+            {"Annual Variance", "0.06"},
+            {"Information Ratio", "12.783"},
+            {"Tracking Error", "0.088"},
+            {"Treynor Ratio", "2.937"},
+            {"Total Fees", "$399.57"},
+            {"Fitness Score", "0.936"},
+            {"Kelly Criterion Estimate", "34.534"},
+            {"Kelly Criterion Probability Value", "0.444"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "518.681"},
+            {"Portfolio Turnover", "0.936"},
             {"Total Insights Generated", "5"},
             {"Total Insights Closed", "3"},
             {"Total Insights Analysis Completed", "3"},
             {"Long Insight Count", "3"},
             {"Short Insight Count", "2"},
             {"Long/Short Ratio", "150.0%"},
-            {"Estimated Monthly Alpha Value", "$799818.3566"},
-            {"Total Accumulated Estimated Alpha Value", "$128859.6241"},
-            {"Mean Population Estimated Insight Value", "$42953.2080"},
+            {"Estimated Monthly Alpha Value", "$732515.0932"},
+            {"Total Accumulated Estimated Alpha Value", "$118016.3206"},
+            {"Mean Population Estimated Insight Value", "$39338.7735"},
             {"Mean Population Direction", "100%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "100%"},
-            {"Rolling Averaged Population Magnitude", "0%"}
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "2040175467"}
         };
     }
 }

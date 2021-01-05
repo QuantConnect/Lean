@@ -34,7 +34,7 @@ from datetime import date, timedelta
 ### This example algorithm defines its own custom coarse/fine fundamental selection model
 ### with equally weighted portfolio and a maximum sector exposure.
 ### </summary>
-class SectorExposureRiskFrameworkAlgorithm(QCAlgorithmFramework):
+class SectorExposureRiskFrameworkAlgorithm(QCAlgorithm):
     '''This example algorithm defines its own custom coarse/fine fundamental selection model
 ### with equally weighted portfolio and a maximum sector exposure.'''
 
@@ -43,7 +43,7 @@ class SectorExposureRiskFrameworkAlgorithm(QCAlgorithmFramework):
         # Set requested data resolution
         self.UniverseSettings.Resolution = Resolution.Daily
 
-        self.SetStartDate(2014, 3, 24)
+        self.SetStartDate(2014, 3, 25)
         self.SetEndDate(2014, 4, 7)
         self.SetCash(100000)
 

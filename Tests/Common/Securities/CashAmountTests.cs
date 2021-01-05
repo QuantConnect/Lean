@@ -14,6 +14,7 @@
 */
 
 using System;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Securities;
 
@@ -22,13 +23,6 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class CashAmountTests
     {
-        [Test]
-        public void DoesNotInitializeWithInvalidArguments()
-        {
-            Assert.Throws<ArgumentNullException>(() => new CashAmount(100m, null));
-            Assert.Throws<ArgumentNullException>(() => new CashAmount(100m, ""));
-        }
-
         [Test]
         public void InitializesProperlyUsingAccountCurrency()
         {
@@ -112,6 +106,17 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsNotNull(cashAmount);
             Assert.AreEqual(0, cashAmount.Amount);
             Assert.AreEqual(null, cashAmount.Currency);
+        }
+
+        [Test]
+        public void RoundTripSerialization()
+        {
+            var cashAmount = new CashAmount(1000m, "EUR");
+
+            var serialized = JsonConvert.SerializeObject(cashAmount);
+            var deserialize = JsonConvert.DeserializeObject<CashAmount>(serialized);
+
+            Assert.AreEqual(cashAmount, deserialize);
         }
     }
 }

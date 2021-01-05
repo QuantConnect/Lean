@@ -19,13 +19,49 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using NUnit.Framework;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class MapFileResolverTests
     {
         private readonly MapFileResolver _resolver = CreateMapFileResolver();
+
+        [Test]
+        public void ChecksFirstDate()
+        {
+            var mapFileProvider = new LocalDiskMapFileProvider();
+            var mapFileResolver = mapFileProvider.Get(Market.USA);
+            // QQQ started trading on 19990310
+            var mapFile = mapFileResolver.ResolveMapFile("QQQ", new DateTime(1999, 3, 9));
+            Assert.IsTrue(mapFile.IsNullOrEmpty());
+
+            var mapFile2 = mapFileResolver.ResolveMapFile("QQQ", new DateTime(2015, 3, 10));
+            Assert.IsFalse(mapFile2.IsNullOrEmpty());
+        }
+
+        [Test]
+        public void ResolvesCorrectlyReUsedTicker()
+        {
+            var mapFileProvider = new LocalDiskMapFileProvider();
+            var mapFileResolver = mapFileProvider.Get(Market.USA);
+
+            // FB.1 started trading on 19990929 and ended on 20030328
+            var mapFile = mapFileResolver.ResolveMapFile("FB", new DateTime(1999, 9, 28));
+            Assert.IsTrue(mapFile.IsNullOrEmpty());
+
+            mapFile = mapFileResolver.ResolveMapFile("FB", new DateTime(1999, 9, 29));
+            Assert.IsFalse(mapFile.IsNullOrEmpty());
+
+            // FB started trading on 20120518
+            mapFile = mapFileResolver.ResolveMapFile("FB", new DateTime(2012, 5, 17));
+            Assert.IsTrue(mapFile.IsNullOrEmpty());
+
+            mapFile = mapFileResolver.ResolveMapFile("FB", new DateTime(2015, 5, 18));
+            Assert.IsFalse(mapFile.IsNullOrEmpty());
+        }
 
         [Test]
         public void InitializationSpeedTest()
@@ -34,7 +70,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
             var sw = Stopwatch.StartNew();
             var mapFileresolver = mapFileProvider.Get(Market.USA);
             sw.Stop();
-            Console.WriteLine($"elapsed: {sw.Elapsed.TotalSeconds} seconds");
+            Log.Trace($"elapsed: {sw.Elapsed.TotalSeconds} seconds");
         }
 
         [Test]

@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Globalization;
 using System.IO;
 using NUnit.Framework;
 using QuantConnect.Data.Auxiliary;
@@ -57,7 +58,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
 
             foreach (var fileName in Directory.EnumerateFiles(factorFileFolder))
             {
-                var ticker = Path.GetFileNameWithoutExtension(fileName).ToUpper();
+                var ticker = Path.GetFileNameWithoutExtension(fileName).ToUpper(CultureInfo.InvariantCulture);
                 var symbol = Symbol.Create(ticker, SecurityType.Equity, QuantConnect.Market.USA);
 
                 try

@@ -38,13 +38,15 @@ from Portfolio.MeanVarianceOptimizationPortfolioConstructionModel import *
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="trading and orders" />
-class MeanVarianceOptimizationFrameworkAlgorithm(QCAlgorithmFramework):
+class MeanVarianceOptimizationFrameworkAlgorithm(QCAlgorithm):
     '''Mean Variance Optimization algorithm.'''
 
     def Initialize(self):
 
         # Set requested data resolution
         self.UniverseSettings.Resolution = Resolution.Minute
+
+        self.Settings.RebalancePortfolioOnInsightChanges = False
 
         self.SetStartDate(2013,10,7)   #Set Start Date
         self.SetEndDate(2013,10,11)    #Set End Date
@@ -65,6 +67,6 @@ class MeanVarianceOptimizationFrameworkAlgorithm(QCAlgorithmFramework):
 
         return self.symbols[0:last]
 
-    def OnOrderEvent(self, orderEvent):
+    def OnOrderEvent(self,  orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
-            self.Debug(orderEvent)
+            self.Log(str(orderEvent))

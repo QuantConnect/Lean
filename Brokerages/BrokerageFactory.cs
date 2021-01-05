@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages
 {
@@ -51,10 +52,10 @@ namespace QuantConnect.Brokerages
         public abstract Dictionary<string, string> BrokerageData { get; }
 
         /// <summary>
-        /// Gets a brokerage model that can be used to model this brokerage's unique
-        /// behaviors
+        /// Gets a brokerage model that can be used to model this brokerage's unique behaviors
         /// </summary>
-        public abstract IBrokerageModel BrokerageModel { get; }
+        /// <param name="orderProvider">The order provider</param>
+        public abstract IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider);
 
         /// <summary>
         /// Creates a new IBrokerage instance
@@ -80,11 +81,11 @@ namespace QuantConnect.Brokerages
         {
             _brokerageType = brokerageType;
         }
-        
+
         /// <summary>
         /// Reads a value from the brokerage data, adding an error if the key is not found
         /// </summary>
-        protected static T Read<T>(IReadOnlyDictionary<string, string> brokerageData, string key, ICollection<string> errors) 
+        protected static T Read<T>(IReadOnlyDictionary<string, string> brokerageData, string key, ICollection<string> errors)
             where T : IConvertible
         {
             string value;
@@ -100,7 +101,7 @@ namespace QuantConnect.Brokerages
             }
             catch (Exception err)
             {
-                errors.Add(string.Format("BrokerageFactory.CreateBrokerage(): Error converting key '{0}' with value '{1}'. {2}", key, value, err.Message));
+                errors.Add($"BrokerageFactory.CreateBrokerage(): Error converting key '{key}' with value '{value}'. {err.Message}");
                 return default(T);
             }
         }

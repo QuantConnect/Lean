@@ -64,6 +64,22 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             Assert.AreEqual(new DateTime(2014, 03, 27), mapFile.FirstDate);
         }
 
+        [Test]
+        public void GenerateMapFileCSV()
+        {
+            var mapFile = new MapFile("enrn", new List<MapFileRow>()
+            {
+                new MapFileRow(new DateTime(2001, 1, 1), "enrn"),
+                new MapFileRow(new DateTime(2001, 12, 2), "enrnq")
+            });
 
+            var csvData = new List<string>()
+            {
+                "20010101,enrn",
+                "20011202,enrnq"
+            };
+
+            Assert.True(mapFile.ToCsvLines().SequenceEqual(csvData));
+        }
     }
 }

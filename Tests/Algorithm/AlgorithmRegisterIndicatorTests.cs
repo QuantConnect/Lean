@@ -23,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -80,9 +81,29 @@ namespace QuantConnect.Tests.Algorithm
                 {
                     throw new NotSupportedException($"RegistersIndicatorProperlyPython(): Unsupported indicator data type: {indicatorTest.GetType()}");
                 }
-                var actual = _algorithm.SubscriptionManager.Subscriptions.FirstOrDefault().Consolidators.Count;
+                var actual = _algorithm.SubscriptionManager.Subscriptions
+                    .Single(s => s.TickType == LeanData.GetCommonTickType(SecurityType.Equity))
+                    .Consolidators.Count;
                 Assert.AreEqual(expected, actual);
             }
+        }
+
+
+        private static TestCaseData[] IndicatorNameParameters => new[]
+        {
+            new TestCaseData(Symbols.SPY, "TEST", Resolution.Tick, "TEST(SPY_tick)"),
+            new TestCaseData(Symbols.SPY, "TEST", Resolution.Second, "TEST(SPY_sec)"),
+            new TestCaseData(Symbols.SPY, "TEST", Resolution.Minute, "TEST(SPY_min)"),
+            new TestCaseData(Symbols.SPY, "TEST", Resolution.Hour, "TEST(SPY_hr)"),
+            new TestCaseData(Symbols.SPY, "TEST", Resolution.Daily, "TEST(SPY_day)"),
+            new TestCaseData(Symbol.Empty, "TEST", Resolution.Minute, "TEST(min)"),
+            new TestCaseData(Symbol.None, "TEST", Resolution.Minute, "TEST(min)")
+        };
+
+        [Test, TestCaseSource(nameof(IndicatorNameParameters))]
+        public void CreateIndicatorName(Symbol symbol, string baseName, Resolution resolution, string expectation)
+        {
+            Assert.AreEqual(expectation, _algorithm.CreateIndicatorName(symbol, baseName, resolution));
         }
 
         [Test]
@@ -114,7 +135,9 @@ namespace QuantConnect.Tests.Algorithm
                 Assert.DoesNotThrow(() => _algorithm.Plot(_spy.Value, indicator));
                 expected++;
 
-                var actual = _algorithm.SubscriptionManager.Subscriptions.FirstOrDefault().Consolidators.Count;
+                var actual = _algorithm.SubscriptionManager.Subscriptions
+                    .Single(s => s.TickType == LeanData.GetCommonTickType(SecurityType.Equity))
+                    .Consolidators.Count;
                 Assert.AreEqual(expected, actual);
             }
         }
@@ -122,35 +145,44 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void RegisterPythonCustomIndicatorProperly()
         {
+            const string code = @"
+class GoodCustomIndicator :
+    def __init__(self):
+        self.IsReady = True
+        self.Value = 0
+    def Update(self, input):
+        self.Value = input.Value
+        return True
+class BadCustomIndicator:
+    def __init__(self):
+        self.IsReady = True
+        self.Value = 0
+    def Updat(self, input):
+        self.Value = input.Value
+        return True";
+
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                    "class GoodCustomIndicator:\n" +
-                    "    def __init__(self):\n" +
-                    "        pass\n" +
-                    "    def Update(self, input):\n" +
-                    "        return input\n" +
-                    "class BadCustomIndicator:\n" +
-                    "    def __init__(self):\n" +
-                    "        pass\n" +
-                    "    def Updat(self, input):\n" +
-                    "        return input");
+                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(), code);
 
                 var goodIndicator = module.GetAttr("GoodCustomIndicator").Invoke();
                 Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, goodIndicator, Resolution.Minute));
 
-                var actual = _algorithm.SubscriptionManager.Subscriptions.FirstOrDefault().Consolidators.Count;
+                var actual = _algorithm.SubscriptionManager.Subscriptions
+                    .Single(s => s.TickType == LeanData.GetCommonTickType(SecurityType.Equity))
+                    .Consolidators.Count;
                 Assert.AreEqual(1, actual);
 
                 var badIndicator = module.GetAttr("BadCustomIndicator").Invoke();
-                Assert.Throws<ArgumentException>(() => _algorithm.RegisterIndicator(_spy, badIndicator, Resolution.Minute));
+                Assert.Throws<NotImplementedException>(() => _algorithm.RegisterIndicator(_spy, badIndicator, Resolution.Minute));
             }
         }
 
         [Test]
         public void RegistersIndicatorProperlyPythonScript()
         {
-            var code = @"from clr import AddReference
+            const string code = @"
+from clr import AddReference
 AddReference('System')
 AddReference('QuantConnect.Algorithm')
 AddReference('QuantConnect.Indicators')
@@ -168,9 +200,10 @@ algo = QCAlgorithm()
 
 marketHoursDatabase = MarketHoursDatabase.FromDataFolder()
 symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder()
-securityService =  SecurityService(algo.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDatabase, algo)
+securityService =  SecurityService(algo.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDatabase, algo, RegisteredSecurityDataTypesProvider.Null, SecurityCacheProvider(algo.Portfolio))
 algo.Securities.SetSecurityService(securityService)
-dataManager = DataManager(None, UniverseSelection(algo, securityService), algo, algo.TimeKeeper, marketHoursDatabase)
+dataPermissionManager = DataPermissionManager()
+dataManager = DataManager(None, UniverseSelection(algo, securityService, dataPermissionManager, None), algo, algo.TimeKeeper, marketHoursDatabase, False, RegisteredSecurityDataTypesProvider.Null, dataPermissionManager)
 algo.SubscriptionManager.SetDataManager(dataManager)
 
 

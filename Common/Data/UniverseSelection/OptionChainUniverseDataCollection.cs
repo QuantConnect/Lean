@@ -50,7 +50,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="symbol">A common identifier for all data in this packet</param>
         /// <param name="data">The data to add to this collection</param>
         /// <param name="underlying">The option chain's underlying price data</param>
-        public OptionChainUniverseDataCollection(DateTime time, Symbol symbol, IEnumerable<BaseData> data = null, BaseData underlying = null)
+        public OptionChainUniverseDataCollection(DateTime time, Symbol symbol, List<BaseData> data = null, BaseData underlying = null)
             : this(time, time, symbol, data, underlying)
         {
         }
@@ -63,7 +63,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="symbol">A common identifier for all data in this packet</param>
         /// <param name="data">The data to add to this collection</param>
         /// <param name="underlying">The option chain's underlying price data</param>
-        public OptionChainUniverseDataCollection(DateTime time, DateTime endTime, Symbol symbol, IEnumerable<BaseData> data = null, BaseData underlying = null)
+        public OptionChainUniverseDataCollection(DateTime time, DateTime endTime, Symbol symbol, List<BaseData> data = null, BaseData underlying = null)
             : base(time, endTime, symbol, data)
         {
             Underlying = underlying;

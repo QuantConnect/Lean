@@ -41,9 +41,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             security.Holdings.SetHoldings(1m, holdings);
 
             var buyingPowerMock = new Mock<IBuyingPowerModel>();
-            buyingPowerMock.Setup(bpm => bpm.GetMaximumOrderQuantityForTargetValue(It.IsAny<GetMaximumOrderQuantityForTargetValueParameters>()))
-                .Returns(new GetMaximumOrderQuantityForTargetValueResult(bpmQuantity, null, false));
+            buyingPowerMock.Setup(bpm => bpm.GetMaximumOrderQuantityForTargetBuyingPower(It.IsAny<GetMaximumOrderQuantityForTargetBuyingPowerParameters>()))
+                .Returns(new GetMaximumOrderQuantityResult(bpmQuantity, null, false));
             security.BuyingPowerModel = buyingPowerMock.Object;
+            buyingPowerMock.Setup(bpm => bpm.GetLeverage(It.IsAny<Security>())).Returns(1);
 
             var target = PortfolioTarget.Percent(algorithm, security.Symbol, targetPercent);
 
@@ -83,13 +84,51 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             security.Holdings.SetHoldings(1m, holdings);
 
             var buyingPowerMock = new Mock<IBuyingPowerModel>();
-            buyingPowerMock.Setup(bpm => bpm.GetMaximumOrderQuantityForTargetValue(It.IsAny<GetMaximumOrderQuantityForTargetValueParameters>()))
-                .Returns(new GetMaximumOrderQuantityForTargetValueResult(0, "The portfolio does not have enough margin available."));
+            buyingPowerMock.Setup(bpm => bpm.GetMaximumOrderQuantityForTargetBuyingPower(It.IsAny<GetMaximumOrderQuantityForTargetBuyingPowerParameters>()))
+                .Returns(new GetMaximumOrderQuantityResult(0, "The portfolio does not have enough margin available."));
             security.BuyingPowerModel = buyingPowerMock.Object;
+            buyingPowerMock.Setup(bpm => bpm.GetLeverage(It.IsAny<Security>())).Returns(1);
 
             var target = PortfolioTarget.Percent(algorithm, security.Symbol, targetPercent);
 
             Assert.IsNull(target);
+        }
+
+        [TestCase(-3, true)]
+        [TestCase(3, true)]
+        [TestCase(2, false)]
+        [TestCase(-2, false)]
+        [TestCase(0.01, true)]
+        [TestCase(-0.01, true)]
+        [TestCase(0.1, false)]
+        [TestCase(-0.1, false)]
+        [TestCase(0, false)]
+        public void PercentIgnoresExtremeValuesBasedOnSettings(double value, bool shouldBeNull)
+        {
+            var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
+            algorithm.Settings.MaxAbsolutePortfolioTargetPercentage = 2;
+            algorithm.Settings.MinAbsolutePortfolioTargetPercentage = 0.1m;
+            algorithm.Initialize();
+            algorithm.PostInitialize();
+            var security = algorithm.Securities.Single().Value;
+            security.SetMarketPrice(new Tick { Value = 1m });
+
+            var buyingPowerMock = new Mock<IBuyingPowerModel>();
+            buyingPowerMock.Setup(bpm => bpm.GetMaximumOrderQuantityForTargetBuyingPower(It.IsAny<GetMaximumOrderQuantityForTargetBuyingPowerParameters>()))
+                .Returns(new GetMaximumOrderQuantityResult(1, null, false));
+            buyingPowerMock.Setup(bpm => bpm.GetLeverage(It.IsAny<Security>())).Returns(1);
+            security.BuyingPowerModel = buyingPowerMock.Object;
+
+            var target = PortfolioTarget.Percent(algorithm, security.Symbol, value);
+
+            if (shouldBeNull)
+            {
+                Assert.IsNull(target);
+            }
+            else
+            {
+                Assert.IsNotNull(target);
+            }
         }
     }
 }

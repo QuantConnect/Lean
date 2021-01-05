@@ -23,7 +23,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.Framework.Selection
 {
     /// <summary>
-    /// Portoflio selection model that uses coarse/fine selectors. For US equities only.
+    /// Portfolio selection model that uses coarse/fine selectors. For US equities only.
     /// </summary>
     public class FineFundamentalUniverseSelectionModel : FundamentalUniverseSelectionModel
     {
@@ -64,24 +64,24 @@ namespace QuantConnect.Algorithm.Framework.Selection
             )
             : base(true, universeSettings, securityInitializer)
         {
-            Func<IEnumerable<FineFundamental>, Symbol[]> fineFunc;
-            Func<IEnumerable<CoarseFundamental>, Symbol[]> coarseFunc;
+            Func<IEnumerable<FineFundamental>, object> fineFunc;
+            Func<IEnumerable<CoarseFundamental>, object> coarseFunc;
             if (fineSelector.TryConvertToDelegate(out fineFunc) &&
                 coarseSelector.TryConvertToDelegate(out coarseFunc))
             {
-                _fineSelector = fineFunc;
-                _coarseSelector = coarseFunc;
+                _fineSelector = fineFunc.ConvertToUniverseSelectionSymbolDelegate();
+                _coarseSelector = coarseFunc.ConvertToUniverseSelectionSymbolDelegate();
             }
         }
 
         /// <inheritdoc />
-        public override IEnumerable<Symbol> SelectCoarse(QCAlgorithmFramework algorithm, IEnumerable<CoarseFundamental> coarse)
+        public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
         {
             return _coarseSelector(coarse);
         }
 
         /// <inheritdoc />
-        public override IEnumerable<Symbol> SelectFine(QCAlgorithmFramework algorithm, IEnumerable<FineFundamental> fine)
+        public override IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
         {
             return _fineSelector(fine);
         }

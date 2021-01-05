@@ -15,7 +15,6 @@
 
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Brokerages.Backtesting;
@@ -30,7 +29,7 @@ using QuantConnect.Tests.Engine;
 
 namespace QuantConnect.Tests.Common.Orders.Fills
 {
-    [TestFixture, Ignore]
+    [TestFixture, Ignore("TODO: fix me")]
     public class PartialMarketFillModelTests
     {
         [Test]
@@ -95,7 +94,6 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             var transactionHandler = new BacktestingTransactionHandler();
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), new TestResultHandler(Console.WriteLine));
-            Task.Run(() => transactionHandler.Run());
 
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
@@ -105,7 +103,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 config,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
 
             model = new PartialMarketFillModel(algorithm.Transactions, 2);

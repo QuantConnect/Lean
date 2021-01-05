@@ -16,8 +16,10 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Oanda
@@ -66,10 +68,8 @@ namespace QuantConnect.Brokerages.Oanda
         /// <summary>
         /// Gets a new instance of the <see cref="OandaBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel
-        {
-            get { return new OandaBrokerageModel(); }
-        }
+        /// <param name="orderProvider">The order provider</param>
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new OandaBrokerageModel();
 
         /// <summary>
         /// Creates a new <see cref="IBrokerage"/> instance
@@ -93,7 +93,14 @@ namespace QuantConnect.Brokerages.Oanda
                 throw new Exception(string.Join(System.Environment.NewLine, errors));
             }
 
-            var brokerage = new OandaBrokerage(algorithm.Transactions, algorithm.Portfolio, environment, accessToken, accountId, agent);
+            var brokerage = new OandaBrokerage(
+                algorithm.Transactions, 
+                algorithm.Portfolio,
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                environment, 
+                accessToken, 
+                accountId, 
+                agent);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;

@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using DayOfWeek = System.DayOfWeek;
 
@@ -219,6 +220,78 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void GetNextMarketCloseWorksAfterLateOpen()
+        {
+            var exchangeHours = CreateSecurityExchangeHoursWithMultipleOpeningHours();
+
+            var startTime = new DateTime(2018, 12, 10, 2, 0, 1);
+            // From 2:00am, the next close would normally be 3:00am.
+            // Because there is a late open at 4am, the next close is the close of the session after that open.
+            var nextMarketOpen = exchangeHours.GetNextMarketClose(startTime, false);
+            Assert.AreEqual(new DateTime(2018, 12, 10, 17, 30, 0), nextMarketOpen);
+        }
+
+        [Test]
+        public void MarketIsNotOpenBeforeLateOpen()
+        {
+            var exchangeHours = CreateForexSecurityExchangeHours();
+
+            var localDateTime = new DateTime(2019, 1, 1, 16, 59, 59);
+            Assert.IsFalse(exchangeHours.IsOpen(localDateTime, false));
+        }
+
+        [Test]
+        public void MarketIsOpenAfterLateOpen()
+        {
+            var exchangeHours = CreateForexSecurityExchangeHours();
+
+            var localDateTime = new DateTime(2019, 1, 1, 17, 0, 1);
+            Assert.IsTrue(exchangeHours.IsOpen(localDateTime, false));
+        }
+
+        [Test]
+        public void MarketIsNotOpenForIntervalBeforeLateOpen()
+        {
+            var exchangeHours = CreateForexSecurityExchangeHours();
+
+            var startLocalDateTime = new DateTime(2019, 1, 1, 16, 30, 0);
+            var endLocalDateTime = new DateTime(2019, 1, 1, 17, 0, 0);
+            Assert.IsFalse(exchangeHours.IsOpen(startLocalDateTime, endLocalDateTime, false));
+        }
+
+        [Test]
+        public void GetNextMarketOpenWorksBeforeLateOpen()
+        {
+            var exchangeHours = CreateForexSecurityExchangeHours();
+
+            var startTime = new DateTime(2019, 1, 1, 16, 59, 59);
+            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, false);
+            Assert.AreEqual(new DateTime(2019, 1, 1, 17, 0, 0), nextMarketOpen);
+        }
+
+        [Test]
+        public void GetNextMarketOpenWorksAfterLateOpen()
+        {
+            var exchangeHours = CreateForexSecurityExchangeHours();
+
+            var startTime = new DateTime(2019, 1, 1, 17, 0, 1);
+            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, false);
+            Assert.AreEqual(new DateTime(2019, 1, 2, 0, 0, 0), nextMarketOpen);
+        }
+
+        [Test]
+        public void GetNextMarketOpenWorksAfterEarlyClose()
+        {
+            var exchangeHours = CreateSecurityExchangeHoursWithMultipleOpeningHours();
+
+            var startTime = new DateTime(2018, 12, 31, 17, 0, 1);
+            // From 5:00pm, the next open would normally be 6:00pm.
+            // Because there is an early close at 5pm, the next open is the open of the session on the following day (+ a late open).
+            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, false);
+            Assert.AreEqual(new DateTime(2019, 1, 1, 02, 0, 0), nextMarketOpen);
+        }
+
+        [Test]
         public void Benchmark()
         {
             var forex = CreateForexSecurityExchangeHours();
@@ -236,7 +309,7 @@ namespace QuantConnect.Tests.Common.Securities
             }
             stopwatch.Stop();
 
-            Console.WriteLine("forex1: " + stopwatch.Elapsed);
+            Log.Trace("forex1: " + stopwatch.Elapsed);
         }
 
         [Test]
@@ -253,7 +326,7 @@ namespace QuantConnect.Tests.Common.Securities
                     {DayOfWeek.Thursday, new LocalMarketHours(DayOfWeek.Thursday, TimeSpan.FromHours(1), TimeSpan.FromHours(23))},      //22hr
                     {DayOfWeek.Friday, new LocalMarketHours(DayOfWeek.Friday, TimeSpan.FromHours(0), TimeSpan.FromHours(23))},          //23hr
                     {DayOfWeek.Saturday, new LocalMarketHours(DayOfWeek.Saturday, TimeSpan.FromHours(3), TimeSpan.FromHours(23))},      //20hr
-                }, new Dictionary<DateTime, TimeSpan>());
+                }, new Dictionary<DateTime, TimeSpan>(), new Dictionary<DateTime, TimeSpan>());
 
             Assert.AreEqual(TimeSpan.FromHours(5), exchangeHours.RegularMarketDuration);
         }
@@ -268,11 +341,42 @@ namespace QuantConnect.Tests.Common.Securities
             var friday = new LocalMarketHours(DayOfWeek.Friday, TimeSpan.Zero, new TimeSpan(17, 0, 0));
             var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
 
-            var earlyCloses = new Dictionary<DateTime, TimeSpan>();
-            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, USHoliday.Dates.Select(x => x.Date), new[]
+            var holidays = USHoliday.Dates.Select(x => x.Date).ToList();
+            holidays.Remove(new DateTime(2019, 1, 1));  // not a forex holiday
+
+            var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2018, 12, 31), new TimeSpan(17, 0, 0) } };
+            var lateOpens = new Dictionary<DateTime, TimeSpan> { { new DateTime(2019, 1, 1), new TimeSpan(17, 0, 0) } };
+            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
             {
                 sunday, monday, tuesday, wednesday, thursday, friday//, saturday
-            }.ToDictionary(x => x.DayOfWeek), earlyCloses);
+            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
+            return exchangeHours;
+        }
+
+        public static SecurityExchangeHours CreateSecurityExchangeHoursWithMultipleOpeningHours()
+        {
+            var sunday = LocalMarketHours.OpenAllDay(DayOfWeek.Sunday);
+            var monday = new LocalMarketHours(
+                DayOfWeek.Monday,
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(3, 0, 0), new TimeSpan(3, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(17, 0, 0), new TimeSpan(17, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(18, 0, 0), new TimeSpan(18, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(19, 0, 0), TimeSpan.FromTicks(Time.OneDay.Ticks - 1))
+            );
+            var tuesday = LocalMarketHours.OpenAllDay(DayOfWeek.Tuesday);
+            var wednesday = LocalMarketHours.OpenAllDay(DayOfWeek.Wednesday);
+            var thursday = LocalMarketHours.OpenAllDay(DayOfWeek.Thursday);
+            var friday = LocalMarketHours.OpenAllDay(DayOfWeek.Friday);
+            var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
+
+            var holidays = new List<DateTime>();
+            var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2018, 12, 31), new TimeSpan(17, 0, 0) } };
+            var lateOpens = new Dictionary<DateTime, TimeSpan> { {new DateTime(2019, 01, 01), new TimeSpan(2, 0, 0)},
+                { new DateTime(2018, 12, 10), new TimeSpan(4, 0, 0) } };
+            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
+            {
+                sunday, monday, tuesday, wednesday, thursday, friday//, saturday
+            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
             return exchangeHours;
         }
 
@@ -287,10 +391,11 @@ namespace QuantConnect.Tests.Common.Securities
             var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
 
             var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2016, 11, 25), new TimeSpan(13, 0, 0) } };
+            var lateOpens = new Dictionary<DateTime, TimeSpan>();
             var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, USHoliday.Dates.Select(x => x.Date), new[]
             {
                 sunday, monday, tuesday, wednesday, thursday, friday, saturday
-            }.ToDictionary(x => x.DayOfWeek), earlyCloses);
+            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
             return exchangeHours;
         }
     }

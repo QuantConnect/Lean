@@ -21,7 +21,7 @@ using Accord.Statistics;
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
     /// <summary>
-    /// Provides an implementation of a minimum variance portfolio optimizer that calculate the optimal weights 
+    /// Provides an implementation of a minimum variance portfolio optimizer that calculate the optimal weights
     /// with the weight range from -1 to 1 and minimize the portfolio variance with a target return of 2%
     /// </summary>
     public class MinimumVariancePortfolioOptimizer : IPortfolioOptimizer
@@ -58,7 +58,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="size">number of variables</param>
         /// <returns>enumeration of linear constaraint objects</returns>
         protected IEnumerable<LinearConstraint> GetBoundaryConditions(int size)
-        {            
+        {
             for (int i = 0; i < size; i++)
             {
                 yield return new LinearConstraint(1)

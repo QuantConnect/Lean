@@ -23,7 +23,6 @@ from QuantConnect.Data import SubscriptionDataSource
 from QuantConnect.Python import PythonData
 
 from datetime import date, timedelta, datetime
-import decimal
 import numpy as np
 import json
 
@@ -82,7 +81,7 @@ class Bitcoin(PythonData):
                 liveBTC = json.loads(line)
 
                 # If value is zero, return None
-                value = decimal.Decimal(liveBTC["last"])
+                value = liveBTC["last"]
                 if value == 0: return None
 
                 coin.Time = datetime.now()
@@ -109,7 +108,7 @@ class Bitcoin(PythonData):
             data = line.split(',')
 
             # If value is zero, return None
-            value = decimal.Decimal(data[4])
+            value = data[4]
             if value == 0: return None
 
             coin.Time = datetime.strptime(data[0], "%Y-%m-%d")

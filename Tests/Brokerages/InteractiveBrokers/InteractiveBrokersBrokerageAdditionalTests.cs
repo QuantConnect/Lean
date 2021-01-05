@@ -24,19 +24,28 @@ using IBApi;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.InteractiveBrokers;
-using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
     [TestFixture]
-    [Ignore("These tests require the IBController and IB TraderWorkstation to be installed.")]
+    [Ignore("These tests require the IBGateway to be installed.")]
     public class InteractiveBrokersBrokerageAdditionalTests
     {
         private readonly List<Order> _orders = new List<Order>();
+
+        [Test(Description = "Requires an existing IB connection with the same user credentials.")]
+        public void ThrowsWhenExistingSessionDetected()
+        {
+            Assert.Throws<Exception>(() => GetBrokerage());
+        }
 
         [Test]
         public void TestRateLimiting()
@@ -61,12 +70,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                     var stopwatch = Stopwatch.StartNew();
                     var value = (ContractDetails)method.Invoke(brokerage, parameters);
                     stopwatch.Stop();
-                    Console.WriteLine($"{DateTime.UtcNow:O} Response time: {stopwatch.Elapsed}");
+                    Log.Trace($"{DateTime.UtcNow:O} Response time: {stopwatch.Elapsed}");
                 });
                 while (!result.IsCompleted) Thread.Sleep(1000);
             }
-
-            InteractiveBrokersGatewayRunner.Stop();
         }
 
         [Test]
@@ -106,20 +113,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 // each day has 390 minute bars for equities
                 Assert.AreEqual(5 * 390, history.Count);
             }
-
-            InteractiveBrokersGatewayRunner.Stop();
         }
 
         private InteractiveBrokersBrokerage GetBrokerage()
         {
-            InteractiveBrokersGatewayRunner.Start(Config.Get("ib-controller-dir"),
-                Config.Get("ib-tws-dir"),
-                Config.Get("ib-user-name"),
-                Config.Get("ib-password"),
-                Config.Get("ib-trading-mode"),
-                Config.GetBool("ib-use-tws")
-                );
-
             // grabs account info from configuration
             var securityProvider = new SecurityProvider();
             securityProvider[Symbols.USDJPY] = new Security(
@@ -136,10 +133,17 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 ),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
 
-            var brokerage = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(_orders), securityProvider);
+            var brokerage = new InteractiveBrokersBrokerage(
+                new QCAlgorithm(), 
+                new OrderProvider(_orders), 
+                securityProvider,
+                new AggregationManager(),
+                new LocalDiskMapFileProvider());
             brokerage.Connect();
 
             return brokerage;

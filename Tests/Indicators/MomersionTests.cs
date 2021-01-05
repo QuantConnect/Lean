@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,7 +15,10 @@
 
 using NUnit.Framework;
 using QuantConnect.Indicators;
+using QuantConnect.Logging;
 using System;
+using System.Collections;
+using System.Linq;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -51,31 +54,24 @@ namespace QuantConnect.Tests.Indicators
 
         #endregion Array input
 
-        [Test]
-        public void OnlyFullPeriodTest()
+        [TestCase(7, 20)]
+        [TestCase(null, 10)]
+        public void ComputesCorrectly(int? minPeriod, int fullPeriod)
         {
-            const int fullPeriod = 10;
-            var momersion = new MomersionIndicator(fullPeriod);
-
-            RunTestIndicator(momersion, _expectedFullPeriod);
-        }
-
-        [Test]
-        public void MinPeriodTest()
-        {
-            const int minPeriod = 7;
-            const int fullPeriod = 20;
             var momersion = new MomersionIndicator(minPeriod, fullPeriod);
+            var expected = minPeriod.HasValue ? _expectedMinPeriod : _expectedFullPeriod;
 
-            RunTestIndicator(momersion, _expectedMinPeriod);
+            RunTestIndicator(momersion, expected);
         }
 
-        [Test]
-        public void ResetsProperly()
+        [TestCase(7, 20)]
+        [TestCase(null, 10)]
+        public void ResetsProperly(int? minPeriod, int fullPeriod)
         {
-            var momersion = new MomersionIndicator(7, 20);
+            var momersion = new MomersionIndicator(minPeriod, fullPeriod);
+            var expected = minPeriod.HasValue ? _expectedMinPeriod : _expectedFullPeriod;
 
-            RunTestIndicator(momersion, _expectedMinPeriod);
+            RunTestIndicator(momersion, expected);
 
             Assert.IsTrue(momersion.IsReady);
 
@@ -84,19 +80,32 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.AssertIndicatorIsInDefaultState(momersion);
         }
 
-        private void RunTestIndicator(MomersionIndicator momersion, decimal[] expected)
+        [TestCase(7, 20)]
+        [TestCase(null, 10)]
+        public void WarmsUpProperly(int? minPeriod, int fullPeriod)
+        {
+            var momersion = new MomersionIndicator(minPeriod, fullPeriod);
+            var period = ((IIndicatorWarmUpPeriodProvider)momersion).WarmUpPeriod;
+            var dataStream = TestHelper.GetDataStream(period).ToArray();
+
+            for (var i = 0; i < period; i++)
+            {
+                momersion.Update(dataStream[i]);
+                Assert.AreEqual(i == period - 1, momersion.IsReady);
+            }
+        }
+
+        private void RunTestIndicator(MomersionIndicator momersion, IEnumerable expected)
         {
             var time = DateTime.Now;
             var actual = new decimal[_prices.Length];
 
             for (var i = 0; i < _prices.Length; i++)
             {
-                momersion.Update(new IndicatorDataPoint(time, _prices[i]));
-                var momersionValue = Math.Round(momersion.Current.Value, 2);
-                actual[i] = momersionValue;
+                momersion.Update(time.AddMinutes(i), _prices[i]);
+                actual[i] = Math.Round(momersion.Current.Value, 2);
 
-                Console.WriteLine("Bar : {0} | {1}, Is ready? {2}", i, momersion, momersion.IsReady);
-                time = time.AddMinutes(1);
+                Log.Trace($"Bar : {i} | {momersion}, Is ready? {momersion.IsReady}");
             }
             Assert.AreEqual(expected, actual);
         }

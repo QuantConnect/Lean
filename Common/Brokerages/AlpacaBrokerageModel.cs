@@ -13,14 +13,14 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -29,6 +29,8 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class AlpacaBrokerageModel : DefaultBrokerageModel
     {
+        private readonly IOrderProvider _orderProvider;
+
         /// <summary>
         /// The default markets for the alpaca brokerage
         /// </summary>
@@ -46,15 +48,13 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
         /// </summary>
+        /// <param name="orderProvider">The order provider</param>
         /// <param name="accountType">The type of account to be modelled, defaults to
         /// <see cref="AccountType.Cash"/></param>
-        public AlpacaBrokerageModel(AccountType accountType = AccountType.Cash)
+        public AlpacaBrokerageModel(IOrderProvider orderProvider, AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
-            if (accountType == AccountType.Margin)
-            {
-                throw new Exception("The Alpaca brokerage does not currently support Margin trading.");
-            }
+            _orderProvider = orderProvider;
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace QuantConnect.Brokerages
             if (security.Type != SecurityType.Equity)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    $"The {nameof(AlpacaBrokerageModel)} does not support {security.Type} security type."
+                    Invariant($"The {nameof(AlpacaBrokerageModel)} does not support {security.Type} security type.")
                 );
 
                 return false;
@@ -86,7 +86,7 @@ namespace QuantConnect.Brokerages
             if (order.Type != OrderType.Limit && order.Type != OrderType.Market && order.Type != OrderType.StopMarket && order.Type != OrderType.StopLimit && order.Type != OrderType.MarketOnOpen)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    $"The {nameof(AlpacaBrokerageModel)} does not support {order.Type} order type."
+                    Invariant($"The {nameof(AlpacaBrokerageModel)} does not support {order.Type} order type.")
                 );
 
                 return false;
@@ -102,17 +102,78 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            return true;
-        }
+            var openOrders = _orderProvider.GetOpenOrders(x => x.Symbol == order.Symbol && x.Id != order.Id);
 
-        /// <summary>
-        /// Gets a new fill model that represents this brokerage's fill behavior
-        /// </summary>
-        /// <param name="security">The security to get fill model for</param>
-        /// <returns>The new fill model for this brokerage</returns>
-        public override IFillModel GetFillModel(Security security)
-        {
-            return new ImmediateFillModel();
+            if (security.Holdings.IsLong)
+            {
+                var openSellQuantity = openOrders.Where(x => x.Direction == OrderDirection.Sell).Sum(x => x.Quantity);
+                var availableSellQuantity = -security.Holdings.Quantity - openSellQuantity;
+
+                // cannot reverse position from long to short (open sell orders are taken into account)
+                if (order.Direction == OrderDirection.Sell && order.Quantity < availableSellQuantity)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        (openSellQuantity == 0
+                        ? $"The {nameof(AlpacaBrokerageModel)} does not support reversing the position (from long to short) with a single order"
+                        : $"The {nameof(AlpacaBrokerageModel)} does not support submitting orders which could potentially reverse the position (from long to short)") +
+                        $" [position:{security.Holdings.Quantity}, order quantity:{order.Quantity}, " +
+                        $"open sell orders quantity:{openSellQuantity}, available sell quantity:{availableSellQuantity}]."
+                    );
+
+                    return false;
+                }
+            }
+            else if (security.Holdings.IsShort)
+            {
+                var openBuyQuantity = openOrders.Where(x => x.Direction == OrderDirection.Buy).Sum(x => x.Quantity);
+                var availableBuyQuantity = -security.Holdings.Quantity - openBuyQuantity;
+
+                // cannot reverse position from short to long (open buy orders are taken into account)
+                if (order.Direction == OrderDirection.Buy && order.Quantity > availableBuyQuantity)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        (openBuyQuantity == 0
+                        ? $"The {nameof(AlpacaBrokerageModel)} does not support reversing the position (from short to long) with a single order"
+                        : $"The {nameof(AlpacaBrokerageModel)} does not support submitting orders which could potentially reverse the position (from short to long)") +
+                        $" [position:{security.Holdings.Quantity}, order quantity:{order.Quantity}, " +
+                        $"open buy orders quantity:{openBuyQuantity}, available buy quantity:{availableBuyQuantity}]."
+                    );
+
+                    return false;
+                }
+            }
+            else if (security.Holdings.Quantity == 0)
+            {
+                // cannot open a short sell while a long buy order is open
+                if (order.Direction == OrderDirection.Sell && openOrders.Any(x => x.Direction == OrderDirection.Buy))
+                {
+                    var openBuyQuantity = openOrders.Where(x => x.Direction == OrderDirection.Buy).Sum(x => x.Quantity);
+
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        $"The {nameof(AlpacaBrokerageModel)} does not support submitting sell orders with open buy orders" +
+                        $" [position:{security.Holdings.Quantity}, order quantity:{order.Quantity}, " +
+                        $"open buy orders quantity:{openBuyQuantity}]."
+                    );
+
+                    return false;
+                }
+
+                // cannot open a long buy while a short sell order is open
+                if (order.Direction == OrderDirection.Buy && openOrders.Any(x => x.Direction == OrderDirection.Sell))
+                {
+                    var openSellQuantity = openOrders.Where(x => x.Direction == OrderDirection.Sell).Sum(x => x.Quantity);
+
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        $"The {nameof(AlpacaBrokerageModel)} does not support submitting buy orders with open sell orders" +
+                        $" [position:{security.Holdings.Quantity}, order quantity:{order.Quantity}, " +
+                        $"open sell orders quantity:{openSellQuantity}]."
+                    );
+
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>

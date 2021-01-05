@@ -40,7 +40,9 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
 
             _equity.SetMarketPrice(new TradeBar(DateTime.Now, Symbols.SPY, 100m, 100m, 100m, 100m, 1));
@@ -53,7 +55,9 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
 
             _forex.SetMarketPrice(new TradeBar(DateTime.Now, Symbols.EURUSD, 100m, 100m, 100m, 100m, 0));
@@ -130,6 +134,28 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             var model = new VolumeShareSlippageModel();
 
             // Since FX/CFD often have zero volume, the model returns zero slippage
+            var expected = 0;
+            var actual = model.GetSlippageApproximation(_forex, _forexBuyOrder);
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void AlphaStreamsSlippageModel_EquityTest()
+        {
+            decimal slippagePercent = 0.0001m;
+
+            var model = new AlphaStreamsSlippageModel();
+
+            var expected = _equity.Price * slippagePercent;
+            var actual = model.GetSlippageApproximation(_equity, _equityBuyOrder);
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void AlphaStreamsSlippageModel_ForexTest()
+        {
+            var model = new AlphaStreamsSlippageModel();
+
             var expected = 0;
             var actual = model.GetSlippageApproximation(_forex, _forexBuyOrder);
             Assert.AreEqual(expected, actual);

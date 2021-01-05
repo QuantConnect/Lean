@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
 {
@@ -287,7 +288,8 @@ namespace QuantConnect.Securities
             {
                 return "Open All Day";
             }
-            return DayOfWeek + ": " + string.Join(" | ", (IEnumerable<MarketHoursSegment>) _segments);
+
+            return Invariant($"{DayOfWeek}: {string.Join(" | ", (IEnumerable<MarketHoursSegment>) _segments)}");
         }
     }
 }

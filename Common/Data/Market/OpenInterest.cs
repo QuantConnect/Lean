@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,12 +16,14 @@
 
 using QuantConnect.Util;
 using System;
+using ProtoBuf;
 
 namespace QuantConnect.Data.Market
 {
     /// <summary>
     /// Defines a data type that represents open interest for given security
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class OpenInterest : Tick
     {
         /// <summary>
@@ -80,13 +82,13 @@ namespace QuantConnect.Data.Market
 
             Time = (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour) ?
                 // hourly and daily have different time format, and can use slow, robust c# parser.
-                DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, 
+                DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter,
                     System.Globalization.CultureInfo.InvariantCulture)
                     .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone)
                 :
                 // Using custom "ToDecimal" conversion for speed on high resolution data.
                 baseDate.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
-            
+
             Value = csv[1].ToDecimal();
         }
 
@@ -131,12 +133,13 @@ namespace QuantConnect.Data.Market
         {
             if (isLiveMode)
             {
-                // Currently ticks aren't sourced through GetSource in live mode
-                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.LocalFile);
+                // this data type is streamed in live mode
+                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.Streaming);
             }
 
             var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
             if (config.SecurityType == SecurityType.Option ||
+                config.SecurityType == SecurityType.FutureOption ||
                 config.SecurityType == SecurityType.Future)
             {
                 source += "#" + LeanData.GenerateZipEntryName(config.Symbol, date, config.Resolution, config.TickType);

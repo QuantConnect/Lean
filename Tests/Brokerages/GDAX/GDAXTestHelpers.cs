@@ -32,8 +32,10 @@ namespace QuantConnect.Tests.Brokerages.GDAX
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 CreateConfig(securityType, resolution),
                 new Cash(Currencies.USD, 1000, price),
-                new SymbolProperties("BTCUSD", Currencies.USD, 1, 1, 0.01m),
-                ErrorCurrencyConverter.Instance
+                new SymbolProperties("BTCUSD", Currencies.USD, 1, 1, 0.01m, string.Empty),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
         }
 

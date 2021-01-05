@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,11 +26,12 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Demonstration of using custom fee, slippage and fill models for modelling transactions in backtesting.
+    /// Demonstration of using custom fee, slippage, fill, and buying power models for modelling transactions in backtesting.
     /// QuantConnect allows you to model all orders as deeply and accurately as you need.
     /// </summary>
     /// <meta name="tag" content="trading and orders" />
     /// <meta name="tag" content="transaction fees and slippage" />
+    /// <meta name="tag" content="custom buying power models" />
     /// <meta name="tag" content="custom transaction models" />
     /// <meta name="tag" content="custom slippage models" />
     /// <meta name="tag" content="custom fee models" />
@@ -50,6 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
             _security.SetFeeModel(new CustomFeeModel(this));
             _security.SetFillModel(new CustomFillModel(this));
             _security.SetSlippageModel(new CustomSlippageModel(this));
+            _security.SetBuyingPowerModel(new CustomBuyingPowerModel(this));
         }
 
         public void OnData(TradeBars data)
@@ -60,13 +62,13 @@ namespace QuantConnect.Algorithm.CSharp
             if (Time.Day > 10 && _security.Holdings.Quantity <= 0)
             {
                 var quantity = CalculateOrderQuantity(_spy, .5m);
-                Log("MarketOrder: " + quantity);
+                Log($"MarketOrder: {quantity}");
                 MarketOrder(_spy, quantity, asynchronous: true); // async needed for partial fill market orders
             }
             else if (Time.Day > 20 && _security.Holdings.Quantity >= 0)
             {
                 var quantity = CalculateOrderQuantity(_spy, -.5m);
-                Log("MarketOrder: " + quantity);
+                Log($"MarketOrder: {quantity}");
                 MarketOrder(_spy, quantity, asynchronous: true); // async needed for partial fill market orders
             }
         }
@@ -109,7 +111,7 @@ namespace QuantConnect.Algorithm.CSharp
                     fill.Status = OrderStatus.PartiallyFilled;
                 }
 
-                _algorithm.Log("CustomFillModel: " + fill);
+                _algorithm.Log($"CustomFillModel: {fill}");
 
                 return fill;
             }
@@ -131,7 +133,7 @@ namespace QuantConnect.Algorithm.CSharp
                     1m,
                     parameters.Security.Price*parameters.Order.AbsoluteQuantity*0.00001m);
 
-                _algorithm.Log("CustomFeeModel: " + fee);
+                _algorithm.Log($"CustomFeeModel: {fee}");
                 return new OrderFee(new CashAmount(fee, "USD"));
             }
         }
@@ -150,8 +152,28 @@ namespace QuantConnect.Algorithm.CSharp
                 // custom slippage math
                 var slippage = asset.Price*0.0001m*(decimal) Math.Log10(2*(double) order.AbsoluteQuantity);
 
-                _algorithm.Log("CustomSlippageModel: " + slippage);
+                _algorithm.Log($"CustomSlippageModel: {slippage}");
                 return slippage;
+            }
+        }
+
+        public class CustomBuyingPowerModel : BuyingPowerModel
+        {
+            private readonly QCAlgorithm _algorithm;
+
+            public CustomBuyingPowerModel(QCAlgorithm algorithm)
+            {
+                _algorithm = algorithm;
+            }
+
+            public override HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(
+                HasSufficientBuyingPowerForOrderParameters parameters)
+            {
+                // custom behavior: this model will assume that there is always enough buying power
+                var hasSufficientBuyingPowerForOrderResult = new HasSufficientBuyingPowerForOrderResult(true);
+                _algorithm.Log($"CustomBuyingPowerModel: {hasSufficientBuyingPowerForOrderResult.IsSufficient}");
+
+                return hasSufficientBuyingPowerForOrderResult;
             }
         }
 
@@ -171,24 +193,45 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "62"},
-            {"Average Win", "0.11%"},
+            {"Average Win", "0.10%"},
             {"Average Loss", "-0.06%"},
-            {"Compounding Annual Return", "-7.582%"},
+            {"Compounding Annual Return", "-7.727%"},
             {"Drawdown", "2.400%"},
-            {"Expectancy", "-0.193"},
-            {"Net Profit", "-0.660%"},
-            {"Sharpe Ratio", "-1.563"},
+            {"Expectancy", "-0.197"},
+            {"Net Profit", "-0.673%"},
+            {"Sharpe Ratio", "-1.565"},
+            {"Probabilistic Sharpe Ratio", "22.763%"},
             {"Loss Rate", "70%"},
             {"Win Rate", "30%"},
-            {"Profit-Loss Ratio", "1.71"},
-            {"Alpha", "-0.174"},
-            {"Beta", "5.695"},
-            {"Annual Standard Deviation", "0.046"},
+            {"Profit-Loss Ratio", "1.70"},
+            {"Alpha", "-0.14"},
+            {"Beta", "0.124"},
+            {"Annual Standard Deviation", "0.047"},
             {"Annual Variance", "0.002"},
-            {"Information Ratio", "-1.959"},
-            {"Tracking Error", "0.046"},
-            {"Treynor Ratio", "-0.013"},
-            {"Total Fees", "$62.24"}
+            {"Information Ratio", "-5.163"},
+            {"Tracking Error", "0.118"},
+            {"Treynor Ratio", "-0.591"},
+            {"Total Fees", "$62.24"},
+            {"Fitness Score", "0.147"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "-2.792"},
+            {"Return Over Maximum Drawdown", "-3.569"},
+            {"Portfolio Turnover", "2.562"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "852026186"}
         };
     }
 }

@@ -64,36 +64,27 @@ class StandardDeviationExecutionModel(ExecutionModel):
            targets: The portfolio targets'''
         self.targetsCollection.AddRange(targets)
 
-        for target in self.targetsCollection.OrderByMarginImpact(algorithm):
-            symbol = target.Symbol
+        # for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call
+        if self.targetsCollection.Count > 0:
+            for target in self.targetsCollection.OrderByMarginImpact(algorithm):
+                symbol = target.Symbol
 
-            # calculate remaining quantity to be ordered
-            unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target)
+                # calculate remaining quantity to be ordered
+                unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target)
 
-            # fetch our symbol data containing our STD/SMA indicators
-            data = self.symbolData.get(symbol, None)
-            if data is None: return
+                # fetch our symbol data containing our STD/SMA indicators
+                data = self.symbolData.get(symbol, None)
+                if data is None: return
 
-            # check order entry conditions
-            if data.STD.IsReady and self.PriceIsFavorable(data, unorderedQuantity):
-                # get the maximum order size based on total order value
-                maxOrderSize = OrderSizing.Value(data.Security, self.MaximumOrderValue)
-                orderSize = np.min([maxOrderSize, np.abs(unorderedQuantity)])
+                # check order entry conditions
+                if data.STD.IsReady and self.PriceIsFavorable(data, unorderedQuantity):
+                    # Adjust order size to respect the maximum total order value
+                    orderSize = OrderSizing.GetOrderSizeForMaximumValue(data.Security, self.MaximumOrderValue, unorderedQuantity)
 
-                remainder = orderSize % data.Security.SymbolProperties.LotSize
-                missingForLotSize = data.Security.SymbolProperties.LotSize - remainder
-                # if the amount we are missing for +1 lot size is 1M part of a lot size
-                # we suppose its due to floating point error and round up
-                # Note: this is required to avoid a diff with C# equivalent
-                if missingForLotSize < (data.Security.SymbolProperties.LotSize / 1000000):
-                    remainder -= data.Security.SymbolProperties.LotSize
+                    if orderSize != 0:
+                        algorithm.MarketOrder(symbol, orderSize)
 
-                # round down to even lot size
-                orderSize -= remainder
-                if orderSize != 0:
-                    algorithm.MarketOrder(symbol, np.sign(unorderedQuantity) * orderSize)
-
-        self.targetsCollection.ClearFulfilled(algorithm)
+            self.targetsCollection.ClearFulfilled(algorithm)
 
 
     def OnSecuritiesChanged(self, algorithm, changes):
@@ -101,45 +92,29 @@ class StandardDeviationExecutionModel(ExecutionModel):
         Args:
             algorithm: The algorithm instance that experienced the change in securities
             changes: The security additions and removals from the algorithm'''
-        for removed in changes.RemovedSecurities:
-            # clean up data from removed securities
-            if removed.Symbol in self.symbolData:
-                if self.IsSafeToRemove(algorithm, removed.Symbol):
-                    data = self.symbolData.pop(removed.Symbol)
-                    algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.Consolidator)
-
-        addedSymbols = []
         for added in changes.AddedSecurities:
             if added.Symbol not in self.symbolData:
                 self.symbolData[added.Symbol] = SymbolData(algorithm, added, self.period, self.resolution)
-                addedSymbols.append(added.Symbol)
 
-        if len(addedSymbols) > 0:
-            # warmup our indicators by pushing history through the consolidators
-            history = algorithm.History(addedSymbols, self.period, self.resolution)
-            if history.empty: return
+        for removed in changes.RemovedSecurities:
+            # clean up data from removed securities
+            symbol = removed.Symbol
+            if symbol in self.symbolData:
+                if self.IsSafeToRemove(algorithm, symbol):
+                    data = self.symbolData.pop(symbol)
+                    algorithm.SubscriptionManager.RemoveConsolidator(symbol, data.Consolidator)
 
-            tickers = history.index.levels[0]
-            for ticker in tickers:
-                symbol = SymbolCache.GetSymbol(ticker)
-                symbolData = self.symbolData[symbol]
-
-                for tuple in history.loc[ticker].itertuples():
-                    bar = TradeBar(tuple.Index, symbol, tuple.open, tuple.high, tuple.low, tuple.close, tuple.volume)
-                    symbolData.Consolidator.Update(bar)
 
     def PriceIsFavorable(self, data, unorderedQuantity):
         '''Determines if the current price is more than the configured
        number of standard deviations away from the mean in the favorable direction.'''
+        sma = data.SMA.Current.Value
         deviations = self.deviations * data.STD.Current.Value
         if unorderedQuantity > 0:
-            if data.Security.BidPrice < data.SMA.Current.Value - deviations:
-                return True
+            return data.Security.BidPrice < sma - deviations
         else:
-            if data.Security.AskPrice > data.SMA.Current.Value + deviations:
-                return True
+            return data.Security.AskPrice > sma + deviations
 
-        return False
 
     def IsSafeToRemove(self, algorithm, symbol):
         '''Determines if it's safe to remove the associated symbol data'''
@@ -148,11 +123,22 @@ class StandardDeviationExecutionModel(ExecutionModel):
 
 class SymbolData:
     def __init__(self, algorithm, security, period, resolution):
+        symbol = security.Symbol
         self.Security = security
-        self.Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution)
-        smaName = algorithm.CreateIndicatorName(security.Symbol, "SMA{}".format(period), resolution)
+        self.Consolidator = algorithm.ResolveConsolidator(symbol, resolution)
+
+        smaName = algorithm.CreateIndicatorName(symbol, f"SMA{period}", resolution)
         self.SMA = SimpleMovingAverage(smaName, period)
-        algorithm.RegisterIndicator(security.Symbol, self.SMA, self.Consolidator)
-        stdName = algorithm.CreateIndicatorName(security.Symbol, "STD{}".format(period), resolution)
+        algorithm.RegisterIndicator(symbol, self.SMA, self.Consolidator)
+
+        stdName = algorithm.CreateIndicatorName(symbol, f"STD{period}", resolution)
         self.STD = StandardDeviation(stdName, period)
-        algorithm.RegisterIndicator(security.Symbol, self.STD, self.Consolidator)
+        algorithm.RegisterIndicator(symbol, self.STD, self.Consolidator)
+
+        # warmup our indicators by pushing history through the indicators
+        history = algorithm.History(symbol, period, resolution)
+        if 'close' in history:
+            history = history.close.unstack(0).squeeze()
+            for time, value in history.iteritems():
+                self.SMA.Update(time, value)
+                self.STD.Update(time, value)

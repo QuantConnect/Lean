@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Brokerages.GDAX;
 using NUnit.Framework;
 using QuantConnect.Interfaces;
@@ -21,42 +22,22 @@ using QuantConnect.Configuration;
 using QuantConnect.Orders;
 using Moq;
 using QuantConnect.Brokerages;
+using QuantConnect.Tests.Common.Securities;
 using RestSharp;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
-    [TestFixture, Ignore("This test requires a configured and active account")]
+    [TestFixture, Explicit("This test requires a configured and active account")]
     public class GDAXBrokerageIntegrationTests : BrokerageTests
     {
         #region Properties
-        protected override Symbol Symbol
-        {
-            get { return Symbol.Create("ETHBTC", SecurityType, Market.GDAX); }
-        }
+        protected override Symbol Symbol => Symbol.Create("ETHBTC", SecurityType.Crypto, Market.GDAX);
 
         /// <summary>
         ///     Gets the security type associated with the <see cref="BrokerageTests.Symbol" />
         /// </summary>
-        protected override SecurityType SecurityType
-        {
-            get { return SecurityType.Crypto; }
-        }
-
-        /// <summary>
-        ///     Gets a high price for the specified symbol so a limit sell won't fill
-        /// </summary>
-        protected override decimal HighPrice
-        {
-            get { return 1m; }
-        }
-
-        /// <summary>
-        /// Gets a low price for the specified symbol so a limit buy won't fill
-        /// </summary>
-        protected override decimal LowPrice
-        {
-            get { return 0.0001m; }
-        }
+        protected override SecurityType SecurityType => SecurityType.Crypto;
 
         protected override decimal GetDefaultQuantity()
         {
@@ -67,16 +48,29 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
             var restClient = new RestClient("https://api.pro.coinbase.com");
-            var webSocketClient = new WebSocketWrapper();
+            var webSocketClient = new WebSocketClientWrapper();
+
+            var securities = new SecurityManager(new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork))
+            {
+                {Symbol, CreateSecurity(Symbol)}
+            };
+
+            var transactions = new SecurityTransactionManager(null, securities);
+            transactions.SetOrderProcessor(new FakeOrderProcessor());
 
             var algorithm = new Mock<IAlgorithm>();
-            algorithm.Setup(a => a.BrokerageModel).Returns(new GDAXBrokerageModel(AccountType.Cash));
+            algorithm.Setup(a => a.Transactions).Returns(transactions);
+            algorithm.Setup(a => a.BrokerageModel).Returns(new GDAXBrokerageModel());
+            algorithm.Setup(a => a.Portfolio).Returns(new SecurityPortfolioManager(securities, transactions));
+            algorithm.Setup(a => a.Securities).Returns(securities);
 
-            var priceProvider = new ApiPriceProvider(Config.GetInt("job-user-id"), Config.Get("api-access-token"));
+            var priceProvider = new Mock<IPriceProvider>();
+            priceProvider.Setup(a => a.GetLastPrice(It.IsAny<Symbol>())).Returns(1.234m);
 
+            var aggregator = new AggregationManager();
             return new GDAXBrokerage(Config.Get("gdax-url", "wss://ws-feed.pro.coinbase.com"), webSocketClient, restClient,
                 Config.Get("gdax-api-key"), Config.Get("gdax-api-secret"), Config.Get("gdax-passphrase"), algorithm.Object,
-                priceProvider);
+                priceProvider.Object, aggregator);
         }
 
         /// <summary>
@@ -89,7 +83,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
         protected override decimal GetAskPrice(Symbol symbol)
         {
-            var tick = ((GDAXBrokerage)this.Brokerage).GetTick(symbol);
+            var tick = ((GDAXBrokerage)Brokerage).GetTick(symbol);
             return tick.AskPrice;
         }
 
@@ -98,12 +92,61 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             Assert.Pass("Order update not supported");
         }
 
-        //no stop limit support
-        public override TestCaseData[] OrderParameters => new[]
+        [Test]
+        public override void GetAccountHoldings()
         {
-            new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
-            new TestCaseData(new StopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder"),
+            // GDAX GetAccountHoldings() always returns an empty list
+            Assert.That(Brokerage.GetAccountHoldings().Count == 0);
+        }
+
+        // stop market orders no longer supported (since 3/23/2019)
+        // no stop limit support
+        private static TestCaseData[] OrderParameters => new[]
+        {
+            new TestCaseData(new MarketOrderTestParameters(Symbol.Create("ETHBTC", SecurityType.Crypto, Market.GDAX))).SetName("MarketOrder"),
+            new TestCaseData(new LimitOrderTestParameters(Symbol.Create("ETHBTC", SecurityType.Crypto, Market.GDAX), 1m, 0.0001m)).SetName("LimitOrder"),
         };
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CancelOrders(OrderTestParameters parameters)
+        {
+            base.CancelOrders(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromZero(OrderTestParameters parameters)
+        {
+            base.LongFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromLong(OrderTestParameters parameters)
+        {
+            base.CloseFromLong(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromZero(OrderTestParameters parameters)
+        {
+            base.ShortFromZero(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void CloseFromShort(OrderTestParameters parameters)
+        {
+            base.CloseFromShort(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void ShortFromLong(OrderTestParameters parameters)
+        {
+            base.ShortFromLong(parameters);
+        }
+
+        [Test, TestCaseSource(nameof(OrderParameters))]
+        public override void LongFromShort(OrderTestParameters parameters)
+        {
+            base.LongFromShort(parameters);
+        }
     }
 }

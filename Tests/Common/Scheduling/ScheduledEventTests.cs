@@ -22,7 +22,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Scheduling
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class ScheduledEventTests
     {
         [Test]
@@ -67,6 +67,19 @@ namespace QuantConnect.Tests.Common.Scheduling
             var count = 0;
             var time = new DateTime(2015, 08, 11, 10, 30, 0);
             var sevent = new ScheduledEvent("test", new[] { time.AddSeconds(-2), time.AddSeconds(-1), time }, (n, t) => count++);
+            // skips all preceding events, not including the specified time
+            sevent.SkipEventsUntil(time);
+            Assert.AreEqual(time, sevent.NextEventUtcTime);
+            Assert.AreEqual(0, count);
+        }
+
+        [Test]
+        public void SkipEventsUntilDoesNotSkipFirstEventEqualToRequestedTime()
+        {
+            var count = 0;
+            var time = new DateTime(2015, 08, 11, 10, 30, 0);
+            var eventTimes = new[] {time, time.AddSeconds(1)};
+            var sevent = new ScheduledEvent("test", eventTimes, (n, t) => count++);
             // skips all preceding events, not including the specified time
             sevent.SkipEventsUntil(time);
             Assert.AreEqual(time, sevent.NextEventUtcTime);

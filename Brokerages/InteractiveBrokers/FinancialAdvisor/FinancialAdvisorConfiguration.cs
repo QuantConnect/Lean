@@ -147,7 +147,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.FinancialAdvisor
             }
 
             // save the master account code
-            var entry = _accountAliases.FirstOrDefault(x => x.Account.Contains("F"));
+            var entry = _accountAliases.FirstOrDefault(x => InteractiveBrokersBrokerage.IsMasterAccount(x.Account));
             if (entry == null)
             {
                 throw new Exception("The Financial Advisor master account was not found.");

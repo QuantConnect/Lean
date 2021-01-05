@@ -1,6 +1,6 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
 */
 
 using System;
@@ -8,44 +8,14 @@ using System;
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
     /// <summary>
-    /// Encapsulates quote infromation from Polygon streaming API.
+    /// Encapsulates quote information from Polygon streaming API.
     /// </summary>
-    public interface IStreamQuote
+    public interface IStreamQuote : IQuoteBase<Int64>
     {
         /// <summary>
         /// Gets asset name.
         /// </summary>
         String Symbol { get; }
-
-        /// <summary>
-        /// Gets identifier of bid source exchange.
-        /// </summary>
-        Int64 BidExchange { get; }
-
-        /// <summary>
-        /// Gets identifier of ask source exchange.
-        /// </summary>
-        Int64 AskExchange { get; }
-
-        /// <summary>
-        /// Gets bid price level.
-        /// </summary>
-        Decimal BidPrice { get; }
-
-        /// <summary>
-        /// Gets ask price level.
-        /// </summary>
-        Decimal AskPrice { get; }
-
-        /// <summary>
-        /// Gets bid quantity.
-        /// </summary>
-        Int64 BidSize { get; }
-
-        /// <summary>
-        /// Gets ask quantity.
-        /// </summary>
-        Int64 AskSize { get; }
 
         /// <summary>
         /// Gets quote timestamp.

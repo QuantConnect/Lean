@@ -64,5 +64,10 @@ namespace QuantConnect.Brokerages
         /// On Open event
         /// </summary>
         event EventHandler Open;
+
+        /// <summary>
+        /// On Close event
+        /// </summary>
+        event EventHandler<WebSocketCloseData> Closed;
     }
 }

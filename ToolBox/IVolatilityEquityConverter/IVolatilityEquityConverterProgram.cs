@@ -103,13 +103,13 @@ namespace QuantConnect.ToolBox.IVolatilityEquityConverter
                     if (linearray.Length <= 2) continue;
                     var time = DateTime.ParseExact(linearray[TimeField], DateFormat.UI,
                         CultureInfo.InvariantCulture);
-                    var priceBid = Decimal.Parse(linearray[PriceBidField]);
-                    var sizeBid = Decimal.Parse(linearray[SizeBidField]);
-                    var priceAsk = Decimal.Parse(linearray[PriceAskField]);
-                    var sizeAsk = Decimal.Parse(linearray[SizeAskField]);
-                    var priceLast = Decimal.Parse(linearray[PriceLastField]);
-                    //var sizeLast = Decimal.Parse(linearray[sizeLastField]);
-                    var volume = Decimal.Parse(linearray[VolumeField]);
+                    var priceBid = Parse.Decimal(linearray[PriceBidField]);
+                    var sizeBid = Parse.Decimal(linearray[SizeBidField]);
+                    var priceAsk = Parse.Decimal(linearray[PriceAskField]);
+                    var sizeAsk = Parse.Decimal(linearray[SizeAskField]);
+                    var priceLast = Parse.Decimal(linearray[PriceLastField]);
+                    //var sizeLast = linearray[sizeLastField]);
+                    var volume = Parse.Decimal(linearray[VolumeField]);
                     var tradeBar = new TradeBar(time, symbol, priceLast, priceLast, priceLast, priceLast, 0);
                     tradeBar.Update(priceLast, priceBid, priceAsk, volume, sizeBid, sizeAsk);
                     var bidBar = new Bar(priceBid, priceBid, priceBid, priceBid);
@@ -213,7 +213,7 @@ namespace QuantConnect.ToolBox.IVolatilityEquityConverter
                 {
                     Time = DateTime.ParseExact(line[1].Replace("-", String.Empty), DateFormat.EightCharacter,
                         CultureInfo.InvariantCulture),
-                    Value = decimal.Parse(line[3])
+                    Value = Parse.Decimal(line[3])
                 });
             }
             return parsed;
@@ -252,7 +252,7 @@ namespace QuantConnect.ToolBox.IVolatilityEquityConverter
                         parsed.Add(new Dividend
                         {
                             Time = time,
-                            Value = decimal.Parse(line[4])
+                            Value = Parse.Decimal(line[4])
                         });
                         break;
 
@@ -272,7 +272,7 @@ namespace QuantConnect.ToolBox.IVolatilityEquityConverter
         /// <returns></returns>
         private static decimal ParseSplitAmt(string amount)
         {
-            return 1 / decimal.Parse(amount);
+            return 1 / Parse.Decimal(amount);
         }
     }
 }

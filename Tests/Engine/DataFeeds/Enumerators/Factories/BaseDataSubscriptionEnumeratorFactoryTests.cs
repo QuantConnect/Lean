@@ -41,7 +41,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 config,
                 new Cash(Currencies.USD, 0, 1),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
 
             var mapFileProvider = new LocalDiskMapFileProvider();

@@ -34,12 +34,13 @@ namespace QuantConnect.Interfaces
         SubscriptionDataConfig Add(
             Type dataType,
             Symbol symbol,
-            Resolution resolution,
+            Resolution? resolution = null,
             bool fillForward = true,
             bool extendedMarketHours = false,
             bool isFilteredSubscription = true,
             bool isInternalFeed = false,
-            bool isCustomData = false
+            bool isCustomData = false,
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted
             );
 
         /// <summary>
@@ -49,13 +50,14 @@ namespace QuantConnect.Interfaces
         /// </summary>
         List<SubscriptionDataConfig> Add(
             Symbol symbol,
-            Resolution resolution,
+            Resolution? resolution = null,
             bool fillForward = true,
             bool extendedMarketHours = false,
             bool isFilteredSubscription = true,
             bool isInternalFeed = false,
             bool isCustomData = false,
-            List<Tuple<Type, TickType>> subscriptionDataTypes = null
+            List<Tuple<Type, TickType>> subscriptionDataTypes = null,
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted
             );
 
         /// <summary>

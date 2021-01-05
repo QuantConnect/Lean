@@ -13,8 +13,8 @@
  * limitations under the License.
  *
 */
+
 using QuantConnect.Data.Market;
-using System;
 
 namespace QuantConnect.Indicators
 {
@@ -23,13 +23,14 @@ namespace QuantConnect.Indicators
     /// It is calculated by adding up the dollars traded for every transaction (price multiplied
     /// by number of shares traded) and then dividing by the total shares traded for the day.
     /// </summary>
-    public class VolumeWeightedAveragePriceIndicator : TradeBarIndicator
+    public class VolumeWeightedAveragePriceIndicator : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// In this VWAP calculation, typical price is defined by (O + H + L + C) / 4
         /// </summary>
-        private Identity _price;
-        private Identity _volume;
+        private readonly int _period;
+        private readonly Identity _price;
+        private readonly Identity _volume;
         private CompositeIndicator<IndicatorDataPoint> _vwap;
 
         /// <summary>
@@ -37,7 +38,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period of the VWAP</param>
         public VolumeWeightedAveragePriceIndicator(int period)
-            : this("VWAP_" + period, period)
+            : this($"VWAP({period})", period)
         {
         }
 
@@ -49,6 +50,8 @@ namespace QuantConnect.Indicators
         public VolumeWeightedAveragePriceIndicator(string name, int period)
             : base(name)
         {
+            _period = period;
+
             _price = new Identity("Price");
             _volume = new Identity("Volume");
 
@@ -59,10 +62,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady
-        {
-            get { return _vwap.IsReady; }
-        }
+        public override bool IsReady => _vwap.IsReady;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => _period;
 
         /// <summary>
         /// Resets this indicator to its initial state
@@ -71,7 +76,7 @@ namespace QuantConnect.Indicators
         {
             _price.Reset();
             _volume.Reset();
-            _vwap.Reset();
+            _vwap = _price.WeightedBy(_volume, _period);
             base.Reset();
         }
 

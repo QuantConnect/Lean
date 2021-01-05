@@ -41,21 +41,34 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.SetEndDate(Time.EndOfTime);
             algorithm.SetStartDate(DateTime.UtcNow.Subtract(TimeSpan.FromDays(10)));
             algorithm.AddUniverse(CoarseSelectionFunction, FineSelectionFunction);
+            // OnEndOfTimeStep will add all pending universe additions
+            algorithm.OnEndOfTimeStep();
             var universe = algorithm.UniverseManager.Values.First();
             var securityChanges = algorithm.DataManager.UniverseSelection.ApplyUniverseSelection(
                 universe,
                 algorithm.EndDate.ConvertToUtc(algorithm.TimeZone).Subtract(TimeSpan.FromDays(1)),
                 new BaseDataCollection(
                     DateTime.UtcNow,
-                    Symbol.Create("GOOG", SecurityType.Equity, Market.USA),
-                    new List<BaseData>()
+                    Symbols.AAPL,
+                    new[]
+                    {
+                        new CoarseFundamental
+                        {
+                            Symbol = Symbols.AAPL,
+                            HasFundamentalData = true
+                        },
+                        new CoarseFundamental
+                        {
+                            Symbol = Symbols.SPY,
+                            HasFundamentalData = false
+                        }
+                    }
                 )
             );
             Symbol symbol;
             Assert.AreEqual(1, securityChanges.AddedSecurities.Count);
-            Assert.AreEqual(Symbol.Create("SPY", SecurityType.Equity, Market.USA),
-                securityChanges.AddedSecurities.First().Symbol);
-            Assert.IsFalse(SymbolCache.TryGetSymbol("GOOG", out symbol));
+            Assert.AreEqual(Symbols.AAPL, securityChanges.AddedSecurities.First().Symbol);
+            Assert.IsFalse(SymbolCache.TryGetSymbol("AAPL", out symbol));
             Assert.IsFalse(SymbolCache.TryGetSymbol("SPY", out symbol));
         }
 
@@ -71,6 +84,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.SetStartDate(2012, 3, 27);
             algorithm.SetEndDate(2012, 3, 30);
             algorithm.AddUniverse("my-custom-universe", dt => dt.Day < 30 ? new List<string> { "CPRT" } : Enumerable.Empty<string>());
+            // OnEndOfTimeStep will add all pending universe additions
+            algorithm.OnEndOfTimeStep();
             var universe = algorithm.UniverseManager.Values.First();
 
             var securityChanges = algorithm.DataManager.UniverseSelection.ApplyUniverseSelection(
@@ -106,18 +121,55 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsFalse(security.IsTradable);
         }
 
+        [Test]
+        public void CoarseFundamentalHasFundamentalDataFalseExcludedInFineUniverseSelection()
+        {
+            var algorithm = new AlgorithmStub(new MockDataFeed());
+            algorithm.SetEndDate(Time.EndOfTime);
+            algorithm.SetStartDate(DateTime.UtcNow.Subtract(TimeSpan.FromDays(10)));
+
+            algorithm.AddUniverse(
+                coarse => coarse.Select(c => c.Symbol),
+                fine => fine.Select(f => f.Symbol)
+            );
+            // OnEndOfTimeStep will add all pending universe additions
+            algorithm.OnEndOfTimeStep();
+
+            var universe = algorithm.UniverseManager.Values.First();
+            var securityChanges = algorithm.DataManager.UniverseSelection.ApplyUniverseSelection(
+                universe,
+                algorithm.EndDate.ConvertToUtc(algorithm.TimeZone).Subtract(TimeSpan.FromDays(1)),
+                new BaseDataCollection(
+                    DateTime.UtcNow,
+                    Symbols.AAPL,
+                    new[]
+                    {
+                        new CoarseFundamental
+                        {
+                            Symbol = Symbols.AAPL,
+                            HasFundamentalData = true
+                        },
+                        new CoarseFundamental
+                        {
+                            Symbol = Symbols.SPY,
+                            HasFundamentalData = false
+                        }
+                    }
+                )
+            );
+
+            Assert.AreEqual(1, securityChanges.Count);
+            Assert.AreEqual(Symbols.AAPL, securityChanges.AddedSecurities.First().Symbol);
+        }
+
         private IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
         {
-            return new List<Symbol>
-            {
-                Symbol.Create("GOOG", SecurityType.Equity, Market.USA),
-                Symbol.Create("SPY", SecurityType.Equity, Market.USA)
-            };
+            return new List<Symbol> {Symbols.AAPL, Symbols.SPY};
         }
 
         private IEnumerable<Symbol> FineSelectionFunction(IEnumerable<FineFundamental> fine)
         {
-            return new[] { fine.First().Symbol };
+            return new[] { fine.First(fundamental => fundamental.Symbol.Value == "AAPL").Symbol };
         }
 
         public class MockDataFeedWithSubscription : IDataFeed
@@ -132,7 +184,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 IFactorFileProvider factorFileProvider,
                 IDataProvider dataProvider,
                 IDataFeedSubscriptionManager subscriptionManager,
-                IDataFeedTimeProvider dataFeedTimeProvider
+                IDataFeedTimeProvider dataFeedTimeProvider,
+                IDataChannelProvider channelProvider
             )
             {
             }

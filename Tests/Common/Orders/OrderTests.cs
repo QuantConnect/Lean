@@ -25,6 +25,7 @@ using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Option;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Tests.Common.Orders
 {
@@ -36,6 +37,33 @@ namespace QuantConnect.Tests.Common.Orders
         {
             var value = parameters.Order.GetValue(parameters.Security);
             Assert.AreEqual(parameters.ExpectedValue, value);
+        }
+
+        [Test]
+        [TestCase(null)]
+        [TestCase("")]
+        public void LimitOrder_SetsDefaultTag(string tag)
+        {
+            var order = new LimitOrder(Symbols.SPY, 1m, 123.4567m, DateTime.Today, tag);
+            Assert.AreEqual(Invariant($"Limit Price: {order.LimitPrice:C}"), order.Tag);
+        }
+
+        [Test]
+        [TestCase(null)]
+        [TestCase("")]
+        public void StopLimitOrder_SetsDefaultTag(string tag)
+        {
+            var order = new StopLimitOrder(Symbols.SPY, 1m, 123.4567m, 234.5678m, DateTime.Today, tag);
+            Assert.AreEqual(Invariant($"Stop Price: {order.StopPrice:C} Limit Price: {order.LimitPrice:C}"), order.Tag);
+        }
+
+        [Test]
+        [TestCase(null)]
+        [TestCase("")]
+        public void StopMarketOrder_SetsDefaultTag(string tag)
+        {
+            var order = new StopMarketOrder(Symbols.SPY, 1m, 123.4567m, DateTime.Today, tag);
+            Assert.AreEqual(Invariant($"Stop Price: {order.StopPrice:C}"), order.Tag);
         }
 
         private static TestCaseData[] GetValueTestParameters()
@@ -54,7 +82,8 @@ namespace QuantConnect.Tests.Common.Orders
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             equity.SetMarketPrice(new Tick {Value = price});
 
@@ -65,18 +94,20 @@ namespace QuantConnect.Tests.Common.Orders
                 gbpCash,
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false),
                 properties,
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             forex.SetMarketPrice(new Tick {Value= price});
 
             var eurCash = new Cash("EUR", 0, 1.12m);
-            properties = new SymbolProperties("Euro-Bund", eurCash.Symbol, 10, 0.1m, 1);
+            properties = new SymbolProperties("Euro-Bund", eurCash.Symbol, 10, 0.1m, 1, string.Empty);
             var cfd = new Cfd(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 eurCash,
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.DE10YBEUR, Resolution.Minute, tz, tz, true, false, false),
                 properties,
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             cfd.SetMarketPrice(new Tick { Value = price });
             var multiplierTimesConversionRate = properties.ContractMultiplier*eurCash.ConversionRate;
@@ -95,7 +126,8 @@ namespace QuantConnect.Tests.Common.Orders
                 ),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             option.SetMarketPrice(new Tick { Value = price });
 
@@ -149,9 +181,9 @@ namespace QuantConnect.Tests.Common.Orders
                 new ValueTestParameters("OptionShortStopMarketOrder", option, new StopMarketOrder(Symbols.SPY_P_192_Feb19_2016, -quantity, pricePlusDelta, time), -quantity*pricePlusDelta),
                 new ValueTestParameters("OptionShortStopMarketOrder", option, new StopMarketOrder(Symbols.SPY_P_192_Feb19_2016, -quantity, priceMinusDelta, time), -quantity*price),
 
-                new ValueTestParameters("OptionExercisetOrderPut", option, new OptionExerciseOrder(Symbols.SPY_P_192_Feb19_2016, quantity, time), quantity*option.Symbol.ID.StrikePrice),
+                new ValueTestParameters("OptionExerciseOrderPut", option, new OptionExerciseOrder(Symbols.SPY_P_192_Feb19_2016, quantity, time), quantity*option.Symbol.ID.StrikePrice),
                 new ValueTestParameters("OptionAssignmentOrderPut", option, new OptionExerciseOrder(Symbols.SPY_P_192_Feb19_2016, -quantity, time), -quantity*option.Symbol.ID.StrikePrice),
-                new ValueTestParameters("OptionExercisetOrderCall", option, new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, quantity, time), quantity*option.Symbol.ID.StrikePrice),
+                new ValueTestParameters("OptionExerciseOrderCall", option, new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, quantity, time), quantity*option.Symbol.ID.StrikePrice),
                 new ValueTestParameters("OptionAssignmentOrderCall", option, new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, -quantity, time), -quantity*option.Symbol.ID.StrikePrice),
 
 

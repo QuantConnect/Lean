@@ -1,6 +1,6 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
 */
 
 using System.Runtime.Serialization;
@@ -85,7 +85,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// Initial new order request pending.
         /// </summary>
         [EnumMember(Value = "pending_new")]
-        PendingMew,
+        PendingNew,
 
         /// <summary>
         /// Order information calculated by server.
@@ -109,6 +109,12 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// Order replacement request pending.
         /// </summary>
         [EnumMember(Value = "pending_replace")]
-        PendingReplace
+        PendingReplace,
+
+        /// <summary>
+        /// Order completely filled.
+        /// </summary>
+        [EnumMember(Value = "fill")]
+        Fill
     }
 }

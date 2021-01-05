@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
             // we have data for these dates locally
             var start = new DateTime(2013, 10, 07, 09, 30, 0);
             SetStartDate(start);
-            SetEndDate(start.AddDays(1));
+            SetEndDate(start.AddDays(60));
 
             // define our 30 minute trade bar consolidator. we can access the 30 minute bar
             // from the DataConsolidated events
@@ -94,6 +94,22 @@ namespace QuantConnect.Algorithm.CSharp
             Consolidate("SPY", TimeSpan.FromMinutes(45), FortyFiveMinuteBarHandler);
             Consolidate("SPY", Resolution.Hour, HourBarHandler);
             Consolidate("EURUSD", Resolution.Daily, DailyEurUsdBarHandler);
+
+            // API convenience method for easily receiving weekly-consolidated data
+            Consolidate("SPY", Calendar.Weekly, CalendarTradeBarHandler);
+            Consolidate("EURUSD", Calendar.Weekly, CalendarQuoteBarHandler);
+
+            // API convenience method for easily receiving monthly-consolidated data
+            Consolidate("SPY", Calendar.Monthly, CalendarTradeBarHandler);
+            Consolidate("EURUSD", Calendar.Monthly, CalendarQuoteBarHandler);
+
+            // API convenience method for easily receiving quarterly-consolidated data
+            Consolidate("SPY", Calendar.Quarterly, CalendarTradeBarHandler);
+            Consolidate("EURUSD", Calendar.Quarterly, CalendarQuoteBarHandler);
+
+            // API convenience method for easily receiving yearly-consolidated data
+            Consolidate("SPY", Calendar.Yearly, CalendarTradeBarHandler);
+            Consolidate("EURUSD", Calendar.Yearly, CalendarQuoteBarHandler);
 
             // requires quote data subscription
             //Consolidate<QuoteBar>("EURUSD", TimeSpan.FromMinutes(45), FortyFiveMinuteBarHandler);
@@ -173,9 +189,19 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"{consolidated.EndTime:o} 45 minute consolidated.");
         }
 
-        private void DailyEurUsdBarHandler(TradeBar consolidated)
+        private void DailyEurUsdBarHandler(QuoteBar consolidated)
         {
             Log($"{consolidated.EndTime:o} EURUSD Daily consolidated.");
+        }
+
+        private void CalendarTradeBarHandler(TradeBar tradeBar)
+        {
+            Log($"{Time} :: {tradeBar.Time:o} {tradeBar.Close}");
+        }
+
+        private void CalendarQuoteBarHandler(QuoteBar quoteBar)
+        {
+            Log($"{Time} :: {quoteBar.Time:o} {quoteBar.Close}");
         }
 
         public override void OnEndOfAlgorithm()

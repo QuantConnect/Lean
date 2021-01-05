@@ -35,12 +35,21 @@ import pandas as pd
 ### </summary>
 class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionModel):
     def __init__(self,
+                 rebalance = Resolution.Daily,
+                 portfolioBias = PortfolioBias.LongShort,
                  lookback = 1,
                  period = 63,
                  resolution = Resolution.Daily,
+                 targetReturn = 0.02,
                  optimizer = None):
         """Initialize the model
         Args:
+            rebalance: Rebalancing parameter. If it is a timedelta, date rules or Resolution, it will be converted into a function.
+                              If None will be ignored.
+                              The function returns the next expected rebalance time for a given algorithm UTC DateTime.
+                              The function returns null if unknown, in which case the function will be called again in the
+                              next loop. Returning current time will trigger rebalance.
+            portfolioBias: Specifies the bias of the portfolio (Short, Long/Short, Long)
             lookback(int): Historical return lookback period
             period(int): The time interval of history price to calculate the weight
             resolution: The resolution of the history price
@@ -48,35 +57,45 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         self.lookback = lookback
         self.period = period
         self.resolution = resolution
-        self.optimizer = MinimumVariancePortfolioOptimizer() if optimizer is None else optimizer
+        self.portfolioBias = portfolioBias
+        self.sign = lambda x: -1 if x < 0 else (1 if x > 0 else 0)
+
+        lower = 0 if portfolioBias == PortfolioBias.Long else -1
+        upper = 0 if portfolioBias == PortfolioBias.Short else 1
+        self.optimizer = MinimumVariancePortfolioOptimizer(lower, upper, targetReturn) if optimizer is None else optimizer
 
         self.symbolDataBySymbol = {}
-        self.pendingRemoval = []
 
-    def CreateTargets(self, algorithm, insights):
+        # If the argument is an instance of Resolution or Timedelta
+        # Redefine rebalancingFunc
+        rebalancingFunc = rebalance
+        if isinstance(rebalance, int):
+            rebalance = Extensions.ToTimeSpan(rebalance)
+        if isinstance(rebalance, timedelta):
+            rebalancingFunc = lambda dt: dt + rebalance
+        if rebalancingFunc:
+            self.SetRebalancingFunc(rebalancingFunc)
+
+    def ShouldCreateTargetForInsight(self, insight):
+        if len(PortfolioConstructionModel.FilterInvalidInsightMagnitude(self.Algorithm, [insight])) == 0:
+            return False
+
+        symbolData = self.symbolDataBySymbol.get(insight.Symbol)
+        if insight.Magnitude is None:
+            self.algorithm.SetRunTimeError(ArgumentNullException('MeanVarianceOptimizationPortfolioConstructionModel does not accept \'None\' as Insight.Magnitude. Please checkout the selected Alpha Model specifications.'))
+            return False
+        symbolData.Add(self.Algorithm.Time, insight.Magnitude)
+
+        return True
+
+    def DetermineTargetPercent(self, activeInsights):
         """
-        Create portfolio targets from the specified insights
+         Will determine the target percent for each insight
         Args:
-            algorithm: The algorithm instance
-            insights: The insights to create portoflio targets from
         Returns:
-            An enumerable of portoflio targets to be sent to the execution model
         """
-        targets = []
-
-        for symbol in self.pendingRemoval:
-            targets.append(PortfolioTarget.Percent(algorithm, symbol, 0))
-        self.pendingRemoval.clear()
-
-        symbols = [insight.Symbol for insight in insights]
-        if len(symbols) == 0 or all([insight.Magnitude == 0 for insight in insights]):
-            return targets
-
-        for insight in insights:
-            symbolData = self.symbolDataBySymbol.get(insight.Symbol)
-            if insight.Magnitude is None:
-                algorithm.SetRunTimeError(ArgumentNullException('MeanVarianceOptimizationPortfolioConstructionModel does not accept \'None\' as Insight.Magnitude. Please checkout the selected Alpha Model specifications.'))
-            symbolData.Add(algorithm.Time, insight.Magnitude)
+        targets = {}
+        symbols = [insight.Symbol for insight in activeInsights]
 
         # Create a dictionary keyed by the symbols in the insights with an pandas.Series as value to create a data frame
         returns = { str(symbol) : data.Return for symbol, data in self.symbolDataBySymbol.items() if symbol in symbols }
@@ -87,11 +106,13 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         weights = pd.Series(weights, index = returns.columns)
 
         # Create portfolio targets from the specified insights
-        for insight in insights:
+        for insight in activeInsights:
             weight = weights[str(insight.Symbol)]
-            target = PortfolioTarget.Percent(algorithm, insight.Symbol, weight)
-            if target is not None:
-                targets.append(target)
+
+            # don't trust the optimizer
+            if self.portfolioBias != PortfolioBias.LongShort and self.sign(weight) != self.portfolioBias:
+                weight = 0
+            targets[insight] = weight
 
         return targets
 
@@ -102,8 +123,8 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             changes: The security additions and removals from the algorithm'''
 
         # clean up data for removed securities
+        super().OnSecuritiesChanged(algorithm, changes)
         for removed in changes.RemovedSecurities:
-            self.pendingRemoval.append(removed.Symbol)
             symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
             symbolData.Reset()
 

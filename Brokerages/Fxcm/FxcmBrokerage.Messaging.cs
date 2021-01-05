@@ -59,8 +59,6 @@ namespace QuantConnect.Brokerages.Fxcm
         private readonly Dictionary<string, AutoResetEvent> _mapRequestsToAutoResetEvents = new Dictionary<string, AutoResetEvent>();
         private readonly HashSet<string> _pendingHistoryRequests = new HashSet<string>();
 
-        private string _fxcmAccountCurrency = Currencies.USD;
-
         private void LoadInstruments()
         {
             // Note: requestTradingSessionStatus() MUST be called just after login
@@ -73,7 +71,9 @@ namespace QuantConnect.Brokerages.Fxcm
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
             if (!autoResetEvent.WaitOne(ResponseTimeout))
-                throw new TimeoutException(string.Format("FxcmBrokerage.LoadInstruments(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
+                throw new TimeoutException("FxcmBrokerage.LoadInstruments(): Operation took longer than " +
+                    $"{((decimal)ResponseTimeout / 1000).ToStringInvariant()} seconds."
+                );
         }
 
         private void LoadAccounts()
@@ -86,7 +86,9 @@ namespace QuantConnect.Brokerages.Fxcm
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
             if (!autoResetEvent.WaitOne(ResponseTimeout))
-                throw new TimeoutException(string.Format("FxcmBrokerage.LoadAccounts(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
+                throw new TimeoutException("FxcmBrokerage.LoadAccounts(): Operation took longer than " +
+                    $"{((decimal)ResponseTimeout / 1000).ToStringInvariant()} seconds."
+                );
 
             if (!_accounts.ContainsKey(_accountId))
                 throw new ArgumentException("FxcmBrokerage.LoadAccounts(): The account id is invalid: " + _accountId);
@@ -95,7 +97,8 @@ namespace QuantConnect.Brokerages.Fxcm
             if (_accounts[_accountId].getParties().getFXCMPositionMaintenance() == "Y")
             {
                 throw new NotSupportedException("FxcmBrokerage.LoadAccounts(): The Lean engine does not support accounts with Hedging enabled. " +
-                                                "Please contact FXCM Active Trader support to disable Hedging. They can be reached at 646.432.2970 or by email, activetrader@fxcm.com.");
+                    "Please contact FXCM Active Trader support to disable Hedging. They can be reached at https://www.fxcm.com/markets/contact-client-support/ through their Live Chat or Phone."
+                );
             }
         }
 
@@ -104,12 +107,15 @@ namespace QuantConnect.Brokerages.Fxcm
             AutoResetEvent autoResetEvent;
             lock (_locker)
             {
-                _currentRequest = _gateway.requestOpenOrders(_accountId);
+                _currentRequest = _gateway.requestOpenOrders(null);
+
                 autoResetEvent = new AutoResetEvent(false);
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
             if (!autoResetEvent.WaitOne(ResponseTimeout))
-                throw new TimeoutException(string.Format("FxcmBrokerage.LoadOpenOrders(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
+                throw new TimeoutException("FxcmBrokerage.LoadOpenOrders(): Operation took longer than " +
+                    $"{((decimal)ResponseTimeout / 1000).ToStringInvariant()} seconds."
+                );
         }
 
         private void LoadOpenPositions()
@@ -118,13 +124,15 @@ namespace QuantConnect.Brokerages.Fxcm
             lock (_locker)
             {
                 _currentRequest = _terminal.Equals("Demo") ?
-                    _gateway.requestOpenPositions(Convert.ToInt64(_accountId)) :
+                    _gateway.requestOpenPositions(_accountId.ConvertInvariant<long>()) :
                     _gateway.requestOpenPositions(_accountId);
                 autoResetEvent = new AutoResetEvent(false);
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
             if (!autoResetEvent.WaitOne(ResponseTimeout))
-                throw new TimeoutException(string.Format("FxcmBrokerage.LoadOpenPositions(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
+                throw new TimeoutException("FxcmBrokerage.LoadOpenPositions(): Operation took longer than " +
+                    $"{((decimal)ResponseTimeout / 1000).ToStringInvariant()} seconds."
+                );
         }
 
         /// <summary>
@@ -139,8 +147,8 @@ namespace QuantConnect.Brokerages.Fxcm
                     x.getInstrument().getSymbol(),
                     _symbolMapper.GetBrokerageSecurityType(x.getInstrument().getSymbol()),
                     Market.FXCM),
-                BidPrice = (decimal) x.getBidClose(),
-                AskPrice = (decimal) x.getAskClose()
+                BidPrice = (decimal)x.getBidClose(),
+                AskPrice = (decimal)x.getAskClose()
             }).ToList();
         }
 
@@ -166,7 +174,9 @@ namespace QuantConnect.Brokerages.Fxcm
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
             if (!autoResetEvent.WaitOne(ResponseTimeout))
-                throw new TimeoutException(string.Format("FxcmBrokerage.GetQuotes(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
+                throw new TimeoutException("FxcmBrokerage.GetQuotes(): Operation took longer than " +
+                    $"{((decimal)ResponseTimeout / 1000).ToStringInvariant()} seconds."
+                );
 
             return _rates.Where(x => fxcmSymbols.Contains(x.Key)).Select(x => x.Value).ToList();
         }
@@ -235,7 +245,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 }
 
                 // get account base currency
-                _fxcmAccountCurrency = message.getParameter("BASE_CRNCY").getValue();
+                AccountBaseCurrency = message.getParameter("BASE_CRNCY").getValue();
 
                 _mapRequestsToAutoResetEvents[_currentRequest].Set();
                 _mapRequestsToAutoResetEvents.Remove(_currentRequest);
@@ -320,7 +330,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 _rates[instrument.getSymbol()] = message;
 
                 // if instrument is subscribed, add ticks to list
-                if (_subscribedSymbols.Contains(symbol))
+                if (_subscriptionManager.IsSubscribed(symbol, TickType.Quote))
                 {
                     // For some unknown reason, messages returned by SubscriptionRequestTypeFactory.SUBSCRIBE
                     // have message.getDate() rounded to the second, so we use message.getMakingTime() instead
@@ -337,10 +347,7 @@ namespace QuantConnect.Brokerages.Fxcm
                     var askPrice = Convert.ToDecimal(message.getAskClose());
                     var tick = new Tick(time, symbol, bidPrice, askPrice);
 
-                    lock (_ticks)
-                    {
-                        _ticks.Add(tick);
-                    }
+                    _aggregator.Update(tick);
                 }
             }
 
@@ -381,21 +388,26 @@ namespace QuantConnect.Brokerages.Fxcm
                     // existing order
                     if (!OrderIsBeingProcessed(orderStatus.getCode()))
                     {
-                        order.PriceCurrency = message.getCurrency();
+                        var status = ConvertOrderStatus(orderStatus);
+
+                        int id;
+                        // if we get a Submitted status and we had placed an order update, this new event is flagged as an update
+                        var isUpdate = status == OrderStatus.Submitted && _orderUpdates.TryRemove(order.Id, out id);
+                        var security = _securityProvider.GetSecurity(order.Symbol);
+                        order.PriceCurrency = security.SymbolProperties.QuoteCurrency;
 
                         var orderEvent = new OrderEvent(order,
                             DateTime.UtcNow,
                             OrderFee.Zero)
                         {
-                            Status = ConvertOrderStatus(orderStatus),
+                            Status = isUpdate ? OrderStatus.UpdateSubmitted : status,
                             FillPrice = Convert.ToDecimal(message.getPrice()),
-                            FillQuantity = Convert.ToInt32(message.getSide() == SideFactory.BUY ? message.getLastQty() : -message.getLastQty())
+                            FillQuantity = Convert.ToInt32(message.getSide() == SideFactory.BUY ? message.getLastQty() : -message.getLastQty()),
                         };
 
                         // we're catching the first fill so we apply the fees only once
                         if ((int)message.getCumQty() == (int)message.getLastQty() && message.getLastQty() > 0)
                         {
-                            var security = _securityProvider.GetSecurity(order.Symbol);
                             orderEvent.OrderFee = security.FeeModel.GetOrderFee(
                                 new OrderFeeParameters(security, order));
                         }
@@ -407,7 +419,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 {
                     _mapFxcmOrderIdsToOrders[orderId] = order;
                     order.BrokerId.Add(orderId);
-                    order.PriceCurrency = message.getCurrency();
+                    order.PriceCurrency = _securityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
 
                     // new order
                     var orderEvent = new OrderEvent(order,

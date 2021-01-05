@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,15 +25,15 @@ namespace QuantConnect.Util
     /// <see href="http://www.jackleitch.net/2010/10/better-rate-limiting-with-dot-net/"/>
     /// <remarks>
     ///     <para>
-    ///     To control the rate of an action using a <see cref="RateGate"/>, 
-    ///     code should simply call <see cref="WaitToProceed()"/> prior to 
+    ///     To control the rate of an action using a <see cref="RateGate"/>,
+    ///     code should simply call <see cref="WaitToProceed()"/> prior to
     ///     performing the action. <see cref="WaitToProceed()"/> will block
-    ///     the current thread until the action is allowed based on the rate 
+    ///     the current thread until the action is allowed based on the rate
     ///     limit.
     ///     </para>
     ///     <para>
-    ///     This class is thread safe. A single <see cref="RateGate"/> instance 
-    ///     may be used to control the rate of an occurrence across multiple 
+    ///     This class is thread safe. A single <see cref="RateGate"/> instance
+    ///     may be used to control the rate of an occurrence across multiple
     ///     threads.
     ///     </para>
     /// </remarks>
@@ -77,7 +77,7 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Initializes a <see cref="RateGate"/> with a rate of <paramref name="occurrences"/> 
+        /// Initializes a <see cref="RateGate"/> with a rate of <paramref name="occurrences"/>
         /// per <paramref name="timeUnit"/>.
         /// </summary>
         /// <param name="occurrences">Number of occurrences allowed per unit of time.</param>
@@ -89,11 +89,11 @@ namespace QuantConnect.Util
         {
             // Check the arguments.
             if (occurrences <= 0)
-                throw new ArgumentOutOfRangeException("occurrences", "Number of occurrences must be a positive integer");
+                throw new ArgumentOutOfRangeException(nameof(occurrences), "Number of occurrences must be a positive integer");
             if (timeUnit != timeUnit.Duration())
-                throw new ArgumentOutOfRangeException("timeUnit", "Time unit must be a positive span of time");
+                throw new ArgumentOutOfRangeException(nameof(timeUnit), "Time unit must be a positive span of time");
             if (timeUnit >= TimeSpan.FromMilliseconds(UInt32.MaxValue))
-                throw new ArgumentOutOfRangeException("timeUnit", "Time unit must be less than 2^32 milliseconds");
+                throw new ArgumentOutOfRangeException(nameof(timeUnit), "Time unit must be less than 2^32 milliseconds");
 
             Occurrences = occurrences;
             TimeUnitMilliseconds = (int)timeUnit.TotalMilliseconds;
@@ -109,31 +109,32 @@ namespace QuantConnect.Util
             _exitTimer = new Timer(ExitTimerCallback, null, TimeUnitMilliseconds, -1);
         }
 
-        // Callback for the exit timer that exits the semaphore based on exit times 
+        // Callback for the exit timer that exits the semaphore based on exit times
         // in the queue and then sets the timer for the nextexit time.
+        // Credit to Jim: http://www.jackleitch.net/2010/10/better-rate-limiting-with-dot-net/#comment-3620
+        // for providing the code below, fixing issue #3499 - https://github.com/QuantConnect/Lean/issues/3499
         private void ExitTimerCallback(object state)
         {
             // While there are exit times that are passed due still in the queue,
             // exit the semaphore and dequeue the exit time.
-            int exitTime;
-            while (_exitTimes.TryPeek(out exitTime)
-                    && unchecked(exitTime - Environment.TickCount) <= 0)
+            var exitTime = 0;
+            var exitTimeValid = _exitTimes.TryPeek(out exitTime);
+            while (exitTimeValid)
             {
+                if (unchecked(exitTime - Environment.TickCount) > 0)
+                {
+                    break;
+                }
                 _semaphore.Release();
                 _exitTimes.TryDequeue(out exitTime);
+                exitTimeValid = _exitTimes.TryPeek(out exitTime);
             }
+            // we are already holding the next item from the queue, do not peek again
+            // although this exit time may have already pass by this stmt.
+            var timeUntilNextCheck = exitTimeValid
+                ? Math.Min(TimeUnitMilliseconds, Math.Max(0, exitTime - Environment.TickCount))
+                : TimeUnitMilliseconds;
 
-            // Try to get the next exit time from the queue and compute
-            // the time until the next check should take place. If the 
-            // queue is empty, then no exit times will occur until at least
-            // one time unit has passed.
-            int timeUntilNextCheck;
-            if (_exitTimes.TryPeek(out exitTime))
-                timeUntilNextCheck = unchecked(exitTime - Environment.TickCount);
-            else
-                timeUntilNextCheck = TimeUnitMilliseconds;
-
-            // Set the timer.
             _exitTimer.Change(timeUntilNextCheck, -1);
         }
 
@@ -147,14 +148,14 @@ namespace QuantConnect.Util
         {
             // Check the arguments.
             if (millisecondsTimeout < -1)
-                throw new ArgumentOutOfRangeException("millisecondsTimeout");
+                throw new ArgumentOutOfRangeException(nameof(millisecondsTimeout));
 
             CheckDisposed();
 
             // Block until we can enter the semaphore or until the timeout expires.
             var entered = _semaphore.Wait(millisecondsTimeout);
 
-            // If we entered the semaphore, compute the corresponding exit time 
+            // If we entered the semaphore, compute the corresponding exit time
             // and add it to the queue.
             if (entered)
             {
@@ -210,7 +211,7 @@ namespace QuantConnect.Util
             {
                 if (isDisposing)
                 {
-                    // The semaphore and timer both implement IDisposable and 
+                    // The semaphore and timer both implement IDisposable and
                     // therefore must be disposed.
                     _semaphore.Dispose();
                     _exitTimer.Dispose();

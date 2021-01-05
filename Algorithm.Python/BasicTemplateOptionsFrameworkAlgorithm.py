@@ -35,7 +35,7 @@ from datetime import date, timedelta
 ### Basic template options framework algorithm uses framework components
 ### to define an algorithm that trades options.
 ### </summary>
-class BasicTemplateOptionsFrameworkAlgorithm(QCAlgorithmFramework):
+class BasicTemplateOptionsFrameworkAlgorithm(QCAlgorithm):
 
     def Initialize(self):
 
@@ -67,7 +67,10 @@ class EarliestExpiringWeeklyAtTheMoneyPutOptionUniverseSelectionModel(OptionUniv
     def Filter(self, filter):
         '''Defines the option chain universe filter'''
         return (filter.Strikes(+1, +1)
-                      .Expiration(timedelta(0), timedelta(7))
+                      # Expiration method accepts timedelta objects or integer for days.
+                      # The following statements yield the same filtering criteria
+                      .Expiration(0, 7)
+                      # .Expiration(timedelta(0), timedelta(7))
                       .WeeklysOnly()
                       .PutsOnly()
                       .OnlyApplyFilterAtMarketOpen())
@@ -85,7 +88,7 @@ class ConstantOptionContractAlphaModel(ConstantAlphaModel):
         return super().ShouldEmitInsight(utcTime, symbol)
 
 class SingleSharePortfolioConstructionModel(PortfolioConstructionModel):
-    '''Portoflio construction model that sets target quantities to 1 for up insights and -1 for down insights'''
+    '''Portfolio construction model that sets target quantities to 1 for up insights and -1 for down insights'''
     def CreateTargets(self, algorithm, insights):
         targets = []
         for insight in insights:

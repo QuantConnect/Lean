@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
@@ -70,41 +69,42 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The portfolio targets</param>
-        public override void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
+        public override void Execute(QCAlgorithm algorithm, IPortfolioTarget[] targets)
         {
             _targetsCollection.AddRange(targets);
 
-            foreach (var target in _targetsCollection.OrderByMarginImpact(algorithm))
+            // for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call
+            if (_targetsCollection.Count > 0)
             {
-                var symbol = target.Symbol;
-
-                // calculate remaining quantity to be ordered
-                var unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target);
-
-                // fetch our symbol data containing our STD/SMA indicators
-                SymbolData data;
-                if (!_symbolData.TryGetValue(symbol, out data))
+                foreach (var target in _targetsCollection.OrderByMarginImpact(algorithm))
                 {
-                    continue;
-                }
+                    var symbol = target.Symbol;
 
-                // check order entry conditions
-                if (data.STD.IsReady && PriceIsFavorable(data, unorderedQuantity))
-                {
-                    // get the maximum order size based on total order value
-                    var maxOrderSize = OrderSizing.Value(data.Security, MaximumOrderValue);
-                    var orderSize = Math.Min(maxOrderSize, Math.Abs(unorderedQuantity));
+                    // calculate remaining quantity to be ordered
+                    var unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target);
 
-                    // round down to even lot size
-                    orderSize -= orderSize % data.Security.SymbolProperties.LotSize;
-                    if (orderSize != 0)
+                    // fetch our symbol data containing our STD/SMA indicators
+                    SymbolData data;
+                    if (!_symbolData.TryGetValue(symbol, out data))
                     {
-                        algorithm.MarketOrder(symbol, Math.Sign(unorderedQuantity) * orderSize);
+                        continue;
+                    }
+
+                    // check order entry conditions
+                    if (data.STD.IsReady && PriceIsFavorable(data, unorderedQuantity))
+                    {
+                        // Adjust order size to respect the maximum total order value
+                        var orderSize = OrderSizing.GetOrderSizeForMaximumValue(data.Security, MaximumOrderValue, unorderedQuantity);
+
+                        if (orderSize != 0)
+                        {
+                            algorithm.MarketOrder(symbol, orderSize);
+                        }
                     }
                 }
-            }
 
-            _targetsCollection.ClearFulfilled(algorithm);
+                _targetsCollection.ClearFulfilled(algorithm);
+            }
         }
 
         /// <summary>
@@ -112,29 +112,15 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
-            var addedSymbols = new List<Symbol>();
             foreach (var added in changes.AddedSecurities)
             {
                 // initialize new securities
                 if (!_symbolData.ContainsKey(added.Symbol))
                 {
-                    var symbolData = new SymbolData(algorithm, added, _period, _resolution);
-                    addedSymbols.Add(added.Symbol);
-                    _symbolData[added.Symbol] = symbolData;
+                    _symbolData[added.Symbol] = new SymbolData(algorithm, added, _period, _resolution);
                 }
-            }
-
-            if (addedSymbols.Count > 0)
-            {
-                // warmup our indicators by pushing history through the consolidators
-                algorithm.History(addedSymbols, _period, _resolution)
-                    .PushThroughConsolidators(symbol =>
-                    {
-                        SymbolData data;
-                        return _symbolData.TryGetValue(symbol, out data) ? data.Consolidator : null;
-                    });
             }
 
             foreach (var removed in changes.RemovedSecurities)
@@ -159,28 +145,15 @@ namespace QuantConnect.Algorithm.Framework.Execution
         protected virtual bool PriceIsFavorable(SymbolData data, decimal unorderedQuantity)
         {
             var deviations = _deviations * data.STD;
-            if (unorderedQuantity > 0)
-            {
-                if (data.Security.BidPrice < data.SMA - deviations)
-                {
-                    return true;
-                }
-            }
-            else
-            {
-                if (data.Security.AskPrice > data.SMA + deviations)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return unorderedQuantity > 0
+                ? data.Security.BidPrice < data.SMA - deviations
+                : data.Security.AskPrice > data.SMA + deviations;
         }
 
         /// <summary>
         /// Determines if it's safe to remove the associated symbol data
         /// </summary>
-        protected virtual bool IsSafeToRemove(QCAlgorithmFramework algorithm, Symbol symbol)
+        protected virtual bool IsSafeToRemove(QCAlgorithm algorithm, Symbol symbol)
         {
             // confirm the security isn't currently a member of any universe
             return !algorithm.UniverseManager.Any(kvp => kvp.Value.ContainsMember(symbol));
@@ -193,21 +166,25 @@ namespace QuantConnect.Algorithm.Framework.Execution
             public SimpleMovingAverage SMA { get; }
             public IDataConsolidator Consolidator { get; }
 
-            public SymbolData(QCAlgorithmFramework algorithm, Security security, int period, Resolution resolution)
+            public SymbolData(QCAlgorithm algorithm, Security security, int period, Resolution resolution)
             {
                 Security = security;
                 Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
+
                 var smaName = algorithm.CreateIndicatorName(security.Symbol, "SMA" + period, resolution);
                 SMA = new SimpleMovingAverage(smaName, period);
+                algorithm.RegisterIndicator(security.Symbol, SMA, Consolidator);
+
                 var stdName = algorithm.CreateIndicatorName(security.Symbol, "STD" + period, resolution);
                 STD = new StandardDeviation(stdName, period);
+                algorithm.RegisterIndicator(security.Symbol, STD, Consolidator);
 
-                algorithm.SubscriptionManager.AddConsolidator(security.Symbol, Consolidator);
-                Consolidator.DataConsolidated += (sender, consolidated) =>
+                // warmup our indicators by pushing history through the indicators
+                foreach (var bar in algorithm.History(Security.Symbol, period, resolution))
                 {
-                    SMA.Update(consolidated.EndTime, consolidated.Value);
-                    STD.Update(consolidated.EndTime, consolidated.Value);
-                };
+                    SMA.Update(bar.EndTime, bar.Value);
+                    STD.Update(bar.EndTime, bar.Value);
+                }
             }
         }
     }

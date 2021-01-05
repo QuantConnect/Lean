@@ -85,7 +85,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 SetHoldings(data.Symbol, 1.0);
             }
-            Log($"CLOSE - {data.Time.ToString("o")} - {data.Open} {data.Close}");
+            Log($"CLOSE - {data.Time.ToIso8601Invariant()} - {data.Open} {data.Close}");
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Liquidate(data.Symbol);
             }
-            Log($"7BAR - {data.Time.ToString("o")} - {data.Open} {data.Close}");
+            Log($"7BAR - {data.Time.ToIso8601Invariant()} - {data.Open} {data.Close}");
         }
 
         /// <summary>
@@ -119,22 +119,43 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "29"},
             {"Average Win", "1.14%"},
             {"Average Loss", "-1.76%"},
-            {"Compounding Annual Return", "-2.010%"},
+            {"Compounding Annual Return", "-2.045%"},
             {"Drawdown", "11.000%"},
-            {"Expectancy", "-0.058"},
-            {"Net Profit", "-2.015%"},
-            {"Sharpe Ratio", "-0.161"},
+            {"Expectancy", "-0.059"},
+            {"Net Profit", "-2.050%"},
+            {"Sharpe Ratio", "-0.148"},
+            {"Probabilistic Sharpe Ratio", "10.284%"},
             {"Loss Rate", "43%"},
             {"Win Rate", "57%"},
             {"Profit-Loss Ratio", "0.65"},
-            {"Alpha", "-0.179"},
-            {"Beta", "8.103"},
-            {"Annual Standard Deviation", "0.098"},
-            {"Annual Variance", "0.01"},
-            {"Information Ratio", "-0.368"},
-            {"Tracking Error", "0.097"},
-            {"Treynor Ratio", "-0.002"},
-            {"Total Fees", "$117.47"}
+            {"Alpha", "-0.013"},
+            {"Beta", "0.001"},
+            {"Annual Standard Deviation", "0.089"},
+            {"Annual Variance", "0.008"},
+            {"Information Ratio", "-1.032"},
+            {"Tracking Error", "0.145"},
+            {"Treynor Ratio", "-25.917"},
+            {"Total Fees", "$117.46"},
+            {"Fitness Score", "0.044"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "-0.219"},
+            {"Return Over Maximum Drawdown", "-0.185"},
+            {"Portfolio Turnover", "0.094"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "937992775"}
         };
     }
 }

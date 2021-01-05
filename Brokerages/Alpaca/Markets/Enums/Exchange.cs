@@ -1,6 +1,6 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
 */
 
 using System.Runtime.Serialization;
@@ -12,9 +12,15 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
     /// <summary>
     /// Exchanges supported by Alpaca REST API.
     /// </summary>
-    [JsonConverter(typeof(StringEnumConverter))]
+    [JsonConverter(typeof(ExchangeEnumConverter))]
     public enum Exchange
     {
+        /// <summary>
+        /// Unknown exchange (not supported by this version of SDK).
+        /// </summary>
+        [EnumMember(Value = "UNKNOWN")]
+        Unknown,
+
         /// <summary>
         /// NYSE American Stock Exchange.
         /// </summary>
@@ -52,9 +58,15 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         Amex,
 
         /// <summary>
-        /// Archipelago Stock Exchagne (ARCA).
+        /// Archipelago Stock Exchange (ARCA).
         /// </summary>
         [EnumMember(Value = "ARCA")]
-        Arca
+        Arca,
+
+        /// <summary>
+        /// International Exchange (IEX).
+        /// </summary>
+        [EnumMember(Value = "IEX")]
+        Iex
     }
 }

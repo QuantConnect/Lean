@@ -21,22 +21,21 @@ AddReference("QuantConnect.Indicators")
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework import QCAlgorithmFrameworkBridge
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Indicators import *
 from datetime import timedelta
 
 ### <summary>
 ### Demonstration algorithm showing how to easily convert an old algorithm into the framework.
-### 
-###  1. Make class derive from QCAlgorithmFrameworkBridge instead of QCAlgorithm.
-###  2. When making orders, also create insights for the correct direction (up/down), can also set insight prediction period/magnitude/direction
+###
+###  1. When making orders, also create insights for the correct direction (up/down/flat), can also set insight prediction period/magnitude/direction
+###  2. Emit insights before placing any trades
 ###  3. Profit :)
 ###  </summary>
 ###  <meta name="tag" content="indicators" />
 ###  <meta name="tag" content="indicator classes" />
 ###  <meta name="tag" content="plotting indicators" />
-class ConvertToFrameworkAlgorithm(QCAlgorithmFrameworkBridge):   # 1. Derive from QCAlgorithmFrameworkBridge
+class ConvertToFrameworkAlgorithm(QCAlgorithm):
     '''Demonstration algorithm showing how to easily convert an old algorithm into the framework.'''
 
     FastEmaPeriod = 12
@@ -59,7 +58,7 @@ class ConvertToFrameworkAlgorithm(QCAlgorithmFrameworkBridge):   # 1. Derive fro
         Args:
             data: Slice object with your stock data'''
         # wait for our indicator to be ready
-        if not self.macd.IsReady or data[self.symbol] is None: return
+        if not self.macd.IsReady or not data.ContainsKey(self.symbol) or data[self.symbol] is None: return
 
         holding = self.Portfolio[self.symbol]
 
@@ -68,7 +67,7 @@ class ConvertToFrameworkAlgorithm(QCAlgorithmFrameworkBridge):   # 1. Derive fro
 
         # if our macd is greater than our signal, then let's go long
         if holding.Quantity <= 0 and signalDeltaPercent > tolerance:
-            # 2. Call EmitInsights with insights created in correct direction, here we're going long
+            # 1. Call EmitInsights with insights created in correct direction, here we're going long
             #    The EmitInsights method can accept multiple insights separated by commas
             self.EmitInsights(
                 # Creates an insight for our symbol, predicting that it will move up within the fast ema period number of days
@@ -80,7 +79,7 @@ class ConvertToFrameworkAlgorithm(QCAlgorithmFrameworkBridge):   # 1. Derive fro
 
         # if our macd is less than our signal, then let's go short
         elif holding.Quantity >= 0 and signalDeltaPercent < -tolerance:
-            # 2. Call EmitInsights with insights created in correct direction, here we're going short
+            # 1. Call EmitInsights with insights created in correct direction, here we're going short
             #    The EmitInsights method can accept multiple insights separated by commas
             self.EmitInsights(
                 # Creates an insight for our symbol, predicting that it will move down within the fast ema period number of days
@@ -88,6 +87,16 @@ class ConvertToFrameworkAlgorithm(QCAlgorithmFrameworkBridge):   # 1. Derive fro
             )
 
             self.SetHoldings(self.symbol, -1)
+
+        # if we wanted to liquidate our positions
+        ## 1. Call EmitInsights with insights create in the correct direction -- Flat
+        
+        #self.EmitInsights(
+            # Creates an insight for our symbol, predicting that it will move down or up within the fast ema period number of days, depending on our current position
+            # Insight.Price(self.symbol, timedelta(self.FastEmaPeriod), InsightDirection.Flat)
+        #)
+        
+        # self.Liquidate()
 
         # plot both lines
         self.Plot("MACD", self.macd, self.macd.Signal)

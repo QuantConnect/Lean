@@ -1,4 +1,4 @@
-﻿
+
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -29,7 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="managing orders" />
     /// <meta name="tag" content="order tickets" />
     /// <meta name="tag" content="updating orders" />
-    public class OrderTicketDemoAlgorithm : QCAlgorithm
+    public class OrderTicketDemoAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string symbol = "SPY";
         private readonly List<OrderTicket> _openMarketOnOpenOrders = new List<OrderTicket>();
@@ -167,7 +168,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 var newLongLimit = longOrder.Get(OrderField.LimitPrice) + 0.01m;
                 var newShortLimit = shortOrder.Get(OrderField.LimitPrice) - 0.01m;
-                Log("Updating limits - Long: " + newLongLimit.ToString("0.00") + " Short: " + newShortLimit.ToString("0.00"));
+                Log($"Updating limits - Long: {newLongLimit.ToStringInvariant("0.00")} Short: {newShortLimit.ToStringInvariant("0.00")}");
 
                 longOrder.Update(new UpdateOrderFields
                 {
@@ -236,7 +237,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 var newLongStop = longOrder.Get(OrderField.StopPrice) - 0.01m;
                 var newShortStop = shortOrder.Get(OrderField.StopPrice) + 0.01m;
-                Log("Updating stops - Long: " + newLongStop.ToString("0.00") + " Short: " + newShortStop.ToString("0.00"));
+                Log($"Updating stops - Long: {newLongStop.ToStringInvariant("0.00")} Short: {newShortStop.ToStringInvariant("0.00")}");
 
                 longOrder.Update(new UpdateOrderFields
                 {
@@ -318,8 +319,8 @@ namespace QuantConnect.Algorithm.CSharp
                 var newLongLimit = longOrder.Get(OrderField.LimitPrice) + 0.01m;
                 var newShortStop = shortOrder.Get(OrderField.StopPrice) + 0.01m;
                 var newShortLimit = shortOrder.Get(OrderField.LimitPrice) - 0.01m;
-                Log("Updating stops  - Long: " + newLongStop.ToString("0.00") + " Short: " + newShortStop.ToString("0.00"));
-                Log("Updating limits - Long: " + newLongLimit.ToString("0.00") + " Short: " + newShortLimit.ToString("0.00"));
+                Log($"Updating stops  - Long: {newLongStop.ToStringInvariant("0.00")} Short: {newShortStop.ToStringInvariant("0.00")}");
+                Log($"Updating limits - Long: {newLongLimit.ToStringInvariant("0.00")} Short: {newShortLimit.ToStringInvariant("0.00")}");
 
                 longOrder.Update(new UpdateOrderFields
                 {
@@ -430,6 +431,24 @@ namespace QuantConnect.Algorithm.CSharp
         {
             var order = Transactions.GetOrderById(orderEvent.OrderId);
             Console.WriteLine("{0}: {1}: {2}", Time, order.Type, orderEvent);
+
+            if (orderEvent.Quantity == 0)
+            {
+                throw new Exception("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity");
+            }
+            if (orderEvent.Quantity != order.Quantity)
+            {
+                throw new Exception("OrderEvent quantity should hold the current order Quantity");
+            }
+            if (order is LimitOrder && orderEvent.LimitPrice == 0
+                || order is StopLimitOrder && orderEvent.LimitPrice == 0)
+            {
+                throw new Exception("OrderEvent LimitPrice is Not expected to be 0 for LimitOrder and StopLimitOrder");
+            }
+            if (order is StopMarketOrder && orderEvent.StopPrice == 0)
+            {
+                throw new Exception("OrderEvent StopPrice is Not expected to be 0 for StopMarketOrder");
+            }
         }
 
         private bool CheckPairOrdersForFills(OrderTicket longOrder, OrderTicket shortOrder)
@@ -453,5 +472,62 @@ namespace QuantConnect.Algorithm.CSharp
         {
             return Time.Day == day && Time.Hour == hour && Time.Minute == minute;
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "8"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "97.900%"},
+            {"Drawdown", "0.100%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "0.877%"},
+            {"Sharpe Ratio", "13.295"},
+            {"Probabilistic Sharpe Ratio", "99.183%"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0.284"},
+            {"Beta", "0.24"},
+            {"Annual Standard Deviation", "0.056"},
+            {"Annual Variance", "0.003"},
+            {"Information Ratio", "-7.021"},
+            {"Tracking Error", "0.168"},
+            {"Treynor Ratio", "3.113"},
+            {"Total Fees", "$8.00"},
+            {"Fitness Score", "0.098"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "157.3"},
+            {"Return Over Maximum Drawdown", "1209.079"},
+            {"Portfolio Turnover", "0.098"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "-1594146186"}
+        };
     }
 }

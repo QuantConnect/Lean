@@ -36,7 +36,13 @@ namespace QuantConnect.Securities.Forex
         /// <param name="symbolProperties">The symbol properties for this security</param>
         /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
         /// instances into units of the account currency</param>
-        public Forex(SecurityExchangeHours exchangeHours, Cash quoteCurrency, SubscriptionDataConfig config, SymbolProperties symbolProperties, ICurrencyConverter currencyConverter)
+        /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
+        public Forex(SecurityExchangeHours exchangeHours,
+            Cash quoteCurrency,
+            SubscriptionDataConfig config,
+            SymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypes)
             : base(config,
                 quoteCurrency,
                 symbolProperties,
@@ -51,7 +57,8 @@ namespace QuantConnect.Securities.Forex
                 new SecurityMarginModel(50m),
                 new ForexDataFilter(),
                 new SecurityPriceVariationModel(),
-                currencyConverter
+                currencyConverter,
+                registeredTypes
                 )
         {
             Holdings = new ForexHolding(this, currencyConverter);
@@ -71,12 +78,19 @@ namespace QuantConnect.Securities.Forex
         /// <param name="symbolProperties">The symbol properties for this security</param>
         /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
         /// instances into units of the account currency</param>
-        public Forex(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, SymbolProperties symbolProperties, ICurrencyConverter currencyConverter)
+        /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
+        public Forex(Symbol symbol,
+            SecurityExchangeHours exchangeHours,
+            Cash quoteCurrency,
+            SymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypes,
+            SecurityCache securityCache)
             : base(symbol,
                 quoteCurrency,
                 symbolProperties,
                 new ForexExchange(exchangeHours),
-                new ForexCache(),
+                securityCache,
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),
@@ -86,7 +100,8 @@ namespace QuantConnect.Securities.Forex
                 new SecurityMarginModel(50m),
                 new ForexDataFilter(),
                 new SecurityPriceVariationModel(),
-                currencyConverter
+                currencyConverter,
+                registeredTypes
                 )
         {
             Holdings = new ForexHolding(this, currencyConverter);
@@ -116,8 +131,9 @@ namespace QuantConnect.Securities.Forex
         {
             if (currencyPair == null || currencyPair.Length != 6)
             {
-                throw new ArgumentException("Currency pairs must be exactly 6 characters: " + currencyPair);
+                throw new ArgumentException($"Currency pairs must be exactly 6 characters: {currencyPair}");
             }
+
             baseCurrency = currencyPair.Substring(0, 3);
             quoteCurrency = currencyPair.Substring(3);
         }

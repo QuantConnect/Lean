@@ -1,37 +1,22 @@
 #
-#	LEAN Algorithm Docker Container November-2016
-#	Cross platform deployment for multiple brokerages
+#   LEAN Docker Container 20200522
+#   Cross platform deployment for multiple brokerages
 #
 
+# Use base system
 FROM quantconnect/lean:foundation
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
-#################################
-# Option 1: Download from Master
-# RUN \
-#	wget https://github.com/QuantConnect/Lean/archive/master.zip && \
-#	unzip master.zip -d /root/Lean && \
-#	cd /root/Lean
-# RUN \
-#	sed -i 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj && \
-#	wget https://nuget.org/nuget.exe && \
-#	mono nuget.exe restore QuantConnect.Lean.sln -NonInteractive && \
-#	xbuild /property:Configuration=Release && \
-#	cd /root/Lean/Launcher/bin/Release/
-#################################
+#Install Python Tool for Visual Studio Debugger for remote python debugging
+RUN pip install ptvsd
 
+#Install PyDev Debugger for Pycharm for remote python debugging
+RUN pip install pydevd-pycharm~=201.8538.36
 
-################################
-# Option 2: Run Local Binaries:
-COPY ./Launcher/bin/Release /root/Lean/Launcher/bin/Release
-#################################
+COPY ./Launcher/bin/Debug/ /Lean/Launcher/bin/Debug/
 
-# Finally.
-WORKDIR /root/Lean/Launcher/bin/Release
-CMD [ "mono", "QuantConnect.Lean.Launcher.exe"] # Run app
+# Can override with '-w'
+WORKDIR /Lean/Launcher/bin/Debug
 
-# Usage: 
-# docker build -t quantconnect/lean:foundation -f DockerfileLeanFoundation .
-# docker build -t quantconnect/lean:algorithm -f Dockerfile .
-# docker run -v "(absolute to your data folder):/root/Lean/Data" quantconnect/lean:algorithm 
+ENTRYPOINT [ "mono", "QuantConnect.Lean.Launcher.exe" ]

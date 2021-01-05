@@ -20,8 +20,6 @@ from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
 from itertools import groupby
 from datetime import datetime, timedelta
-from pytz import utc
-UTCMIN = datetime.min.replace(tzinfo=utc)
 
 class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
     '''Provides an implementation of IPortfolioConstructionModel that gives equal weighting to all securities.
@@ -29,85 +27,43 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
     For insights of direction InsightDirection.Up, long targets are returned and
     for insights of direction InsightDirection.Down, short targets are returned.'''
 
-    def __init__(self, resolution = Resolution.Daily):
+    def __init__(self, rebalance = Resolution.Daily, portfolioBias = PortfolioBias.LongShort):
         '''Initialize a new instance of EqualWeightingPortfolioConstructionModel
         Args:
-            resolution: Rebalancing frequency'''
-        self.insightCollection = InsightCollection()
-        self.removedSymbols = []
-        self.nextExpiryTime = UTCMIN
-        self.rebalancingTime = UTCMIN
-        self.rebalancingPeriod = Extensions.ToTimeSpan(resolution)
+            rebalance: Rebalancing parameter. If it is a timedelta, date rules or Resolution, it will be converted into a function.
+                              If None will be ignored.
+                              The function returns the next expected rebalance time for a given algorithm UTC DateTime.
+                              The function returns null if unknown, in which case the function will be called again in the
+                              next loop. Returning current time will trigger rebalance.
+            portfolioBias: Specifies the bias of the portfolio (Short, Long/Short, Long)'''
+        self.portfolioBias = portfolioBias
 
-    def CreateTargets(self, algorithm, insights):
-        '''Create portfolio targets from the specified insights
+        # If the argument is an instance of Resolution or Timedelta
+        # Redefine rebalancingFunc
+        rebalancingFunc = rebalance
+        if isinstance(rebalance, int):
+            rebalance = Extensions.ToTimeSpan(rebalance)
+        if isinstance(rebalance, timedelta):
+            rebalancingFunc = lambda dt: dt + rebalance
+        if rebalancingFunc:
+            self.SetRebalancingFunc(rebalancingFunc)
+
+    def DetermineTargetPercent(self, activeInsights):
+        '''Will determine the target percent for each insight
         Args:
-            algorithm: The algorithm instance
-            insights: The insights to create portoflio targets from
-        Returns:
-            An enumerable of portoflio targets to be sent to the execution model'''
-
-        targets = []
-
-        if (algorithm.UtcTime <= self.nextExpiryTime and
-            algorithm.UtcTime <= self.rebalancingTime and
-            len(insights) == 0 and
-            self.removedSymbols is None):
-            return targets
-
-        self.insightCollection.AddRange(insights)
-
-        # Create flatten target for each security that was removed from the universe
-        if self.removedSymbols is not None:
-            universeDeselectionTargets = [ PortfolioTarget(symbol, 0) for symbol in self.removedSymbols ]
-            targets.extend(universeDeselectionTargets)
-            self.removedSymbols = None
-
-        # Get insight that haven't expired of each symbol that is still in the universe
-        activeInsights = self.insightCollection.GetActiveInsights(algorithm.UtcTime)
-
-        # Get the last generated active insight for each symbol
-        lastActiveInsights = []
-        for symbol, g in groupby(activeInsights, lambda x: x.Symbol):
-            lastActiveInsights.append(sorted(g, key = lambda x: x.GeneratedTimeUtc)[-1])
+            activeInsights: The active insights to generate a target for'''
+        result = {}
 
         # give equal weighting to each security
-        count = sum(x.Direction != InsightDirection.Flat for x in lastActiveInsights)
+        count = sum(x.Direction != InsightDirection.Flat and self.RespectPortfolioBias(x) for x in activeInsights)
         percent = 0 if count == 0 else 1.0 / count
+        for insight in activeInsights:
+            result[insight] = (insight.Direction if self.RespectPortfolioBias(insight) else InsightDirection.Flat) * percent
+        return result
 
-        errorSymbols = {}
-        for insight in lastActiveInsights:
-            target = PortfolioTarget.Percent(algorithm, insight.Symbol, insight.Direction * percent)
-            if not target is None:
-                targets.append(target)
-            else:
-                errorSymbols[insight.Symbol] = insight.Symbol
-
-        # Get expired insights and create flatten targets for each symbol
-        expiredInsights = self.insightCollection.RemoveExpiredInsights(algorithm.UtcTime)
-
-        expiredTargets = []
-        for symbol, f in groupby(expiredInsights, lambda x: x.Symbol):
-            if not self.insightCollection.HasActiveInsights(symbol, algorithm.UtcTime) and not symbol in errorSymbols:
-                expiredTargets.append(PortfolioTarget(symbol, 0))
-                continue
-
-        targets.extend(expiredTargets)
-
-        self.nextExpiryTime = self.insightCollection.GetNextExpiryTime()
-        if self.nextExpiryTime is None:
-            self.nextExpiryTime = UTCMIN
-
-        self.rebalancingTime = algorithm.UtcTime + self.rebalancingPeriod
-
-        return targets
-
-    def OnSecuritiesChanged(self, algorithm, changes):
-        '''Event fired each time the we add/remove securities from the data feed
+    def RespectPortfolioBias(self, insight):
+        '''Method that will determine if a given insight respects the portfolio bias
         Args:
-            algorithm: The algorithm instance that experienced the change in securities
-            changes: The security additions and removals from the algorithm'''
-
-        # Get removed symbol and invalidate them in the insight collection
-        self.removedSymbols = [x.Symbol for x in changes.RemovedSecurities]
-        self.insightCollection.Clear(self.removedSymbols)
+            insight: The insight to create a target for
+        '''
+        return self.portfolioBias == PortfolioBias.LongShort or insight.Direction == self.portfolioBias

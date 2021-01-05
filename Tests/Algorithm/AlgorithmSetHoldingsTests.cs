@@ -26,7 +26,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class AlgorithmSetHoldingsTests
     {
         // Test class to enable calling protected methods
@@ -95,7 +95,7 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        public TestCaseData[] TestParameters
+        private static TestCaseData[] TestParameters
         {
             get
             {
@@ -125,7 +125,7 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        [Test, TestCaseSource("TestParameters")]
+        [Test, TestCaseSource(nameof(TestParameters))]
         public void Run(Position initialPosition, Position finalPosition, FeeType feeType, PriceMovement priceMovement, int leverage)
         {
             //Console.WriteLine("----------");

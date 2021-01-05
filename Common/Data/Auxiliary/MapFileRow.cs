@@ -42,7 +42,7 @@ namespace QuantConnect.Data.Auxiliary
         public MapFileRow(DateTime date, string mappedSymbol)
         {
             Date = date;
-            MappedSymbol = mappedSymbol.ToUpper();
+            MappedSymbol = mappedSymbol.LazyToUpper();
         }
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public string ToCsv()
         {
-            return $"{Date.ToString(DateFormat.EightCharacter)},{MappedSymbol}";
+            return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},{MappedSymbol.ToLowerInvariant()}";
         }
 
         public override string ToString()

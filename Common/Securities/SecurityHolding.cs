@@ -84,7 +84,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public IPortfolioTarget Target
         {
-            get; internal set;
+            get; set;
         }
 
         /// <summary>
@@ -160,7 +160,11 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return AveragePrice * Convert.ToDecimal(Quantity) * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
+                if (Quantity == 0)
+                {
+                    return 0;
+                }
+                return AveragePrice * Quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
             }
         }
 
@@ -215,7 +219,15 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal HoldingsValue
         {
-            get { return _price * Quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier; }
+            get
+            {
+                if (Quantity == 0)
+                {
+                    return 0;
+                }
+
+                return _price * Quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
+            }
         }
 
         /// <summary>
@@ -425,7 +437,7 @@ namespace QuantConnect.Securities
         /// <remarks>Does not use the transaction model for market fills but should.</remarks>
         public virtual decimal TotalCloseProfit()
         {
-            if (AbsoluteQuantity == 0)
+            if (Quantity == 0)
             {
                 return 0;
             }
@@ -439,6 +451,12 @@ namespace QuantConnect.Securities
                 ConvertToAccountCurrency(orderFee).Amount;
 
             var price = marketOrder.Direction == OrderDirection.Sell ? _security.BidPrice : _security.AskPrice;
+            if (price == 0)
+            {
+                // Bid/Ask prices can both be equal to 0. This usually happens when we request our holdings from
+                // the brokerage, but only the last trade price was provided.
+                price = _security.Price;
+            }
 
             return (price - AveragePrice) * Quantity * _security.QuoteCurrency.ConversionRate
                 * _security.SymbolProperties.ContractMultiplier - feesInAccountCurrency;

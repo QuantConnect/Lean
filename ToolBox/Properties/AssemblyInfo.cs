@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("ToolBox")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("QuantConnect LEAN Engine: ToolBox Project - A collection of data downloaders and converters")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("ToolBox")]

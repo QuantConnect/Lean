@@ -24,10 +24,10 @@ namespace QuantConnect.ToolBox
             _resolution = resolution;
             var market = _symbol.ID.Market;
             FolderPath =
-                Path.Combine(new[] {dataDirectory, "forex", market.ToLower(), _resolution.ToString().ToLower()});
+                Path.Combine(new[] {dataDirectory, "forex", market.ToLowerInvariant(), _resolution.ToLower()});
             if (_resolution == Resolution.Minute)
             {
-                FolderPath = Path.Combine(FolderPath, _symbol.Value.ToLower());
+                FolderPath = Path.Combine(FolderPath, _symbol.Value.ToLowerInvariant());
             }
         }
 
@@ -56,7 +56,7 @@ namespace QuantConnect.ToolBox
         private IEnumerable<BaseData> ReadActualDataAndAppendNewData(IEnumerable<BaseData> data)
         {
             // Read the actual data
-            var zipFilePath = Path.Combine(FolderPath, _symbol.Value.ToLower() + "_volume.zip");
+            var zipFilePath = Path.Combine(FolderPath, _symbol.Value.ToLowerInvariant() + "_volume.zip");
             var actualData = FxcmVolumeAuxiliaryMethods.GetFxcmVolumeFromZip(zipFilePath);
             return actualData.Concat(data);
         }
@@ -68,12 +68,11 @@ namespace QuantConnect.ToolBox
             var volData = data.Cast<FxcmVolume>();
             foreach (var obs in volData)
             {
-                sb.AppendLine(string.Format("{0:yyyyMMdd HH:mm},{1},{2}", obs.Time, obs.Value,
-                                            obs.Transactions));
+                sb.AppendLine($"{obs.Time.ToStringInvariant("yyyyMMdd HH:mm")},{obs.Value.ToStringInvariant()},{obs.Transactions}");
             }
             var data_to_save = sb.ToString();
 
-            var filename = _symbol.Value.ToLower() + "_volume";
+            var filename = _symbol.Value.ToLowerInvariant() + "_volume";
             var csvFilePath = Path.Combine(FolderPath, filename + ".csv");
             var zipFilePath = csvFilePath.Replace(".csv", ".zip");
 
@@ -92,10 +91,9 @@ namespace QuantConnect.ToolBox
             {
                 foreach (var obs in dayOfData)
                 {
-                    sb.AppendLine(string.Format("{0},{1},{2}", obs.Time.TimeOfDay.TotalMilliseconds, obs.Value,
-                                                obs.Transactions));
+                    sb.AppendLine($"{obs.Time.TimeOfDay.TotalMilliseconds.ToStringInvariant()},{obs.Value.ToStringInvariant()},{obs.Transactions}");
                 }
-                var filename = string.Format("{0:yyyyMMdd}_volume.csv", dayOfData.Key);
+                var filename = $"{dayOfData.Key.ToStringInvariant("yyyyMMdd")}_volume.csv";
                 var filePath = Path.Combine(FolderPath, filename);
                 File.WriteAllText(filePath, sb.ToString());
                 // Write out this data string to a zip file

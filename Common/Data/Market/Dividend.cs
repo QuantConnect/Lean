@@ -15,17 +15,21 @@
 */
 
 using System;
+using ProtoBuf;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Market
 {
     /// <summary>
     /// Dividend event from a security
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class Dividend : BaseData
     {
         /// <summary>
         /// Gets the dividend payment
         /// </summary>
+        [ProtoMember(10)]
         public decimal Distribution
         {
             get { return Value; }
@@ -36,6 +40,7 @@ namespace QuantConnect.Data.Market
         /// Gets the price at which the dividend occurred.
         /// This is typically the previous day's closing price
         /// </summary>
+        [ProtoMember(11)]
         public decimal ReferencePrice
         {
             get;
@@ -73,9 +78,10 @@ namespace QuantConnect.Data.Market
         /// <param name="date">The date</param>
         /// <param name="referencePrice">The previous day's closing price</param>
         /// <param name="priceFactorRatio">The ratio of the price factors, pf_i/pf_i+1</param>
-        public static Dividend Create(Symbol symbol, DateTime date, decimal referencePrice, decimal priceFactorRatio)
+        /// <param name="decimalPlaces">The number of decimal places to round the dividend's distribution to, defaulting to 2</param>
+        public static Dividend Create(Symbol symbol, DateTime date, decimal referencePrice, decimal priceFactorRatio, int decimalPlaces = 2)
         {
-            var distribution = ComputeDistribution(referencePrice, priceFactorRatio);
+            var distribution = ComputeDistribution(referencePrice, priceFactorRatio, decimalPlaces);
             return new Dividend(symbol, date, distribution, referencePrice);
         }
 
@@ -86,7 +92,7 @@ namespace QuantConnect.Data.Market
         /// <param name="priceFactorRatio">Price factor ratio pf_i/pf_i+1</param>
         /// <param name="decimalPlaces">The number of decimal places to round the result to, defaulting to 2</param>
         /// <returns>The distribution rounded to the specified number of decimal places, defaulting to 2</returns>
-        public static decimal ComputeDistribution(decimal close, decimal priceFactorRatio, int decimalPlaces = 2)
+        public static decimal ComputeDistribution(decimal close, decimal priceFactorRatio, int decimalPlaces)
         {
             return Math.Round(close - close * priceFactorRatio, decimalPlaces);
         }
@@ -146,7 +152,7 @@ namespace QuantConnect.Data.Market
         /// <returns>string - a string formatted as SPY: 167.753</returns>
         public override string ToString()
         {
-            return $"Dividend: {Symbol}: {Distribution} | {ReferencePrice}";
+            return Invariant($"Dividend: {Symbol}: {Distribution} | {ReferencePrice}");
         }
     }
 }

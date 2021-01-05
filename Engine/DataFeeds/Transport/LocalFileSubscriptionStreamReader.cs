@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,6 @@
 
 using System.IO;
 using Ionic.Zip;
-using System.IO.Compression;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,8 +28,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     /// </summary>
     public class LocalFileSubscriptionStreamReader : IStreamReader
     {
-        private StreamReader _streamReader;
         private readonly ZipFile _zipFile;
+
+        /// <summary>
+        /// Gets whether or not this stream reader should be rate limited
+        /// </summary>
+        public bool ShouldBeRateLimited => false;
+
+        /// <summary>
+        /// Direct access to the StreamReader instance
+        /// </summary>
+        public StreamReader StreamReader { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalFileSubscriptionStreamReader"/> class.
@@ -45,7 +53,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 
             if (stream != null)
             {
-                _streamReader = new StreamReader(stream);
+                StreamReader = new StreamReader(stream);
             }
         }
 
@@ -61,11 +69,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 
             if (stream != null)
             {
-                _streamReader = new StreamReader(stream);
+                StreamReader = new StreamReader(stream);
 
                 if (startingPosition != 0)
                 {
-                    _streamReader.BaseStream.Seek(startingPosition, SeekOrigin.Begin);
+                    StreamReader.BaseStream.Seek(startingPosition, SeekOrigin.Begin);
                 }
             }
         }
@@ -85,7 +93,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
                 var stream = new MemoryStream();
                 entry.OpenReader().CopyTo(stream);
                 stream.Position = 0;
-                _streamReader = new StreamReader(stream);
+                StreamReader = new StreamReader(stream);
             }
         }
 
@@ -113,15 +121,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// </summary>
         public bool EndOfStream
         {
-            get { return _streamReader == null || _streamReader.EndOfStream; }
+            get { return StreamReader == null || StreamReader.EndOfStream; }
         }
 
         /// <summary>
-        /// Gets the next line/batch of content from the stream 
+        /// Gets the next line/batch of content from the stream
         /// </summary>
         public string ReadLine()
         {
-            return _streamReader.ReadLine();
+            return StreamReader.ReadLine();
         }
 
         /// <summary>
@@ -129,10 +137,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// </summary>
         public void Dispose()
         {
-            if (_streamReader != null)
+            if (StreamReader != null)
             {
-                _streamReader.Dispose();
-                _streamReader = null;
+                StreamReader.Dispose();
+                StreamReader = null;
             }
         }
     }

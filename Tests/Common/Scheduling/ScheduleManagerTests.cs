@@ -17,11 +17,14 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
+using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.RealTime;
+using QuantConnect.Packets;
+using QuantConnect.Util.RateLimit;
 
 namespace QuantConnect.Tests.Common.Scheduling
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class ScheduleManagerTests
     {
         [Test]
@@ -30,7 +33,8 @@ namespace QuantConnect.Tests.Common.Scheduling
             var algorithm = new QCAlgorithm();
 
             var handler = new BacktestingRealTimeHandler();
-            handler.Setup(algorithm, null, null, null);
+            var timeLimitManager = new AlgorithmTimeLimitManager(TokenBucket.Null, TimeSpan.MaxValue);
+            handler.Setup(algorithm, new AlgorithmNodePacket(PacketType.BacktestNode), null, null, timeLimitManager);
 
             algorithm.Schedule.SetEventSchedule(handler);
 
@@ -50,6 +54,7 @@ namespace QuantConnect.Tests.Common.Scheduling
                 time = time.AddHours(1);
             }
 
+            handler.Exit();
             Assert.AreEqual(timeSteps, count1);
             Assert.AreEqual(timeSteps, count2);
         }

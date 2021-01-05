@@ -33,7 +33,7 @@ namespace QuantConnect.Securities.Option
         /// Creates an instance of the <see cref="OptionSymbolProperties"/> class
         /// </summary>
         public OptionSymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal pipSize, decimal lotSize)
-            : base(description, quoteCurrency, contractMultiplier, pipSize, lotSize)
+            : base(description, quoteCurrency, contractMultiplier, pipSize, lotSize, string.Empty)
         {
             ContractUnitOfTrade = (int)contractMultiplier;
         }
@@ -46,7 +46,8 @@ namespace QuantConnect.Securities.Option
                  properties.QuoteCurrency,
                  properties.ContractMultiplier,
                  properties.MinimumPriceVariation,
-                 properties.LotSize)
+                 properties.LotSize,
+                 properties.MarketTicker)
         {
             ContractUnitOfTrade = (int)properties.ContractMultiplier;
         }

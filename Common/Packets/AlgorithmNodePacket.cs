@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Packets
 {
@@ -31,6 +32,12 @@ namespace QuantConnect.Packets
         public AlgorithmNodePacket(PacketType type)
             : base(type)
         { }
+
+        /// <summary>
+        /// The host name to use if any
+        /// </summary>
+        [JsonProperty(PropertyName = "sHostName")]
+        public string HostName;
 
         /// <summary>
         /// User Id placing request
@@ -150,7 +157,7 @@ namespace QuantConnect.Packets
         /// </summary>
         public string GetAlgorithmName()
         {
-            return $"{UserId}-{ProjectId}-{AlgorithmId}";
+            return Invariant($"{UserId}-{ProjectId}-{AlgorithmId}");
         }
     }
 }

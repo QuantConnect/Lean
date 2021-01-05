@@ -36,6 +36,16 @@ namespace QuantConnect.Python
         /// <param name="model"> Represents a model that computes the volatility of a security</param>
         public VolatilityModelPythonWrapper(PyObject model)
         {
+            using (Py.GIL())
+            {
+                foreach (var attributeName in new[] { "Volatility", "Update", "GetHistoryRequirements" })
+                {
+                    if (!model.HasAttr(attributeName))
+                    {
+                        throw new NotImplementedException($"IVolatilityModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
+                    }
+                }
+            }
             _model = model;
         }
 
@@ -46,7 +56,10 @@ namespace QuantConnect.Python
         {
             get
             {
-                return _model.Volatility;
+                using (Py.GIL())
+                {
+                    return (_model.Volatility as PyObject).GetAndDispose<decimal>();
+                }
             }
         }
 
@@ -74,7 +87,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetHistoryRequirements(security, utcTime);
+                return (_model.GetHistoryRequirements(security, utcTime) as PyObject).GetAndDispose<IEnumerable<HistoryRequest>>();
             }
         }
 

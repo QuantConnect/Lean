@@ -1,0 +1,38 @@
+date,initial,maintenance
+# Values are converted from CAD to USD
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv11-437.html
+20111205,4647,3442
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-380.html
+20120907,3597,3270
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-014.html
+20130115,2507,2280
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-126.html
+20130319,2678,2435
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-304.html
+20130702,3129,2844
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-540.html
+20131122,2826,2569
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-062.html
+20140207,3740,3400
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-211.html
+20140530,3297,2997
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-424.html
+20141031,2441,2219
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-431.html
+20141107,2913,2648
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-023.html
+20150123,2834,2577
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv16-103.html
+20160304,2975,2704
+# https://www.cmegroup.com/notices/clearing/2016/04/Chadv16-185.html
+20160429,3505,3186
+# https://www.cmegroup.com/notices/clearing/2016/12/Chadv16-516.html
+20161209,3006,2733
+# https://www.cmegroup.com/notices/clearing/2017/01/Chadv17-028.html
+20170113,2643,2402
+# https://www.cmegroup.com/notices/clearing/2017/05/Chadv17-194.html
+20170601,2361,2147
+# https://www.cmegroup.com/notices/clearing/2017/07/Chadv17-292.html
+20170728,2301,2092
+# https://www.cmegroup.com/notices/clearing/2019/07/Chadv19-230.html
+20190719,2022,1838

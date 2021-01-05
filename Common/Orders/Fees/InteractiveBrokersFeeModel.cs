@@ -17,7 +17,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
-
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders.Fees
 {
@@ -32,11 +32,6 @@ namespace QuantConnect.Orders.Fees
         // option commission function takes number of contracts and the size of the option premium and returns total commission
         private readonly Dictionary<string, Func<decimal, decimal, CashAmount>> _optionFee =
             new Dictionary<string, Func<decimal, decimal, CashAmount>>();
-
-        private readonly Dictionary<string, EquityFee> _equityFee =
-            new Dictionary<string, EquityFee> {
-                { Market.USA, new EquityFee("USD", feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.005m) }
-            };
 
         private readonly Dictionary<string, CashAmount> _futureFee =
             //                                                               IB fee + exchange fee
@@ -73,15 +68,16 @@ namespace QuantConnect.Orders.Fees
             {
                 var optionOrder = (OptionExerciseOrder)order;
 
-                if (optionOrder.Symbol.ID.SecurityType == SecurityType.Option &&
-                    optionOrder.Symbol.ID.Underlying.SecurityType == SecurityType.Equity)
+                // For Futures Options, contracts are charged the standard commission at expiration of the contract.
+                // Read more here: https://www1.interactivebrokers.com/en/index.php?f=14718#trading-related-fees
+                if (optionOrder.Symbol.ID.SecurityType == SecurityType.Option)
                 {
                     return OrderFee.Zero;
                 }
             }
 
-            decimal feeResult = 0;
-            var feeCurrency = "";
+            decimal feeResult;
+            string feeCurrency;
             var market = security.Symbol.ID.Market;
             switch (security.Type)
             {
@@ -93,21 +89,26 @@ namespace QuantConnect.Orders.Fees
                     // IB Forex fees are all in USD
                     feeCurrency = Currencies.USD;
                     break;
+
                 case SecurityType.Option:
                     Func<decimal, decimal, CashAmount> optionsCommissionFunc;
                     if (!_optionFee.TryGetValue(market, out optionsCommissionFunc))
                     {
-                        throw new Exception($"InteractiveBrokersFeeModel(): unexpected option Market {market}");
+                        throw new KeyNotFoundException($"InteractiveBrokersFeeModel(): unexpected option Market {market}");
                     }
                     // applying commission function to the order
                     var optionFee = optionsCommissionFunc(order.AbsoluteQuantity, order.Price);
                     feeResult = optionFee.Amount;
                     feeCurrency = optionFee.Currency;
                     break;
+
                 case SecurityType.Future:
+                case SecurityType.FutureOption:
+                    // The futures options fee model is exactly the same as futures' fees on IB.
                     if (market == Market.Globex || market == Market.NYMEX
                         || market == Market.CBOT || market == Market.ICE
-                        || market == Market.CBOE || market == Market.NSE)
+                        || market == Market.CBOE || market == Market.COMEX
+                        || market == Market.CME)
                     {
                         // just in case...
                         market = Market.USA;
@@ -116,16 +117,21 @@ namespace QuantConnect.Orders.Fees
                     CashAmount feeRatePerContract;
                     if (!_futureFee.TryGetValue(market, out feeRatePerContract))
                     {
-                        throw new Exception($"InteractiveBrokersFeeModel(): unexpected future Market {market}");
+                        throw new KeyNotFoundException($"InteractiveBrokersFeeModel(): unexpected future Market {market}");
                     }
                     feeResult = order.AbsoluteQuantity * feeRatePerContract.Amount;
                     feeCurrency = feeRatePerContract.Currency;
                     break;
+
                 case SecurityType.Equity:
                     EquityFee equityFee;
-                    if (!_equityFee.TryGetValue(market, out equityFee))
+                    switch (market)
                     {
-                        throw new Exception($"InteractiveBrokersFeeModel(): unexpected equity Market {market}");
+                        case Market.USA:
+                            equityFee = new EquityFee("USD", feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.005m);
+                            break;
+                        default:
+                            throw new KeyNotFoundException($"InteractiveBrokersFeeModel(): unexpected equity Market {market}");
                     }
                     var tradeValue = Math.Abs(order.GetValue(security));
 
@@ -148,6 +154,10 @@ namespace QuantConnect.Orders.Fees
                     //Always return a positive fee.
                     feeResult = Math.Abs(tradeFee);
                     break;
+
+                default:
+                    // unsupported security type
+                    throw new ArgumentException(Invariant($"Unsupported security type: {security.Type}"));
             }
 
             return new OrderFee(new CashAmount(

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,10 +26,10 @@ namespace QuantConnect.Tests.Logging
         [Test]
         public void WritesMessageToFile()
         {
-            const string file = "log.txt";
+            const string file = "log2.txt";
             File.Delete(file);
 
-            var debugMessage = "*debug message*" + DateTime.UtcNow.ToString("o");
+            var debugMessage = "*debug message*" + DateTime.UtcNow.ToStringInvariant("o");
             using (var log = new FileLogHandler(file))
             {
                 log.Debug(debugMessage);
@@ -40,6 +40,28 @@ namespace QuantConnect.Tests.Logging
             Assert.IsTrue(contents.Contains(debugMessage));
 
             File.Delete(file);
+        }
+
+        [Test]
+        public void UsesGlobalFilePath()
+        {
+            var previous = Log.FilePath;
+            Directory.CreateDirectory("filePathTest");
+            Log.FilePath = Path.Combine("filePathTest", "log2.txt");
+            File.Delete(Log.FilePath);
+
+            var debugMessage = "*debug message*" + DateTime.UtcNow.ToStringInvariant("o");
+            using (var log = new FileLogHandler())
+            {
+                log.Debug(debugMessage);
+            }
+
+            var contents = File.ReadAllText(Log.FilePath);
+            File.Delete(Log.FilePath);
+            Log.FilePath = previous;
+
+            Assert.IsNotNull(contents);
+            Assert.IsTrue(contents.Contains(debugMessage));
         }
     }
 }

@@ -40,10 +40,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var symbolUniverse = new TestDataQueueUniverseProvider(timeProvider);
             var factory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, timeProvider);
 
-            var canonicalSymbol = Symbol.Create("VX", SecurityType.Future, Market.USA, "/VX");
+            var canonicalSymbol = Symbol.Create(Futures.Indices.VIX, SecurityType.Future, Market.CBOE, "/VX");
 
             var quoteCurrency = new Cash(Currencies.USD, 0, 1);
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, canonicalSymbol, SecurityType.Future);
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.CBOE, canonicalSymbol, SecurityType.Future);
             var config = new SubscriptionDataConfig(
                 typeof(ZipEntryName),
                 canonicalSymbol,
@@ -64,7 +64,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 exchangeHours,
                 quoteCurrency,
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
 
             var universeSettings = new UniverseSettings(Resolution.Minute, 0, true, false, TimeSpan.Zero);
@@ -105,18 +107,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
             Assert.AreEqual(2, symbolUniverse.TotalLookupCalls);
+
+            enumerator.Dispose();
         }
 
         public class TestDataQueueUniverseProvider : IDataQueueUniverseProvider
         {
             private readonly Symbol[] _symbolList1 =
             {
-                Symbol.CreateFuture("VX", Market.USA, new DateTime(2018, 10, 31))
+                Symbol.CreateFuture(Futures.Indices.VIX, Market.CBOE, new DateTime(2018, 10, 31))
             };
             private readonly Symbol[] _symbolList2 =
             {
-                Symbol.CreateFuture("VX", Market.USA, new DateTime(2018, 10, 31)),
-                Symbol.CreateFuture("VX", Market.USA, new DateTime(2018, 11, 30)),
+                Symbol.CreateFuture(Futures.Indices.VIX, Market.CBOE, new DateTime(2018, 10, 31)),
+                Symbol.CreateFuture(Futures.Indices.VIX, Market.CBOE, new DateTime(2018, 11, 30)),
             };
 
             private readonly ITimeProvider _timeProvider;
@@ -128,11 +132,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 _timeProvider = timeProvider;
             }
 
-            public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, string securityCurrency = null, string securityExchange = null)
+            public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null)
             {
                 TotalLookupCalls++;
 
                 return _timeProvider.GetUtcNow().Date.Day >= 18 ? _symbolList2 : _symbolList1;
+            }
+
+            public bool CanAdvanceTime(SecurityType securityType)
+            {
+                return true;
             }
         }
     }

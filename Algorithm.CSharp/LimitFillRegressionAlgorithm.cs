@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -48,15 +49,20 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public override void OnData(Slice data)
         {
-            if (data.Bars.ContainsKey("SPY"))
+            if (data.ContainsKey("SPY"))
             {
-                if (Time.TimeOfDay.Ticks%TimeSpan.FromHours(1).Ticks == 0)
+                if (Time.Second == 0 && Time.Minute == 0)
                 {
-                    var goLong = Time < StartDate + TimeSpan.FromTicks((EndDate - StartDate).Ticks/2);
+                    var goLong = Time < StartDate.AddDays(2);
                     var negative = goLong ? 1 : -1;
                     LimitOrder("SPY", negative*10, data["SPY"].Price);
                 }
             }
+        }
+
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            Debug($"{orderEvent}");
         }
 
         /// <summary>
@@ -76,23 +82,44 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "34"},
             {"Average Win", "0.01%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "9.024%"},
-            {"Drawdown", "0.400%"},
-            {"Expectancy", "0.502"},
-            {"Net Profit", "0.111%"},
-            {"Sharpe Ratio", "1.922"},
-            {"Loss Rate", "25%"},
-            {"Win Rate", "75%"},
-            {"Profit-Loss Ratio", "1.00"},
-            {"Alpha", "-0.102"},
-            {"Beta", "14.351"},
-            {"Annual Standard Deviation", "0.029"},
+            {"Average Loss", "-0.02%"},
+            {"Compounding Annual Return", "-5.405%"},
+            {"Drawdown", "0.300%"},
+            {"Expectancy", "-0.202"},
+            {"Net Profit", "-0.071%"},
+            {"Sharpe Ratio", "-0.745"},
+            {"Probabilistic Sharpe Ratio", "42.475%"},
+            {"Loss Rate", "50%"},
+            {"Win Rate", "50%"},
+            {"Profit-Loss Ratio", "0.60"},
+            {"Alpha", "-0.223"},
+            {"Beta", "0.107"},
+            {"Annual Standard Deviation", "0.024"},
             {"Annual Variance", "0.001"},
-            {"Information Ratio", "1.547"},
-            {"Tracking Error", "0.029"},
-            {"Treynor Ratio", "0.004"},
-            {"Total Fees", "$34.00"}
+            {"Information Ratio", "-9.903"},
+            {"Tracking Error", "0.196"},
+            {"Treynor Ratio", "-0.169"},
+            {"Total Fees", "$34.00"},
+            {"Fitness Score", "0.008"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "-2.961"},
+            {"Return Over Maximum Drawdown", "-18.615"},
+            {"Portfolio Turnover", "0.103"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "187652813"}
         };
     }
 }

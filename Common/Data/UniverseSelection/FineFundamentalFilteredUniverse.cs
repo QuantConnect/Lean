@@ -40,6 +40,7 @@ namespace QuantConnect.Data.UniverseSelection
             : base(universe, universe.SelectSymbols)
         {
             FineFundamentalUniverse = new FineFundamentalUniverse(universe.UniverseSettings, universe.SecurityInitializer, fineSelector);
+            FineFundamentalUniverse.SelectionChanged += (sender, args) => OnSelectionChanged(((SelectionEventArgs) args).CurrentSelection);
         }
 
         /// <summary>
@@ -52,6 +53,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             var func = fineSelector.ConvertToDelegate<Func< IEnumerable<FineFundamental>, Symbol[]>>();
             FineFundamentalUniverse = new FineFundamentalUniverse(universe.UniverseSettings, universe.SecurityInitializer, func);
+            FineFundamentalUniverse.SelectionChanged += (sender, args) => OnSelectionChanged(((SelectionEventArgs)args).CurrentSelection);
         }
 
         /// <summary>

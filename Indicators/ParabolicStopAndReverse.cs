@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
     /// Parabolic SAR Indicator 
     /// Based on TA-Lib implementation
     /// </summary>
-    public class ParabolicStopAndReverse : BarIndicator
+    public class ParabolicStopAndReverse : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         private bool _isLong;
         private IBaseDataBar _previousBar;
@@ -57,17 +57,19 @@ namespace QuantConnect.Indicators
         /// <param name="afIncrement">Acceleration factor increment value</param>
         /// <param name="afMax">Acceleration factor max value</param>
         public ParabolicStopAndReverse(decimal afStart = 0.02m, decimal afIncrement = 0.02m, decimal afMax = 0.2m)
-            : this(string.Format("PSAR({0},{1},{2})", afStart, afIncrement, afMax), afStart, afIncrement, afMax)
+            : this($"PSAR({afStart},{afIncrement},{afMax})", afStart, afIncrement, afMax)
         {
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady
-        {
-            get { return Samples >= 2; }
-        }
+        public override bool IsReady => Samples >= 2;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => 2;
 
         /// <summary>
         /// Resets this indicator to its initial state

@@ -140,7 +140,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     SetPendingOrder(order);
                 }
 
-                var orderId = order.Id.ToString();
+                var orderId = order.Id.ToStringInvariant();
                 if (!order.BrokerId.Contains(orderId)) order.BrokerId.Add(orderId);
 
                 // fire off the event that says this order has been submitted
@@ -180,14 +180,16 @@ namespace QuantConnect.Brokerages.Backtesting
                 SetPendingOrder(order);
             }
 
-            var orderId = order.Id.ToString();
+            var orderId = order.Id.ToStringInvariant();
             if (!order.BrokerId.Contains(orderId)) order.BrokerId.Add(orderId);
 
             // fire off the event that says this order has been updated
             var updated = new OrderEvent(order,
                     Algorithm.UtcTime,
                     OrderFee.Zero)
-                { Status = OrderStatus.Submitted };
+            {
+                Status = OrderStatus.UpdateSubmitted
+            };
             OnOrderEvent(updated);
 
             return true;
@@ -215,8 +217,8 @@ namespace QuantConnect.Brokerages.Backtesting
                 }
             }
 
-            var orderId = order.Id.ToString();
-            if (!order.BrokerId.Contains(orderId)) order.BrokerId.Add(order.Id.ToString());
+            var orderId = order.Id.ToStringInvariant();
+            if (!order.BrokerId.Contains(orderId)) order.BrokerId.Add(order.Id.ToStringInvariant());
 
             // fire off the event that says this order has been canceled
             var canceled = new OrderEvent(order,
@@ -273,9 +275,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
-                    var fills = new[] { new OrderEvent(order,
-                        Algorithm.UtcTime,
-                        OrderFee.Zero) };
+                    var fills = new OrderEvent[0];
 
                     Security security;
                     if (!Algorithm.Securities.TryGetValue(order.Symbol, out security))
@@ -288,6 +288,21 @@ namespace QuantConnect.Brokerages.Backtesting
                         {Status = OrderStatus.Invalid});
                         _pending.TryRemove(order.Id, out order);
                         continue;
+                    }
+
+                    if (order.Type == OrderType.MarketOnOpen)
+                    {
+                        // This is a performance improvement:
+                        // Since MOO should never fill on the same bar or on stale data (see FillModel)
+                        // the order can remain unfilled for multiple 'scans', so we want to avoid
+                        // margin and portfolio calculations since they are expensive
+                        var currentBar = security.GetLastData();
+                        var localOrderTime = order.Time.ConvertFromUtc(security.Exchange.TimeZone);
+                        if (currentBar == null || localOrderTime >= currentBar.EndTime)
+                        {
+                            stillNeedsScan = true;
+                            continue;
+                        }
                     }
 
                     // check if the time in force handler allows fills
@@ -351,7 +366,8 @@ namespace QuantConnect.Brokerages.Backtesting
                                 var context = new FillModelParameters(
                                     security,
                                     order,
-                                    Algorithm.SubscriptionManager.SubscriptionDataConfigService);
+                                    Algorithm.SubscriptionManager.SubscriptionDataConfigService,
+                                    Algorithm.Settings.StalePriceTimeSpan);
                                 fills = new[] { model.Fill(context).OrderEvent };
                             }
 
@@ -405,11 +421,16 @@ namespace QuantConnect.Brokerages.Backtesting
                         // change in status or a new fill
                         if (order.Status != fill.Status || fill.FillQuantity != 0)
                         {
+                            // we update the order status so we do not re process it if we re enter
+                            // because of the call to OnOrderEvent.
+                            // Note: this is done by the transaction handler but we have a clone of the order
+                            order.Status = fill.Status;
+
                             //If the fill models come back suggesting filled, process the affects on portfolio
                             OnOrderEvent(fill);
                         }
 
-                        if (order.Type == OrderType.OptionExercise)
+                        if (fill.IsAssignment)
                         {
                             fill.Message = order.Tag;
                             OnOptionPositionAssigned(fill);
@@ -426,8 +447,9 @@ namespace QuantConnect.Brokerages.Backtesting
                     }
                 }
 
-                // if we didn't fill then we need to continue to scan
-                _needsScan = stillNeedsScan;
+                // if we didn't fill then we need to continue to scan or
+                // if there are still pending orders
+                _needsScan = stillNeedsScan || !_pending.IsEmpty;
             }
         }
 
@@ -452,7 +474,8 @@ namespace QuantConnect.Brokerages.Backtesting
 
             _pendingOptionAssignments.Add(option.Symbol);
 
-            var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, -quantity, 0m, 0m, Algorithm.UtcTime, "Simulated option assignment before expiration");
+            // assignments always cause a positive change to option contract holdings
+            var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, Math.Abs(quantity), 0m, 0m, Algorithm.UtcTime, "Simulated option assignment before expiration");
 
             var ticket = Algorithm.Transactions.ProcessRequest(request);
             Log.Trace($"BacktestingBrokerage.ActivateOptionAssignment(): OrderId: {ticket.OrderId}");
@@ -495,8 +518,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns></returns>
         private void SetPendingOrder(Order order)
         {
-            // only save off clones!
-            _pending[order.Id] = order.Clone();
+            _pending[order.Id] = order;
         }
     }
 }

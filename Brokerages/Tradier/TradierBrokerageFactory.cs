@@ -19,9 +19,11 @@ using System.Globalization;
 using System.IO;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Tradier
@@ -112,7 +114,7 @@ namespace QuantConnect.Brokerages.Tradier
                 string accessToken, refreshToken, issuedAt, lifeSpan;
 
                 // always need to grab account ID from configuration
-                var accountID = Configuration.AccountID.ToString();
+                var accountID = Configuration.AccountID.ToStringInvariant();
                 var data = new Dictionary<string, string>();
                 if (File.Exists(TokensFile))
                 {
@@ -141,10 +143,8 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Gets a new instance of the <see cref="TradierBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel
-        {
-            get { return new TradierBrokerageModel(); }
-        }
+        /// <param name="orderProvider">The order provider</param>
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new TradierBrokerageModel();
 
         /// <summary>
         /// Creates a new IBrokerage instance
@@ -161,7 +161,11 @@ namespace QuantConnect.Brokerages.Tradier
             var issuedAt = Read<DateTime>(job.BrokerageData, "tradier-issued-at", errors);
             var lifeSpan = TimeSpan.FromSeconds(Read<double>(job.BrokerageData, "tradier-lifespan", errors));
 
-            var brokerage = new TradierBrokerage(algorithm.Transactions, algorithm.Portfolio, accountID);
+            var brokerage = new TradierBrokerage(
+                algorithm.Transactions, 
+                algorithm.Portfolio,
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                accountID);
 
             // if we're running live locally we'll want to save any new tokens generated so that they can easily be retrieved
             if (Config.GetBool("tradier-save-tokens"))

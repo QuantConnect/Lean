@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using System;
 
 namespace QuantConnect.Indicators
 {
@@ -20,32 +19,49 @@ namespace QuantConnect.Indicators
     /// This indicator creates a moving average (middle band) with an upper band and lower band
     /// fixed at k standard deviations above and below the moving average.
     /// </summary>
-    public class BollingerBands : Indicator
+    public class BollingerBands : Indicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// Gets the type of moving average
         /// </summary>
-        public MovingAverageType MovingAverageType { get; private set; }
+        public MovingAverageType MovingAverageType { get; }
 
         /// <summary>
         /// Gets the standard deviation
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> StandardDeviation { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> StandardDeviation { get; }
 
         /// <summary>
-        /// Gets the middle bollinger band (moving average)
+        /// Gets the middle Bollinger band (moving average)
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> MiddleBand { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> MiddleBand { get; }
 
         /// <summary>
-        /// Gets the upper bollinger band (middleBand + k * stdDev)
+        /// Gets the upper Bollinger band (middleBand + k * stdDev)
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> UpperBand { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> UpperBand { get; }
 
         /// <summary>
-        /// Gets the lower bollinger band (middleBand - k * stdDev)
+        /// Gets the lower Bollinger band (middleBand - k * stdDev)
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> LowerBand { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> LowerBand { get; }
+
+        /// <summary>
+        /// Gets the Bollinger BandWidth indicator
+        /// BandWidth = ((Upper Band - Lower Band) / Middle Band) * 100
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> BandWidth { get; }
+
+        /// <summary>
+        /// Gets the Bollinger %B
+        /// %B = (Price - Lower Band)/(Upper Band - Lower Band)
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> PercentB { get; }
+
+        /// <summary>
+        /// Gets the Price level
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> Price { get; }
 
         /// <summary>
         /// Initializes a new instance of the BollingerBands class
@@ -54,7 +70,7 @@ namespace QuantConnect.Indicators
         /// <param name="k">The number of standard deviations specifying the distance between the middle band and upper or lower bands</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
         public BollingerBands(int period, decimal k, MovingAverageType movingAverageType = MovingAverageType.Simple)
-            : this(string.Format("BB({0},{1})", period, k), period, k, movingAverageType)
+            : this($"BB({period},{k})", period, k, movingAverageType)
         {
         }
 
@@ -65,27 +81,41 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of the standard deviation and moving average (middle band)</param>
         /// <param name="k">The number of standard deviations specifying the distance between the middle band and upper or lower bands</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
-        public BollingerBands(String name, int period, decimal k, MovingAverageType movingAverageType = MovingAverageType.Simple)
+        public BollingerBands(string name, int period, decimal k, MovingAverageType movingAverageType = MovingAverageType.Simple)
             : base(name)
         {
+            WarmUpPeriod = period;
             MovingAverageType = movingAverageType;
             StandardDeviation = new StandardDeviation(name + "_StandardDeviation", period);
             MiddleBand = movingAverageType.AsIndicator(name + "_MiddleBand", period);
             LowerBand = MiddleBand.Minus(StandardDeviation.Times(k), name + "_LowerBand");
             UpperBand = MiddleBand.Plus(StandardDeviation.Times(k), name + "_UpperBand");
+
+            var UpperMinusLower = UpperBand.Minus(LowerBand);
+            BandWidth = UpperMinusLower
+                .Over(MiddleBand)
+                .Times(new ConstantIndicator<IndicatorDataPoint>("ct", 100m), name + "_BandWidth");
+
+            Price = new Identity(name + "_Close");
+            PercentB = IndicatorExtensions.Over(
+                Price.Minus(LowerBand),
+                UpperMinusLower,
+                name + "_%B");
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady
-        {
-            get { return MiddleBand.IsReady && UpperBand.IsReady && LowerBand.IsReady; }
-        }
+        public override bool IsReady => MiddleBand.IsReady && UpperBand.IsReady && LowerBand.IsReady && BandWidth.IsReady && PercentB.IsReady;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod { get; }
 
         /// <summary>
         /// Computes the next value of the following sub-indicators from the given state:
-        /// StandardDeviation, MiddleBand, UpperBand, LowerBand
+        /// StandardDeviation, MiddleBand, UpperBand, LowerBand, BandWidth, %B
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>The input is returned unmodified.</returns>
@@ -93,11 +123,13 @@ namespace QuantConnect.Indicators
         {
             StandardDeviation.Update(input);
             MiddleBand.Update(input);
-            return input;
+            Price.Update(input);
+
+            return input.Value;
         }
 
         /// <summary>
-        /// Resets this indicator and all sub-indicators (StandardDeviation, LowerBand, MiddleBand, UpperBand)
+        /// Resets this indicator and all sub-indicators (StandardDeviation, LowerBand, MiddleBand, UpperBand, BandWidth, %B)
         /// </summary>
         public override void Reset()
         {
@@ -105,6 +137,8 @@ namespace QuantConnect.Indicators
             MiddleBand.Reset();
             UpperBand.Reset();
             LowerBand.Reset();
+            BandWidth.Reset();
+            PercentB.Reset();
             base.Reset();
         }
     }

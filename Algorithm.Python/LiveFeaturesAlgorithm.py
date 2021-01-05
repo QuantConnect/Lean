@@ -27,7 +27,6 @@ from QuantConnect.Python import PythonData
 
 import numpy as np
 from datetime import datetime
-import decimal
 import json
 
 
@@ -103,7 +102,7 @@ class Bitcoin(PythonData):
                 liveBTC = json.loads(line)
 
                 # If value is zero, return None
-                value = decimal.Decimal(liveBTC["last"])
+                value = liveBTC["last"]
                 if value == 0: return None
 
                 coin.Time = datetime.now()

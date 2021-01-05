@@ -1,6 +1,6 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
 */
 
 using System;
@@ -25,8 +25,32 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         String Symbol { get; }
 
         /// <summary>
-        /// Gets read-only collection of histrical items.
+        /// Gets read-only collection of historical items.
         /// </summary>
-        IReadOnlyCollection<TItem> Items { get; }
+        IReadOnlyList<TItem> Items { get; }
+
+        /// <summary>
+        /// Indicates if this response was adjusted for splits.
+        /// Polygon v2 API only.
+        /// </summary>
+        Boolean Adjusted { get; }
+
+        /// <summary>
+        /// Number of aggregates (minutes or days) used to generate the response.
+        /// Polygon v2 API only.
+        /// </summary>
+        Int64 QueryCount { get; }
+
+        /// <summary>
+        /// Total number of results generated.
+        /// Polygon v2 API only.
+        /// </summary>
+        Int64 ResultsCount { get; }
+
+        /// <summary>
+        /// Query execution database latency reported by Polygon.
+        /// </summary>
+        [Obsolete("This property will be removed in upcoming major version of SDK.", true)]
+        TimeSpan DatabaseLatency { get; }
     }
 }

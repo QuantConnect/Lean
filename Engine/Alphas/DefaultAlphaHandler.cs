@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -24,10 +24,13 @@ using Newtonsoft.Json;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Alpha;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Statistics;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Alphas
@@ -37,17 +40,25 @@ namespace QuantConnect.Lean.Engine.Alphas
     /// </summary>
     public class DefaultAlphaHandler : IAlphaHandler
     {
-        private DateTime _lastSecurityValuesSnapshotTime;
-
-        private bool _isNotFrameworkAlgorithm;
-        private ChartingInsightManagerExtension _charting;
+        private DateTime _lastStepTime;
+        private List<Insight> _insights;
         private ISecurityValuesProvider _securityValuesProvider;
-        private CancellationTokenSource _cancellationTokenSource;
+        private FitnessScoreManager _fitnessScore;
+        private DateTime _lastFitnessScoreCalculation;
+        private Timer _storeTimer;
+        private readonly object _lock = new object();
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private string _alphaResultsPath;
+
+        /// <summary>
+        /// The cancellation token that will be cancelled when requested to exit
+        /// </summary>
+        protected CancellationToken CancellationToken => _cancellationTokenSource.Token;
 
         /// <summary>
         /// Gets a flag indicating if this handler's thread is still running and processing messages
         /// </summary>
-        public bool IsActive { get; private set; }
+        public virtual bool IsActive { get; private set; }
 
         /// <summary>
         /// Gets the current alpha runtime statistics
@@ -57,7 +68,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <summary>
         /// Gets the algorithm's unique identifier
         /// </summary>
-        protected string AlgorithmId => Job.AlgorithmId;
+        protected virtual string AlgorithmId => Job.AlgorithmId;
 
         /// <summary>
         /// Gets whether or not the job is a live job
@@ -82,7 +93,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <summary>
         /// Gets the insight manager instance used to manage the analysis of algorithm insights
         /// </summary>
-        protected InsightManager InsightManager { get; private set; }
+        protected virtual IInsightManager InsightManager { get; private set; }
 
         /// <summary>
         /// Initializes this alpha handler to accept insights from the specified algorithm
@@ -91,33 +102,52 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="messagingHandler">Handler used for sending insights</param>
         /// <param name="api">Api instance</param>
-        public virtual void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm, IMessagingHandler messagingHandler, IApi api)
+        /// <param name="transactionHandler">Algorithms transaction handler</param>
+        public virtual void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler)
         {
-            // initializing these properties just in case, doens't hurt to have them populated
+            // initializing these properties just in case, doesn't hurt to have them populated
             Job = job;
             Algorithm = algorithm;
             MessagingHandler = messagingHandler;
-            _isNotFrameworkAlgorithm = !algorithm.IsFrameworkAlgorithm;
-            if (_isNotFrameworkAlgorithm)
-            {
-                return;
-            }
 
+            _fitnessScore = new FitnessScoreManager();
+            _insights = new List<Insight>();
             _securityValuesProvider = new AlgorithmSecurityValuesProvider(algorithm);
 
             InsightManager = CreateInsightManager();
 
-            // send scored insights to messaging handler
-            InsightManager.AddExtension(CreateAlphaResultPacketSender());
-
             var statistics = new StatisticsInsightManagerExtension(algorithm);
             RuntimeStatistics = statistics.Statistics;
             InsightManager.AddExtension(statistics);
-            _charting = new ChartingInsightManagerExtension(algorithm, statistics);
-            InsightManager.AddExtension(_charting);
 
+            AddInsightManagerCustomExtensions(statistics);
+
+            var baseDirectory = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
+            var directory = Path.Combine(baseDirectory, AlgorithmId);
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+            _alphaResultsPath = Path.Combine(directory, "alpha-results.json");
+            
             // when insight is generated, take snapshot of securities and place in queue for insight manager to process on alpha thread
-            algorithm.InsightsGenerated += (algo, collection) => InsightManager.Step(collection.DateTimeUtc, CreateSecurityValuesSnapshot(), collection);
+            algorithm.InsightsGenerated += (algo, collection) =>
+            {
+                lock (_insights)
+                {
+                    _insights.AddRange(collection.Insights);
+                }
+            };
+        }
+
+        /// <summary>
+        /// Allows each alpha handler implementation to add there own optional extensions
+        /// </summary>
+        protected virtual void AddInsightManagerCustomExtensions(StatisticsInsightManagerExtension statistics)
+        {
+            // send scored insights to messaging handler
+            InsightManager.AddExtension(new AlphaResultPacketSender(Job, MessagingHandler, TimeSpan.FromSeconds(3), 50));
+            InsightManager.AddExtension(new ChartingInsightManagerExtension(Algorithm, statistics));
         }
 
         /// <summary>
@@ -127,14 +157,19 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         public void OnAfterAlgorithmInitialized(IAlgorithm algorithm)
         {
-            if (_isNotFrameworkAlgorithm)
-            {
-                return;
-            }
-
+            _fitnessScore.Initialize(algorithm);
             // send date ranges to extensions for initialization -- this data wasn't available when the handler was
             // initialzied, so we need to invoke it here
             InsightManager.InitializeExtensionsForRange(algorithm.StartDate, algorithm.EndDate, algorithm.UtcTime);
+
+            if (LiveMode)
+            {
+                _storeTimer = new Timer(_ => StoreInsights(),
+                    null,
+                    TimeSpan.FromMinutes(10),
+                    TimeSpan.FromMinutes(10));
+            }
+            IsActive = true;
         }
 
         /// <summary>
@@ -142,92 +177,83 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// </summary>
         public virtual void ProcessSynchronousEvents()
         {
-            if (_isNotFrameworkAlgorithm)
+            // check the last snap shot time, we may have already produced a snapshot via OnInsightsGenerated
+            if (_lastStepTime != Algorithm.UtcTime)
             {
-                return;
+                _lastStepTime = Algorithm.UtcTime;
+                lock (_insights)
+                {
+                    InsightManager.Step(_lastStepTime,
+                        _securityValuesProvider.GetAllValues(),
+                        new GeneratedInsightsCollection(_lastStepTime, _insights.Count == 0 ? Enumerable.Empty<Insight>() : _insights, clone: false));
+                    _insights.Clear();
+                }
             }
 
-            // check the last snap shot time, we may have already produced a snapshot via OnInsightssGenerated
-            if (_lastSecurityValuesSnapshotTime != Algorithm.UtcTime)
+            if (_lastFitnessScoreCalculation.Date != Algorithm.UtcTime.Date)
             {
-                InsightManager.Step(Algorithm.UtcTime, CreateSecurityValuesSnapshot(), new GeneratedInsightsCollection(Algorithm.UtcTime, Enumerable.Empty<Insight>()));
+                _lastFitnessScoreCalculation = Algorithm.UtcTime.Date;
+                _fitnessScore.UpdateScores();
+
+                RuntimeStatistics.FitnessScore = _fitnessScore.FitnessScore;
+                RuntimeStatistics.PortfolioTurnover = _fitnessScore.PortfolioTurnover;
+                RuntimeStatistics.SortinoRatio = _fitnessScore.SortinoRatio;
+                RuntimeStatistics.ReturnOverMaxDrawdown = _fitnessScore.ReturnOverMaxDrawdown;
             }
         }
 
         /// <summary>
-        /// Thread entry point for asynchronous processing
+        /// Stops processing and stores insights
         /// </summary>
-        public virtual void Run()
+        public void Exit()
         {
-            if (_isNotFrameworkAlgorithm)
-            {
-                return;
-            }
+            Log.Trace("DefaultAlphaHandler.Exit(): Exiting...");
 
-            IsActive = true;
-            _cancellationTokenSource = new CancellationTokenSource();
-
-            // run main loop until canceled, will clean out work queues separately
-            while (!_cancellationTokenSource.IsCancellationRequested)
-            {
-                try
-                {
-                    ProcessAsynchronousEvents();
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err);
-                    throw;
-                }
-
-                Thread.Sleep(1);
-            }
+            _storeTimer.DisposeSafely();
+            _storeTimer = null;
 
             // persist insights at exit
             StoreInsights();
 
-            InsightManager.DisposeSafely();
+            InsightManager?.DisposeSafely();
 
-            Log.Trace("DefaultAlphaHandler.Run(): Ending Thread...");
             IsActive = false;
-        }
-
-        /// <summary>
-        /// Stops processing in the <see cref="IAlphaHandler.Run"/> method
-        /// </summary>
-        public void Exit()
-        {
-            if (_isNotFrameworkAlgorithm)
-            {
-                return;
-            }
-
-            Log.Trace("DefaultAlphaHandler.Exit(): Exiting Thread...");
-
-            _cancellationTokenSource.Cancel(false);
-        }
-
-        /// <summary>
-        /// Performs asynchronous processing, including broadcasting of insights to messaging handler
-        /// </summary>
-        protected void ProcessAsynchronousEvents()
-        {
+            Log.Trace("DefaultAlphaHandler.Exit(): Ended");
         }
 
         /// <summary>
         /// Save insight results to persistent storage
         /// </summary>
+        /// <remarks>Method called by the storing timer and on exit</remarks>
         protected virtual void StoreInsights()
         {
-            // default save all results to disk and don't remove any from memory
-            // this will result in one file with all of the insights/results in it
-            var insights = InsightManager.AllInsights.OrderBy(insight => insight.GeneratedTimeUtc).ToList();
-            if (insights.Count > 0)
+            // avoid reentrancy
+            if (Monitor.TryEnter(_lock))
             {
-                var directory = Path.Combine(Directory.GetCurrentDirectory(), AlgorithmId);
-                var path = Path.Combine(directory, "alpha-results.json");
-                Directory.CreateDirectory(directory);
-                File.WriteAllText(path, JsonConvert.SerializeObject(insights, Formatting.Indented));
+                try
+                {
+                    if (InsightManager == null)
+                    {
+                        // could be null if we are not initialized and exit is called
+                        return;
+                    }
+                    // default save all results to disk and don't remove any from memory
+                    // this will result in one file with all of the insights/results in it
+                    var insights = InsightManager.AllInsights.OrderBy(insight => insight.GeneratedTimeUtc).ToList();
+                    if (insights.Count > 0)
+                    {
+                        var directory = Directory.GetParent(_alphaResultsPath);
+                        if (!directory.Exists)
+                        {
+                            directory.Create();
+                        }
+                        File.WriteAllText(_alphaResultsPath, JsonConvert.SerializeObject(insights, Formatting.Indented));
+                    }
+                }
+                finally
+                {
+                    Monitor.Exit(_lock);
+                }
             }
         }
 
@@ -235,25 +261,10 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// Creates the <see cref="InsightManager"/> to manage the analysis of generated insights
         /// </summary>
         /// <returns>A new insight manager instance</returns>
-        protected virtual InsightManager CreateInsightManager()
+        protected virtual IInsightManager CreateInsightManager()
         {
             var scoreFunctionProvider = new DefaultInsightScoreFunctionProvider();
             return new InsightManager(scoreFunctionProvider, 0);
-        }
-
-        /// <summary>
-        /// Creates the <see cref="AlphaResultPacketSender"/> to manage sending finalized insights via the messaging handler
-        /// </summary>
-        /// <returns>A new <see cref="CreateAlphaResultPacketSender"/> instance</returns>
-        protected virtual AlphaResultPacketSender CreateAlphaResultPacketSender()
-        {
-            return new AlphaResultPacketSender(Job, MessagingHandler, TimeSpan.FromSeconds(1), 50);
-        }
-
-        private ReadOnlySecurityValuesCollection CreateSecurityValuesSnapshot()
-        {
-            _lastSecurityValuesSnapshotTime = Algorithm.UtcTime;
-            return _securityValuesProvider.GetValues(Algorithm.Securities.Keys);
         }
 
         /// <summary>
@@ -288,29 +299,36 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             private void MessagingUpdateIntervalElapsed(object state)
             {
-                _timer.Change(Timeout.Infinite, Timeout.Infinite);
-
                 try
                 {
+                    _timer.Change(Timeout.Infinite, Timeout.Infinite);
 
-                    Insight insight;
-                    var insights = new List<Insight>();
-                    while (insights.Count < _maximumNumberOfInsightsPerPacket && _insights.TryDequeue(out insight))
+                    try
                     {
-                        insights.Add(insight);
+
+                        Insight insight;
+                        var insights = new List<Insight>();
+                        while (insights.Count < _maximumNumberOfInsightsPerPacket && _insights.TryDequeue(out insight))
+                        {
+                            insights.Add(insight);
+                        }
+
+                        if (insights.Count > 0)
+                        {
+                            _messagingHandler.Send(new AlphaResultPacket(_job.AlgorithmId, _job.UserId, insights));
+                        }
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err);
                     }
 
-                    if (insights.Count > 0)
-                    {
-                        _messagingHandler.Send(new AlphaResultPacket(_job.AlgorithmId, _job.UserId, insights));
-                    }
+                    _timer.Change(_interval, _interval);
                 }
-                catch (Exception err)
+                catch (ObjectDisposedException)
                 {
-                    Log.Error(err);
+                    // pass. The timer callback can be called even after disposed
                 }
-
-                _timer.Change(_interval, _interval);
             }
 
             /// <summary>

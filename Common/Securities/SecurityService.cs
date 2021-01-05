@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using System;
 
 namespace QuantConnect.Securities
 {
@@ -28,7 +29,9 @@ namespace QuantConnect.Securities
         private readonly CashBook _cashBook;
         private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
+        private readonly IRegisteredSecurityDataTypesProvider _registeredTypes;
         private readonly ISecurityInitializerProvider _securityInitializerProvider;
+        private readonly SecurityCacheProvider _cacheProvider;
         private bool _isLiveMode;
 
         /// <summary>
@@ -37,12 +40,16 @@ namespace QuantConnect.Securities
         public SecurityService(CashBook cashBook,
             MarketHoursDatabase marketHoursDatabase,
             SymbolPropertiesDatabase symbolPropertiesDatabase,
-            ISecurityInitializerProvider securityInitializerProvider)
+            ISecurityInitializerProvider securityInitializerProvider,
+            IRegisteredSecurityDataTypesProvider registeredTypes,
+            SecurityCacheProvider cacheProvider)
         {
             _cashBook = cashBook;
+            _registeredTypes = registeredTypes;
             _marketHoursDatabase = marketHoursDatabase;
             _symbolPropertiesDatabase = symbolPropertiesDatabase;
             _securityInitializerProvider = securityInitializerProvider;
+            _cacheProvider = cacheProvider;
         }
 
         /// <summary>
@@ -61,12 +68,22 @@ namespace QuantConnect.Securities
             var exchangeHours = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType).ExchangeHours;
 
             var defaultQuoteCurrency = _cashBook.AccountCurrency;
-            if (symbol.ID.SecurityType == SecurityType.Forex || symbol.ID.SecurityType == SecurityType.Crypto)
+            if (symbol.ID.SecurityType == SecurityType.Forex)
             {
                 defaultQuoteCurrency = symbol.Value.Substring(3);
             }
 
-            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
+            if (symbol.ID.SecurityType == SecurityType.Crypto && !_symbolPropertiesDatabase.ContainsKey(symbol.ID.Market, symbol, symbol.ID.SecurityType))
+            {
+                throw new ArgumentException($"Symbol can't be found in the Symbol Properties Database: {symbol.Value}");
+            }
+
+            // For Futures Options that don't have a SPDB entry, the futures entry will be used instead.
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
+                symbol.ID.Market,
+                symbol,
+                symbol.SecurityType,
+                defaultQuoteCurrency);
 
             // add the symbol to our cache
             if (addToSymbolCache)
@@ -85,7 +102,14 @@ namespace QuantConnect.Securities
             {
                 // decompose the symbol into each currency pair
                 string baseCurrency;
-                Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
+                if (symbol.ID.SecurityType == SecurityType.Forex)
+                {
+                    Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
+                }
+                else
+                {
+                    Crypto.Crypto.DecomposeCurrencyPair(symbol, symbolProperties, out baseCurrency, out quoteCurrency);
+                }
 
                 if (!_cashBook.ContainsKey(baseCurrency))
                 {
@@ -100,38 +124,50 @@ namespace QuantConnect.Securities
             }
 
             var quoteCash = _cashBook[symbolProperties.QuoteCurrency];
+            var cache = _cacheProvider.GetSecurityCache(symbol);
 
             Security security;
             switch (symbol.ID.SecurityType)
             {
                 case SecurityType.Equity:
-                    security = new Equity.Equity(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook);
+                    security = new Equity.Equity(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
                     break;
 
                 case SecurityType.Option:
                     if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
-                    security = new Option.Option(symbol, exchangeHours, quoteCash, new Option.OptionSymbolProperties(symbolProperties), _cashBook);
+                    security = new Option.Option(symbol, exchangeHours, quoteCash, new Option.OptionSymbolProperties(symbolProperties), _cashBook, _registeredTypes, cache);
+                    break;
+
+                case SecurityType.FutureOption:
+                    if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
+                    var optionSymbolProperties = new Option.OptionSymbolProperties(symbolProperties);
+
+                    // Future options exercised only gives us one contract back, rather than the
+                    // 100x seen in equities.
+                    optionSymbolProperties.SetContractUnitOfTrade(1);
+
+                    security = new FutureOption.FutureOption(symbol, exchangeHours, quoteCash, optionSymbolProperties, _cashBook, _registeredTypes, cache);
                     break;
 
                 case SecurityType.Future:
-                    security = new Future.Future(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook);
+                    security = new Future.Future(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
                     break;
 
                 case SecurityType.Forex:
-                    security = new Forex.Forex(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook);
+                    security = new Forex.Forex(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
                     break;
 
                 case SecurityType.Cfd:
-                    security = new Cfd.Cfd(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook);
+                    security = new Cfd.Cfd(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
                     break;
 
                 case SecurityType.Crypto:
-                    security = new Crypto.Crypto(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook);
+                    security = new Crypto.Crypto(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
                     break;
 
                 default:
                 case SecurityType.Base:
-                    security = new Security(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook);
+                    security = new Security(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
                     break;
             }
 
@@ -149,13 +185,15 @@ namespace QuantConnect.Securities
 
             // if leverage was specified then apply to security after the initializer has run, parameters of this
             // method take precedence over the intializer
-            if (leverage > 0)
+            if (leverage != Security.NullLeverage)
             {
                 security.SetLeverage(leverage);
             }
 
-            // In live mode, equity assumes specific price variation model
-            if (_isLiveMode && security.Type == SecurityType.Equity)
+            var isNotNormalized = configList.DataNormalizationMode() == DataNormalizationMode.Raw;
+
+            // In live mode and non normalized data, equity assumes specific price variation model
+            if ((_isLiveMode || isNotNormalized) && security.Type == SecurityType.Equity)
             {
                 security.PriceVariationModel = new EquityPriceVariationModel();
             }

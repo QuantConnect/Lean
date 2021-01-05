@@ -15,6 +15,7 @@
 
 using System;
 using System.IO;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Util
 {
@@ -119,7 +120,7 @@ namespace QuantConnect.Util
 
             if (parts.Length < LowResSecurityTypeOffset)
             {
-                throw new FormatException("Unexpected path format: " + path);
+                throw new FormatException($"Unexpected path format: {path}");
             }
 
             var securityTypeOffset = LowResSecurityTypeOffset;
@@ -131,7 +132,7 @@ namespace QuantConnect.Util
                 rawValue = parts[parts.Length - securityTypeOffset];
                 if (!Enum.TryParse(rawValue, true, out securityType))
                 {
-                    throw new FormatException("Unexpected path format: " + path);
+                    throw new FormatException($"Unexpected path format: {path}");
                 }
             }
 
@@ -141,22 +142,22 @@ namespace QuantConnect.Util
             if (securityTypeOffset == LowResSecurityTypeOffset)
             {
                 ticker = Path.GetFileNameWithoutExtension(path);
-                if (securityType == SecurityType.Option)
+                if (securityType == SecurityType.Option || securityType == SecurityType.FutureOption)
                 {
                     // ticker_trade_american
-                    var tickerWithoutStyle = ticker.Substring(0, ticker.LastIndexOf("_"));
-                    ticker = tickerWithoutStyle.Substring(0, tickerWithoutStyle.LastIndexOf("_"));
+                    var tickerWithoutStyle = ticker.Substring(0, ticker.LastIndexOfInvariant("_"));
+                    ticker = tickerWithoutStyle.Substring(0, tickerWithoutStyle.LastIndexOfInvariant("_"));
                 }
                 if (securityType == SecurityType.Future)
                 {
                     // ticker_trade
-                    ticker = ticker.Substring(0, ticker.LastIndexOf("_"));
+                    ticker = ticker.Substring(0, ticker.LastIndexOfInvariant("_"));
                 }
                 if (securityType == SecurityType.Crypto &&
                     (resolution == Resolution.Daily || resolution == Resolution.Hour))
                 {
                     // ticker_trade or ticker_quote
-                    ticker = ticker.Substring(0, ticker.LastIndexOf("_"));
+                    ticker = ticker.Substring(0, ticker.LastIndexOfInvariant("_"));
                 }
             }
             else
@@ -173,6 +174,14 @@ namespace QuantConnect.Util
                 rawValue = withoutExtension.Substring(withoutExtension.LastIndexOf("_", StringComparison.Ordinal) + 1);
                 var style = (OptionStyle) Enum.Parse(typeof (OptionStyle), rawValue, true);
                 symbol = Symbol.CreateOption(ticker, market, style, OptionRight.Call | OptionRight.Put, 0, SecurityIdentifier.DefaultDate);
+            }
+            else if (securityType == SecurityType.FutureOption)
+            {
+                var withoutExtension = Path.GetFileNameWithoutExtension(filename);
+                rawValue = withoutExtension.Substring(withoutExtension.LastIndexOf("_", StringComparison.Ordinal) + 1);
+                var style = (OptionStyle) Enum.Parse(typeof (OptionStyle), rawValue, true);
+                var futureSymbol = QuantConnect.Symbol.Create(FuturesOptionsSymbolMappings.MapFromOption(ticker), SecurityType.Future, market);
+                symbol = Symbol.CreateOption(futureSymbol, market, style, OptionRight.Call | OptionRight.Put, 0, SecurityIdentifier.DefaultDate);
             }
             else if (securityType == SecurityType.Future)
             {

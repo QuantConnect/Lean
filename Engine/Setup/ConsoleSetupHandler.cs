@@ -25,6 +25,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -33,6 +34,11 @@ namespace QuantConnect.Lean.Engine.Setup
     /// </summary>
     public class ConsoleSetupHandler : ISetupHandler
     {
+        /// <summary>
+        /// The worker thread instance the setup handler should use
+        /// </summary>
+        public WorkerThread WorkerThread { get; set; }
+
         /// <summary>
         /// Error which occured during setup may appear here.
         /// </summary>
@@ -82,9 +88,17 @@ namespace QuantConnect.Lean.Engine.Setup
             IAlgorithm algorithm;
             var algorithmName = Config.Get("algorithm-type-name");
 
+            var debugNode = algorithmNodePacket as BacktestNodePacket;
+            var debugging = debugNode != null && debugNode.IsDebugging || Config.GetBool("debugging", false);
+
+            if (debugging && !BaseSetupHandler.InitializeDebugging(algorithmNodePacket, WorkerThread))
+            {
+                throw new AlgorithmSetupException("Failed to initialize debugging");
+            }
+
             // don't force load times to be fast here since we're running locally, this allows us to debug
             // and step through some code that may take us longer than the default 10 seconds
-            var loader = new Loader(algorithmNodePacket.Language, TimeSpan.FromHours(1), names => names.SingleOrDefault(name => MatchTypeName(name, algorithmName)));
+            var loader = new Loader(debugging, algorithmNodePacket.Language, TimeSpan.FromHours(1), names => names.SingleOrDefault(name => MatchTypeName(name, algorithmName)), WorkerThread);
             var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, algorithmNodePacket.RamAllocation, out algorithm, out error);
             if (!complete) throw new AlgorithmSetupException($"During the algorithm initialization, the following exception has occurred: {error}");
 
@@ -144,8 +158,34 @@ namespace QuantConnect.Lean.Engine.Setup
                     // set the future chain provider
                     algorithm.SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider()));
 
-                    //Setup Base Algorithm:
-                    algorithm.Initialize();
+                    // set the object store
+                    algorithm.SetObjectStore(parameters.ObjectStore);
+
+                    // before we call initialize
+                    BaseSetupHandler.LoadBacktestJobAccountCurrency(algorithm, backtestJob);
+
+                    var isolator = new Isolator();
+                    isolator.ExecuteWithTimeLimit(TimeSpan.FromMinutes(5),
+                        () =>
+                        {
+                            //Setup Base Algorithm:
+                            algorithm.Initialize();
+                        }, baseJob.Controls.RamAllocation,
+                        sleepIntervalMillis: 50,
+                        workerThread: WorkerThread);
+
+                    // set start and end date if present in the job
+                    if (backtestJob.PeriodStart.HasValue)
+                    {
+                        algorithm.SetStartDate(backtestJob.PeriodStart.Value);
+                    }
+                    if (backtestJob.PeriodFinish.HasValue)
+                    {
+                        algorithm.SetEndDate(backtestJob.PeriodFinish.Value);
+                    }
+
+                    // after we call initialize
+                    BaseSetupHandler.LoadBacktestJobCashAmount(algorithm, backtestJob);
 
                     //Finalize Initialization
                     algorithm.PostInitialize();
@@ -153,15 +193,15 @@ namespace QuantConnect.Lean.Engine.Setup
                     //Set the time frontier of the algorithm
                     algorithm.SetDateTime(algorithm.StartDate.ConvertToUtc(algorithm.TimeZone));
 
-                    //Construct the backtest job packet:
-                    backtestJob.PeriodStart = algorithm.StartDate;
-                    backtestJob.PeriodFinish = algorithm.EndDate;
-
                     //Backtest Specific Parameters:
-                    StartingDate = backtestJob.PeriodStart;
+                    StartingDate = algorithm.StartDate;
 
                     BaseSetupHandler.SetupCurrencyConversions(algorithm, parameters.UniverseSelection);
                     StartingPortfolioValue = algorithm.Portfolio.Cash;
+
+                    // we set the free portfolio value based on the initial total value and the free percentage value
+                    algorithm.Settings.FreePortfolioValue =
+                        algorithm.Portfolio.TotalPortfolioValue * algorithm.Settings.FreePortfolioValuePercentage;
                 }
                 else
                 {
@@ -190,7 +230,7 @@ namespace QuantConnect.Lean.Engine.Setup
         {
             var dataFeedsConfigString = Config.Get("security-data-feeds");
 
-            Dictionary<SecurityType, List<TickType>> dataFeeds = new Dictionary<SecurityType, List<TickType>>();
+            var dataFeeds = new Dictionary<SecurityType, List<TickType>>();
             if (dataFeedsConfigString != string.Empty)
             {
                 dataFeeds = JsonConvert.DeserializeObject<Dictionary<SecurityType, List<TickType>>>(dataFeedsConfigString);

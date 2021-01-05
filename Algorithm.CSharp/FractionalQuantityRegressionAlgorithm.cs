@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
 
             SetTimeZone(NodaTime.DateTimeZone.Utc);
-            var security = AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Daily, Market.GDAX, false, 3.3m, true);
+            var security = AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Daily, Market.GDAX, false, 1, true);
 
             // The default buying power model for the Crypto security type is now CashBuyingPowerModel.
             // Since this test algorithm uses leverage we need to set a buying power model with margin.
@@ -101,22 +101,43 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "6"},
             {"Average Win", "6.02%"},
             {"Average Loss", "-2.40%"},
-            {"Compounding Annual Return", "915.597%"},
+            {"Compounding Annual Return", "915.480%"},
             {"Drawdown", "5.500%"},
-            {"Expectancy", "1.339"},
-            {"Net Profit", "11.401%"},
-            {"Sharpe Ratio", "3.299"},
+            {"Expectancy", "1.338"},
+            {"Net Profit", "11.400%"},
+            {"Sharpe Ratio", "9.507"},
+            {"Probabilistic Sharpe Ratio", "76.768%"},
             {"Loss Rate", "33%"},
             {"Win Rate", "67%"},
             {"Profit-Loss Ratio", "2.51"},
-            {"Alpha", "-0.409"},
-            {"Beta", "1.047"},
-            {"Annual Standard Deviation", "0.493"},
-            {"Annual Variance", "0.243"},
-            {"Information Ratio", "-2.648"},
-            {"Tracking Error", "0.12"},
-            {"Treynor Ratio", "1.555"},
-            {"Total Fees", "$2650.41"}
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0.507"},
+            {"Annual Variance", "0.257"},
+            {"Information Ratio", "9.507"},
+            {"Tracking Error", "0.507"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$2651.01"},
+            {"Fitness Score", "0.467"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "53.455"},
+            {"Return Over Maximum Drawdown", "165.408"},
+            {"Portfolio Turnover", "0.468"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "-89452746"}
         };
     }
 }

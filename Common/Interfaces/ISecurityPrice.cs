@@ -14,6 +14,8 @@
  *
 */
 
+using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Securities;
 
@@ -75,6 +77,16 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="data">New data packet from LEAN</param>
         void SetMarketPrice(BaseData data);
+
+        /// <summary>
+        /// Updates all of the security properties, such as price/OHLCV/bid/ask based
+        /// on the data provided. Data is also stored into the security's data cache
+        /// </summary>
+        /// <param name="data">The security update data</param>
+        /// <param name="dataType">The data type</param>
+        /// <param name="containsFillForwardData">Flag indicating whether
+        /// <paramref name="data"/> contains any fill forward bar or not</param>
+        void Update(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData);
 
         /// <summary>
         /// Get the last price update set to the security.

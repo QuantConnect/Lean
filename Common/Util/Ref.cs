@@ -89,7 +89,10 @@ namespace QuantConnect.Util
         /// </summary>
         public static IReadOnlyRef<T> CreateReadOnly<T>(Func<T> getter)
         {
-            return new Ref<T>(getter, null).AsReadOnly();
+            return new Ref<T>(getter, value =>
+            {
+                throw new InvalidOperationException("This instance is read-only.");
+            });
         }
         /// <summary>
         /// Creates a new <see cref="Ref{T}"/> instance by closing over

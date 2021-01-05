@@ -49,19 +49,9 @@ namespace QuantConnect.Securities
             try
             {
                 // apply sales value to holdings in the account currency
-                if (security.Type == SecurityType.Future)
-                {
-                    // for futures, we measure volume of sales, not notionals
-                    var saleValueInQuoteCurrency = fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity);
-                    var saleValue = saleValueInQuoteCurrency * quoteCash.ConversionRate;
-                    security.Holdings.AddNewSale(saleValue);
-                }
-                else
-                {
-                    var saleValueInQuoteCurrency = fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity) * security.SymbolProperties.ContractMultiplier;
-                    var saleValue = saleValueInQuoteCurrency * quoteCash.ConversionRate;
-                    security.Holdings.AddNewSale(saleValue);
-                }
+                var saleValueInQuoteCurrency = fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity) * security.SymbolProperties.ContractMultiplier;
+                var saleValue = saleValueInQuoteCurrency * quoteCash.ConversionRate;
+                security.Holdings.AddNewSale(saleValue);
 
                 // subtract transaction fees from the portfolio
                 var feeInAccountCurrency = 0m;
@@ -73,12 +63,14 @@ namespace QuantConnect.Securities
                     var feeThisOrder = fill.OrderFee.Value;
                     feeInAccountCurrency = portfolio.CashBook.ConvertToAccountCurrency(feeThisOrder).Amount;
                     security.Holdings.AddNewFee(feeInAccountCurrency);
-                    portfolio.CashBook[feeThisOrder.Currency].AddAmount(-feeThisOrder.Amount);
+
+                    fill.OrderFee.ApplyToPortfolio(portfolio, fill);
                 }
 
                 // apply the funds using the current settlement model
-                // we dont adjust funds for futures: it is zero upfront payment derivative (margin applies though)
-                if (security.Type != SecurityType.Future)
+                // we dont adjust funds for futures and CFDs: it is zero upfront payment derivative (margin applies though)
+                // We do however apply funds for futures options, since they affect our cash balance the moment they are purchased/sold.
+                if (security.Type != SecurityType.Future && security.Type != SecurityType.Cfd)
                 {
                     security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, -fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier);
                 }
@@ -106,8 +98,8 @@ namespace QuantConnect.Securities
                         * security.SymbolProperties.ContractMultiplier;
                     var lastTradeProfitInAccountCurrency = lastTradeProfit * security.QuoteCurrency.ConversionRate;
 
-                    // Reflect account cash adjustment for futures position
-                    if (security.Type == SecurityType.Future)
+                    // Reflect account cash adjustment for futures/CFD position
+                    if (security.Type == SecurityType.Future || security.Type == SecurityType.Cfd)
                     {
                         security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, lastTradeProfit);
                     }

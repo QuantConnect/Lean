@@ -50,7 +50,7 @@ namespace QuantConnect.Python
             Parameters = parameters;
             using (Py.GIL())
             {
-                return _model.Fill(parameters);
+                return (_model.Fill(parameters) as PyObject).GetAndDispose<Fill>();
             }
         }
 
@@ -64,7 +64,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.LimitFill(asset, order);
+                return (_model.LimitFill(asset, order) as PyObject).GetAndDispose<OrderEvent>();
             }
         }
 
@@ -78,7 +78,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.MarketFill(asset, order);
+                return (_model.MarketFill(asset, order) as PyObject).GetAndDispose<OrderEvent>();
             }
         }
 
@@ -92,7 +92,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.MarketOnCloseFill(asset, order);
+                return (_model.MarketOnCloseFill(asset, order) as PyObject).GetAndDispose<OrderEvent>();
             }
         }
 
@@ -106,7 +106,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.MarketOnOpenFill(asset, order);
+                return (_model.MarketOnOpenFill(asset, order) as PyObject).GetAndDispose<OrderEvent>();
             }
         }
 
@@ -120,7 +120,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.StopLimitFill(asset, order);
+                return (_model.StopLimitFill(asset, order) as PyObject).GetAndDispose<OrderEvent>();
             }
         }
 
@@ -134,7 +134,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.StopMarketFill(asset, order);
+                return (_model.StopMarketFill(asset, order) as PyObject).GetAndDispose<OrderEvent>();
             }
         }
 
@@ -147,8 +147,19 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetPrices(asset, direction);
+                return (_model.GetPrices(asset, direction) as PyObject).GetAndDispose<Prices>();
             }
+        }
+
+        /// <summary>
+        /// Get the minimum and maximum price for this security in the last bar:
+        /// </summary>
+        /// <param name="asset">Security asset we're checking</param>
+        /// <param name="direction">The order direction, decides whether to pick bid or ask</param>
+        /// <remarks>This method was implemented temporarily to help the refactoring of fill models (GH #4567)</remarks>
+        internal Prices GetPricesInternal(Security asset, OrderDirection direction)
+        {
+            return GetPrices(asset, direction);
         }
     }
 }

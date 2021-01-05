@@ -24,6 +24,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Forex;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using Order = QuantConnect.Orders.Order;
 
@@ -48,21 +49,18 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         /// <param name="orderProvider">The order provider.</param>
         /// <param name="securityProvider">The holdings provider.</param>
+        /// <param name="aggregator">consolidate ticks</param>
         /// <param name="environment">The Oanda environment (Trade or Practice)</param>
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
         /// <param name="agent">The Oanda agent string</param>
-        public OandaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent = OandaRestApiBase.OandaAgentDefaultValue)
+        public OandaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator, Environment environment, string accessToken, string accountId, string agent = OandaRestApiBase.OandaAgentDefaultValue)
             : base("Oanda Brokerage")
         {
             if (environment != Environment.Trade && environment != Environment.Practice)
                 throw new NotSupportedException("Oanda Environment not supported: " + environment);
 
-            // Use v20 REST API only if you have a v20 account
-            // Use v1 REST API if your account id contains only digits(ie. 2534253) as it is a legacy account
-            _api = IsLegacyAccount(accountId) ? (OandaRestApiBase)
-                new OandaRestApiV1(_symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId, agent) :
-                new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId, agent);
+            _api = new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent);
 
             // forward events received from API
             _api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);
@@ -79,6 +77,11 @@ namespace QuantConnect.Brokerages.Oanda
         {
             get { return _api.IsConnected; }
         }
+
+        /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
+        public override string AccountBaseCurrency => _api.AccountBaseCurrency;
 
         /// <summary>
         /// Connects the client to the broker's remote servers
@@ -144,7 +147,29 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<CashAmount> GetCashBalance()
         {
-            return _api.GetCashBalance();
+            var balances = _api.GetCashBalance().ToDictionary(x => x.Currency);
+
+            // include cash balances from currency swaps for open Forex positions
+            foreach (var holding in GetAccountHoldings().Where(x => x.Symbol.SecurityType == SecurityType.Forex))
+            {
+                string baseCurrency;
+                string quoteCurrency;
+                Forex.DecomposeCurrencyPair(holding.Symbol.Value, out baseCurrency, out quoteCurrency);
+
+                var baseQuantity = holding.Quantity;
+                CashAmount baseCurrencyAmount;
+                balances[baseCurrency] = balances.TryGetValue(baseCurrency, out baseCurrencyAmount)
+                    ? new CashAmount(baseQuantity + baseCurrencyAmount.Amount, baseCurrency)
+                    : new CashAmount(baseQuantity, baseCurrency);
+
+                var quoteQuantity = -holding.Quantity * holding.AveragePrice;
+                CashAmount quoteCurrencyAmount;
+                balances[quoteCurrency] = balances.TryGetValue(quoteCurrency, out quoteCurrencyAmount)
+                    ? new CashAmount(quoteQuantity + quoteCurrencyAmount.Amount, quoteCurrency)
+                    : new CashAmount(quoteQuantity, quoteCurrency);
+            }
+
+            return balances.Values.ToList();
         }
 
         /// <summary>
@@ -221,32 +246,32 @@ namespace QuantConnect.Brokerages.Oanda
         #region IDataQueueHandler implementation
 
         /// <summary>
-        /// Get the next ticks from the live trading data queue
+        /// Sets the job we're subscribing for
         /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public IEnumerable<BaseData> GetNextTicks()
+        /// <param name="job">Job we're subscribing for</param>
+        public void SetJob(LiveNodePacket job)
         {
-            return _api.GetNextTicks();
+            _api.SetJob(job);
         }
 
         /// <summary>
-        /// Adds the specified symbols to the subscription
+        /// Subscribe to the specified configuration
         /// </summary>
-        /// <param name="job">Job we're subscribing for:</param>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
+        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
+        /// <returns>The new enumerator for this subscription request</returns>
+        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            _api.Subscribe(job, symbols);
+            return _api.Subscribe(dataConfig, newDataAvailableHandler);
         }
 
         /// <summary>
-        /// Removes the specified symbols from the subscription
+        /// Removes the specified configuration
         /// </summary>
-        /// <param name="job">Job we're processing.</param>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <param name="dataConfig">Subscription config to be removed</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            _api.Unsubscribe(job, symbols);
+            _api.Unsubscribe(dataConfig);
         }
 
         #endregion
@@ -296,12 +321,6 @@ namespace QuantConnect.Brokerages.Oanda
         public IEnumerable<QuoteBar> DownloadQuoteBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
         {
             return _api.DownloadQuoteBars(symbol, startTimeUtc, endTimeUtc, resolution, requestedTimeZone);
-        }
-
-        private static bool IsLegacyAccount(string accountId)
-        {
-            long value;
-            return long.TryParse(accountId, out value);
         }
     }
 }

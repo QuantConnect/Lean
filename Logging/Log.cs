@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -49,6 +50,12 @@ namespace QuantConnect.Logging
             get { return _debuggingEnabled; }
             set { _debuggingEnabled = value; }
         }
+
+        /// <summary>
+        /// Global flag to specify file based log path
+        /// </summary>
+        /// <remarks>Only valid for file based loggers</remarks>
+        public static string FilePath { get; set; } = "log.txt";
 
         /// <summary>
         /// Set the minimum message level:
@@ -125,7 +132,7 @@ namespace QuantConnect.Logging
         /// </summary>
         public static void Trace(string format, params object[] args)
         {
-            Trace(string.Format(format, args));
+            Trace(string.Format(CultureInfo.InvariantCulture, format, args));
         }
 
         /// <summary>
@@ -133,7 +140,7 @@ namespace QuantConnect.Logging
         /// </summary>
         public static void Error(string format, params object[] args)
         {
-            Error(string.Format(format, args));
+            Error(string.Format(CultureInfo.InvariantCulture, format, args));
         }
 
         /// <summary>
@@ -200,7 +207,7 @@ namespace QuantConnect.Logging
                             if (value is string) displayValue = String.Concat('"', displayValue, '"');
 
                             // Add property name and value to return string
-                            result.AppendFormat("{0}{1} = {2}\n", indent, property.Name, displayValue);
+                            result.AppendFormat(CultureInfo.InvariantCulture, "{0}{1} = {2}\n", indent, property.Name, displayValue);
 
                             try
                             {
@@ -219,11 +226,11 @@ namespace QuantConnect.Logging
                                     var elementCount = 0;
                                     foreach (var element in ((ICollection)value))
                                     {
-                                        var elementName = String.Format("{0}[{1}]", property.Name, elementCount);
+                                        var elementName = $"{property.Name}[{elementCount}]";
                                         indent = new StringBuilder(trail).Insert(0, spaces, recursion).ToString();
 
                                         // Display the collection element name and type
-                                        result.AppendFormat("{0}{1} = {2}\n", indent, elementName, element.ToString());
+                                        result.AppendFormat(CultureInfo.InvariantCulture, "{0}{1} = {2}\n", indent, elementName, element.ToString());
 
                                         // Display the child properties
                                         result.Append(VarDump(element, recursion + 2));
@@ -237,7 +244,7 @@ namespace QuantConnect.Logging
                         else
                         {
                             // Add empty (null) property to return string
-                            result.AppendFormat("{0}{1} = {2}\n", indent, property.Name, "null");
+                            result.AppendFormat(CultureInfo.InvariantCulture, "{0}{1} = {2}\n", indent, property.Name, "null");
                         }
                     }
                     catch

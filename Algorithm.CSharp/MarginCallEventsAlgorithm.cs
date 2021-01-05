@@ -77,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// Margin call warning event handler. This method is called when Portoflio.MarginRemaining is under 5% of your Portfolio.TotalPortfolioValue
+        /// Margin call warning event handler. This method is called when Portfolio.MarginRemaining is under 5% of your Portfolio.TotalPortfolioValue
         /// </summary>
         public override void OnMarginCallWarning()
         {
@@ -87,7 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
             // prevent margin calls by responding to the warning and increasing margin remaining
             var spyHoldings = Securities["SPY"].Holdings.Quantity;
             var shares = (int)(-spyHoldings * .005m);
-            Error(string.Format("{0} - OnMarginCallWarning(): Liquidating {1} shares of SPY to avoid margin call.", Time, shares));
+            Error($"{Time.ToStringInvariant()} - OnMarginCallWarning(): Liquidating {shares.ToStringInvariant()} shares of SPY to avoid margin call.");
             MarketOrder("SPY", shares);
         }
     }

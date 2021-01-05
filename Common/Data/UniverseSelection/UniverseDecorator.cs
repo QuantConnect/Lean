@@ -46,7 +46,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the internal security collection used to define membership in this universe
         /// </summary>
-        internal override ConcurrentDictionary<Symbol, Member> Securities
+        public override ConcurrentDictionary<Symbol, Member> Securities
         {
             get { return Universe.Securities; }
         }

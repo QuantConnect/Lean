@@ -59,7 +59,7 @@ namespace QuantConnect.Parameters
         /// <param name="instance">The instance to set parameters on</param>
         public static void ApplyAttributes(Dictionary<string, string> parameters, object instance)
         {
-            if (instance == null) throw new ArgumentNullException("instance");
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
 
             var type = instance.GetType();
 
@@ -73,7 +73,7 @@ namespace QuantConnect.Parameters
                 // this line make static analysis a little happier, but should never actually throw
                 if (fieldInfo == null && propertyInfo == null)
                 {
-                    throw new Exception("Resolved member that is neither FieldInfo or PropertyInfo");
+                    throw new InvalidOperationException("Resolved member that is neither FieldInfo or PropertyInfo");
                 }
 
                 // check the member for our custom attribute
@@ -87,11 +87,17 @@ namespace QuantConnect.Parameters
                 string parameterValue;
                 if (!parameters.TryGetValue(parameterName, out parameterValue)) continue;
 
+                if (string.IsNullOrEmpty(parameterValue))
+                {
+                    Log.Error($"ParameterAttribute.ApplyAttributes(): parameter '{parameterName}' provided value is null/empty, skipping");
+                    continue;
+                }
+
                 // if it's a read-only property with a parameter value we can't really do anything, bail
                 if (propertyInfo != null && !propertyInfo.CanWrite)
                 {
-                    var message = string.Format("The specified property is read only: {0}.{1}", propertyInfo.DeclaringType, propertyInfo.Name);
-                    throw new Exception(message);
+                    var message = $"The specified property is read only: {propertyInfo.DeclaringType}.{propertyInfo.Name}";
+                    throw new InvalidOperationException(message);
                 }
 
                 // resolve the member type
@@ -122,7 +128,6 @@ namespace QuantConnect.Parameters
             var parameters = new Dictionary<string, string>();
             foreach (var type in assembly.GetTypes())
             {
-                Log.Debug("ParameterAttribute.GetParametersFromAssembly(): Checking type " + type.Name);
                 foreach (var kvp in GetParametersFromType(type))
                 {
                     parameters[kvp.Key] = kvp.Value;

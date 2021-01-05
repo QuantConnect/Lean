@@ -39,12 +39,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="dateTimeUtc">The utc date time the sinals were generated</param>
         /// <param name="insights">The generated insights</param>
-        public GeneratedInsightsCollection(DateTime dateTimeUtc, IEnumerable<Insight> insights)
+        /// <param name="clone">Keep a clone of the generated insights</param>
+        public GeneratedInsightsCollection(DateTime dateTimeUtc,
+            IEnumerable<Insight> insights,
+            bool clone = true)
         {
             DateTimeUtc = dateTimeUtc;
 
-            // ensure we're keeping copies to avoid reference shenanigans
-            Insights = insights.Select(insight => insight.Clone()).ToList();
+            // for performance only call 'ToArray' if not empty enumerable (which is static)
+            Insights = insights == Enumerable.Empty<Insight>()
+                ? new List<Insight>() : insights.Select(insight => clone ? insight.Clone() : insight).ToList();
         }
     }
 }

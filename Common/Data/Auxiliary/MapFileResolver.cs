@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using QuantConnect.Util;
@@ -69,7 +70,7 @@ namespace QuantConnect.Data.Auxiliary
                         // check to verify it' the same data
                         if (!entries[mapFileRowEntry.MapFileRow.Date].Equals(mapFileRowEntry))
                         {
-                            throw new Exception("Attempted to assign different history for symbol.");
+                            throw new DuplicateNameException("Attempted to assign different history for symbol.");
                         }
                     }
                     else
@@ -89,7 +90,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>The collection of map files capable of mapping equity symbols within the specified market</returns>
         public static MapFileResolver Create(string dataDirectory, string market)
         {
-            return Create(Path.Combine(dataDirectory, "equity", market.ToLower(), "map_files"));
+            return Create(Path.Combine(dataDirectory, "equity", market.ToLowerInvariant(), "map_files"));
         }
 
         /// <summary>
@@ -111,7 +112,7 @@ namespace QuantConnect.Data.Auxiliary
         public MapFile GetByPermtick(string permtick)
         {
             MapFile mapFile;
-            _mapFilesByPermtick.TryGetValue(permtick.ToUpper(), out mapFile);
+            _mapFilesByPermtick.TryGetValue(permtick.LazyToUpper(), out mapFile);
             return mapFile;
         }
 
@@ -159,7 +160,8 @@ namespace QuantConnect.Data.Auxiliary
             }
             // secondary search for exact mapping, find path than ends with symbol.csv
             MapFile mapFile;
-            if (!_mapFilesByPermtick.TryGetValue(symbol, out mapFile))
+            if (!_mapFilesByPermtick.TryGetValue(symbol, out mapFile)
+                || mapFile.FirstDate > date)
             {
                 return new MapFile(symbol, new List<MapFileRow>());
             }

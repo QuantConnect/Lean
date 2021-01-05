@@ -1,9 +1,11 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
+ * Updated from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.5.5
 */
 
 using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
@@ -67,10 +69,16 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         [JsonProperty(PropertyName = "stop_price", Required = Required.Default)]
         public Decimal? StopPrice { get; set; }
 
-        [JsonProperty(PropertyName = "filled_avg_price ", Required = Required.Default)]
+        [JsonProperty(PropertyName = "filled_avg_price", Required = Required.Default)]
         public Decimal? AverageFillPrice { get; set; }
 
         [JsonProperty(PropertyName = "status", Required = Required.Always)]
         public OrderStatus OrderStatus { get; set; }
+
+        [JsonProperty(PropertyName = "legs", Required = Required.Default)]
+        public List<JsonOrder> LegsList { get; set; }
+
+        [JsonIgnore]
+        public IReadOnlyList<IOrder> Legs => LegsList.EmptyIfNull<IOrder, JsonOrder>();
     }
 }

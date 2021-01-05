@@ -20,6 +20,7 @@ using System.Runtime.InteropServices;
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("ce3487da-3d41-47fa-b229-0726c57931f9")]
+[assembly: AssemblyDescription("QuantConnect LEAN Engine: API Project - C# SDK for interaction with the QuantConnect.com")]
 
 // Version information for an assembly consists of the following four values:
 //

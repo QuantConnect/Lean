@@ -54,6 +54,9 @@ class ScheduledEventsAlgorithm(QCAlgorithm):
         # time rule here tells it to fire 10 minutes before SPY's market close
         self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.BeforeMarketClose("SPY", 10), self.EveryDayAfterMarketClose)
 
+        # schedule an event to fire on a single day of the week
+        self.Schedule.On(self.DateRules.Every(DayOfWeek.Wednesday), self.TimeRules.At(12, 0), self.EveryWedAtNoon)
+
         # schedule an event to fire on certain days of the week
         self.Schedule.On(self.DateRules.Every(DayOfWeek.Monday, DayOfWeek.Friday), self.TimeRules.At(12, 0), self.EveryMonFriAtNoon)
 
@@ -74,25 +77,29 @@ class ScheduledEventsAlgorithm(QCAlgorithm):
 
 
     def SpecificTime(self):
-        self.Log("SpecificTime: Fired at : {0}".format(self.Time))
+        self.Log(f"SpecificTime: Fired at : {self.Time}")
 
 
     def EveryDayAfterMarketOpen(self):
-        self.Log("EveryDay.SPY 10 min after open: Fired at: {0}".format(self.Time))
+        self.Log(f"EveryDay.SPY 10 min after open: Fired at: {self.Time}")
 
 
     def EveryDayAfterMarketClose(self):
-        self.Log("EveryDay.SPY 10 min before close: Fired at: {0}".format(self.Time))
+        self.Log(f"EveryDay.SPY 10 min before close: Fired at: {self.Time}")
+
+
+    def EveryWedAtNoon(self):
+        self.Log(f"Wed at 12pm: Fired at: {self.Time}")
 
 
     def EveryMonFriAtNoon(self):
-        self.Log("Mon/Fri at 12pm: Fired at: {0}".format(self.Time))
+        self.Log(f"Mon/Fri at 12pm: Fired at: {self.Time}")
 
 
     def LiquidateUnrealizedLosses(self):
         ''' if we have over 1000 dollars in unrealized losses, liquidate'''
         if self.Portfolio.TotalUnrealizedProfit < -1000:
-            self.Log("Liquidated due to unrealized losses at: {0}".format(self.Time))
+            self.Log(f"Liquidated due to unrealized losses at: {self.Time}")
             self.Liquidate()
 
 

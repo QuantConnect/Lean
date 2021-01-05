@@ -55,13 +55,14 @@ namespace QuantConnect.Securities
         /// <param name="security">The security to be initialized</param>
         public virtual void Initialize(Security security)
         {
-            // set leverage and models
-            security.SetLeverage(_brokerageModel.GetLeverage(security));
+            // Sets the security models
             security.FillModel = _brokerageModel.GetFillModel(security);
             security.FeeModel = _brokerageModel.GetFeeModel(security);
             security.SlippageModel = _brokerageModel.GetSlippageModel(security);
             security.SettlementModel = _brokerageModel.GetSettlementModel(security);
             security.BuyingPowerModel = _brokerageModel.GetBuyingPowerModel(security);
+            // Sets the leverage after the buying power model. Otherwise we would set the leverage of the default model. 
+            security.SetLeverage(_brokerageModel.GetLeverage(security));
 
             _securitySeeder.SeedSecurity(security);
         }

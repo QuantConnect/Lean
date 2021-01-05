@@ -141,11 +141,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_indicators.BB.IsReady || !_indicators.RSI.IsReady) return;
 
-            _price = data["SPY"].Close;
+            _price = data[_symbol].Close;
 
             if (!Portfolio.HoldStock)
             {
-                int quantity = (int)Math.Floor(Portfolio.Cash / data[_symbol].Close);
+                int quantity = (int)Math.Floor(Portfolio.Cash / _price);
 
                 //Order function places trades: enter the string symbol and the quantity you want:
                 Order(_symbol, quantity);
@@ -248,18 +248,39 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "7.300%"},
             {"Expectancy", "0"},
             {"Net Profit", "41.858%"},
-            {"Sharpe Ratio", "1.649"},
+            {"Sharpe Ratio", "1.607"},
+            {"Probabilistic Sharpe Ratio", "77.376%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.317"},
-            {"Beta", "-6.83"},
-            {"Annual Standard Deviation", "0.109"},
-            {"Annual Variance", "0.012"},
-            {"Information Ratio", "1.467"},
-            {"Tracking Error", "0.109"},
-            {"Treynor Ratio", "-0.026"},
-            {"Total Fees", "$1.00"}
+            {"Alpha", "0.171"},
+            {"Beta", "-0.06"},
+            {"Annual Standard Deviation", "0.099"},
+            {"Annual Variance", "0.01"},
+            {"Information Ratio", "-0.187"},
+            {"Tracking Error", "0.146"},
+            {"Treynor Ratio", "-2.677"},
+            {"Total Fees", "$1.00"},
+            {"Fitness Score", "0.001"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "2.305"},
+            {"Return Over Maximum Drawdown", "2.632"},
+            {"Portfolio Turnover", "0.001"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "-1514456802"}
         };
     }
 }

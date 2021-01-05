@@ -20,10 +20,13 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Policy;
+using Python.Runtime;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
+using QuantConnect.Configuration;
 using QuantConnect.Python;
+using QuantConnect.Util;
 
 namespace QuantConnect.AlgorithmFactory
 {
@@ -33,6 +36,9 @@ namespace QuantConnect.AlgorithmFactory
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class Loader : MarshalByRefObject
     {
+        // True if we are in a debugging session
+        private readonly bool _debugging;
+
         // Defines the maximum amount of time we will allow for instantiating an instance of IAlgorithm
         private readonly TimeSpan _loaderTimeLimit;
 
@@ -41,6 +47,9 @@ namespace QuantConnect.AlgorithmFactory
 
         // Defines how we resolve a list of type names into a single type name to be instantiated
         private readonly Func<List<string>, string> _multipleTypeNameResolverFunction;
+
+        // The worker thread instance the loader will use if not null
+        private readonly WorkerThread _workerThread;
 
         /// <summary>
         /// Memory space of the user algorithm
@@ -66,13 +75,14 @@ namespace QuantConnect.AlgorithmFactory
         /// Creates a new loader with a 10 second maximum load time that forces exactly one derived type to be found
         /// </summary>
         public Loader()
-            : this(Language.CSharp, TimeSpan.FromSeconds(10), names => names.SingleOrDefault())
+            : this(false, Language.CSharp, TimeSpan.FromSeconds(10), names => names.SingleOrDefault())
         {
         }
 
         /// <summary>
         /// Creates a new loader with the specified configuration
         /// </summary>
+        /// <param name="debugging">True if we are debugging</param>
         /// <param name="language">Which language are we trying to load</param>
         /// <param name="loaderTimeLimit">
         /// Used to limit how long it takes to create a new instance
@@ -84,10 +94,12 @@ namespace QuantConnect.AlgorithmFactory
         /// for the QuantConnect.Algorithm assembly in this solution.  In order to pick the correct type, consumers must specify how to pick the type,
         /// that's what this function does, it picks the correct type from the list of types found within the assembly.
         /// </param>
-        public Loader(Language language, TimeSpan loaderTimeLimit, Func<List<string>, string> multipleTypeNameResolverFunction)
+        /// <param name="workerThread">The worker thread instance the loader should use</param>
+        public Loader(bool debugging, Language language, TimeSpan loaderTimeLimit, Func<List<string>, string> multipleTypeNameResolverFunction, WorkerThread workerThread = null)
         {
+            _debugging = debugging;
             _language = language;
-
+            _workerThread = workerThread;
             if (multipleTypeNameResolverFunction == null)
             {
                 throw new ArgumentNullException("multipleTypeNameResolverFunction");
@@ -154,21 +166,25 @@ namespace QuantConnect.AlgorithmFactory
             var pythonFile = new FileInfo(assemblyPath);
             var moduleName = pythonFile.Name.Replace(".pyc", "").Replace(".py", "");
 
-            // Set the python path for loading python algorithms.
-            var pythonPath = new[]
-            {
-                pythonFile.Directory.FullName,
-                new DirectoryInfo(Environment.CurrentDirectory).FullName,
-                Environment.GetEnvironmentVariable("PYTHONPATH")
-            };
-
-            Environment.SetEnvironmentVariable("PYTHONPATH", string.Join(OS.IsLinux ? ":" : ";", pythonPath));
-
             try
             {
                 PythonInitializer.Initialize();
 
                 algorithmInstance = new AlgorithmPythonWrapper(moduleName);
+
+                // we need stdout for debugging
+                if (!_debugging && Config.GetBool("mute-python-library-logging", true))
+                {
+                    using (Py.GIL())
+                    {
+                        PythonEngine.Exec(
+                            @"
+import logging, os, sys
+sys.stdout = open(os.devnull, 'w')
+logging.captureWarnings(True)"
+                        );
+                    }
+                }
             }
             catch (Exception e)
             {
@@ -229,12 +245,6 @@ namespace QuantConnect.AlgorithmFactory
                     var assemblyBytes = File.ReadAllBytes(assemblyPath);
                     assembly = Assembly.Load(assemblyBytes, debugInformationBytes);
                 }
-                if (assembly == null)
-                {
-                    errorMessage = "Assembly is null.";
-                    Log.Error("Loader.TryCreateILAlgorithm(): Assembly is null");
-                    return false;
-                }
 
                 //Get the list of extention classes in the library:
                 var types = GetExtendedTypeNames(assembly);
@@ -278,8 +288,7 @@ namespace QuantConnect.AlgorithmFactory
             catch (Exception err)
             {
                 errorMessage = "Algorithm type name not found, or unable to resolve multiple algorithm types to a single type. Please verify algorithm type name matches the algorithm name in the configuration file and that there is one and only one class derived from QCAlgorithm.";
-                errorMessage += err.InnerException == null ? err.Message : err.InnerException.Message;
-                Log.Error($"Loader.TryCreateILAlgorithm(): {errorMessage}");
+                Log.Error($"Loader.TryCreateILAlgorithm(): {errorMessage}\n{err.InnerException ?? err}");
                 return false;
             }
 
@@ -303,7 +312,18 @@ namespace QuantConnect.AlgorithmFactory
                 }
                 catch (ReflectionTypeLoadException e)
                 {
-                    assemblyTypes = e.Types;
+                    // We may want to exclude possible null values
+                    // See https://stackoverflow.com/questions/7889228/how-to-prevent-reflectiontypeloadexception-when-calling-assembly-gettypes
+                    assemblyTypes = e.Types.Where(t => t != null).ToArray();
+
+                    var countTypesNotLoaded = e.LoaderExceptions.Length;
+                    Log.Error($"Loader.GetExtendedTypeNames(): Unable to load {countTypesNotLoaded} of the requested types, " +
+                              "see below for more details on what causes an issue:");
+
+                    foreach (Exception inner in e.LoaderExceptions)
+                    {
+                        Log.Error($"Loader.GetExtendedTypeNames(): {inner.Message}");
+                    }
                 }
 
                 if (assemblyTypes != null && assemblyTypes.Length > 0)
@@ -348,7 +368,7 @@ namespace QuantConnect.AlgorithmFactory
             var complete = isolator.ExecuteWithTimeLimit(_loaderTimeLimit, () =>
             {
                 success = TryCreateAlgorithmInstance(assemblyPath, out instance, out error);
-            }, ramLimit, sleepIntervalMillis:50);
+            }, ramLimit, sleepIntervalMillis:50, workerThread:_workerThread);
 
             algorithmInstance = instance;
             errorMessage = error;

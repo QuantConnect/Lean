@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -29,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// This model extendes <see cref="BasePairsTradingAlphaModel"/> and uses Pearson correlation
     /// to rank the pairs trading candidates and use the best candidate to trade.
     /// </summary>
-    public class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    public class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -64,24 +63,31 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "6"},
-            {"Average Win", "0.83%"},
-            {"Average Loss", "-0.40%"},
-            {"Compounding Annual Return", "47.354%"},
+            {"Average Win", "0.86%"},
+            {"Average Loss", "-0.42%"},
+            {"Compounding Annual Return", "48.905%"},
             {"Drawdown", "0.700%"},
-            {"Expectancy", "0.548"},
-            {"Net Profit", "0.497%"},
-            {"Sharpe Ratio", "8.022"},
+            {"Expectancy", "0.537"},
+            {"Net Profit", "0.510%"},
+            {"Sharpe Ratio", "10.851"},
+            {"Probabilistic Sharpe Ratio", "86.843%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "2.10"},
-            {"Alpha", "0"},
-            {"Beta", "22.675"},
-            {"Annual Standard Deviation", "0.031"},
+            {"Profit-Loss Ratio", "2.07"},
+            {"Alpha", "0.267"},
+            {"Beta", "0.058"},
+            {"Annual Standard Deviation", "0.035"},
             {"Annual Variance", "0.001"},
-            {"Information Ratio", "7.695"},
-            {"Tracking Error", "0.031"},
-            {"Treynor Ratio", "0.011"},
-            {"Total Fees", "$23.83"},
+            {"Information Ratio", "-7.388"},
+            {"Tracking Error", "0.21"},
+            {"Treynor Ratio", "6.538"},
+            {"Total Fees", "$23.85"},
+            {"Fitness Score", "0.752"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "152.636"},
+            {"Portfolio Turnover", "0.753"},
             {"Total Insights Generated", "4"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -94,7 +100,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Direction", "0%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"}
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "-2071442882"}
         };
     }
 }

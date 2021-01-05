@@ -24,7 +24,6 @@ from QuantConnect.Indicators import *
 from QuantConnect.Data import SubscriptionDataSource
 from QuantConnect.Python import PythonData
 from datetime import date, timedelta, datetime
-import decimal
 import numpy as np
 import math
 import json
@@ -200,7 +199,7 @@ class Cape(PythonData):
             # DateTime.ParseExact() and explicit declare the format your data source has.
             index.Time = datetime.strptime(data[0], "%Y-%m")
             index["Cape"] = float(data[10]) 
-            index.Value = decimal.Decimal(data[10])
+            index.Value = data[10]
             
     
         except ValueError:

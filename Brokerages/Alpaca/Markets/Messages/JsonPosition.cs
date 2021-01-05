@@ -1,6 +1,6 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
 */
 
 using System;
@@ -47,12 +47,12 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         public Decimal UnrealizedProfitLossPercent { get; set; }
 
         [JsonProperty(PropertyName = "unrealized_intraday_pl", Required = Required.Always)]
-        public Decimal IntadayUnrealizedProfitLoss { get; set; }
+        public Decimal IntradayUnrealizedProfitLoss { get; set; }
 
         [JsonProperty(PropertyName = "unrealized_intraday_plpc", Required = Required.Always)]
         public Decimal IntradayUnrealizedProfitLossPercent { get; set; }
 
-        [JsonProperty(PropertyName = "current_price ", Required = Required.Default)]
+        [JsonProperty(PropertyName = "current_price", Required = Required.Default)]
         public Decimal AssetCurrentPrice { get; set; }
 
         [JsonProperty(PropertyName = "lastday_price", Required = Required.Always)]

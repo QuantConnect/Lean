@@ -22,7 +22,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class AlgorithmSettingsTest
     {
         [Test]
@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.Algorithm
         public void SettingSetHoldingsBufferWorksCorrectly()
         {
             var algo = new QCAlgorithm();
-            algo.Settings.FreePortfolioValuePercentage = 0;
+            algo.Settings.FreePortfolioValue = 0;
             InitializeAndGetFakeOrderProcessor(algo);
 
             var actual = algo.CalculateOrderQuantity(Symbols.SPY, 1m);
@@ -117,6 +117,9 @@ namespace QuantConnect.Tests.Algorithm
 
             InitializeAndGetFakeOrderProcessor(algo);
 
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
+
             var actual = algo.CalculateOrderQuantity(Symbols.SPY, 1m);
             // 100000 / 20 - 1 due to fee - effect of the target being reduced because of FreePortfolioValuePercentage
             Assert.AreEqual(4986m, actual);
@@ -127,11 +130,11 @@ namespace QuantConnect.Tests.Algorithm
             algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
             algo.SetFinishedWarmingUp();
             algo.SetCash(100000);
-            algo.AddEquity("SPY");
+            var symbol = algo.AddEquity("SPY").Symbol;
             var fakeOrderProcessor = new FakeOrderProcessor();
             algo.Transactions.SetOrderProcessor(fakeOrderProcessor);
-            algo.Portfolio["SPY"].SetHoldings(1, 10);
-            var security = algo.Securities["SPY"];
+            algo.Portfolio[symbol].SetHoldings(1, 10);
+            var security = algo.Securities[symbol];
             security.SetMarketPrice(new TradeBar
             {
                 Time = DateTime.Now,

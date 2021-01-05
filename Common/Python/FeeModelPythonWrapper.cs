@@ -50,14 +50,15 @@ namespace QuantConnect.Python
                 {
                     try
                     {
-                        return _model.GetOrderFee(parameters);
+                        return (_model.GetOrderFee(parameters) as PyObject).GetAndDispose<OrderFee>();
                     }
                     catch (PythonException)
                     {
                         _extendedVersion = false;
                     }
                 }
-                decimal fee = _model.GetOrderFee(parameters.Security, parameters.Order);
+                var fee = (_model.GetOrderFee(parameters.Security, parameters.Order)
+                    as PyObject).GetAndDispose<decimal>();
                 return new OrderFee(new CashAmount(fee, "USD"));
             }
         }

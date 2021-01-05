@@ -81,14 +81,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="settings">Universe settings for subscriptions added via this universe, null will default to algorithm's universe settings</param>
         /// <param name="initializer">Security initializer for new securities created via this universe, null will default to algorithm's security initializer</param>
         public ScheduledUniverseSelectionModel(IDateRule dateRule, ITimeRule timeRule, PyObject selector, UniverseSettings settings = null, ISecurityInitializer initializer = null)
+            : this(null, dateRule, timeRule, selector, settings, initializer)
         {
-            Func<DateTime, Symbol[]> func;
-            selector.TryConvertToDelegate(out func);
-            _dateRule = dateRule;
-            _timeRule = timeRule;
-            _selector = func;
-            _settings = settings;
-            _initializer = initializer;
         }
 
         /// <summary>
@@ -102,12 +96,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="initializer">Security initializer for new securities created via this universe, null will default to algorithm's security initializer</param>
         public ScheduledUniverseSelectionModel(DateTimeZone timeZone, IDateRule dateRule, ITimeRule timeRule, PyObject selector, UniverseSettings settings = null, ISecurityInitializer initializer = null)
         {
-            Func<DateTime, Symbol[]> func;
+            Func<DateTime, object> func;
             selector.TryConvertToDelegate(out func);
             _timeZone = timeZone;
             _dateRule = dateRule;
             _timeRule = timeRule;
-            _selector = func;
+            _selector = func.ConvertToUniverseSelectionSymbolDelegate();
             _settings = settings;
             _initializer = initializer;
         }
@@ -117,10 +111,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="algorithm">The algorithm instance to create universes for</param>
         /// <returns>The universes to be used by the algorithm</returns>
-        public override IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
+        public override IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
             yield return new ScheduledUniverse(
-                _timeZone ?? algorithm.TimeZone,
+                // by default ITimeRule yields in UTC
+                _timeZone ?? TimeZones.Utc,
                 _dateRule,
                 _timeRule,
                 _selector,

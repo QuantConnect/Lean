@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
 using System.Net;
 using System.Net.Sockets;
 using Newtonsoft.Json;
@@ -9,6 +24,7 @@ using QuantConnect.Notifications;
 using QuantConnect.Packets;
 using NetMQ;
 using NetMQ.Sockets;
+using QuantConnect.Orders.Serialization;
 
 namespace QuantConnect.Messaging
 {
@@ -20,6 +36,7 @@ namespace QuantConnect.Messaging
         private string _port;
         private PushSocket _server;
         private AlgorithmNodePacket _job;
+        private OrderEventJsonConverter _orderEventJsonConverter;
 
         /// <summary>
         /// Gets or sets whether this messaging handler has any current subscribers.
@@ -44,6 +61,7 @@ namespace QuantConnect.Messaging
         public void SetAuthentication(AlgorithmNodePacket job)
         {
             _job = job;
+            _orderEventJsonConverter = new OrderEventJsonConverter(job.AlgorithmId);
             Transmit(_job);
         }
 
@@ -68,11 +86,6 @@ namespace QuantConnect.Messaging
         public void Send(Packet packet)
         {
            Transmit(packet);
-
-            if (StreamingApi.IsEnabled)
-            {
-                StreamingApi.Transmit(_job.UserId, _job.Channel, packet);
-            }
         }
 
         /// <summary>
@@ -81,7 +94,7 @@ namespace QuantConnect.Messaging
         /// <param name="packet">Packet to transmit</param>
         public void Transmit(Packet packet)
         {
-            var payload = JsonConvert.SerializeObject(packet);
+            var payload = JsonConvert.SerializeObject(packet, _orderEventJsonConverter);
 
             var message = new NetMQMessage();
 
@@ -106,6 +119,13 @@ namespace QuantConnect.Messaging
                 throw new Exception("The port configured in config.json is either being used or blocked by a firewall." +
                     "Please choose a new port or open the port in the firewall.");
             }
+        }
+
+        /// <summary>
+        /// Dispose any resources used before destruction
+        /// </summary>
+        public void Dispose()
+        {
         }
     }
 }

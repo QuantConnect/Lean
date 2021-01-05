@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,41 +15,24 @@
 
 using NUnit.Framework;
 using QuantConnect.Indicators;
+using System;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class T3MovingAverageTests
+    public class T3MovingAverageTests : CommonIndicatorTests<IndicatorDataPoint>
     {
-        [Test]
-        public void ComparesAgainstExternalData()
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            var indicator = new T3MovingAverage(5);
-
-            RunTestIndicator(indicator);
+            return new T3MovingAverage(5);
         }
 
-        [Test]
-        public void ComparesAgainstExternalDataAfterReset()
-        {
-            var indicator = new T3MovingAverage(5);
+        protected override string TestFileName => "spy_t3.txt";
 
-            RunTestIndicator(indicator);
-            indicator.Reset();
-            RunTestIndicator(indicator);
-        }
+        protected override string TestColumnName => "T3_5";
 
-        [Test]
-        public void ResetsProperly()
-        {
-            var indicator = new T3MovingAverage(5, 1);
-
-            TestHelper.TestIndicatorReset(indicator, "spy_t3.txt");
-        }
-
-        private static void RunTestIndicator(IndicatorBase<IndicatorDataPoint> indicator)
-        {
-            TestHelper.TestIndicator(indicator, "spy_t3.txt", "T3_5", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 2e-2));
-        }
+        protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion =>
+            (indicator, expected)
+                => Assert.AreEqual(expected, (double) indicator.Current.Value, 2e-2);
     }
 }

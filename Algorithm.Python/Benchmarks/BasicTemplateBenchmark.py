@@ -20,6 +20,7 @@ AddReference("QuantConnect.Common")
 from System import *
 from QuantConnect import *
 from QuantConnect.Data import *
+from QuantConnect.Algorithm import *
 
 ### <summary>
 ### Benchmark Algorithm: The minimalist basic template algorithm benchmark strategy.

@@ -58,6 +58,11 @@ namespace QuantConnect.Data.Market
         public OptionRight Right => Symbol.ID.OptionRight;
 
         /// <summary>
+        /// Gets the option style
+        /// </summary>
+        public OptionStyle Style => Symbol.ID.OptionStyle;
+
+        /// <summary>
         /// Gets the theoretical price of this option contract as computed by the <see cref="IOptionPriceModel"/>
         /// </summary>
         public decimal TheoreticalPrice => _optionPriceModelResult.Value.TheoreticalPrice;

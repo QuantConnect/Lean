@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,8 +22,6 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.IBDownloader
 {
@@ -33,15 +31,13 @@ namespace QuantConnect.ToolBox.IBDownloader
     public class IBDataDownloader : IDataDownloader, IDisposable
     {
         private readonly InteractiveBrokersBrokerage _brokerage;
-        private readonly InteractiveBrokersSymbolMapper _symbolMapper = new InteractiveBrokersSymbolMapper();
-
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IBDataDownloader"/> class
         /// </summary>
         public IBDataDownloader()
         {
-            _brokerage = new InteractiveBrokersBrokerage(null, null,null);
+            _brokerage = new InteractiveBrokersBrokerage(null, null, null, null, null);
             _brokerage.Connect();
         }
 
@@ -77,11 +73,34 @@ namespace QuantConnect.ToolBox.IBDownloader
                 TickType.Quote);
 
             var data = _brokerage.GetHistory(historyRequest);
-            
+
             return data;
-            
         }
 
+        /// <summary>
+        /// Returns an IEnumerable of Future/Option contract symbols for the given root ticker
+        /// </summary>
+        /// <param name="symbol">The Symbol to get futures/options chain for</param>
+        /// <param name="includeExpired">Include expired contracts</param>
+        public IEnumerable<Symbol> GetChainSymbols(Symbol symbol, bool includeExpired)
+        {
+            return _brokerage.LookupSymbols(symbol, includeExpired);
+        }
+
+        /// <summary>
+        /// Downloads historical data from the brokerage and saves it in LEAN format.
+        /// </summary>
+        /// <param name="symbols">The list of symbols</param>
+        /// <param name="tickType">The tick type</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="securityType">The security type</param>
+        /// <param name="startTimeUtc">The starting date/time (UTC)</param>
+        /// <param name="endTimeUtc">The ending date/time (UTC)</param>
+        public void DownloadAndSave(List<Symbol> symbols, Resolution resolution, SecurityType securityType, TickType tickType, DateTime startTimeUtc, DateTime endTimeUtc)
+        {
+            var writer = new LeanDataWriter(Globals.DataFolder, resolution, securityType, tickType);
+            writer.DownloadAndSave(_brokerage, symbols, startTimeUtc, endTimeUtc);
+        }
 
         /// <summary>
         /// Groups a list of bars into a dictionary keyed by date
@@ -142,7 +161,7 @@ namespace QuantConnect.ToolBox.IBDownloader
         #region Console Helper
 
         /// <summary>
-        /// Draw a progress bar 
+        /// Draw a progress bar
         /// </summary>
         /// <param name="complete"></param>
         /// <param name="maxVal"></param>
@@ -157,14 +176,21 @@ namespace QuantConnect.ToolBox.IBDownloader
             bar = bar.PadLeft(chars, progressCharacter);
             bar = bar.PadRight(Convert.ToInt32(barSize) - 1);
 
-            Console.Write(string.Format("\r[{0}] {1}%", bar, (p * 100).ToString("N2")));
-        }
-
-        public void Dispose()
-        {
-            _brokerage.Disconnect();
+            Console.Write($"\r[{bar}] {(p * 100).ToStringInvariant("N2")}%");
         }
 
         #endregion
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            if (_brokerage != null)
+            {
+                _brokerage.Disconnect();
+                _brokerage.Dispose();
+            }
+        }
     }
 }

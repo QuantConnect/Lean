@@ -51,7 +51,7 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
-                    return _model.AccountType;
+                    return (_model.AccountType as PyObject).GetAndDispose<AccountType>();
                 }
             }
         }
@@ -66,7 +66,7 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
-                    return _model.RequiredFreeBuyingPowerPercent;
+                    return (_model.RequiredFreeBuyingPowerPercent as PyObject).GetAndDispose<decimal>();
                 }
             }
         }
@@ -80,7 +80,8 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
-                    return _model.DefaultMarkets;
+                    return (_model.DefaultMarkets as PyObject)
+                        .GetAndDispose<IReadOnlyDictionary<SecurityType, string>>();
                 }
             }
         }
@@ -112,7 +113,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.CanExecuteOrder(security, order);
+                return (_model.CanExecuteOrder(security, order) as PyObject).GetAndDispose<bool>();
             }
         }
 
@@ -131,7 +132,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.CanSubmitOrder(security, order, out message);
+                return (_model.CanSubmitOrder(security, order, out message) as PyObject).GetAndDispose<bool>();
             }
         }
 
@@ -147,7 +148,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.CanUpdateOrder(security, order, out message);
+                return (_model.CanUpdateOrder(security, order, out message) as PyObject).GetAndDispose<bool>();
             }
         }
 
@@ -160,7 +161,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetFeeModel(security);
+                return (_model.GetFeeModel(security) as PyObject).GetAndDispose<IFeeModel>();
             }
         }
 
@@ -173,7 +174,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetFillModel(security);
+                return (_model.GetFillModel(security) as PyObject).GetAndDispose<IFillModel>();
             }
         }
 
@@ -186,7 +187,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetLeverage(security);
+                return (_model.GetLeverage(security) as PyObject).GetAndDispose<decimal>();
             }
         }
 
@@ -199,7 +200,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetSettlementModel(security);
+                return (_model.GetSettlementModel(security) as PyObject).GetAndDispose<ISettlementModel>();
             }
         }
 
@@ -214,7 +215,8 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetSettlementModel(security, accountType);
+                return (_model.GetSettlementModel(security, accountType)
+                    as PyObject).GetAndDispose<ISettlementModel>();
             }
         }
 
@@ -227,7 +229,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetSlippageModel(security);
+                return (_model.GetSlippageModel(security) as PyObject).GetAndDispose<ISlippageModel>();
             }
         }
 
@@ -241,7 +243,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetBuyingPowerModel(security);
+                return (_model.GetBuyingPowerModel(security) as PyObject).GetAndDispose<IBuyingPowerModel>();
             }
         }
 
@@ -256,7 +258,8 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetBuyingPowerModel(security, accountType);
+                return (_model.GetBuyingPowerModel(security, accountType)
+                    as PyObject).GetAndDispose<IBuyingPowerModel>();
             }
         }
     }

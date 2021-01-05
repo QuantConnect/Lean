@@ -15,7 +15,6 @@
 
 using System;
 using Newtonsoft.Json;
-using QuantConnect.API;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -46,9 +45,8 @@ namespace QuantConnect.Api
         public ApiConnection(int userId, string token)
         {
             _token = token;
-            _userId = userId.ToString();
-            var apiUrl = Config.Get("cloud-api-url", "https://www.quantconnect.com/api/v2/");
-            Client = new RestClient(apiUrl);
+            _userId = userId.ToStringInvariant();
+            Client = new RestClient("https://www.quantconnect.com/api/v2/");
         }
 
         /// <summary>
@@ -87,7 +85,8 @@ namespace QuantConnect.Api
                 // Timestamps older than 1800 seconds will not work.
                 var timestamp = (int)Time.TimeStamp();
                 var hash = Api.CreateSecureHash(timestamp, _token);
-                request.AddHeader("Timestamp", timestamp.ToString());
+                request.AddHeader("Timestamp", timestamp.ToStringInvariant());
+
                 Client.Authenticator = new HttpBasicAuthenticator(_userId, hash);
 
                 // Execute the authenticated REST API Call
@@ -102,22 +101,28 @@ namespace QuantConnect.Api
                 //Verify success
                 if (restsharpResponse.ErrorException != null)
                 {
-                    Log.Error(restsharpResponse.ErrorException);
+                    Log.Error($"ApiConnection.TryRequest({request.Resource}): Error: {restsharpResponse.ErrorException.Message}");
                     result = null;
                     return false;
                 }
 
+                if (!restsharpResponse.IsSuccessful)
+                {
+                    Log.Error($"ApiConnect.TryRequest(): Content: {restsharpResponse.Content}");
+                }
+
                 responseContent = restsharpResponse.Content;
                 result = JsonConvert.DeserializeObject<T>(responseContent);
-                if (!result.Success)
+
+                if (result == null || !result.Success)
                 {
-                    //result;
+                    Log.Debug($"ApiConnection.TryRequest(): Raw response: '{responseContent}'");
                     return false;
                 }
             }
             catch (Exception err)
             {
-                Log.Error($"Api.ApiConnection.TryRequest({request.Resource}): Failed to make REST request. Response content: {responseContent}, Error: {err}");
+                Log.Error($"ApiConnection.TryRequest({request.Resource}): Error: {err.Message}, Response content: {responseContent}");
                 result = null;
                 return false;
             }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using Python.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,7 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
+using QuantConnect.Python;
 
 namespace QuantConnect.Data
 {
@@ -39,16 +41,8 @@ namespace QuantConnect.Data
         /// <summary>
         ///     Returns an IEnumerable of Subscriptions
         /// </summary>
-        public IEnumerable<SubscriptionDataConfig> Subscriptions => _subscriptionManager.SubscriptionManagerSubscriptions;
-
-        /// <summary>
-        ///     Flags the existence of custom data in the subscriptions
-        /// </summary>
-        public bool HasCustomData
-        {
-            get { return _subscriptionManager.HasCustomData; }
-            set { _subscriptionManager.HasCustomData = value; }
-        }
+        /// <remarks>Will not return internal subscriptions</remarks>
+        public IEnumerable<SubscriptionDataConfig> Subscriptions => _subscriptionManager.SubscriptionManagerSubscriptions.Where(config => !config.IsInternalFeed);
 
         /// <summary>
         ///     The different <see cref="TickType" /> each <see cref="SecurityType" /> supports
@@ -121,6 +115,7 @@ namespace QuantConnect.Data
         ///     True if this subscription should have filters applied to it (market hours/user
         ///     filters from security), false otherwise
         /// </param>
+        /// <param name="dataNormalizationMode">Define how data is normalized</param>
         /// <returns>
         ///     The newly created <see cref="SubscriptionDataConfig" /> or existing instance if it already existed
         /// </returns>
@@ -135,12 +130,14 @@ namespace QuantConnect.Data
             bool fillDataForward = true,
             bool extendedMarketHours = false,
             bool isInternalFeed = false,
-            bool isFilteredSubscription = true
+            bool isFilteredSubscription = true,
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted
             )
         {
             return SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward,
                 extendedMarketHours, isFilteredSubscription, isInternalFeed, isCustomData,
-                new List<Tuple<Type, TickType>> {new Tuple<Type, TickType>(dataType, tickType)}).First();
+                new List<Tuple<Type, TickType>> {new Tuple<Type, TickType>(dataType, tickType)},
+                dataNormalizationMode).First();
         }
 
 
@@ -164,7 +161,7 @@ namespace QuantConnect.Data
             foreach (var subscription in subscriptions)
             {
                 // we need to be able to pipe data directly from the data feed into the consolidator
-                if (consolidator.InputType.IsAssignableFrom(subscription.Type))
+                if (IsSubscriptionValidForConsolidator(subscription, consolidator))
                 {
                     subscription.Consolidators.Add(consolidator);
                     return;
@@ -177,6 +174,17 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Add a custom python consolidator for the symbol
+        /// </summary>
+        /// <param name="symbol">Symbol of the asset to consolidate</param>
+        /// <param name="pyConsolidator">The custom python consolidator</param>
+        public void AddConsolidator(Symbol symbol, PyObject pyConsolidator)
+        {
+            IDataConsolidator consolidator = new DataConsolidatorPythonWrapper(pyConsolidator);
+            AddConsolidator(symbol, consolidator);
+        }
+
+        /// <summary>
         ///     Removes the specified consolidator for the symbol
         /// </summary>
         /// <param name="symbol">The symbol the consolidator is receiving data from</param>
@@ -184,7 +192,7 @@ namespace QuantConnect.Data
         public void RemoveConsolidator(Symbol symbol, IDataConsolidator consolidator)
         {
             // remove consolidator from each subscription
-            foreach (var subscription in Subscriptions.Where(x => x.Symbol == symbol))
+            foreach (var subscription in _subscriptionManager.GetSubscriptionDataConfigs(symbol))
             {
                 subscription.Consolidators.Remove(consolidator);
             }
@@ -202,8 +210,9 @@ namespace QuantConnect.Data
             {
                 {SecurityType.Base, new List<TickType> {TickType.Trade}},
                 {SecurityType.Forex, new List<TickType> {TickType.Quote}},
-                {SecurityType.Equity, new List<TickType> {TickType.Trade}},
+                {SecurityType.Equity, new List<TickType> {TickType.Trade, TickType.Quote}},
                 {SecurityType.Option, new List<TickType> {TickType.Quote, TickType.Trade, TickType.OpenInterest}},
+                {SecurityType.FutureOption, new List<TickType> {TickType.Quote, TickType.Trade, TickType.OpenInterest}},
                 {SecurityType.Cfd, new List<TickType> {TickType.Quote}},
                 {SecurityType.Future, new List<TickType> {TickType.Quote, TickType.Trade, TickType.OpenInterest}},
                 {SecurityType.Commodity, new List<TickType> {TickType.Trade}},
@@ -241,6 +250,48 @@ namespace QuantConnect.Data
         public void SetDataManager(IAlgorithmSubscriptionManager subscriptionManager)
         {
             _subscriptionManager = subscriptionManager;
+        }
+
+        /// <summary>
+        /// Checks if the subscription is valid for the consolidator
+        /// </summary>
+        /// <param name="subscription">The subscription configuration</param>
+        /// <param name="consolidator">The consolidator</param>
+        /// <returns>true if the subscription is valid for the consolidator</returns>
+        public static bool IsSubscriptionValidForConsolidator(SubscriptionDataConfig subscription, IDataConsolidator consolidator)
+        {
+            if (subscription.Type == typeof(Tick) &&
+                LeanData.IsCommonLeanDataType(consolidator.OutputType))
+            {
+                var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(
+                    consolidator.OutputType,
+                    subscription.Symbol.SecurityType);
+
+                return subscription.TickType == tickType;
+            }
+
+            return consolidator.InputType.IsAssignableFrom(subscription.Type);
+        }
+
+        /// <summary>
+        /// Returns true if the provided data is the default data type associated with it's <see cref="SecurityType"/>.
+        /// This is useful to determine if a data point should be used/cached in an environment where consumers will not provider a data type and we want to preserve
+        /// determinism and backwards compatibility when there are multiple data types available per <see cref="SecurityType"/> or new ones added.
+        /// </summary>
+        /// <remarks>Temporary until we have a dictionary for the default data type per security type see GH issue 4196.
+        /// Internal so it's only accessible from this assembly.</remarks>
+        internal static bool IsDefaultDataType(BaseData data)
+        {
+            switch (data.Symbol.SecurityType)
+            {
+                case SecurityType.Equity:
+                    if (data.DataType == MarketDataType.QuoteBar || data.DataType == MarketDataType.Tick && (data as Tick).TickType == TickType.Quote)
+                    {
+                        return false;
+                    }
+                    break;
+            }
+            return true;
         }
     }
 }

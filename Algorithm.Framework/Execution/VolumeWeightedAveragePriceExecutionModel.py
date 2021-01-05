@@ -56,36 +56,27 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
         # update the complete set of portfolio targets with the new targets
         self.targetsCollection.AddRange(targets)
 
-        for target in self.targetsCollection.OrderByMarginImpact(algorithm):
-            symbol = target.Symbol
+        # for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call
+        if self.targetsCollection.Count > 0:
+            for target in self.targetsCollection.OrderByMarginImpact(algorithm):
+                symbol = target.Symbol
 
-            # calculate remaining quantity to be ordered
-            unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target)
+                # calculate remaining quantity to be ordered
+                unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target)
 
-            # fetch our symbol data containing our VWAP indicator
-            data = self.symbolData.get(symbol, None)
-            if data is None: return
+                # fetch our symbol data containing our VWAP indicator
+                data = self.symbolData.get(symbol, None)
+                if data is None: return
 
-            # check order entry conditions
-            if self.PriceIsFavorable(data, unorderedQuantity):
-                # get the maximum order size based on total order value
-                maxOrderSize = OrderSizing.PercentVolume(data.Security, self.MaximumOrderQuantityPercentVolume)
-                orderSize = np.min([maxOrderSize, np.abs(unorderedQuantity)])
+                # check order entry conditions
+                if self.PriceIsFavorable(data, unorderedQuantity):
+                    # adjust order size to respect maximum order size based on a percentage of current volume
+                    orderSize = OrderSizing.GetOrderSizeForPercentVolume(data.Security, self.MaximumOrderQuantityPercentVolume, unorderedQuantity)
 
-                remainder = orderSize % data.Security.SymbolProperties.LotSize
-                missingForLotSize = data.Security.SymbolProperties.LotSize - remainder
-                # if the amount we are missing for +1 lot size is 1M part of a lot size
-                # we suppose its due to floating point error and round up
-                # Note: this is required to avoid a diff with C# equivalent
-                if missingForLotSize < (data.Security.SymbolProperties.LotSize / 1000000):
-                    remainder -= data.Security.SymbolProperties.LotSize
+                    if orderSize != 0:
+                        algorithm.MarketOrder(symbol, orderSize)
 
-                # round down to even lot size
-                orderSize -= remainder
-                if orderSize != 0:
-                    algorithm.MarketOrder(symbol, np.sign(unorderedQuantity) * orderSize)
-
-        self.targetsCollection.ClearFulfilled(algorithm)
+            self.targetsCollection.ClearFulfilled(algorithm)
 
 
     def OnSecuritiesChanged(self, algorithm, changes):
@@ -151,7 +142,7 @@ class IntradayVwap:
         '''Computes the new VWAP'''
         success, volume, averagePrice = self.GetVolumeAndAveragePrice(input)
         if not success:
-            return
+            return self.IsReady
 
         # reset vwap on daily boundaries
         if self.lastDate != input.EndTime.date():
@@ -166,10 +157,10 @@ class IntradayVwap:
         if self.sumOfVolume == 0.0:
            # if we have no trade volume then use the current price as VWAP
            self.Value = input.Value
-           return
+           return self.IsReady
 
         self.Value = self.sumOfPriceTimesVolume / self.sumOfVolume
-
+        return self.IsReady
 
     def GetVolumeAndAveragePrice(self, input):
         '''Determines the volume and price to be used for the current input in the VWAP computation'''

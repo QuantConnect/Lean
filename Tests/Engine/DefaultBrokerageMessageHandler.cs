@@ -25,7 +25,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine
 {
-    [TestFixture, Category("TravisExclude")]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class DefaultBrokerageMessageHandlerTests
     {
         [Test]
@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Engine
             var job = new LiveNodePacket();
             var results = new TestResultHandler();//packet => Console.WriteLine(FieldsToString(packet)));
             var api = new Api.Api();
-            var handler = new DefaultBrokerageMessageHandler(algorithm, job, api, TimeSpan.FromMinutes(15));
+            var handler = new DefaultBrokerageMessageHandler(algorithm, job, api, TimeSpan.FromSeconds(2));
 
             Assert.IsNull(algorithm.RunTimeError);
 
@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Engine
             var job = new LiveNodePacket();
             var results = new TestResultHandler();//packet => Console.WriteLine(FieldsToString(packet)));
             var api = new Api.Api();
-            var handler = new DefaultBrokerageMessageHandler(algorithm, job, api, TimeSpan.FromMinutes(15), TimeSpan.FromSeconds(.25));
+            var handler = new DefaultBrokerageMessageHandler(algorithm, job, api, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(.25));
 
             Assert.IsNull(algorithm.RunTimeError);
 

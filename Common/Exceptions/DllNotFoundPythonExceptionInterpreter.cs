@@ -49,11 +49,11 @@ namespace QuantConnect.Exceptions
         {
             var dnfe = (DllNotFoundException)exception;
 
-            var startIndex = dnfe.Message.IndexOf("python");
+            var startIndex = dnfe.Message.IndexOfInvariant("python");
             var length = Math.Min(dnfe.Message.Length - startIndex, 10);
             var dllName = dnfe.Message.Substring(startIndex, length);
 
-            length = dllName.IndexOf('\'');
+            length = dllName.IndexOfInvariant('\'');
             if (length > 0)
             {
                 dllName = dllName.Substring(0, length);

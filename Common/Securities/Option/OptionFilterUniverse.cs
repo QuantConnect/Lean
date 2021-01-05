@@ -18,8 +18,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using System.Linq;
-using System.Collections;
-using QuantConnect.Util;
+using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Securities
@@ -27,166 +26,49 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Represents options symbols universe used in filtering.
     /// </summary>
-    public class OptionFilterUniverse : IDerivativeSecurityFilterUniverse
+    public class OptionFilterUniverse : ContractSecurityFilterUniverse<OptionFilterUniverse>
     {
-        /// <summary>
-        /// Defines listed option types
-        /// </summary>
-        public enum Type : int
-        {
-            /// <summary>
-            /// Listed stock options that expire 3rd Friday of the month
-            /// </summary>
-            Standard = 1,
-
-            /// <summary>
-            /// Weeklys options that expire every week
-            /// These are options listed with approximately one week to expiration
-            /// </summary>
-            Weeklys = 2
-        }
-
-        internal IEnumerable<Symbol> _allSymbols;
-
-        /// <summary>
-        /// The underlying price data
-        /// </summary>
-        public BaseData Underlying
-        {
-            get
-            {
-                // underlying value changes over time, so accessing it makes universe dynamic
-                _isDynamic = true;
-                return _underlying;
-            }
-        }
-
-        internal BaseData _underlying;
-
-        /// <summary>
-        /// True if the universe is dynamic and filter needs to be reapplied
-        /// </summary>
-        public bool IsDynamic
-        {
-            get
-            {
-                return _isDynamic;
-            }
-        }
-
-        internal bool _isDynamic;
-        internal Type _type = Type.Standard;
-
         // Fields used in relative strikes filter
         private List<decimal> _uniqueStrikes;
-        private DateTime _uniqueStrikesResolveDate;
+        private bool _refreshUniqueStrikes;
+
+        /// <summary>
+        /// Constructs OptionFilterUniverse
+        /// </summary>
+        public OptionFilterUniverse()
+        {
+        }
 
         /// <summary>
         /// Constructs OptionFilterUniverse
         /// </summary>
         public OptionFilterUniverse(IEnumerable<Symbol> allSymbols, BaseData underlying)
+            : base(allSymbols, underlying)
         {
-            _allSymbols = allSymbols;
-            _underlying = underlying;
-            _type = Type.Standard;
-            _isDynamic = false;
+            _refreshUniqueStrikes = true;
         }
 
         /// <summary>
-        /// Includes universe of weeklys options (if any) into selection
+        /// Refreshes this option filter universe and allows specifying if the exchange date changed from last call
         /// </summary>
-        /// <returns></returns>
-        public OptionFilterUniverse IncludeWeeklys()
+        /// <param name="allSymbols">All the options contract symbols</param>
+        /// <param name="underlying">The current underlying last data point</param>
+        /// <param name="exchangeDateChange">True if the exchange data has chanced since the last call or construction</param>
+        public void Refresh(IEnumerable<Symbol> allSymbols, BaseData underlying, bool exchangeDateChange = true)
         {
-            _type |= Type.Weeklys;
-            return this;
+            base.Refresh(allSymbols, underlying);
+            _refreshUniqueStrikes = exchangeDateChange;
         }
 
         /// <summary>
-        /// Sets universe of weeklys options (if any) as a selection
+        /// Determine if the given Option contract symbol is standard
         /// </summary>
-        /// <returns></returns>
-        public OptionFilterUniverse WeeklysOnly()
+        /// <returns>True if standard</returns>
+        protected override bool IsStandard(Symbol symbol)
         {
-            _type = Type.Weeklys;
-            return this;
-        }
-
-        /// <summary>
-        /// Returns universe, filtered by option type
-        /// </summary>
-        /// <returns></returns>
-        internal OptionFilterUniverse ApplyOptionTypesFilter()
-        {
-            // memoization map for ApplyOptionTypesFilter()
-            var memoizedMap = new Dictionary<DateTime, bool>();
-
-            Func<Symbol, bool> memoizedIsStandardType = symbol =>
-            {
-                var dt = symbol.ID.Date;
-
-                if (memoizedMap.ContainsKey(dt))
-                    return memoizedMap[dt];
-                var res = OptionSymbol.IsStandardContract(symbol);
-                memoizedMap[dt] = res;
-
-                return res;
-            };
-
-            var filtered = _allSymbols.Where(x =>
-            {
-                switch (_type)
-                {
-                    case Type.Weeklys:
-                        return !memoizedIsStandardType(x);
-                    case Type.Standard:
-                        return memoizedIsStandardType(x);
-                    case Type.Standard | Type.Weeklys:
-                        return true;
-                    default:
-                        return false;
-                }
-            });
-
-            _allSymbols = filtered.ToList();
-            return this;
-        }
-
-        /// <summary>
-        /// Returns front month contract
-        /// </summary>
-        /// <returns></returns>
-        public OptionFilterUniverse FrontMonth()
-        {
-            if (!_allSymbols.Any()) return this;
-            var ordered = this.OrderBy(x => x.ID.Date).ToList();
-            var frontMonth = ordered.TakeWhile(x => ordered[0].ID.Date == x.ID.Date);
-
-            _allSymbols = frontMonth.ToList();
-            return this;
-        }
-
-        /// <summary>
-        /// Returns a list of back month contracts
-        /// </summary>
-        /// <returns></returns>
-        public OptionFilterUniverse BackMonths()
-        {
-            if (!_allSymbols.Any()) return this;
-            var ordered = this.OrderBy(x => x.ID.Date).ToList();
-            var backMonths = ordered.SkipWhile(x => ordered[0].ID.Date == x.ID.Date);
-
-            _allSymbols = backMonths.ToList();
-            return this;
-        }
-
-        /// <summary>
-        /// Returns first of back month contracts
-        /// </summary>
-        /// <returns></returns>
-        public OptionFilterUniverse BackMonth()
-        {
-            return BackMonths().FrontMonth();
+            return symbol.SecurityType == SecurityType.FutureOption
+                ? FutureOptionSymbol.IsStandard(symbol)
+                : OptionSymbol.IsStandard(symbol);
         }
 
         /// <summary>
@@ -194,32 +76,30 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="minStrike">The minimum strike relative to the underlying price, for example, -1 would filter out contracts further than 1 strike below market price</param>
         /// <param name="maxStrike">The maximum strike relative to the underlying price, for example, +1 would filter out contracts further than 1 strike above market price</param>
-        /// <returns></returns>
+        /// <returns>Universe with filter applied</returns>
         public OptionFilterUniverse Strikes(int minStrike, int maxStrike)
         {
-            if (_underlying == null)
+            if (UnderlyingInternal == null)
             {
                 return this;
             }
 
-            if (_underlying.Time.Date != _uniqueStrikesResolveDate)
+            if (_refreshUniqueStrikes || _uniqueStrikes == null)
             {
                 // each day we need to recompute the unique strikes list
-                _uniqueStrikes = _allSymbols
-                    .DistinctBy(x => x.ID.StrikePrice)
-                    .OrderBy(x => x.ID.StrikePrice)
-                    .Select(symbol => symbol.ID.StrikePrice)
+                _uniqueStrikes = AllSymbols.Select(x => x.ID.StrikePrice)
+                    .Distinct()
+                    .OrderBy(strikePrice => strikePrice)
                     .ToList();
-
-                _uniqueStrikesResolveDate = _underlying.Time.Date;
+                _refreshUniqueStrikes = false;
             }
 
             // new universe is dynamic
-            _isDynamic = true;
+            IsDynamicInternal = true;
 
             // find the current price in the list of strikes
             var exactPriceFound = true;
-            var index = _uniqueStrikes.BinarySearch(_underlying.Price);
+            var index = _uniqueStrikes.BinarySearch(UnderlyingInternal.Price);
 
             // Return value of BinarySearch (from MSDN):
             // The zero-based index of item in the sorted List<T>, if item is found;
@@ -233,7 +113,7 @@ namespace QuantConnect.Securities
                 if (index == ~_uniqueStrikes.Count)
                 {
                     // there is no greater price, return empty
-                    _allSymbols = Enumerable.Empty<Symbol>();
+                    AllSymbols = Enumerable.Empty<Symbol>();
                     return this;
                 }
 
@@ -263,14 +143,14 @@ namespace QuantConnect.Securities
             else if (indexMinPrice >= _uniqueStrikes.Count)
             {
                 // price out of range: return empty
-                _allSymbols = Enumerable.Empty<Symbol>();
+                AllSymbols = Enumerable.Empty<Symbol>();
                 return this;
             }
 
             if (indexMaxPrice < 0)
             {
                 // price out of range: return empty
-                _allSymbols = Enumerable.Empty<Symbol>();
+                AllSymbols = Enumerable.Empty<Symbol>();
                 return this;
             }
             if (indexMaxPrice >= _uniqueStrikes.Count)
@@ -281,76 +161,21 @@ namespace QuantConnect.Securities
             var minPrice = _uniqueStrikes[indexMinPrice];
             var maxPrice = _uniqueStrikes[indexMaxPrice];
 
-            var filtered =
-                    from symbol in _allSymbols
-                    let contract = symbol.ID
-                    where contract.StrikePrice >= minPrice
-                        && contract.StrikePrice <= maxPrice
-                    select symbol;
+            AllSymbols = AllSymbols
+                .Where(symbol =>
+                    {
+                        var price = symbol.ID.StrikePrice;
+                        return price >= minPrice && price <= maxPrice;
+                    }
+                ).ToList();
 
-            _allSymbols = filtered.ToList();
-
-            return this;
-        }
-
-        /// <summary>
-        /// Applies filter selecting options contracts based on a range of expiration dates relative to the current day
-        /// </summary>
-        /// <param name="minExpiry">The minimum time until expiry to include, for example, TimeSpan.FromDays(10)
-        /// would exclude contracts expiring in less than 10 days</param>
-        /// <param name="maxExpiry">The maxmium time until expiry to include, for example, TimeSpan.FromDays(10)
-        /// would exclude contracts expiring in more than 10 days</param>
-        /// <returns></returns>
-        public OptionFilterUniverse Expiration(TimeSpan minExpiry, TimeSpan maxExpiry)
-        {
-            if (_underlying == null)
-            {
-                return this;
-            }
-
-            if (maxExpiry > Time.MaxTimeSpan) maxExpiry = Time.MaxTimeSpan;
-
-            var minExpiryToDate = _underlying.Time.Date + minExpiry;
-            var maxExpiryToDate = _underlying.Time.Date + maxExpiry;
-
-            var filtered =
-                   from symbol in _allSymbols
-                   let contract = symbol.ID
-                   where contract.Date >= minExpiryToDate
-                      && contract.Date <= maxExpiryToDate
-                   select symbol;
-
-            _allSymbols = filtered.ToList();
-
-            return this;
-        }
-
-        /// <summary>
-        /// Explicitly sets the selected contract symbols for this universe.
-        /// This overrides and and all other methods of selecting symbols assuming it is called last.
-        /// </summary>
-        /// <param name="contracts">The option contract symbol objects to select</param>
-        public OptionFilterUniverse Contracts(IEnumerable<Symbol> contracts)
-        {
-            _allSymbols = contracts.ToList();
-            return this;
-        }
-
-        /// <summary>
-        /// Sets a function used to filter the set of available contract filters. The input to the 'contractSelector'
-        /// function will be the already filtered list if any other filters have already been applied.
-        /// </summary>
-        /// <param name="contractSelector">The option contract symbol objects to select</param>
-        public OptionFilterUniverse Contracts(Func<IEnumerable<Symbol>, IEnumerable<Symbol>> contractSelector)
-        {
-            // force materialization using ToList
-            _allSymbols = contractSelector(_allSymbols).ToList();
             return this;
         }
 
         /// <summary>
         /// Sets universe of call options (if any) as a selection
         /// </summary>
+        /// <returns>Universe with filter applied</returns>
         public OptionFilterUniverse CallsOnly()
         {
             return Contracts(contracts => contracts.Where(x => x.ID.OptionRight == OptionRight.Call));
@@ -359,34 +184,10 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Sets universe of put options (if any) as a selection
         /// </summary>
+        /// <returns>Universe with filter applied</returns>
         public OptionFilterUniverse PutsOnly()
         {
             return Contracts(contracts => contracts.Where(x => x.ID.OptionRight == OptionRight.Put));
-        }
-
-        /// <summary>
-        /// Instructs the engine to only filter options contracts on the first time step of each market day.
-        /// </summary>
-        public OptionFilterUniverse OnlyApplyFilterAtMarketOpen()
-        {
-            _isDynamic = false;
-            return this;
-        }
-
-        /// <summary>
-        /// IEnumerable interface method implementation
-        /// </summary>
-        public IEnumerator<Symbol> GetEnumerator()
-        {
-            return _allSymbols.GetEnumerator();
-        }
-
-        /// <summary>
-        /// IEnumerable interface method implementation
-        /// </summary>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return _allSymbols.GetEnumerator();
         }
     }
 
@@ -398,33 +199,52 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Filters universe
         /// </summary>
-        /// <param name="universe"></param>
-        /// <param name="predicate"></param>
-        /// <returns></returns>
+        /// <param name="universe">Universe to apply the filter too</param>
+        /// <param name="predicate">Bool function to determine which Symbol are filtered</param>
+        /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse Where(this OptionFilterUniverse universe, Func<Symbol, bool> predicate)
         {
-            universe._allSymbols = universe._allSymbols.Where(predicate).ToList();
-            universe._isDynamic = true;
+            universe.AllSymbols = universe.AllSymbols.Where(predicate).ToList();
+            universe.IsDynamicInternal = true;
             return universe;
         }
 
         /// <summary>
         /// Maps universe
         /// </summary>
+        /// <param name="universe">Universe to apply the filter too</param>
+        /// <param name="mapFunc">Symbol function to determine which Symbols are filtered</param>
+        /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse Select(this OptionFilterUniverse universe, Func<Symbol, Symbol> mapFunc)
         {
-            universe._allSymbols = universe._allSymbols.Select(mapFunc).ToList();
-            universe._isDynamic = true;
+            universe.AllSymbols = universe.AllSymbols.Select(mapFunc).ToList();
+            universe.IsDynamicInternal = true;
             return universe;
         }
 
         /// <summary>
         /// Binds universe
         /// </summary>
+        /// <param name="universe">Universe to apply the filter too</param>
+        /// <param name="mapFunc">Symbol function to determine which Symbols are filtered</param>
+        /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse SelectMany(this OptionFilterUniverse universe, Func<Symbol, IEnumerable<Symbol>> mapFunc)
         {
-            universe._allSymbols = universe._allSymbols.SelectMany(mapFunc).ToList();
-            universe._isDynamic = true;
+            universe.AllSymbols = universe.AllSymbols.SelectMany(mapFunc).ToList();
+            universe.IsDynamicInternal = true;
+            return universe;
+        }
+
+        /// <summary>
+        /// Updates universe to only contain the symbols in the list
+        /// </summary>
+        /// <param name="universe">Universe to apply the filter too</param>
+        /// <param name="filterList">List of Symbols to keep in the Universe</param>
+        /// <returns>Universe with filter applied</returns>
+        public static OptionFilterUniverse WhereContains(this OptionFilterUniverse universe, List<Symbol> filterList)
+        {
+            universe.AllSymbols = universe.AllSymbols.Where(filterList.Contains).ToList();
+            universe.IsDynamicInternal = true;
             return universe;
         }
     }

@@ -20,6 +20,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
+using static System.FormattableString;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
@@ -60,7 +61,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             _pairs = new Dictionary<Tuple<Symbol, Symbol>, PairData>();
 
             Securities = new HashSet<Security>();
-            Name = $"{nameof(BasePairsTradingAlphaModel)}({_lookback},{_resolution},{_threshold.Normalize()})";
+            Name = Invariant($"{nameof(BasePairsTradingAlphaModel)}({_lookback},{_resolution},{_threshold.Normalize()})");
         }
 
         /// <summary>
@@ -70,7 +71,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
         /// <returns>The new insights generated</returns>
-        public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+        public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
         {
             var insights = new List<Insight>();
 
@@ -87,13 +88,13 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
             NotifiedSecurityChanges.UpdateCollection(Securities, changes);
 
             UpdatePairs(algorithm);
 
-            // Remove pairs that has assets that were removed from the universe 
+            // Remove pairs that has assets that were removed from the universe
             foreach (var security in changes.RemovedSecurities)
             {
                 var symbol = security.Symbol;
@@ -113,9 +114,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="asset1">The first asset's symbol in the pair</param>
         /// <param name="asset2">The second asset's symbol in the pair</param>
         /// <returns>True if the statistical test for the pair is successful</returns>
-        public virtual bool HasPassedTest(QCAlgorithmFramework algorithm, Symbol asset1, Symbol asset2) => true;
+        public virtual bool HasPassedTest(QCAlgorithm algorithm, Symbol asset1, Symbol asset2) => true;
 
-        private void UpdatePairs(QCAlgorithmFramework algorithm)
+        private void UpdatePairs(QCAlgorithm algorithm)
         {
             var assets = Securities.Select(x => x.Symbol).ToArray();
 

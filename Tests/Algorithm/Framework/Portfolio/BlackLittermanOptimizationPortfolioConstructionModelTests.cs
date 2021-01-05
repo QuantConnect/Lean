@@ -16,7 +16,6 @@
 using Accord.Math;
 using NUnit.Framework;
 using Python.Runtime;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
@@ -25,21 +24,25 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 using System;
 using System.Linq;
-using QuantConnect.Tests.Common.Securities;
+using QuantConnect.Algorithm;
+using QuantConnect.Tests.Engine.DataFeeds;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
     [TestFixture]
     public class BlackLittermanOptimizationPortfolioConstructionModelTests
     {
-        private QCAlgorithmFramework _algorithm;
+        private QCAlgorithm _algorithm;
         private Insight[] _view1Insights;
         private Insight[] _view2Insights;
 
-        [TestFixtureSetUp]
+        [SetUp]
         public void SetUp()
         {
-            _algorithm = new QCAlgorithmFramework();
+            _algorithm = new QCAlgorithm();
+            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
+
             SetUtcTime(new DateTime(2018, 8, 7));
 
             // Germany will outperform the other European markets by 5%
@@ -150,6 +153,125 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             }
         }
 
+        [Test]
+        [TestCase(Language.CSharp, 11, true)]
+        [TestCase(Language.CSharp, -11, true)]
+        [TestCase(Language.CSharp, 0.001d, true)]
+        [TestCase(Language.CSharp, -0.001d, true)]
+        [TestCase(Language.CSharp, 0.1, false)]
+        [TestCase(Language.CSharp, -0.1, false)]
+        [TestCase(Language.CSharp, 0.011d, false)]
+        [TestCase(Language.CSharp, -0.011d, false)]
+        [TestCase(Language.CSharp, 0, true)]
+        [TestCase(Language.Python, 0, true)]
+        [TestCase(Language.Python, 11, true)]
+        [TestCase(Language.Python, -11, true)]
+        [TestCase(Language.Python, 0.001d, true)]
+        [TestCase(Language.Python, -0.001d, true)]
+        [TestCase(Language.Python, 0.1, false)]
+        [TestCase(Language.Python, -0.1, false)]
+        [TestCase(Language.Python, 0.011d, false)]
+        [TestCase(Language.Python, -0.011d, false)]
+        public void IgnoresInsightsWithInvalidMagnitudeValue(Language language, double magnitude, bool expectZero)
+        {
+            SetPortfolioConstruction(language);
+            _algorithm.Settings.MaxAbsolutePortfolioTargetPercentage = 10;
+            _algorithm.Settings.MinAbsolutePortfolioTargetPercentage = 0.01m;
+
+            var insights = new[]
+            {
+                GetInsight("View 1", "AUS", magnitude),
+                GetInsight("View 1", "CAN", magnitude),
+                GetInsight("View 1", "FRA", magnitude),
+                GetInsight("View 1", "GER", magnitude),
+                GetInsight("View 1", "JAP", magnitude),
+                GetInsight("View 1", "UK" , magnitude),
+                GetInsight("View 1", "USA", magnitude)
+            };
+
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);
+
+            if (expectZero)
+            {
+                Assert.AreEqual(0, actualTargets.Count());
+            }
+            else
+            {
+                Assert.AreNotEqual(0, actualTargets.Count());
+            }
+        }
+
+        [TestCase(Language.CSharp, PortfolioBias.Long)]
+        [TestCase(Language.Python, PortfolioBias.Long)]
+        [TestCase(Language.CSharp, PortfolioBias.Short)]
+        [TestCase(Language.Python, PortfolioBias.Short)]
+        public void PortfolioBiasIsRespected(Language language, PortfolioBias bias)
+        {
+            SetPortfolioConstruction(language, bias);
+
+            var insights = new[]
+            {
+                GetInsight("View 1", "AUS", -10.1),
+                GetInsight("View 1", "CAN", -0.1),
+                GetInsight("View 1", "FRA", 0.1),
+                GetInsight("View 1", "GER", -0.1),
+                GetInsight("View 1", "JAP", -0.1),
+                GetInsight("View 1", "UK" , 0.1),
+                GetInsight("View 1", "USA", -0.1)
+            };
+
+            var createdValidTarget = false;
+            foreach (var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights))
+            {
+                QuantConnect.Logging.Log.Trace($"{target.Symbol}: {target.Quantity}");
+                if (target.Quantity == 0)
+                {
+                    continue;
+                }
+
+                createdValidTarget = true;
+                Assert.AreEqual(Math.Sign((int)bias), Math.Sign(target.Quantity));
+            }
+
+            Assert.IsTrue(createdValidTarget);
+        }
+
+        [Test]
+        public void NewSymbolPortfolioConstructionModelDoesNotThrow()
+        {
+            var algorithm = new QCAlgorithm();
+            var timezone = algorithm.TimeZone;
+            algorithm.SetDateTime(new DateTime(2018, 8, 7).ConvertToUtc(timezone));
+            algorithm.SetPortfolioConstruction(new NewSymbolPortfolioConstructionModel());
+
+            var spySymbol = Symbols.SPY;
+            var spy = GetSecurity(spySymbol, Resolution.Daily);
+
+            spy.SetMarketPrice(new Tick(algorithm.Time, spySymbol, 1m, 1m));
+            algorithm.Securities.Add(spySymbol, spy);
+
+            algorithm.PortfolioConstruction.OnSecuritiesChanged(algorithm, SecurityChanges.Added(spy));
+
+            var insights = new[] { Insight.Price(spySymbol, Time.OneMinute, InsightDirection.Up, .1) };
+
+            Assert.DoesNotThrow(() => algorithm.PortfolioConstruction.CreateTargets(algorithm, insights));
+
+            algorithm.SetDateTime(algorithm.Time.AddDays(1));
+
+            var aaplSymbol = Symbols.AAPL;
+            var aapl = GetSecurity(spySymbol, Resolution.Daily);
+
+            aapl.SetMarketPrice(new Tick(algorithm.Time, aaplSymbol, 1m, 1m));
+            algorithm.Securities.Add(aaplSymbol, aapl);
+
+            algorithm.PortfolioConstruction.OnSecuritiesChanged(algorithm, SecurityChanges.Added(aapl));
+
+            insights = new[] { spySymbol, aaplSymbol }
+                .Select(x => Insight.Price(x, Time.OneMinute, InsightDirection.Up, .1)).ToArray();
+
+            Assert.DoesNotThrow(() => algorithm.PortfolioConstruction.CreateTargets(algorithm, insights));
+        }
+
         private Security GetSecurity(Symbol symbol, Resolution resolution)
         {
             var timezone = _algorithm.TimeZone;
@@ -160,7 +282,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 config,
                 new Cash(Currencies.USD, 0, 1),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
         }
 
@@ -176,9 +300,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             return insight;
         }
 
-        private void SetPortfolioConstruction(Language language)
+        private void SetPortfolioConstruction(Language language, PortfolioBias portfolioBias = PortfolioBias.LongShort)
         {
-            _algorithm.SetPortfolioConstruction(new BLOPCM(new UnconstrainedMeanVariancePortfolioOptimizer()));
+            _algorithm.SetPortfolioConstruction(new BLOPCM(new UnconstrainedMeanVariancePortfolioOptimizer(), portfolioBias));
             if (language == Language.Python)
             {
                 try
@@ -186,7 +310,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                     using (Py.GIL())
                     {
                         var name = nameof(BLOPCM);
-                        var instance = PythonEngine.ModuleFromString(name, GetPythonBLOPCM()).GetAttr(name).Invoke();
+                        var instance = PythonEngine.ModuleFromString(name, GetPythonBLOPCM()).GetAttr(name).Invoke(((int)portfolioBias).ToPython());
                         var model = new PortfolioConstructionModelPythonWrapper(instance);
                         _algorithm.SetPortfolioConstruction(model);
                     }
@@ -208,8 +332,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
         private class BLOPCM : BlackLittermanOptimizationPortfolioConstructionModel
         {
-            public BLOPCM(IPortfolioOptimizer optimizer)
-                : base(optimizer: optimizer)
+            public BLOPCM(IPortfolioOptimizer optimizer, PortfolioBias portfolioBias)
+                : base(optimizer: optimizer, portfolioBias: portfolioBias)
             {
             }
 
@@ -235,7 +359,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 return w.Dot(Σ.Multiply(delta));
             }
 
-            public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+            public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
             {
 
             }
@@ -260,8 +384,8 @@ def GetSymbol(ticker):
 
 class BLOPCM(BlackLittermanOptimizationPortfolioConstructionModel):
 
-    def __init__(self):
-        super().__init__(optimizer = UnconstrainedMeanVariancePortfolioOptimizer())
+    def __init__(self, portfolioBias):
+        super().__init__(portfolioBias = portfolioBias, optimizer = UnconstrainedMeanVariancePortfolioOptimizer())
 
     def get_equilibrium_return(self, returns):
 
@@ -286,6 +410,54 @@ class BLOPCM(BlackLittermanOptimizationPortfolioConstructionModel):
 
     def OnSecuritiesChanged(self, algorithm, changes):
         pass";
+        }
+
+        private class NewSymbolPortfolioConstructionModel : BlackLittermanOptimizationPortfolioConstructionModel
+        {
+            private readonly Dictionary<Symbol, ReturnsSymbolData> _symbolDataDict = new Dictionary<Symbol, ReturnsSymbolData>();
+
+            public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
+            {
+                // Updates the ReturnsSymbolData with insights
+                foreach (var insight in insights)
+                {
+                    ReturnsSymbolData symbolData;
+                    if (_symbolDataDict.TryGetValue(insight.Symbol, out symbolData))
+                    {
+                        symbolData.Add(algorithm.Time, .1m);
+                    }
+                }
+
+                double[,] returns = null;
+                Assert.DoesNotThrow(() => returns = _symbolDataDict.FormReturnsMatrix(insights.Select(x => x.Symbol)));
+
+                // Calculate posterior estimate of the mean and uncertainty in the mean
+                double[,] Σ;
+                var Π = GetEquilibriumReturns(returns, out Σ);
+
+                Assert.IsFalse(double.IsNaN(Π[0]));
+
+                return Enumerable.Empty<PortfolioTarget>();
+            }
+
+            public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
+            {
+                const int period = 2;
+                var reference = algorithm.Time.AddDays(-period);
+
+                foreach (var security in changes.AddedSecurities)
+                {
+                    var symbol = security.Symbol;
+                    var symbolData = new ReturnsSymbolData(symbol, 1, period);
+
+                    for (var i = 0; i <= period * 2; i++)
+                    {
+                        symbolData.Update(reference.AddDays(i), i);
+                    }
+
+                    _symbolDataDict[symbol] = symbolData;
+                }
+            }
         }
     }
 }

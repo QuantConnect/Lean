@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.ComponentModel.Composition;
 using QuantConnect.Notifications;
 using QuantConnect.Packets;
@@ -25,7 +26,7 @@ namespace QuantConnect.Interfaces
     /// Provides a common messaging pattern between desktop and cloud implementations of QuantConnect.
     /// </summary>
     [InheritedExport(typeof(IMessagingHandler))]
-    public interface IMessagingHandler
+    public interface IMessagingHandler : IDisposable
     {
         /// <summary>
         /// Gets or sets whether this messaging handler has any current subscribers.

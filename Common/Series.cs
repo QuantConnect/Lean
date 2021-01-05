@@ -320,7 +320,9 @@ namespace QuantConnect
         /// 100% area chart showing relative proportions of series values at each time index
         StackedArea,
         /// Pie chart
-        Pie
+        Pie,
+        /// Treemap Plot
+        Treemap
     }
 
     /// <summary>

@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
+using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
@@ -25,7 +26,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Securities
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class SecurityCacheTests
     {
         private static readonly DateTime ReferenceTime = new DateTime(2000, 01, 01);
@@ -46,10 +47,19 @@ namespace QuantConnect.Tests.Common.Securities
             // Act
             foreach (var quoteBar in quotes)
             {
+                quoteBar.Symbol = Symbols.SPY;
                 securityCache.AddData(quoteBar);
             }
-            // Assert
-            Assert.True(securityCache.GetData().Equals(quotes.Last()));
+
+            var lastData = securityCache.GetData();
+            if (marketDataType == MarketDataType.QuoteBar)
+            {
+                Assert.IsNull(lastData);
+            }
+            else
+            {
+                Assert.True(lastData.Equals(quotes.Last()));
+            }
         }
 
         [Test]
@@ -90,6 +100,118 @@ namespace QuantConnect.Tests.Common.Securities
             // Assert
             Assert.True(securityCache.GetData().Equals(laterTrade));
             Assert.True(securityCache.GetData<QuoteBar>().Equals(quotes.Last()));
+        }
+
+        [Test]
+        public void AddData_SecurityCacheHasTradeAndQuoteTick()
+        {
+            // Arrange
+            var securityCache = new SecurityCache();
+            var time = DateTime.Now;
+
+            var quote = new Tick(time, Symbol.Empty, 100, 102) { TickType = TickType.Quote };
+            securityCache.AddData(quote);
+
+            var trade = new Tick(time, Symbol.Empty, 100, 100, 102) {TickType = TickType.Trade};
+            securityCache.AddData(trade);
+
+            var openInterest = new OpenInterest(time, Symbol.Empty, 1000);
+            securityCache.AddData(openInterest);
+
+            // Assert
+            Assert.True(securityCache.GetData().Equals(trade));
+            Assert.True(securityCache.GetData<Tick>().Equals(trade));
+
+            Assert.True(securityCache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Quote).Equals(quote));
+            Assert.True(securityCache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Trade).Equals(trade));
+        }
+
+        [Test]
+        public void StoreData_SecurityCacheHasTradeAndQuoteTick()
+        {
+            // Arrange
+            var securityCache = new SecurityCache();
+            var time = DateTime.Now;
+
+            var quote = new Tick(time, Symbol.Empty, 100, 102) { TickType = TickType.Quote };
+            securityCache.StoreData(new[] {quote}, typeof(Tick));
+
+            var trade = new Tick(time.AddMilliseconds(1), Symbol.Empty, 100, 100, 102) { TickType = TickType.Trade };
+            securityCache.StoreData(new[] { trade }, typeof(Tick));
+
+            // Adding OpenInterest as Tick or OpenInterest should not matter
+            var openInterest = new OpenInterest(time, Symbol.Empty, 1000);
+            securityCache.StoreData(new[] { openInterest }, typeof(Tick));           // Add as Tick
+            securityCache.StoreData(new[] { openInterest }, typeof(OpenInterest));   // Add as OI
+
+            // Assert
+            Assert.IsTrue(securityCache.HasData(typeof(Tick)));
+            Assert.True(securityCache.GetData<Tick>().Equals(trade));
+            Assert.True(securityCache.GetData<OpenInterest>().Equals(openInterest));
+
+            Assert.True(securityCache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Quote).Equals(quote));
+            Assert.True(securityCache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Trade).Equals(trade));
+        }
+
+        [Test]
+        public void StoreData_TargetToModify_SecurityCacheHasTradeAndQuoteTick()
+        {
+            // Arrange
+            var sourceToShare = new SecurityCache();
+            var time = DateTime.Now;
+
+            var quote = new Tick(time, Symbol.Empty, 100, 102) { TickType = TickType.Quote };
+            sourceToShare.StoreData(new[] { quote }, typeof(Tick));
+
+            var trade = new Tick(time, Symbol.Empty, 100, 100, 102) { TickType = TickType.Trade };
+            sourceToShare.StoreData(new[] { trade }, typeof(Tick));
+
+            // Adding OpenInterest as Tick or OpenInterest should not matter
+            var openInterest = new OpenInterest(time, Symbol.Empty, 1000);
+            sourceToShare.StoreData(new[] { openInterest }, typeof(Tick));           // Add as Tick
+            sourceToShare.StoreData(new[] { openInterest }, typeof(OpenInterest));   // Add as OI
+
+            var targetToModify = new SecurityCache();
+            SecurityCache.ShareTypeCacheInstance(sourceToShare, targetToModify);
+
+            // Assert
+            Assert.IsTrue(targetToModify.HasData(typeof(Tick)));
+            Assert.True(targetToModify.GetData<Tick>().Equals(trade));
+            Assert.True(targetToModify.GetData<OpenInterest>().Equals(openInterest));
+
+            Assert.True(targetToModify.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Quote).Equals(quote));
+            Assert.True(targetToModify.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Trade).Equals(trade));
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetSecurityCacheInitialStates))]
+        public void ResetTests(SecurityCache cache, SecuritySeedData seedType)
+        {
+            switch (seedType)
+            {
+                case SecuritySeedData.None:
+                case SecuritySeedData.OpenInterest:
+                case SecuritySeedData.OpenInterestTick:
+                    break;
+                case SecuritySeedData.QuoteTick:
+                    Assert.IsNotNull(cache.GetData());
+                    Assert.Greater(cache.GetAll<Tick>().Count(x => x.TickType == TickType.Quote), 0);
+                    cache.Reset();
+                    Assert.IsFalse(cache.HasData(typeof(Tick)));
+                    Assert.AreEqual(cache.GetAll<Tick>().Count(x => x.TickType == TickType.Quote), 0);
+                    break;
+                case SecuritySeedData.TradeTick:
+                    Assert.IsNotNull(cache.GetData());
+                    Assert.Greater(cache.GetAll<Tick>().Count(x => x.TickType == TickType.Trade), 0);
+                    cache.Reset();
+                    Assert.IsFalse(cache.HasData(typeof(Tick)));
+                    Assert.AreEqual(cache.GetAll<Tick>().Count(x => x.TickType == TickType.Trade), 0);
+                    break;
+                default:
+                    Assert.IsNotNull(cache.GetData());
+                    cache.Reset();
+                    break;
+            }
         }
 
         [Test]
@@ -157,8 +279,70 @@ namespace QuantConnect.Tests.Common.Securities
                 Low = 103,
                 Close = 104,
                 Volume = 105,
-                EndTime = ReferenceTime
+                EndTime = ReferenceTime,
+                Symbol = Symbols.SPY
             });
+        }
+
+        [Test]
+        public void AddDataEquity_OHLC_IgnoresQuoteBar()
+        {
+            var securityCache = new SecurityCache();
+            var quoteBar = new QuoteBar
+            {
+                Bid = new Bar(101, 102, 103, 104),
+                Ask = new Bar(105, 106, 107, 108),
+                LastAskSize = 109,
+                LastBidSize = 110,
+                EndTime = ReferenceTime,
+                Symbol = Symbols.SPY
+            };
+            securityCache.AddData(quoteBar);
+
+            var last = securityCache.GetData();
+            Assert.IsNull(last);
+
+            Assert.AreEqual(0, securityCache.High);
+            Assert.AreEqual(0, securityCache.Close);
+            Assert.AreEqual(0, securityCache.Low);
+            Assert.AreEqual(0, securityCache.Open);
+            Assert.AreEqual(0, securityCache.Volume);
+
+            var actualQuoteBar = securityCache.GetData<QuoteBar>();
+            Assert.IsNotNull(actualQuoteBar);
+            Assert.AreEqual(108, securityCache.AskPrice);
+            Assert.AreEqual(109, securityCache.AskSize);
+            Assert.AreEqual(104, securityCache.BidPrice);
+            Assert.AreEqual(110, securityCache.BidSize);
+
+            var tradeBar = new TradeBar
+            {
+                Open = 101,
+                High = 102,
+                Low = 103,
+                Close = 104,
+                Volume = 105,
+                EndTime = ReferenceTime,
+                Symbol = Symbols.SPY
+            };
+            securityCache.AddData(tradeBar);
+
+            last = securityCache.GetData();
+            Assert.IsNotNull(last);
+
+            var actualTradeBar = securityCache.GetData<TradeBar>();
+            Assert.IsNotNull(actualTradeBar);
+            Assert.AreEqual(102, securityCache.High);
+            Assert.AreEqual(104, securityCache.Close);
+            Assert.AreEqual(103, securityCache.Low);
+            Assert.AreEqual(101, securityCache.Open);
+            Assert.AreEqual(105, securityCache.Volume);
+
+            // quote bar data should still be the same
+            Assert.AreEqual(108, securityCache.AskPrice);
+            Assert.AreEqual(109, securityCache.AskSize);
+            Assert.AreEqual(104, securityCache.BidPrice);
+            Assert.AreEqual(110, securityCache.BidSize);
         }
 
         [Test]
@@ -221,6 +405,41 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(securityCache.BidPrice, 0m);
             Assert.AreEqual(securityCache.AskPrice, 0m);
             Assert.AreEqual(securityCache.Volume, volume);
+        }
+
+        [Test]
+        public void GetAllData_ReturnsListOfData()
+        {
+            var cache = new SecurityCache();
+            cache.StoreData(new []
+            {
+                new CustomDataBitcoinAlgorithm.Bitcoin{Ask = 1m},
+                new CustomDataBitcoinAlgorithm.Bitcoin{Ask = 2m}
+            }, typeof(CustomDataBitcoinAlgorithm.Bitcoin));
+
+            var data = cache.GetAll<CustomDataBitcoinAlgorithm.Bitcoin>().ToList();
+            Assert.AreEqual(2, data.Count);
+            Assert.AreEqual(1m, data[0].Ask);
+            Assert.AreEqual(2m, data[1].Ask);
+        }
+
+        [Test]
+        public void GetAllData_ReturnsListOfDataOnTargetCache()
+        {
+            var cache = new SecurityCache();
+            cache.StoreData(new[]
+            {
+                new CustomDataBitcoinAlgorithm.Bitcoin{Ask = 1m},
+                new CustomDataBitcoinAlgorithm.Bitcoin{Ask = 2m}
+            }, typeof(CustomDataBitcoinAlgorithm.Bitcoin));
+
+            var targetToModify = new SecurityCache();
+            SecurityCache.ShareTypeCacheInstance(cache, targetToModify);
+
+            var data = targetToModify.GetAll<CustomDataBitcoinAlgorithm.Bitcoin>().ToList();
+            Assert.AreEqual(2, data.Count);
+            Assert.AreEqual(1m, data[0].Ask);
+            Assert.AreEqual(2m, data[1].Ask);
         }
 
         private void AddDataAndAssertChanges(SecurityCache cache, SecuritySeedData seedType, SecuritySeedData dataType, BaseData data, Dictionary<string, string> cacheToBaseDataPropertyMap = null)
@@ -314,7 +533,7 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
-        private TestCaseData[] GetSecurityCacheInitialStates()
+        private static TestCaseData[] GetSecurityCacheInitialStates()
         {
             var defaultInstance = new SecurityCache();
 

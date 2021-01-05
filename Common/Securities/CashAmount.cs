@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-
 namespace QuantConnect.Securities
 {
     /// <summary>
@@ -39,11 +37,6 @@ namespace QuantConnect.Securities
         /// <param name="currency">The currency</param>
         public CashAmount(decimal amount, string currency)
         {
-            if (string.IsNullOrWhiteSpace(currency))
-            {
-                throw new ArgumentNullException(nameof(currency), "Invalid currency");
-            }
-
             Amount = amount;
             Currency = currency;
         }

@@ -49,6 +49,13 @@ namespace QuantConnect.Securities
         protected readonly ConcurrentBag<SubscriptionDataConfig> SubscriptionsBag;
 
         /// <summary>
+        /// A null security leverage value
+        /// </summary>
+        /// <remarks>This value is used to determine when the
+        /// <see cref="SecurityInitializer"/> leverage is used</remarks>
+        public const decimal NullLeverage = 0;
+
+        /// <summary>
         /// Gets all the subscriptions for this security
         /// </summary>
         public IEnumerable<SubscriptionDataConfig> Subscriptions => SubscriptionsBag;
@@ -262,14 +269,29 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Provides dynamic access to data in the cache
+        /// </summary>
+        public dynamic Data
+        {
+            get;
+        }
+
+        /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties, ICurrencyConverter currencyConverter)
+        public Security(SecurityExchangeHours exchangeHours,
+            SubscriptionDataConfig config,
+            Cash quoteCurrency,
+            SymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider,
+            SecurityCache cache
+            )
             : this(config,
                 quoteCurrency,
                 symbolProperties,
                 new SecurityExchange(exchangeHours),
-                new SecurityCache(),
+                cache,
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),
@@ -279,7 +301,8 @@ namespace QuantConnect.Securities
                 new SecurityMarginModel(),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel(),
-                currencyConverter
+                currencyConverter,
+                registeredTypesProvider
                 )
         {
         }
@@ -287,12 +310,19 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, SymbolProperties symbolProperties, ICurrencyConverter currencyConverter)
+        public Security(Symbol symbol,
+            SecurityExchangeHours exchangeHours,
+            Cash quoteCurrency,
+            SymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider,
+            SecurityCache cache
+            )
             : this(symbol,
                 quoteCurrency,
                 symbolProperties,
                 new SecurityExchange(exchangeHours),
-                new SecurityCache(),
+                cache,
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),
@@ -302,7 +332,8 @@ namespace QuantConnect.Securities
                 new SecurityMarginModel(),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel(),
-                currencyConverter
+                currencyConverter,
+                registeredTypesProvider
                 )
         {
         }
@@ -324,12 +355,13 @@ namespace QuantConnect.Securities
             IBuyingPowerModel buyingPowerModel,
             ISecurityDataFilter dataFilter,
             IPriceVariationModel priceVariationModel,
-            ICurrencyConverter currencyConverter
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider
             )
         {
             if (symbolProperties == null)
             {
-                throw new ArgumentNullException("symbolProperties", "Security requires a valid SymbolProperties instance.");
+                throw new ArgumentNullException(nameof(symbolProperties), "Security requires a valid SymbolProperties instance.");
             }
 
             if (symbolProperties.QuoteCurrency != quoteCurrency.Symbol)
@@ -356,6 +388,7 @@ namespace QuantConnect.Securities
             SettlementModel = settlementModel;
             VolatilityModel = volatilityModel;
             Holdings = new SecurityHolding(this, currencyConverter);
+            Data = new DynamicSecurityData(registeredTypesProvider, Cache);
 
             UpdateSubscriptionProperties();
         }
@@ -378,7 +411,8 @@ namespace QuantConnect.Securities
             IBuyingPowerModel buyingPowerModel,
             ISecurityDataFilter dataFilter,
             IPriceVariationModel priceVariationModel,
-            ICurrencyConverter currencyConverter
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider
             )
             : this(config.Symbol,
                 quoteCurrency,
@@ -394,7 +428,8 @@ namespace QuantConnect.Securities
                 buyingPowerModel,
                 dataFilter,
                 priceVariationModel,
-                currencyConverter
+                currencyConverter,
+                registeredTypesProvider
                 )
         {
             SubscriptionsBag.Add(config);
@@ -420,8 +455,9 @@ namespace QuantConnect.Securities
             {
                 if (_localTimeKeeper == null)
                 {
-                    throw new Exception("Security.SetLocalTimeKeeper(LocalTimeKeeper) must be called in order to use the LocalTime property.");
+                    throw new InvalidOperationException("Security.SetLocalTimeKeeper(LocalTimeKeeper) must be called in order to use the LocalTime property.");
                 }
+
                 return _localTimeKeeper.LocalTime;
             }
         }
@@ -454,7 +490,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// If this uses tradebar data, return the most recent open.
         /// </summary>
-        public virtual decimal Open => Cache.Open == 0 ? Price: Cache.Open;
+        public virtual decimal Open => Cache.Open == 0 ? Price : Cache.Open;
 
         /// <summary>
         /// Access to the volume of the equity today
@@ -553,23 +589,22 @@ namespace QuantConnect.Securities
             if (data == null) return;
             Cache.AddData(data);
 
-            if (data is OpenInterest || data.Price == 0m) return;
-            Holdings.UpdateMarketPrice(Price);
-            VolatilityModel.Update(this, data);
+            UpdateConsumersMarketPrice(data);
         }
 
         /// <summary>
-        /// Update any security properties based on the latest realtime data and time
+        /// Updates all of the security properties, such as price/OHLCV/bid/ask based
+        /// on the data provided. Data is also stored into the security's data cache
         /// </summary>
-        /// <param name="data">New data packet from LEAN</param>
-        public void SetRealTimePrice(BaseData data)
+        /// <param name="data">The security update data</param>
+        /// <param name="dataType">The data type</param>
+        /// <param name="containsFillForwardData">Flag indicating whether
+        /// <paramref name="data"/> contains any fill forward bar or not</param>
+        public void Update(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData = null)
         {
-            //Add new point to cache:
-            if (data == null) return;
-            Cache.AddData(data);
+            Cache.AddDataList(data, dataType, containsFillForwardData);
 
-            if (data is OpenInterest || data.Price == 0m) return;
-            Holdings.UpdateMarketPrice(Price);
+            UpdateConsumersMarketPrice(data[data.Count - 1]);
         }
 
         /// <summary>
@@ -594,7 +629,8 @@ namespace QuantConnect.Securities
         public void SetLeverage(decimal leverage)
         {
             if (Symbol.ID.SecurityType == SecurityType.Future ||
-                Symbol.ID.SecurityType == SecurityType.Option)
+                Symbol.ID.SecurityType == SecurityType.Option ||
+                Symbol.ID.SecurityType == SecurityType.FutureOption)
                 return;
 
             BuyingPowerModel.SetLeverage(this, leverage);
@@ -772,6 +808,13 @@ namespace QuantConnect.Securities
                 SubscriptionsBag.Add(subscription);
             }
             UpdateSubscriptionProperties();
+        }
+
+        private void UpdateConsumersMarketPrice(BaseData data)
+        {
+            if (data is OpenInterest || data.Price == 0m) return;
+            Holdings.UpdateMarketPrice(Price);
+            VolatilityModel.Update(this, data);
         }
 
         private void UpdateSubscriptionProperties()

@@ -47,5 +47,21 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
             var volume = security.Cache.GetData<TradeBar>()?.Volume ?? 0;
             return new SecurityValues(symbol, _algorithm.UtcTime, security.Exchange.Hours, security.Price, security.VolatilityModel.Volatility, volume, security.QuoteCurrency.ConversionRate);
         }
+
+        /// <summary>
+        /// Gets the current values for all the algorithm securities (price/volatility)
+        /// </summary>
+        /// <returns>The insight target values for all the algorithm securities</returns>
+        public ReadOnlySecurityValuesCollection GetAllValues()
+        {
+            // lets be lazy creating the SecurityValues
+            return new ReadOnlySecurityValuesCollection(
+                symbol =>
+                {
+                    var security = _algorithm.Securities[symbol];
+                    var volume = security.Cache.GetData<TradeBar>()?.Volume ?? 0;
+                    return new SecurityValues(security.Symbol, _algorithm.UtcTime, security.Exchange.Hours, security.Price, security.VolatilityModel.Volatility, volume, security.QuoteCurrency.ConversionRate);
+                });
+        }
     }
 }

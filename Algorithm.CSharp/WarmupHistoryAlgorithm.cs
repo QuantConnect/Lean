@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -45,15 +46,15 @@ namespace QuantConnect.Algorithm.CSharp
             slow = EMA("EURUSD", 3600);
 
             // 3601 because rolling window waits for one to fall off the back to be considered ready
-            var history = History("EURUSD", 3601);
+            var history = History<QuoteBar>("EURUSD", 3601);
             foreach (var bar in history)
             {
                 fast.Update(bar.EndTime, bar.Close);
                 slow.Update(bar.EndTime, bar.Close);
             }
 
-            Log(string.Format("FAST IS {0} READY. Samples: {1}", fast.IsReady ? "" : "NOT", fast.Samples));
-            Log(string.Format("SLOW IS {0} READY. Samples: {1}", slow.IsReady ? "" : "NOT", slow.Samples));
+            Log($"FAST IS {(fast.IsReady ? "" : "NOT")} READY. Samples: {fast.Samples.ToStringInvariant()}");
+            Log($"SLOW IS {(slow.IsReady ? "" : "NOT")} READY. Samples: {slow.Samples.ToStringInvariant()}");
         }
 
         /// <summary>

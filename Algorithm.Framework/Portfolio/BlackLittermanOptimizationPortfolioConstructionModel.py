@@ -21,11 +21,11 @@ AddReference("QuantConnect.Indicators")
 from System import *
 from QuantConnect import *
 from QuantConnect.Indicators import *
-from QuantConnect.Logging import Log
 from QuantConnect.Algorithm import *
+from QuantConnect.Logging import Log
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import InsightCollection, InsightDirection
-from QuantConnect.Algorithm.Framework.Portfolio import PortfolioConstructionModel, PortfolioTarget
+from QuantConnect.Algorithm.Framework.Portfolio import PortfolioConstructionModel, PortfolioTarget, PortfolioBias
 from Portfolio.MaximumSharpeRatioPortfolioOptimizer import MaximumSharpeRatioPortfolioOptimizer
 from datetime import datetime, timedelta
 from itertools import groupby
@@ -33,8 +33,6 @@ import pandas as pd
 import numpy as np
 from numpy import dot, transpose
 from numpy.linalg import inv
-from pytz import utc
-UTCMIN = datetime.min.replace(tzinfo=utc)
 
 ### <summary>
 ### Provides an implementation of Black-Litterman portfolio optimization. The model adjusts equilibrium market
@@ -47,6 +45,8 @@ UTCMIN = datetime.min.replace(tzinfo=utc)
 ### </summary>
 class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstructionModel):
     def __init__(self,
+                 rebalance = Resolution.Daily,
+                 portfolioBias = PortfolioBias.LongShort,
                  lookback = 1,
                  period = 63,
                  resolution = Resolution.Daily,
@@ -56,6 +56,12 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
                  optimizer = None):
         """Initialize the model
         Args:
+            rebalance: Rebalancing parameter. If it is a timedelta, date rules or Resolution, it will be converted into a function.
+                              If None will be ignored.
+                              The function returns the next expected rebalance time for a given algorithm UTC DateTime.
+                              The function returns null if unknown, in which case the function will be called again in the
+                              next loop. Returning current time will trigger rebalance.
+            portfolioBias: Specifies the bias of the portfolio (Short, Long/Short, Long)
             lookback(int): Historical return lookback period
             period(int): The time interval of history price to calculate the weight
             resolution: The resolution of the history price
@@ -68,64 +74,44 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
         self.risk_free_rate = risk_free_rate
         self.delta = delta
         self.tau = tau
-        self.optimizer = MaximumSharpeRatioPortfolioOptimizer(risk_free_rate = risk_free_rate) if optimizer is None else optimizer
+        self.portfolioBias = portfolioBias
 
-        self.removedSymbols = []
+        lower = 0 if portfolioBias == PortfolioBias.Long else -1
+        upper = 0 if portfolioBias == PortfolioBias.Short else 1
+        self.optimizer = MaximumSharpeRatioPortfolioOptimizer(lower, upper, risk_free_rate) if optimizer is None else optimizer
+
+        self.sign = lambda x: -1 if x < 0 else (1 if x > 0 else 0)
         self.symbolDataBySymbol = {}
 
-        self.insightCollection = InsightCollection()
-        self.nextExpiryTime = UTCMIN
-        self.rebalancingTime = UTCMIN
-        self.rebalancingPeriod = Extensions.ToTimeSpan(resolution)
+        # If the argument is an instance of Resolution or Timedelta
+        # Redefine rebalancingFunc
+        rebalancingFunc = rebalance
+        if isinstance(rebalance, int):
+            rebalance = Extensions.ToTimeSpan(rebalance)
+        if isinstance(rebalance, timedelta):
+            rebalancingFunc = lambda dt: dt + rebalance
+        if rebalancingFunc:
+            self.SetRebalancingFunc(rebalancingFunc)
 
-    def CreateTargets(self, algorithm, insights):
-        """
-        Create portfolio targets from the specified insights
-        Args:
-            algorithm: The algorithm instance
-            insights: The insights to create portoflio targets from
-        Returns:
-            An enumerable of portoflio targets to be sent to the execution model
-        """
-        targets = []
+    def ShouldCreateTargetForInsight(self, insight):
+        return len(PortfolioConstructionModel.FilterInvalidInsightMagnitude(self.Algorithm, [ insight ])) != 0
 
-        if (algorithm.UtcTime <= self.nextExpiryTime and
-            algorithm.UtcTime <= self.rebalancingTime and
-            len(insights) == 0 and
-            self.removedSymbols is None):
-            return targets
-
-        self.insightCollection.AddRange(insights)
-
-        # Create flatten target for each security that was removed from the universe
-        if self.removedSymbols is not None:
-            universeDeselectionTargets = [ PortfolioTarget(symbol, 0) for symbol in self.removedSymbols ]
-            targets.extend(universeDeselectionTargets)
-            self.removedSymbols = None
-
-        # Get insight that haven't expired of each symbol that is still in the universe
-        activeInsights = self.insightCollection.GetActiveInsights(algorithm.UtcTime)
-
-        # Get the last generated active insight for each symbol
-        lastActiveInsights = []
-        for sourceModel, f in groupby(sorted(activeInsights, key = lambda ff: ff.SourceModel), lambda fff: fff.SourceModel):
-            for symbol, g in groupby(sorted(list(f), key = lambda gg: gg.Symbol), lambda ggg: ggg.Symbol):
-                lastActiveInsights.append(sorted(g, key = lambda x: x.GeneratedTimeUtc)[-1])
+    def DetermineTargetPercent(self, lastActiveInsights):
+        targets = {}
 
         # Get view vectors
         P, Q = self.get_views(lastActiveInsights)
         if P is not None:
-
             returns = dict()
-
             # Updates the BlackLittermanSymbolData with insights
             # Create a dictionary keyed by the symbols in the insights with an pandas.Series as value to create a data frame
             for insight in lastActiveInsights:
                 symbol = insight.Symbol
-                symbolData = self.symbolDataBySymbol.get(symbol, self.BlackLittermanSymbolData(insight.Symbol, self.lookback, self.period))
+                symbolData = self.symbolDataBySymbol.get(symbol, self.BlackLittermanSymbolData(symbol, self.lookback, self.period))
                 if insight.Magnitude is None:
-                    algorithm.SetRunTimeError(ArgumentNullExceptionArgumentNullException('BlackLittermanOptimizationPortfolioConstructionModel does not accept \'None\' as Insight.Magnitude. Please make sure your Alpha Model is generating Insights with the Magnitude property set.'))
-                symbolData.Add(algorithm.Time, insight.Magnitude)
+                    self.Algorithm.SetRunTimeError(ArgumentNullException('BlackLittermanOptimizationPortfolioConstructionModel does not accept \'None\' as Insight.Magnitude. Please make sure your Alpha Model is generating Insights with the Magnitude property set.'))
+                    return targets
+                symbolData.Add(insight.GeneratedTimeUtc, insight.Magnitude)
                 returns[symbol] = symbolData.Return
 
             returns = pd.DataFrame(returns)
@@ -141,29 +127,26 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             weights = pd.Series(weights, index = Sigma.columns)
 
             for symbol, weight in weights.items():
-                target = PortfolioTarget.Percent(algorithm, symbol, weight)
-                if target is not None:
-                    targets.append(target)
-
-        # Get expired insights and create flatten targets for each symbol
-        expiredInsights = self.insightCollection.RemoveExpiredInsights(algorithm.UtcTime)
-
-        expiredTargets = []
-        for symbol, f in groupby(expiredInsights, lambda x: x.Symbol):
-            if not self.insightCollection.HasActiveInsights(symbol, algorithm.UtcTime):
-                expiredTargets.append(PortfolioTarget(symbol, 0))
-                continue
-
-        targets.extend(expiredTargets)
-
-        self.nextExpiryTime = self.insightCollection.GetNextExpiryTime()
-        if self.nextExpiryTime is None:
-            self.nextExpiryTime = UTCMIN
-
-        self.rebalancingTime = algorithm.UtcTime + self.rebalancingPeriod
+                for insight in lastActiveInsights:
+                    if str(insight.Symbol) == str(symbol):
+                        # don't trust the optimizer
+                        if self.portfolioBias != PortfolioBias.LongShort and self.sign(weight) != self.portfolioBias:
+                            weight = 0
+                        targets[insight] = weight
+                        break;
 
         return targets
 
+    def GetTargetInsights(self):
+        # Get insight that haven't expired of each symbol that is still in the universe
+        activeInsights = self.InsightCollection.GetActiveInsights(self.Algorithm.UtcTime)
+
+        # Get the last generated active insight for each symbol
+        lastActiveInsights = []
+        for sourceModel, f in groupby(sorted(activeInsights, key = lambda ff: ff.SourceModel), lambda fff: fff.SourceModel):
+            for symbol, g in groupby(sorted(list(f), key = lambda gg: gg.Symbol), lambda ggg: ggg.Symbol):
+                lastActiveInsights.append(sorted(g, key = lambda x: x.GeneratedTimeUtc)[-1])
+        return lastActiveInsights
 
     def OnSecuritiesChanged(self, algorithm, changes):
         '''Event fired each time the we add/remove securities from the data feed
@@ -172,29 +155,32 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             changes: The security additions and removals from the algorithm'''
 
         # Get removed symbol and invalidate them in the insight collection
-        self.removedSymbols = [x.Symbol for x in changes.RemovedSecurities]
-        self.insightCollection.Clear(self.removedSymbols)
+        super().OnSecuritiesChanged(algorithm, changes)
 
-        for symbol in self.removedSymbols:
+        for security in changes.RemovedSecurities:
+            symbol = security.Symbol
             symbolData = self.symbolDataBySymbol.pop(symbol, None)
             if symbolData is not None:
                 symbolData.Reset()
 
         # initialize data for added securities
-        addedSymbols = [ x.Symbol for x in changes.AddedSecurities ]
-        history = algorithm.History(addedSymbols, self.lookback * self.period, self.resolution)
+        addedSymbols = { x.Symbol: x.Exchange.TimeZone for x in changes.AddedSecurities }
+        history = algorithm.History(list(addedSymbols.keys()), self.lookback * self.period, self.resolution)
 
-        for symbol in addedSymbols:
-            symbolData = self.BlackLittermanSymbolData(symbol, self.lookback, self.period)
+        if history.empty:
+            return
 
-            if not history.empty:
-                ticker = SymbolCache.GetTicker(symbol)
+        history = history.close.unstack(0)
+        symbols = history.columns
 
-                if ticker not in history.index.levels[0]:
-                    Log.Trace(f'BlackLittermanOptimizationPortfolioConstructionModel.OnSecuritiesChanged: {ticker} not found in history data frame.')
-                    continue
+        for symbol, timezone in addedSymbols.items():
+            if str(symbol) not in symbols:
+                continue
 
-                symbolData.WarmUpIndicators(history.loc[ticker])
+            symbolData = self.symbolDataBySymbol.get(symbol, self.BlackLittermanSymbolData(symbol, self.lookback, self.period))
+            for time, close in history[symbol].items():
+                utcTime = Extensions.ConvertToUtc(time, timezone)
+                symbolData.Update(utcTime, close)
 
             self.symbolDataBySymbol[symbol] = symbolData
 
@@ -309,22 +295,24 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             self.roc.Reset()
             self.window.Reset()
 
-        def WarmUpIndicators(self, history):
-            for tuple in history.itertuples():
-                self.roc.Update(tuple.Index, tuple.close)
+        def Update(self, utcTime, close):
+            self.roc.Update(utcTime, close)
 
         def OnRateOfChangeUpdated(self, roc, value):
             if roc.IsReady:
                 self.window.Add(value)
 
         def Add(self, time, value):
+            if self.window.Samples > 0 and self.window[0].EndTime == time:
+                return;
+
             item = IndicatorDataPoint(self.symbol, time, value)
             self.window.Add(item)
 
         @property
         def Return(self):
             return pd.Series(
-                data = [float(x.Value) for x in self.window],
+                data = [x.Value for x in self.window],
                 index = [x.EndTime for x in self.window])
 
         @property
@@ -332,4 +320,4 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             return self.window.IsReady
 
         def __str__(self, **kwargs):
-            return '{}: {:.2%}'.format(self.roc.Name, (1 + self.window[0])**252 - 1)
+            return f'{self.roc.Name}: {(1 + self.window[0])**252 - 1:.2%}'

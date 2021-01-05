@@ -42,8 +42,9 @@ namespace QuantConnect.Brokerages
             {SecurityType.Base, Market.USA},
             {SecurityType.Equity, Market.USA},
             {SecurityType.Option, Market.USA},
-            {SecurityType.Future, Market.USA},
-            {SecurityType.Forex, Market.FXCM},
+            {SecurityType.Future, Market.CME},
+            {SecurityType.FutureOption, Market.CME},
+            {SecurityType.Forex, Market.Oanda},
             {SecurityType.Cfd, Market.FXCM},
             {SecurityType.Crypto, Market.GDAX}
         }.ToReadOnlyDictionary();
@@ -174,6 +175,7 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Base:
                 case SecurityType.Commodity:
                 case SecurityType.Option:
+                case SecurityType.FutureOption:
                 case SecurityType.Future:
                 default:
                     return 1m;
@@ -187,6 +189,30 @@ namespace QuantConnect.Brokerages
         /// <returns>The new fill model for this brokerage</returns>
         public virtual IFillModel GetFillModel(Security security)
         {
+            switch (security.Type)
+            {
+                case SecurityType.Base:
+                    break;
+                case SecurityType.Equity:
+                    return new EquityFillModel();
+                case SecurityType.Option:
+                    break;
+                case SecurityType.FutureOption:
+                    break;
+                case SecurityType.Commodity:
+                    break;
+                case SecurityType.Forex:
+                    break;
+                case SecurityType.Future:
+                    break;
+                case SecurityType.Cfd:
+                    break;
+                case SecurityType.Crypto:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException($"{GetType().Name}.GetFillModel: Invalid security type {security.Type}");
+            }
+
             return new ImmediateFillModel();
         }
 
@@ -208,6 +234,7 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Equity:
                 case SecurityType.Option:
                 case SecurityType.Future:
+                case SecurityType.FutureOption:
                     return new InteractiveBrokersFeeModel();
 
                 case SecurityType.Commodity:
@@ -236,6 +263,7 @@ namespace QuantConnect.Brokerages
 
                 case SecurityType.Commodity:
                 case SecurityType.Option:
+                case SecurityType.FutureOption:
                 case SecurityType.Future:
                 default:
                     return new ConstantSlippageModel(0);
@@ -299,8 +327,11 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Option:
                     model = new OptionMarginModel(RequiredFreeBuyingPowerPercent);
                     break;
+                case SecurityType.FutureOption:
+                    model = new FuturesOptionsMarginModel(RequiredFreeBuyingPowerPercent, (Option)security);
+                    break;
                 case SecurityType.Future:
-                    model = new FutureMarginModel(RequiredFreeBuyingPowerPercent);
+                    model = new FutureMarginModel(RequiredFreeBuyingPowerPercent, security);
                     break;
                 default:
                     model = new SecurityMarginModel(leverage, RequiredFreeBuyingPowerPercent);

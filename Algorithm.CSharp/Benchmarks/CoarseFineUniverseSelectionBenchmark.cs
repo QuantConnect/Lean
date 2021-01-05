@@ -24,16 +24,16 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
 
     public class CoarseFineUniverseSelectionBenchmark : QCAlgorithm
     {
-        private const int NumberOfSymbolsCoarse = 30;
-        private const int NumberOfSymbolsFine = 2;
+        private const int NumberOfSymbolsCoarse = 150;
+        private const int NumberOfSymbolsFine = 40;
 
         private SecurityChanges _changes = SecurityChanges.None;
 
         public override void Initialize()
         {
-            UniverseSettings.Resolution = Resolution.Daily;
+            UniverseSettings.Resolution = Resolution.Minute;
 
-            SetStartDate(2017, 01, 01);
+            SetStartDate(2017, 11, 01);
             SetEndDate(2018, 01, 01);
             SetCash(50000);
 
@@ -83,10 +83,10 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
                 }
             }
 
-            // we want 50% allocation in each security in our universe
+            // we want allocation in each security in our universe
             foreach (var security in _changes.AddedSecurities)
             {
-                SetHoldings(security.Symbol, 0.5m);
+                SetHoldings(security.Symbol, 0.02m);
             }
 
             _changes = SecurityChanges.None;

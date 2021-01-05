@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -65,7 +65,10 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception("Expected 'EUR' Cash to be fully set");
                 }
 
-                var eurUsdSubscription = SubscriptionManager.Subscriptions.Single(x => x.Symbol.Value == "EURUSD");
+                var eurUsdSubscription = SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda),
+                        includeInternalConfigs: true)
+                    .Single();
                 if (!eurUsdSubscription.IsInternalFeed)
                 {
                     throw new Exception("Unexpected not internal 'EURUSD' Subscription");
@@ -97,22 +100,43 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "17.116%"},
+            {"Compounding Annual Return", "16.445%"},
             {"Drawdown", "4.800%"},
             {"Expectancy", "0"},
             {"Net Profit", "0.913%"},
-            {"Sharpe Ratio", "0.845"},
+            {"Sharpe Ratio", "0.903"},
+            {"Probabilistic Sharpe Ratio", "48.314%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.209"},
-            {"Beta", "-5.052"},
+            {"Alpha", "0.113"},
+            {"Beta", "0.203"},
             {"Annual Standard Deviation", "0.156"},
             {"Annual Variance", "0.024"},
-            {"Information Ratio", "0.748"},
-            {"Tracking Error", "0.156"},
-            {"Treynor Ratio", "-0.026"},
-            {"Total Fees", "$2.60"}
+            {"Information Ratio", "0.001"},
+            {"Tracking Error", "0.198"},
+            {"Treynor Ratio", "0.697"},
+            {"Total Fees", "$2.60"},
+            {"Fitness Score", "0.041"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "1.617"},
+            {"Return Over Maximum Drawdown", "3.406"},
+            {"Portfolio Turnover", "0.052"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "150018942"}
         };
     }
 }

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,16 +14,13 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Data.Market;
+using Python.Runtime;
 
 namespace QuantConnect.Data.Consolidators
 {
     /// <summary>
-    /// Type capable of consolidating open interest 
+    /// Type capable of consolidating open interest
     /// </summary>
     public class OpenInterestConsolidator : PeriodCountConsolidatorBase<Tick, OpenInterest>
     {
@@ -49,7 +46,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Creates a consolidator to produce a new 'OpenInterest' representing the last count pieces of data
         /// </summary>
-        /// <param name="maxCount">The number of pieces to accept before emiting a consolidated bar</param>
+        /// <param name="maxCount">The number of pieces to accept before emitting a consolidated bar</param>
         public OpenInterestConsolidator(int maxCount)
             : base(maxCount)
         {
@@ -58,7 +55,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Creates a consolidator to produce a new 'OpenInterest' representing the last count pieces of data or the period, whichever comes first
         /// </summary>
-        /// <param name="maxCount">The number of pieces to accept before emiting a consolidated bar</param>
+        /// <param name="maxCount">The number of pieces to accept before emitting a consolidated bar</param>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         public OpenInterestConsolidator(int maxCount, TimeSpan period)
             : base(maxCount, period)
@@ -66,7 +63,26 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Determines whether or not the specified data should be processd
+        /// Creates a consolidator to produce a new 'OpenInterest'
+        /// </summary>
+        /// <param name="func">Func that defines the start time of a consolidated data</param>
+        public OpenInterestConsolidator(Func<DateTime, CalendarInfo> func)
+            : base(func)
+        {
+        }
+
+        /// <summary>
+        /// Creates a consolidator to produce a new 'OpenInterest'
+        /// </summary>
+        /// <param name="pyfuncobj">Python function object that defines the start time of a consolidated data</param>
+        public OpenInterestConsolidator(PyObject pyfuncobj)
+            : base(pyfuncobj)
+        {
+        }
+
+
+        /// <summary>
+        /// Determines whether or not the specified data should be processed
         /// </summary>
         /// <param name="tick">The data to check</param>
         /// <returns>True if the consolidator should process this data, false otherwise</returns>

@@ -22,7 +22,6 @@ using Moq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
@@ -33,11 +32,11 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
-using HistoryRequest = QuantConnect.Data.HistoryRequest;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.Setup
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class BrokerageSetupHandlerTests
     {
         private IAlgorithm _algorithm;
@@ -48,7 +47,7 @@ namespace QuantConnect.Tests.Engine.Setup
 
         private TestableBrokerageSetupHandler _brokerageSetupHandler;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             _algorithm = new QCAlgorithm();
@@ -59,6 +58,15 @@ namespace QuantConnect.Tests.Engine.Setup
             _brokerage = new TestBrokerage();
 
             _brokerageSetupHandler = new TestableBrokerageSetupHandler();
+        }
+
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            _dataManager.RemoveAllSubscriptions();
+            _brokerage.DisposeSafely();
+            _transactionHandler.Exit();
+            _resultHandler.Exit();
         }
 
         [Test]
@@ -116,9 +124,11 @@ namespace QuantConnect.Tests.Engine.Setup
             var resultHandler = new Mock<IResultHandler>();
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
+            var objectStore = new Mock<IObjectStore>();
             var brokerage = new Mock<IBrokerage>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
             brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
             brokerage.Setup(x => x.GetAccountHoldings()).Returns(getHoldings);
             brokerage.Setup(x => x.GetOpenOrders()).Returns(getOrders);
@@ -129,7 +139,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             var result = setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object));
 
             Assert.AreEqual(expected, result);
 
@@ -169,8 +179,10 @@ namespace QuantConnect.Tests.Engine.Setup
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
             var brokerage = new Mock<IBrokerage>();
+            var objectStore = new Mock<IObjectStore>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
             brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
             brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>
             {
@@ -184,14 +196,175 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object)));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
 
             Security security;
             Assert.IsTrue(algorithm.Portfolio.Securities.TryGetValue(symbol, out security));
             Assert.AreEqual(symbol, security.Symbol);
         }
 
-        public TestCaseData[] GetExistingHoldingsAndOrdersTestCaseData()
+        [Test]
+        public void SeedsSecurityCorrectly()
+        {
+            var symbol = Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda);
+
+            var algorithm = new TestAlgorithm();
+            algorithm.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
+
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = new LiveNodePacket
+            {
+                UserId = 1,
+                ProjectId = 1,
+                DeployId = "1",
+                Brokerage = "PaperBrokerage",
+                DataQueueHandler = "none"
+            };
+            // Increasing RAM limit, else the tests fail. This is happening in master, when running all the tests together, locally (not travis).
+            job.Controls.RamAllocation = 1024 * 1024 * 1024;
+
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var brokerage = new Mock<IBrokerage>();
+            var objectStore = new Mock<IObjectStore>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>
+            {
+                new Holding { Symbol = symbol, Type = symbol.SecurityType, Quantity = 100, MarketPrice = 99}
+            });
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
+
+            var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+
+            Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
+
+            Security security;
+            Assert.IsTrue(algorithm.Portfolio.Securities.TryGetValue(symbol, out security));
+            Assert.AreEqual(symbol, security.Symbol);
+            Assert.AreEqual(99, security.Price);
+
+            var last = security.GetLastData();
+            Assert.IsTrue((DateTime.UtcNow.ConvertFromUtc(security.Exchange.TimeZone) - last.Time) < TimeSpan.FromSeconds(1));
+        }
+
+        [Test]
+        public void AlgorithmTimeIsSetToUtcNowBeforePostInitialize()
+        {
+            var time = DateTime.UtcNow;
+            TestAlgorithm algorithm = null;
+
+            algorithm = new TestAlgorithm(() =>
+            {
+                Assert.That(algorithm.UtcTime > time);
+            });
+
+            Assert.AreEqual(new DateTime(1998, 1, 1), algorithm.UtcTime);
+
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = new LiveNodePacket
+            {
+                UserId = 1,
+                ProjectId = 1,
+                DeployId = "1",
+                Brokerage = "PaperBrokerage",
+                DataQueueHandler = "none",
+                Controls = new Controls { RamAllocation = 4096 } // no real limit
+            };
+
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var brokerage = new Mock<IBrokerage>();
+            var objectStore = new Mock<IObjectStore>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>());
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
+
+            var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+
+            Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
+
+            Assert.Greater(algorithm.UtcTime, time);
+        }
+
+        [TestCase(true, true)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        [TestCase(false, false)]
+        public void HasErrorWithZeroTotalPortfolioValue(bool hasCashBalance, bool hasHoldings)
+        {
+            var algorithm = new TestAlgorithm();
+
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = new LiveNodePacket
+            {
+                UserId = 1,
+                ProjectId = 1,
+                DeployId = "1",
+                Brokerage = "TestBrokerage",
+                DataQueueHandler = "none",
+                Controls = new Controls { RamAllocation = 4096 } // no real limit
+            };
+
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var brokerage = new Mock<IBrokerage>();
+            var objectStore = new Mock<IObjectStore>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(
+                hasCashBalance
+                    ? new List<CashAmount>
+                    {
+                        new CashAmount(1000, "USD")
+                    }
+                    : new List<CashAmount>()
+                );
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(
+                hasHoldings
+                    ? new List<Holding>
+                    {
+                        new Holding { Type = SecurityType.Equity, Symbol = Symbols.SPY, Quantity = 1, AveragePrice = 100, MarketPrice = 100 }
+                    }
+                    : new List<Holding>());
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
+
+            var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+
+            var dataManager = new DataManagerStub(algorithm, new MockDataFeed(), true);
+
+            Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object)));
+
+            if (!hasCashBalance && !hasHoldings)
+            {
+                Assert.That(algorithm.DebugMessages.Count > 0);
+
+                Assert.That(algorithm.DebugMessages.Any(x => x.Contains("No cash balances or holdings were found in the brokerage account.")));
+            }
+        }
+
+        private static TestCaseData[] GetExistingHoldingsAndOrdersTestCaseData()
         {
             return new[]
             {
@@ -329,12 +502,21 @@ namespace QuantConnect.Tests.Engine.Setup
 
         private class TestAlgorithm : QCAlgorithm
         {
-            public TestAlgorithm()
+            private readonly Action _beforePostInitializeAction;
+
+            public TestAlgorithm(Action beforePostInitializeAction = null)
             {
-                SubscriptionManager.SetDataManager(new DataManagerStub(this, new MockDataFeed()));
+                _beforePostInitializeAction = beforePostInitializeAction;
+                SubscriptionManager.SetDataManager(new DataManagerStub(this, new MockDataFeed(), liveMode:true));
             }
 
             public override void Initialize() { }
+
+            public override void PostInitialize()
+            {
+                _beforePostInitializeAction?.Invoke();
+                base.PostInitialize();
+            }
         }
 
         private class NonDequeingTestResultsHandler : TestResultHandler
@@ -362,16 +544,32 @@ namespace QuantConnect.Tests.Engine.Setup
         }
     }
 
-    internal class TestBrokerage : IBrokerage
+    internal class TestBrokerageFactory : BrokerageFactory
     {
-        public event EventHandler<OrderEvent> OrderStatusChanged;
-        public event EventHandler<OrderEvent> OptionPositionAssigned;
-        public event EventHandler<AccountEvent> AccountChanged;
-        public event EventHandler<BrokerageMessageEvent> Message;
-        public string Name { get; }
-        public bool IsConnected { get; }
+        public TestBrokerageFactory() : base(typeof(TestBrokerage))
+        {
+        }
 
-        public List<Order> GetOpenOrders()
+        public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>();
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.TestBrokerageModel();
+        public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm) => new TestBrokerage();
+        public override void Dispose() { }
+    }
+
+    internal class TestBrokerage : Brokerage
+    {
+        public override bool IsConnected { get; } = true;
+        public int GetCashBalanceCallCount;
+
+        public TestBrokerage() : base("Test")
+        {
+        }
+
+        public TestBrokerage(string name) : base(name)
+        {
+        }
+
+        public override List<Order> GetOpenOrders()
         {
             const decimal delta = 1m;
             const decimal price = 1.2345m;
@@ -381,10 +579,12 @@ namespace QuantConnect.Tests.Engine.Setup
             var tz = TimeZones.NewYork;
 
             var time = new DateTime(2016, 2, 4, 16, 0, 0).ConvertToUtc(tz);
-            var marketOrderWithPrice = new MarketOrder(Symbols.SPY, quantity, time);
-            marketOrderWithPrice.Price = price;
+            var marketOrderWithPrice = new MarketOrder(Symbols.SPY, quantity, time)
+            {
+                Price = price
+            };
 
-            return new List<Order>()
+            return new List<Order>
             {
                 marketOrderWithPrice,
                 new LimitOrder(Symbols.SPY, -quantity, pricePlusDelta, time),
@@ -393,47 +593,41 @@ namespace QuantConnect.Tests.Engine.Setup
             };
         }
 
+        public override List<CashAmount> GetCashBalance()
+        {
+            GetCashBalanceCallCount++;
+
+            return new List<CashAmount> { new CashAmount(10, Currencies.USD) };
+        }
+
         #region UnusedMethods
-        public void Dispose()
-        {
-        }
-        public List<Holding> GetAccountHoldings()
+
+        public override List<Holding> GetAccountHoldings()
         {
             throw new NotImplementedException();
         }
 
-        public List<CashAmount> GetCashBalance()
+        public override bool PlaceOrder(Order order)
         {
             throw new NotImplementedException();
         }
 
-        public bool PlaceOrder(Order order)
+        public override bool UpdateOrder(Order order)
         {
             throw new NotImplementedException();
         }
 
-        public bool UpdateOrder(Order order)
+        public override bool CancelOrder(Order order)
         {
             throw new NotImplementedException();
         }
 
-        public bool CancelOrder(Order order)
+        public override void Connect()
         {
             throw new NotImplementedException();
         }
 
-        public void Connect()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Disconnect()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool AccountInstantlyUpdated { get; }
-        public IEnumerable<BaseData> GetHistory(HistoryRequest request)
+        public override void Disconnect()
         {
             throw new NotImplementedException();
         }

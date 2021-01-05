@@ -60,7 +60,8 @@ namespace QuantConnect.Algorithm.CSharp
                 //Bitcoin used as a tradable asset, like stocks, futures etc.
                 if (data.Close != 0)
                 {
-                    Order("BTC", Portfolio.MarginRemaining / Math.Abs(data.Close + 1));
+                    //Access custom data symbols using <ticker>.<custom-type>
+                    Order("BTC.Bitcoin", Portfolio.MarginRemaining / Math.Abs(data.Close + 1));
                 }
             }
         }
@@ -83,22 +84,43 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "155.365%"},
+            {"Compounding Annual Return", "155.262%"},
             {"Drawdown", "84.800%"},
             {"Expectancy", "0"},
             {"Net Profit", "5123.170%"},
-            {"Sharpe Ratio", "1.2"},
+            {"Sharpe Ratio", "2.066"},
+            {"Probabilistic Sharpe Ratio", "68.832%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.008"},
-            {"Beta", "73.725"},
-            {"Annual Standard Deviation", "0.84"},
-            {"Annual Variance", "0.706"},
-            {"Information Ratio", "1.183"},
-            {"Tracking Error", "0.84"},
-            {"Treynor Ratio", "0.014"},
-            {"Total Fees", "$0.00"}
+            {"Alpha", "1.732"},
+            {"Beta", "0.037"},
+            {"Annual Standard Deviation", "0.841"},
+            {"Annual Variance", "0.707"},
+            {"Information Ratio", "1.902"},
+            {"Tracking Error", "0.848"},
+            {"Treynor Ratio", "46.996"},
+            {"Total Fees", "$0.00"},
+            {"Fitness Score", "0"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "2.238"},
+            {"Return Over Maximum Drawdown", "1.832"},
+            {"Portfolio Turnover", "0"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "-541549381"}
         };
 
         /// <summary>

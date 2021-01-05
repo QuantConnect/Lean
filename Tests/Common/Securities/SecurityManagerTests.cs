@@ -50,7 +50,9 @@ namespace QuantConnect.Tests.Common.Securities
                 CreateTradeBarConfig(),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             manager.CollectionChanged += (sender, args) =>
             {
@@ -79,7 +81,9 @@ namespace QuantConnect.Tests.Common.Securities
                 CreateTradeBarConfig(),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             manager.CollectionChanged += (sender, args) =>
             {
@@ -108,7 +112,9 @@ namespace QuantConnect.Tests.Common.Securities
                 CreateTradeBarConfig(),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             manager.Add(security.Symbol, security);
             manager.CollectionChanged += (sender, args) =>

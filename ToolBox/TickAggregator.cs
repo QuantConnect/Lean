@@ -39,6 +39,15 @@ namespace QuantConnect.ToolBox
         public Resolution Resolution { get; }
 
         /// <summary>
+        /// Updates the consolidator with the specified bar.
+        /// </summary>
+        /// <param name="data">The latest data observation.</param>
+        public virtual void Update(BaseData data)
+        {
+            Consolidator.Update(data);
+        }
+
+        /// <summary>
         /// Return all the consolidated data as well as the
         /// bar the consolidator is currently working on
         /// </summary>

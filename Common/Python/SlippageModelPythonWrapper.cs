@@ -46,7 +46,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetSlippageApproximation(asset, order);
+                return (_model.GetSlippageApproximation(asset, order) as PyObject).GetAndDispose<decimal>();
             }
         }
     }

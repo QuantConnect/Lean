@@ -34,7 +34,9 @@ namespace QuantConnect.Data.Consolidators
         {
             if (!(data is TInput))
             {
-                throw new ArgumentNullException("data", "Received type of " + data.GetType().Name + " but expected " + typeof (TInput).Name);
+                throw new ArgumentNullException(nameof(data),
+                    $"Received type of {data.GetType().Name} but expected {typeof(TInput).Name}"
+                );
             }
             Update((TInput)data);
         }

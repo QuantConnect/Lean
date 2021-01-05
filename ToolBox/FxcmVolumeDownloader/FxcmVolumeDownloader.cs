@@ -114,9 +114,9 @@ namespace QuantConnect.ToolBox
                 var stringDate = obs[0].Substring(startIndex: 3);
                 obsTime = DateTime.ParseExact(stringDate, "yyyyMMddHHmm",
                                               DateTimeFormatInfo.InvariantInfo);
-                var volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
+                var volume = _volumeIdx.Select(x => Parse.Long(obs[x])).Sum();
 
-                var transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
+                var transactions = _transactionsIdx.Select(x => Parse.Int(obs[x])).Sum();
                 requestedData.Add(new FxcmVolume
                 {
                     Symbol = symbol,
@@ -258,23 +258,23 @@ namespace QuantConnect.ToolBox
         private string[] RequestData(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
             var startDate = string.Empty;
-            var endDate = endUtc.AddDays(value: 2).ToString("yyyyMMdd") + "2100";
+            var endDate = endUtc.AddDays(value: 2).ToStringInvariant("yyyyMMdd") + "2100";
             var symbolId = GetFxcmIDFromSymbol(symbol);
             var interval = GetIntervalFromResolution(resolution);
             switch (resolution)
             {
                 case Resolution.Minute:
                 case Resolution.Hour:
-                    startDate = startUtc.ToString("yyyyMMdd") + "0000";
+                    startDate = startUtc.ToStringInvariant("yyyyMMdd") + "0000";
                     break;
 
                 case Resolution.Daily:
-                    startDate = startUtc.AddDays(value: 1).ToString("yyyyMMdd") + "2100";
+                    startDate = startUtc.AddDays(value: 1).ToStringInvariant("yyyyMMdd") + "2100";
                     break;
             }
 
-            var request = string.Format("{0}&ver={1}&sid={2}&interval={3}&offerID={4}&timeFrom={5}&timeTo={6}",
-                                        _baseUrl, _ver, _sid, interval, symbolId, startDate, endDate);
+            var request = $"{_baseUrl}&ver={_ver}&sid={_sid}&interval={interval}&offerID={symbolId}" +
+                $"&timeFrom={startDate.ToStringInvariant()}&timeTo={endDate.ToStringInvariant()}";
 
             string[] lines;
             using (var client = new WebClient())

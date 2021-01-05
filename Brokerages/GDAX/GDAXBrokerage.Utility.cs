@@ -56,7 +56,22 @@ namespace QuantConnect.Brokerages.GDAX
         public AuthenticationToken GetAuthenticationToken(IRestRequest request)
         {
             var body = request.Parameters.SingleOrDefault(b => b.Type == ParameterType.RequestBody);
-            var token = GetAuthenticationToken(body == null ? "" : body.Value.ToString(), request.Method.ToString().ToUpper(), request.Resource);
+
+            string url;
+            if (request.Method == Method.GET && request.Parameters.Count > 0)
+            {
+                var parameters = request.Parameters.Count > 0
+                    ? string.Join("&", request.Parameters.Select(x => $"{x.Name}={x.Value}"))
+                    : string.Empty;
+                url = $"{request.Resource}?{parameters}";
+            }
+            else
+            {
+                url = request.Resource;
+            }
+
+
+            var token = GetAuthenticationToken(body?.Value.ToString() ?? string.Empty, request.Method.ToString().ToUpperInvariant(), url);
 
             request.AddHeader(SignHeader, token.Signature);
             request.AddHeader(KeyHeader, ApiKey);
@@ -100,34 +115,18 @@ namespace QuantConnect.Brokerages.GDAX
         {
             if (orderType == Orders.OrderType.Limit || orderType == Orders.OrderType.Market)
             {
-                return orderType.ToString().ToLower();
+                return orderType.ToLower();
             }
             else if (orderType == Orders.OrderType.StopMarket)
             {
                 return "stop";
             }
+            else if (orderType == Orders.OrderType.StopLimit)
+            {
+                return "limit";
+            }
 
-            throw new NotSupportedException("GDAXBrokerage.ConvertOrderType: Unsupported order type:" + orderType.ToString());
-        }
-
-        /// <summary>
-        /// Converts a product id to a symbol
-        /// </summary>
-        /// <param name="productId">gdax format product id</param>
-        /// <returns>Symbol</returns>
-        public static Symbol ConvertProductId(string productId)
-        {
-            return Symbol.Create(productId.Replace("-", ""), SecurityType.Crypto, Market.GDAX);
-        }
-
-        /// <summary>
-        /// Converts a symbol to a product id
-        /// </summary>
-        /// <param name="symbol">Th symbol</param>
-        /// <returns>gdax product id</returns>
-        protected static string ConvertSymbol(Symbol symbol)
-        {
-            return symbol.Value.Substring(0, 3).ToUpper() + "-" + symbol.Value.Substring(3, 3).ToUpper();
+            throw new NotSupportedException($"GDAXBrokerage.ConvertOrderType: Unsupported order type:{orderType.ToStringInvariant()}");
         }
 
         private static Orders.OrderStatus ConvertOrderStatus(Messages.Order order)

@@ -50,8 +50,8 @@ namespace QuantConnect.Algorithm.CSharp
             UniverseSettings.Resolution = Resolution.Daily;
 
             // set our start and end for backtest mode
-            SetStartDate(2013, 01, 01);
-            SetEndDate(2013, 12, 31);
+            SetStartDate(2017, 07, 04);
+            SetEndDate(2018, 07, 04);
 
             // define a new custom universe that will trigger each day at midnight
             AddUniverse("my-dropbox-universe", Resolution.Daily, dateTime =>
@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (LiveMode)
                 {
                     // fetch the file from dropbox
-                    var file = Download(@"https://www.dropbox.com/s/2az14r5xbx4w5j6/daily-stock-picker-live.csv?dl=1");
+                    var file = Download(@"https://www.dropbox.com/s/2l73mu97gcehmh7/daily-stock-picker-live.csv?dl=1");
                     // if we have a file for today, break apart by commas and return symbols
                     if (file.Length > 0) return file.ToCsv();
                     // no symbol today, leave universe unchanged
@@ -78,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
                         new KeyValuePair<string, string>("Authorization", $"Basic ({Convert.ToBase64String(byteKey)})")
                     };
 
-                    var file = Download(@"https://www.dropbox.com/s/rmiiktz0ntpff3a/daily-stock-picker-backtest.csv?dl=1", headers);
+                    var file = Download(@"https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1", headers);
 
                     // split the file into lines and add to our cache
                     foreach (var line in file.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
@@ -157,25 +157,46 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "66"},
-            {"Average Win", "1.06%"},
-            {"Average Loss", "-0.50%"},
-            {"Compounding Annual Return", "18.511%"},
-            {"Drawdown", "7.100%"},
-            {"Expectancy", "0.810"},
-            {"Net Profit", "18.511%"},
-            {"Sharpe Ratio", "1.439"},
-            {"Loss Rate", "42%"},
-            {"Win Rate", "58%"},
-            {"Profit-Loss Ratio", "2.12"},
-            {"Alpha", "0.308"},
-            {"Beta", "-10.065"},
-            {"Annual Standard Deviation", "0.1"},
-            {"Annual Variance", "0.01"},
-            {"Information Ratio", "1.275"},
-            {"Tracking Error", "0.1"},
-            {"Treynor Ratio", "-0.014"},
-            {"Total Fees", "$193.75"}
+            {"Total Trades", "5059"},
+            {"Average Win", "0.08%"},
+            {"Average Loss", "-0.08%"},
+            {"Compounding Annual Return", "14.950%"},
+            {"Drawdown", "10.600%"},
+            {"Expectancy", "0.075"},
+            {"Net Profit", "14.950%"},
+            {"Sharpe Ratio", "1.072"},
+            {"Probabilistic Sharpe Ratio", "50.327%"},
+            {"Loss Rate", "45%"},
+            {"Win Rate", "55%"},
+            {"Profit-Loss Ratio", "0.97"},
+            {"Alpha", "0.137"},
+            {"Beta", "-0.066"},
+            {"Annual Standard Deviation", "0.121"},
+            {"Annual Variance", "0.015"},
+            {"Information Ratio", "0.083"},
+            {"Tracking Error", "0.171"},
+            {"Treynor Ratio", "-1.971"},
+            {"Total Fees", "$6806.67"},
+            {"Fitness Score", "0.694"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "1.265"},
+            {"Return Over Maximum Drawdown", "1.409"},
+            {"Portfolio Turnover", "1.296"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "1142077166"}
         };
     }
 }

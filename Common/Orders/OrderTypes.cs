@@ -124,6 +124,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Order waiting for confirmation of cancellation
         /// </summary>
-        CancelPending = 8
+        CancelPending = 8,
+
+        /// <summary>
+        /// Order update submitted to the market
+        /// </summary>
+        UpdateSubmitted = 9
     }
 }

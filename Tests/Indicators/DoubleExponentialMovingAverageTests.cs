@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,37 +19,15 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class DoubleExponentialMovingAverageTests
+    public class DoubleExponentialMovingAverageTests : CommonIndicatorTests<IndicatorDataPoint>
     {
-        [Test]
-        public void ComparesAgainstExternalData()
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            var dema = new DoubleExponentialMovingAverage("DEMA", 5);
-
-            RunTestIndicator(dema);
+            return new DoubleExponentialMovingAverage(5);
         }
 
-        [Test]
-        public void ComparesAgainstExternalDataAfterReset()
-        {
-            var dema = new DoubleExponentialMovingAverage("DEMA", 5);
+        protected override string TestFileName => "spy_dema.txt";
 
-            RunTestIndicator(dema);
-            dema.Reset();
-            RunTestIndicator(dema);
-        }
-
-        [Test]
-        public void ResetsProperly()
-        {
-            var dema = new DoubleExponentialMovingAverage("DEMA", 5);
-
-            TestHelper.TestIndicatorReset(dema, "spy_dema.txt");
-        }
-
-        private static void RunTestIndicator(DoubleExponentialMovingAverage dema)
-        {
-            TestHelper.TestIndicator(dema, "spy_dema.txt", "DEMA_5", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-2));
-        }
+        protected override string TestColumnName => "DEMA_5";
     }
 }

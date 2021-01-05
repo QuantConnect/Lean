@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 
@@ -24,6 +25,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public interface IDataFeedSubscriptionManager
     {
+        /// <summary>
+        /// Event fired when a new subscription is added
+        /// </summary>
+        event EventHandler<Subscription> SubscriptionAdded;
+
+        /// <summary>
+        /// Event fired when an existing subscription is removed
+        /// </summary>
+        event EventHandler<Subscription> SubscriptionRemoved;
+
         /// <summary>
         /// Gets the data feed subscription collection
         /// </summary>

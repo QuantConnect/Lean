@@ -20,6 +20,7 @@ using System.Runtime.InteropServices;
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("687f62a5-f512-459a-9d66-64815d62a790")]
+[assembly: AssemblyDescription("QuantConnect LEAN Engine: Logging Project - The logging library implementation")]
 
 // Version information for an assembly consists of the following four values:
 //

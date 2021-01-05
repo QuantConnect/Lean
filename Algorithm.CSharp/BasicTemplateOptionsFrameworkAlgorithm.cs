@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -30,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Basic template options framework algorithm uses framework components to define an algorithm
     /// that trades options.
     /// </summary>
-    public class BasicTemplateOptionsFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    public class BasicTemplateOptionsFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -81,7 +80,10 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 return filter
                     .Strikes(+1, +1)
-                    .Expiration(TimeSpan.Zero, TimeSpan.FromDays(7))
+                    // Expiration method accepts TimeSpan objects or integer for days.
+                    // The following statements yield the same filtering criteria
+                    .Expiration(0, 7)
+                    //.Expiration(TimeSpan.Zero, TimeSpan.FromDays(7))
                     .WeeklysOnly()
                     .PutsOnly()
                     .OnlyApplyFilterAtMarketOpen();
@@ -115,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         class SingleSharePortfolioConstructionModel : PortfolioConstructionModel
         {
-            public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights)
+            public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
             {
                 foreach (var insight in insights)
                 {
@@ -140,37 +142,45 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "4"},
-            {"Average Win", "0.14%"},
+            {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "71.396%"},
-            {"Drawdown", "0.700%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.271%"},
-            {"Sharpe Ratio", "9.165"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
+            {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0"},
-            {"Beta", "24.746"},
-            {"Annual Standard Deviation", "0.025"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "8.883"},
-            {"Tracking Error", "0.025"},
-            {"Treynor Ratio", "0.009"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
             {"Total Fees", "$4.00"},
+            {"Fitness Score", "0"},
+            {"Kelly Criterion Estimate", "0.327"},
+            {"Kelly Criterion Probability Value", "1"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "26"},
             {"Total Insights Closed", "24"},
             {"Total Insights Analysis Completed", "24"},
             {"Long Insight Count", "26"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$28.43325"},
+            {"Estimated Monthly Alpha Value", "$31.01809"},
             {"Total Accumulated Estimated Alpha Value", "$1.89555"},
             {"Mean Population Estimated Insight Value", "$0.07898125"},
             {"Mean Population Direction", "50%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "50.0482%"},
-            {"Rolling Averaged Population Magnitude", "0%"}
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "352959406"}
         };
     }
 }

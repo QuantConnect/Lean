@@ -14,8 +14,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using QuantConnect.Data;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Indicators
 {
@@ -28,7 +30,7 @@ namespace QuantConnect.Indicators
         where T : IBaseData
     {
         /// <summary>the most recent input that was given to this indicator</summary>
-        private T _previousInput;
+        private Dictionary<SecurityIdentifier, T> _previousInput = new Dictionary<SecurityIdentifier, T>();
 
         /// <summary>
         /// Event handler that fires after this indicator is updated
@@ -74,12 +76,14 @@ namespace QuantConnect.Indicators
         /// <returns>True if this indicator is ready, false otherwise</returns>
         public bool Update(IBaseData input)
         {
-            if (_previousInput != null && input.Time < _previousInput.Time)
+            T _previousSymbolInput = default(T);
+            if (_previousInput.TryGetValue(input.Symbol.ID, out _previousSymbolInput) && input.EndTime < _previousSymbolInput.EndTime)
             {
-                // if we receive a time in the past, throw
-                throw new ArgumentException($"This is a forward only indicator: {Name} Input: {input.Time:u} Previous: {_previousInput.Time:u}");
+                // if we receive a time in the past, log and return
+                Log.Error($"This is a forward only indicator: {Name} Input: {input.EndTime:u} Previous: {_previousSymbolInput.EndTime:u}. It will not be updated with this input.");
+                return IsReady;
             }
-            if (!ReferenceEquals(input, _previousInput))
+            if (!ReferenceEquals(input, _previousSymbolInput))
             {
                 // compute a new value and update our previous time
                 Samples++;
@@ -88,12 +92,12 @@ namespace QuantConnect.Indicators
                 {
                     throw new ArgumentException($"IndicatorBase.Update() 'input' expected to be of type {typeof(T)} but is of type {input.GetType()}");
                 }
-                _previousInput = (T)input;
+                _previousInput[input.Symbol.ID] = (T)input;
 
                 var nextResult = ValidateAndComputeNextValue((T)input);
                 if (nextResult.Status == IndicatorStatus.Success)
                 {
-                    Current = new IndicatorDataPoint(input.Time, nextResult.Value);
+                    Current = new IndicatorDataPoint(input.EndTime, nextResult.Value);
 
                     // let others know we've produced a new data point
                     OnUpdated(Current);
@@ -115,10 +119,19 @@ namespace QuantConnect.Indicators
             {
                 return Update((T)(object)new IndicatorDataPoint(time, value));
             }
-            else
+
+            var suggestions = new List<string>
             {
-                throw new NotSupportedException(string.Format("{0} does not support Update(DateTime, decimal) method overload. Use Update({1}) instead.", GetType().Name, typeof(T).Name));
+                "Update(TradeBar)",
+                "Update(QuoteBar)"
+            };
+
+            if (typeof(T) == typeof(IBaseData))
+            {
+                suggestions.Add("Update(Tick)");
             }
+
+            throw new NotSupportedException($"{GetType().Name} does not support the `Update(DateTime, decimal)` method. Use one of the following methods instead: {string.Join(", ", suggestions)}");
         }
 
         /// <summary>
@@ -127,7 +140,7 @@ namespace QuantConnect.Indicators
         public virtual void Reset()
         {
             Samples = 0;
-            _previousInput = default(T);
+            _previousInput.Clear();
             Current = new IndicatorDataPoint(DateTime.MinValue, default(decimal));
         }
 
@@ -184,11 +197,29 @@ namespace QuantConnect.Indicators
             // solely relying on reference semantics (think hashset/dictionary impls)
 
             if (ReferenceEquals(obj, null)) return false;
-            if (obj.GetType().IsSubclassOf(typeof (IndicatorBase<>))) return ReferenceEquals(this, obj);
+            var type = obj.GetType();
 
-            // the obj is not an indicator, so let's check for value types, try converting to decimal
-            var converted = Convert.ToDecimal(obj);
-            return Current.Value == converted;
+            while (type != null && type != typeof(object))
+            {
+                var cur = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
+                if (typeof(IndicatorBase<>) == cur)
+                {
+                    return ReferenceEquals(this, obj);
+                }
+                type = type.BaseType;
+            }
+
+            try
+            {
+                // the obj is not an indicator, so let's check for value types, try converting to decimal
+                var converted = obj.ConvertInvariant<decimal>();
+                return Current.Value == converted;
+            }
+            catch (InvalidCastException)
+            {
+                // conversion failed, return false
+                return false;
+            }
         }
 
         /// <summary>
@@ -197,7 +228,7 @@ namespace QuantConnect.Indicators
         /// <returns>String representation of the indicator</returns>
         public override string ToString()
         {
-            return Current.Value.ToString("#######0.0####");
+            return Current.Value.ToStringInvariant("#######0.0####");
         }
 
         /// <summary>
@@ -206,7 +237,7 @@ namespace QuantConnect.Indicators
         /// <returns>A detailed string of this indicator's current state</returns>
         public string ToDetailedString()
         {
-            return string.Format("{0} - {1}", Name, this);
+            return $"{Name} - {this}";
         }
 
         /// <summary>
@@ -234,8 +265,7 @@ namespace QuantConnect.Indicators
         /// <param name="consolidated">This is the new piece of data produced by this indicator</param>
         protected virtual void OnUpdated(IndicatorDataPoint consolidated)
         {
-            var handler = Updated;
-            if (handler != null) handler(this, consolidated);
+            Updated?.Invoke(this, consolidated);
         }
     }
 }

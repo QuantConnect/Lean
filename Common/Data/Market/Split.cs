@@ -16,18 +16,22 @@
 
 using System;
 using Newtonsoft.Json;
+using ProtoBuf;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Market
 {
     /// <summary>
     /// Split event from a security
     /// </summary>
+    [ProtoContract(SkipConstructor = true)]
     public class Split : BaseData
     {
         /// <summary>
         ///Gets the type of split event, warning or split.
         /// </summary>
         [JsonProperty]
+        [ProtoMember(10)]
         public SplitType Type
         {
             get; private set;
@@ -37,6 +41,7 @@ namespace QuantConnect.Data.Market
         /// Gets the split factor
         /// </summary>
         [JsonProperty]
+        [ProtoMember(11)]
         public decimal SplitFactor
         {
             get; private set;
@@ -46,6 +51,7 @@ namespace QuantConnect.Data.Market
         /// Gets the price at which the split occurred
         /// This is typically the previous day's closing price
         /// </summary>
+        [ProtoMember(12)]
         public decimal ReferencePrice
         {
             get { return Value; }
@@ -114,7 +120,7 @@ namespace QuantConnect.Data.Market
         public override string ToString()
         {
             var type = Type == SplitType.Warning ? "Split Warning" : "Split";
-            return $"{type}: {Symbol}: {SplitFactor} | {ReferencePrice}";
+            return Invariant($"{type}: {Symbol}: {SplitFactor} | {ReferencePrice}");
         }
 
         /// <summary>

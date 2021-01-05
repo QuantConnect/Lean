@@ -40,14 +40,20 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// Construct the Equity Object
         /// </summary>
-        public Equity(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, SymbolProperties symbolProperties, ICurrencyConverter currencyConverter)
+        public Equity(Symbol symbol,
+            SecurityExchangeHours exchangeHours,
+            Cash quoteCurrency,
+            SymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypes,
+            SecurityCache securityCache)
             : base(symbol,
                 quoteCurrency,
                 symbolProperties,
                 new EquityExchange(exchangeHours),
-                new EquityCache(),
+                securityCache,
                 new SecurityPortfolioModel(),
-                new ImmediateFillModel(),
+                new EquityFillModel(),
                 new InteractiveBrokersFeeModel(),
                 new ConstantSlippageModel(0m),
                 new ImmediateSettlementModel(),
@@ -55,7 +61,8 @@ namespace QuantConnect.Securities.Equity
                 new SecurityMarginModel(2m),
                 new EquityDataFilter(),
                 new AdjustedPriceVariationModel(),
-                currencyConverter
+                currencyConverter,
+                registeredTypes
                 )
         {
             Holdings = new EquityHolding(this, currencyConverter);
@@ -64,7 +71,12 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// Construct the Equity Object
         /// </summary>
-        public Equity(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties, ICurrencyConverter currencyConverter)
+        public Equity(SecurityExchangeHours exchangeHours,
+            SubscriptionDataConfig config,
+            Cash quoteCurrency,
+            SymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypes)
             : base(
                 config,
                 quoteCurrency,
@@ -72,7 +84,7 @@ namespace QuantConnect.Securities.Equity
                 new EquityExchange(exchangeHours),
                 new EquityCache(),
                 new SecurityPortfolioModel(),
-                new ImmediateFillModel(),
+                new EquityFillModel(),
                 new InteractiveBrokersFeeModel(),
                 new ConstantSlippageModel(0m),
                 new ImmediateSettlementModel(),
@@ -80,7 +92,8 @@ namespace QuantConnect.Securities.Equity
                 new SecurityMarginModel(2m),
                 new EquityDataFilter(),
                 new AdjustedPriceVariationModel(),
-                currencyConverter
+                currencyConverter,
+                registeredTypes
                 )
         {
             Holdings = new EquityHolding(this, currencyConverter);

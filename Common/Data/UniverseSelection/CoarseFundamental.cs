@@ -15,6 +15,7 @@
 
 using System;
 using System.IO;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -89,7 +90,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>String URL of source file.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var path = Path.Combine(Globals.DataFolder, "equity", config.Market, "fundamental", "coarse", date.ToString("yyyyMMdd") + ".csv");
+            var path = Path.Combine(Globals.DataFolder, "equity", config.Market, "fundamental", "coarse", Invariant($"{date:yyyyMMdd}.csv"));
             return new SubscriptionDataSource(path, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
@@ -119,7 +120,7 @@ namespace QuantConnect.Data.UniverseSelection
 
                 if (csv.Length > 5)
                 {
-                    coarse.HasFundamentalData = Convert.ToBoolean(csv[5]);
+                    coarse.HasFundamentalData = csv[5].ConvertInvariant<bool>();
                 }
 
                 if (csv.Length > 7)
@@ -161,13 +162,27 @@ namespace QuantConnect.Data.UniverseSelection
         /// Creates the symbol used for coarse fundamental data
         /// </summary>
         /// <param name="market">The market</param>
+        /// <param name="addGuid">True, will add a random GUID to allow uniqueness</param>
         /// <returns>A coarse universe symbol for the specified market</returns>
-        public static Symbol CreateUniverseSymbol(string market)
+        public static Symbol CreateUniverseSymbol(string market, bool addGuid = true)
         {
-            market = market.ToLower();
-            var ticker = "qc-universe-coarse-" + market;
+            market = market.ToLowerInvariant();
+            var ticker = $"qc-universe-coarse-{market}";
+            if (addGuid)
+            {
+                ticker += $"-{Guid.NewGuid()}";
+            }
             var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
             return new Symbol(sid, ticker);
+        }
+
+        /// <summary>
+        /// Converts a given fundamental data point into row format
+        /// </summary>
+        public static string ToRow(CoarseFundamental coarse)
+        {
+            // sid,symbol,close,volume,dollar volume,has fundamental data,price factor,split factor
+            return $"{coarse.Symbol.ID},{coarse.Symbol.Value},{coarse.Value},{coarse.Volume},{coarse.DollarVolume},{coarse.HasFundamentalData},{coarse.PriceFactor},{coarse.SplitFactor}";
         }
     }
 }

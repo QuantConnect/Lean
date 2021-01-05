@@ -20,15 +20,15 @@ using Moq;
 using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
-using QuantConnect.Algorithm.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 .Returns((OrderTicket)null)
                 .Callback((SubmitOrderRequest request) => actualOrdersSubmitted.Add(request));
 
-            var algorithm = new QCAlgorithmFramework();
+            var algorithm = new QCAlgorithm();
             algorithm.SetPandasConverter();
             algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
 
@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var time = new DateTime(2018, 8, 2, 16, 0, 0);
             var historyProvider = new Mock<IHistoryProvider>();
             historyProvider.Setup(m => m.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
-                .Returns(historicalPrices.Select((x,i) =>
+                .Returns(historicalPrices.Select((x, i) =>
                     new Slice(time.AddMinutes(i),
                         new List<BaseData>
                         {
@@ -95,7 +95,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                             }
                         })));
 
-            var algorithm = new QCAlgorithmFramework();
+            var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.SetPandasConverter();
             algorithm.SetHistoryProvider(historyProvider.Object);
@@ -106,12 +106,18 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             algorithm.SetFinishedWarmingUp();
 
+            var openOrderRequest = new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, Symbols.AAPL, openOrdersQuantity, 0, 0, DateTime.MinValue, "");
+            openOrderRequest.SetOrderId(1);
+            var openOrderTicket = new OrderTicket(algorithm.Transactions, openOrderRequest);
+
             var orderProcessor = new Mock<IOrderProcessor>();
             orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
                 .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
                 .Callback((SubmitOrderRequest request) => actualOrdersSubmitted.Add(request));
             orderProcessor.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
                 .Returns(new List<Order> { new MarketOrder(Symbols.AAPL, openOrdersQuantity, DateTime.MinValue) });
+            orderProcessor.Setup(m => m.GetOpenOrderTickets(It.IsAny<Func<OrderTicket, bool>>()))
+                .Returns(new List<OrderTicket> { openOrderTicket });
             algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
 
             var model = GetExecutionModel(language);
@@ -132,6 +138,90 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 Assert.AreEqual(expectedTotalQuantity, request.Quantity);
                 Assert.AreEqual(algorithm.UtcTime, request.Time);
             }
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void PartiallyFilledOrdersAreTakenIntoAccount(Language language)
+        {
+            var actualOrdersSubmitted = new List<SubmitOrderRequest>();
+
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetPandasConverter();
+
+            var security = algorithm.AddEquity(Symbols.AAPL.Value);
+            security.SetMarketPrice(new TradeBar { Value = 250 });
+
+            algorithm.SetFinishedWarmingUp();
+
+            var openOrderRequest = new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, Symbols.AAPL, 100, 0, 0, DateTime.MinValue, "");
+            openOrderRequest.SetOrderId(1);
+
+            var order = Order.CreateOrder(openOrderRequest);
+            var openOrderTicket = new OrderTicket(algorithm.Transactions, openOrderRequest);
+            openOrderTicket.SetOrder(order);
+
+            openOrderTicket.AddOrderEvent(new OrderEvent(1, Symbols.AAPL, DateTime.MinValue, OrderStatus.PartiallyFilled, OrderDirection.Buy, 250, 70, OrderFee.Zero));
+
+            var orderProcessor = new Mock<IOrderProcessor>();
+            orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
+                .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
+                .Callback((SubmitOrderRequest request) => actualOrdersSubmitted.Add(request));
+            orderProcessor.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
+                .Returns(new List<Order> { new MarketOrder(Symbols.AAPL, 100, DateTime.MinValue) });
+            orderProcessor.Setup(m => m.GetOpenOrderTickets(It.IsAny<Func<OrderTicket, bool>>()))
+                .Returns(new List<OrderTicket> { openOrderTicket });
+            algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
+
+            var model = GetExecutionModel(language);
+            algorithm.SetExecution(model);
+
+            var changes = new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
+            model.OnSecuritiesChanged(algorithm, changes);
+
+            var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 80) };
+            model.Execute(algorithm, targets);
+
+            Assert.AreEqual(1, actualOrdersSubmitted.Count);
+
+            // Remaining quantity for partially filled order = 100 - 70 = 30
+            // Quantity submitted = 80 - 30 = 50
+            Assert.AreEqual(50, actualOrdersSubmitted.Sum(x => x.Quantity));
+        }
+
+        [TestCase(Language.CSharp, -1)]
+        [TestCase(Language.Python, -1)]
+        [TestCase(Language.CSharp, 1)]
+        [TestCase(Language.Python, 1)]
+        public void LotSizeIsRespected(Language language, int side)
+        {
+            var actualOrdersSubmitted = new List<SubmitOrderRequest>();
+
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetPandasConverter();
+
+            var security = algorithm.AddForex(Symbols.EURUSD.Value);
+            algorithm.Portfolio.SetCash("EUR", 1, 1);
+            security.SetMarketPrice(new TradeBar { Value = 250 });
+
+            algorithm.SetFinishedWarmingUp();
+
+            var orderProcessor = new Mock<IOrderProcessor>();
+            orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
+                .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
+                .Callback((SubmitOrderRequest request) => actualOrdersSubmitted.Add(request));
+            algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
+
+            var model = GetExecutionModel(language);
+            algorithm.SetExecution(model);
+
+            model.Execute(algorithm,
+                new IPortfolioTarget[] { new PortfolioTarget(Symbols.EURUSD, security.SymbolProperties.LotSize * 1.5m * side) });
+
+            Assert.AreEqual(1, actualOrdersSubmitted.Count);
+            Assert.AreEqual(security.SymbolProperties.LotSize * side, actualOrdersSubmitted.Single().Quantity);
         }
 
         private static IExecutionModel GetExecutionModel(Language language)

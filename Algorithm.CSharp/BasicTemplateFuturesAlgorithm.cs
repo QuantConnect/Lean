@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -19,8 +19,8 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -34,13 +34,15 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="futures" />
     public class BasicTemplateFuturesAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private Symbol _contractSymbol;
+
         // S&P 500 EMini futures
         private const string RootSP500 = Futures.Indices.SP500EMini;
-        public Symbol SP500 = QuantConnect.Symbol.Create(RootSP500, SecurityType.Future, Market.USA);
+        public Symbol SP500 = QuantConnect.Symbol.Create(RootSP500, SecurityType.Future, Market.CME);
 
         // Gold futures
         private const string RootGold = Futures.Metals.Gold;
-        public Symbol Gold = QuantConnect.Symbol.Create(RootGold, SecurityType.Future, Market.USA);
+        public Symbol Gold = QuantConnect.Symbol.Create(RootGold, SecurityType.Future, Market.COMEX);
 
         /// <summary>
         /// Initialize your algorithm and add desired assets.
@@ -55,8 +57,10 @@ namespace QuantConnect.Algorithm.CSharp
             var futureGold = AddFuture(RootGold);
 
             // set our expiry filter for this futures chain
+            // SetFilter method accepts TimeSpan objects or integer for days.
+            // The following statements yield the same filtering criteria 
             futureSP500.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
-            futureGold.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
+            futureGold.SetFilter(0, 182);
 
             var benchmark = AddEquity("SPY");
             SetBenchmark(benchmark.Symbol);
@@ -82,7 +86,8 @@ namespace QuantConnect.Algorithm.CSharp
                     // if found, trade it
                     if (contract != null)
                     {
-                        MarketOrder(contract.Symbol, 1);
+                        _contractSymbol = contract.Symbol;
+                        MarketOrder(_contractSymbol, 1);
                     }
                 }
             }
@@ -92,14 +97,19 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        /// <summary>
-        /// Order fill event handler. On an order fill update the resulting information is passed to this method.
-        /// </summary>
-        /// <param name="orderEvent">Order event details containing details of the evemts</param>
-        /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnEndOfAlgorithm()
         {
-            Log(orderEvent.ToString());
+            // Get the margin requirements
+            var buyingPowerModel = Securities[_contractSymbol].BuyingPowerModel;
+            var futureMarginModel = buyingPowerModel as FutureMarginModel;
+            if (buyingPowerModel == null)
+            {
+                throw new Exception($"Invalid buying power model. Found: {buyingPowerModel.GetType().Name}. Expected: {nameof(FutureMarginModel)}");
+            }
+            var initialOvernight = futureMarginModel.InitialOvernightMarginRequirement;
+            var maintenanceOvernight = futureMarginModel.MaintenanceOvernightMarginRequirement;
+            var initialIntraday = futureMarginModel.InitialIntradayMarginRequirement;
+            var maintenanceIntraday = futureMarginModel.MaintenanceIntradayMarginRequirement;
         }
 
         /// <summary>
@@ -124,18 +134,39 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "13.500%"},
             {"Expectancy", "-0.818"},
             {"Net Profit", "-13.517%"},
-            {"Sharpe Ratio", "-29.354"},
+            {"Sharpe Ratio", "-2.678"},
+            {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "89%"},
             {"Win Rate", "11%"},
             {"Profit-Loss Ratio", "0.69"},
-            {"Alpha", "-7.746"},
-            {"Beta", "-0.859"},
-            {"Annual Standard Deviation", "0.305"},
-            {"Annual Variance", "0.093"},
-            {"Information Ratio", "-24.985"},
-            {"Tracking Error", "0.414"},
-            {"Treynor Ratio", "10.413"},
-            {"Total Fees", "$15207.00"}
+            {"Alpha", "4.398"},
+            {"Beta", "-0.989"},
+            {"Annual Standard Deviation", "0.373"},
+            {"Annual Variance", "0.139"},
+            {"Information Ratio", "-12.816"},
+            {"Tracking Error", "0.504"},
+            {"Treynor Ratio", "1.011"},
+            {"Total Fees", "$15207.00"},
+            {"Fitness Score", "0.033"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "-8.62"},
+            {"Return Over Maximum Drawdown", "-7.81"},
+            {"Portfolio Turnover", "302.321"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "-1197265007"}
         };
     }
 }

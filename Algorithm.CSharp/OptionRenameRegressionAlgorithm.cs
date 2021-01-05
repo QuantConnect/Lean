@@ -56,6 +56,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
+            foreach (var dividend in slice.Dividends.Values)
+            {
+                if (dividend.ReferencePrice != 32.59m || dividend.Distribution != 3.82m)
+                {
+                    throw new Exception($"{Time} - Invalid dividend {dividend}");
+                }
+            }
             if (!Portfolio.Invested)
             {
                 if (Time.Day == 28 && Time.Hour > 9 && Time.Minute > 0)
@@ -139,22 +146,43 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "4"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.02%"},
-            {"Compounding Annual Return", "-0.484%"},
+            {"Compounding Annual Return", "-0.492%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "-1"},
             {"Net Profit", "-0.006%"},
-            {"Sharpe Ratio", "-3.415"},
+            {"Sharpe Ratio", "-3.943"},
+            {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.016"},
-            {"Beta", "-0.001"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
             {"Annual Standard Deviation", "0.002"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "10.014"},
-            {"Tracking Error", "0.877"},
-            {"Treynor Ratio", "4.289"},
-            {"Total Fees", "$4.00"}
+            {"Information Ratio", "-3.943"},
+            {"Tracking Error", "0.002"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$4.00"},
+            {"Fitness Score", "0"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "-2.808"},
+            {"Portfolio Turnover", "0.001"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "-932374"}
         };
     }
 }
