@@ -32,6 +32,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="regression test" />
     public class CustomDataPropertiesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private string _ticker = "BTC";
+
         /// <summary>
         /// Initialize the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -44,16 +46,15 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             // Define our custom data properties and exchange hours
-            var ticker = "BTC";
-            var properties = new SymbolProperties("Bitcoin", "USD", 1, (decimal)0.01, (decimal)0.01, ticker);
+            var properties = new SymbolProperties("Bitcoin", "USD", 1, (decimal)0.01, (decimal)0.01, _ticker);
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
 
             // Add the custom properties and exchange hours to our database
-            SymbolPropertiesDatabase.SetEntry(Market.USA, ticker, SecurityType.Base, properties);
-            MarketHoursDatabase.SetEntry(Market.USA, ticker, SecurityType.Base, exchangeHours);
+            SymbolPropertiesDatabase.SetEntry(Market.USA, _ticker, SecurityType.Base, properties);
+            MarketHoursDatabase.SetEntry(Market.USA, _ticker, SecurityType.Base, exchangeHours);
 
             // Add the custom data to our algorithm
-            var bitcoin = AddData<Bitcoin>(ticker);
+            var bitcoin = AddData<Bitcoin>(_ticker);
 
             //Verify our symbol properties were changed and loaded into this security
             if (bitcoin.SymbolProperties != properties)
@@ -85,6 +86,13 @@ namespace QuantConnect.Algorithm.CSharp
                     Order("BTC.Bitcoin", Portfolio.MarginRemaining / Math.Abs(data.Close + 1));
                 }
             }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            // Reset our Symbol property value, for testing purposes.
+            SymbolPropertiesDatabase.SetEntry(Market.USA, _ticker, SecurityType.Base,
+                SymbolProperties.GetDefault("USD"));
         }
 
         /// <summary>
