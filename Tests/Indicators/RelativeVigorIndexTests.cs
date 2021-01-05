@@ -14,7 +14,6 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
@@ -25,28 +24,19 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
-            return new RelativeVigorIndex("RVI","RVI_S",10);
+            return new RelativeVigorIndex("RVI", "RVI_S", 10);
         }
 
         protected override string TestFileName => "spy_rvi.txt";
-
         protected override string TestColumnName => "RVI";
-        
+
         [Test]
         public void ComparesWithExternalDataRviSignal()
         {
             var rvi = CreateIndicator();
-            TestHelper.TestIndicator(
-                rvi,
-                TestFileName,
-                "RVI_S",
-                (ind, expected) => Assert.AreEqual(
-                    expected,
-                    (double) ((RelativeVigorIndex) ind).Signal.Current.Value,
-                    delta: 0.06
-                ));
+            TestHelper.TestIndicator(rvi, TestFileName, "RVI_S",
+                (ind, expected) => Assert.AreEqual(expected, 
+                    (double) ((RelativeVigorIndex) ind).Signal.Current.Value, 0.06));
         }
     }
-   
-    
 }
