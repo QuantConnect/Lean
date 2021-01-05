@@ -1653,6 +1653,114 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(expected.SequenceEqual(FillForwardDaylightMovementTestAlgorithm.FillForwardBars));
         }
 
+        [Test]
+        public void SkipFF2AMOfSundayDST()
+        {
+            var dataResolution = Time.OneHour;
+            var reference = new DateTime(2011, 3, 12);
+            var dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
+            var exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+
+            var data = new[]
+            {
+                new TradeBar
+                {
+                    Time = reference.ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 0,
+                    Period = dataResolution,
+                    Volume = 100
+                },
+                new TradeBar
+                {
+                    Time = reference.AddDays(2).ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 2,
+                    Period = dataResolution,
+                    Volume = 100
+                }
+            }.ToList();
+            var enumerator = data.GetEnumerator();
+
+            var fillForwardEnumerator = new FillForwardEnumerator(
+                enumerator,
+                exchange,
+                Ref.Create(dataResolution),
+                false,
+                data.Last().EndTime,
+                dataResolution,
+                dataTimeZone);
+
+            int count = 0;
+            while (fillForwardEnumerator.MoveNext())
+            {
+                if (fillForwardEnumerator.Current?.IsFillForward == true)
+                {
+                    if (fillForwardEnumerator.Current.Time.DayOfWeek == DayOfWeek.Sunday &&
+                        fillForwardEnumerator.Current.Time.Hour == 2)
+                    {
+                        Assert.Fail("Shouldn't fill forward bar of 1AM of Sunday when changed Daylight Saving Time.");
+                    }
+                }
+
+                count++;
+            }
+
+            Assert.Greater(count, 0);
+            fillForwardEnumerator.Dispose();
+        }
+
+        [Test]
+        public void FillsForward2AMOfSundayST()
+        {
+            var dataResolution = Time.OneHour;
+            var reference = new DateTime(2011, 11, 5);
+            var dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
+            var exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+
+            var data = new[]
+            {
+                new TradeBar
+                {
+                    Time = reference.ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 0,
+                    Period = dataResolution,
+                    Volume = 100
+                },
+                new TradeBar
+                {
+                    Time = reference.AddDays(2).ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 2,
+                    Period = dataResolution,
+                    Volume = 100
+                }
+            }.ToList();
+            var enumerator = data.GetEnumerator();
+
+            var fillForwardEnumerator = new FillForwardEnumerator(
+                enumerator,
+                exchange,
+                Ref.Create(dataResolution),
+                false,
+                data.Last().EndTime,
+                dataResolution,
+                dataTimeZone);
+
+            int count = 0;
+            while (fillForwardEnumerator.MoveNext())
+            {
+                if (fillForwardEnumerator.Current?.IsFillForward == true)
+                {
+                    if (fillForwardEnumerator.Current.Time.DayOfWeek == DayOfWeek.Sunday &&
+                        fillForwardEnumerator.Current.Time.Hour == 2)
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            Assert.AreEqual(1, count);
+            fillForwardEnumerator.Dispose();
+        }
+
         internal class FillForwardTestAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
         {
             protected Symbol _symbol;
