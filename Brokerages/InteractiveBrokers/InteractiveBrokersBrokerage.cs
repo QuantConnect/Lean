@@ -76,6 +76,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // Notifies the thread reading information from Gateway/TWS whenever there are messages ready to be consumed
         private readonly EReaderSignal _signal = new EReaderMonitorSignal();
 
+        private readonly ManualResetEvent _connectEvent = new ManualResetEvent(false);
         private readonly ManualResetEvent _waitForNextValidId = new ManualResetEvent(false);
         private readonly ManualResetEvent _accountHoldingsResetEvent = new ManualResetEvent(false);
         private Exception _accountHoldingsLastException;
@@ -305,11 +306,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.ConnectAck += (sender, e) =>
             {
                 Log.Trace("InteractiveBrokersBrokerage.HandleConnectAck(): API client connected.");
+                _connectEvent.Set();
             };
 
             _client.ConnectionClosed += (sender, e) =>
             {
                 Log.Trace("InteractiveBrokersBrokerage.HandleConnectionClosed(): API client disconnected.");
+                _connectEvent.Set();
             };
         }
 
@@ -685,8 +688,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         Thread.Sleep(2500);
                     }
 
+                    _connectEvent.Reset();
+
                     // we're going to try and connect several times, if successful break
                     _client.ClientSocket.eConnect(_host, _port, ClientId);
+
+                    if (!_connectEvent.WaitOne(TimeSpan.FromSeconds(15)))
+                    {
+                        Log.Error("InteractiveBrokersBrokerage.Connect(): timeout waiting for connect callback");
+                    }
 
                     // create the message processing thread
                     var reader = new EReader(_client.ClientSocket, _signal);
@@ -1202,6 +1212,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandleError(object sender, IB.ErrorEventArgs e)
         {
+            // handles the 'connection refused' connect cases
+            _connectEvent.Set();
+
             // https://www.interactivebrokers.com/en/software/api/apiguide/tables/api_message_codes.htm
 
             var requestId = e.Id;
