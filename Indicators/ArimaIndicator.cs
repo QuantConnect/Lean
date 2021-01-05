@@ -121,6 +121,7 @@ namespace QuantConnect.Indicators
                 _d = d;
                 WarmUpPeriod = period;
                 _rollingData = new RollingWindow<double>(period);
+                _intercept = true;
             }
             else
             {
@@ -288,6 +289,19 @@ namespace QuantConnect.Indicators
             }
 
             return 0m;
+        }
+
+        /// <summary>
+        /// Fits the model by means of Maximum Likelihood Estimation (MLE).
+        /// </summary>
+        /// <param name="series">Series to fit the model onto</param>
+        protected void MaxLikelihood(double[] series)
+        {
+            _residuals = new List<double>();
+            Parameters = new Dictionary<string, double[]>();
+            var data = _d > 0 ? DifferenceSeries(_d, series) : series; // Difference the series
+            var lags = _p > 0 ? LaggedSeries(_p, data) : new[] {data};
+
         }
     }
 }

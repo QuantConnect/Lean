@@ -94,7 +94,7 @@ namespace QuantConnect.Tests.Indicators
             Console.Write($"Prediction error for ArimaIndicator: {ssIndicator}\n");
             Console.Write($"Prediction error for External: {ssTest}\n");
             Console.Write(
-                $"Mean difference between methods: {betweenMethods.Average()}, Std: {Measures.StandardDeviation(betweenMethods.ToDoubleArray())} ");
+                $"Mean difference between methods: {betweenMethods.Average()}, Std: {betweenMethods.ToDoubleArray().StandardDeviation()} ");
             Assert.LessOrEqual(ssIndicator, ssTest);
         }
 
