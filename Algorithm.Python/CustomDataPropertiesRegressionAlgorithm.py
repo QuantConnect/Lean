@@ -44,16 +44,16 @@ class CustomDataPropertiesRegressionAlgorithm(QCAlgorithm):
         self.SetCash(100000)           # Set Strategy Cash
         
         # Define our custom data properties and exchange hours
-        ticker = 'BTC'
-        properties = SymbolProperties("Bitcoin", "USD", 1, 0.01, 0.01, ticker)
+        self.ticker = 'BTC'
+        properties = SymbolProperties("Bitcoin", "USD", 1, 0.01, 0.01, self.ticker)
         exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork)
 
         # Add the custom properties and exchange hours to our database
-        self.SymbolPropertiesDatabase.SetEntry(Market.USA, ticker, SecurityType.Base, properties)
-        self.MarketHoursDatabase.SetEntry(Market.USA, ticker, SecurityType.Base, exchangeHours)
+        self.SymbolPropertiesDatabase.SetEntry(Market.USA, self.ticker, SecurityType.Base, properties)
+        self.MarketHoursDatabase.SetEntry(Market.USA, self.ticker, SecurityType.Base, exchangeHours)
 
         # Add the custom data to our algorithm
-        bitcoin = self.AddData(Bitcoin, "BTC")
+        bitcoin = self.AddData(Bitcoin, self.ticker)
 
         # Verify our symbol properties were changed and loaded into this security
         if bitcoin.SymbolProperties != properties :
@@ -68,6 +68,12 @@ class CustomDataPropertiesRegressionAlgorithm(QCAlgorithm):
         if not self.Portfolio.Invested:
             if data['BTC'].Close != 0 :
                 self.Order('BTC', self.Portfolio.MarginRemaining/abs(data['BTC'].Close + 1))
+
+    def OnEndOfAlgorithm(self):
+        #Reset our Symbol property value, for testing purposes.
+        self.SymbolPropertiesDatabase.SetEntry(Market.USA, self.ticker, SecurityType.Base,
+            SymbolProperties.GetDefault("USD"));
+
 
 
 class Bitcoin(PythonData):
