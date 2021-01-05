@@ -543,7 +543,7 @@ namespace QuantConnect.Orders.Fills
 
         /// <summary>
         /// Get current bid price for subscribed data
-        /// This method will try to get the most recent ask price data, so it will try to get tick quote first, then quote bar.
+        /// This method will try to get the most recent bid price data, so it will try to get tick quote first, then quote bar.
         /// If no quote, tick or bar, is available (e.g. hourly data), use trade data with preference to tick data.
         /// </summary>
         /// <param name="asset">Security which has subscribed data types</param>
