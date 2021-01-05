@@ -37,9 +37,33 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class RelativeVigorIndex : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
+        /// <summary>
+        /// An optional signal line which behaves like a slowed version of the RVI.
+        /// </summary>
+        public RviSignal Signal { get; }
+
+        /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => CloseBand.IsReady && RangeBand.IsReady;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod { get; }
+        
         private readonly RollingWindow<IBaseDataBar> _previousInputs;
 
+        /// <summary>
+        /// Gets the band of Closes for the RVI.
+        /// </summary>
+        private IndicatorBase<IndicatorDataPoint> CloseBand { get; }
 
+        /// <summary>
+        /// Gets the band of Ranges for the RVI.
+        /// </summary>
+        private IndicatorBase<IndicatorDataPoint> RangeBand { get; }
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="RelativeVigorIndex"/> (RVI) class.
         /// </summary>
@@ -73,8 +97,7 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period for the RelativeVigorIndex.</param>
         /// <param name="type">The type of Moving Average to use</param>
         public RelativeVigorIndex(
-            string name, string signalName, int period,
-            MovingAverageType type = MovingAverageType.Simple)
+            string name, string signalName, int period, MovingAverageType type = MovingAverageType.Simple)
             : base(name)
         {
             WarmUpPeriod = period + 3;
@@ -83,33 +106,6 @@ namespace QuantConnect.Indicators
             _previousInputs = new RollingWindow<IBaseDataBar>(3);
             Signal = new RviSignal(signalName);
         }
-
-        /// <summary>
-        /// An optional signal line which behaves like a slowed version of the RVI.
-        /// </summary>
-        public RviSignal Signal { get; }
-
-
-        /// <summary>
-        /// Gets the band of Closes for the RVI.
-        /// </summary>
-        private IndicatorBase<IndicatorDataPoint> CloseBand { get; }
-
-        /// <summary>
-        /// Gets the band of Ranges for the RVI.
-        /// </summary>
-        private IndicatorBase<IndicatorDataPoint> RangeBand { get; }
-
-        /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady => CloseBand.IsReady && RangeBand.IsReady;
-
-        /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        public int WarmUpPeriod { get; }
-
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -182,7 +178,6 @@ namespace QuantConnect.Indicators
             /// Resets this indicator to its initial state
             /// </summary>
             public int WarmUpPeriod { get; }
-
 
             /// <summary>
             /// Computes the next value of this indicator from the given state
