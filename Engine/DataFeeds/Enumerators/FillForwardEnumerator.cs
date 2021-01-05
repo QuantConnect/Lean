@@ -308,18 +308,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // Time = EndTime - resolution, both Time and EndTime in the TZ of EndTime (Standard/Daylight)
 
                 // next.EndTime sticks to Time TZ,
-                // potentialBarEndTime should be calculated in the same way as bar.EndTime, i.e. Time + resolution,
-                // this approach also allows to stick data timezone (we know that data come in Exchange TZ)
-                var potentialBarEndTime = RoundDown(item.ReferenceDateTime, item.Interval).ConvertTo(Exchange.TimeZone, _dataTimeZone) + item.Interval;
+                // potentialBarEndTime should be calculated in the same way as bar.EndTime, i.e. Time + resolution
+                var potentialBarEndTime = RoundDown(item.ReferenceDateTime, item.Interval).ConvertToUtc(Exchange.TimeZone) + item.Interval;
 
-                // to avoid duality it's necessary to compare potentialBarEndTime (data time zone)
-                // with next.EndTime calculated as Time (converted to data time zone) + resolution
-                if (potentialBarEndTime < (next.Time.ConvertTo(Exchange.TimeZone, _dataTimeZone) + _dataResolution))
+                // to avoid duality it's necessary to compare potentialBarEndTime with
+                // next.EndTime calculated as Time + resolution,
+                // and both should be based on the same TZ (for example UTC)
+                if (potentialBarEndTime < (next.Time.ConvertToUtc(Exchange.TimeZone) + _dataResolution))
                 {
                     // to check open hours we need to convert potential
                     // bar EndTime into exchange time zone
                     var potentialBarEndTimeInExchangeTZ =
-                        potentialBarEndTime.ConvertTo(_dataTimeZone, Exchange.TimeZone);
+                        potentialBarEndTime.ConvertFromUtc(Exchange.TimeZone);
                     var nextFillForwardBarStartTime = potentialBarEndTimeInExchangeTZ - item.Interval;
                     
                     if (Exchange.IsOpenDuringBar(nextFillForwardBarStartTime, potentialBarEndTimeInExchangeTZ, _isExtendedMarketHours))
@@ -327,7 +327,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         fillForward = previous.Clone(true);
 
                         // bar are ALWAYS of the data resolution
-                        fillForward.Time = (potentialBarEndTime - _dataResolution).ConvertTo(_dataTimeZone, Exchange.TimeZone);
+                        fillForward.Time = (potentialBarEndTime - _dataResolution).ConvertFromUtc(Exchange.TimeZone);
                         fillForward.EndTime = potentialBarEndTimeInExchangeTZ;
 
                         return true;
