@@ -23,51 +23,50 @@ using MathNet.Numerics.LinearRegression;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    ///     An ARIMA is a time series model which can be used to describe a set of data. In particular,with Xₜ
-    ///     representing the series, the model assumes the data are of form (after differencing <see cref="_d" /> times):
-    ///     <para>
-    ///         Xₜ = c + εₜ + ΣᵢφᵢXₜ₋ᵢ +  Σᵢθᵢεₜ₋ᵢ
-    ///     </para>
-    ///     where the first sum has an upper limit of <see cref="_p" /> and the second <see cref="_q" />.
+    /// An ARIMA is a time series model which can be used to describe a set of data. In particular,with Xₜ
+    /// representing the series, the model assumes the data are of form (after differencing <see cref="_d" /> times):
+    /// <para>
+    ///     Xₜ = c + εₜ + ΣᵢφᵢXₜ₋ᵢ +  Σᵢθᵢεₜ₋ᵢ
+    /// </para>
+    /// where the first sum has an upper limit of <see cref="_p" /> and the second <see cref="_q" />.
     /// </summary>
     public class ArimaIndicator : TimeSeriesIndicator, IIndicatorWarmUpPeriodProvider
 
     {
-        private readonly RollingWindow<double> _rollingData;
-
         /// <summary>
-        ///     Differencing coefficient. Determines how many times the series should be differenced before fitting the
-        ///     model.
+        /// Differencing coefficient. Determines how many times the series should be differenced before fitting the
+        /// model.
         /// </summary>
         private readonly int _d;
 
         private readonly bool _intercept;
 
         /// <summary>
-        ///     AR coefficient.
+        /// AR coefficient.
         /// </summary>
         private readonly int _p;
 
         /// <summary>
-        ///     MA Coefficient.
+        /// MA Coefficient.
         /// </summary>
         private readonly int _q;
 
+        private readonly RollingWindow<double> _rollingData;
+
         private List<double> _residuals;
 
-
         /// <summary>
-        ///     A dictionary, indexed by "AR" and "MA", containing their respective, fitted parameters.
+        /// A dictionary, indexed by "AR" and "MA", containing their respective, fitted parameters.
         /// </summary>
         public Dictionary<string, double[]> Parameters;
 
         /// <summary>
-        ///     Fits an ARIMA(p,d,q) model of form (after differencing it <see cref="_d" /> times):
-        ///     <para>
-        ///         Xₜ = c + εₜ + ΣᵢφᵢXₜ₋ᵢ +  Σᵢθᵢεₜ₋ᵢ
-        ///     </para>
-        ///     where the first sum has an upper limit of <see cref="_p" /> and the second <see cref="_q" />.
-        ///     This particular constructor fits the model by means of <see cref="TwoStepFit" /> for a specified name.
+        /// Fits an ARIMA(p,d,q) model of form (after differencing it <see cref="_d" /> times):
+        /// <para>
+        ///     Xₜ = c + εₜ + ΣᵢφᵢXₜ₋ᵢ +  Σᵢθᵢεₜ₋ᵢ
+        /// </para>
+        /// where the first sum has an upper limit of <see cref="_p" /> and the second <see cref="_q" />.
+        /// This particular constructor fits the model by means of <see cref="TwoStepFit" /> for a specified name.
         /// </summary>
         /// <param name="name">The name of the indicator</param>
         /// <param name="p">AR order</param>
@@ -101,12 +100,12 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        ///     Fits an ARIMA(p,d,q) model of form (after differencing it <see cref="_d" /> times):
-        ///     <para>
-        ///         Xₜ = c + εₜ + ΣᵢφᵢXₜ₋ᵢ +  Σᵢθᵢεₜ₋ᵢ
-        ///     </para>
-        ///     where the first sum has an upper limit of <see cref="_p" /> and the second <see cref="_q" />.
-        ///     This particular constructor fits the model by means of <see cref="TwoStepFit" /> by means of OLS.
+        /// Fits an ARIMA(p,d,q) model of form (after differencing it <see cref="_d" /> times):
+        /// <para>
+        ///     Xₜ = c + εₜ + ΣᵢφᵢXₜ₋ᵢ +  Σᵢθᵢεₜ₋ᵢ
+        /// </para>
+        /// where the first sum has an upper limit of <see cref="_p" /> and the second <see cref="_q" />.
+        /// This particular constructor fits the model by means of <see cref="TwoStepFit" /> by means of OLS.
         /// </summary>
         /// <param name="p">AR order</param>
         /// <param name="d">Difference order</param>
@@ -130,34 +129,34 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        ///     The variance of the residuals (Var(ε)) from the first step of <see cref="TwoStepFit" />.
+        /// The variance of the residuals (Var(ε)) from the first step of <see cref="TwoStepFit" />.
         /// </summary>
         public double ArResidualError { get; private set; }
 
         /// <summary>
-        ///     The variance of the residuals (Var(ε)) from the second step of <see cref="TwoStepFit" />.
+        /// The variance of the residuals (Var(ε)) from the second step of <see cref="TwoStepFit" />.
         /// </summary>
         public double MaResidualError { get; private set; }
 
         /// <summary>
-        ///     Gets a flag indicating when this indicator is ready and fully initialized
+        /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady => _rollingData.IsReady;
 
         /// <summary>
-        ///     Required period, in data points, for the indicator to be ready and fully initialized.
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
         public new int WarmUpPeriod { get; }
 
         /// <summary>
-        ///     Fits the model by means of implementing the following pseudo-code algorithm (in the form of "if{then}"):
-        ///     <code>
+        /// Fits the model by means of implementing the following pseudo-code algorithm (in the form of "if{then}"):
+        /// <code>
         /// if d > 0 {Difference data D times}
         /// if p > 0 {Fit the AR model Xₜ = ΣᵢφᵢXₜ; ε's are set to residuals from fitting this.}
         /// if q > 0 {Fit the MA parameters left over  Xₜ = c + εₜ + ΣᵢφᵢXₜ₋ᵢ +  Σᵢθᵢεₜ₋ᵢ}
         /// Return: φ and θ estimates.
         /// </code>
-        ///     http://mbhauser.com/informal-notes/two-step-arma-estimation.pdf
+        /// http://mbhauser.com/informal-notes/two-step-arma-estimation.pdf
         /// </summary>
         protected void TwoStepFit(double[] series) // Protected for any future inheritors (e.g., SARIMA)
         {
@@ -182,8 +181,7 @@ namespace QuantConnect.Indicators
                         continue;
                     }
 
-                    var residual = data[i] -
-                        Vector.Build.Dense(lags[i - _p]).DotProduct(fittedVec);
+                    var residual = data[i] - Vector.Build.Dense(lags[i - _p]).DotProduct(fittedVec);
                     errAr += Math.Pow(residual, 2);
                     _residuals.Add(residual);
                 }
@@ -213,16 +211,13 @@ namespace QuantConnect.Indicators
                 }
 
                 var maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(_p).ToArray(),
-                    method: DirectRegressionMethod.NormalEquations,
-                    intercept: _intercept);
+                    method: DirectRegressionMethod.NormalEquations, intercept: _intercept);
                 for (var i = size; i < data.Length; i++) // Calculate the error assoc. with model.
                 {
                     var paramVector = _intercept
                         ? Vector.Build.Dense(maFits.Skip(1).ToArray())
                         : Vector.Build.Dense(maFits);
-                    var residual = data[i] -
-                        Vector.Build.Dense(appendedData[i - size])
-                            .DotProduct(paramVector);
+                    var residual = data[i] - Vector.Build.Dense(appendedData[i - size]).DotProduct(paramVector);
                     errMa += Math.Pow(residual, 2);
                 }
 
@@ -243,7 +238,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        ///     Resets this indicator to its initial state
+        /// Resets this indicator to its initial state
         /// </summary>
         public override void Reset()
         {
@@ -252,7 +247,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        ///     Forecasts the series of the fitted model one point ahead.
+        /// Forecasts the series of the fitted model one point ahead.
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>

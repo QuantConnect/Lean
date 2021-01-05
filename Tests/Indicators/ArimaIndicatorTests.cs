@@ -34,26 +34,25 @@ namespace QuantConnect.Tests.Indicators
         }
 
         protected override string TestFileName => "spy_arima.csv";
-
         protected override string TestColumnName => "ARIMA";
 
         [Test]
         public override void ComparesAgainstExternalData()
         {
             var ARIMA = CreateIndicator();
-            TestHelper.TestIndicator(ARIMA, TestFileName, TestColumnName, (ind, expected) =>
-                Assert.AreEqual(expected, (double) ARIMA.Current.Value, 7d));
+            TestHelper.TestIndicator(ARIMA, TestFileName, TestColumnName,
+                (ind, expected) => Assert.AreEqual(expected, (double) ARIMA.Current.Value, 7d));
         }
 
         [Test]
         public override void ComparesAgainstExternalDataAfterReset()
         {
             var ARIMA = CreateIndicator();
-            TestHelper.TestIndicator(ARIMA, TestFileName, TestColumnName, (ind, expected) =>
-                Assert.AreEqual(expected, (double) ARIMA.Current.Value, 7d));
+            TestHelper.TestIndicator(ARIMA, TestFileName, TestColumnName,
+                (ind, expected) => Assert.AreEqual(expected, (double) ARIMA.Current.Value, 7d));
             ARIMA.Reset();
-            TestHelper.TestIndicator(ARIMA, TestFileName, TestColumnName, (ind, expected) =>
-                Assert.AreEqual(expected, (double) ARIMA.Current.Value, 7d));
+            TestHelper.TestIndicator(ARIMA, TestFileName, TestColumnName,
+                (ind, expected) => Assert.AreEqual(expected, (double) ARIMA.Current.Value, 7d));
         }
 
         [Test]
@@ -87,10 +86,8 @@ namespace QuantConnect.Tests.Indicators
             {
                 var test = realValues[i];
                 var arimas = testValues[i - 50];
-
                 ssIndicator += Math.Pow((double) (arimas[0] - test), 2);
                 ssTest += Math.Pow((double) (arimas[1] - test), 2);
-
                 betweenMethods.Add(Math.Abs(arimas[0] - arimas[1]));
             }
 
@@ -106,7 +103,6 @@ namespace QuantConnect.Tests.Indicators
         {
             var indicator = CreateIndicator();
             var period = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
-
             if (!period.HasValue)
             {
                 Assert.Ignore($"{indicator.Name} is not IIndicatorWarmUpPeriodProvider");
@@ -114,7 +110,6 @@ namespace QuantConnect.Tests.Indicators
             }
 
             var startDate = new DateTime(2019, 1, 1);
-
             for (decimal i = 0; i < period.Value; i++)
             {
                 indicator.Update(startDate, 100m * (1m + 0.05m * i)); // Values should be sufficiently different, now.

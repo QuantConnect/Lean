@@ -13,20 +13,21 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    ///     The base class for any Time Series-type indicator, containing methods common to most of such models.
+    /// The base class for any Time Series-type indicator, containing methods common to most of such models.
     /// </summary>
     public abstract class TimeSeriesIndicator : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
         private double[] _diffHeads;
 
         /// <summary>
-        ///     A constructor for a basic Time Series indicator.
+        /// A constructor for a basic Time Series indicator.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         protected TimeSeriesIndicator(string name)
@@ -35,17 +36,17 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        ///     Gets a flag indicating when this indicator is ready and fully initialized
+        /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady { get; }
 
         /// <summary>
-        ///     Required period, in data points, for the indicator to be ready and fully initialized.
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
         public int WarmUpPeriod { get; }
 
         /// <summary>
-        ///     Computes the next value of this indicator from the given state
+        /// Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
@@ -54,9 +55,8 @@ namespace QuantConnect.Indicators
             return 0m;
         }
 
-
         /// <summary>
-        ///     Differences a time series d times.
+        /// Differences a time series d times.
         /// </summary>
         /// <param name="series">Series to difference</param>
         /// <param name="d">The differencing order</param>
@@ -87,8 +87,8 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        ///     Returns a series where each spot is taken by the cumulative sum of all points up to and including
-        ///     the value at that spot in the original series.
+        /// Returns a series where each spot is taken by the cumulative sum of all points up to and including
+        /// the value at that spot in the original series.
         /// </summary>
         /// <param name="series">Series to cumulatively sum over.</param>
         /// <returns>Cumulatively summed series.</returns>
@@ -105,10 +105,9 @@ namespace QuantConnect.Indicators
             return outSeries;
         }
 
-
         /// <summary>
-        ///     Undoes the differencing of a time series which has been differenced using <see cref="DifferenceSeries" />..
-        ///     https://github.com/statsmodels/statsmodels/blob/04f00006a7aeb1c93d6894caa420698400da6c33/statsmodels/tsa/tsatools.py#L758
+        /// Undoes the differencing of a time series which has been differenced using <see cref="DifferenceSeries" />..
+        /// https://github.com/statsmodels/statsmodels/blob/04f00006a7aeb1c93d6894caa420698400da6c33/statsmodels/tsa/tsatools.py#L758
         /// </summary>
         /// <param name="series">Series to un-difference</param>
         protected double[]
@@ -116,7 +115,7 @@ namespace QuantConnect.Indicators
         {
             if (_diffHeads == null)
             {
-                return null;
+                throw new IndexOutOfRangeException("Series was not (or not properly) differenced.");
             }
 
             var diffHeads = _diffHeads;
@@ -132,7 +131,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        ///     Returns an array of lagged series for each of {1,...,p} lags.
+        /// Returns an array of lagged series for each of {1,...,p} lags.
         /// </summary>
         /// <param name="p">Max lag order</param>
         /// <param name="series">Series to calculate the lags of</param>
