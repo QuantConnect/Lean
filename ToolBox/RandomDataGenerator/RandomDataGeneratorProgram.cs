@@ -64,6 +64,17 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             Console.ReadKey();
         }
 
+        public static DateTime GetDelistDate(DateTime start, DateTime end, RandomValueGenerator randomValueGenerator)
+        {
+            TimeSpan span = end.Subtract(start);
+            double diff_span = -(span.Minutes / 2);
+            DateTime start_time = end.AddMinutes(Math.Round(diff_span, 2, MidpointRounding.ToEven));
+            var delist_Date = randomValueGenerator.NextDate(start_time, end, null);
+
+            //Returns a DateTime object that is halfway between start and end
+            return delist_Date;
+        }
+
         public static void GenerateRandomData(RandomDataGeneratorSettings settings, ConsoleLeveledOutput output)
         {
             // can specify a seed value in this ctor if determinism is desired
@@ -91,10 +102,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             foreach (var currentSymbol in symbolGenerator.GenerateRandomSymbols())
             {
                 // This is done so that we can update the symbol in the case of a rename event
-                TimeSpan span = settings.End.Subtract(settings.Start);
-                double diff_span = -(span.Minutes/2);
-                DateTime start_time = settings.End.AddMinutes(Math.Round(diff_span, 2, MidpointRounding.ToEven));
-                var delistDate = randomValueGenerator.NextDate(start_time, settings.End, null);
+                var delistDate = GetDelistDate(settings.Start, settings.End, randomValueGenerator);
                 var symbol = currentSymbol;
                 var willBeDelisted = randomValueGenerator.NextBool(1.0);
                 var monthsTrading = 0;
