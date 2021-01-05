@@ -24,12 +24,11 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     public abstract class BaseRenkoConsolidator : IDataConsolidator
     {
-        private DataConsolidatedHandler _dataConsolidatedHandler;
-        internal RenkoBar CurrentBar;
-        internal readonly bool EvenBars;
         internal readonly Func<IBaseData, decimal> Selector;
         internal readonly Func<IBaseData, decimal> VolumeSelector;
-
+        internal readonly bool EvenBars;
+        internal RenkoBar CurrentBar;
+        private DataConsolidatedHandler _dataConsolidatedHandler;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WickedRenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
@@ -52,10 +51,9 @@ namespace QuantConnect.Data.Consolidators
         {
             BarSize = barSize;
             Selector = x => x.Value;
-            VolumeSelector = x => 0;
             EvenBars = evenBars;
-
             Type = RenkoType.Classic;
+            VolumeSelector = x => 0;
         }
 
         /// <summary>
@@ -67,21 +65,16 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        protected BaseRenkoConsolidator(
-            decimal barSize,
-            Func<IBaseData, decimal> selector,
-            Func<IBaseData, decimal> volumeSelector = null,
-            bool evenBars = true
-            )
+        protected BaseRenkoConsolidator(decimal barSize, Func<IBaseData, decimal> selector, 
+            Func<IBaseData, decimal> volumeSelector = null, bool evenBars = true)
         {
             EpsilonCheck(barSize);
 
             BarSize = barSize;
             EvenBars = evenBars;
+            Type = RenkoType.Classic;
             Selector = selector ?? (x => x.Value);
             VolumeSelector = volumeSelector ?? (x => 0);
-
-            Type = RenkoType.Classic;
         }
 
         /// <summary>
@@ -93,12 +86,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public BaseRenkoConsolidator(
-            decimal barSize,
-            PyObject selector,
-            PyObject volumeSelector = null,
-            bool evenBars = true
-            )
+        public BaseRenkoConsolidator(decimal barSize, PyObject selector, PyObject volumeSelector = null, bool evenBars = true)
             : this(barSize, evenBars)
         {
             EpsilonCheck(barSize);
@@ -126,7 +114,7 @@ namespace QuantConnect.Data.Consolidators
             }
             else
             {
-                VolumeSelector = (x => 0);
+                VolumeSelector = x => 0;
             }
         }
 
@@ -139,7 +127,6 @@ namespace QuantConnect.Data.Consolidators
         /// Gets the bar size used by this consolidator
         /// </summary>
         protected decimal BarSize { get; }
-
 
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
@@ -162,13 +149,11 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public Type OutputType => typeof(RenkoBar);
 
-
         /// <summary>
         /// Updates this consolidator with the specified data
         /// </summary>
         /// <param name="data">The new data for the consolidator</param>
         public abstract void Update(IBaseData data);
-
 
         /// <summary>
         /// Scans this consolidator to see if it should emit a bar due to time passing
@@ -185,7 +170,6 @@ namespace QuantConnect.Data.Consolidators
             DataConsolidated = null;
             _dataConsolidatedHandler = null;
         }
-
 
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
@@ -209,7 +193,6 @@ namespace QuantConnect.Data.Consolidators
                     "RenkoConsolidator bar size must be positve and greater than 1e-28");
             }
         }
-
 
         /// <summary>
         /// Event invocator for the DataConsolidated event. This should be invoked
