@@ -37,10 +37,11 @@ namespace QuantConnect.Tests.ToolBox
         DateTime _fromDate = new DateTime(2013, 10, 7);
         DateTime _toDate = new DateTime(2013, 10, 11);
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void LoadsEquity_Daily_SingleEntryZip()
         {
-            var leanDataReader = new LeanDataReader("..\\..\\..\\Data\\equity\\usa\\daily\\aapl.zip");
+            var dataPath = LeanData.GenerateZipFilePath(Globals.DataFolder, Symbols.AAPL, DateTime.UtcNow, Resolution.Daily, TickType.Trade);
+            var leanDataReader = new LeanDataReader(dataPath);
             var data = leanDataReader.Parse().ToList();
 
             Assert.AreEqual(5580, data.Count);
@@ -49,10 +50,12 @@ namespace QuantConnect.Tests.ToolBox
 
         #region futures
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void ReadsEntireZipFileEntries_OpenInterest()
         {
-            var leanDataReader = new LeanDataReader("..\\..\\..\\Data\\future\\cme\\minute\\es\\20131006_openinterest.zip");
+            var baseFuture = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, SecurityIdentifier.DefaultDate);
+            var filePath = LeanData.GenerateZipFilePath(Globals.DataFolder, baseFuture, new DateTime(2013, 10, 06), Resolution.Minute, TickType.OpenInterest);
+            var leanDataReader = new LeanDataReader(filePath);
 
             var data = leanDataReader.Parse()
                 .ToList()
@@ -73,10 +76,12 @@ namespace QuantConnect.Tests.ToolBox
             }
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void ReadsEntireZipFileEntries_Trade()
         {
-            var leanDataReader = new LeanDataReader("..\\..\\..\\Data\\future\\cme\\minute\\es\\20131006_trade.zip");
+            var baseFuture = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, SecurityIdentifier.DefaultDate);
+            var filePath = LeanData.GenerateZipFilePath(Globals.DataFolder, baseFuture, new DateTime(2013, 10, 06), Resolution.Minute, TickType.Trade);
+            var leanDataReader = new LeanDataReader(filePath);
 
             var data = leanDataReader.Parse()
                 .ToList()
@@ -98,10 +103,12 @@ namespace QuantConnect.Tests.ToolBox
             Assert.AreEqual(10, data[1].Count);
         }
 
-        [Test]
+        [Test, Parallelizable(ParallelScope.Self)]
         public void ReadsEntireZipFileEntries_Quote()
         {
-            var leanDataReader = new LeanDataReader("..\\..\\..\\Data\\future\\cme\\minute\\es\\20131006_quote.zip");
+            var baseFuture = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, SecurityIdentifier.DefaultDate);
+            var filePath = LeanData.GenerateZipFilePath(Globals.DataFolder, baseFuture, new DateTime(2013, 10, 06), Resolution.Minute, TickType.Quote);
+            var leanDataReader = new LeanDataReader(filePath);
 
             var data = leanDataReader.Parse()
                 .ToList()
