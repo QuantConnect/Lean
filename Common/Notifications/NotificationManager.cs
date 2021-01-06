@@ -79,11 +79,14 @@ namespace QuantConnect.Notifications
                 return false;
             }
             
-            if (headers == null) {
+            if (headers == null)
+            {
                 headers = new Dictionary<string, string>();
             }
-            if (!headers.ContainsKey('Content-Type')) {
-                headers['Content-Type'] = 'text/plain';
+            
+            if (headers.Keys.All(key -> key.ToLower() != "content-type"))
+            {
+                headers["Content-Type"] = "text/plain";
             }
 
             var email = new NotificationEmail(address, subject, message, data, headers);
