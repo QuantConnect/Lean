@@ -824,9 +824,9 @@ namespace QuantConnect.Api
             var client  = new RestClient(uri.Scheme + "://" + uri.Host);
             var request = new RestRequest(uri.PathAndQuery, Method.GET);
 
-            // If the response is not a zip then it is not data, don't write it.
+            // If the response is not a zip or octet-stream then it is not data, don't write it.
             var response = client.Execute(request);
-            if (response.ContentType != "application/zip")
+            if (response.ContentType != "application/zip" && response.ContentType != "application/octet-stream")
             {
                 var message = JObject.Parse(response.Content)["message"].Value<string>();
                 Log.Error($"Api.DownloadData(): Failed to download zip for {symbol} {resolution} data for date {date}, Api response: {message}");
