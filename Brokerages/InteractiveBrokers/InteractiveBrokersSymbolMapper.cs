@@ -23,8 +23,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using IBApi;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -199,6 +201,57 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return _ibNameMap.ContainsKey(brokerageRootSymbol) ? _ibNameMap[brokerageRootSymbol] : brokerageRootSymbol;
         }
 
+        /// <summary>
+        /// Parses a contract for future with malformed data.
+        /// Malformed data usually manifests itself by having "0" assigned to some values
+        /// we expect, like the contract's expiry date. The contract is returned by IB
+        /// like this, usually due to a high amount of data subscriptions that are active
+        /// in an account, surpassing IB's imposed limit. Read more about this here: https://interactivebrokers.github.io/tws-api/rtd_fqa_errors.html#rtd_common_errors_maxmktdata
+        ///
+        /// We are provided a string in the Symbol in malformed contracts that can be
+        /// parsed to construct the clean contract, which is done by this method.
+        /// </summary>
+        /// <param name="malformedContract">Malformed contract (for futures), i.e. a contract with invalid values ("0") in some of its fields</param>
+        /// <param name="symbolPropertiesDatabase">The symbol properties database to use</param>
+        /// <returns>Clean Contract for the future</returns>
+        /// <remarks>
+        /// The malformed contract returns data similar to the following when calling <see cref="InteractiveBrokersBrokerage.GetContractDetails"/>: ES       MAR2021
+        /// </remarks>
+        public Contract ParseMalformedContractFutureSymbol(Contract malformedContract, SymbolPropertiesDatabase symbolPropertiesDatabase)
+        {
+            Log.Trace($"InteractiveBrokersSymbolMapper.ParseMalformedContractFutureSymbol(): Parsing malformed contract: {InteractiveBrokersBrokerage.GetContractDescription(malformedContract)} with trading class: \"{malformedContract.TradingClass}\"");
+
+            // capture any character except spaces, match spaces, capture any char except digits, capture digits
+            var matches = Regex.Matches(malformedContract.Symbol, @"^(\S*)\s*(\D*)(\d*)");
+
+            var match = matches[0].Groups;
+            var contractSymbol = match[1].Value;
+            var contractMonthExpiration = DateTime.ParseExact(match[2].Value, "MMM", CultureInfo.CurrentCulture).Month;
+            var contractYearExpiration = match[3].Value;
+
+            var leanSymbol = GetLeanRootSymbol(contractSymbol);
+            string market;
+            if (!symbolPropertiesDatabase.TryGetMarket(leanSymbol, SecurityType.Future, out market))
+            {
+                market = InteractiveBrokersBrokerageModel.DefaultMarketMap[SecurityType.Future];
+            }
+            var canonicalSymbol = Symbol.Create(leanSymbol, SecurityType.Future, market);
+            var contractMonthYear = new DateTime(int.Parse(contractYearExpiration, CultureInfo.InvariantCulture), contractMonthExpiration, 1);
+            // we get the expiration date using the FuturesExpiryFunctions
+            var contractExpirationDate = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalSymbol)(contractMonthYear);
+
+            return new Contract
+            {
+                Symbol = contractSymbol,
+                Multiplier = malformedContract.Multiplier,
+                LastTradeDateOrContractMonth = $"{contractExpirationDate:yyyyMMdd}",
+                Exchange = malformedContract.Exchange,
+                SecType = malformedContract.SecType,
+                IncludeExpired = false,
+                Currency = malformedContract.Currency
+            };
+        }
+
         private string GetMappedTicker(Symbol symbol)
         {
             var ticker = symbol.Value;
@@ -236,14 +289,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             Log.Trace($"InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(): Parsing malformed contract: {InteractiveBrokersBrokerage.GetContractDescription(malformedContract)} with trading class: \"{malformedContract.TradingClass}\"");
 
-            var contractInfoSplit = malformedContract.Symbol.Substring(malformedContract.Symbol.IndexOf('['))
-                .Replace("[", "")
-                .Replace("]", "")
-                .Split(' ');
+            // we search for the '[ ]' pattern, inside of it we: (capture any character except spaces, match spaces) -> 3 times
+            var matches = Regex.Matches(malformedContract.Symbol, @"^.*[\[](\S*)\s*(\S*)\s*(\S*)[\]]");
 
-            var contractSymbol = contractInfoSplit[0];
-            var contractSpecification = contractInfoSplit[1];
-            var multiplier = contractInfoSplit[2];
+            var match = matches[0].Groups;
+            var contractSymbol = match[1].Value;
+            var contractSpecification = match[2].Value;
+            var multiplier = match[3].Value;
             var expiryDate = "20" + contractSpecification.Substring(0, 6);
             var contractRight = contractSpecification[6] == 'C' ? IB.RightType.Call : IB.RightType.Put;
             var contractStrike = long.Parse(contractSpecification.Substring(7), CultureInfo.InvariantCulture) / 1000.0;
