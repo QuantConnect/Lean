@@ -221,6 +221,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             Log.Trace($"InteractiveBrokersSymbolMapper.ParseMalformedContractFutureSymbol(): Parsing malformed contract: {InteractiveBrokersBrokerage.GetContractDescription(malformedContract)} with trading class: \"{malformedContract.TradingClass}\"");
 
+            // capture any character except spaces, match spaces, capture any char except digits, capture digits
             var matches = Regex.Matches(malformedContract.Symbol, @"^(\S*)\s*(\D*)(\d*)");
 
             var match = matches[0].Groups;
@@ -234,16 +235,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 market = InteractiveBrokersBrokerageModel.DefaultMarketMap[SecurityType.Future];
             }
-            var canonicalSymbol = Symbol.CreateFuture(leanSymbol, market, SecurityIdentifier.DefaultDate);
-            var expirationMonthYear = new DateTime(int.Parse(contractYearExpiration, CultureInfo.InvariantCulture), contractMonthExpiration, 1);
+            var canonicalSymbol = Symbol.Create(leanSymbol, SecurityType.Future, market);
+            var contractMonthYear = new DateTime(int.Parse(contractYearExpiration, CultureInfo.InvariantCulture), contractMonthExpiration, 1);
             // we get the expiration date using the FuturesExpiryFunctions
-            var contractExpirationDate = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalSymbol)(expirationMonthYear);
+            var contractExpirationDate = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalSymbol)(contractMonthYear);
 
             return new Contract
             {
                 Symbol = contractSymbol,
                 Multiplier = malformedContract.Multiplier,
-                LastTradeDateOrContractMonth = $"{contractYearExpiration}{contractMonthExpiration:00}{contractExpirationDate.Day:00}",
+                LastTradeDateOrContractMonth = $"{contractExpirationDate:yyyyMMdd}",
                 Exchange = malformedContract.Exchange,
                 SecType = malformedContract.SecType,
                 IncludeExpired = false,
@@ -288,7 +289,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             Log.Trace($"InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(): Parsing malformed contract: {InteractiveBrokersBrokerage.GetContractDescription(malformedContract)} with trading class: \"{malformedContract.TradingClass}\"");
 
-            var matches = Regex.Matches(malformedContract.Symbol, @"^.*[\[]\s*(\S*)\s*(\S*)\s*(\S*)[\]]");
+            // we search for the '[ ]' pattern, inside of it we: (capture any character except spaces, match spaces) -> 3 times
+            var matches = Regex.Matches(malformedContract.Symbol, @"^.*[\[](\S*)\s*(\S*)\s*(\S*)[\]]");
 
             var match = matches[0].Groups;
             var contractSymbol = match[1].Value;
