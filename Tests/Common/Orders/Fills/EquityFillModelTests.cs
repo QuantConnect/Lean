@@ -286,15 +286,16 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
-        [Test]
-        public void PerformsStopMarketFillBuy()
+        [TestCase(101.25)]
+        [TestCase(102)]
+        public void PerformsStopMarketFillBuy(decimal open)
         {
             var model = new EquityFillModel();
             var order = new StopMarketOrder(Symbols.SPY, 100, 101.5m, Noon);
-            var config = CreateTradeBarConfig(Symbols.SPY);
+            var configTradeBar = CreateTradeBarConfig(Symbols.SPY);
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
-                config,
+                configTradeBar,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
@@ -302,41 +303,51 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new SecurityCache()
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101m));
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 101m, 101m, 101m, 101m, 100));
+
+            var configQuoteBar = new SubscriptionDataConfig(configTradeBar, typeof(QuoteBar));
+            var configProvider = new MockSubscriptionDataConfigProvider(configQuoteBar);
+            configProvider.SubscriptionDataConfigs.Add(configTradeBar);
 
             var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
-                new MockSubscriptionDataConfigProvider(config),
+                configProvider,
                 Time.OneHour)).OrderEvent;
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102.5m));
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, open, 103m, 101m, 102.5m, 100));
+            security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY,
+                new Bar(101m, 102m, 100m, 101.5m), 100,
+                new Bar(103m, 104m, 102m, 103.5m), 100));
 
             fill = model.Fill(new FillModelParameters(
                 security,
                 order,
-                new MockSubscriptionDataConfigProvider(config),
+                configProvider,
                 Time.OneHour)).OrderEvent;
 
-            // this fills worst case scenario, so it's min of asset/stop price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(Math.Max(security.Price, order.StopPrice), fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            // this fills worst case scenario, so it's min of asset/stop price
+            // or the open (gap case)
+            var expected = open > order.StopPrice ? open : security.AskPrice;
+            Assert.AreEqual(expected, fill.FillPrice);
         }
 
-        [Test]
-        public void PerformsStopMarketFillSell()
+        [TestCase(101.25)]
+        [TestCase(102)]
+        public void PerformsStopMarketFillSell(decimal open)
         {
             var model = new EquityFillModel();
             var order = new StopMarketOrder(Symbols.SPY, -100, 101.5m, Noon);
-            var config = CreateTradeBarConfig(Symbols.SPY);
+            var configTradeBar = CreateTradeBarConfig(Symbols.SPY);
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
-                config,
+                configTradeBar,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
@@ -344,30 +355,39 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new SecurityCache()
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102m));
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 102m, 102m, 102m, 102m, 100));
+
+            var configQuoteBar = new SubscriptionDataConfig(configTradeBar, typeof(QuoteBar));
+            var configProvider = new MockSubscriptionDataConfigProvider(configQuoteBar);
+            configProvider.SubscriptionDataConfigs.Add(configTradeBar);
 
             var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
-                new MockSubscriptionDataConfigProvider(config),
+                configProvider,
                 Time.OneHour)).OrderEvent;
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101m));
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, open, 103m, 101m, 101m, 100));
+            security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY,
+                new Bar(101m, 102m, 100m, 100m), 100,
+                new Bar(103m, 104m, 102m, 102m), 100));
 
             fill = model.Fill(new FillModelParameters(
                 security,
                 order,
-                new MockSubscriptionDataConfigProvider(config),
+                configProvider,
                 Time.OneHour)).OrderEvent;
 
-            // this fills worst case scenario, so it's min of asset/stop price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(Math.Min(security.Price, order.StopPrice), fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            // this fills worst case scenario, so it's min of asset/stop price
+            // or the open (gap case)
+            var expected = open < order.StopPrice ? open : security.BidPrice;
+            Assert.AreEqual(expected, fill.FillPrice);
         }
 
         [Test]
@@ -646,7 +666,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
-            var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var config = CreateTradeBarConfig(symbol);
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
@@ -683,7 +703,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             time += TimeSpan.FromMinutes(1);
             timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
 
-            tradeBar = new TradeBar(time, symbol, 290m, 292m, 289m, 291m, 12345);
+            tradeBar = new TradeBar(time, symbol, 291m, 292m, 289m, 291m, 12345);
             security.SetMarketPrice(tradeBar);
 
             fill = fillModel.StopMarketFill(security, order);
@@ -702,7 +722,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
-            var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var config = CreateTradeBarConfig(symbol);
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
@@ -748,6 +768,50 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(limitPrice, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
             Assert.AreEqual(0, fill.OrderFee.Value.Amount);
+        }
+
+        [TestCase(100, 105, 100)]
+        [TestCase(-100, 100, 102)]
+        public void StopMarketOrderDoesNotFillWithOpenInterest(decimal orderQuantity, decimal openInterest, decimal tickPrice)
+        {
+            var model = new EquityFillModel();
+            var order = new StopMarketOrder(Symbols.SPY, orderQuantity, 101.5m, Noon);
+            var configTick = new SubscriptionDataConfig(typeof(Tick), Symbols.SPY, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                configTick,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            var configOpenInterest = new SubscriptionDataConfig(configTick, typeof(OpenInterest));
+            var configProvider = new MockSubscriptionDataConfigProvider(configOpenInterest);
+            configProvider.SubscriptionDataConfigs.Add(configTick);
+
+            security.SetMarketPrice(new Tick(Noon, Symbols.SPY, tickPrice, tickPrice, tickPrice));
+
+            var fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                configProvider,
+                Time.OneHour)).OrderEvent;
+
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+
+            security.Update(new[] { new OpenInterest(Noon, Symbols.SPY, openInterest) }, typeof(Tick));
+
+            fill = model.StopMarketFill(security, order);
+
+            // Should not fill
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
         }
 
         [Test]

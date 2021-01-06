@@ -153,12 +153,18 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
-        /// Default stop fill model implementation in base class security. (Stop Market Order Type)
+        /// Stop market fill model implementation for Equity.
+        /// The order is triggered if and when the user-specified stop trigger price is attained or penetrated by trade prices.
+        /// Assumes the worse case scenario fill price:
+        ///    Buy: highest of the stop trigger price and last ask price
+        ///    Sell: lowest of the stop trigger price and last bid price
+        /// We model the security price with its trade bar High and Low to account intrabar prices.
+        /// https://www1.interactivebrokers.com/en/index.php?f=609
         /// </summary>
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
-        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        /// <seealso cref="MarketFill(Security, MarketOrder)"/>
+        /// <returns>There's no way to know if the price has "gapped" past the stop price within a single OHLC bar.
+        /// So we have to assume a fluid, high volume market, where every price between the high and low has been touched.</returns>
         public virtual OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
         {
             //Default order event to return.
@@ -171,12 +177,38 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            //Get the range of prices in the last bar:
-            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
-            var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+            // Get the range of prices in the last bar:
+            var open = 0m;
+            var high = 0m;
+            var low = 0m;
+            var endTimeUtc = DateTime.MinValue;
+
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            if (subscribedTypes.Contains(typeof(Tick)))
+            {
+                var trade = asset.Cache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+                if (trade != null)
+                {
+                    open = trade.Price;
+                    low = trade.Price;
+                    endTimeUtc = trade.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+                }
+            }
+            else if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar != null)
+                {
+                    open = tradeBar.Open;
+                    high = tradeBar.High;
+                    low = tradeBar.Low;
+                    endTimeUtc = tradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+                }
+            }
 
             // do not fill on stale data
-            if (pricesEndTime <= order.Time) return fill;
+            if (endTimeUtc <= order.Time) return fill;
 
             //Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
@@ -186,25 +218,43 @@ namespace QuantConnect.Orders.Fills
             {
                 case OrderDirection.Sell:
                     //-> 1.1 Sell Stop: If Price below setpoint, Sell:
-                    if (prices.Low < order.StopPrice)
+                    if (low <= order.StopPrice)
                     {
-                        fill.Status = OrderStatus.Filled;
-                        // Assuming worse case scenario fill - fill at lowest of the stop & asset price.
-                        fill.FillPrice = Math.Min(order.StopPrice, prices.Current - slip);
                         // assume the order completely filled
-                        fill.FillQuantity = order.Quantity;
+                        fill.FillQuantity = order.Quantity; 
+                        fill.Status = OrderStatus.Filled;
+                        
+                        // Bar opens above stop price, fill at open price
+                        if (open <= order.StopPrice)
+                        {
+                            fill.FillPrice = open - slip;
+                        }
+                        else
+                        {
+                            // Assuming worse case scenario fill - fill at lowest of the stop & asset price.
+                            fill.FillPrice = Math.Min(order.StopPrice, GetBidPrice(asset, out endTimeUtc) - slip);
+                        }
                     }
                     break;
 
                 case OrderDirection.Buy:
                     //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
-                    if (prices.High > order.StopPrice)
+                    if (high >= order.StopPrice)
                     {
-                        fill.Status = OrderStatus.Filled;
-                        // Assuming worse case scenario fill - fill at highest of the stop & asset price.
-                        fill.FillPrice = Math.Max(order.StopPrice, prices.Current + slip);
                         // assume the order completely filled
                         fill.FillQuantity = order.Quantity;
+                        fill.Status = OrderStatus.Filled;
+
+                        // Bar opens above stop price, fill at open price
+                        if (open >= order.StopPrice)
+                        {
+                            fill.FillPrice = open + slip;
+                        }
+                        else
+                        {
+                            // Assuming worse case scenario fill - fill at highest of the stop & asset price.
+                            fill.FillPrice = Math.Max(order.StopPrice, GetAskPrice(asset, out endTimeUtc) + slip);
+                        }
                     }
                     break;
             }
