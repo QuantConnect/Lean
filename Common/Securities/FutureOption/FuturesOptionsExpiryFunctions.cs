@@ -120,7 +120,13 @@ namespace QuantConnect.Securities.FutureOption
             var baseOptionExpiryMonthDate = new DateTime(futureOptionExpirationDate.Year, futureOptionExpirationDate.Month, 1);
             if (!_futuresOptionsExpiryDelta.ContainsKey(canonicalFutureSymbol))
             {
-                return baseOptionExpiryMonthDate;
+                // For contracts like CL, they have no expiry delta between the Futures and FOPs, so we hit this path.
+                // However, it does have a delta between its expiry and contract month, which we adjust here before
+                // claiming that `baseOptionExpiryMonthDate` is the future's contract month.
+                var futuresExpiry = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFutureSymbol)(baseOptionExpiryMonthDate);
+                var futuresDelta = FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(canonicalFutureSymbol.ID.Symbol, futuresExpiry);
+
+                return baseOptionExpiryMonthDate.AddMonths(futuresDelta);
             }
 
             return baseOptionExpiryMonthDate.AddMonths(_futuresOptionsExpiryDelta[canonicalFutureSymbol]);
