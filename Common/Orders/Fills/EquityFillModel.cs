@@ -431,17 +431,41 @@ namespace QuantConnect.Orders.Fills
 
             var localOrderTime = order.Time.ConvertFromUtc(asset.Exchange.TimeZone);
             var nextMarketClose = asset.Exchange.Hours.GetNextMarketClose(localOrderTime, false);
+            var endTime = DateTime.MinValue;
+
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            if (subscribedTypes.Contains(typeof(Tick)))
+            {
+                var trade = asset.Cache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+                if (trade != null)
+                {
+                    endTime = trade.EndTime;
+                    fill.FillPrice = trade.Price;
+                }
+            }
+            else if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar != null)
+                {
+                    endTime = tradeBar.EndTime;
+                    fill.FillPrice = tradeBar.Close;
+                }
+            }
 
             // wait until market closes after the order time
-            if (asset.LocalTime < nextMarketClose)
+            if (endTime < nextMarketClose)
             {
                 return fill;
             }
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            fill.FillPrice = GetPricesCheckingPythonWrapper(asset, order.Direction).Close;
+            // assume the order completely filled
+            fill.FillQuantity = order.Quantity;
             fill.Status = OrderStatus.Filled;
+
             //Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
@@ -450,13 +474,9 @@ namespace QuantConnect.Orders.Fills
             {
                 case OrderDirection.Buy:
                     fill.FillPrice += slip;
-                    // assume the order completely filled
-                    fill.FillQuantity = order.Quantity;
                     break;
                 case OrderDirection.Sell:
                     fill.FillPrice -= slip;
-                    // assume the order completely filled
-                    fill.FillQuantity = order.Quantity;
                     break;
             }
 

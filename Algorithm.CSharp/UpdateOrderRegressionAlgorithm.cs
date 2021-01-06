@@ -196,13 +196,13 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "21"},
             {"Average Win", "0%"},
-            {"Average Loss", "-1.59%"},
-            {"Compounding Annual Return", "-7.733%"},
-            {"Drawdown", "15.800%"},
+            {"Average Loss", "-1.60%"},
+            {"Compounding Annual Return", "-7.771%"},
+            {"Drawdown", "15.700%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-14.869%"},
-            {"Sharpe Ratio", "-1.183"},
-            {"Probabilistic Sharpe Ratio", "0.042%"},
+            {"Net Profit", "-14.938%"},
+            {"Sharpe Ratio", "-1.189"},
+            {"Probabilistic Sharpe Ratio", "0.041%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
@@ -210,15 +210,15 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0.035"},
             {"Annual Standard Deviation", "0.053"},
             {"Annual Variance", "0.003"},
-            {"Information Ratio", "-2.251"},
+            {"Information Ratio", "-2.253"},
             {"Tracking Error", "0.111"},
-            {"Treynor Ratio", "-1.766"},
+            {"Treynor Ratio", "-1.788"},
             {"Total Fees", "$21.00"},
             {"Fitness Score", "0.002"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-2.097"},
-            {"Return Over Maximum Drawdown", "-0.49"},
+            {"Sortino Ratio", "-2.112"},
+            {"Return Over Maximum Drawdown", "-0.494"},
             {"Portfolio Turnover", "0.006"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -233,7 +233,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "1536869386"}
+            {"OrderListHash", "-988398285"}
         };
     }
 }
