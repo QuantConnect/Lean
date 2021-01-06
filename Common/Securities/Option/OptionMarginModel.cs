@@ -68,44 +68,48 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the order</param>
         /// <returns>The total margin in terms of the currency quoted in the order</returns>
-        public override decimal GetInitialMarginRequiredForOrder(
-            InitialMarginRequiredForOrderParameters parameters)
+        public override InitialMargin GetInitialMarginRequiredForOrder(
+            InitialMarginRequiredForOrderParameters parameters
+            )
         {
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
 
             var fees = parameters.Security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(parameters.Security,
-                    parameters.Order)).Value;
-            var feesInAccountCurrency = parameters.CurrencyConverter.
-                ConvertToAccountCurrency(fees).Amount;
+                new OrderFeeParameters(parameters.Security, parameters.Order)
+            );
+
+            var feesInAccountCurrency = parameters.CurrencyConverter.ConvertToAccountCurrency(fees.Value);
 
             var value = parameters.Order.GetValue(parameters.Security);
             var orderMargin = value * GetMarginRequirement(parameters.Security, value);
 
-            return orderMargin + Math.Sign(orderMargin) * feesInAccountCurrency;
+            return orderMargin + Math.Sign(orderMargin) * feesInAccountCurrency.Amount;
         }
 
         /// <summary>
         /// Gets the margin currently alloted to the specified holding
         /// </summary>
-        /// <param name="security">The security to compute maintenance margin for</param>
+        /// <param name="parameters">An object containing the security</param>
         /// <returns>The maintenance margin required for the </returns>
-        public override decimal GetMaintenanceMargin(Security security)
+        public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
+            var security = parameters.Security;
             return security.Holdings.AbsoluteHoldingsCost * GetMaintenanceMarginRequirement(security, security.Holdings.HoldingsCost);
         }
 
         /// <summary>
         /// The margin that must be held in order to increase the position by the provided quantity
         /// </summary>
-        public override decimal GetInitialMarginRequirement(Security security, decimal quantity)
+        public override InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
         {
+            var security = parameters.Security;
+            var quantity = parameters.Quantity;
             var value = security.QuoteCurrency.ConversionRate
                         * security.SymbolProperties.ContractMultiplier
                         * security.Price
                         * quantity;
-            return value * GetMarginRequirement(security, value);
+            return new InitialMargin(value * GetMarginRequirement(security, value));
         }
 
         /// <summary>

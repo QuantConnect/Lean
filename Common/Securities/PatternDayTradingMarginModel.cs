@@ -67,17 +67,19 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
         /// </summary>
-        public override decimal GetInitialMarginRequirement(Security security, decimal quantity)
+        public override InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
         {
-            return base.GetInitialMarginRequirement(security, quantity) * GetMarginCorrectionFactor(security);
+            return new InitialMargin(base.GetInitialMarginRequirement(parameters).Value
+                * GetMarginCorrectionFactor(parameters.Security)
+            );
         }
 
         /// <summary>
         /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
         /// </summary>
-        public override decimal GetMaintenanceMargin(Security security)
+        public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
-            return base.GetMaintenanceMargin(security)*GetMarginCorrectionFactor(security);
+            return base.GetMaintenanceMargin(parameters) * GetMarginCorrectionFactor(parameters.Security);
         }
 
         /// <summary>

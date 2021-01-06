@@ -193,7 +193,7 @@ namespace QuantConnect.Tests.Common.Securities
             var initialMargin = buyingPowerModel.GetInitialMarginRequiredForOrder(
                 new InitialMarginRequiredForOrderParameters(algorithm.Portfolio.CashBook,
                     futureSecurity,
-                    new MarketOrder(futureSecurity.Symbol, quantity, algorithm.UtcTime)));
+                    new MarketOrder(futureSecurity.Symbol, quantity, algorithm.UtcTime))).Value;
 
             var initialMarginExpected = buyingPowerModel.GetInitialMarginRequirement(futureSecurity, quantity);
 

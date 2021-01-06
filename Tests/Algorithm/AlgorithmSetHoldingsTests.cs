@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Algorithm
             public new decimal GetInitialMarginRequiredForOrder(
                 InitialMarginRequiredForOrderParameters parameters)
             {
-                return base.GetInitialMarginRequiredForOrder(parameters);
+                return base.GetInitialMarginRequiredForOrder(parameters).Value;
             }
 
             public new decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
