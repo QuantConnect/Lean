@@ -81,7 +81,7 @@ namespace QuantConnect.Indicators
             Slow = type.AsIndicator(name + "_Slow", slowPeriod);
             Signal = type.AsIndicator(name + "_Signal", signalPeriod);
             Histogram = new Identity(name + "_Histogram");
-            WarmUpPeriod = Math.Max(fastPeriod, slowPeriod) + signalPeriod;
+            WarmUpPeriod = Math.Max(fastPeriod, slowPeriod) + signalPeriod - 1;
         }
 
         /// <summary>
@@ -91,19 +91,17 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            Fast.Update(input);
-            Slow.Update(input);
+            var fastReady = Fast.Update(input);
+            var slowReady = Slow.Update(input);
 
             var macd = Fast.Current.Value - Slow.Current.Value;
 
-            if (Fast.IsReady && Slow.IsReady)
+            if (fastReady && slowReady)
             {
-                Signal.Update(input.Time, macd);
-            }
-                
-            if (Signal.IsReady)
-            {
-                Histogram.Update(input.Time, macd - Signal.Current.Value);
+                if (Signal.Update(input.Time, macd))
+                {
+                    Histogram.Update(input.Time, macd - Signal.Current.Value);
+                }
             }
 
             return macd;
