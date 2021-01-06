@@ -14,12 +14,14 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Orders.Fills
 {
@@ -116,17 +118,8 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
-            var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
-
-            // if the order is filled on stale (fill-forward) data, set a warning message on the order event
-            if (pricesEndTimeUtc.Add(Parameters.StalePriceTimeSpan) < order.Time)
-            {
-                fill.Message = $"Warning: fill at stale price ({prices.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone})";
-            }
-
-            //Order [fill]price for a market order model is the current security price
-            fill.FillPrice = prices.Current;
+            // Define the last bid or ask time to set stale prices message
+            var endTime = DateTime.MinValue;
             fill.Status = OrderStatus.Filled;
 
             //Calculate the model slippage: e.g. 0.01c
@@ -136,11 +129,21 @@ namespace QuantConnect.Orders.Fills
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
-                    fill.FillPrice += slip;
+                    //Order [fill]price for a buy market order model is the current security ask price
+                    fill.FillPrice = GetAskPrice(asset, out endTime) + slip;
                     break;
                 case OrderDirection.Sell:
-                    fill.FillPrice -= slip;
+                    //Order [fill]price for a buy market order model is the current security bid price
+                    fill.FillPrice = GetBidPrice(asset, out endTime) - slip;
                     break;
+            }
+
+            var endTimeUtc = endTime.ConvertToUtc(asset.Exchange.TimeZone);
+
+            // if the order is filled on stale (fill-forward) data, set a warning message on the order event
+            if (endTimeUtc.Add(Parameters.StalePriceTimeSpan) < order.Time)
+            {
+                fill.Message = $"Warning: fill at stale price ({endTime.ToStringInvariant()} {asset.Exchange.TimeZone})";
             }
 
             // assume the order completely filled
@@ -459,6 +462,144 @@ namespace QuantConnect.Orders.Fills
 
             return fill;
         }
+
+        /// <summary>
+        /// Get data types the Security is subscribed to
+        /// </summary>
+        /// <param name="asset">Security which has subscribed data types</param>
+        private HashSet<Type> GetSubscribedTypes(Security asset)
+        {
+            var subscribedTypes = Parameters
+                .ConfigProvider
+                .GetSubscriptionDataConfigs(asset.Symbol)
+                .ToHashSet(x => x.Type);
+
+            if (subscribedTypes.Count == 0)
+            {
+                throw new InvalidOperationException($"Cannot perform fill for {asset.Symbol} because no data subscription were found.");
+            }
+
+            return subscribedTypes;
+        }
+
+        /// <summary>
+        /// Get current ask price for subscribed data
+        /// This method will try to get the most recent ask price data, so it will try to get tick quote first, then quote bar.
+        /// If no quote, tick or bar, is available (e.g. hourly data), use trade data with preference to tick data.
+        /// </summary>
+        /// <param name="asset">Security which has subscribed data types</param>
+        /// <param name="endTime">Timestamp of the most recent data type</param>
+        private decimal GetAskPrice(Security asset, out DateTime endTime)
+        {
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            List<Tick> ticks = null;
+            var isTickSubscribed = subscribedTypes.Contains(typeof(Tick));
+
+            if (isTickSubscribed)
+            {
+                ticks = asset.Cache.GetAll<Tick>().ToList();
+
+                var quote = ticks.LastOrDefault(x => x.TickType == TickType.Quote && x.AskPrice > 0);
+                if (quote != null)
+                {
+                    endTime = quote.EndTime;
+                    return quote.AskPrice;
+                }
+            }
+
+            if (subscribedTypes.Contains(typeof(QuoteBar)))
+            {
+                var quoteBar = asset.Cache.GetData<QuoteBar>();
+                if (quoteBar != null)
+                {
+                    endTime = quoteBar.EndTime;
+                    return quoteBar.Ask?.Close ?? quoteBar.Close;
+                }
+            }
+
+            if (isTickSubscribed)
+            {
+                var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+                if (trade != null)
+                {
+                    endTime = trade.EndTime;
+                    return trade.Price;
+                }
+            }
+
+            if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar != null)
+                {
+                    endTime = tradeBar.EndTime;
+                    return tradeBar.Close;
+                }
+            }
+
+            throw new InvalidOperationException($"Cannot get ask price to perform fill for {asset.Symbol} because no market data subscription were found.");
+        }
+
+        /// <summary>
+        /// Get current bid price for subscribed data
+        /// This method will try to get the most recent bid price data, so it will try to get tick quote first, then quote bar.
+        /// If no quote, tick or bar, is available (e.g. hourly data), use trade data with preference to tick data.
+        /// </summary>
+        /// <param name="asset">Security which has subscribed data types</param>
+        /// <param name="endTime">Timestamp of the most recent data type</param>
+        private decimal GetBidPrice(Security asset, out DateTime endTime)
+        {
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            List<Tick> ticks = null;
+            var isTickSubscribed = subscribedTypes.Contains(typeof(Tick));
+
+            if (isTickSubscribed)
+            {
+                ticks = asset.Cache.GetAll<Tick>().ToList();
+
+                var quote = ticks.LastOrDefault(x => x.TickType == TickType.Quote && x.BidPrice > 0);
+                if (quote != null)
+                {
+                    endTime = quote.EndTime;
+                    return quote.BidPrice;
+                }
+            }
+
+            if (subscribedTypes.Contains(typeof(QuoteBar)))
+            {
+                var quoteBar = asset.Cache.GetData<QuoteBar>();
+                if (quoteBar != null)
+                {
+                    endTime = quoteBar.EndTime;
+                    return quoteBar.Bid?.Close ?? quoteBar.Close;
+                }
+            }
+
+            if (isTickSubscribed)
+            {
+                var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+                if (trade != null)
+                {
+                    endTime = trade.EndTime;
+                    return trade.Price;
+                }
+            }
+
+            if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar != null)
+                {
+                    endTime = tradeBar.EndTime;
+                    return tradeBar.Close;
+                }
+            }
+
+            throw new InvalidOperationException($"Cannot get bid price to perform fill for {asset.Symbol} because no market data subscription were found.");
+        }
+
 
         /// <summary>
         /// This is required due to a limitation in PythonNet to resolved
