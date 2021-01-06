@@ -493,12 +493,46 @@ namespace QuantConnect.Orders.Fills
             // have large gaps, in which case the currentBar.EndTime will be in the past
             // ASUR  | | |      [order]        | | | | | | |
             //  SPY  | | | | | | | | | | | | | | | | | | | |
-            var currentBar = asset.GetLastData();
+            var openTime = DateTime.MinValue;
+            var endTime = DateTime.MinValue;
+
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            if (subscribedTypes.Contains(typeof(Tick)))
+            {
+                var trade = asset.Cache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+                if (trade != null)
+                {
+                    openTime = trade.Time;
+                    endTime = trade.EndTime;
+                    fill.FillPrice = trade.Price;
+                }
+            }
+            else if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar != null)
+                {
+                    openTime = tradeBar.Time;
+                    endTime = tradeBar.EndTime;
+                    fill.FillPrice = tradeBar.Open;
+                }
+            }
+
             var localOrderTime = order.Time.ConvertFromUtc(asset.Exchange.TimeZone);
-            if (currentBar == null || localOrderTime >= currentBar.EndTime) return fill;
+            if (localOrderTime >= endTime) return fill;
 
             // if the MOO was submitted during market the previous day, wait for a day to turn over
             if (asset.Exchange.DateTimeIsOpen(localOrderTime) && localOrderTime.Date == asset.LocalTime.Date)
+            {
+                return fill;
+            }
+
+            // If the first data after the market opens is a quote bar (high resolution only),
+            // the open of the last trade bar is not the open for the current day, but the last open in cache.
+            // We need to verify whether the trade data is from the open market.
+            var resolution = Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol).GetHighestResolution();
+            if (resolution < Resolution.Hour && !asset.Exchange.DateTimeIsOpen(openTime))
             {
                 return fill;
             }
@@ -507,8 +541,10 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            fill.FillPrice = GetPricesCheckingPythonWrapper(asset, order.Direction).Open;
+            // assume the order completely filled
+            fill.FillQuantity = order.Quantity;
             fill.Status = OrderStatus.Filled;
+
             //Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
@@ -517,13 +553,9 @@ namespace QuantConnect.Orders.Fills
             {
                 case OrderDirection.Buy:
                     fill.FillPrice += slip;
-                    // assume the order completely filled
-                    fill.FillQuantity = order.Quantity;
                     break;
                 case OrderDirection.Sell:
                     fill.FillPrice -= slip;
-                    // assume the order completely filled
-                    fill.FillQuantity = order.Quantity;
                     break;
             }
 

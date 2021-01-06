@@ -92,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0.000%"},
             {"Expectancy", "-0.974"},
             {"Net Profit", "-0.016%"},
-            {"Sharpe Ratio", "-8.696"},
+            {"Sharpe Ratio", "-8.697"},
             {"Probabilistic Sharpe Ratio", "0.002%"},
             {"Loss Rate", "99%"},
             {"Win Rate", "1%"},
@@ -103,14 +103,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Annual Variance", "0"},
             {"Information Ratio", "-7.193"},
             {"Tracking Error", "0.195"},
-            {"Treynor Ratio", "8.201"},
+            {"Treynor Ratio", "8.204"},
             {"Total Fees", "$1590.00"},
             {"Estimated Strategy Capacity", "$67000000.00"},
             {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-14.995"},
+            {"Sortino Ratio", "-14.997"},
             {"Return Over Maximum Drawdown", "-72.578"},
             {"Portfolio Turnover", "0.018"},
             {"Total Insights Generated", "0"},
@@ -126,7 +126,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "98388f6232375a64b6858a6e3e82c321"}
+            {"OrderListHash", "ef8575d4042a0e9c5cfa353f7ed20867"}
         };
     }
 }
