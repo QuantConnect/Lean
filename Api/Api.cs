@@ -828,7 +828,7 @@ namespace QuantConnect.Api
             var response = client.Execute(request);
 
             // If the response is JSON it doesn't contain any data, try and extract the message and write it
-            if (response.ContentType == "application/json")
+            if (response.ContentType.ToLowerInvariant() == "application/json")
             {
                 try
                 {
