@@ -134,8 +134,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the order</param>
         /// <returns>The total margin in terms of the currency quoted in the order</returns>
-        public virtual decimal GetInitialMarginRequiredForOrder(
-            InitialMarginRequiredForOrderParameters parameters)
+        public virtual InitialMargin GetInitialMarginRequiredForOrder(
+            InitialMarginRequiredForOrderParameters parameters
+            )
         {
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
@@ -146,7 +147,7 @@ namespace QuantConnect.Securities
             var feesInAccountCurrency = parameters.CurrencyConverter.
                 ConvertToAccountCurrency(fees).Amount;
 
-            var orderMargin = GetInitialMarginRequirement(parameters.Security, parameters.Order.Quantity);
+            var orderMargin = this.GetInitialMarginRequirement(parameters.Security, parameters.Order.Quantity);
 
             return orderMargin + Math.Sign(orderMargin) * feesInAccountCurrency;
         }
@@ -154,10 +155,11 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the margin currently allocated to the specified holding
         /// </summary>
-        /// <param name="security">The security to compute maintenance margin for</param>
+        /// <param name="parameters">An object containing the security</param>
         /// <returns>The maintenance margin required for the </returns>
-        public virtual decimal GetMaintenanceMargin(Security security)
+        public virtual MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
+            var security = parameters.Security;
             return security.Holdings.AbsoluteHoldingsValue * _maintenanceMarginRequirement;
         }
 
@@ -189,9 +191,9 @@ namespace QuantConnect.Securities
                         case OrderDirection.Sell:
                             result +=
                                 // portion of margin to close the existing position
-                                GetMaintenanceMargin(security) +
+                                this.GetMaintenanceMargin(security) +
                                 // portion of margin to open the new position
-                                GetInitialMarginRequirement(security, security.Holdings.AbsoluteQuantity);
+                                this.GetInitialMarginRequirement(security, security.Holdings.AbsoluteQuantity);
                             break;
                     }
                 }
@@ -202,9 +204,9 @@ namespace QuantConnect.Securities
                         case OrderDirection.Buy:
                             result +=
                                 // portion of margin to close the existing position
-                                GetMaintenanceMargin(security) +
+                                this.GetMaintenanceMargin(security) +
                                 // portion of margin to open the new position
-                                GetInitialMarginRequirement(security, security.Holdings.AbsoluteQuantity);
+                                this.GetInitialMarginRequirement(security, security.Holdings.AbsoluteQuantity);
                             break;
                     }
                 }
@@ -217,15 +219,16 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The margin that must be held in order to increase the position by the provided quantity
         /// </summary>
-        /// <param name="security">The security to compute initial margin for</param>
-        /// <param name="quantity">The change in the contemplated change in shares</param>
-        public virtual decimal GetInitialMarginRequirement(Security security, decimal quantity)
+        /// <param name="parameters">An object containing the security and quantity of shares</param>
+        public virtual InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
         {
+            var security = parameters.Security;
+            var quantity = parameters.Quantity;
             return security.QuoteCurrency.ConversionRate
-                   * security.SymbolProperties.ContractMultiplier
-                   * security.Price
-                   * quantity
-                   * _initialMarginRequirement;
+                * security.SymbolProperties.ContractMultiplier
+                * security.Price
+                * quantity
+                * _initialMarginRequirement;
         }
 
         /// <summary>
@@ -357,7 +360,7 @@ namespace QuantConnect.Securities
 
             // we use initial margin requirement here to avoid the duplicate PortfolioTarget.Percent situation:
             // PortfolioTarget.Percent(1) -> fills -> PortfolioTarget.Percent(1) _could_ detect free buying power if we use Maintenance requirement here
-            var currentSignedUsedMargin = GetInitialMarginRequirement(parameters.Security, parameters.Security.Holdings.Quantity);
+            var currentSignedUsedMargin = this.GetInitialMarginRequirement(parameters.Security, parameters.Security.Holdings.Quantity);
 
             // remove directionality, we'll work in the land of absolutes
             var absFinalOrderMargin = Math.Abs(signedTargetFinalMarginValue - currentSignedUsedMargin);
@@ -366,7 +369,7 @@ namespace QuantConnect.Securities
             // determine the unit price in terms of the account currency
             var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
             // determine the margin required for 1 unit, positive since we are working with absolutes
-            var absUnitMargin = GetInitialMarginRequirement(parameters.Security, 1);
+            var absUnitMargin = this.GetInitialMarginRequirement(parameters.Security, 1);
             if (absUnitMargin == 0)
             {
                 return new GetMaximumOrderQuantityResult(0, parameters.Security.Symbol.GetZeroPriceMessage());
@@ -486,7 +489,7 @@ namespace QuantConnect.Securities
         /// <returns>The reserved buying power in account currency</returns>
         public virtual ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionParameters parameters)
         {
-            var maintenanceMargin = GetMaintenanceMargin(parameters.Security);
+            var maintenanceMargin = this.GetMaintenanceMargin(parameters.Security);
             return parameters.ResultInAccountCurrency(maintenanceMargin);
         }
 

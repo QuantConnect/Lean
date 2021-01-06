@@ -26,33 +26,6 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class FutureOptionMarginBuyingPowerModelTests
     {
-        // Test class to enable calling protected methods
-        public class TestFutureMarginModel : FutureMarginModel
-        {
-            public TestFutureMarginModel(Security security = null)
-                : base(security: security)
-            {
-            }
-
-            public new decimal GetMaintenanceMargin(Security security)
-            {
-                return base.GetMaintenanceMargin(security);
-            }
-        }
-
-        // Test class to enable calling protected methods
-        public class TestFuturesOptionsMarginModel : FuturesOptionsMarginModel
-        {
-            public TestFuturesOptionsMarginModel(Option futureOption) : base(futureOption: futureOption)
-            {
-            }
-
-            public new decimal GetMaintenanceMargin(Security security)
-            {
-                return base.GetMaintenanceMargin(security);
-            }
-        }
-
         [Test]
         public void MarginForSymbolWithOneLinerHistory()
         {
@@ -85,8 +58,8 @@ namespace QuantConnect.Tests.Common.Securities
             optionSecurity.Underlying.SetMarketPrice(new Tick { Value = price, Time = time });
             optionSecurity.Underlying.Holdings.SetHoldings(1.5m, 1);
 
-            var futureBuyingPowerModel = new TestFutureMarginModel(optionSecurity.Underlying);
-            var futureOptionBuyingPowerModel = new TestFuturesOptionsMarginModel(optionSecurity);
+            var futureBuyingPowerModel = new FutureMarginModel(security: optionSecurity.Underlying);
+            var futureOptionBuyingPowerModel = new FuturesOptionsMarginModel(futureOption: optionSecurity);
 
             Assert.AreNotEqual(0m, futureOptionBuyingPowerModel.GetMaintenanceMargin(optionSecurity));
             Assert.AreEqual(futureBuyingPowerModel.GetMaintenanceMargin(optionSecurity.Underlying) * 1.5m, futureOptionBuyingPowerModel.GetMaintenanceMargin(optionSecurity));

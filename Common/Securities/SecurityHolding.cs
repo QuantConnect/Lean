@@ -152,7 +152,6 @@ namespace QuantConnect.Securities
             }
         }
 
-
         /// <summary>
         /// Acquisition cost of the security total holdings in units of the account's currency.
         /// </summary>
@@ -226,7 +225,7 @@ namespace QuantConnect.Securities
                     return 0;
                 }
 
-                return _price * Quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
+                return GetQuantityValue(Quantity);
             }
         }
 
@@ -429,6 +428,17 @@ namespace QuantConnect.Securities
         public virtual void UpdateMarketPrice(decimal closingPrice)
         {
             _price = closingPrice;
+        }
+
+        /// <summary>
+        /// Gets the total value of the specified <paramref name="quantity"/> of shares of this security
+        /// in the account currency
+        /// </summary>
+        /// <param name="quantity">The quantity of shares</param>
+        /// <returns>The value of the quantity of shares in the account currency</returns>
+        public virtual decimal GetQuantityValue(decimal quantity)
+        {
+            return _price * quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
         }
 
         /// <summary>
