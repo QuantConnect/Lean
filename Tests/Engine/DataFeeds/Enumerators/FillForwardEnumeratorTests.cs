@@ -675,7 +675,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         }
 
         [Test]
-        public void FillForwardHoursAtEndOfDayByHalfHour()
+        public void FillsForwardHoursAtEndOfDayByHalfHour()
         {
             var dataResolution = Time.OneHour;
             var reference = new DateTime(2015, 6, 25, 14, 0, 0);
@@ -1131,7 +1131,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [TestCase(Resolution.Minute, Resolution.Minute)]
         [TestCase(Resolution.Minute, Resolution.Daily)]
         [TestCase(Resolution.Daily, Resolution.Minute)]
-        public void FillForwardBarsForDifferentResolutions(Resolution resolution, Resolution anotherSymbolResolution)
+        public void FillsForwardBarsForDifferentResolutions(Resolution resolution, Resolution anotherSymbolResolution)
         {
             FillForwardTestAlgorithm.FillForwardBars.Clear();
 
@@ -1501,39 +1501,47 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             new TestCaseData(new SecurityExchange(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, null, SecurityType.Forex)), DateTimeZone.Utc, Resolution.Daily)
         };
 
-        private static IEnumerable<TestCaseData> ExchangeSettings(string daylight, DateTime start, int durationInDays)
+        private static IEnumerable<TestCaseData> ExchangeSettings(string daylight, DateTime start, params object[] extra)
         {
             return ExchangeSet.Select(origin =>
             {
                 var list = new List<object>(origin.Arguments)
                 {
                     daylight,
-                    start,
-                    durationInDays
+                    start
                 };
+
+                if (extra?.Any() == true)
+                {
+                    list.AddRange(extra);
+                }
 
                 return new TestCaseData(list.ToArray());
             });
         }
 
-        private static IEnumerable<TestCaseData> ExchangeDaylightTimeSet(int durationInDays)
+        private static IEnumerable<TestCaseData> ExchangeDaylightTimeSet(int durationInDays, Resolution fillforwardResolution)
         {
-            return ExchangeSettings("DST", new DateTime(2011, 3, 7), durationInDays);
+            return ExchangeSettings("DST", new DateTime(2011, 3, 7), durationInDays, fillforwardResolution);
         }
 
-        private static IEnumerable<TestCaseData> ExchangeStandardTimeSet(int durationInDays)
+        private static IEnumerable<TestCaseData> ExchangeStandardTimeSet(int durationInDays, Resolution fillforwardResolution)
         {
-            return ExchangeSettings("ST", new DateTime(2011, 10, 31), durationInDays);
+            return ExchangeSettings("ST", new DateTime(2011, 10, 31), durationInDays, fillforwardResolution);
         }
 
         [Test]
-        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 6 })]
-        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 7 })]
-        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 14 })]
-        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 6 })]
-        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 7 })]
-        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 14 })]
-        public void FillForwardBarsAroundDaylightMovementForDifferentResolutions_Enumerator(SecurityExchange exchange, DateTimeZone dataTimeZone, Resolution resolution, string dst, DateTime reference, int durationInDays)
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 6, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 7, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 14, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 6, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 7, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 14, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 7, Resolution.Minute })]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 7, Resolution.Hour })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 7, Resolution.Minute })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 7, Resolution.Hour })]
+        public void FillsForwardBarsAroundDaylightMovementForDifferentResolutions_Enumerator(SecurityExchange exchange, DateTimeZone dataTimeZone, Resolution resolution, string dst, DateTime reference, int durationInDays, Resolution fillforwardResolution)
         {
             var data = new[]
             {
@@ -1558,7 +1566,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var fillForwardEnumerator = new FillForwardEnumerator(
                 enumerator,
                 exchange,
-                Ref.Create(resolution.ToTimeSpan()),
+                Ref.Create(fillforwardResolution.ToTimeSpan()),
                 isExtendedMarketHours,
                 data.Last().EndTime,
                 resolution.ToTimeSpan(),
@@ -1576,7 +1584,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             fillForwardEnumerator.Dispose();
 
-            var expectedDataFile = $"enum_{dst}_{durationInDays}_{exchange.TimeZone.Id.Replace("/", "_")}_{dataTimeZone.Id.Replace("/","_")}_{resolution}.txt";
+            var expectedDataFile = $"enum_{dst}_{durationInDays}_{exchange.TimeZone.Id.Replace("/", "_")}_{dataTimeZone.Id.Replace("/", "_")}_{resolution}_{fillforwardResolution}.txt";
 
             // updates expected data
             if (false)
@@ -1595,13 +1603,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         }
 
         [Test]
-        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 6 })]
-        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 7 })]
-        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 14 })]
-        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 6 })]
-        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 7 })]
-        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 14 })]
-        public void FillForwardBarsAroundDaylightMovementForDifferentResolutions_Algorithm(SecurityExchange exchange, DateTimeZone dataTimeZone, Resolution resolution, string dst, DateTime reference, int durationInDays)
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 6, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 7, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 14, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 6, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 7, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 14, Resolution.Daily })]
+        public void FillsForwardBarsAroundDaylightMovementForDifferentResolutions_Algorithm(SecurityExchange exchange, DateTimeZone dataTimeZone, Resolution resolution, string dst, DateTime reference, int durationInDays, Resolution ffResolution)
         {
             MarketHoursDatabase MarketHours = MarketHoursDatabase.FromDataFolder();
             MarketHours.SetEntry(
@@ -1643,6 +1651,114 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.AreEqual(expected.Length, FillForwardDaylightMovementTestAlgorithm.FillForwardBars.Count);
             Assert.IsTrue(expected.SequenceEqual(FillForwardDaylightMovementTestAlgorithm.FillForwardBars));
+        }
+
+        [Test]
+        public void SkipFF2AMOfSundayDST()
+        {
+            var dataResolution = Time.OneHour;
+            var reference = new DateTime(2011, 3, 12);
+            var dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
+            var exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+
+            var data = new[]
+            {
+                new TradeBar
+                {
+                    Time = reference.ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 0,
+                    Period = dataResolution,
+                    Volume = 100
+                },
+                new TradeBar
+                {
+                    Time = reference.AddDays(2).ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 2,
+                    Period = dataResolution,
+                    Volume = 100
+                }
+            }.ToList();
+            var enumerator = data.GetEnumerator();
+
+            var fillForwardEnumerator = new FillForwardEnumerator(
+                enumerator,
+                exchange,
+                Ref.Create(dataResolution),
+                false,
+                data.Last().EndTime,
+                dataResolution,
+                dataTimeZone);
+
+            int count = 0;
+            while (fillForwardEnumerator.MoveNext())
+            {
+                if (fillForwardEnumerator.Current?.IsFillForward == true)
+                {
+                    if (fillForwardEnumerator.Current.Time.DayOfWeek == DayOfWeek.Sunday &&
+                        fillForwardEnumerator.Current.Time.Hour == 2)
+                    {
+                        Assert.Fail("Shouldn't fill forward bar of 1AM of Sunday when changed Daylight Saving Time.");
+                    }
+                }
+
+                count++;
+            }
+
+            Assert.Greater(count, 0);
+            fillForwardEnumerator.Dispose();
+        }
+
+        [Test]
+        public void FillsForward2AMOfSundayST()
+        {
+            var dataResolution = Time.OneHour;
+            var reference = new DateTime(2011, 11, 5);
+            var dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
+            var exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+
+            var data = new[]
+            {
+                new TradeBar
+                {
+                    Time = reference.ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 0,
+                    Period = dataResolution,
+                    Volume = 100
+                },
+                new TradeBar
+                {
+                    Time = reference.AddDays(2).ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 2,
+                    Period = dataResolution,
+                    Volume = 100
+                }
+            }.ToList();
+            var enumerator = data.GetEnumerator();
+
+            var fillForwardEnumerator = new FillForwardEnumerator(
+                enumerator,
+                exchange,
+                Ref.Create(dataResolution),
+                false,
+                data.Last().EndTime,
+                dataResolution,
+                dataTimeZone);
+
+            int count = 0;
+            while (fillForwardEnumerator.MoveNext())
+            {
+                if (fillForwardEnumerator.Current?.IsFillForward == true)
+                {
+                    if (fillForwardEnumerator.Current.Time.DayOfWeek == DayOfWeek.Sunday &&
+                        fillForwardEnumerator.Current.Time.Hour == 2)
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            Assert.AreEqual(1, count);
+            fillForwardEnumerator.Dispose();
         }
 
         internal class FillForwardTestAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
