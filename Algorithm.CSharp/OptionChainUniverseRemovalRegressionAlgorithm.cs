@@ -75,14 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            // liquidate removed securities
-            foreach (var security in _changes.RemovedSecurities)
-            {
-                if (security.Invested)
-                {
-                    Liquidate(security.Symbol);
-                }
-            }
+            Debug(GetStatusLog());
 
             foreach (var security in _changes.AddedSecurities)
             {
@@ -106,7 +99,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            Debug($"{Time}-{changes}");
+            Debug($"{GetStatusLog()}. CHANGES {changes}");
             if (Time.Day == 6)
             {
                 if (Time.Hour != 0 && Time.Hour != 9)
@@ -186,6 +179,17 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("There shouldn't be any disposed universe, they should be removed and replaced by new universes");
             }
+        }
+
+        private string GetStatusLog()
+        {
+            Plot("Status", "UniverseCount", UniverseManager.Count);
+            Plot("Status", "SubscriptionCount", SubscriptionManager.Subscriptions.Count());
+            Plot("Status", "ActiveSymbolsCount", UniverseManager.ActiveSecurities.Count);
+
+            return $"{Time} | UniverseCount {UniverseManager.Count}. " +
+                $"SubscriptionCount {SubscriptionManager.Subscriptions.Count()}. " +
+                $"ActiveSymbols {string.Join(",", UniverseManager.ActiveSecurities.Keys)}";
         }
 
         /// <summary>
