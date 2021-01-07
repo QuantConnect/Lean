@@ -95,7 +95,7 @@ namespace QuantConnect.Securities.Option
         public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
             var security = parameters.Security;
-            return security.Holdings.AbsoluteHoldingsCost * GetMaintenanceMarginRequirement(security, security.Holdings.HoldingsCost);
+            return parameters.AbsoluteHoldingsCost * GetMaintenanceMarginRequirement(security, security.Holdings.HoldingsCost);
         }
 
         /// <summary>
