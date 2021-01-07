@@ -493,17 +493,17 @@ namespace QuantConnect.Orders.Fills
             // have large gaps, in which case the currentBar.EndTime will be in the past
             // ASUR  | | |      [order]        | | | | | | |
             //  SPY  | | | | | | | | | | | | | | | | | | | |
-            var openTime = DateTime.MinValue;
             var endTime = DateTime.MinValue;
 
             var subscribedTypes = GetSubscribedTypes(asset);
 
             if (subscribedTypes.Contains(typeof(Tick)))
             {
-                var trade = asset.Cache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+                // Get the first valid (non-zero) tick of trade type from an open market
+                var trade = asset.Cache.GetAll<Tick>().FirstOrDefault(x =>
+                    x.TickType == TickType.Trade && x.Price > 0 && asset.Exchange.DateTimeIsOpen(x.Time));
                 if (trade != null)
                 {
-                    openTime = trade.Time;
                     endTime = trade.EndTime;
                     fill.FillPrice = trade.Price;
                 }
@@ -513,7 +513,14 @@ namespace QuantConnect.Orders.Fills
                 var tradeBar = asset.Cache.GetData<TradeBar>();
                 if (tradeBar != null)
                 {
-                    openTime = tradeBar.Time;
+                    // If the first data after the market opens is a quote bar (high resolution only),
+                    // the open of the last trade bar is not the open for the current day, but the last open in cache.
+                    // We need to verify whether the trade data is from the open market.
+                    if (tradeBar.Period < Resolution.Hour.ToTimeSpan() && !asset.Exchange.DateTimeIsOpen(tradeBar.Time))
+                    {
+                        return fill;
+                    }
+
                     endTime = tradeBar.EndTime;
                     fill.FillPrice = tradeBar.Open;
                 }
@@ -524,15 +531,6 @@ namespace QuantConnect.Orders.Fills
 
             // if the MOO was submitted during market the previous day, wait for a day to turn over
             if (asset.Exchange.DateTimeIsOpen(localOrderTime) && localOrderTime.Date == asset.LocalTime.Date)
-            {
-                return fill;
-            }
-
-            // If the first data after the market opens is a quote bar (high resolution only),
-            // the open of the last trade bar is not the open for the current day, but the last open in cache.
-            // We need to verify whether the trade data is from the open market.
-            var resolution = Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol).GetHighestResolution();
-            if (resolution < Resolution.Hour && !asset.Exchange.DateTimeIsOpen(openTime))
             {
                 return fill;
             }

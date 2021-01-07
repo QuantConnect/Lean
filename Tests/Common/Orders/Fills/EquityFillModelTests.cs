@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
@@ -576,6 +577,80 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             // Fill with trade bar
             security.SetMarketPrice(new TradeBar(time, Symbols.SPY, expected, 2.0m, 1.1m, 1.40m, 100));
+            fill = model.MarketOnOpenFill(security, order);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(expected, fill.FillPrice);
+        }
+
+        [Test]
+        public void PerformsMarketOnOpenUsingOpenPriceWithTickSubscription()
+        {
+            var reference = new DateTime(2015, 06, 05, 9, 0, 0); // before market open
+            var model = new EquityFillModel();
+            var order = new MarketOnOpenOrder(Symbols.SPY, 100, reference);
+            var config = CreateTickConfig(Symbols.SPY);
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            var time = reference;
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            security.Update(new List<Tick>
+            {
+                new Tick(time, Symbols.SPY, "", "", 100, 1m),
+                new Tick(time, Symbols.SPY, 1m, 0.9m, 1.1m)
+            }, typeof(Tick));
+
+            var fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour)).OrderEvent;
+
+            Assert.AreEqual(0, fill.FillQuantity);
+
+            // market opens after 30min, so this is just before market open
+            time = reference.AddMinutes(29);
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            security.Update(new List<Tick>
+            {
+                new Tick(time, Symbols.SPY, "", "", 100, 1m),
+                new Tick(time, Symbols.SPY, 1m, 0.9m, 1.1m)
+            }, typeof(Tick));
+
+            fill = model.MarketOnOpenFill(security, order);
+            Assert.AreEqual(0, fill.FillQuantity);
+
+            const decimal expected = 1m;
+            // market opens after 30min
+            time = reference.AddMinutes(30);
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            // The quote is received after the market is open, but the trade is not
+            security.Update(new List<Tick>
+            {
+                new Tick(time.AddMinutes(-1), Symbols.SPY, "", "", 100, expected),
+                new Tick(time, Symbols.SPY, 1m, 0.9m, 1.1m)
+            }, typeof(Tick));
+
+            fill = model.MarketOnOpenFill(security, order);
+            Assert.AreEqual(0, fill.FillQuantity);
+
+            // One trade and quote is received after the market is open, but there is trade prior to that with different price
+            security.Update(new List<Tick>
+            {
+                new Tick(time.AddMinutes(-1), Symbols.SPY, "", "", 100, 0.9m),
+                new Tick(time, Symbols.SPY, "", "", 100, expected),
+                new Tick(time, Symbols.SPY, 1m, 0.9m, 1.1m)
+            }, typeof(Tick));
+
             fill = model.MarketOnOpenFill(security, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(expected, fill.FillPrice);
