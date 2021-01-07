@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -319,6 +319,9 @@ namespace QuantConnect.Lean.Engine
                 // process split warnings for options
                 ProcessSplitSymbols(algorithm, splitWarnings, delistings);
 
+                // after filling orders and removing/modifying securities (splits/delistings) - see if we need to re-evaluate position groups
+                algorithm.Portfolio.Positions.ResolvePositionGroups();
+
                 //Check if the user's signalled Quit: loop over data until day changes.
                 if (algorithm.Status == AlgorithmStatus.Stopped)
                 {
@@ -623,6 +626,9 @@ namespace QuantConnect.Lean.Engine
                 //If its the historical/paper trading models, wait until market orders have been "filled"
                 // Manually trigger the event handler to prevent thread switch.
                 transactions.ProcessSynchronousEvents();
+
+                // check again to see if there we need to re-resolve our position groupings
+                algorithm.Portfolio.Positions.ResolvePositionGroups();
 
                 // sample alpha charts now that we've updated time/price information and after transactions
                 // are processed so that insights closed because of new order based insights get updated
