@@ -189,11 +189,11 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// AddData<typeparam name="T"/> a new user defined data source including symbol properties and exchange hours,
+        /// AddData a new user defined data source including symbol properties and exchange hours,
         /// all other vars are not required and will use defaults.
         /// This overload reflects the C# equivalent for custom properties and market hours
         /// </summary>
-        /// <param name="dataType">The custom type being added</param>
+        /// <param name="type">Data source type</param>
         /// <param name="ticker">Key/Ticker for data</param>
         /// <param name="properties">The properties of this new custom data</param>
         /// <param name="exchangeHours">The Exchange hours of this symbol</param>
