@@ -37,21 +37,6 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class RelativeVigorIndex : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        /// <summary>
-        /// An optional signal line which behaves like a slowed version of the RVI.
-        /// </summary>
-        public RviSignal Signal { get; }
-
-        /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady => CloseBand.IsReady && RangeBand.IsReady;
-
-        /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        public int WarmUpPeriod { get; }
-        
         private readonly RollingWindow<IBaseDataBar> _previousInputs;
 
         /// <summary>
@@ -64,6 +49,21 @@ namespace QuantConnect.Indicators
         /// </summary>
         private IndicatorBase<IndicatorDataPoint> RangeBand { get; }
         
+        /// <summary>
+        /// A signal line which behaves like a slowed version of the RVI.
+        /// </summary>
+        public RelativeVigorIndexSignal Signal { get; }
+
+        /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => CloseBand.IsReady && RangeBand.IsReady;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod { get; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="RelativeVigorIndex"/> (RVI) class.
         /// </summary>
@@ -86,27 +86,10 @@ namespace QuantConnect.Indicators
             WarmUpPeriod = period + 3;
             CloseBand = type.AsIndicator("_closingBand", period);
             RangeBand = type.AsIndicator("_rangeBand", period);
+            Signal = new RelativeVigorIndexSignal($"{name}_S");
             _previousInputs = new RollingWindow<IBaseDataBar>(3);
         }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RelativeVigorIndex"/> (RVI) class along with a signal term.
-        /// </summary>
-        /// <param name="name">The name of this indicator.</param>
-        /// <param name="signalName">The name of the signal associated with this indicator.</param>
-        /// <param name="period">The period for the RelativeVigorIndex.</param>
-        /// <param name="type">The type of Moving Average to use</param>
-        public RelativeVigorIndex(
-            string name, string signalName, int period, MovingAverageType type = MovingAverageType.Simple)
-            : base(name)
-        {
-            WarmUpPeriod = period + 3;
-            CloseBand = type.AsIndicator("_closingBand", period);
-            RangeBand = type.AsIndicator("_rangeBand", period);
-            _previousInputs = new RollingWindow<IBaseDataBar>(3);
-            Signal = new RviSignal(signalName);
-        }
-
+        
         /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
@@ -126,16 +109,17 @@ namespace QuantConnect.Indicators
                 var h = _previousInputs[2].High - _previousInputs[2].Low;
                 CloseBand.Update(input.Time, (a + 2 * (b + c) + d) / 6);
                 RangeBand.Update(input.Time, (e + 2 * (f + g) + h) / 6);
+                
+                if (CloseBand.IsReady && RangeBand.IsReady && RangeBand != 0m)
+                {
+                    _previousInputs.Add(input);
+                    var rvi = CloseBand / RangeBand;
+                    Signal?.Update(input.Time, rvi); // Checks for null before updating.
+                    return rvi;
+                }
             }
-
+            
             _previousInputs.Add(input);
-            if (CloseBand.IsReady && RangeBand.IsReady)
-            {
-                var rvi = CloseBand / RangeBand;
-                Signal?.Update(input.Time, rvi); // Checks for null before updating.
-                return rvi;
-            }
-
             return 0m;
         }
 
@@ -149,62 +133,6 @@ namespace QuantConnect.Indicators
             RangeBand.Reset();
             _previousInputs.Reset();
             Signal?.Reset();
-        }
-
-        /// <summary>
-        /// The signal for the Relative Vigor Index, itself an indicator. 
-        /// </summary>
-        public class RviSignal : Indicator, IIndicatorWarmUpPeriodProvider
-        {
-            private readonly RollingWindow<IndicatorDataPoint> _rollingRvi;
-
-            /// <summary>
-            /// Initializes the signal term.
-            /// </summary>
-            /// <param name="name"></param>
-            public RviSignal(string name)
-                : base(name)
-            {
-                WarmUpPeriod = 3;
-                _rollingRvi = new RollingWindow<IndicatorDataPoint>(3);
-            }
-
-            /// <summary>
-            /// Gets a flag indicating when this indicator is ready and fully initialized
-            /// </summary>
-            public override bool IsReady => _rollingRvi.IsReady;
-
-            /// <summary>
-            /// Resets this indicator to its initial state
-            /// </summary>
-            public int WarmUpPeriod { get; }
-
-            /// <summary>
-            /// Computes the next value of this indicator from the given state
-            /// </summary>
-            /// <param name="input">The input given to the indicator</param>
-            /// <returns>A new value for this indicator</returns>
-            protected override decimal ComputeNextValue(IndicatorDataPoint input)
-            {
-                if (IsReady)
-                {
-                    var output = (input.Value + 2 * (_rollingRvi[0] + _rollingRvi[1]) + _rollingRvi[2]) / 6;
-                    _rollingRvi.Add(input);
-                    return output;
-                }
-
-                _rollingRvi.Add(input);
-                return 0m;
-            }
-
-            /// <summary>
-            /// Resets this indicator to its initial state
-            /// </summary>
-            public override void Reset()
-            {
-                base.Reset();
-                _rollingRvi.Reset();
-            }
         }
     }
 }

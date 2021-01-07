@@ -24,7 +24,7 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
-            return new RelativeVigorIndex("RVI", "RVI_S", 10);
+            return new RelativeVigorIndex("RVI", 10);
         }
 
         protected override string TestFileName => "spy_rvi.txt";
@@ -37,6 +37,26 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.TestIndicator(rvi, TestFileName, "RVI_S",
                 (ind, expected) => Assert.AreEqual(expected, 
                     (double) ((RelativeVigorIndex) ind).Signal.Current.Value, 0.06));
+        }
+
+        [Test]
+        public void TestDivByZero() // Should give 0 (default) to avoid div by zero errors.
+        {
+            var rvi = CreateIndicator();
+            for (int i = 0; i < 13; i++)
+            {
+                var tradeBar = new TradeBar
+                    {
+                        Open = 0m,
+                        Close = 0m,
+                        High = 0m,
+                        Low = 0m,
+                        Volume = 1
+                    };
+                    rvi.Update(tradeBar);
+            }
+            Assert.AreEqual(rvi.Current.Value, 0m);
+            Assert.AreEqual(((RelativeVigorIndex) rvi).Signal.Current.Value, 0m);
         }
     }
 }
