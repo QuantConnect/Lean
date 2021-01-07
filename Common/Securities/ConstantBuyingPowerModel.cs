@@ -65,7 +65,7 @@ namespace QuantConnect.Securities
         /// <returns>The maintenance margin required for the </returns>
         public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
-            return parameters.Security.Holdings.AbsoluteQuantity * _marginRequiredPerUnitInAccountCurrency;
+            return parameters.AbsoluteQuantity * _marginRequiredPerUnitInAccountCurrency;
         }
     }
 }

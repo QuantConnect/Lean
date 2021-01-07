@@ -67,7 +67,6 @@ namespace QuantConnect.Securities
             _currencyConverter = holding._currencyConverter;
         }
 
-
         /// <summary>
         /// The security being held
         /// </summary>

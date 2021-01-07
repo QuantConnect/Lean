@@ -159,8 +159,7 @@ namespace QuantConnect.Securities
         /// <returns>The maintenance margin required for the </returns>
         public virtual MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
-            var security = parameters.Security;
-            return security.Holdings.AbsoluteHoldingsValue * _maintenanceMarginRequirement;
+            return parameters.AbsoluteHoldingsValue * _maintenanceMarginRequirement;
         }
 
         /// <summary>

@@ -105,7 +105,7 @@ namespace QuantConnect.Securities
         /// <returns>The maintenance margin required for the </returns>
         public static decimal GetMaintenanceMargin(this IBuyingPowerModel model, Security security)
         {
-            return model.GetMaintenanceMargin(new MaintenanceMarginParameters(security));
+            return model.GetMaintenanceMargin(MaintenanceMarginParameters.ForCurrentHoldings(security));
         }
 
         /// <summary>
