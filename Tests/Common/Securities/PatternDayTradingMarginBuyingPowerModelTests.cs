@@ -20,8 +20,10 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -34,17 +36,26 @@ namespace QuantConnect.Tests.Common.Securities
         private static readonly DateTime NoonHoliday = new DateTime(2016, 02, 15, 12, 0, 0);
         private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
 
+        private BuyingPowerModelComparator GetModel(decimal closed = 2m, decimal open = 4m)
+        {
+            return new BuyingPowerModelComparator(
+                new PatternDayTradingMarginModel(closed, open),
+                new SecurityPositionGroupBuyingPowerModel(),
+                timeKeeper: TimeKeeper
+            );
+        }
+
         [Test]
         public void InitializationTests()
         {
             // No parameters initialization, used default PDT 4x leverage open market and 2x leverage otherwise
-            var model = new PatternDayTradingMarginModel();
-            var leverage = model.GetLeverage(CreateSecurity(Noon));
+            var model = GetModel();
+            var leverage = model.GetLeverage(CreateSecurity(model.SecurityModel, Noon));
 
             Assert.AreEqual(4.0m, leverage);
 
-            model = new PatternDayTradingMarginModel(2.0m, 5.0m);
-            leverage = model.GetLeverage(CreateSecurity(Noon));
+            model = GetModel(2m, 5m);
+            leverage = model.GetLeverage(CreateSecurity(model.SecurityModel, Noon));
 
             Assert.AreEqual(5.0m, leverage);
         }
@@ -52,18 +63,18 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void SetLeverageTest()
         {
-            var model = new PatternDayTradingMarginModel();
+            var model = GetModel();
 
             // Open market
-            var security = CreateSecurity(Noon);
+            var security = CreateSecurity(model.SecurityModel, Noon);
 
-            security.BuyingPowerModel = new PatternDayTradingMarginModel();
+            security.BuyingPowerModel = GetModel();
 
             model.SetLeverage(security, 10m);
             Assert.AreNotEqual(10m, model.GetLeverage(security));
 
             // Closed market
-            security = CreateSecurity(Midnight);
+            security = CreateSecurity(model.SecurityModel, Midnight);
 
             model.SetLeverage(security, 10m);
             Assert.AreNotEqual(10m, model.GetLeverage(security));
@@ -79,8 +90,8 @@ namespace QuantConnect.Tests.Common.Securities
             var leverage = 4m;
             var expected = 100 * 100m / leverage + 1;
 
-            var model = new PatternDayTradingMarginModel();
-            var security = CreateSecurity(Noon);
+            var model = GetModel();
+            var security = CreateSecurity(model.SecurityModel, Noon);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
@@ -96,8 +107,8 @@ namespace QuantConnect.Tests.Common.Securities
             var leverage = 5m;
             var expected = 100 * 100m / leverage + 1;
 
-            var model = new PatternDayTradingMarginModel(2m, leverage);
-            var security = CreateSecurity(Noon);
+            var model = GetModel(2m, leverage);
+            var security = CreateSecurity(model.SecurityModel, Noon);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
@@ -111,10 +122,10 @@ namespace QuantConnect.Tests.Common.Securities
             var leverage = 2m;
             var expected = 100 * 100m / leverage + 1;
 
-            var model = new PatternDayTradingMarginModel();
+            var model = GetModel();
 
             // Market is Closed on Tuesday, Feb, 16th 2016 at Midnight
-            var security = CreateSecurity(Midnight);
+            var security = CreateSecurity(model.SecurityModel, Midnight);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
@@ -122,7 +133,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)).Value, 1e-3);
 
             // Market is Closed on Monday, Feb, 15th 2016 at Noon (US President Day)
-            security = CreateSecurity(NoonHoliday);
+            security = CreateSecurity(model.SecurityModel, NoonHoliday);
             order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
@@ -130,7 +141,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)).Value, 1e-3);
 
             // Market is Closed on Sunday, Feb, 14th 2016 at Noon
-            security = CreateSecurity(NoonWeekend);
+            security = CreateSecurity(model.SecurityModel, NoonWeekend);
             order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
@@ -144,10 +155,10 @@ namespace QuantConnect.Tests.Common.Securities
             var leverage = 3m;
             var expected = 100 * 100m / leverage + 1;
 
-            var model = new PatternDayTradingMarginModel(leverage, 4m);
+            var model = GetModel(leverage, 4m);
 
             // Market is Closed on Tuesday, Feb, 16th 2016 at Midnight
-            var security = CreateSecurity(Midnight);
+            var security = CreateSecurity(model.SecurityModel, Midnight);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
@@ -155,7 +166,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)).Value, 1e-3);
 
             // Market is Closed on Monday, Feb, 15th 2016 at Noon (US President Day)
-            security = CreateSecurity(NoonHoliday);
+            security = CreateSecurity(model.SecurityModel, NoonHoliday);
             order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
@@ -163,7 +174,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)).Value, 1e-3);
 
             // Market is Closed on Sunday, Feb, 14th 2016 at Noon
-            security = CreateSecurity(NoonWeekend);
+            security = CreateSecurity(model.SecurityModel, NoonWeekend);
             order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
@@ -177,10 +188,10 @@ namespace QuantConnect.Tests.Common.Securities
             var closedLeverage = 2m;
             var openLeverage = 5m;
 
-            var model = new PatternDayTradingMarginModel(closedLeverage, openLeverage);
+            var model = GetModel(closedLeverage, openLeverage);
 
             // Market is Closed on Tuesday, Feb, 16th 2016 at 16
-            var security = CreateSecurity(new DateTime(2016, 2, 16, 15, 49, 0));
+            var security = CreateSecurity(model.SecurityModel, new DateTime(2016, 2, 16, 15, 49, 0));
             Assert.AreEqual(openLeverage, model.GetLeverage(security));
             Assert.IsFalse(security.Exchange.ClosingSoon);
 
@@ -196,16 +207,16 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void VerifyMaintenaceMargin()
         {
-            var model = new PatternDayTradingMarginModel();
+            var model = GetModel();
 
             // Open Market
-            var security = CreateSecurity(Noon);
+            var security = CreateSecurity(model.SecurityModel, Noon);
             security.Holdings.SetHoldings(100m, 100);
 
             Assert.AreEqual((double)100 * 100 / 4, (double)model.GetMaintenanceMargin(security), 1e-3);
 
             // Closed Market
-            security = CreateSecurity(Midnight);
+            security = CreateSecurity(model.SecurityModel, Midnight);
             security.Holdings.SetHoldings(100m, 100);
 
             Assert.AreEqual((double)100 * 100 / 2, (double)model.GetMaintenanceMargin(security), 1e-3);
@@ -219,10 +230,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             var orderProcessor = new FakeOrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity, Noon);
-            var model = new PatternDayTradingMarginModel();
+            var model = GetModel();
 
             // Open Market
-            var security = CreateSecurity(Noon);
+            var security = CreateSecurity(model.SecurityModel, Noon);
             security.BuyingPowerModel = model;
             security.Holdings.SetHoldings(securityPrice, quantity);
             portfolio.Securities.Add(security);
@@ -246,10 +257,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             var orderProcessor = new FakeOrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity, Midnight);
-            var model = new PatternDayTradingMarginModel();
+            var model = GetModel();
 
             // Open Market
-            var security = CreateSecurity(Midnight);
+            var security = CreateSecurity(model.SecurityModel, Midnight);
             security.BuyingPowerModel = model;
             security.Holdings.SetHoldings(securityPrice, quantity);
             portfolio.Securities.Add(security);
@@ -273,10 +284,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             var orderProcessor = new FakeOrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity, Noon);
-            var model = new PatternDayTradingMarginModel();
+            var model = GetModel();
 
             // Open Market
-            var security = CreateSecurity(Noon);
+            var security = CreateSecurity(model.SecurityModel, Noon);
             security.BuyingPowerModel = model;
             security.Holdings.SetHoldings(securityPrice, quantity);
             portfolio.Securities.Add(security);
@@ -299,10 +310,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             var orderProcessor = new FakeOrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity, Midnight);
-            var model = new PatternDayTradingMarginModel();
+            var model = GetModel();
 
             // Open Market
-            var security = CreateSecurity(Midnight);
+            var security = CreateSecurity(model.SecurityModel, Midnight);
             security.BuyingPowerModel = model;
             security.Holdings.SetHoldings(securityPrice, quantity);
             portfolio.Securities.Add(security);
@@ -330,7 +341,7 @@ namespace QuantConnect.Tests.Common.Securities
             return portfolio;
         }
 
-        private static Security CreateSecurity(DateTime newLocalTime)
+        private static Security CreateSecurity(IBuyingPowerModel buyingPowerModel, DateTime newLocalTime)
         {
             var security = new Security(
                 CreateUsEquitySecurityExchangeHours(),
@@ -342,6 +353,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new SecurityCache()
             );
             TimeKeeper.SetUtcDateTime(newLocalTime.ConvertToUtc(security.Exchange.TimeZone));
+            security.BuyingPowerModel = buyingPowerModel;
             security.Exchange.SetLocalDateTimeFrontier(newLocalTime);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, newLocalTime, 100m));

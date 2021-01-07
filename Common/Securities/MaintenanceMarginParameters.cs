@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -81,8 +81,14 @@ namespace QuantConnect.Securities
         /// Creates a new instance of the <see cref="MaintenanceMarginParameters"/> class to compute the maintenance margin
         /// required to support the algorithm's current holdings
         /// </summary>
-        public static MaintenanceMarginParameters ForCurrentHoldings(Security security)
+        public static MaintenanceMarginParameters ForCurrentHoldings(Security security, decimal? quantity = null)
         {
+            if (quantity != null)
+            {
+                var value = security.Holdings.GetQuantityValue(quantity.Value);
+                return new MaintenanceMarginParameters(security, quantity.Value, value, value);
+            }
+
             return new MaintenanceMarginParameters(security,
                 security.Holdings.Quantity,
                 security.Holdings.HoldingsCost,

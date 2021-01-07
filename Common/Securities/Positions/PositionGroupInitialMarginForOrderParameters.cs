@@ -15,17 +15,22 @@
 
 using QuantConnect.Orders;
 
-namespace QuantConnect.Securities
+namespace QuantConnect.Securities.Positions
 {
     /// <summary>
-    /// Defines the parameters for <see cref="BuyingPowerModel.GetInitialMarginRequiredForOrder"/>
+    /// Defines parameters for <see cref="IPositionGroupBuyingPowerModel.GetInitialMarginRequiredForOrder"/>
     /// </summary>
-    public class InitialMarginRequiredForOrderParameters
+    public class PositionGroupInitialMarginForOrderParameters
     {
         /// <summary>
-        /// Gets the security
+        /// Gets the algorithm's portfolio manager
         /// </summary>
-        public Security Security { get; }
+        public SecurityPortfolioManager Portfolio { get; }
+
+        /// <summary>
+        /// Gets the position group
+        /// </summary>
+        public IPositionGroup PositionGroup { get; }
 
         /// <summary>
         /// Gets the order
@@ -33,25 +38,20 @@ namespace QuantConnect.Securities
         public Order Order { get; }
 
         /// <summary>
-        /// Gets the currency converter
+        /// Initializes a new instance of the <see cref="PositionGroupInitialMarginForOrderParameters"/> class
         /// </summary>
-        public ICurrencyConverter CurrencyConverter { get; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="InitialMarginRequiredForOrderParameters"/> class
-        /// </summary>
-        /// <param name="currencyConverter">The currency converter</param>
-        /// <param name="security">The security</param>
+        /// <param name="portfolio">The algorithm's portfolio manager</param>
+        /// <param name="positionGroup">The position group</param>
         /// <param name="order">The order</param>
-        public InitialMarginRequiredForOrderParameters(
-            ICurrencyConverter currencyConverter,
-            Security security,
+        public PositionGroupInitialMarginForOrderParameters(
+            SecurityPortfolioManager portfolio,
+            IPositionGroup positionGroup,
             Order order
             )
         {
+            Portfolio = portfolio;
+            PositionGroup = positionGroup;
             Order = order;
-            Security = security;
-            CurrencyConverter = currencyConverter;
         }
     }
 }
