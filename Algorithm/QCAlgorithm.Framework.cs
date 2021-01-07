@@ -113,14 +113,21 @@ namespace QuantConnect.Algorithm
                         continue;
                     }
 
+                    if (ukvp.Value.DisposeRequested)
+                    {
+                        // have to remove in the next loop after the universe is marked as disposed, when 'Dispose()' is called it will trigger universe selection
+                        // and deselect all symbols, sending the removed security changes, which are picked up by the AlgorithmManager and tags securities
+                        // as non tradable as long as they are not active in any universe (uses UniverseManager.ActiveSecurities)
+                        // but they will remain tradable if a position is still being hold since they won't be remove from the UniverseManager
+                        // but this last part will not happen if we remove the universe from the UniverseManager right away, since it won't be part of 'UniverseManager'. 
+                        // And we have to remove the universe even if it's present at 'universes' because that one is another New universe that should get added!
+                        // 'UniverseManager' will skip duplicate entries getting added.
+                        UniverseManager.Remove(universeSymbol);
+                    }
+
                     Universe universe;
                     if (!universes.TryGetValue(universeSymbol, out universe))
                     {
-                        if (ukvp.Value.DisposeRequested)
-                        {
-                            UniverseManager.Remove(universeSymbol);
-                        }
-
                         // mark this universe as disposed to remove all child subscriptions
                         ukvp.Value.Dispose();
                     }

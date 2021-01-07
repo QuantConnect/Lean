@@ -191,6 +191,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (subscription.IsUniverseSelectionSubscription
                             && subscription.Universes.Single().DisposeRequested)
                         {
+                            var universe = subscription.Universes.Single();
+                            // check if a universe selection isn't already scheduled for this disposed universe
+                            if (universeData == null || !universeData.ContainsKey(universe))
+                            {
+                                if (universeData == null)
+                                {
+                                    universeData = new Dictionary<Universe, BaseDataCollection>();
+                                }
+                                // we force trigger one last universe selection for this disposed universe, so it deselects all subscriptions it added
+                                universeData[universe] = new BaseDataCollection(frontierUtc, subscription.Configuration.Symbol);
+                            }
+
                             // we need to do this after all usages of subscription.Universes
                             OnSubscriptionFinished(subscription);
                         }

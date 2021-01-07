@@ -160,6 +160,8 @@
     <Compile Include="FutureOptionShortCallOTMExpiryRegressionAlgorithm.cs" />
     <Compile Include="FutureOptionShortPutOTMExpiryRegressionAlgorithm.cs" />
     <Compile Include="FutureOptionShortPutITMExpiryRegressionAlgorithm.cs" />
+    <Compile Include="OptionChainSubscriptionRemovalRegressionAlgorithm.cs" />
+    <Compile Include="OptionChainUniverseRemovalRegressionAlgorithm.cs" />
     <Compile Include="ScaledFillForwardDataRegressionAlgorithm.cs" />
     <Compile Include="DailyHistoryForDailyResolutionRegressionAlgorithm.cs" />
     <Compile Include="DailyHistoryForMinuteResolutionRegressionAlgorithm.cs" />
