@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,6 +23,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Python;
+using QuantConnect.Securities.Positions;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
@@ -51,6 +52,11 @@ namespace QuantConnect.Securities
         public SecurityTransactionManager Transactions;
 
         /// <summary>
+        /// Local access to the position manager
+        /// </summary>
+        internal PositionManager Positions;
+
+        /// <summary>
         /// Gets the cash book that keeps track of all currency holdings (only settled cash)
         /// </summary>
         public CashBook CashBook { get; }
@@ -72,6 +78,7 @@ namespace QuantConnect.Securities
         {
             Securities = securityManager;
             Transactions = transactions;
+            Positions = new PositionManager(securityManager);
             MarginCallModel = new DefaultMarginCallModel(this, defaultOrderProperties);
 
             CashBook = new CashBook();
