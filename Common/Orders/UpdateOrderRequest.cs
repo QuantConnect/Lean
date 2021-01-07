@@ -47,6 +47,8 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal? StopPrice { get; private set; }
 
+        public decimal? TriggerPrice { get; private set; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="UpdateOrderRequest"/> class
         /// </summary>

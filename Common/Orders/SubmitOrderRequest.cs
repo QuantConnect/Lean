@@ -79,6 +79,15 @@ namespace QuantConnect.Orders
         {
             get; private set;
         }
+        
+        /// <summary>
+        /// Price which must first be reached before a limit order can be submitted.
+        /// </summary>
+        public decimal TriggerPrice
+        {
+            get; private set;
+
+        }
 
         /// <summary>
         /// Gets the order properties for this request

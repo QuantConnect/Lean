@@ -75,6 +75,11 @@ namespace QuantConnect.Orders.Fills
                         ? PythonWrapper.LimitFill(parameters.Security, parameters.Order as LimitOrder)
                         : LimitFill(parameters.Security, parameters.Order as LimitOrder);
                     break;
+                case OrderType.LimitIfTouched:
+                    orderEvent = PythonWrapper != null
+                        ? PythonWrapper.LimitIfTouchedFill(parameters.Security, parameters.Order as LimitIfTouchedOrder)
+                        : LimitIfTouchedFill(parameters.Security, parameters.Order as LimitIfTouchedOrder);
+                    break;
                 case OrderType.StopMarket:
                     orderEvent = PythonWrapper != null
                         ? PythonWrapper.StopMarketFill(parameters.Security, parameters.Order as StopMarketOrder)
@@ -100,6 +105,74 @@ namespace QuantConnect.Orders.Fills
             }
             return new Fill(orderEvent);
         }
+
+        private OrderEvent LimitIfTouchedFill(Security asset, LimitIfTouchedOrder order)
+        {
+            //Default order event to return.
+            var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
+            var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
+
+            //If its cancelled don't need anymore checks:
+            if (order.Status == OrderStatus.Canceled) return fill;
+
+            // make sure the exchange is open before filling -- allow pre/post market fills to occur
+            if (!IsExchangeOpen(
+                asset,
+                Parameters.ConfigProvider
+                    .GetSubscriptionDataConfigs(asset.Symbol)
+                    .IsExtendedMarketHours()))
+            {
+                return fill;
+            }
+
+            //Get the range of prices in the last bar:
+            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
+            var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+
+            // do not fill on stale data
+            if (pricesEndTime <= order.Time) return fill;
+
+            //Check if the limit if touched order was filled:
+            switch (order.Direction)
+            {
+                case OrderDirection.Buy:
+                    //-> 1.2 Buy Stop: If Price below Trigger, Buy:
+                    if (prices.High < order.TriggerPrice || order.TriggerTouched)
+                    {
+                        order.TriggerTouched = true;
+
+                        // Fill the limit order, using closing price of bar:
+                        // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
+                        if (prices.Current < order.LimitPrice)
+                        {
+                            fill.Status = OrderStatus.Filled;
+                            fill.FillPrice = Math.Min(prices.High, order.LimitPrice);
+                            // assume the order completely filled
+                            fill.FillQuantity = order.Quantity;
+                        }
+                    }
+                    break;
+
+                case OrderDirection.Sell:
+                    //-> 1.2 Buy Stop: If Price above Trigger, Sell:
+                    if (prices.Low > order.TriggerPrice || order.TriggerTouched)
+                    {
+                        order.TriggerTouched = true;
+
+                        // Fill the limit order, using minimum price of the bar
+                        // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
+                        if (prices.Current > order.LimitPrice)
+                        {
+                            fill.Status = OrderStatus.Filled;
+                            fill.FillPrice = Math.Max(prices.Low, order.LimitPrice);
+                            // assume the order completely filled
+                            fill.FillQuantity = order.Quantity;
+                        }
+                    }
+                    break;
+            }
+
+            return fill;        }
 
         /// <summary>
         /// Default market fill model for the base security class. Fills at the last traded price.

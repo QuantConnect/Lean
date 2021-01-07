@@ -177,11 +177,15 @@ namespace QuantConnect.Orders.Serialization
         public double? TimeInForceExpiry { get; set; }
 
         /// <summary>
+        /// The price which must first be reached before submitting a limit order.
+        /// </summary>
+        public decimal TriggerPrice { get; set; }
+
+        /// <summary>
         /// Empty constructor required for JSON converter.
         /// </summary>
         private SerializedOrder()
         {
-
         }
 
         /// <summary>
@@ -216,7 +220,6 @@ namespace QuantConnect.Orders.Serialization
             {
                 CanceledTime = Time.DateTimeToUnixTimeStamp(order.CanceledTime.Value);
             }
-
             if (order.OrderSubmissionData != null)
             {
                 SubmissionAskPrice = order.OrderSubmissionData.AskPrice;

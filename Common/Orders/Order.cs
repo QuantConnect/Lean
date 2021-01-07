@@ -347,41 +347,94 @@ namespace QuantConnect.Orders
             }
 
             var createdTime = QuantConnect.Time.UnixTimeStampToDateTime(serializedOrder.CreatedTime);
-
-            var order = CreateOrder(serializedOrder.OrderId, serializedOrder.Type, symbol, serializedOrder.Quantity,
+            
+            CreateOrder(serializedOrder.OrderId, serializedOrder.Type, symbol, serializedOrder.Quantity,
                 DateTime.SpecifyKind(createdTime, DateTimeKind.Utc),
                 serializedOrder.Tag,
                 new OrderProperties { TimeInForce = timeInForce },
                 serializedOrder.LimitPrice ?? 0,
-                serializedOrder.StopPrice ?? 0);
-
-            order.OrderSubmissionData = new OrderSubmissionData(serializedOrder.SubmissionBidPrice,
+                serializedOrder.StopPrice ?? 0,
+                serializedOrder.TriggerPrice).OrderSubmissionData = new OrderSubmissionData(serializedOrder.SubmissionBidPrice,
                 serializedOrder.SubmissionAskPrice,
                 serializedOrder.SubmissionLastPrice);
 
-            order.BrokerId = serializedOrder.BrokerId;
-            order.ContingentId = serializedOrder.ContingentId;
-            order.Price = serializedOrder.Price;
-            order.PriceCurrency = serializedOrder.PriceCurrency;
-            order.Status = serializedOrder.Status;
+            CreateOrder(serializedOrder.OrderId, serializedOrder.Type, symbol, serializedOrder.Quantity,
+                DateTime.SpecifyKind(createdTime, DateTimeKind.Utc),
+                serializedOrder.Tag,
+                new OrderProperties { TimeInForce = timeInForce },
+                serializedOrder.LimitPrice ?? 0,
+                serializedOrder.StopPrice ?? 0,
+                serializedOrder.TriggerPrice).BrokerId = serializedOrder.BrokerId;
+            CreateOrder(serializedOrder.OrderId, serializedOrder.Type, symbol, serializedOrder.Quantity,
+                DateTime.SpecifyKind(createdTime, DateTimeKind.Utc),
+                serializedOrder.Tag,
+                new OrderProperties { TimeInForce = timeInForce },
+                serializedOrder.LimitPrice ?? 0,
+                serializedOrder.StopPrice ?? 0,
+                serializedOrder.TriggerPrice).ContingentId = serializedOrder.ContingentId;
+            CreateOrder(serializedOrder.OrderId, serializedOrder.Type, symbol, serializedOrder.Quantity,
+                DateTime.SpecifyKind(createdTime, DateTimeKind.Utc),
+                serializedOrder.Tag,
+                new OrderProperties { TimeInForce = timeInForce },
+                serializedOrder.LimitPrice ?? 0,
+                serializedOrder.StopPrice ?? 0,
+                serializedOrder.TriggerPrice).Price = serializedOrder.Price;
+            CreateOrder(serializedOrder.OrderId, serializedOrder.Type, symbol, serializedOrder.Quantity,
+                DateTime.SpecifyKind(createdTime, DateTimeKind.Utc),
+                serializedOrder.Tag,
+                new OrderProperties { TimeInForce = timeInForce },
+                serializedOrder.LimitPrice ?? 0,
+                serializedOrder.StopPrice ?? 0,
+                serializedOrder.TriggerPrice).PriceCurrency = serializedOrder.PriceCurrency;
+            CreateOrder(serializedOrder.OrderId, serializedOrder.Type, symbol, serializedOrder.Quantity,
+                DateTime.SpecifyKind(createdTime, DateTimeKind.Utc),
+                serializedOrder.Tag,
+                new OrderProperties { TimeInForce = timeInForce },
+                serializedOrder.LimitPrice ?? 0,
+                serializedOrder.StopPrice ?? 0,
+                serializedOrder.TriggerPrice).Status = serializedOrder.Status;
 
             if (serializedOrder.LastFillTime.HasValue)
             {
                 var time = QuantConnect.Time.UnixTimeStampToDateTime(serializedOrder.LastFillTime.Value);
-                order.LastFillTime = DateTime.SpecifyKind(time, DateTimeKind.Utc);
+                CreateOrder(serializedOrder.OrderId, serializedOrder.Type, symbol, serializedOrder.Quantity,
+                    DateTime.SpecifyKind(createdTime, DateTimeKind.Utc),
+                    serializedOrder.Tag,
+                    new OrderProperties { TimeInForce = timeInForce },
+                    serializedOrder.LimitPrice ?? 0,
+                    serializedOrder.StopPrice ?? 0,
+                    serializedOrder.TriggerPrice).LastFillTime = DateTime.SpecifyKind(time, DateTimeKind.Utc);
             }
             if (serializedOrder.LastUpdateTime.HasValue)
             {
                 var time = QuantConnect.Time.UnixTimeStampToDateTime(serializedOrder.LastUpdateTime.Value);
-                order.LastUpdateTime = DateTime.SpecifyKind(time, DateTimeKind.Utc);
+                CreateOrder(serializedOrder.OrderId, serializedOrder.Type, symbol, serializedOrder.Quantity,
+                    DateTime.SpecifyKind(createdTime, DateTimeKind.Utc),
+                    serializedOrder.Tag,
+                    new OrderProperties { TimeInForce = timeInForce },
+                    serializedOrder.LimitPrice ?? 0,
+                    serializedOrder.StopPrice ?? 0,
+                    serializedOrder.TriggerPrice).LastUpdateTime = DateTime.SpecifyKind(time, DateTimeKind.Utc);
             }
             if (serializedOrder.CanceledTime.HasValue)
             {
                 var time = QuantConnect.Time.UnixTimeStampToDateTime(serializedOrder.CanceledTime.Value);
-                order.CanceledTime = DateTime.SpecifyKind(time, DateTimeKind.Utc);
+                CreateOrder(serializedOrder.OrderId, serializedOrder.Type, symbol, serializedOrder.Quantity,
+                    DateTime.SpecifyKind(createdTime, DateTimeKind.Utc),
+                    serializedOrder.Tag,
+                    new OrderProperties { TimeInForce = timeInForce },
+                    serializedOrder.LimitPrice ?? 0,
+                    serializedOrder.StopPrice ?? 0,
+                    serializedOrder.TriggerPrice).CanceledTime = DateTime.SpecifyKind(time, DateTimeKind.Utc);
             }
 
-            return order;
+            return CreateOrder(serializedOrder.OrderId, serializedOrder.Type, symbol, serializedOrder.Quantity,
+                DateTime.SpecifyKind(createdTime, DateTimeKind.Utc),
+                serializedOrder.Tag,
+                new OrderProperties { TimeInForce = timeInForce },
+                serializedOrder.LimitPrice ?? 0,
+                serializedOrder.StopPrice ?? 0,
+                serializedOrder.TriggerPrice);
         }
 
         /// <summary>
@@ -392,11 +445,11 @@ namespace QuantConnect.Orders
         public static Order CreateOrder(SubmitOrderRequest request)
         {
             return CreateOrder(request.OrderId, request.OrderType, request.Symbol, request.Quantity, request.Time,
-                request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice);
+                request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice, request.TriggerPrice);
         }
 
         private static Order CreateOrder(int orderId, OrderType type, Symbol symbol, decimal quantity, DateTime time,
-            string tag, IOrderProperties properties, decimal limitPrice, decimal stopPrice)
+            string tag, IOrderProperties properties, decimal limitPrice, decimal stopPrice, decimal triggerPrice)
         {
             Order order;
             switch (type)
@@ -415,6 +468,9 @@ namespace QuantConnect.Orders
 
                 case OrderType.StopLimit:
                     order = new StopLimitOrder(symbol, quantity, stopPrice, limitPrice, time, tag, properties);
+                    break;
+                case OrderType.LimitIfTouched:
+                    order = new LimitIfTouchedOrder(symbol, quantity, triggerPrice, limitPrice, time, tag, properties);
                     break;
 
                 case OrderType.MarketOnOpen:

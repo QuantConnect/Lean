@@ -58,7 +58,6 @@ namespace QuantConnect.Orders.Fills
             // Important: setting the parameters is required because it is
             // consumed by the different XxxxFill() implementations
             Parameters = parameters;
-
             var order = parameters.Order;
             OrderEvent orderEvent;
             switch (order.Type)
@@ -72,6 +71,11 @@ namespace QuantConnect.Orders.Fills
                     orderEvent = PythonWrapper != null
                         ? PythonWrapper.LimitFill(parameters.Security, parameters.Order as LimitOrder)
                         : LimitFill(parameters.Security, parameters.Order as LimitOrder);
+                    break;
+                case OrderType.LimitIfTouched:
+                    orderEvent = PythonWrapper != null
+                        ? PythonWrapper.LimitIfTouchedFill(parameters.Security, parameters.Order as LimitIfTouchedOrder)
+                        : LimitIfTouchedFill(parameters.Security, parameters.Order as LimitIfTouchedOrder);
                     break;
                 case OrderType.StopMarket:
                     orderEvent = PythonWrapper != null
@@ -96,7 +100,60 @@ namespace QuantConnect.Orders.Fills
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
             return new Fill(orderEvent);
+        }
+
+        private OrderEvent LimitIfTouchedFill(Security asset, LimitIfTouchedOrder order)
+        {
+            //Default order event to return.
+            var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
+            var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
+
+            //If its cancelled don't need anymore checks:
+            if (order.Status == OrderStatus.Canceled) return fill;
+
+            // make sure the exchange is open/normal market hours before filling
+            if (!IsExchangeOpen(asset, false)) return fill;
+
+            //Get the range of prices in the last bar:
+            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
+            var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+
+            // do not fill on stale data
+            if (pricesEndTime <= order.Time) return fill;
+
+            //Calculate the model slippage: e.g. 0.01c
+            var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
+            switch (order.Direction)
+            {
+                case OrderDirection.Sell:
+                    //-> 1.1 Limit surpassed: Sell.
+                    if (prices.Low > order.LimitPrice)
+                    {
+                        fill.Status = OrderStatus.Filled;
+                        // Assuming worse case scenario fill - fill at lowest of the stop & asset price.
+                        fill.FillPrice = Math.Min(order.LimitPrice, prices.Current - slip);
+                        // assume the order completely filled
+                        fill.FillQuantity = order.Quantity;
+                    }
+
+                    break;
+                case OrderDirection.Buy:
+                    //-> 1.2 Limit surpassed: Buy.
+                    if (prices.High < order.LimitPrice)
+                    {
+                        fill.Status = OrderStatus.Filled;
+                        // Assuming worse case scenario fill - fill at highest of the stop & asset price.
+                        fill.FillPrice = Math.Max(order.LimitPrice, prices.Current + slip);
+                        // assume the order completely filled
+                        fill.FillQuantity = order.Quantity;
+                    }
+
+                    break;
+            }
+
+            return fill;
         }
 
         /// <summary>
