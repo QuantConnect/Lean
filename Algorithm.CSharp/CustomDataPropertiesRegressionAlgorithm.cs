@@ -33,6 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class CustomDataPropertiesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private string _ticker = "BTC";
+        private Security _bitcoin;
 
         /// <summary>
         /// Initialize the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -49,21 +50,17 @@ namespace QuantConnect.Algorithm.CSharp
             var properties = new SymbolProperties("Bitcoin", "USD", 1, (decimal)0.01, (decimal)0.01, _ticker);
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
 
-            // Add the custom properties and exchange hours to our database
-            SymbolPropertiesDatabase.SetEntry(Market.USA, _ticker, SecurityType.Base, properties);
-            MarketHoursDatabase.SetEntry(Market.USA, _ticker, SecurityType.Base, exchangeHours);
-
-            // Add the custom data to our algorithm
-            var bitcoin = AddData<Bitcoin>(_ticker);
+            // Add the custom data to our algorithm with our custom properties and exchange hours
+            _bitcoin = AddData<Bitcoin>(_ticker, properties, exchangeHours);
 
             //Verify our symbol properties were changed and loaded into this security
-            if (bitcoin.SymbolProperties != properties)
+            if (_bitcoin.SymbolProperties != properties)
             {
                 throw new Exception("Failed to set and retrieve custom SymbolProperties for BTC");
             }
 
             //Verify our exchange hours were changed and loaded into this security
-            if (bitcoin.Exchange.Hours != exchangeHours)
+            if (_bitcoin.Exchange.Hours != exchangeHours)
             {
                 throw new Exception("Failed to set and retrieve custom ExchangeHours for BTC");
             }
@@ -91,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnEndOfAlgorithm()
         {
             // Reset our Symbol property value, for testing purposes.
-            SymbolPropertiesDatabase.SetEntry(Market.USA, _ticker, SecurityType.Base,
+            SymbolPropertiesDatabase.SetEntry(Market.USA, MarketHoursDatabase.GetDatabaseSymbolKey(_bitcoin.Symbol), SecurityType.Base,
                 SymbolProperties.GetDefault("USD"));
         }
 

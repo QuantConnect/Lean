@@ -295,11 +295,10 @@ namespace QuantConnect.Securities
                     case SecurityType.FutureOption:
                         stringSymbol = symbol.HasUnderlying ? symbol.ID.Symbol : string.Empty;
                         break;
+                    case SecurityType.Base:
                     case SecurityType.Future:
                         stringSymbol = symbol.ID.Symbol;
                         break;
-                    // For ease of setting base entries in the DB we will make it just the ticker (GH #5100)
-                    case SecurityType.Base:
                     default:
                         stringSymbol = symbol.Value;
                         break;

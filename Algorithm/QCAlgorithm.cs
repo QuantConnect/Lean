@@ -1993,9 +1993,12 @@ namespace QuantConnect.Algorithm
         public Security AddData<T>(string ticker, SymbolProperties properties, SecurityExchangeHours exchangeHours, Resolution? resolution = null, DateTimeZone timeZone = null, bool fillDataForward = false, decimal leverage = 1.0m)
             where T : IBaseData, new()
         {
+            // Get the right key for storage of base type symbols
+            var key = SecurityIdentifier.GenerateBaseSymbol(typeof(T), ticker);
+
             // Add entries to our Symbol Properties DB and MarketHours DB
-            SymbolPropertiesDatabase.SetEntry(Market.USA, ticker, SecurityType.Base, properties);
-            MarketHoursDatabase.SetEntry(Market.USA, ticker, SecurityType.Base, exchangeHours);
+            SymbolPropertiesDatabase.SetEntry(Market.USA, key, SecurityType.Base, properties);
+            MarketHoursDatabase.SetEntry(Market.USA, key, SecurityType.Base, exchangeHours);
 
             // Then add the data
             return AddData(typeof(T), ticker, resolution, timeZone, fillDataForward, leverage);

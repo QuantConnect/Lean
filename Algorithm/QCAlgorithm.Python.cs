@@ -189,6 +189,34 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// AddData<typeparam name="T"/> a new user defined data source including symbol properties and exchange hours,
+        /// all other vars are not required and will use defaults.
+        /// This overload reflects the C# equivalent for custom properties and market hours
+        /// </summary>
+        /// <param name="dataType">The custom type being added</param>
+        /// <param name="ticker">Key/Ticker for data</param>
+        /// <param name="properties">The properties of this new custom data</param>
+        /// <param name="exchangeHours">The Exchange hours of this symbol</param>
+        /// <param name="resolution">Resolution of the Data Required</param>
+        /// <param name="timeZone">Specifies the time zone of the raw data</param>
+        /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
+        /// <param name="leverage">Custom leverage per security</param>
+        /// <returns>The new <see cref="Security"/></returns>
+        public Security AddData(PyObject type, string ticker, SymbolProperties properties, SecurityExchangeHours exchangeHours, Resolution? resolution = null, DateTimeZone timeZone = null, bool fillDataForward = false, decimal leverage = 1.0m)
+        {
+            // Get the right key for storage of base type symbols
+            var dataType = type.CreateType();
+            var key = SecurityIdentifier.GenerateBaseSymbol(dataType, ticker);
+
+            // Add entries to our Symbol Properties DB and MarketHours DB
+            SymbolPropertiesDatabase.SetEntry(Market.USA, key, SecurityType.Base, properties);
+            MarketHoursDatabase.SetEntry(Market.USA, key, SecurityType.Base, exchangeHours);
+
+            // Then add the data
+            return AddData(dataType, ticker, resolution, timeZone, fillDataForward, leverage);
+        }
+
+        /// <summary>
         /// Creates and adds a new Future Option contract to the algorithm.
         /// </summary>
         /// <param name="symbol">The <see cref="Future"/> canonical symbol (i.e. Symbol returned from <see cref="AddFuture"/>)</param>

@@ -48,19 +48,15 @@ class CustomDataPropertiesRegressionAlgorithm(QCAlgorithm):
         properties = SymbolProperties("Bitcoin", "USD", 1, 0.01, 0.01, self.ticker)
         exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork)
 
-        # Add the custom properties and exchange hours to our database
-        self.SymbolPropertiesDatabase.SetEntry(Market.USA, self.ticker, SecurityType.Base, properties)
-        self.MarketHoursDatabase.SetEntry(Market.USA, self.ticker, SecurityType.Base, exchangeHours)
-
-        # Add the custom data to our algorithm
-        bitcoin = self.AddData(Bitcoin, self.ticker)
+        # Add the custom data to our algorithm with our custom properties and exchange hours
+        self.bitcoin = self.AddData(Bitcoin, self.ticker, properties, exchangeHours)
 
         # Verify our symbol properties were changed and loaded into this security
-        if bitcoin.SymbolProperties != properties :
+        if self.bitcoin.SymbolProperties != properties :
             raise Exception("Failed to set and retrieve custom SymbolProperties for BTC")
 
         # Verify our exchange hours were changed and loaded into this security
-        if bitcoin.Exchange.Hours != exchangeHours :
+        if self.bitcoin.Exchange.Hours != exchangeHours :
             raise Exception("Failed to set and retrieve custom ExchangeHours for BTC")
 
 
@@ -71,7 +67,7 @@ class CustomDataPropertiesRegressionAlgorithm(QCAlgorithm):
 
     def OnEndOfAlgorithm(self):
         #Reset our Symbol property value, for testing purposes.
-        self.SymbolPropertiesDatabase.SetEntry(Market.USA, self.ticker, SecurityType.Base,
+        self.SymbolPropertiesDatabase.SetEntry(Market.USA, self.MarketHoursDatabase.GetDatabaseSymbolKey(self.bitcoin.Symbol), SecurityType.Base,
             SymbolProperties.GetDefault("USD"));
 
 
