@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -28,6 +28,7 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Crypto;
+using QuantConnect.Securities.Positions;
 using QuantConnect.Tests.Engine;
 using QuantConnect.Tests.Engine.DataFeeds;
 
@@ -43,7 +44,7 @@ namespace QuantConnect.Tests.Common.Securities
         private SecurityPortfolioManager _portfolio;
         private BacktestingTransactionHandler _transactionHandler;
         private BacktestingBrokerage _brokerage;
-        private CashBuyingPowerModel _buyingPowerModel;
+        private IBuyingPowerModel _buyingPowerModel;
         private QCAlgorithm _algorithm;
         private LocalTimeKeeper _timeKeeper;
         private IResultHandler _resultHandler;
@@ -104,7 +105,10 @@ namespace QuantConnect.Tests.Common.Securities
                 RegisteredSecurityDataTypesProvider.Null
             );
 
-            _buyingPowerModel = new CashBuyingPowerModel();
+            _buyingPowerModel = new BuyingPowerModelComparator(
+                new CashBuyingPowerModel(),
+                new SecurityPositionGroupBuyingPowerModel()
+            );
 
             _timeKeeper = new LocalTimeKeeper(new DateTime(2019, 4, 22), DateTimeZone.Utc);
             _btcusd.SetLocalTimeKeeper(_timeKeeper);
