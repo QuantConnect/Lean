@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using Python.Runtime;
 
 namespace QuantConnect.Notifications
@@ -84,7 +85,7 @@ namespace QuantConnect.Notifications
                 headers = new Dictionary<string, string>();
             }
             
-            if (headers.Keys.All(key -> key.ToLower() != "content-type"))
+            if (headers.Keys.All(key => key.ToLowerInvariant() != "content-type"))
             {
                 headers["Content-Type"] = "text/plain";
             }
