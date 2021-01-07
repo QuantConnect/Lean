@@ -1979,6 +1979,29 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// AddData<typeparam name="T"/> a new user defined data source including symbol properties and exchange hours,
+        /// all other vars are not required and will use defaults.
+        /// </summary>
+        /// <param name="ticker">Key/Ticker for data</param>
+        /// <param name="properties">The properties of this new custom data</param>
+        /// <param name="exchangeHours">The Exchange hours of this symbol</param>
+        /// <param name="resolution">Resolution of the Data Required</param>
+        /// <param name="timeZone">Specifies the time zone of the raw data</param>
+        /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
+        /// <param name="leverage">Custom leverage per security</param>
+        /// <returns>The new <see cref="Security"/></returns>
+        public Security AddData<T>(string ticker, SymbolProperties properties, SecurityExchangeHours exchangeHours, Resolution? resolution = null, DateTimeZone timeZone = null, bool fillDataForward = false, decimal leverage = 1.0m)
+            where T : IBaseData, new()
+        {
+            // Add entries to our Symbol Properties DB and MarketHours DB
+            SymbolPropertiesDatabase.SetEntry(Market.USA, ticker, SecurityType.Base, properties);
+            MarketHoursDatabase.SetEntry(Market.USA, ticker, SecurityType.Base, exchangeHours);
+
+            // Then add the data
+            return AddData(typeof(T), ticker, resolution, timeZone, fillDataForward, leverage);
+        }
+
+        /// <summary>
         /// Send a debug message to the web console:
         /// </summary>
         /// <param name="message">Message to send to debug console</param>
