@@ -91,7 +91,7 @@ Y | BATS Y-Exchange
 Z | BATS Exchange 
 
 #### Tick Sale Conditions
-Sale Condition Code | Exchange | Description |
+Exchange | Sale Condition Code | Description |
 ---- | --- | ---
 CTS | Blank or ‘@’ | Regular Sale (no condition)
 CTS | ‘B’ | Average Price Trade
