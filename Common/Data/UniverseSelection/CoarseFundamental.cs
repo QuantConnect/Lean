@@ -14,7 +14,9 @@
 */
 
 using System;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -182,7 +184,19 @@ namespace QuantConnect.Data.UniverseSelection
         public static string ToRow(CoarseFundamental coarse)
         {
             // sid,symbol,close,volume,dollar volume,has fundamental data,price factor,split factor
-            return $"{coarse.Symbol.ID},{coarse.Symbol.Value},{coarse.Value},{coarse.Volume},{coarse.DollarVolume},{coarse.HasFundamentalData},{coarse.PriceFactor},{coarse.SplitFactor}";
+            var values = new object[]
+            {
+                coarse.Symbol.ID,
+                coarse.Symbol.Value,
+                coarse.Value,
+                coarse.Volume,
+                coarse.DollarVolume,
+                coarse.HasFundamentalData,
+                coarse.PriceFactor,
+                coarse.SplitFactor
+            };
+
+            return string.Join(",", values.Select(s => Convert.ToString(s, CultureInfo.InvariantCulture)));
         }
     }
 }
