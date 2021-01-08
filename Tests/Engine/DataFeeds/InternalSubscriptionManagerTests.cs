@@ -28,7 +28,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Queues;
 using QuantConnect.Lean.Engine.TransactionHandlers;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
@@ -229,7 +228,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm.UniverseSettings.Resolution = Resolution.Hour;
             _algorithm.UniverseSettings.MinimumTimeInUniverse = TimeSpan.Zero;
             var added = false;
-            var first = true;
+            var manualEvent = new ManualResetEvent(false);
             var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
             foreach (var timeSlice in _synchronizer.StreamData(tokenSource.Token))
             {
@@ -243,7 +242,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             _algorithm.UniverseSettings,
                             time =>
                             {
-                                return first ? new[] { "IBM" } : new[] { "AAPL" };
+                                return !manualEvent.WaitOne(0) ? new[] { "IBM" } : new[] { "AAPL" };
                             }
                     );
 
@@ -252,14 +251,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else if (!timeSlice.IsTimePulse)
                 {
-                    if (first)
+                    if (!manualEvent.WaitOne(0))
                     {
                         Assert.IsTrue(_algorithm.SubscriptionManager.SubscriptionDataConfigService
                             .GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second),
                             "IBM subscription was not found");
                         Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any(),
                             "Unexpected AAPL subscription was found");
-                        first = false;
+                        manualEvent.Set();
                     }
                     else
                     {
