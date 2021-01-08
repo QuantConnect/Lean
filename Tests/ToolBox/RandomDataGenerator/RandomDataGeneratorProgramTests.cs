@@ -30,33 +30,19 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 
         public void NextRandomGeneratedData(DateTime start, DateTime end, DateTime expectedMidPoint)
         {
-            var delistIsLessThanEnd = true;
-            var startIsLessThanEnd = true;
-            var midPointCheck = true;
             var randomValueGenerator = new RandomValueGenerator();
             var midPoint = RandomDataGeneratorProgram.GetDateMidpoint(start, end);
-            var delistDate = RandomDataGeneratorProgram.GetDelistDate(start, end, randomValueGenerator);
+            var delistDate = RandomDataGeneratorProgram.GetDelistingDate(start, end, randomValueGenerator);
 
             // midPoint and expectedMidPoint must be the same
-            if (midPoint != expectedMidPoint)
-            {
-                midPointCheck = false;
-            }
-            Assert.IsTrue(midPointCheck);
+            Assert.AreEqual(expectedMidPoint, midPoint);
 
             // start must be less than or equal to end
-            if (start > end)
-            {
-                startIsLessThanEnd = false;
-            }
-            Assert.IsTrue(startIsLessThanEnd);
+            Assert.LessOrEqual(start, end);
 
             // delistDate must be less than or equal to end
-            if ((delistDate > end) || (delistDate < midPoint))
-            {
-                delistIsLessThanEnd = false;
-            }
-            Assert.IsTrue(delistIsLessThanEnd);
+            Assert.LessOrEqual(delistDate, end);
+            Assert.GreaterOrEqual(delistDate, midPoint);
         }
     }
 }

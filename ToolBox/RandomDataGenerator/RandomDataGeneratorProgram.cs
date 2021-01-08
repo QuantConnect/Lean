@@ -75,7 +75,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             return start_time;
         }
 
-        public static DateTime GetDelistDate(DateTime start, DateTime end, RandomValueGenerator randomValueGenerator)
+        public static DateTime GetDelistingDate(DateTime start, DateTime end, RandomValueGenerator randomValueGenerator)
         {
             var mid_point = GetDateMidpoint(start, end);            
             var delist_Date = randomValueGenerator.NextDate(mid_point, end, null);
@@ -103,7 +103,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var count = 0;
             var progress = 0d;
             var previousMonth = -1;
-            var previousDay = settings.Start;
 
             Func<Tick, DateTime> tickDay = (tick => new DateTime(tick.Time.Year, tick.Time.Month, tick.Time.Day));
             Func<Data.BaseData, DateTime> dataDay = (data => new DateTime(data.Time.Year, data.Time.Month, data.Time.Day));
@@ -111,7 +110,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             foreach (var currentSymbol in symbolGenerator.GenerateRandomSymbols())
             {
                 // This is done so that we can update the symbol in the case of a rename event
-                var delistDate = GetDelistDate(settings.Start, settings.End, randomValueGenerator);
+                var delistDate = GetDelistingDate(settings.Start, settings.End, randomValueGenerator);
                 var symbol = currentSymbol;
                 var willBeDelisted = randomValueGenerator.NextBool(1.0);
                 var monthsTrading = 0;
