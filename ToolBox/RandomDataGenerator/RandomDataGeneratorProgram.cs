@@ -64,6 +64,26 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             Console.ReadKey();
         }
 
+        public static DateTime GetDateMidpoint(DateTime start, DateTime end)
+        {
+            TimeSpan span = end.Subtract(start);
+            int span_time = (int)span.TotalMinutes;
+            double diff_span = -(span_time / 2.0);
+            DateTime start_time = end.AddMinutes(Math.Round(diff_span, 2, MidpointRounding.ToEven));
+
+            //Returns a DateTime object that is halfway between start and end
+            return start_time;
+        }
+
+        public static DateTime GetDelistingDate(DateTime start, DateTime end, RandomValueGenerator randomValueGenerator)
+        {
+            var mid_point = GetDateMidpoint(start, end);            
+            var delist_Date = randomValueGenerator.NextDate(mid_point, end, null);
+
+            //Returns a DateTime object that is a random value between the mid_point and end
+            return delist_Date;
+        }
+
         public static void GenerateRandomData(RandomDataGeneratorSettings settings, ConsoleLeveledOutput output)
         {
             // can specify a seed value in this ctor if determinism is desired
@@ -83,7 +103,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var count = 0;
             var progress = 0d;
             var previousMonth = -1;
-            var previousDay = settings.Start;
 
             Func<Tick, DateTime> tickDay = (tick => new DateTime(tick.Time.Year, tick.Time.Month, tick.Time.Day));
             Func<Data.BaseData, DateTime> dataDay = (data => new DateTime(data.Time.Year, data.Time.Month, data.Time.Day));
@@ -91,9 +110,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             foreach (var currentSymbol in symbolGenerator.GenerateRandomSymbols())
             {
                 // This is done so that we can update the symbol in the case of a rename event
+                var delistDate = GetDelistingDate(settings.Start, settings.End, randomValueGenerator);
                 var symbol = currentSymbol;
                 var willBeDelisted = randomValueGenerator.NextBool(1.0);
-                var delistDate = randomValueGenerator.NextDate(settings.Start.AddMonths(6), settings.End, null);
                 var monthsTrading = 0;
 
                 // Keep track of renamed symbols and the time they were renamed. 
