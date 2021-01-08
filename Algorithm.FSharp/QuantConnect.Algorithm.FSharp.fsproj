@@ -8,16 +8,15 @@
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <WarningLevel>3</WarningLevel>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <DocumentationFile>bin\$(Configuration)\QuantConnect.Algorithm.FSharp.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
     <Tailcalls>false</Tailcalls>
-    <DocumentationFile>bin\$(Configuration)\QuantConnect.Algorithm.FSharp.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Tailcalls>true</Tailcalls>
-    <DocumentationFile>bin\$(Configuration)\QuantConnect.Algorithm.FSharp.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <IsWindows>false</IsWindows>

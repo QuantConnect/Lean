@@ -1,5 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <OutputType>Exe</OutputType>
     <TargetFramework>net462</TargetFramework>
     <LangVersion>6</LangVersion>
@@ -8,7 +10,6 @@
     <Product>ToolBox</Product>
     <Description>QuantConnect LEAN Engine: ToolBox Project - A collection of data downloaders and converters</Description>
     <Copyright>Copyright ©  2015</Copyright>
-    <LangVersion>6</LangVersion>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
