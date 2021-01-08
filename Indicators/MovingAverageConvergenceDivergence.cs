@@ -79,14 +79,14 @@ namespace QuantConnect.Indicators
         {
             if (fastPeriod >= slowPeriod)
             {
-                throw new ArgumentException("MovingAverageConvergenceDivergence: fastPeriod must be less than slowPeriod", "fastPeriod, slowPeriod");
+                throw new ArgumentException("MovingAverageConvergenceDivergence: fastPeriod must be less than slowPeriod", $"{nameof(fastPeriod)}, {nameof(slowPeriod)}");
             }
             
             Fast = type.AsIndicator(name + "_Fast", fastPeriod);
             Slow = type.AsIndicator(name + "_Slow", slowPeriod);
             Signal = type.AsIndicator(name + "_Signal", signalPeriod);
             Histogram = new Identity(name + "_Histogram");
-            WarmUpPeriod = Math.Max(fastPeriod, slowPeriod) + signalPeriod - 1;
+            WarmUpPeriod = slowPeriod + signalPeriod - 1;
         }
 
         /// <summary>
