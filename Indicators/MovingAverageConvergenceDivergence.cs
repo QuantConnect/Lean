@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+using System;
 
 namespace QuantConnect.Indicators
 {
@@ -76,11 +77,16 @@ namespace QuantConnect.Indicators
         public MovingAverageConvergenceDivergence(string name, int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType type = MovingAverageType.Exponential)
             : base(name)
         {
+            if (fastPeriod >= slowPeriod)
+            {
+                throw new ArgumentException("MovingAverageConvergenceDivergence: fastPeriod must be less than slowPeriod", $"{nameof(fastPeriod)}, {nameof(slowPeriod)}");
+            }
+            
             Fast = type.AsIndicator(name + "_Fast", fastPeriod);
             Slow = type.AsIndicator(name + "_Slow", slowPeriod);
             Signal = type.AsIndicator(name + "_Signal", signalPeriod);
             Histogram = new Identity(name + "_Histogram");
-            WarmUpPeriod = signalPeriod;
+            WarmUpPeriod = slowPeriod + signalPeriod - 1;
         }
 
         /// <summary>
@@ -90,13 +96,19 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            Fast.Update(input);
-            Slow.Update(input);
+            var fastReady = Fast.Update(input);
+            var slowReady = Slow.Update(input);
 
             var macd = Fast.Current.Value - Slow.Current.Value;
 
-            Signal.Update(input.Time, macd);
-            Histogram.Update(input.Time, macd - Signal.Current.Value);
+            if (fastReady && slowReady)
+            {
+                if (Signal.Update(input.Time, macd))
+                {
+                    Histogram.Update(input.Time, macd - Signal.Current.Value);
+                }
+            }
+
             return macd;
         }
 
