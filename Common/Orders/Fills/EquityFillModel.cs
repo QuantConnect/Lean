@@ -493,6 +493,7 @@ namespace QuantConnect.Orders.Fills
             // have large gaps, in which case the currentBar.EndTime will be in the past
             // ASUR  | | |      [order]        | | | | | | |
             //  SPY  | | | | | | | | | | | | | | | | | | | |
+            var localOrderTime = order.Time.ConvertFromUtc(asset.Exchange.TimeZone);
             var endTime = DateTime.MinValue;
 
             var subscribedTypes = GetSubscribedTypes(asset);
@@ -513,6 +514,9 @@ namespace QuantConnect.Orders.Fills
                 var tradeBar = asset.Cache.GetData<TradeBar>();
                 if (tradeBar != null)
                 {
+                    // If the order was placed during the bar aggregation, we cannot use its open price
+                    if (tradeBar.Time < localOrderTime) return fill;
+
                     // If the first data after the market opens is a quote bar (high resolution only),
                     // the open of the last trade bar is not the open for the current day, but the last open in cache.
                     // We need to verify whether the trade data is from the open market.
@@ -526,11 +530,12 @@ namespace QuantConnect.Orders.Fills
                 }
             }
 
-            var localOrderTime = order.Time.ConvertFromUtc(asset.Exchange.TimeZone);
             if (localOrderTime >= endTime) return fill;
 
             // if the MOO was submitted during market the previous day, wait for a day to turn over
-            if (asset.Exchange.DateTimeIsOpen(localOrderTime) && localOrderTime.Date == asset.LocalTime.Date)
+            // The date of the order and the trade data end time cannot be the same.
+            // Note that the security local time can be ahead of the data end time.
+            if (asset.Exchange.DateTimeIsOpen(localOrderTime) && localOrderTime.Date == endTime.Date)
             {
                 return fill;
             }

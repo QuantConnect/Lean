@@ -583,6 +583,55 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         }
 
         [Test]
+        public void PerformsMarketOnOpenUsingOpenPriceWithDailySubscription()
+        {
+            Func<DateTime, decimal, TradeBar> getTradeBar = (t, o) => new TradeBar(t.RoundDown(Time.OneDay),
+                Symbols.SPY, o, 2m, 0.5m, 1.33m, 100, Time.OneDay);
+
+            var reference = new DateTime(2015, 06, 05, 12, 0, 0); // market is open
+            var model = new EquityFillModel();
+            var order = new MarketOnOpenOrder(Symbols.SPY, 100, reference);
+            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            var time = reference;
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            security.SetMarketPrice(getTradeBar(time, 2m));
+
+            // Will not fill because the order was placed before the bar is closed
+            var fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour)).OrderEvent;
+
+            Assert.AreEqual(0, fill.FillQuantity);
+
+            // It will not fill in the next morning because needs to wait for day to close
+            const decimal expected = 1m;
+            time = security.Exchange.Hours.GetNextMarketOpen(time, false);
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            fill = model.MarketOnOpenFill(security, order);
+            Assert.AreEqual(0, fill.FillQuantity);
+
+            // Fill once the security is updated with the day bar
+            security.SetMarketPrice(getTradeBar(time, expected));
+
+            fill = model.MarketOnOpenFill(security, order);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(expected, fill.FillPrice);
+        }
+
+        [Test]
         public void PerformsMarketOnOpenUsingOpenPriceWithTickSubscription()
         {
             var reference = new DateTime(2015, 06, 05, 9, 0, 0); // before market open
