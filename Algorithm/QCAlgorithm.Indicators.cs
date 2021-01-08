@@ -1418,6 +1418,28 @@ namespace QuantConnect.Algorithm
 
             return relativeStrengthIndex;
         }
+        /// <summary>
+        /// Creates a new RelativeVigorIndex indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose RVI we want</param>
+        /// <param name="period">The period over which to compute the RVI</param>
+        /// <param name="movingAverageType">The type of moving average to use</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The RelativeVigorIndex indicator for the requested symbol over the specified period</returns>
+        public RelativeVigorIndex RVI(Symbol symbol, int period, MovingAverageType movingAverageType = MovingAverageType.Simple, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"RVI({period},{movingAverageType})", resolution);
+            var relativeVigorIndex = new RelativeVigorIndex(name, period, movingAverageType);
+            RegisterIndicator(symbol, relativeVigorIndex, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, relativeVigorIndex, resolution);
+            }
+
+            return relativeVigorIndex;
+        }
 
         /// <summary>
         /// Creates an SimpleMovingAverage indicator for the symbol. The indicator will be automatically
