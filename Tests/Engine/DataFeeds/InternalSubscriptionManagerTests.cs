@@ -246,27 +246,34 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                                 return first ? new[] { "IBM" } : new[] { "AAPL" };
                             }
                     );
+
+                    // The custom exchange has to pick up the universe selection data point and push it into the universe subscription
+                    Thread.Sleep(100);
                 }
                 else if (!timeSlice.IsTimePulse)
                 {
                     if (first)
                     {
                         Assert.IsTrue(_algorithm.SubscriptionManager.SubscriptionDataConfigService
-                            .GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second));
-                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any());
+                            .GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second),
+                            "IBM subscription was not found");
+                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any(),
+                            "Unexpected AAPL subscription was found");
                         first = false;
                     }
                     else
                     {
                         Assert.IsTrue(_algorithm.SubscriptionManager.SubscriptionDataConfigService
-                            .GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second));
-                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true).Any());
+                            .GetSubscriptionDataConfigs(Symbols.AAPL, includeInternalConfigs: true).Any(config => config.Resolution == Resolution.Second),
+                            "AAPL subscription was not found");
+                        Assert.IsFalse(_algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.IBM, includeInternalConfigs: true).Any(),
+                            "Unexpected IBM subscription was found");
                         break;
                     }
                 }
                 _algorithm.OnEndOfTimeStep();
             }
-            Assert.IsFalse(tokenSource.IsCancellationRequested);
+            Assert.IsFalse(tokenSource.IsCancellationRequested, "Test timed out");
         }
 
         private static TestCaseData[] DataTypeTestCases
