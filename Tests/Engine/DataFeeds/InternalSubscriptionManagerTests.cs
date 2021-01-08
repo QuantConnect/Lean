@@ -221,7 +221,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreNotEqual(0, internalDataCount);
         }
 
-        [Test]
+        [Test, Category("TravisExclude")]
         public void UniverseSelectionAddAndRemove()
         {
             _algorithm.SetLiveMode(true);
@@ -245,9 +245,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                                 return !manualEvent.WaitOne(0) ? new[] { "IBM" } : new[] { "AAPL" };
                             }
                     );
-
-                    // The custom exchange has to pick up the universe selection data point and push it into the universe subscription
-                    Thread.Sleep(100);
                 }
                 else if (!timeSlice.IsTimePulse)
                 {
