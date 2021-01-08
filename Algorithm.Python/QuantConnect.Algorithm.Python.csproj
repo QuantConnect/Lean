@@ -10,6 +10,7 @@
     <LangVersion>6</LangVersion>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' ">
       build
     </PostBuildEvent>

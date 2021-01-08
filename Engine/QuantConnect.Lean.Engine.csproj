@@ -22,6 +22,7 @@
     <LangVersion>6</LangVersion>
     <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <PostBuildEvent />
     <PostBuildEvent />
     <PostBuildEvent />

@@ -5,6 +5,7 @@
     <Name>QuantConnect.Algorithm.FSharp</Name>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <WarningLevel>3</WarningLevel>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
