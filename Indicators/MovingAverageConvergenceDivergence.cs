@@ -77,6 +77,11 @@ namespace QuantConnect.Indicators
         public MovingAverageConvergenceDivergence(string name, int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType type = MovingAverageType.Exponential)
             : base(name)
         {
+            if (fastPeriod >= slowPeriod)
+            {
+                throw new ArgumentException("MovingAverageConvergenceDivergence: fastPeriod must be less than slowPeriod", "fastPeriod, slowPeriod");
+            }
+            
             Fast = type.AsIndicator(name + "_Fast", fastPeriod);
             Slow = type.AsIndicator(name + "_Slow", slowPeriod);
             Signal = type.AsIndicator(name + "_Signal", signalPeriod);

@@ -32,6 +32,14 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestColumnName => "MACD";
 
         [Test]
+        public void FastPeriodLessThanSlowPeriod()
+        {
+            var a = new MovingAverageConvergenceDivergence(fastPeriod: 2, slowPeriod: 3, signalPeriod: 2);
+            Assert.Throws<ArgumentException>(() => new MovingAverageConvergenceDivergence(fastPeriod: 3, slowPeriod: 3, signalPeriod: 2));
+            Assert.Throws<ArgumentException>(() => new MovingAverageConvergenceDivergence(fastPeriod: 4, slowPeriod: 3, signalPeriod: 2));
+        }
+
+        [Test]
         public void ComparesWithExternalDataMacdHistogram()
         {
             var macd = CreateIndicator();
