@@ -1693,6 +1693,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             {
                 Assert.NotNull(fillForwardEnumerator.Current);
                 Assert.GreaterOrEqual(fillForwardEnumerator.Current.Time, previous?.Time);
+                Assert.GreaterOrEqual(fillForwardEnumerator.Current.EndTime, previous?.EndTime);
                 Assert.AreEqual(
                     fillForwardEnumerator.Current.DataType != MarketDataType.Auxiliary,
                     fillForwardEnumerator.Current.IsFillForward || (intermediateDay != 0 && fillForwardEnumerator.Current.Time.Day == expiry.Day + intermediateDay));
@@ -2050,6 +2051,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             {
                 Assert.NotNull(fillForwardEnumerator.Current);
                 Assert.GreaterOrEqual(fillForwardEnumerator.Current.Time, previous?.Time ?? DateTime.MinValue);
+                Assert.GreaterOrEqual(fillForwardEnumerator.Current.EndTime, previous?.EndTime ?? DateTime.MinValue);
                 Assert.AreEqual(
                     fillForwardEnumerator.Current.DataType != MarketDataType.Auxiliary,
                     fillForwardEnumerator.Current.IsFillForward);
@@ -2139,6 +2141,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             {
                 Assert.NotNull(fillForwardEnumerator.Current);
                 Assert.GreaterOrEqual(fillForwardEnumerator.Current.Time, previous?.Time ?? DateTime.MinValue);
+                Assert.GreaterOrEqual(fillForwardEnumerator.Current.EndTime, previous?.EndTime ?? DateTime.MinValue);
                 Assert.AreEqual(
                     fillForwardEnumerator.Current.DataType != MarketDataType.Auxiliary,
                     fillForwardEnumerator.Current.IsFillForward);
