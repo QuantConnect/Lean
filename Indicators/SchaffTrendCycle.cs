@@ -86,7 +86,7 @@ namespace QuantConnect.Indicators
             _PF = new Identity(name + "_PF");
             _PFF = type.AsIndicator(3).Of(_PF, false);
 
-            WarmUpPeriod = cyclePeriod;
+            WarmUpPeriod = _MACD.WarmUpPeriod;
         }
 
         /// <summary>
