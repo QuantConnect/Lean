@@ -115,18 +115,37 @@ namespace QuantConnect.ToolBox
         public IEnumerable<BaseData> Parse()
         {
             var factory = (BaseData) ObjectActivator.GetActivator(_config.Type).Invoke(new object[0]);
-            ZipFile zipFile;
-            using (var unzipped = Compression.Unzip(_zipPath,_zipentry, out zipFile))
+
+            // for futures and options if no entry was provided we just read all
+            if (_zipentry == null && (_config.SecurityType == SecurityType.Future || _config.SecurityType == SecurityType.Option || _config.SecurityType == SecurityType.FutureOption))
             {
-                if (unzipped == null)
-                    yield break;
-                string line;
-                while ((line = unzipped.ReadLine()) != null)
+                foreach (var entries in Compression.Unzip(_zipPath))
                 {
-                    yield return factory.Reader(_config, line, _date, false);
+                    // we get the contract symbol from the zip entry
+                    var symbol = LeanData.ReadSymbolFromZipEntry(_config.Symbol, _config.Resolution, entries.Key);
+                    foreach (var line in entries.Value)
+                    {
+                        var dataPoint = factory.Reader(_config, line, _date, false);
+                        dataPoint.Symbol = symbol;
+                        yield return dataPoint;
+                    }
                 }
             }
-            zipFile.Dispose();
+            else
+            {
+                ZipFile zipFile;
+                using (var unzipped = Compression.Unzip(_zipPath, _zipentry, out zipFile))
+                {
+                    if (unzipped == null)
+                        yield break;
+                    string line;
+                    while ((line = unzipped.ReadLine()) != null)
+                    {
+                        yield return factory.Reader(_config, line, _date, false);
+                    }
+                }
+                zipFile.Dispose();
+            }
         }
 
         /// <summary>
