@@ -101,6 +101,7 @@ namespace QuantConnect.Algorithm
         private Dictionary<string, string> _parameters = new Dictionary<string, string>();
 
         private readonly HistoryRequestFactory _historyRequestFactory;
+        private IShortableProvider _shortableProvider;
 
         private IApi _api;
 
@@ -172,6 +173,11 @@ namespace QuantConnect.Algorithm
 
             // Framework
             _securityValuesProvider = new AlgorithmSecurityValuesProvider(this);
+
+            // Shortable provider, responsible for loading the data that indicates how much
+            // quantity we can short for a given asset. The NullShortableProvider default will
+            // allow for infinite quantities of any asset to be shorted.
+            _shortableProvider = new NullShortableProvider();
 
             // set model defaults, universe selection set via PostInitialize
             SetAlpha(new NullAlphaModel());
@@ -692,6 +698,19 @@ namespace QuantConnect.Algorithm
         public void SetFutureChainProvider(IFutureChainProvider futureChainProvider)
         {
             FutureChainProvider = futureChainProvider;
+        }
+
+        /// <summary>
+        /// Sets the shortable provider, which is used to determine whether
+        /// the asset you want to short is: shortable, and has sufficient quantity
+        /// for your order. The default is set to <see cref="NullShortableProvider"/>,
+        /// which allows for infinite shorting of any asset. You can limit how much
+        /// quantity you can short for a given asset.
+        /// </summary>
+        /// <param name="shortableProvider">The shortable provider</param>
+        public void SetShortableProvider(IShortableProvider shortableProvider)
+        {
+            _shortableProvider = shortableProvider;
         }
 
         /// <summary>
