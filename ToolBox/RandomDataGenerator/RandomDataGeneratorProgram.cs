@@ -64,14 +64,23 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             Console.ReadKey();
         }
 
-        public static DateTime GetDelistDate(DateTime start, DateTime end, RandomValueGenerator randomValueGenerator)
+        public static DateTime GetDateMidpoint(DateTime start, DateTime end)
         {
             TimeSpan span = end.Subtract(start);
-            double diff_span = -(span.Minutes / 2);
+            int span_time = (int)span.TotalMinutes;
+            double diff_span = -(span_time / 2.0);
             DateTime start_time = end.AddMinutes(Math.Round(diff_span, 2, MidpointRounding.ToEven));
-            var delist_Date = randomValueGenerator.NextDate(start_time, end, null);
 
             //Returns a DateTime object that is halfway between start and end
+            return start_time;
+        }
+
+        public static DateTime GetDelistDate(DateTime start, DateTime end, RandomValueGenerator randomValueGenerator)
+        {
+            var mid_point = GetDateMidpoint(start, end);            
+            var delist_Date = randomValueGenerator.NextDate(mid_point, end, null);
+
+            //Returns a DateTime object that is a random value between the mid_point and end
             return delist_Date;
         }
 
