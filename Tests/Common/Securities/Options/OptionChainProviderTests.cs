@@ -22,6 +22,7 @@ using NUnit.Framework;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities.Future;
+using QuantConnect.Securities.FutureOption;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Securities.Options

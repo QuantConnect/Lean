@@ -1,7 +1,21 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Interfaces;
 using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Securities.FutureOption
@@ -28,37 +42,39 @@ namespace QuantConnect.Securities.FutureOption
     ///   OGK21 would have an underlying of GCM21
     ///   OGM21 would have an underlying of GCM21...
     /// </remarks>
-    public class FuturesOptionsUnderlyingMapper
+    public static class FuturesOptionsUnderlyingMapper
     {
-        private readonly IFutureChainProvider _chainProvider;
-        private readonly Dictionary<string, Func<DateTime, DateTime?, DateTime?>> _underlyingFuturesOptionsRules;
+        private static readonly Dictionary<string, Func<DateTime, DateTime?, DateTime?>> _underlyingFuturesOptionsRules = new Dictionary<string, Func<DateTime, DateTime?, DateTime?>>
+        {
+            // CBOT
+            { "ZB", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZB", SecurityType.Future, Market.CBOT), d, ld.Value) },
+            { "ZC", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZC", SecurityType.Future, Market.CBOT), d, ld.Value) },
+            { "ZS", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZS", SecurityType.Future, Market.CBOT), d, ld.Value) },
+            { "ZT", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZT", SecurityType.Future, Market.CBOT), d, ld.Value) },
+            { "ZW", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZW", SecurityType.Future, Market.CBOT), d, ld.Value) },
+
+            // COMEX
+            { "HG", (d, _) => ContractMonthYearStartThreeMonthsThenEvenOddMonthsSkipRule(d, true) },
+            { "SI", (d, _) => ContractMonthYearStartThreeMonthsThenEvenOddMonthsSkipRule(d, true) },
+            { "GC", (d, _) => ContractMonthEvenOddMonth(d, false) }
+        };
 
         /// <summary>
-        /// Creates an instance of the mapper
+        /// The difference in months for the Futures expiry month minus the Futures Options expiry month. This assumes
+        /// that the underlying Future follows a 1-1 mapping between the FOP and future, i.e. this will result in incorrect
+        /// results, but is needed as an intermediate step to resolve the actual expiry.
         /// </summary>
-        /// <param name="futureChainProvider">Future chain provider, for underlying contract lookups</param>
-        /// <remarks>
-        /// The Future Chain Provider is used to resolve CBOT FOPs underlying futures, by looking at the closest
-        /// contract in the chain.
-        /// </remarks>
-        public FuturesOptionsUnderlyingMapper(IFutureChainProvider futureChainProvider)
+        private static readonly IReadOnlyDictionary<string, int> _futuresOptionsExpiryDelta = new Dictionary<string, int>
         {
-            _chainProvider = futureChainProvider;
-            _underlyingFuturesOptionsRules = new Dictionary<string, Func<DateTime, DateTime?, DateTime?>>
-            {
-                // CBOT
-                { "ZB", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZB", SecurityType.Future, Market.CBOT), d, ld.Value) },
-                { "ZC", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZC", SecurityType.Future, Market.CBOT), d, ld.Value) },
-                { "ZS", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZS", SecurityType.Future, Market.CBOT), d, ld.Value) },
-                { "ZT", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZT", SecurityType.Future, Market.CBOT), d, ld.Value) },
-                { "ZW", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZW", SecurityType.Future, Market.CBOT), d, ld.Value) },
-
-                // COMEX
-                { "HG", (d, _) => ContractMonthYearStartThreeMonthsThenEvenOddMonthsSkipRule(d, true) },
-                { "SI", (d, _) => ContractMonthYearStartThreeMonthsThenEvenOddMonthsSkipRule(d, true) },
-                { "GC", (d, _) => ContractMonthEvenOddMonth(d, false) }
-            };
-        }
+            { "ZB", 1 },
+            { "ZC", 1 },
+            { "ZS", 1 },
+            { "ZT", 1 },
+            { "ZW", 1 },
+            { "HG", 1 },
+            { "GC", 1 },
+            { "SI", 1 }
+        };
 
         /// <summary>
         /// Gets the FOP's underlying Future. The underlying Future's contract month might not match
@@ -69,14 +85,14 @@ namespace QuantConnect.Securities.FutureOption
         /// <param name="futureOptionExpiration">Expiration date of the future option</param>
         /// <param name="date">Date to search the future chain provider with. Optional, but required for CBOT based contracts</param>
         /// <returns>Symbol if there is an underlying for the FOP, null if there's no underlying found for the Future Option</returns>
-        public Symbol GetUnderlyingFutureFromFutureOption(string futureOptionTicker, string market, DateTime futureOptionExpiration, DateTime? date = null)
+        public static Symbol GetUnderlyingFutureFromFutureOption(string futureOptionTicker, string market, DateTime futureOptionExpiration, DateTime? date = null)
         {
             var futureTicker = FuturesOptionsSymbolMappings.MapFromOption(futureOptionTicker);
             var canonicalFuture = Symbol.Create(futureTicker, SecurityType.Future, market);
             // Get the contract month of the FOP to use when searching for the underlying.
             // If the FOP and Future share the same contract month, this is reused as the future's
             // contract month so that we can resolve the Future's expiry.
-            var contractMonth = FuturesOptionsExpiryFunctions.GetFutureContractMonth(canonicalFuture, futureOptionExpiration);
+            var contractMonth = GetFutureContractMonthNoRulesApplied(canonicalFuture, futureOptionExpiration);
 
             if (_underlyingFuturesOptionsRules.ContainsKey(futureTicker))
             {
@@ -105,9 +121,14 @@ namespace QuantConnect.Securities.FutureOption
         /// <param name="futureOptionContractMonth">Future option contract month. Note that this is not the expiry of the Future Option.</param>
         /// <param name="lookupDate">The date that we'll be using to look at the Future chain</param>
         /// <returns>The underlying future's contract month, or null if no closest contract was found</returns>
-        protected DateTime? ContractMonthSerialLookupRule(Symbol canonicalFutureSymbol, DateTime futureOptionContractMonth, DateTime lookupDate)
+        private static DateTime? ContractMonthSerialLookupRule(Symbol canonicalFutureSymbol, DateTime futureOptionContractMonth, DateTime lookupDate)
         {
-            var futureChain = _chainProvider.GetFutureContractList(canonicalFutureSymbol, lookupDate);
+            var futureChain = FuturesListings.ListedContracts(canonicalFutureSymbol.ID.Symbol, lookupDate);
+            if (futureChain == null)
+            {
+                // No matching contract listing rules entry was found
+                return null;
+            }
 
             foreach (var future in futureChain.OrderBy(s => s.ID.Date))
             {
@@ -138,7 +159,7 @@ namespace QuantConnect.Securities.FutureOption
         /// <param name="futureOptionContractMonth">Future option contract month. Note that this is not the expiry of the Future Option.</param>
         /// <param name="oddMonths">True if the Future Option's underlying future contract month is on odd months, false if on even months</param>
         /// <returns>The underlying Future's contract month</returns>
-        protected DateTime ContractMonthEvenOddMonth(DateTime futureOptionContractMonth, bool oddMonths)
+        private static DateTime ContractMonthEvenOddMonth(DateTime futureOptionContractMonth, bool oddMonths)
         {
             var monthEven = futureOptionContractMonth.Month % 2 == 0;
             if (oddMonths && monthEven)
@@ -159,7 +180,7 @@ namespace QuantConnect.Securities.FutureOption
         /// <param name="futureOptionContractMonth">Future option contract month. Note that this is not the expiry of the Future Option.</param>
         /// <param name="oddMonths">True if the Future Option's underlying future contract month is on odd months, false if on even months. Only used for months greater than 3 months</param>
         /// <returns></returns>
-        protected DateTime ContractMonthYearStartThreeMonthsThenEvenOddMonthsSkipRule(DateTime futureOptionContractMonth, bool oddMonths)
+        private static DateTime ContractMonthYearStartThreeMonthsThenEvenOddMonthsSkipRule(DateTime futureOptionContractMonth, bool oddMonths)
         {
             if (futureOptionContractMonth.Month <= 3)
             {
@@ -167,6 +188,30 @@ namespace QuantConnect.Securities.FutureOption
             }
 
             return ContractMonthEvenOddMonth(futureOptionContractMonth, oddMonths);
+        }
+
+        /// <summary>
+        /// Gets the theoretical (i.e. intermediate/naive) future contract month if we assumed a 1-1 mapping
+        /// between FOPs contract months and Futures contract months, i.e. they share the same contract month.
+        /// </summary>
+        /// <param name="canonicalFutureSymbol">Canonical future Symbol</param>
+        /// <param name="futureOptionExpirationDate">Future Option Expiration Date</param>
+        /// <returns>Contract month assuming that the Future Option and Future share the same contract month</returns>
+        public static DateTime GetFutureContractMonthNoRulesApplied(Symbol canonicalFutureSymbol, DateTime futureOptionExpirationDate)
+        {
+            var baseOptionExpiryMonthDate = new DateTime(futureOptionExpirationDate.Year, futureOptionExpirationDate.Month, 1);
+            if (!_futuresOptionsExpiryDelta.ContainsKey(canonicalFutureSymbol.ID.Symbol))
+            {
+                // For contracts like CL, they have no expiry delta between the Futures and FOPs, so we hit this path.
+                // However, it does have a delta between its expiry and contract month, which we adjust here before
+                // claiming that `baseOptionExpiryMonthDate` is the future's contract month.
+                var futuresExpiry = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFutureSymbol)(baseOptionExpiryMonthDate);
+                var futuresDelta = FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(canonicalFutureSymbol.ID.Symbol, futuresExpiry);
+
+                return baseOptionExpiryMonthDate.AddMonths(futuresDelta);
+            }
+
+            return baseOptionExpiryMonthDate.AddMonths(_futuresOptionsExpiryDelta[canonicalFutureSymbol.ID.Symbol]);
         }
     }
 }

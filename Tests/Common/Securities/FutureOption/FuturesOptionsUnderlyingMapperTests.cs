@@ -1,3 +1,18 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using System;
 using NUnit.Framework;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -36,18 +51,18 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
         public void GetUnderlyingSymbolFromFutureOption(string futureTicker, string market, int year, int month, int day, int fopContractYear, int fopContractMonth, bool nullExpected)
         {
             var optionTicker = FuturesOptionsSymbolMappings.Map(futureTicker);
-            var chainProvider = new BacktestingFutureChainProvider();
-            var fopsUnderlyingMapper = new FuturesOptionsUnderlyingMapper(chainProvider);
-
             var expectedFuture = Symbol.CreateFuture(futureTicker, market, new DateTime(year, month, day));
             var canonicalFutureOption = Symbol.CreateOption(expectedFuture, market, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
+
             var futureContractMonthDelta = FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(futureTicker, expectedFuture.ID.Date);
             var futureContractMonth = expectedFuture.ID.Date.AddMonths(futureContractMonthDelta);
             var futuresOptionsExpiration = FuturesOptionsExpiryFunctions.FuturesOptionExpiry(canonicalFutureOption, futureContractMonth);
-            var actualFuture = fopsUnderlyingMapper.GetUnderlyingFutureFromFutureOption(optionTicker, market, futuresOptionsExpiration, new DateTime(2021, 1, 1));
+
+            var actualFuture = FuturesOptionsUnderlyingMapper.GetUnderlyingFutureFromFutureOption(optionTicker, market, futuresOptionsExpiration, new DateTime(2021, 1, 1));
 
             if (nullExpected)
             {
+                // There were no futures that appeared on the or subsequent contract months from the future option.
                 Assert.IsNull(actualFuture);
             }
             else

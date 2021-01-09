@@ -2308,12 +2308,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         return _symbolMapper.GetLeanSymbol(ibSymbol, SecurityType.Future, market, contractExpiryDate);
                     }
 
-                    // Create a canonical future Symbol for lookup in the FuturesExpiryFunctions helper class.
-                    // We then get the delta between the futures option's expiry month vs. the future's expiry month.
-                    var canonicalFutureSymbol = _symbolMapper.GetLeanSymbol(ibSymbol, SecurityType.Future, market, SecurityIdentifier.DefaultDate);
-                    var futureExpiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFutureSymbol);
-                    var futureContractExpiryDate = futureExpiryFunction(FuturesOptionsExpiryFunctions.GetFutureContractMonth(canonicalFutureSymbol, contractExpiryDate));
-                    var futureSymbol = Symbol.CreateFuture(canonicalFutureSymbol.ID.Symbol, canonicalFutureSymbol.ID.Market, futureContractExpiryDate);
+                    // Get the *actual* futures contract that this futures options contract has as its underlying.
+                    // Futures options contracts can have a different contract month from their underlying future.
+                    // As such, we resolve the underlying future to the future with the correct contract month.
+                    // There's a chance this can fail, and if it does, we throw because this Symbol can't be
+                    // represented accurately in Lean.
+                    var futureSymbol = FuturesOptionsUnderlyingMapper.GetUnderlyingFutureFromFutureOption(leanSymbol, market, contractExpiryDate, _algorithm.Time);
+                    if (futureSymbol == null)
+                    {
+                        // This is the worst case scenario, because we didn't find a matching futures contract for the FOP.
+                        // Note that this only applies to CBOT symbols for now.
+                        throw new ArgumentException($"The Future Option contract: {GetContractDescription(contract)} with trading class: {contract.TradingClass} has no matching underlying future contract.");
+                    }
 
                     var right = contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put;
                     var strike = Convert.ToDecimal(contract.Strike);
