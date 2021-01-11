@@ -246,7 +246,7 @@ namespace QuantConnect.Tests.Common.Packets
             Assert.AreEqual(Currencies.USD, TestInitialCashAmountSetupHandler.TestAlgorithm.AccountCurrency);
         }
 
-        internal class TestInitialCashAmountAlgorithm : BasicTemplateDailyAlgorithm
+        public class TestInitialCashAmountAlgorithm : BasicTemplateDailyAlgorithm
         {
             public override void Initialize()
             {
@@ -256,7 +256,7 @@ namespace QuantConnect.Tests.Common.Packets
             }
         }
 
-        internal class TestInitialCashAmountSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
+        public class TestInitialCashAmountSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
         {
             public static TestInitialCashAmountAlgorithm TestAlgorithm { get; set; }
 
