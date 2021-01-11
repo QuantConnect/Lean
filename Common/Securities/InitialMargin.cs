@@ -34,7 +34,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Initializes a new instance of the <see cref="InitialMargin"/> class
         /// </summary>
-        /// <param name="value">The maintenance margin</param>
+        /// <param name="value">The initial margin</param>
         public InitialMargin(decimal value)
         {
             Value = value;
