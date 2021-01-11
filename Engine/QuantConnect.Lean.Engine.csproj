@@ -7,6 +7,7 @@
     <AssemblyName>QuantConnect.Lean.Engine</AssemblyName>
     <TargetFramework>net462</TargetFramework>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
