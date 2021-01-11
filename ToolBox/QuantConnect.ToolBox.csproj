@@ -148,8 +148,8 @@
     <Reference Include="IKVM.Runtime.JNI, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
       <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.Runtime.JNI.dll</HintPath>
     </Reference>
-    <Reference Include="IQFeed.CSharpApiClient, Version=2.5.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\IQFeed.CSharpApiClient.2.5.1\lib\net461\IQFeed.CSharpApiClient.dll</HintPath>
+    <Reference Include="IQFeed.CSharpApiClient, Version=2.6.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IQFeed.CSharpApiClient.2.6.0\lib\net461\IQFeed.CSharpApiClient.dll</HintPath>
     </Reference>
     <Reference Include="LaunchDarkly.EventSource, Version=3.3.2.0, Culture=neutral, PublicKeyToken=18e8c36453e3060f, processorArchitecture=MSIL">
       <HintPath>..\packages\LaunchDarkly.EventSource.3.3.2\lib\net45\LaunchDarkly.EventSource.dll</HintPath>
