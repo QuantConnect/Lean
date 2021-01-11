@@ -148,6 +148,7 @@
     <Compile Include="AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorithm.cs" />
     <Compile Include="AddOptionContractExpiresRegressionAlgorithm.cs" />
     <Compile Include="AltData\QuiverWallStreetBetsDataAlgorithm.cs" />
+    <Compile Include="FillForwardUntilExpiryRegressionAlgorithm.cs" />
     <Compile Include="FutureOptionCallITMGreeksExpiryRegressionAlgorithm.cs" />
     <Compile Include="FuturesAndFuturesOptionsExpiryTimeAndLiquidationRegressionAlgorithm.cs" />
     <Compile Include="OnOrderEventExceptionRegression.cs" />
