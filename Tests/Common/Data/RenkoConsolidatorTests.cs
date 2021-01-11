@@ -21,7 +21,7 @@ using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Common.Data
 {
-    public class ClassicRenkoConsolidatorTests
+    public class RenkoConsolidatorTests
     {
         [Test]
         public void ClassicOutputTypeIsRenkoBar()
