@@ -45,9 +45,9 @@
     <When Condition="$(IsWindows) AND '$(ForceLinuxBuild)' != 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(NuGetPackageFolders)\quantconnect.pythonnet\1.0.5.30\lib\win\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\win\Python.Runtime.dll</HintPath>
         </Reference>
-        <Content Include="$(NuGetPackageFolders)\quantconnect.pythonnet\1.0.5.30\lib\win\clr.pyd">
+        <Content Include="$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\win\clr.pyd">
           <Link>clr.pyd</Link>
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -56,13 +56,13 @@
     <When Condition="$(IsLinux) OR '$(ForceLinuxBuild)' == 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(NuGetPackageFolders)\quantconnect.pythonnet\1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
         </Reference>
-        <Content Include="$(NuGetPackageFolders)\quantconnect.pythonnet\1.0.5.30\lib\linux\jupyter\clr.cpython-36m-x86_64-linux-gnu.so">
+        <Content Include="$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\linux\jupyter\clr.cpython-36m-x86_64-linux-gnu.so">
           <Link>jupyter\clr.cpython-36m-x86_64-linux-gnu.so</Link>
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Content Include="$(NuGetPackageFolders)\quantconnect.pythonnet\1.0.5.30\lib\linux\jupyter\Python.Runtime.dll">
+        <Content Include="$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\linux\jupyter\Python.Runtime.dll">
           <Link>jupyter\Python.Runtime.dll</Link>
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -71,13 +71,13 @@
     <When Condition="$(IsOSX) AND '$(ForceLinuxBuild)' != 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(NuGetPackageFolders)\quantconnect.pythonnet\1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
         </Reference>
-        <Content Include="$(NuGetPackageFolders)\quantconnect.pythonnet\1.0.5.30\lib\osx\jupyter\clr.cpython-36m-darwin.so">
+        <Content Include="$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\osx\jupyter\clr.cpython-36m-darwin.so">
           <Link>jupyter\clr.cpython-36m-darwin.so</Link>
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Content Include="$(NuGetPackageFolders)\quantconnect.pythonnet\1.0.5.30\lib\osx\jupyter\Python.Runtime.dll">
+        <Content Include="$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\osx\jupyter\Python.Runtime.dll">
           <Link>jupyter\Python.Runtime.dll</Link>
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
