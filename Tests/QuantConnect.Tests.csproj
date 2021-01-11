@@ -399,6 +399,7 @@
     <Compile Include="Common\Data\Auxiliary\FactorFileTests.cs" />
     <Compile Include="Common\Data\Auxiliary\MapFileTests.cs" />
     <Compile Include="Common\Data\ChannelTests.cs" />
+    <Compile Include="Common\Data\ClassicRenkoConsolidatorTests.cs" />
     <Compile Include="Common\Data\Custom\QuiverTests.cs" />
     <Compile Include="Common\Data\Custom\TradingEconomicsTests.cs" />
     <Compile Include="Common\Data\DataQueueHandlerSubscriptionManagerTests.cs" />
@@ -839,7 +840,7 @@
     <Compile Include="Common\Data\BaseDataConsolidatorTests.cs" />
     <Compile Include="Common\Data\DynamicDataConsolidatorTests.cs" />
     <Compile Include="Common\Data\IdentityDataConsolidatorTests.cs" />
-    <Compile Include="Common\Data\RenkoConsolidatorTests.cs" />
+    <Compile Include="Common\Data\WickedRenkoConsolidatorTests.cs" />
     <Compile Include="Common\Data\SequentialConsolidatorTests.cs" />
     <Compile Include="Common\Data\TickConsolidatorTests.cs" />
     <Compile Include="Common\Data\TradeBarConsolidatorTests.cs" />

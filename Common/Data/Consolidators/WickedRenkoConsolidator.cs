@@ -22,7 +22,7 @@ namespace QuantConnect.Data.Consolidators
     /// This consolidator can transform a stream of <see cref="BaseData"/> instances into a stream of <see cref="RenkoBar"/>
     /// with Renko type <see cref="RenkoType.Wicked"/>.
     /// </summary>
-    public class WickedRenkoConsolidator : BaseRenkoConsolidator
+    public class WickedRenkoConsolidator : IDataConsolidator
     {
         private DateTime _closeOn;
         private decimal _closeRate;
@@ -32,26 +32,74 @@ namespace QuantConnect.Data.Consolidators
         private decimal _lowRate;
         private DateTime _openOn;
         private decimal _openRate;
+        private decimal _barSize;
+        private DataConsolidatedHandler _dataConsolidatedHandler;
+        private RenkoBar _currentBar;
+        private IBaseData _consolidated;
 
+        // Used for unit tests
+        internal RenkoBar OpenRenkoBar =>
+            new RenkoBar(null, _openOn, _closeOn, _barSize, _openRate, _highRate, _lowRate, _closeRate);
+
+        /// <summary>
+        /// Gets the kind of the bar
+        /// </summary>
+        public RenkoType Type { get; }
+
+        /// <summary>
+        /// Gets a clone of the data being currently consolidated
+        /// </summary>
+        public IBaseData WorkingData => _currentBar?.Clone();
+
+        /// <summary>
+        /// Gets the type consumed by this consolidator
+        /// </summary>
+        public Type InputType => typeof(IBaseData);
+
+        /// <summary>
+        /// Gets <see cref="RenkoBar"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
+        /// </summary>
+        public Type OutputType => typeof(RenkoBar);
+
+        /// <summary>
+        /// Gets the most recently consolidated piece of data. This will be null if this consolidator
+        /// has not produced any data yet.
+        /// </summary>
+        public IBaseData Consolidated
+        {
+            get { return _consolidated; }
+            private set { _consolidated = value; }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WickedRenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
         /// </summary>
         /// <param name="barSize">The constant value size of each bar</param>
-        public WickedRenkoConsolidator(decimal barSize)
-            : base(barSize)
+        public WickedRenkoConsolidator(decimal barSize) // For use with WickedType
         {
+            _barSize = barSize;
+            Type = RenkoType.Wicked;
         }
 
-        // Used for unit tests
-        internal RenkoBar OpenRenkoBar =>
-            new RenkoBar(null, _openOn, _closeOn, BarSize, _openRate, _highRate, _lowRate, _closeRate);
+        /// <summary>
+        /// Event handler that fires when a new piece of data is produced
+        /// </summary>
+        public event EventHandler<RenkoBar> DataConsolidated;
+
+        /// <summary>
+        /// Event handler that fires when a new piece of data is produced
+        /// </summary>
+        event DataConsolidatedHandler IDataConsolidator.DataConsolidated
+        {
+            add { _dataConsolidatedHandler += value; }
+            remove { _dataConsolidatedHandler -= value; }
+        }
 
         /// <summary>
         /// Updates this consolidator with the specified data
         /// </summary>
         /// <param name="data">The new data for the consolidator</param>
-        public override void Update(IBaseData data)
+        public void Update(IBaseData data)
         {
             var rate = data.Price;
 
@@ -84,11 +132,11 @@ namespace QuantConnect.Data.Consolidators
                         return;
                     }
 
-                    var limit = _lastWicko.Open + BarSize;
+                    var limit = _lastWicko.Open + _barSize;
 
                     if (_closeRate > limit)
                     {
-                        var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn, BarSize, _lastWicko.Open, limit,
+                        var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn, _barSize, _lastWicko.Open, limit,
                             _lowRate, limit);
 
                         _lastWicko = wicko;
@@ -110,11 +158,11 @@ namespace QuantConnect.Data.Consolidators
                         return;
                     }
 
-                    var limit = _lastWicko.Open - BarSize;
+                    var limit = _lastWicko.Open - _barSize;
 
                     if (_closeRate < limit)
                     {
-                        var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn, BarSize, _lastWicko.Open, _highRate,
+                        var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn, _barSize, _lastWicko.Open, _highRate,
                             limit, limit);
 
                         _lastWicko = wicko;
@@ -131,13 +179,43 @@ namespace QuantConnect.Data.Consolidators
             }
         }
 
+        /// <summary>
+        /// Scans this consolidator to see if it should emit a bar due to time passing
+        /// </summary>
+        /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
+        public void Scan(DateTime currentLocalTime)
+        {
+        }
+
+        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            DataConsolidated = null;
+            _dataConsolidatedHandler = null;
+        }
+
+        /// <summary>
+        /// Event invocator for the DataConsolidated event. This should be invoked
+        /// by derived classes when they have consolidated a new piece of data.
+        /// </summary>
+        /// <param name="consolidated">The newly consolidated data</param>
+        protected void OnDataConsolidated(RenkoBar consolidated)
+        {
+            DataConsolidated?.Invoke(this, consolidated);
+            _currentBar = consolidated;
+            _dataConsolidatedHandler?.Invoke(this, consolidated);
+
+            Consolidated = consolidated;
+        }
+
         private void Rising(IBaseData data)
         {
             decimal limit;
 
-            while (_closeRate > (limit = _openRate + BarSize))
+            while (_closeRate > (limit = _openRate + _barSize))
             {
-                var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn, BarSize, _openRate, limit, _lowRate, limit);
+                var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn, _barSize, _openRate, limit, _lowRate, limit);
 
                 _lastWicko = wicko;
 
@@ -153,9 +231,9 @@ namespace QuantConnect.Data.Consolidators
         {
             decimal limit;
 
-            while (_closeRate < (limit = _openRate - BarSize))
+            while (_closeRate < (limit = _openRate - _barSize))
             {
-                var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn, BarSize, _openRate, _highRate, limit, limit);
+                var wicko = new RenkoBar(data.Symbol, _openOn, _closeOn, _barSize, _openRate, _highRate, limit, limit);
 
                 _lastWicko = wicko;
 
@@ -182,6 +260,18 @@ namespace QuantConnect.Data.Consolidators
         public WickedRenkoConsolidator(decimal barSize)
             : base(barSize)
         {
+        }
+
+        /// <summary>
+        /// Updates this consolidator with the specified data.
+        /// </summary>
+        /// <remarks>
+        /// Type safe shim method.
+        /// </remarks>
+        /// <param name="data">The new data for the consolidator</param>
+        public void Update(TInput data)
+        {
+            base.Update(data);
         }
     }
 }
