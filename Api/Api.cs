@@ -930,7 +930,20 @@ namespace QuantConnect.Api
                 // Add a user agent header in case the requested URI contains a query.
                 client.Headers.Add("user-agent", "QCAlgorithm.Download(): User Agent Header");
 
-                return client.DownloadString(address);
+                try
+                {
+                    return client.DownloadString(address);
+                }
+                catch (WebException exception)
+                {
+                    var message = $"Api.Download(): Failed to download data from {address}";
+                    if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())
+                    {
+                        message += $" with username: {userName} and password {password}";
+                    }
+
+                    throw new WebException($"{message}. Please verify the source for missing http:// or https://", exception);
+                }
             }
         }
 
