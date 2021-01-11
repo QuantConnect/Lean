@@ -168,8 +168,16 @@ namespace QuantConnect.Lean.Engine.Setup
                     isolator.ExecuteWithTimeLimit(TimeSpan.FromMinutes(5),
                         () =>
                         {
-                            //Setup Base Algorithm:
-                            algorithm.Initialize();
+                            try
+                            {
+                                //Setup Base Algorithm:
+                                algorithm.Initialize();
+                            }
+                            catch (Exception err)
+                            {
+                                Log.Error(err);
+                                Errors.Add(new AlgorithmSetupException("During the algorithm initialization, the following exception has occurred: ", err));
+                            }
                         }, baseJob.Controls.RamAllocation,
                         sleepIntervalMillis: 50,
                         workerThread: WorkerThread);
