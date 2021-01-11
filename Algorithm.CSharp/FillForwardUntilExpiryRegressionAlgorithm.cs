@@ -20,6 +20,7 @@ using QuantConnect.Securities.Option;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -61,11 +62,16 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 foreach (var contact in value.Contracts)
                 {
-                    BaseData bar;
-                    bar = value.QuoteBars.FirstOrDefault(s => s.Key.ID.Equals(contact.Key.ID)).Value;
-                    if (bar == null)
+                    BaseData bar = null;
+                    QuoteBar quoteBar;
+                    if (bar == null && value.QuoteBars.TryGetValue(contact.Key, out quoteBar))
                     {
-                        bar = value.TradeBars.FirstOrDefault(s => s.Key.ID.Equals(contact.Key.ID)).Value;
+                        bar = quoteBar;
+                    }
+                    TradeBar tradeBar;
+                    if (bar == null && value.TradeBars.TryGetValue(contact.Key, out tradeBar))
+                    {
+                        bar = tradeBar;
                     }
                     if (bar.IsFillForward)
                     {
