@@ -42,11 +42,6 @@ class FutureOptionPutITMExpiryRegressionAlgorithm(QCAlgorithm):
         self.SetStartDate(2020, 1, 5)
         self.SetEndDate(2020, 6, 30)
 
-        # We add AAPL as a temporary workaround for https://github.com/QuantConnect/Lean/issues/4872
-        # which causes delisting events to never be processed, thus leading to options that might never
-        # be exercised until the next data point arrives.
-        self.AddEquity("AAPL", Resolution.Daily)
-
         self.es19m20 = self.AddFutureContract(
             Symbol.CreateFuture(
                 Futures.Indices.SP500EMini,
@@ -106,7 +101,7 @@ class FutureOptionPutITMExpiryRegressionAlgorithm(QCAlgorithm):
         # at 9:30:00 Eastern Time. For unknown reasons, the delisting happens two minutes after the
         # market open.
         # Read more about the issue affecting this test here: https://github.com/QuantConnect/Lean/issues/4980
-        expectedLiquidationTimeUtc = datetime(2020, 6, 19, 13, 32, 0)
+        expectedLiquidationTimeUtc = datetime(2020, 6, 19, 4, 2, 0)
 
         if orderEvent.Direction == OrderDirection.Buy and future.Holdings.Quantity != 0:
             # We expect the contract to have been liquidated immediately

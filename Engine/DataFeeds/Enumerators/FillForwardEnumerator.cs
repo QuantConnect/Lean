@@ -103,10 +103,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// The current element in the collection.
         /// </returns>
         /// <filterpriority>2</filterpriority>
-        object IEnumerator.Current
-        {
-            get { return Current; }
-        }
+        object IEnumerator.Current => Current;
 
         /// <summary>
         /// Advances the enumerator to the next element of the collection.
@@ -195,13 +192,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             if (underlyingCurrent != null && underlyingCurrent.DataType == MarketDataType.Auxiliary)
             {
-                Current = underlyingCurrent;
-                var delisting = Current as Delisting;
-                if (delisting != null && delisting.Type == DelistingType.Delisted)
+                var delisting = underlyingCurrent as Delisting;
+                if (delisting?.Type == DelistingType.Delisted)
                 {
                     _delistedTime = delisting.EndTime;
                 }
-                return true;
             }
 
             if (RequiresFillForwardData(_fillForwardResolution.Value, _previous, underlyingCurrent, out fillForward))
@@ -314,7 +309,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // to avoid duality it's necessary to compare potentialBarEndTime with
                 // next.EndTime calculated as Time + resolution,
                 // and both should be based on the same TZ (for example UTC)
-                if (potentialBarEndTime < (next.Time.ConvertToUtc(Exchange.TimeZone) + _dataResolution))
+                var nextEndTimeUTC = next.Time.ConvertToUtc(Exchange.TimeZone) + _dataResolution;
+                if (potentialBarEndTime < nextEndTimeUTC)
                 {
                     // to check open hours we need to convert potential
                     // bar EndTime into exchange time zone
