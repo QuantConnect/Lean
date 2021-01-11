@@ -3,6 +3,8 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
+    <RootNamespace>QuantConnect.Lean.Engine</RootNamespace>
+    <AssemblyName>QuantConnect.Lean.Engine</AssemblyName>
     <TargetFramework>net462</TargetFramework>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <PublishUrl>publish\</PublishUrl>
