@@ -15,4 +15,5 @@ ORDER_TYPES = ['Market', 'Limit', 'StopMarket', 'StopLimit', 'MarketOnOpen', 'Ma
 
 ORDER_DIRECTIONS = ['Buy', 'Sell', 'Hold']
 
+# Positions are based on the C# OrderStatus enum
 ORDER_STATUSES = ['New', 'Submitted', 'PartiallyFilled', 'Filled', None, 'Canceled', 'None', 'Invalid', 'CancelPending', 'UpdateSubmitted']
