@@ -1,5 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <TargetFramework>net462</TargetFramework>
     <ProductVersion>8.0.30703</ProductVersion>
     <AssemblyName>QuantConnect.Common</AssemblyName>
@@ -12,6 +14,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
     <DebugType>full</DebugType>
     <Optimize>$(SelectedOptimization)</Optimize>
     <DefineConstants>TRACE</DefineConstants>

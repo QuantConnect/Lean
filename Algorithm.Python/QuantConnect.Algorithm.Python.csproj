@@ -11,28 +11,11 @@
     <Copyright>Copyright ©  2015</Copyright>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' ">
-      build
-    </PostBuildEvent>
-    <PostBuildEvent Condition="'$(OS)' != 'Windows_NT'">
-      ./build.sh
-    </PostBuildEvent>
-    <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' ">
-      build
-    </PostBuildEvent>
-    <PostBuildEvent Condition="'$(OS)' != 'Windows_NT'">
-      ./build.sh
-    </PostBuildEvent>
-    <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' ">
-      build
-    </PostBuildEvent>
-    <PostBuildEvent Condition="'$(OS)' != 'Windows_NT'">
-      ./build.sh
-    </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
