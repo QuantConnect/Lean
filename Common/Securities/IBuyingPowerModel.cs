@@ -48,6 +48,7 @@ namespace QuantConnect.Securities
         /// The margin that must be held in order to increase the position by the provided quantity
         /// </summary>
         /// <param name="parameters">An object containing the security and quantity</param>
+        /// <returns>The initial margin required for the provided security and quantity</returns>
         InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters);
 
         /// <summary>

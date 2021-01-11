@@ -50,13 +50,13 @@ namespace QuantConnect.Python
                         missingMembers.Add(member.Name);
                     }
                 }
-            }
 
-            if (missingMembers.Any())
-            {
-                throw new NotImplementedException($"{nameof(TInterface)} must be fully implemented. Please implement " +
-                    $"these missing methods on {model.GetPythonType()}: {string.Join(", ", missingMembers)}"
-                );
+                if (missingMembers.Any())
+                {
+                    throw new NotImplementedException($"{nameof(TInterface)} must be fully implemented. Please implement " +
+                        $"these missing methods on {model.GetPythonType()}: {string.Join(", ", missingMembers)}"
+                    );
+                }
             }
 
             return model;

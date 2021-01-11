@@ -53,6 +53,7 @@ namespace QuantConnect.Securities
         /// The margin that must be held in order to increase the position by the provided quantity
         /// </summary>
         /// <param name="parameters">An object containing the security and quantity of shares</param>
+        /// <returns>The initial margin required for the provided security and quantity</returns>
         public override InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
         {
             return parameters.Quantity * _marginRequiredPerUnitInAccountCurrency;
@@ -62,7 +63,7 @@ namespace QuantConnect.Securities
         /// Gets the margin currently allocated to the specified holding
         /// </summary>
         /// <param name="parameters">An object containing the security</param>
-        /// <returns>The maintenance margin required for the </returns>
+        /// <returns>The maintenance margin required for the provided holdings quantity/cost/value</returns>
         public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
             return parameters.AbsoluteQuantity * _marginRequiredPerUnitInAccountCurrency;

@@ -113,6 +113,15 @@ class CustomBuyingPowerModel:
     def HasSufficientBuyingPowerForOrder(self, context):
         return HasSufficientBuyingPowerForOrderResult(True)
 
+    def GetMaintenanceMargin(self, context):
+        return None
+
+    def GetInitialMarginRequirement(self, context):
+        return None
+
+    def GetInitialMarginRequiredForOrder(self, context):
+        return None
+
     def SetLeverage(self, security, leverage):
         self.margin = 1.0 / float(leverage)";
 

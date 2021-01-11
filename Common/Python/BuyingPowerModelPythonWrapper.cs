@@ -139,7 +139,7 @@ namespace QuantConnect.Python
         /// Gets the margin currently allocated to the specified holding
         /// </summary>
         /// <param name="parameters">An object containing the security</param>
-        /// <returns>The maintenance margin required for the </returns>
+        /// <returns>The maintenance margin required for the provided holdings quantity/cost/value</returns>
         public MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
             using (Py.GIL())
@@ -152,6 +152,8 @@ namespace QuantConnect.Python
         /// <summary>
         /// The margin that must be held in order to increase the position by the provided quantity
         /// </summary>
+        /// <param name="parameters">An object containing the security and quantity</param>
+        /// <returns>The initial margin required for the provided security and quantity</returns>
         public InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
         {
             using (Py.GIL())
