@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             // Define our custom data properties and exchange hours
-            var properties = new SymbolProperties("Bitcoin", "USD", 1, (decimal)0.01, (decimal)0.01, _ticker);
+            var properties = new SymbolProperties("Bitcoin", "USD", 1, 0.01m, 0.01m, _ticker);
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
 
             // Add the custom data to our algorithm with our custom properties and exchange hours

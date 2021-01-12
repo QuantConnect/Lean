@@ -1990,18 +1990,17 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
-        public Security AddData<T>(string ticker, SymbolProperties properties, SecurityExchangeHours exchangeHours, Resolution? resolution = null, DateTimeZone timeZone = null, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData<T>(string ticker, SymbolProperties properties, SecurityExchangeHours exchangeHours, Resolution? resolution = null, bool fillDataForward = false, decimal leverage = 1.0m)
             where T : IBaseData, new()
         {
             // Get the right key for storage of base type symbols
             var key = SecurityIdentifier.GenerateBaseSymbol(typeof(T), ticker);
 
-            // Add entries to our Symbol Properties DB and MarketHours DB
-            SymbolPropertiesDatabase.SetEntry(Market.USA, key, SecurityType.Base, properties);
-            MarketHoursDatabase.SetEntry(Market.USA, key, SecurityType.Base, exchangeHours);
+            // Set our database entries for this data type
+            SetDatabaseEntries(key, properties, exchangeHours);
 
             // Then add the data
-            return AddData(typeof(T), ticker, resolution, timeZone, fillDataForward, leverage);
+            return AddData(typeof(T), ticker, resolution, null, fillDataForward, leverage);
         }
 
         /// <summary>
@@ -2349,6 +2348,19 @@ namespace QuantConnect.Algorithm
         public void SetObjectStore(IObjectStore objectStore)
         {
             ObjectStore = new ObjectStore(objectStore);
+        }
+
+        /// <summary>
+        /// Set the properties and exchange hours for a given key into our databases
+        /// </summary>
+        /// <param name="key">Key for database storage</param>
+        /// <param name="properties">Properties to store</param>
+        /// <param name="exchangeHours">Exchange hours to store</param>
+        private void SetDatabaseEntries(string key, SymbolProperties properties, SecurityExchangeHours exchangeHours)
+        {
+            // Add entries to our Symbol Properties DB and MarketHours DB
+            SymbolPropertiesDatabase.SetEntry(Market.USA, key, SecurityType.Base, properties);
+            MarketHoursDatabase.SetEntry(Market.USA, key, SecurityType.Base, exchangeHours);
         }
     }
 }

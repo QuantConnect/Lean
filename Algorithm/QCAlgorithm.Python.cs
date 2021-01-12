@@ -202,18 +202,17 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
-        public Security AddData(PyObject type, string ticker, SymbolProperties properties, SecurityExchangeHours exchangeHours, Resolution? resolution = null, DateTimeZone timeZone = null, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData(PyObject type, string ticker, SymbolProperties properties, SecurityExchangeHours exchangeHours, Resolution? resolution = null, bool fillDataForward = false, decimal leverage = 1.0m)
         {
             // Get the right key for storage of base type symbols
             var dataType = type.CreateType();
             var key = SecurityIdentifier.GenerateBaseSymbol(dataType, ticker);
 
             // Add entries to our Symbol Properties DB and MarketHours DB
-            SymbolPropertiesDatabase.SetEntry(Market.USA, key, SecurityType.Base, properties);
-            MarketHoursDatabase.SetEntry(Market.USA, key, SecurityType.Base, exchangeHours);
+            SetDatabaseEntries(key, properties, exchangeHours);
 
             // Then add the data
-            return AddData(dataType, ticker, resolution, timeZone, fillDataForward, leverage);
+            return AddData(dataType, ticker, resolution, null, fillDataForward, leverage);
         }
 
         /// <summary>
