@@ -118,6 +118,7 @@
     <PackageReference Include="System.ValueTuple" Version="4.4.0" />
     <PackageReference Include="Utf8Json" Version="1.3.7" />
     <PackageReference Include="WebSocket4Net" Version="0.15.2" />
+    <PackageReference Include="WebSocketSharpFork" Version="1.0.4" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="QuantConnect.Fxcm">
@@ -128,9 +129,6 @@
     <Reference Include="System.Net" />
     <Reference Include="System.Web" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="websocket-sharp, Version=1.0.4.0, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
-      <HintPath>$(NuGetPackageRoot)\WebSocketSharpFork.1.0.4.0\lib\net35\websocket-sharp.dll</HintPath>
-    </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
