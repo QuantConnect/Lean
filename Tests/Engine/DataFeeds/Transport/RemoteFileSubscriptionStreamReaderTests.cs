@@ -118,6 +118,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
                     null),
                 "Api.Download(): Failed to download data from helloworld.com. Please verify the source for missing http:// or https://"
             );
+
+            remoteReader.DisposeSafely();
         }
 
         private class TestDownloadProvider : Api.Api

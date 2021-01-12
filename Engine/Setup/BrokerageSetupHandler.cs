@@ -281,7 +281,7 @@ namespace QuantConnect.Lean.Engine.Setup
                         AddInitializationError(err.ToString(), err);
                     }
                 }, controls.RamAllocation,
-                    sleepIntervalMillis: 50); // entire system is waiting on this, so be as fast as possible
+                    sleepIntervalMillis: 100); // entire system is waiting on this, so be as fast as possible
 
                 if (!initializeComplete)
                 {
