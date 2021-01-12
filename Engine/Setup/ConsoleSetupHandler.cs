@@ -179,7 +179,7 @@ namespace QuantConnect.Lean.Engine.Setup
                                 Errors.Add(new AlgorithmSetupException("During the algorithm initialization, the following exception has occurred: ", err));
                             }
                         }, baseJob.Controls.RamAllocation,
-                        sleepIntervalMillis: 50,
+                        sleepIntervalMillis: 100,
                         workerThread: WorkerThread);
 
                     // set start and end date if present in the job
