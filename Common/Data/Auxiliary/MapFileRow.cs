@@ -37,12 +37,18 @@ namespace QuantConnect.Data.Auxiliary
         public string MappedSymbol { get; private set; }
 
         /// <summary>
+        /// Gets the mapped symbol
+        /// </summary>
+        public string MainExchange { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MapFileRow"/> class.
         /// </summary>
-        public MapFileRow(DateTime date, string mappedSymbol)
+        public MapFileRow(DateTime date, string mappedSymbol, string mainExchange="")
         {
             Date = date;
             MappedSymbol = mappedSymbol.LazyToUpper();
+            MainExchange = mainExchange;
         }
 
         /// <summary>
@@ -70,7 +76,8 @@ namespace QuantConnect.Data.Auxiliary
         public static MapFileRow Parse(string line)
         {
             var csv = line.Split(',');
-            return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1]);
+            var mainExchange = csv.Length > 2 ? csv[2] : "";
+            return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1], mainExchange);
         }
 
         #region Equality members

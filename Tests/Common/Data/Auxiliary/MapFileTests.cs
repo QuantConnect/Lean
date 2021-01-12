@@ -81,5 +81,18 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
 
             Assert.True(mapFile.ToCsvLines().SequenceEqual(csvData));
         }
+        
+        [Test]
+        public void ParsesExchangeCorrectly()
+        {
+            var mapFile = new MapFile("goog", new List<MapFileRow>
+            {
+                new MapFileRow(new DateTime(2014, 03, 27), "goocv", "P"),
+                new MapFileRow(new DateTime(2014, 04, 02), "goocv", "P"),
+                new MapFileRow(new DateTime(2050, 12, 31), "goog", "P")
+            });
+
+            Assert.AreEqual("P", mapFile.Last().MainExchange);
+        }
     }
 }
