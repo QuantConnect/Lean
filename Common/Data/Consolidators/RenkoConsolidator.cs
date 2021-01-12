@@ -58,6 +58,20 @@ namespace QuantConnect.Data.Consolidators
         public IBaseData Consolidated { get; private set; }
 
         /// <summary>
+        /// Event handler that fires when a new piece of data is produced
+        /// </summary>
+        public event EventHandler<RenkoBar> DataConsolidated;
+
+        /// <summary>
+        /// Event handler that fires when a new piece of data is produced
+        /// </summary>
+        event DataConsolidatedHandler IDataConsolidator.DataConsolidated
+        {
+            add { _dataConsolidatedHandler += value; }
+            remove { _dataConsolidatedHandler -= value; }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
         /// The value selector will by default select <see cref="IBaseData.Value"/>
         /// The volume selector will by default select zero.
@@ -94,6 +108,22 @@ namespace QuantConnect.Data.Consolidators
             _selector = selector;
             _evenBars = evenBars;
             _volumeSelector = volumeSelector;
+        }
+
+        /// <summary>
+        ///Initializes a new instance of the <see cref="RenkoConsolidator" /> class.
+        /// </summary>
+        /// <param name="barSize"></param>
+        /// <param name="type"></param>
+        [Obsolete("Please use the WickedRenkoConsolidator type if RenkoType is not Classic")]
+        public RenkoConsolidator(decimal barSize, RenkoType type)
+        {
+            if (type != RenkoType.Classic)
+            {
+                throw new ArgumentException("Please use the WickedRenkoConsolidator type if RenkoType is not Classic");
+            }
+
+            _barSize = barSize;
         }
 
         /// <summary>
@@ -141,20 +171,6 @@ namespace QuantConnect.Data.Consolidators
             }
 
             _evenBars = evenBars;
-        }
-
-        /// <summary>
-        /// Event handler that fires when a new piece of data is produced
-        /// </summary>
-        public event EventHandler<RenkoBar> DataConsolidated;
-
-        /// <summary>
-        /// Event handler that fires when a new piece of data is produced
-        /// </summary>
-        event DataConsolidatedHandler IDataConsolidator.DataConsolidated
-        {
-            add { _dataConsolidatedHandler += value; }
-            remove { _dataConsolidatedHandler -= value; }
         }
 
         /// <summary>

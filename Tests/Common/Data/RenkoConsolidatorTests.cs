@@ -21,6 +21,7 @@ using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Common.Data
 {
+    [TestFixture]
     public class RenkoConsolidatorTests
     {
         [Test]
