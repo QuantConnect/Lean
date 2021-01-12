@@ -105,7 +105,7 @@ namespace QuantConnect.Lean.Engine.Results
                     //While there's no work to do, go back to the algorithm:
                     if (Messages.Count == 0)
                     {
-                        Thread.Sleep(50);
+                        ExitEvent.WaitOne(50);
                     }
                     else
                     {
@@ -640,6 +640,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                 // Set exit flag, update task will send any message before stopping
                 ExitTriggered = true;
+                ExitEvent.Set();
 
                 StopUpdateRunner();
 
