@@ -810,12 +810,14 @@ namespace QuantConnect.Algorithm
             }
 
             var shortableQuantity = _shortableProvider.ShortableQuantity(request.Symbol, Time);
-            if (request.Quantity < 0 && request.Symbol.SecurityType == SecurityType.Equity &&
-                shortableQuantity != null && Portfolio.ContainsKey(request.Symbol) && Portfolio[request.Symbol].IsShort &&
-                (Portfolio[request.Symbol].Quantity + request.Quantity < -shortableQuantity))
+            var openOrderQuantity = Transactions.GetOpenOrders(request.Symbol).Sum(o => o.Quantity);
+            var portfolioQuantity = Portfolio.ContainsKey(request.Symbol) ? Portfolio[request.Symbol].Quantity : 0;
+            var exceedsShortable = portfolioQuantity + request.Quantity + openOrderQuantity < -shortableQuantity;
+
+            if (request.Quantity < 0 && shortableQuantity != null && exceedsShortable)
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.OrderExceedsShortableQuantity,
-                    $"Order exceeds maximum shortable quantity (maximum shortable: {shortableQuantity}, requested short: {Math.Abs(request.Quantity)}, current holdings: {Portfolio[request.Symbol].Quantity}");
+                    $"Order exceeds maximum shortable quantity for Symbol {request.Symbol} (maximum shortable: {shortableQuantity}, requested short: {Math.Abs(request.Quantity)}, current holdings: {Portfolio[request.Symbol].Quantity}, open orders quantity: {openOrderQuantity}");
             }
 
             // passes all initial order checks
