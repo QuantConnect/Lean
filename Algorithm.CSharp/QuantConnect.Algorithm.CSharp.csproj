@@ -150,6 +150,7 @@
     <Compile Include="AltData\QuiverWallStreetBetsDataAlgorithm.cs" />
     <Compile Include="FillForwardUntilExpiryRegressionAlgorithm.cs" />
     <Compile Include="FutureOptionCallITMGreeksExpiryRegressionAlgorithm.cs" />
+    <Compile Include="FutureOptionMultipleContractsInDifferentContractMonthsWithSameUnderlyingFutureRegressionAlgorithm.cs" />
     <Compile Include="FuturesAndFuturesOptionsExpiryTimeAndLiquidationRegressionAlgorithm.cs" />
     <Compile Include="OnOrderEventExceptionRegression.cs" />
     <Compile Include="FutureOptionCallITMExpiryRegressionAlgorithm.cs" />
