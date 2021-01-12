@@ -413,6 +413,8 @@
     <Compile Include="Common\ExpiryTests.cs" />
     <Compile Include="Common\Orders\Serialization\SerializedOrderJsonConverterTests.cs" />
     <Compile Include="Common\Packets\ControlsTests.cs" />
+    <Compile Include="Common\Securities\FutureOption\FuturesOptionsUnderlyingMapperTests.cs" />
+    <Compile Include="Common\Securities\Futures\FuturesListingsTests.cs" />
     <Compile Include="Common\Securities\Options\StrategyMatcher\Option.cs" />
     <Compile Include="Common\Securities\Options\StrategyMatcher\OptionPositionCollectionTests.cs" />
     <Compile Include="Common\Securities\Options\StrategyMatcher\OptionPositionTests.cs" />
