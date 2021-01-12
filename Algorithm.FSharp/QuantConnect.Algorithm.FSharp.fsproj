@@ -59,6 +59,7 @@
     </When>
   </Choose>
   <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="$(TargetFSharpCoreVersion)" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.3" />
     <PackageReference Include="Microsoft.CodeAnalysis.VersionCheckAnalyzer" Version="2.9.3" />
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.3" />
@@ -69,9 +70,6 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj" />
