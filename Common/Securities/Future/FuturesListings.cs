@@ -34,7 +34,7 @@ namespace QuantConnect.Securities.Future
         private static readonly Symbol _zt = Symbol.Create("ZT", SecurityType.Future, Market.CBOT);
         private static readonly Symbol _zw = Symbol.Create("ZW", SecurityType.Future, Market.CBOT);
 
-        private static Dictionary<string, Func<DateTime, Symbol[]>> _futuresListingRules = new Dictionary<string, Func<DateTime, Symbol[]>>
+        private static Dictionary<string, Func<DateTime, List<Symbol>>> _futuresListingRules = new Dictionary<string, Func<DateTime, List<Symbol>>>
         {
             { "ZB", t => QuarterlyContracts(_zb, t, 3) },
             { "ZC", t => MonthlyContractListings(
@@ -63,7 +63,7 @@ namespace QuantConnect.Securities.Future
         /// <param name="futureTicker">Ticker of the future contract</param>
         /// <param name="time">Contracts to look up that are listed at that time</param>
         /// <returns>The currently trading contracts on the exchange</returns>
-        public static Symbol[] ListedContracts(string futureTicker, DateTime time)
+        public static List<Symbol> ListedContracts(string futureTicker, DateTime time)
         {
             if (!_futuresListingRules.ContainsKey(futureTicker))
             {
@@ -83,7 +83,7 @@ namespace QuantConnect.Securities.Future
         /// <param name="time">Contracts to look up that are listed at that time</param>
         /// <param name="limit">Number of Symbols we get back/are listed at a given time</param>
         /// <returns>Symbols that are listed at the given time</returns>
-        private static Symbol[] QuarterlyContracts(Symbol canonicalFuture, DateTime time, int limit)
+        private static List<Symbol> QuarterlyContracts(Symbol canonicalFuture, DateTime time, int limit)
         {
             var contractMonth = new DateTime(time.Year, time.Month, 1);
             var futureExpiry = DateTime.MinValue;
@@ -99,20 +99,18 @@ namespace QuantConnect.Securities.Future
             // Negate the last incrementation from the while loop to get the actual contract month of the future.
             var firstFutureContractMonth = contractMonth.AddMonths(-1);
 
-            var quarterlyContracts = new Symbol[limit];
+            var quarterlyContracts = new List<Symbol>();
             // Gets the next closest month from the current month in multiples of 3
             var quarterlyContractMonth = (int)Math.Ceiling((double)firstFutureContractMonth.Month / 3) * 3;
 
             for (var i = 0; i < limit; i++)
             {
+                // We're past the expiration frontier due to the while loop above, which means
+                // that any contracts from here on out will be greater than the current time.
                 var currentContractMonth = firstFutureContractMonth.AddMonths(-firstFutureContractMonth.Month + quarterlyContractMonth);
                 var currentFutureExpiry = expiryFunc(currentContractMonth);
-                if (currentFutureExpiry < time)
-                {
-                    continue;
-                }
 
-                quarterlyContracts[i] = Symbol.CreateFuture(canonicalFuture.ID.Symbol, canonicalFuture.ID.Market, currentFutureExpiry);
+                quarterlyContracts.Add(Symbol.CreateFuture(canonicalFuture.ID.Symbol, canonicalFuture.ID.Market, currentFutureExpiry));
                 quarterlyContractMonth += 3;
             }
 
@@ -130,7 +128,7 @@ namespace QuantConnect.Securities.Future
         /// the limit of how many contracts will be listed.
         /// </param>
         /// <returns>Symbols that are listed at the given time</returns>
-        private static Symbol[] MonthlyContractListings(
+        private static List<Symbol> MonthlyContractListings(
             Symbol canonicalFuture,
             DateTime time,
             int contractMonthForNewListings,
@@ -187,7 +185,7 @@ namespace QuantConnect.Securities.Future
                 }
             }
 
-            return listings.ToArray();
+            return listings;
         }
 
         /// <summary>

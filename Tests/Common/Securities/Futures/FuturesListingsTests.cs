@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var missingContractsMessage = $"The following contracts are missing from the listed contracts: {string.Join("\n", contractsMissing.Select(s => "  " + s.Value + " " + s.ID.Date.ToStringInvariant("yyyy-MM-dd")))}";
 
             Assert.AreEqual(0, contractsMissing.Count, missingContractsMessage);
-            Assert.AreEqual(expectedListedExpiries.Length, contractsListed.Length, $"The length of expected listed contracts does not match the returned contract count.");
+            Assert.AreEqual(expectedListedExpiries.Length, contractsListed.Count, $"The length of expected listed contracts does not match the returned contract count.");
         }
 
         public static TestCaseData[] ListedContractsCME_2021_01_11()
