@@ -87,6 +87,7 @@ namespace QuantConnect.Securities.Future
         {
             var contractMonth = new DateTime(time.Year, time.Month, 1);
             var futureExpiry = DateTime.MinValue;
+            var expiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFuture);
 
             // Skip any contracts that have already expired.
             while (futureExpiry < time)
@@ -98,22 +99,24 @@ namespace QuantConnect.Securities.Future
             // Negate the last incrementation from the while loop to get the actual contract month of the future.
             var firstFutureContractMonth = contractMonth.AddMonths(-1);
 
-            var quarterlyContracts = new DateTime[limit];
+            var quarterlyContracts = new Symbol[limit];
             // Gets the next closest month from the current month in multiples of 3
             var quarterlyContractMonth = (int)Math.Ceiling((double)firstFutureContractMonth.Month / 3) * 3;
 
             for (var i = 0; i < limit; i++)
             {
-                quarterlyContracts[i] = firstFutureContractMonth.AddMonths(-firstFutureContractMonth.Month + quarterlyContractMonth);
+                var currentContractMonth = firstFutureContractMonth.AddMonths(-firstFutureContractMonth.Month + quarterlyContractMonth);
+                var currentFutureExpiry = expiryFunc(currentContractMonth);
+                if (currentFutureExpiry < time)
+                {
+                    continue;
+                }
+
+                quarterlyContracts[i] = Symbol.CreateFuture(canonicalFuture.ID.Symbol, canonicalFuture.ID.Market, currentFutureExpiry);
                 quarterlyContractMonth += 3;
             }
 
-            return quarterlyContracts
-                .OrderBy(t => t)
-                .Select(t => FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFuture)(t))
-                .Where(e => e >= time)
-                .Select(e => Symbol.CreateFuture(canonicalFuture.ID.Symbol, canonicalFuture.ID.Market, e))
-                .ToArray();
+            return quarterlyContracts;
         }
 
         /// <summary>
@@ -133,7 +136,7 @@ namespace QuantConnect.Securities.Future
             int contractMonthForNewListings,
             params FuturesListingCycles[] futureListingCycles)
         {
-            var listings = new List<DateTime>();
+            var listings = new List<Symbol>();
             var expiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFuture);
             var yearDelta = 0;
 
@@ -167,7 +170,13 @@ namespace QuantConnect.Securities.Future
                     for (var m = monthStartIndex; m < listingCycle.Cycle.Length; m++)
                     {
                         // Add the future's expiration to the listings
-                        listings.Add(expiryFunc(new DateTime(time.Year + year, listingCycle.Cycle[m], 1)));
+                        var currentContractMonth = new DateTime(time.Year + year, listingCycle.Cycle[m], 1);
+                        var currentFutureExpiry = expiryFunc(currentContractMonth);
+                        if (currentFutureExpiry >= time)
+                        {
+                            listings.Add(Symbol.CreateFuture(canonicalFuture.ID.Symbol, canonicalFuture.ID.Market, currentFutureExpiry));
+                        }
+
                         if (++count == listingCycle.Limit)
                         {
                             break;
@@ -178,11 +187,7 @@ namespace QuantConnect.Securities.Future
                 }
             }
 
-            return listings
-                .OrderBy(e => e)
-                .Where(e => e >= time)
-                .Select(e => Symbol.CreateFuture(canonicalFuture.ID.Symbol, canonicalFuture.ID.Market, e))
-                .ToArray();
+            return listings.ToArray();
         }
 
         /// <summary>
@@ -197,7 +202,7 @@ namespace QuantConnect.Securities.Future
         ///
         /// This would equate to a cycle of [3, 5, 7, 9, 12], a limit of 15, and the contract month == 7.
         /// </remarks>
-        public class FuturesListingCycles
+        private class FuturesListingCycles
         {
             /// <summary>
             /// Monthly cycles that the futures listings rule follows
