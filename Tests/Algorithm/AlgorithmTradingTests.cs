@@ -1342,32 +1342,6 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(expected, algo.Transactions.LastOrderId);
         }
 
-        [Test]
-        public void ShortableQuantityTests()
-        {
-            Security msft;
-            var algo = GetAlgorithm(out msft, 1, 0);
-
-            //Set price to $1
-            Update(msft, 1);
-
-            algo.Portfolio.SetCash(150000);
-
-            var mock = new Mock<ITransactionHandler>();
-            var request = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null);
-            mock.Setup(m => m.Process(It.IsAny<OrderRequest>())).Returns(new OrderTicket(null, request.Object));
-            mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
-            algo.Transactions.SetOrderProcessor(mock.Object);
-
-            algo.SetShortableProvider(new TestShortableProvider());
-            var result = algo.MarketOrder(msft.Symbol, -1001);
-
-            Assert.AreEqual(OrderStatus.Invalid, result.Status);
-            Assert.IsTrue(result.SubmitRequest.Response.IsError);
-            Assert.AreEqual(OrderResponseErrorCode.OrderExceedsShortableQuantity, result.SubmitRequest.Response.ErrorCode);
-
-        }
-
         private class TestShortableProvider : IShortableProvider
         {
             public Dictionary<Symbol, long> AllShortableSymbols(DateTime localTime)
@@ -1383,7 +1357,6 @@ namespace QuantConnect.Tests.Algorithm
                 return 1000;
             }
         }
-
 
         private QCAlgorithm GetAlgorithm(out Security msft, decimal leverage, decimal fee)
         {

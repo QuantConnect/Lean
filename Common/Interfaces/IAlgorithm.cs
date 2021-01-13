@@ -332,6 +332,11 @@ namespace QuantConnect.Interfaces
         Slice CurrentSlice { get; }
 
         /// <summary>
+        /// Shortable Provider, used to determine whether a given stock is shortable or not
+        /// </summary>
+        IShortableProvider ShortableProvider { get; }
+
+        /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:
         /// </summary>
         void Initialize();

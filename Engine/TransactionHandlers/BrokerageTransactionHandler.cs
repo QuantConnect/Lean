@@ -230,6 +230,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 ? OrderResponse.Success(request)
                 : OrderResponse.WarmingUp(request);
 
+            var shortableResponse = Shortable(request, request.Symbol, request.Quantity);
+            if (shortableResponse.IsError)
+            {
+                response = shortableResponse;
+            }
+
             request.SetResponse(response);
             var ticket = new OrderTicket(_algorithm.Transactions, request);
 
@@ -250,13 +256,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 // add it to the orders collection for recall later
                 var order = Order.CreateOrder(request);
+                var orderTag = response.ErrorCode == OrderResponseErrorCode.AlgorithmWarmingUp
+                    ? "Algorithm warming up."
+                    : response.ErrorMessage;
 
                 // ensure the order is tagged with a currency
                 var security = _algorithm.Securities[order.Symbol];
                 order.PriceCurrency = security.SymbolProperties.QuoteCurrency;
 
                 order.Status = OrderStatus.Invalid;
-                order.Tag = "Algorithm warming up.";
+                order.Tag = orderTag;
                 ticket.SetOrder(order);
                 _completeOrderTickets.TryAdd(ticket.OrderId, ticket);
                 _completeOrders.TryAdd(order.Id, order);
@@ -297,6 +306,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 //Update the order from the behaviour
                 var order = GetOrderByIdInternal(request.OrderId);
+                var shortableResponse = Shortable(request, ticket.Symbol, request.Quantity ?? ticket.Quantity);
+
                 if (order == null)
                 {
                     // can't update an order that doesn't exist!
@@ -314,6 +325,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 else if (_algorithm.IsWarmingUp)
                 {
                     request.SetResponse(OrderResponse.WarmingUp(request));
+                }
+                else if (shortableResponse.IsError)
+                {
+                    request.SetResponse(shortableResponse);
                 }
                 else
                 {
@@ -1207,6 +1222,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     $"Warning: To meet brokerage precision requirements, order {priceType.ToStringInvariant()}Price was rounded to {priceRound.ToStringInvariant()} from {priceOriginal.ToStringInvariant()}"
                 );
             }
+        }
+
+        protected OrderResponse Shortable(OrderRequest request, Symbol symbol, decimal orderQuantity)
+        {
+            var shortableQuantity = _algorithm.ShortableProvider.ShortableQuantity(symbol, _algorithm.Time);
+            var openOrderQuantity = GetOpenOrders(order => symbol == order.Symbol).Sum(o => o.Quantity);
+            var portfolioQuantity = _algorithm.Portfolio.ContainsKey(symbol) ? _algorithm.Portfolio[symbol].Quantity : 0;
+            var exceedsShortable = shortableQuantity != null && portfolioQuantity + orderQuantity + openOrderQuantity < -shortableQuantity;
+
+            if (orderQuantity < 0 && exceedsShortable)
+            {
+                return OrderResponse.Error(request, OrderResponseErrorCode.ExceedsShortableQuantity,
+                    $"Order exceeds maximum shortable quantity for Symbol {symbol} (maximum shortable: {shortableQuantity}, requested short: {Math.Abs(orderQuantity)}, current holdings: {_algorithm.Portfolio[symbol].Quantity}, open orders quantity: {openOrderQuantity}");
+            }
+
+            return OrderResponse.Success(request);
         }
     }
 }

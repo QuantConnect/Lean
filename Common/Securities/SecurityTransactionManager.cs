@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -379,7 +378,6 @@ namespace QuantConnect.Securities
         {
             _orderProcessor = orderProvider;
         }
-
 
         /// <summary>
         /// Record the transaction value and time in a list to later be processed for statistics creation.

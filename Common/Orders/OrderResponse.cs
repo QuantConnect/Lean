@@ -85,7 +85,7 @@ namespace QuantConnect.Orders
             ErrorCode = errorCode;
             if (errorCode != OrderResponseErrorCode.None)
             {
-                ErrorMessage = errorMessage ?? "An unexpected error ocurred.";
+                ErrorMessage = errorMessage ?? "An unexpected error occurred.";
             }
         }
 

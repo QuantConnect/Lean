@@ -178,6 +178,6 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The order's quantity exceeds the max shortable quantity set by the brokerage
         /// </summary>
-        OrderExceedsShortableQuantity = -31,
+        ExceedsShortableQuantity = -31,
     }
 }

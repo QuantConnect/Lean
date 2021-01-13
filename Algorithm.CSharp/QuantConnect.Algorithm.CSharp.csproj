@@ -169,6 +169,7 @@
     <Compile Include="CoarseFineOptionUniverseChainRegressionAlgorithm.cs" />
     <Compile Include="OptionChainedAndUniverseSelectionRegressionAlgorithm.cs" />
     <Compile Include="OptionAssignmentRegressionAlgorithm.cs" />
+    <Compile Include="ShortableProviderOrdersRejectedRegressionAlgorithm.cs" />
     <Compile Include="SwitchDataModeRegressionAlgorithm.cs" />
     <Compile Include="AddRemoveOptionUniverseRegressionAlgorithm.cs" />
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
