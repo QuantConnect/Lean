@@ -59,6 +59,10 @@ class CustomDataPropertiesRegressionAlgorithm(QCAlgorithm):
         if self.bitcoin.Exchange.Hours != exchangeHours :
             raise Exception("Failed to set and retrieve custom ExchangeHours for BTC")
 
+        # For regression purposes on AddData overloads, this call is simply to ensure Lean can accept this
+        # with default params and is not routed to a breaking function.
+        self.AddData(Bitcoin, "BTCUSD");
+
 
     def OnData(self, data):
         if not self.Portfolio.Invested:
