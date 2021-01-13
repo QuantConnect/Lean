@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,6 +23,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Orders.Serialization;
 using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Positions;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders
@@ -232,6 +233,20 @@ namespace QuantConnect.Orders
             BrokerId = new List<string>();
             ContingentId = 0;
             Properties = properties ?? new OrderProperties();
+        }
+
+        /// <summary>
+        /// Creates an enumerable containing each position resulting from executing this order.
+        /// </summary>
+        /// <remarks>
+        /// This is provided in anticipation of a new combo order type that will need to override this method,
+        /// returning a position for each 'leg' of the order.
+        /// </remarks>
+        /// <returns>An enumerable of positions matching the results of executing this order</returns>
+        public virtual IEnumerable<IPosition> CreatePositions(SecurityManager securities)
+        {
+            var security = securities[Symbol];
+            yield return new Position(security, Quantity);
         }
 
         /// <summary>

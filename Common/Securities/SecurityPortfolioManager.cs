@@ -481,13 +481,11 @@ namespace QuantConnect.Securities
             get
             {
                 decimal sum = 0;
-                foreach (var kvp in Securities.Where((pair, i) => pair.Value.Holdings.Quantity != 0))
+                foreach (var group in Positions.Groups)
                 {
-                    var security = kvp.Value;
-                    var context = new ReservedBuyingPowerForPositionParameters(security);
-                    var reservedBuyingPower = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(context);
-                    sum += reservedBuyingPower.AbsoluteUsedBuyingPower;
+                    sum += group.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(this, group);
                 }
+
                 return sum;
             }
         }
@@ -615,6 +613,7 @@ namespace QuantConnect.Securities
         public decimal GetMarginRemaining(Symbol symbol, OrderDirection direction = OrderDirection.Buy)
         {
             var security = Securities[symbol];
+
             var context = new BuyingPowerParameters(this, security, direction);
             return security.BuyingPowerModel.GetBuyingPower(context).Value;
         }

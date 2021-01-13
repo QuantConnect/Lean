@@ -35,6 +35,28 @@ namespace QuantConnect.Securities.Positions
         }
 
         /// <summary>
+        /// Attempts to group the specified positions into a new <see cref="IPositionGroup"/> using an
+        /// appropriate <see cref="IPositionGroupBuyingPowerModel"/> for position groups created via this
+        /// resolver.
+        /// </summary>
+        /// <param name="positions">The positions to be grouped</param>
+        /// <param name="group">The grouped positions when this resolver is able to, otherwise null</param>
+        /// <returns>True if this resolver can group the specified positions, otherwise false</returns>
+        public bool TryGroup(IReadOnlyCollection<IPosition> positions, out IPositionGroup group)
+        {
+            // we can only create default groupings containing a single security
+            if (positions.Count != 1)
+            {
+                group = null;
+                return false;
+            }
+
+            var key = new PositionGroupKey(_buyingPowerModel, positions);
+            group = new PositionGroup(key, positions.ToDictionary(p => p.Symbol));
+            return true;
+        }
+
+        /// <summary>
         /// Resolves the position groups that exist within the specified collection of positions.
         /// </summary>
         /// <param name="positions">The collection of positions</param>
@@ -75,7 +97,7 @@ namespace QuantConnect.Securities.Positions
                 {
                     if (seen.Add(group.Key))
                     {
-                        yield return @group;
+                        yield return group;
                     }
                 }
             }

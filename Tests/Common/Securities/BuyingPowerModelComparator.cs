@@ -138,7 +138,33 @@ namespace QuantConnect.Tests.Common.Securities
             )
         {
             EnsureSecurityExists(parameters.Security);
-            return SecurityModel.HasSufficientBuyingPowerForOrder(parameters);
+            var expected = SecurityModel.HasSufficientBuyingPowerForOrder(parameters);
+            if (reentry)
+            {
+                return expected;
+            }
+
+            reentry = true;
+            var actual = PositionGroupModel.HasSufficientBuyingPowerForOrder(
+                new HasSufficientPositionGroupBuyingPowerForOrderParameters(
+                    Portfolio,
+                    new PositionGroup(PositionGroupModel, new Position(parameters.Security, parameters.Order.Quantity)),
+                    parameters.Order
+                )
+            );
+
+            Assert.AreEqual(expected.IsSufficient, actual.IsSufficient,
+                $"{PositionGroupModel.GetType().Name}:{nameof(HasSufficientBuyingPowerForOrder)}: " +
+                $"ExpectedReason: {expected.Reason}{Environment.NewLine}" +
+                $"ActualReason: {actual.Reason}"
+            );
+
+            Assert.AreEqual(expected.Reason, actual.Reason,
+                $"{PositionGroupModel.GetType().Name}:{nameof(HasSufficientBuyingPowerForOrder)}"
+            );
+
+            reentry = false;
+            return expected;
         }
 
         public GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(
