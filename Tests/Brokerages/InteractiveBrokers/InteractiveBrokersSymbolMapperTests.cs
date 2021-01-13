@@ -18,6 +18,9 @@ using IBApi;
 using NUnit.Framework;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Securities;
+using QuantConnect.Securities.FutureOption;
 using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
@@ -98,15 +101,17 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(symbol));
         }
 
-        [Test]
-        public void MalformedContractSymbolCreatesOptionContract()
+        [TestCase("SPY JUN2021 345 P [SPY 210618P00345000 100]")]
+        [TestCase("SPY    JUN2021 345 P [SPY   210618P00345000 100]")]
+        [TestCase("SPY     JUN2021    345   P   [SPY         210618P00345000       100]")]
+        public void MalformedContractSymbolCreatesOptionContract(string symbol)
         {
             var malformedContract = new Contract
             {
                 IncludeExpired = false,
                 Currency = "USD",
                 Multiplier = "100",
-                Symbol = "SPY JUN2021 345 P [SPY 210618P00345000 100]",
+                Symbol = symbol,
                 SecType = IB.SecurityType.Option,
             };
 
@@ -134,6 +139,54 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             Assert.AreEqual(expectedContract.SecType, actualContract.SecType);
             Assert.AreEqual(expectedContract.IncludeExpired, actualContract.IncludeExpired);
             Assert.AreEqual(expectedContract.Currency, actualContract.Currency);
+        }
+
+        [TestCase("ES       MAR2021")]
+        [TestCase("ES MAR2021")]
+        public void MalformedContractSymbolCreatesFutureContract(string symbol)
+        {
+            var malformedContract = new Contract
+            {
+                IncludeExpired = false,
+                Currency = "USD",
+                Symbol = symbol,
+                SecType = IB.SecurityType.Future
+            };
+
+            var expectedContract = new Contract
+            {
+                Symbol = "ES",
+                LastTradeDateOrContractMonth = "20210319",
+                SecType = IB.SecurityType.Future,
+                IncludeExpired = false,
+                Currency = "USD"
+            };
+
+            var mapper = new InteractiveBrokersSymbolMapper(new LocalDiskMapFileProvider());
+            var actualContract = mapper.ParseMalformedContractFutureSymbol(malformedContract, SymbolPropertiesDatabase.FromDataFolder());
+
+            Assert.AreEqual(expectedContract.Symbol, actualContract.Symbol);
+            Assert.AreEqual(expectedContract.Multiplier, actualContract.Multiplier);
+            Assert.AreEqual(expectedContract.LastTradeDateOrContractMonth, actualContract.LastTradeDateOrContractMonth);
+            Assert.AreEqual(expectedContract.Right, actualContract.Right);
+            Assert.AreEqual(expectedContract.Strike, actualContract.Strike);
+            Assert.AreEqual(expectedContract.Exchange, actualContract.Exchange);
+            Assert.AreEqual(expectedContract.SecType, actualContract.SecType);
+            Assert.AreEqual(expectedContract.IncludeExpired, actualContract.IncludeExpired);
+            Assert.AreEqual(expectedContract.Currency, actualContract.Currency);
+        }
+
+        [TestCase(2021, 2, 23)]
+        [TestCase(2021, 3, 25)]
+        public void FuturesOptionsWithUnderlyingContractMonthMappedByRuleResolvesUnderlyingGetLeanSymbol(int year, int month, int day)
+        {
+            var futuresChainProvider = new BacktestingFutureChainProvider();
+            var mapper = new InteractiveBrokersSymbolMapper(new LocalDiskMapFileProvider());
+
+            var expectedUnderlyingSymbol = Symbol.CreateFuture("GC", Market.COMEX, new DateTime(2021, 4, 28));
+            var futureOption = mapper.GetLeanSymbol("OG", SecurityType.FutureOption, Market.COMEX, new DateTime(year, month, day));
+
+            Assert.AreEqual(expectedUnderlyingSymbol, futureOption.Underlying);
         }
     }
 }

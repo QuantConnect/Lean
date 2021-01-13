@@ -36,18 +36,13 @@ namespace QuantConnect.Algorithm.CSharp
 
         private readonly DateTime _expectedExpiryWarningTime = new DateTime(2020, 6, 19);
         private readonly DateTime _expectedExpiryDelistingTime = new DateTime(2020, 6, 20);
-        private readonly DateTime _expectedLiquidationTime = new DateTime(2020, 6, 19, 9, 32, 0);
+        private readonly DateTime _expectedLiquidationTime = new DateTime(2020, 6, 19, 0, 2, 0);
 
         public override void Initialize()
         {
             SetStartDate(2020, 1, 5);
             SetEndDate(2020, 12, 1);
             SetCash(100000);
-
-            // To ensure that the expiry liquidations are ran for the Futures and FOPs, we
-            // add AAPL to pump a data point through on liquidation date so that the liquidation goes through
-            // at AAPL market open. See issue for more details: https://github.com/QuantConnect/Lean/issues/4872
-            AddEquity("AAPL", Resolution.Daily);
 
             var es = QuantConnect.Symbol.CreateFuture(
                 Futures.Indices.SP500EMini,
@@ -160,29 +155,29 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "4"},
             {"Average Win", "0.13%"},
             {"Average Loss", "-11.33%"},
-            {"Compounding Annual Return", "-2.634%"},
+            {"Compounding Annual Return", "-5.168%"},
             {"Drawdown", "2.400%"},
             {"Expectancy", "-0.494"},
             {"Net Profit", "-2.399%"},
-            {"Sharpe Ratio", "-0.933"},
-            {"Probabilistic Sharpe Ratio", "0.003%"},
+            {"Sharpe Ratio", "-1.288"},
+            {"Probabilistic Sharpe Ratio", "0.028%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
             {"Profit-Loss Ratio", "0.01"},
-            {"Alpha", "-0.017"},
+            {"Alpha", "-0.032"},
             {"Beta", "-0.001"},
-            {"Annual Standard Deviation", "0.018"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0.886"},
-            {"Tracking Error", "0.127"},
-            {"Treynor Ratio", "30.534"},
+            {"Annual Standard Deviation", "0.025"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "1.149"},
+            {"Tracking Error", "0.176"},
+            {"Treynor Ratio", "29.081"},
             {"Total Fees", "$9.25"},
-            {"Fitness Score", "0.007"},
+            {"Fitness Score", "0.011"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-0.177"},
-            {"Return Over Maximum Drawdown", "-1.098"},
-            {"Portfolio Turnover", "0.018"},
+            {"Sortino Ratio", "-0.348"},
+            {"Return Over Maximum Drawdown", "-2.155"},
+            {"Portfolio Turnover", "0.035"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -196,7 +191,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "542517089"}
+            {"OrderListHash", "2065970593"}
         };
     }
 }

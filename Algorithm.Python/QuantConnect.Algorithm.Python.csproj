@@ -103,6 +103,7 @@
     <Content Include="FutureOptionBuySellCallIntradayRegressionAlgorithm.py" />
     <Content Include="FutureOptionCallITMExpiryRegressionAlgorithm.py" />
     <Content Include="FutureOptionCallOTMExpiryRegressionAlgorithm.py" />
+    <Content Include="FutureOptionMultipleContractsInDifferentContractMonthsWithSameUnderlyingFutureRegressionAlgorithm.py" />
     <Content Include="FutureOptionPutITMExpiryRegressionAlgorithm.py" />
     <Content Include="FutureOptionPutOTMExpiryRegressionAlgorithm.py" />
     <Content Include="FutureOptionShortCallITMExpiryRegressionAlgorithm.py" />

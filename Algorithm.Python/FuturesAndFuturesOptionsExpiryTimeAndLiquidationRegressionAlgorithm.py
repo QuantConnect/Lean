@@ -17,16 +17,11 @@ class FuturesAndFuturesOptionsExpiryTimeAndLiquidationRegressionAlgorithm(QCAlgo
 
         self.expectedExpiryWarningTime = datetime(2020, 6, 19)
         self.expectedExpiryDelistingTime = datetime(2020, 6, 20)
-        self.expectedLiquidationTime = datetime(2020, 6, 19, 9, 32, 0)
+        self.expectedLiquidationTime = datetime(2020, 6, 19, 0, 2, 0)
 
         self.SetStartDate(2020, 1, 5)
         self.SetEndDate(2020, 12, 1)
         self.SetCash(100000)
-
-        # To ensure that the expiry liquidations are ran for the Futures and FOPs, we
-        # add AAPL to pump a data point through on liquidation date so that the liquidation goes through
-        # at AAPL market open. See issue for more details: https://github.com/QuantConnect/Lean/issues/4872
-        self.AddEquity("AAPL", Resolution.Daily)
 
         es = Symbol.CreateFuture(
             "ES",

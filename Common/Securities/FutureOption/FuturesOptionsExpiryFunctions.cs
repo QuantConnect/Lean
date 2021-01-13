@@ -38,21 +38,6 @@ namespace QuantConnect.Securities.FutureOption
         private static readonly Symbol _so = Symbol.CreateOption(Symbol.Create("SI", SecurityType.Future, Market.COMEX), Market.COMEX, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
 
         /// <summary>
-        /// The difference in months for the Futures expiry month minus the Futures Options expiry month
-        /// </summary>
-        private static readonly IReadOnlyDictionary<Symbol, int> _futuresOptionsExpiryDelta = new Dictionary<Symbol, int>
-        {
-            { _ozb.Underlying, 1 },
-            { _ozc.Underlying, 1 },
-            { _ozs.Underlying, 1 },
-            { _ozt.Underlying, 1 },
-            { _ozw.Underlying, 1 },
-            { _hxe.Underlying, 1 },
-            { _og.Underlying, 1 },
-            { _so.Underlying, 1 }
-        };
-
-        /// <summary>
         /// Futures options expiry functions lookup table, keyed by canonical future option Symbol
         /// </summary>
         private static readonly IReadOnlyDictionary<Symbol, Func<DateTime, DateTime>> _futuresOptionExpiryFunctions = new Dictionary<Symbol, Func<DateTime,DateTime>>
@@ -107,23 +92,6 @@ namespace QuantConnect.Securities.FutureOption
             }
 
             return expiryFunction(futureContractMonth);
-        }
-
-        /// <summary>
-        /// Gets the Future's contract month from a futures options expiry date
-        /// </summary>
-        /// <param name="canonicalFutureSymbol">Canonical Future Symbol</param>
-        /// <param name="futureOptionExpirationDate">Expiration of the futures option contract</param>
-        /// <returns>Contract month of the future</returns>
-        public static DateTime GetFutureContractMonth(Symbol canonicalFutureSymbol, DateTime futureOptionExpirationDate)
-        {
-            var baseOptionExpiryMonthDate = new DateTime(futureOptionExpirationDate.Year, futureOptionExpirationDate.Month, 1);
-            if (!_futuresOptionsExpiryDelta.ContainsKey(canonicalFutureSymbol))
-            {
-                return baseOptionExpiryMonthDate;
-            }
-
-            return baseOptionExpiryMonthDate.AddMonths(_futuresOptionsExpiryDelta[canonicalFutureSymbol]);
         }
 
         /// <summary>

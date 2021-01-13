@@ -824,15 +824,27 @@ namespace QuantConnect.Api
             var client  = new RestClient(uri.Scheme + "://" + uri.Host);
             var request = new RestRequest(uri.PathAndQuery, Method.GET);
 
-            // If the response is not a zip then it is not data, don't write it.
+            // MAke a request for the data at the link
             var response = client.Execute(request);
-            if (response.ContentType != "application/zip")
+
+            // If the response is JSON it doesn't contain any data, try and extract the message and write it
+            if (response.ContentType.ToLowerInvariant() == "application/json")
             {
-                var message = JObject.Parse(response.Content)["message"].Value<string>();
-                Log.Error($"Api.DownloadData(): Failed to download zip for {symbol} {resolution} data for date {date}, Api response: {message}");
+                try
+                {
+                    var contentObj = JObject.Parse(response.Content);
+                    var message = contentObj["message"].Value<string>();
+                    Log.Error($"Api.DownloadData(): Failed to download zip for {symbol} {resolution} data for date {date}, Api response: {message}");
+                }
+                catch
+                {
+                    Log.Error($"Api.DownloadData(): Failed to download zip for {symbol} {resolution} data for date {date}. Api response could not be parsed.");
+                }
+
                 return false;
             }
             
+            // Any other case save the content to given path
             response.RawBytes.SaveAs(path);
             return true;
         }
@@ -918,7 +930,20 @@ namespace QuantConnect.Api
                 // Add a user agent header in case the requested URI contains a query.
                 client.Headers.Add("user-agent", "QCAlgorithm.Download(): User Agent Header");
 
-                return client.DownloadString(address);
+                try
+                {
+                    return client.DownloadString(address);
+                }
+                catch (WebException exception)
+                {
+                    var message = $"Api.Download(): Failed to download data from {address}";
+                    if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())
+                    {
+                        message += $" with username: {userName} and password {password}";
+                    }
+
+                    throw new WebException($"{message}. Please verify the source for missing http:// or https://", exception);
+                }
             }
         }
 
