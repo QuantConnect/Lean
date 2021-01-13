@@ -1,4 +1,4 @@
-﻿/*
+/*
 * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 *
@@ -81,18 +81,30 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
 
             Assert.True(mapFile.ToCsvLines().SequenceEqual(csvData));
         }
-        
+
         [Test]
         public void ParsesExchangeCorrectly()
         {
             var mapFile = new MapFile("goog", new List<MapFileRow>
             {
-                new MapFileRow(new DateTime(2014, 03, 27), "goocv", "P"),
-                new MapFileRow(new DateTime(2014, 04, 02), "goocv", "P"),
-                new MapFileRow(new DateTime(2050, 12, 31), "goog", "P")
+                new MapFileRow(new DateTime(2014, 03, 27), "goocv", "NASDAQ"),
+                new MapFileRow(new DateTime(2014, 04, 02), "goocv", "NASDAQ"),
+                new MapFileRow(new DateTime(2050, 12, 31), "goog", "NASDAQ")
             });
 
-            Assert.AreEqual("P", mapFile.Last().MainExchange);
+            Assert.AreEqual("NASDAQ", mapFile.Last().MainExchange);
+        }
+
+        [Test]
+        public void ParsesRwoWithExchangesCorrectly()
+        {
+            // Arrange
+            var mapFileRow = "19980102,aapl,NASDAQ";
+            var expectedMapFileRow = new MapFileRow(new DateTime(1998, 01, 02), "aapl", "NASDAQ");
+            // Act
+            var actualMapFileRow = MapFileRow.Parse(mapFileRow);
+            // Assert
+            Assert.AreEqual(expectedMapFileRow.ToString(), actualMapFileRow.ToString());
         }
     }
 }
