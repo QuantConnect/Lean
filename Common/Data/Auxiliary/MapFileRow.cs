@@ -29,22 +29,22 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the date associated with this data
         /// </summary>
-        public DateTime Date { get; private set; }
+        public DateTime Date { get; }
 
         /// <summary>
         /// Gets the mapped symbol
         /// </summary>
-        public string MappedSymbol { get; private set; }
+        public string MappedSymbol { get; }
 
         /// <summary>
         /// Gets the mapped symbol
         /// </summary>
-        public string MainExchange { get; private set; }
+        public string MainExchange { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MapFileRow"/> class.
         /// </summary>
-        public MapFileRow(DateTime date, string mappedSymbol, string mainExchange="")
+        public MapFileRow(DateTime date, string mappedSymbol, string mainExchange = "")
         {
             Date = date;
             MappedSymbol = mappedSymbol.LazyToUpper();
@@ -93,7 +93,9 @@ namespace QuantConnect.Data.Auxiliary
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Date.Equals(other.Date) && string.Equals(MappedSymbol, other.MappedSymbol);
+            return Date.Equals(other.Date) &&
+                   string.Equals(MappedSymbol, other.MappedSymbol) &&
+                   string.Equals(MainExchange, other.MainExchange);
         }
 
         /// <summary>
@@ -122,7 +124,9 @@ namespace QuantConnect.Data.Auxiliary
         {
             unchecked
             {
-                return (Date.GetHashCode() * 397) ^ (MappedSymbol != null ? MappedSymbol.GetHashCode() : 0);
+                return (Date.GetHashCode() * 397) ^ 
+                       (MappedSymbol != null ? MappedSymbol.GetHashCode() : 0) ^
+                       (MainExchange != null ? MainExchange.GetHashCode() : 0);
             }
         }
 
@@ -149,12 +153,14 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public string ToCsv()
         {
-            return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},{MappedSymbol.ToLowerInvariant()}";
+            var mainExchange = string.IsNullOrEmpty(MainExchange) ? string.Empty : $",{MainExchange}";
+            return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},{MappedSymbol.ToLowerInvariant()}{mainExchange}";
         }
 
         public override string ToString()
         {
-            return Date.ToShortDateString() + ": " + MappedSymbol;
+            var mainExchange = string.IsNullOrEmpty(MainExchange) ? string.Empty : $" {MainExchange}";
+            return Date.ToShortDateString() + ": " + MappedSymbol + mainExchange;
         }
     }
 }
