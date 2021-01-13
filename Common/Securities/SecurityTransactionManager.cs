@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;

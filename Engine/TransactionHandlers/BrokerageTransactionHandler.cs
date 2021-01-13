@@ -1228,6 +1228,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 );
             }
         }
+
+        protected OrderResponse Shortable(OrderRequest request, Symbol symbol, decimal orderQuantity)
+        {
+            var shortableQuantity = _algorithm.ShortableProvider.ShortableQuantity(symbol, _algorithm.Time);
+            var openOrderQuantity = GetOpenOrders(order => symbol == order.Symbol).Sum(o => o.Quantity);
+            var portfolioQuantity = _algorithm.Portfolio.ContainsKey(symbol) ? _algorithm.Portfolio[symbol].Quantity : 0;
+            var exceedsShortable = shortableQuantity != null && portfolioQuantity + orderQuantity + openOrderQuantity < -shortableQuantity;
+
+            if (orderQuantity < 0 && exceedsShortable)
+            {
+                return OrderResponse.Error(request, OrderResponseErrorCode.ExceedsShortableQuantity,
+                    $"Order exceeds maximum shortable quantity for Symbol {symbol} (maximum shortable: {shortableQuantity}, requested short: {Math.Abs(orderQuantity)}, current holdings: {_algorithm.Portfolio[symbol].Quantity}, open orders quantity: {openOrderQuantity}");
+            }
+
+            return OrderResponse.Success(request);
+        }
     }
 }
 
