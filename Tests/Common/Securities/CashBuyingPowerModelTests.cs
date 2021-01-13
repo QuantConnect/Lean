@@ -22,6 +22,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
@@ -47,6 +48,7 @@ namespace QuantConnect.Tests.Common.Securities
         private IBuyingPowerModel _buyingPowerModel;
         private QCAlgorithm _algorithm;
         private LocalTimeKeeper _timeKeeper;
+        private ITimeKeeper _globalTimeKeeper;
         private IResultHandler _resultHandler;
 
         [SetUp]
@@ -105,12 +107,15 @@ namespace QuantConnect.Tests.Common.Securities
                 RegisteredSecurityDataTypesProvider.Null
             );
 
+            _globalTimeKeeper = new TimeKeeper(new DateTime(2019, 4, 22));
+            _timeKeeper = _globalTimeKeeper.GetLocalTimeKeeper(tz);
             _buyingPowerModel = new BuyingPowerModelComparator(
                 new CashBuyingPowerModel(),
-                new SecurityPositionGroupBuyingPowerModel()
+                new SecurityPositionGroupBuyingPowerModel(),
+                _portfolio,
+                _globalTimeKeeper
             );
 
-            _timeKeeper = new LocalTimeKeeper(new DateTime(2019, 4, 22), DateTimeZone.Utc);
             _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _ethusd.SetLocalTimeKeeper(_timeKeeper);
             _btceur.SetLocalTimeKeeper(_timeKeeper);
@@ -275,7 +280,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void MarketBuyBtcWithUsdRequiresUsdInPortfolioPlusFees()
         {
             _portfolio.SetCash(20000);
-
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 10000m });
 
             // Available cash = 20000 USD, cannot buy 2 BTC at 10000 (fees are excluded)
@@ -296,7 +301,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void MarketBuyBtcWithEurRequiresEurInPortfolioPlusFees()
         {
             _portfolio.SetCash("EUR", 20000m, 1.20m);
-
+            _btceur.SetLocalTimeKeeper(_timeKeeper);
             _btceur.SetMarketPrice(new Tick { Value = 10000m });
 
             // Available cash = 20000 EUR, cannot buy 2 BTC at 10000 (fees are excluded)
@@ -579,9 +584,8 @@ namespace QuantConnect.Tests.Common.Securities
         {
             _portfolio.SetCash("EUR", 20000m, 1.20m);
             _portfolio.CashBook.Add("BTC", 1m, 12000m);
-
+            _btceur.SetLocalTimeKeeper(_timeKeeper);
             _btceur.SetMarketPrice(new Tick { Value = 10000m });
-
             // Maximum we can market buy with 20000 EUR is 1.99501246m BTC
             // target value = 30000 EUR = 20000 EUR in cash + 10000 EUR in BTC
             var targetValue = 30000m * _portfolio.CashBook["EUR"].ConversionRate / _portfolio.TotalPortfolioValue;

@@ -13,12 +13,14 @@
  * limitations under the License.
 */
 
+using System;
+
 namespace QuantConnect.Securities.Positions
 {
     /// <summary>
     /// Represents a position group's model of buying power
     /// </summary>
-    public interface IPositionGroupBuyingPowerModel
+    public interface IPositionGroupBuyingPowerModel : IEquatable<IPositionGroupBuyingPowerModel>
     {
         /// <summary>
         /// Gets the margin currently allocated to the specified holding
@@ -39,5 +41,41 @@ namespace QuantConnect.Securities.Positions
         /// <param name="parameters">An object containing the portfolio, the security and the order</param>
         /// <returns>The total margin in terms of the currency quoted in the order</returns>
         InitialMargin GetInitialMarginRequiredForOrder(PositionGroupInitialMarginForOrderParameters parameters);
+
+        /// <summary>
+        /// Computes the impact on the portfolio's buying power from adding the position group to the portfolio. This is
+        /// a 'what if' analysis to determine what the state of the portfolio would be if these changes were applied. The
+        /// delta (before - after) is the margin requirement for adding the positions and if the margin used after the changes
+        /// are applied is less than the total portfolio value, this indicates sufficient capital.
+        /// </summary>
+        /// <param name="parameters">An object containing the portfolio and a position group containing the contemplated
+        /// changes to the portfolio</param>
+        /// <returns>Returns the portfolio's total portfolio value and margin used before and after the position changes are applied</returns>
+        ReservedBuyingPowerImpact GetReservedBuyingPowerImpact(
+            ReservedBuyingPowerImpactParameters parameters
+            );
+
+        /// <summary>
+        /// Check if there is sufficient buying power for the position group to execute this order.
+        /// </summary>
+        /// <param name="parameters">An object containing the portfolio, the position group and the order</param>
+        /// <returns>Returns buying power information for an order against a position group</returns>
+        HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(
+            HasSufficientPositionGroupBuyingPowerForOrderParameters parameters
+            );
+
+        /// <summary>
+        /// Computes the amount of buying power reserved by the provided position group
+        /// </summary>
+        ReservedBuyingPowerForPositionGroup GetReservedBuyingPowerForPositionGroup(
+            ReservedBuyingPowerForPositionGroupParameters parameters
+            );
+
+        /// <summary>
+        /// Gets the buying power available for a position group trade
+        /// </summary>
+        /// <param name="parameters">A parameters object containing the algorithm's portfolio, security, and order direction</param>
+        /// <returns>The buying power available for the trade</returns>
+        PositionGroupBuyingPower GetPositionGroupBuyingPower(PositionGroupBuyingPowerParameters parameters);
     }
 }

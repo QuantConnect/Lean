@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,6 +34,11 @@ namespace QuantConnect.Securities.Positions
         /// Gets the key identifying this group
         /// </summary>
         public PositionGroupKey Key { get; }
+
+        /// <summary>
+        /// Gets the whole number of units in this position group
+        /// </summary>
+        public decimal Quantity { get; }
 
         /// <summary>
         /// Gets the positions in this group
@@ -75,6 +81,15 @@ namespace QuantConnect.Securities.Positions
         {
             Key = key;
             _positions = positions;
+            var firstPosition = positions.First();
+            var quantity = firstPosition.Value.Quantity / firstPosition.Value.UnitQuantity;
+#if DEBUG
+            if (quantity != Math.Truncate(quantity))
+            {
+                throw new InvalidOperationException("PositionGroup.Quantity must be a whole number.");
+            }
+#endif
+            Quantity = quantity;
         }
 
         /// <summary>
@@ -86,6 +101,13 @@ namespace QuantConnect.Securities.Positions
         public bool TryGetPosition(Symbol symbol, out IPosition position)
         {
             return _positions.TryGetValue(symbol, out position);
+        }
+
+        /// <summary>Returns a string that represents the current object.</summary>
+        /// <returns>A string that represents the current object.</returns>
+        public override string ToString()
+        {
+            return $"{Key}: {Quantity}";
         }
 
         /// <summary>Returns an enumerator that iterates through the collection.</summary>

@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+
 namespace QuantConnect.Securities.Positions
 {
     /// <summary>
@@ -30,6 +33,50 @@ namespace QuantConnect.Securities.Positions
         {
             var newQuantity = position.Quantity - quantityToDeduct;
             return new Position(position.Symbol, newQuantity, position.UnitQuantity);
+        }
+
+        /// <summary>
+        /// Combines the provided positions into a single position with the quantities added and the minimum unit quantity.
+        /// </summary>
+        /// <param name="position">The position</param>
+        /// <param name="other">The other position to add</param>
+        /// <returns>The combined position</returns>
+        public static IPosition Combine(this IPosition position, IPosition other)
+        {
+            if (!position.Symbol.Equals(other.Symbol))
+            {
+                throw new ArgumentException($"Position symbols must match in order to combine quantities.");
+            }
+
+            return new Position(position.Symbol,
+                position.Quantity + other.Quantity,
+                Math.Min(position.UnitQuantity, other.UnitQuantity)
+            );
+        }
+
+        /// <summary>
+        /// Consolidates the provided <paramref name="positions"/> into a dictionary
+        /// </summary>
+        /// <param name="positions">The positions to be consolidated</param>
+        /// <returns>A dictionary containing the consolidated positions</returns>
+        public static Dictionary<Symbol, IPosition> Consolidate(this IEnumerable<IPosition> positions)
+        {
+            var consolidated = new Dictionary<Symbol, IPosition>();
+            foreach (var position in positions)
+            {
+                IPosition existing;
+                if (consolidated.TryGetValue(position.Symbol, out existing))
+                {
+                    // if it already exists then combine it with the existing
+                    consolidated[position.Symbol] = existing.Combine(position);
+                }
+                else
+                {
+                    consolidated[position.Symbol] = position;
+                }
+            }
+
+            return consolidated;
         }
     }
 }

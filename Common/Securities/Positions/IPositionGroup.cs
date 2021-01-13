@@ -28,6 +28,11 @@ namespace QuantConnect.Securities.Positions
         PositionGroupKey Key { get; }
 
         /// <summary>
+        /// Gets the whole number of units in this position group
+        /// </summary>
+        decimal Quantity { get; }
+
+        /// <summary>
         /// Gets the positions in this group
         /// </summary>
         IEnumerable<IPosition> Positions { get; }

@@ -13,6 +13,10 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
+using static QuantConnect.StringExtensions;
+
 namespace QuantConnect.Securities.Positions
 {
     /// <summary>
@@ -83,6 +87,43 @@ namespace QuantConnect.Securities.Positions
             }
 
             return initialMarginRequirement;
+        }
+
+        /// <summary>
+        /// Check if there is sufficient buying power for the position group to execute this order.
+        /// </summary>
+        /// <param name="parameters">An object containing the portfolio, the position group and the order</param>
+        /// <returns>Returns buying power information for an order against a position group</returns>
+        public override HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(
+            HasSufficientPositionGroupBuyingPowerForOrderParameters parameters
+            )
+        {
+            var position = parameters.PositionGroup.Single();
+            var security = parameters.Portfolio.Securities[position.Symbol];
+            return security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
+                parameters.Portfolio, security, parameters.Order
+            );
+        }
+
+        /// <summary>
+        /// Additionally check initial margin requirements if the algorithm only has default position groups
+        /// </summary>
+        protected override HasSufficientBuyingPowerForOrderResult PassesPositionGroupSpecificBuyingPowerForOrderChecks(
+            HasSufficientPositionGroupBuyingPowerForOrderParameters parameters,
+            decimal availableBuyingPower
+            )
+        {
+            // only check initial margin requirements when the algorithm is only using default position groups
+            if (!parameters.Portfolio.Positions.IsOnlyDefaultGroups)
+            {
+                return null;
+            }
+
+            var symbol = parameters.PositionGroup.Single().Symbol;
+            var security = parameters.Portfolio.Securities[symbol];
+            return security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
+                parameters.Portfolio, security, parameters.Order
+            );
         }
     }
 }

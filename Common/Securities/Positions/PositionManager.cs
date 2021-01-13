@@ -13,10 +13,12 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.Specialized;
 using System.Linq;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -25,12 +27,21 @@ namespace QuantConnect.Securities.Positions
     /// </summary>
     public class PositionManager
     {
+        /// <summary>
+        /// Gets the set of currently resolved position groups
+        /// </summary>
+        public PositionGroupCollection Groups { get; private set; }
+
+        /// <summary>
+        /// Gets whether or not the algorithm is using only default position groups
+        /// </summary>
+        public bool IsOnlyDefaultGroups => Groups.IsOnlyDefaultGroups;
+
         private bool _requiresGroupResolution;
-        private Dictionary<PositionGroupKey, IPositionGroup> _groups;
 
         private readonly SecurityManager _securities;
         private readonly SecurityPositionGroupResolver _resolver;
-        private readonly IPositionGroupBuyingPowerModel _defaultBuyingPowerModel;
+        private readonly SecurityPositionGroupBuyingPowerModel _defaultModel;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PositionManager"/> class
@@ -39,27 +50,35 @@ namespace QuantConnect.Securities.Positions
         public PositionManager(SecurityManager securities)
         {
             _securities = securities;
-            _groups = new Dictionary<PositionGroupKey, IPositionGroup>();
-            _defaultBuyingPowerModel = new SecurityPositionGroupBuyingPowerModel();
-            _resolver = new SecurityPositionGroupResolver(_defaultBuyingPowerModel);
+            Groups = PositionGroupCollection.Empty;
+            _defaultModel = new SecurityPositionGroupBuyingPowerModel();
+            _resolver = new SecurityPositionGroupResolver(_defaultModel);
 
             // we must be notified each time our holdings change, so each time a security is added, we
             // want to bind to its SecurityHolding.QuantityChanged event so we can trigger the resolver
 
             securities.CollectionChanged += (sender, args) =>
             {
-                foreach (Security security in args.NewItems)
+                var items = args.NewItems ?? new List<object>();
+                if (args.OldItems != null)
                 {
-                    IPositionGroup group;
-                    var key = new PositionGroupKey(_defaultBuyingPowerModel, security);
+                    foreach (var item in args.OldItems)
+                    {
+                        items.Add(item);
+                    }
+                }
+
+                foreach (Security security in items)
+                {
+                    var key = new PositionGroupKey(_defaultModel, security);
                     if (args.Action == NotifyCollectionChangedAction.Add)
                     {
-                        if (!_groups.TryGetValue(key, out group))
+                        if (!Groups.Contains(key))
                         {
                             // simply adding a security doesn't require group resolution until it has holdings
                             // all we need to do is make sure we add the default SecurityPosition
                             var position = new Position(security);
-                            _groups[key] = new PositionGroup(key, position);;
+                            Groups = Groups.Add(new PositionGroup(key, position));
                             security.Holdings.QuantityChanged += HoldingsOnQuantityChanged;
                             if (security.Invested)
                             {
@@ -70,7 +89,7 @@ namespace QuantConnect.Securities.Positions
                     }
                     else if (args.Action == NotifyCollectionChangedAction.Remove)
                     {
-                        if (_groups.TryGetValue(key, out group))
+                        if (Groups.Contains(key))
                         {
                             security.Holdings.QuantityChanged -= HoldingsOnQuantityChanged;
                             if (security.Invested)
@@ -85,6 +104,23 @@ namespace QuantConnect.Securities.Positions
         }
 
         /// <summary>
+        /// Creates a position group for the specified order, pulling
+        /// </summary>
+        /// <param name="order">The order</param>
+        /// <returns>A new position group matching the provided order</returns>
+        public IPositionGroup CreatePositionGroup(Order order)
+        {
+            IPositionGroup group;
+            var positions = order.CreatePositions(_securities).ToList();
+            if (!_resolver.TryGroup(positions, out group))
+            {
+                throw new InvalidOperationException($"Unable to create group for order: {order.Id}");
+            }
+
+            return group;
+        }
+
+        /// <summary>
         /// Resolves the algorithm's position groups from all of its holdings
         /// </summary>
         public void ResolvePositionGroups()
@@ -92,13 +128,42 @@ namespace QuantConnect.Securities.Positions
             if (_requiresGroupResolution)
             {
                 _requiresGroupResolution = false;
-                var positions = new PositionCollection(_securities.ToImmutableDictionary(
+                // TODO : Replace w/ special IPosition impl to always equal security.Quantity and we'll
+                // use them explicitly for resolution collection so we don't do this each time
+
+                Groups = ResolvePositionGroups(new PositionCollection(_securities.ToImmutableDictionary(
                     kvp => kvp.Key,
                     kvp => (IPosition) new Position(kvp.Value)
-                ));
-
-                _groups = _resolver.Resolve(positions).ToDictionary(grp => grp.Key);
+                )));
             }
+        }
+
+        /// <summary>
+        /// Resolves position groups using the specified collection of positions
+        /// </summary>
+        /// <param name="positions">The positions to be grouped</param>
+        /// <returns>A collection of position groups containing all of the provided positions</returns>
+        public PositionGroupCollection ResolvePositionGroups(PositionCollection positions)
+        {
+            return _resolver.Resolve(positions);
+        }
+
+        /// <summary>
+        /// Determines which position groups could be impacted by changes in the specified positions
+        /// </summary>
+        /// <param name="positions">The positions to be changed</param>
+        /// <returns>All position groups that need to be re-evaluated due to changes in the positions</returns>
+        public IEnumerable<IPositionGroup> GetImpactedGroups(IReadOnlyCollection<IPosition> positions)
+        {
+            return _resolver.GetImpactedGroups(Groups, positions);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="PositionGroupKey"/> for the security's default position group
+        /// </summary>
+        public PositionGroupKey CreateDefaultKey(Security security)
+        {
+            return new PositionGroupKey(_defaultModel, security);
         }
 
         private void HoldingsOnQuantityChanged(object sender, SecurityHoldingQuantityChangedEventArgs e)

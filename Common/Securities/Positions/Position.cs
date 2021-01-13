@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+
 namespace QuantConnect.Securities.Positions
 {
     /// <summary>
@@ -47,6 +49,14 @@ namespace QuantConnect.Securities.Positions
             Symbol = symbol;
             Quantity = quantity;
             UnitQuantity = unitQuantity;
+
+#if DEBUG
+            var lots = Quantity / UnitQuantity;
+            if (lots != Math.Truncate(lots))
+            {
+                throw new InvalidOperationException("Position.Quantity must be a whole number multiple of the UnitQuantity.");
+            }
+#endif
         }
 
         /// <summary>
@@ -58,6 +68,13 @@ namespace QuantConnect.Securities.Positions
         public Position(Security security, decimal? quantity = null)
             : this(security.Symbol, quantity ?? security.Holdings.Quantity, security.SymbolProperties.LotSize)
         {
+        }
+
+        /// <summary>Returns a string that represents the current object.</summary>
+        /// <returns>A string that represents the current object.</returns>
+        public override string ToString()
+        {
+            return $"{Symbol}: {Quantity}";
         }
     }
 }
