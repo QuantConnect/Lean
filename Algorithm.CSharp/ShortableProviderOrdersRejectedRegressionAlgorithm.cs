@@ -1,19 +1,37 @@
-
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Tests that orders are denied if they exceed the max shortable quantity.
+    /// </summary>
     public class ShortableProviderOrdersRejectedRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy;
-        private Symbol _bac;
-        private List<OrderTicket> _ordersAllowed = new List<OrderTicket>();
-        private List<OrderTicket> _ordersDenied = new List<OrderTicket>();
+        private Symbol _aig;
+        private readonly List<OrderTicket> _ordersAllowed = new List<OrderTicket>();
+        private readonly List<OrderTicket> _ordersDenied = new List<OrderTicket>();
         private bool _initialize;
         private bool _invalidatedAllowedOrder;
         private bool _invalidatedNewOrderWithPortfolioHoldings;
@@ -22,12 +40,12 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2013, 10, 4);
             SetEndDate(2013, 10, 11);
-            SetCash(100000);
+            SetCash(10000000);
 
             _spy = AddEquity("SPY", Resolution.Minute).Symbol;
-            _bac = AddEquity("BAC", Resolution.Minute).Symbol;
+            _aig = AddEquity("AIG", Resolution.Minute).Symbol;
 
-            SetShortableProvider(new RegressionTestShortableProvider());
+            SetBrokerageModel(new RegressionTestShortableBrokerageModel());
         }
 
         public override void OnData(Slice data)
@@ -55,6 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var allowedOrder = _ordersAllowed[0];
                 var orderUpdate = new UpdateOrderFields()
                 {
+                    LimitPrice = 0.01m,
                     Quantity = -1001,
                     Tag = "Testing updating and exceeding maximum quantity"
                 };
@@ -95,10 +114,10 @@ namespace QuantConnect.Algorithm.CSharp
                 _ordersAllowed.Clear();
                 _ordersDenied.Clear();
 
-                HandleOrder(MarketOrder(_bac, -10000));
+                HandleOrder(MarketOrder(_aig, -1001));
                 if (_ordersAllowed.Count != 1)
                 {
-                    throw new Exception($"Expected market order of -10000 BAC to not fail, but failed with tag: {_ordersDenied[0].Tag}");
+                    throw new Exception($"Expected market order of -1001 BAC to not fail");
                 }
 
                 _invalidatedNewOrderWithPortfolioHoldings = true;
@@ -118,17 +137,31 @@ namespace QuantConnect.Algorithm.CSharp
 
         public class RegressionTestShortableProvider : IShortableProvider
         {
+            private readonly Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
             public Dictionary<Symbol, long> AllShortableSymbols(DateTime localTime)
             {
                 return new Dictionary<Symbol, long>
                 {
-                    { QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA), 1000 }
+                    { _spy, 1000 }
                 };
             }
 
             public long? ShortableQuantity(Symbol symbol, DateTime localTime)
             {
-                return 1000;
+                if (symbol == _spy)
+                {
+                    return 1000;
+                }
+
+                return null;
+            }
+        }
+
+        public class RegressionTestShortableBrokerageModel : DefaultBrokerageModel
+        {
+            public RegressionTestShortableBrokerageModel() : base()
+            {
+                ShortableProvider = new RegressionTestShortableProvider();
             }
         }
 

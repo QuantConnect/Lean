@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -257,6 +258,27 @@ namespace QuantConnect.Securities
         public IEnumerable<OrderTicket> GetOpenOrderTickets(Func<OrderTicket, bool> filter = null)
         {
             return _orderProcessor.GetOpenOrderTickets(filter ?? (x => true));
+        }
+
+        /// <summary>
+        /// Gets the remaining quantity to be filled from open orders, i.e. order size minus quantity filled
+        /// </summary>
+        /// <param name="filter">Filters the order tickets to be included in the aggregate quantity remaining to be filled</param>
+        /// <returns>Total quantity that hasn't been filled yet for all orders that were not filtered</returns>
+        public decimal GetOpenOrdersRemainingQuantity(Func<OrderTicket, bool> filter = null)
+        {
+            return GetOpenOrderTickets(filter)
+                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled);
+        }
+
+        /// <summary>
+        /// Gets the remaining quantity to be filled from open orders for a Symbol, i.e. order size minus quantity filled
+        /// </summary>
+        /// <param name="symbol">Symbol to get the remaining quantity of currently open orders</param>
+        /// <returns>Total quantity that hasn't been filled yet for orders matching the Symbol</returns>
+        public decimal GetOpenOrdersRemainingQuantity(Symbol symbol)
+        {
+            return GetOpenOrdersRemainingQuantity(t => t.Symbol == symbol);
         }
 
         /// <summary>

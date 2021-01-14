@@ -38,6 +38,29 @@ namespace QuantConnect.Securities.Equity
         public static readonly TimeSpan DefaultSettlementTime = new TimeSpan(8, 0, 0);
 
         /// <summary>
+        /// Checks if the equity is a shortable asset. Note that this does not
+        /// take into account any open orders or existing holdings. To check if the asset
+        /// is currently shortable, use <see cref="QCAlgorithm.Shortable"/> instead.
+        /// </summary>
+        /// <returns>True if the security is a shortable equity</returns>
+        public bool Shortable
+        {
+            get
+            {
+                var shortableQuantity = ShortableProvider.ShortableQuantity(Symbol, LocalTime);
+                return shortableQuantity == null || shortableQuantity == 0m;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total quantity shortable for this security. This does not take into account
+        /// any open orders or existing holdings. To check the asset's currently shortable quantity,
+        /// use <see cref="QCAlgorithm.ShortableQuantity"/> instead.
+        /// </summary>
+        /// <returns>Zero if not shortable, null if infinitely shortable, or a number greater than zero if shortable</returns>
+        public long? TotalShortableQuantity => ShortableProvider.ShortableQuantity(Symbol, LocalTime);
+
+        /// <summary>
         /// Construct the Equity Object
         /// </summary>
         public Equity(Symbol symbol,

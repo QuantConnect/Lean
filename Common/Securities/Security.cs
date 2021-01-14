@@ -48,6 +48,8 @@ namespace QuantConnect.Securities
         // using concurrent bag to avoid list enumeration threading issues
         protected readonly ConcurrentBag<SubscriptionDataConfig> SubscriptionsBag;
 
+        protected IShortableProvider ShortableProvider { get; private set; }
+
         /// <summary>
         /// A null security leverage value
         /// </summary>
@@ -769,6 +771,11 @@ namespace QuantConnect.Securities
         public void SetMarginModel(PyObject pyObject)
         {
             SetMarginModel(new BuyingPowerModelPythonWrapper(pyObject));
+        }
+
+        public void SetShortableProvider(IShortableProvider shortableProvider)
+        {
+            ShortableProvider = shortableProvider;
         }
 
         /// <summary>

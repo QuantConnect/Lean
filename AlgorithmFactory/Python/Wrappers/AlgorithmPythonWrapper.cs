@@ -404,15 +404,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public string AccountCurrency => _baseAlgorithm.AccountCurrency;
 
         /// <summary>
-        /// Determines whether the asset you want to short is shortable.
-        /// The default is set to <see cref="NullShortableProvider"/>,
-        /// which allows for infinite shorting of any asset. You can limit the
-        /// quantity you can short for an asset class by setting this variable to
-        /// your own implementation of <see cref="IShortableProvider"/>.
-        /// </summary>
-        public IShortableProvider ShortableProvider => _baseAlgorithm.ShortableProvider;
-
-        /// <summary>
         /// Set a required SecurityType-symbol and resolution for algorithm
         /// </summary>
         /// <param name="securityType">SecurityType Enum: Equity, Commodity, FOREX or Future</param>
@@ -939,5 +930,16 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         /// <param name="objectStore">The object store</param>
         public void SetObjectStore(IObjectStore objectStore) => _baseAlgorithm.SetObjectStore(objectStore);
+
+        /// <summary>
+        /// Checks if the asset is shortable at the brokerage
+        /// </summary>
+        /// <param name="symbol">Symbol to check if it is shortable</param>
+        /// <param name="quantity">Quantity to short</param>
+        /// <returns>True if shortable at the brokerage</returns>
+        public bool Shortable(Symbol symbol, decimal quantity)
+        {
+            return _baseAlgorithm.Shortable(symbol, quantity);
+        }
     }
 }

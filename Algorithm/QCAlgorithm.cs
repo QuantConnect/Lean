@@ -173,11 +173,6 @@ namespace QuantConnect.Algorithm
             // Framework
             _securityValuesProvider = new AlgorithmSecurityValuesProvider(this);
 
-            // Shortable provider, responsible for loading the data that indicates how much
-            // quantity we can short for a given asset. The NullShortableProvider default will
-            // allow for infinite quantities of any asset to be shorted.
-            ShortableProvider = new NullShortableProvider();
-
             // set model defaults, universe selection set via PostInitialize
             SetAlpha(new NullAlphaModel());
             SetPortfolioConstruction(new NullPortfolioConstructionModel());
@@ -353,15 +348,6 @@ namespace QuantConnect.Algorithm
         /// Gets the future chain provider, used to get the list of future contracts for an underlying symbol
         /// </summary>
         public IFutureChainProvider FutureChainProvider { get; private set; }
-
-        /// <summary>
-        /// Determines whether the asset you want to short is shortable.
-        /// The default is set to <see cref="NullShortableProvider"/>,
-        /// which allows for infinite shorting of any asset. You can limit the
-        /// quantity you can short for an asset class by setting this variable to
-        /// your own implementation of <see cref="IShortableProvider"/>.
-        /// </summary>
-        public IShortableProvider ShortableProvider { get; set; }
 
         /// <summary>
         /// Gets the default order properties
@@ -706,19 +692,6 @@ namespace QuantConnect.Algorithm
         public void SetFutureChainProvider(IFutureChainProvider futureChainProvider)
         {
             FutureChainProvider = futureChainProvider;
-        }
-
-        /// <summary>
-        /// Sets the shortable provider, which is used to determine whether
-        /// the asset you want to short is: shortable, and has sufficient quantity
-        /// shortable for your order. The default is set to <see cref="NullShortableProvider"/>,
-        /// which allows for infinite shorting of any asset. You can limit how much
-        /// quantity you can short for a given asset.
-        /// </summary>
-        /// <param name="shortableProvider">The shortable provider</param>
-        public void SetShortableProvider(IShortableProvider shortableProvider)
-        {
-            ShortableProvider = shortableProvider;
         }
 
         /// <summary>
@@ -2351,6 +2324,65 @@ namespace QuantConnect.Algorithm
         public void SetObjectStore(IObjectStore objectStore)
         {
             ObjectStore = new ObjectStore(objectStore);
+        }
+
+        /// <summary>
+        /// Determines if the Symbol is shortable at the brokerage
+        /// </summary>
+        /// <param name="symbol">Symbol to check if shortable</param>
+        /// <returns>True if shortable</returns>
+        public bool Shortable(Symbol symbol)
+        {
+            return Shortable(symbol, 0);
+        }
+
+        /// <summary>
+        /// Determines if the Symbol is shortable at the brokerage
+        /// </summary>
+        /// <param name="symbol">Symbol to check if shortable</param>
+        /// <param name="shortQuantity">Order's quantity to check if it is currently shortable, taking into account current holdings and open orders</param>
+        /// <returns>True if shortable</returns>
+        public bool Shortable(Symbol symbol, decimal shortQuantity)
+        {
+            var shortableQuantity = BrokerageModel.GetShortableProvider().ShortableQuantity(symbol, Time);
+            if (shortableQuantity == null)
+            {
+                return true;
+            }
+
+            var openOrderQuantity = Transactions.GetOpenOrdersRemainingQuantity(symbol);
+            var portfolioQuantity = Portfolio.ContainsKey(symbol) ? Portfolio[symbol].Quantity : 0;
+            // We check portfolio and open orders beforehand to ensure that orderQuantity == 0 case does not return
+            // a true result whenever we have no more shares left to short.
+            if (portfolioQuantity + openOrderQuantity <= -shortableQuantity)
+            {
+                return false;
+            }
+
+            shortQuantity = -Math.Abs(shortQuantity);
+            return portfolioQuantity + shortQuantity + openOrderQuantity >= -shortableQuantity;
+        }
+
+        /// <summary>
+        /// Gets the quantity shortable for the given asset
+        /// </summary>
+        /// <returns>
+        /// Quantity shortable for the given asset. Zero if not
+        /// shortable, or a number greater than zero if shortable.
+        /// </returns>
+        public long ShortableQuantity(Symbol symbol)
+        {
+            var shortableSymbols = AllShortableSymbols();
+            return shortableSymbols.ContainsKey(symbol) ? shortableSymbols[symbol] : 0;
+        }
+
+        /// <summary>
+        /// Gets all Symbols that are shortable, as well as the quantity shortable for them
+        /// </summary>
+        /// <returns>All shortable Symbols, null if all Symbols are shortable</returns>
+        public Dictionary<Symbol, long> AllShortableSymbols()
+        {
+            return BrokerageModel.GetShortableProvider().AllShortableSymbols(Time);
         }
     }
 }
