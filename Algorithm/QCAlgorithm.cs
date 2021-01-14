@@ -564,7 +564,6 @@ namespace QuantConnect.Algorithm
                     _benchmarkSymbol = BrokerageModel.DefaultBenchmark;
                 }
 
-                // Before we set it, ensure the benchmark symbol is not null
                 // Brokerage implementations may set it to null to have no benchmark
                 if (_benchmarkSymbol != null)
                 {
@@ -574,6 +573,11 @@ namespace QuantConnect.Algorithm
                         addToSymbolCache: false);
 
                     Benchmark = new SecurityBenchmark(security);
+                }
+                else
+                {
+                    // Set it to always zero value
+                    Benchmark = new FuncBenchmark(x => 0);
                 }
             }
 
