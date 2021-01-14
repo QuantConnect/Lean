@@ -230,6 +230,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 ? OrderResponse.Success(request)
                 : OrderResponse.WarmingUp(request);
 
+            var shortable = _algorithm.Shortable(request.Symbol, request.Quantity);
+            if (!shortable)
+            {
+                response = OrderResponse.Error(request, OrderResponseErrorCode.ExceedsShortableQuantity,
+                    $"Order exceeds maximum shortable quantity for Symbol {request.Symbol} (requested short: {Math.Abs(request.Quantity)})");
+            }
+
             request.SetResponse(response);
             var ticket = new OrderTicket(_algorithm.Transactions, request);
 
@@ -250,13 +257,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 // add it to the orders collection for recall later
                 var order = Order.CreateOrder(request);
+                var orderTag = response.ErrorCode == OrderResponseErrorCode.AlgorithmWarmingUp
+                    ? "Algorithm warming up."
+                    : response.ErrorMessage;
 
                 // ensure the order is tagged with a currency
                 var security = _algorithm.Securities[order.Symbol];
                 order.PriceCurrency = security.SymbolProperties.QuoteCurrency;
 
                 order.Status = OrderStatus.Invalid;
-                order.Tag = "Algorithm warming up.";
+                order.Tag = orderTag;
                 ticket.SetOrder(order);
                 _completeOrderTickets.TryAdd(ticket.OrderId, ticket);
                 _completeOrders.TryAdd(order.Id, order);
@@ -297,6 +307,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 //Update the order from the behaviour
                 var order = GetOrderByIdInternal(request.OrderId);
+                var orderQuantity = request.Quantity ?? ticket.Quantity;
+                var shortable = _algorithm.Shortable(ticket.Symbol, orderQuantity);
+
                 if (order == null)
                 {
                     // can't update an order that doesn't exist!
@@ -314,6 +327,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 else if (_algorithm.IsWarmingUp)
                 {
                     request.SetResponse(OrderResponse.WarmingUp(request));
+                }
+                else if (!shortable)
+                {
+                    var shortableResponse = OrderResponse.Error(request, OrderResponseErrorCode.ExceedsShortableQuantity,
+                        $"Order exceeds maximum shortable quantity for Symbol {ticket.Symbol} (requested short: {Math.Abs(orderQuantity)})");
+
+                    request.SetResponse(shortableResponse);
                 }
                 else
                 {

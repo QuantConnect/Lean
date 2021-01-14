@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
@@ -153,6 +154,12 @@ namespace QuantConnect.Brokerages
         /// <returns>The buying power model for this brokerage/security</returns>
         [Obsolete("Flagged deprecated and will remove December 1st 2018")]
         IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType);
+
+        /// <summary>
+        /// Gets the shortable provider
+        /// </summary>
+        /// <returns>Shortable provider</returns>
+        IShortableProvider GetShortableProvider();
     }
 
     /// <summary>
