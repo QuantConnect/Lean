@@ -1,48 +1,57 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props" Condition="Exists('..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props')" />
-  <Import Project="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props" Condition="Exists('..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props')" />
-  <Import Project="..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props" Condition="Exists('..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props')" />
-  <Import Project="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props" Condition="Exists('..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props')" />
-  <Import Project="..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props" Condition="Exists('..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props')" />
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{48289996-CE56-4EDF-B451-4A2B1519EBC3}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>QuantConnect.Algorithm.Python</RootNamespace>
     <AssemblyName>QuantConnect.Algorithm.Python</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <TargetFramework>net462</TargetFramework>
     <LangVersion>6</LangVersion>
-    <TargetFrameworkProfile />
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
     <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <LangVersion>6</LangVersion>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <LangVersion>6</LangVersion>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup>
+    <IsWindows>false</IsWindows>
+    <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
+    <IsOSX>false</IsOSX>
+    <IsOSX Condition="'$(IsWindows)' != 'true' AND '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
+    <IsLinux>false</IsLinux>
+    <IsLinux Condition="'$(IsWindows)' != 'true' AND '$(IsOSX)' != 'true' AND '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' ">
+      build
+    </PostBuildEvent>
+    <PostBuildEvent Condition="'$(OS)' != 'Windows_NT'">
+      ./build.sh
+    </PostBuildEvent>
+  </PropertyGroup>
+  <Target Name="PrintRID" BeforeTargets="Build">
+    <Message Text="IsWindows $(IsWindows)" Importance="high" />
+    <Message Text="IsOSX $(IsOSX)" Importance="high" />
+    <Message Text="IsLinux $(IsLinux)" Importance="high" />
+    <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
+  </Target>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.3" />
+    <PackageReference Include="Microsoft.CodeAnalysis.VersionCheckAnalyzer" Version="2.9.3" />
+    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.3" />
+    <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.9.3" />
+    <PackageReference Include="Microsoft.NetFramework.Analyzers" Version="2.9.3" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="1.0.5.30" />
+  </ItemGroup>
   <ItemGroup>
     <Content Include="AccumulativeInsightPortfolioRegressionAlgorithm.py" />
     <Content Include="AddAlphaModelAlgorithm.py" />
@@ -145,20 +154,15 @@
     <Content Include="ExpiryHelperAlphaModelFrameworkAlgorithm.py" />
     <Content Include="BasicTemplateFuturesFrameworkAlgorithm.py" />
     <Content Include="BasicTemplateOptionsFrameworkAlgorithm.py" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Content Include="InsightWeightingFrameworkAlgorithm.py" />
     <None Include="CompositeRiskManagementModelFrameworkAlgorithm.py" />
     <None Include="BlackLittermanPortfolioOptimizationFrameworkAlgorithm.py" />
-    <None Include="packages.config" />
     <None Include="TensorFlowNeuralNetworkAlgorithm.py" />
     <None Include="TiingoPriceAlgorithm.py" />
     <None Include="PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <None Include="AddRemoveSecurityRegressionAlgorithm.py" />
-    <None Include="app.config">
-      <SubType>Designer</SubType>
-    </None>
     <None Include="BasicTemplateAlgorithm.py" />
     <None Include="BasicTemplateCryptoAlgorithm.py" />
     <None Include="BasicTemplateDailyAlgorithm.py" />
@@ -270,18 +274,9 @@
     <None Include="Benchmarks\ScheduledEventsBenchmark.py" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
-      <Project>{3240aca4-bdd4-4d24-ac36-bbb651c39212}</Project>
-      <Name>QuantConnect.Algorithm</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Common\QuantConnect.csproj">
-      <Project>{2545c0b4-fabb-49c9-8dd1-9ad7ee23f86b}</Project>
-      <Name>QuantConnect</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
-      <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>
-      <Name>QuantConnect.Indicators</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj" />
+    <ProjectReference Include="..\Common\QuantConnect.csproj" />
+    <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ConvertToFrameworkAlgorithm.py" />
@@ -289,54 +284,29 @@
   <ItemGroup>
     <None Include="OptionDataNullReferenceRegressionAlgorithm.py" />
   </ItemGroup>
-  <ItemGroup>
-    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\analyzers\dotnet\Microsoft.CodeAnalysis.VersionCheckAnalyzer.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\analyzers\dotnet\cs\Humanizer.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.CodeQuality.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.CodeQuality.CSharp.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetCore.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetCore.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetCore.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetCore.CSharp.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetFramework.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetFramework.CSharp.Analyzers.dll" />
-  </ItemGroup>
-  <PropertyGroup>
-    <IsWindows>false</IsWindows>
-    <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
-    <IsOSX>false</IsOSX>
-    <IsOSX Condition="'$(IsWindows)' != 'true' AND '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
-    <IsLinux>false</IsLinux>
-    <IsLinux Condition="'$(IsWindows)' != 'true' AND '$(IsOSX)' != 'true' AND '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
-  </PropertyGroup>
-  <Target Name="PrintRID" BeforeTargets="Build">
-    <Message Text="IsWindows $(IsWindows)" Importance="high" />
-    <Message Text="IsOSX $(IsOSX)" Importance="high" />
-    <Message Text="IsLinux $(IsLinux)" Importance="high" />
-    <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
-  </Target>
   <Choose>
     <When Condition="$(IsWindows) AND '$(ForceLinuxBuild)' != 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.30\lib\win\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\win\Python.Runtime.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>
     <When Condition="$(IsLinux) OR '$(ForceLinuxBuild)' == 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>
     <When Condition="$(IsOSX) AND '$(ForceLinuxBuild)' != 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>
   </Choose>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' ">
       build
@@ -345,23 +315,7 @@
       ./build.sh
     </PostBuildEvent>
   </PropertyGroup>
-  <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props'))" />
-  </Target>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <ItemGroup>
+    <Compile Remove="PythonAlgorithm.cs" />
+  </ItemGroup>
 </Project>

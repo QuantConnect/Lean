@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26730.12
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 15.0.0.0
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Lean.Launcher", "Launcher\QuantConnect.Lean.Launcher.csproj", "{09E7B916-E58B-4021-BD8B-C10B4446E226}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Lean.Launcher", "Launcher\QuantConnect.Lean.Launcher.csproj", "{09E7B916-E58B-4021-BD8B-C10B4446E226}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Lean.Engine", "Engine\QuantConnect.Lean.Engine.csproj", "{12156F46-D07E-4E3D-AD2B-7409E82AB62F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Lean.Engine", "Engine\QuantConnect.Lean.Engine.csproj", "{12156F46-D07E-4E3D-AD2B-7409E82AB62F}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C5D44209-49A0-4505-A870-043C5EF5FDDF} = {C5D44209-49A0-4505-A870-043C5EF5FDDF}
 		{39A81C16-A1E8-425E-A8F2-1433ADB80228} = {39A81C16-A1E8-425E-A8F2-1433ADB80228}
@@ -14,51 +14,51 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Lean.Engine", 
 		{3240ACA4-BDD4-4D24-AC36-BBB651C39212} = {3240ACA4-BDD4-4D24-AC36-BBB651C39212}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Algorithm", "Algorithm\QuantConnect.Algorithm.csproj", "{3240ACA4-BDD4-4D24-AC36-BBB651C39212}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Algorithm", "Algorithm\QuantConnect.Algorithm.csproj", "{3240ACA4-BDD4-4D24-AC36-BBB651C39212}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect", "Common\QuantConnect.csproj", "{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect", "Common\QuantConnect.csproj", "{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Logging", "Logging\QuantConnect.Logging.csproj", "{01911409-86BE-4E7D-9947-DF714138610D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Logging", "Logging\QuantConnect.Logging.csproj", "{01911409-86BE-4E7D-9947-DF714138610D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Indicators", "Indicators\QuantConnect.Indicators.csproj", "{73FB2522-C3ED-4E47-8E3D-AFAD48A6B888}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Indicators", "Indicators\QuantConnect.Indicators.csproj", "{73FB2522-C3ED-4E47-8E3D-AFAD48A6B888}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Tests", "Tests\QuantConnect.Tests.csproj", "{F15E0E67-E6CA-4BE4-BA36-54D73C5ACC11}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Tests", "Tests\QuantConnect.Tests.csproj", "{F15E0E67-E6CA-4BE4-BA36-54D73C5ACC11}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Queues", "Queues\QuantConnect.Queues.csproj", "{D6633172-1368-4DF6-9444-825C3E00C819}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Queues", "Queues\QuantConnect.Queues.csproj", "{D6633172-1368-4DF6-9444-825C3E00C819}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Messaging", "Messaging\QuantConnect.Messaging.csproj", "{F2E90E2D-BA25-40E2-B39A-0BA31E68F7F8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Messaging", "Messaging\QuantConnect.Messaging.csproj", "{F2E90E2D-BA25-40E2-B39A-0BA31E68F7F8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.AlgorithmFactory", "AlgorithmFactory\QuantConnect.AlgorithmFactory.csproj", "{E99D056A-B6FB-48D2-9F7C-683C54CEBBF9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.AlgorithmFactory", "AlgorithmFactory\QuantConnect.AlgorithmFactory.csproj", "{E99D056A-B6FB-48D2-9F7C-683C54CEBBF9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Brokerages", "Brokerages\QuantConnect.Brokerages.csproj", "{2D3E13CF-2D14-4180-A42D-F0A13AF0ADE2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Brokerages", "Brokerages\QuantConnect.Brokerages.csproj", "{2D3E13CF-2D14-4180-A42D-F0A13AF0ADE2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Configuration", "Configuration\QuantConnect.Configuration.csproj", "{0AEB4EA3-28C8-476E-89FD-926F06590B4C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Configuration", "Configuration\QuantConnect.Configuration.csproj", "{0AEB4EA3-28C8-476E-89FD-926F06590B4C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Compression", "Compression\QuantConnect.Compression.csproj", "{BC3BC77E-0502-43DB-A727-B94F9765D74B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Compression", "Compression\QuantConnect.Compression.csproj", "{BC3BC77E-0502-43DB-A727-B94F9765D74B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Api", "Api\QuantConnect.Api.csproj", "{C5D44209-49A0-4505-A870-043C5EF5FDDF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Api", "Api\QuantConnect.Api.csproj", "{C5D44209-49A0-4505-A870-043C5EF5FDDF}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "QuantConnect.Algorithm.FSharp", "Algorithm.FSharp\QuantConnect.Algorithm.FSharp.fsproj", "{7702711A-0C09-40D4-B151-E308D1520738}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "QuantConnect.Algorithm.FSharp", "Algorithm.FSharp\QuantConnect.Algorithm.FSharp.fsproj", "{7702711A-0C09-40D4-B151-E308D1520738}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Algorithm.CSharp", "Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj", "{39A81C16-A1E8-425E-A8F2-1433ADB80228}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Algorithm.CSharp", "Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj", "{39A81C16-A1E8-425E-A8F2-1433ADB80228}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Algorithm.Python", "Algorithm.Python\QuantConnect.Algorithm.Python.csproj", "{48289996-CE56-4EDF-B451-4A2B1519EBC3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Algorithm.Python", "Algorithm.Python\QuantConnect.Algorithm.Python.csproj", "{48289996-CE56-4EDF-B451-4A2B1519EBC3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.ToolBox", "ToolBox\QuantConnect.ToolBox.csproj", "{AC9A142C-B485-44D7-91FF-015C22C43D05}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.ToolBox", "ToolBox\QuantConnect.ToolBox.csproj", "{AC9A142C-B485-44D7-91FF-015C22C43D05}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Research", "Research\QuantConnect.Research.csproj", "{9561D14A-467E-40AD-928E-EE9F758D7D98}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Research", "Research\QuantConnect.Research.csproj", "{9561D14A-467E-40AD-928E-EE9F758D7D98}"
 EndProject
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "QuantConnect.Algorithm.PythonTools", "Algorithm.Python\QuantConnect.Algorithm.PythonTools.pyproj", "{4A5DED1F-3E34-40E2-B1F2-9A8A02195508}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Algorithm.Framework", "Algorithm.Framework\QuantConnect.Algorithm.Framework.csproj", "{75981418-7246-4B91-B136-482728E02901}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Algorithm.Framework", "Algorithm.Framework\QuantConnect.Algorithm.Framework.csproj", "{75981418-7246-4B91-B136-482728E02901}"
 EndProject
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "QuantConnect.PythonToolbox", "PythonToolbox\QuantConnect.PythonToolbox.pyproj", "{1C47F4DB-2AFF-4FAE-9142-B33BE654A516}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Report", "Report\QuantConnect.Report.csproj", "{2431419F-8BC6-4F59-944E-9A1CD28982DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Report", "Report\QuantConnect.Report.csproj", "{2431419F-8BC6-4F59-944E-9A1CD28982DF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Optimizer", "Optimizer\QuantConnect.Optimizer.csproj", "{4ECD7DF3-A675-4E9E-ACA3-2B51C88736CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Optimizer", "Optimizer\QuantConnect.Optimizer.csproj", "{4ECD7DF3-A675-4E9E-ACA3-2B51C88736CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Optimizer.Launcher", "Optimizer.Launcher\QuantConnect.Optimizer.Launcher.csproj", "{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Optimizer.Launcher", "Optimizer.Launcher\QuantConnect.Optimizer.Launcher.csproj", "{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

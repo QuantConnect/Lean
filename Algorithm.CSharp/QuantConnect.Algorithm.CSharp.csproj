@@ -1,95 +1,28 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props" Condition="Exists('..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props')" />
-  <Import Project="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props" Condition="Exists('..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props')" />
-  <Import Project="..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props" Condition="Exists('..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props')" />
-  <Import Project="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props" Condition="Exists('..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props')" />
-  <Import Project="..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props" Condition="Exists('..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props')" />
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{39A81C16-A1E8-425E-A8F2-1433ADB80228}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>QuantConnect.Algorithm.CSharp</RootNamespace>
     <AssemblyName>QuantConnect.Algorithm.CSharp</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <TargetFramework>net462</TargetFramework>
     <LangVersion>6</LangVersion>
-    <TargetFrameworkProfile />
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
     <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <LangVersion>6</LangVersion>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <LangVersion>6</LangVersion>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="Accord, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.3.6.0\lib\net462\Accord.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Fuzzy, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Fuzzy.3.6.0\lib\net462\Accord.Fuzzy.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.MachineLearning, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.MachineLearning.3.6.0\lib\net462\Accord.MachineLearning.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Math, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Math.3.6.0\lib\net462\Accord.Math.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Math.Core, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Math.3.6.0\lib\net462\Accord.Math.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Statistics, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Statistics.3.6.0\lib\net462\Accord.Statistics.dll</HintPath>
-    </Reference>
-    <Reference Include="DynamicInterop, Version=0.7.4.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\DynamicInterop.0.7.4\lib\net40\DynamicInterop.dll</HintPath>
-    </Reference>
-    <Reference Include="MathNet.Numerics, Version=3.19.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MathNet.Numerics.3.19.0\lib\net40\MathNet.Numerics.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
-      <HintPath>..\packages\NodaTime.1.3.4\lib\net35-Client\NodaTime.dll</HintPath>
-    </Reference>
-    <Reference Include="RDotNet, Version=1.6.5.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\R.NET.Community.1.6.5\lib\net40\RDotNet.dll</HintPath>
-    </Reference>
-    <Reference Include="RDotNet.NativeLibrary, Version=1.6.5.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\R.NET.Community.1.6.5\lib\net40\RDotNet.NativeLibrary.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
   <PropertyGroup>
     <IsWindows>false</IsWindows>
     <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
@@ -99,14 +32,9 @@
     <IsLinux Condition="'$(IsWindows)' != 'true' AND '$(IsOSX)' != 'true' AND '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugDocker|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>portable</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>6</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <Target Name="PrintRID" BeforeTargets="Build">
     <Message Text="IsWindows $(IsWindows)" Importance="high" />
@@ -118,374 +46,57 @@
     <When Condition="$(IsWindows) AND '$(ForceLinuxBuild)' != 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.30\lib\win\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\win\Python.Runtime.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>
     <When Condition="$(IsLinux) OR '$(ForceLinuxBuild)' == 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>
     <When Condition="$(IsOSX) AND '$(ForceLinuxBuild)' != 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>
   </Choose>
   <ItemGroup>
-    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
-      <Link>Properties\SharedAssemblyInfo.cs</Link>
-    </Compile>
-    <Compile Include="AddAlphaModelAlgorithm.cs" />
-    <Compile Include="CustomDataPropertiesRegressionAlgorithm.cs" />
-    <Compile Include="FillForwardEnumeratorOutOfOrderBarRegressionAlgorithm.cs" />
-    <Compile Include="CustomBuyingPowerModelAlgorithm.cs" />
-    <Compile Include="AddFutureOptionContractDataStreamingRegressionAlgorithm.cs" />
-    <Compile Include="AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorithm.cs" />
-    <Compile Include="AddOptionContractExpiresRegressionAlgorithm.cs" />
-    <Compile Include="AltData\QuiverWallStreetBetsDataAlgorithm.cs" />
-    <Compile Include="FillForwardUntilExpiryRegressionAlgorithm.cs" />
-    <Compile Include="FutureOptionCallITMGreeksExpiryRegressionAlgorithm.cs" />
-    <Compile Include="FutureOptionMultipleContractsInDifferentContractMonthsWithSameUnderlyingFutureRegressionAlgorithm.cs" />
-    <Compile Include="FuturesAndFuturesOptionsExpiryTimeAndLiquidationRegressionAlgorithm.cs" />
-    <Compile Include="OnOrderEventExceptionRegression.cs" />
-    <Compile Include="FutureOptionCallITMExpiryRegressionAlgorithm.cs" />
-    <Compile Include="FutureOptionCallOTMExpiryRegressionAlgorithm.cs" />
-    <Compile Include="FutureOptionPutITMExpiryRegressionAlgorithm.cs" />
-    <Compile Include="FutureOptionPutOTMExpiryRegressionAlgorithm.cs" />
-    <Compile Include="FutureOptionBuySellCallIntradayRegressionAlgorithm.cs" />
-    <Compile Include="FutureOptionShortCallITMExpiryRegressionAlgorithm.cs" />
-    <Compile Include="FutureOptionShortCallOTMExpiryRegressionAlgorithm.cs" />
-    <Compile Include="FutureOptionShortPutOTMExpiryRegressionAlgorithm.cs" />
-    <Compile Include="FutureOptionShortPutITMExpiryRegressionAlgorithm.cs" />
-    <Compile Include="OptionChainSubscriptionRemovalRegressionAlgorithm.cs" />
-    <Compile Include="OptionChainUniverseRemovalRegressionAlgorithm.cs" />
-    <Compile Include="ScaledFillForwardDataRegressionAlgorithm.cs" />
-    <Compile Include="DailyHistoryForDailyResolutionRegressionAlgorithm.cs" />
-    <Compile Include="DailyHistoryForMinuteResolutionRegressionAlgorithm.cs" />
-    <Compile Include="ExtendedMarketHoursHistoryRegressionAlgorithm.cs" />
-    <Compile Include="EquityTickQuoteAdjustedModeRegressionAlgorithm.cs" />
-    <Compile Include="AddOptionContractFromUniverseRegressionAlgorithm.cs" />
-    <Compile Include="CoarseFineOptionUniverseChainRegressionAlgorithm.cs" />
-    <Compile Include="OptionChainedAndUniverseSelectionRegressionAlgorithm.cs" />
-    <Compile Include="OptionAssignmentRegressionAlgorithm.cs" />
-    <Compile Include="SwitchDataModeRegressionAlgorithm.cs" />
-    <Compile Include="AddRemoveOptionUniverseRegressionAlgorithm.cs" />
-    <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
-    <Compile Include="AddRiskManagementAlgorithm.cs" />
-    <Compile Include="AddUniverseSelectionModelAlgorithm.cs" />
-    <Compile Include="AddUniverseSelectionModelCoarseAlgorithm.cs" />
-    <Compile Include="Alphas\GasAndCrudeOilEnergyCorrelationAlpha.cs" />
-    <Compile Include="Alphas\GreenblattMagicFormulaAlpha.cs" />
-    <Compile Include="Alphas\IntradayReversalCurrencyMarketsAlpha.cs" />
-    <Compile Include="Alphas\ShareClassMeanReversionAlpha.cs" />
-    <Compile Include="Alphas\SykesShortMicroCapAlpha.cs" />
-    <Compile Include="Alphas\GlobalEquityMeanReversionIBSAlpha.cs" />
-    <Compile Include="Alphas\MeanReversionLunchBreakAlpha.cs" />
-    <Compile Include="Alphas\RebalancingLeveragedETFAlpha.cs" />
-    <Compile Include="Alphas\TriangleExchangeRateArbitrageAlpha.cs" />
-    <Compile Include="Alphas\TripleLeveragedETFPairVolatilityDecayAlpha.cs" />
-    <Compile Include="Alphas\VixDualThrustAlpha.cs" />
-    <Compile Include="AltData\CachedAlternativeDataAlgorithm.cs" />
-    <Compile Include="AltData\BenzingaNewsAlgorithm.cs" />
-    <Compile Include="AltData\SECReport8KAlgorithm.cs" />
-    <Compile Include="AltData\SmartInsiderTransactionAlgorithm.cs" />
-    <Compile Include="AltData\USTreasuryYieldCurveRateAlgorithm.cs" />
-    <Compile Include="AltData\TradingEconomicsAlgorithm.cs" />
-    <Compile Include="AltData\TiingoNewsAlgorithm.cs" />
-    <Compile Include="AutomaticIndicatorWarmupDataTypeRegressionAlgorithm.cs" />
-    <Compile Include="AutomaticIndicatorWarmupRegressionAlgorithm.cs" />
-    <Compile Include="BacktestingBrokerageRegressionAlgorithm.cs" />
-    <Compile Include="ExtendedMarketTradingRegressionAlgorithm.cs" />
-    <Compile Include="CoarseTiingoNewsUniverseSelectionAlgorithm.cs" />
-    <Compile Include="DelistedFutureLiquidateRegressionAlgorithm.cs" />
-    <Compile Include="EmaCrossFuturesFrontMonthAlgorithm.cs" />
-    <Compile Include="OpenInterestFuturesRegressionAlgorithm.cs" />
-    <Compile Include="CustomPartialFillModelAlgorithm.cs" />
-    <Compile Include="EquityTradeAndQuotesRegressionAlgorithm.cs" />
-    <Compile Include="BasicTemplateConstituentUniverseAlgorithm.cs" />
-    <Compile Include="ConsolidateRegressionAlgorithm.cs" />
-    <Compile Include="DefaultResolutionRegressionAlgorithm.cs" />
-    <Compile Include="BasicPythonIntegrationTemplateAlgorithm.cs" />
-    <Compile Include="BasicSetAccountCurrencyAlgorithm.cs" />
-    <Compile Include="FineFundamentalFilteredUniverseRegressionAlgorithm.cs" />
-    <Compile Include="FutureSharingTickerRegressionAlgorithm.cs" />
-    <Compile Include="LongOnlyAlphaStreamAlgorithm.cs" />
-    <Compile Include="Benchmarks\SECReportBenchmarkAlgorithm.cs" />
-    <Compile Include="Benchmarks\SmartInsiderEventBenchmarkAlgorithm.cs" />
-    <Compile Include="CustomBenchmarkRegressionAlgorithm.cs" />
-    <Compile Include="CustomDataAddDataOnSecuritiesChangedRegressionAlgorithm.cs" />
-    <Compile Include="CustomDataAddDataCoarseSelectionRegressionAlgorithm.cs" />
-    <Compile Include="CustomDataAddDataRegressionAlgorithm.cs" />
-    <Compile Include="DynamicSecurityDataAlgorithm.cs" />
-    <Compile Include="ConfidenceWeightedFrameworkAlgorithm.cs" />
-    <Compile Include="AccumulativeInsightPortfolioRegressionAlgorithm.cs" />
-    <Compile Include="EqualWeightingPortfolioConstructionModelFutureRegressionAlgorithm.cs" />
-    <Compile Include="FreePortfolioValueRegressionAlgorithm.cs" />
-    <Compile Include="LeveragePrecedenceRegressionAlgorithm.cs" />
-    <Compile Include="LiquidETFUniverseFrameworkAlgorithm.cs" />
-    <Compile Include="MarginCallClosedMarketRegressionAlgorithm.cs" />
-    <Compile Include="MarginRemainingRegressionAlgorithm.cs" />
-    <Compile Include="NoMarginCallExpectedRegressionAlgorithm.cs" />
-    <Compile Include="ObjectStoreExampleAlgorithm.cs" />
-    <Compile Include="OrderImmutabilityRegressionAlgorithm.cs" />
-    <Compile Include="OrderSubmissionDataRegressionAlgorithm.cs" />
-    <Compile Include="RegisterIndicatorRegressionAlgorithm.cs" />
-    <Compile Include="ScheduledEventsOrderRegressionAlgorithm.cs" />
-    <Compile Include="SectorWeightingFrameworkAlgorithm.cs" />
-    <Compile Include="OnEndOfDayAddDataRegressionAlgorithm.cs" />
-    <Compile Include="PortfolioRebalanceOnCustomFuncRegressionAlgorithm.cs" />
-    <Compile Include="PortfolioRebalanceOnDateRulesRegressionAlgorithm.cs" />
-    <Compile Include="PortfolioRebalanceOnInsightChangesRegressionAlgorithm.cs" />
-    <Compile Include="PortfolioRebalanceOnSecurityChangesRegressionAlgorithm.cs" />
-    <Compile Include="ResolutionSwitchingAlgorithm.cs" />
-    <Compile Include="SetHoldingsFutureRegressionAlgorithm.cs" />
-    <Compile Include="StringToSymbolImplicitConversionRegressionAlgorithm.cs" />
-    <Compile Include="TimeRulesDefaultTimeZoneRegressionAlgorithm.cs" />
-    <Compile Include="SetHoldingsMultipleTargetsRegressionAlgorithm.cs" />
-    <Compile Include="SetHoldingsMarketOnOpenRegressionAlgorithm.cs" />
-    <Compile Include="SmartInsiderDataAlgorithm.cs" />
-    <Compile Include="BasicTemplateAlgorithm.cs" />
-    <Compile Include="Benchmarks\StatefulCoarseUniverseSelectionBenchmark.cs" />
-    <Compile Include="Benchmarks\StatelessCoarseUniverseSelectionBenchmark.cs" />
-    <Compile Include="CapmAlphaRankingFrameworkAlgorithm.cs" />
-    <Compile Include="CustomUniverseWithBenchmarkRegressionAlgorithm.cs" />
-    <Compile Include="CoarseSelectionTimeRegressionAlgorithm.cs" />
-    <Compile Include="CustomUniverseSelectionRegressionAlgorithm.cs" />
-    <Compile Include="OnEndOfDayRegressionAlgorithm.cs" />
-    <Compile Include="TrainingInitializeRegressionAlgorithm.cs" />
-    <Compile Include="TrainingExampleAlgorithm.cs" />
-    <Compile Include="UniverseSharingSubscriptionTradableRegressionAlgorithm.cs" />
-    <Compile Include="UniverseUnchangedRegressionAlgorithm.cs" />
-    <Compile Include="USTreasuryYieldCurveDataAlgorithm.cs" />
-    <Compile Include="SECReportDataAlgorithm.cs" />
-    <Compile Include="CustomDataUsingMapFileRegressionAlgorithm.cs" />
-    <Compile Include="ConstituentsUniverseDataGeneratorAlgorithm.cs" />
-    <Compile Include="ConstituentsUniverseRegressionAlgorithm.cs" />
-    <Compile Include="G10CurrencySelectionModelFrameworkAlgorithm.cs" />
-    <Compile Include="ExpiryHelperAlphaModelFrameworkAlgorithm.cs" />
-    <Compile Include="CfdTimeZonesRegressionAlgorithm.cs" />
-    <Compile Include="EmitInsightCryptoCashAccountType.cs" />
-    <Compile Include="EmitInsightsAlgorithm.cs" />
-    <Compile Include="EmitInsightNoAlphaModelAlgorithm.cs" />
-    <Compile Include="CoarseNoLookAheadBiasAlgorithm.cs" />
-    <Compile Include="ConvertToFrameworkAlgorithm.cs" />
-    <Compile Include="HistoryWithSymbolChangesRegressionAlgorithm.cs" />
-    <Compile Include="FeeModelNotUsingAccountCurrency.cs" />
-    <Compile Include="InsightWeightingFrameworkAlgorithm.cs" />
-    <Compile Include="MaximumPortfolioDrawdownFrameworkAlgorithm.cs" />
-    <Compile Include="CompositeRiskManagementModelFrameworkAlgorithm.cs" />
-    <Compile Include="ProcessSplitSymbolsRegressionAlgorithm.cs" />
-    <Compile Include="RawPricesUniverseRegressionAlgorithm.cs" />
-    <Compile Include="SetAccountCurrencyCashBuyingPowerModelRegressionAlgorithm.cs" />
-    <Compile Include="SetAccountCurrencySecurityMarginModelRegressionAlgorithm.cs" />
-    <Compile Include="SetCashOnDataRegressionAlgorithm.cs" />
-    <Compile Include="SmaCrossUniverseSelectionAlgorithm.cs" />
-    <Compile Include="StartingCapitalRegressionAlgorithm.cs" />
-    <Compile Include="StopLossOnOrderEventRegressionAlgorithm.cs" />
-    <Compile Include="TotalPortfolioValueRegressionAlgorithm.cs" />
-    <Compile Include="TradingEconomicsCalendarIndicatorAlgorithm.cs" />
-    <Compile Include="TrailingStopRiskFrameworkAlgorithm.cs" />
-    <Compile Include="BasicTemplateFuturesFrameworkAlgorithm.cs" />
-    <Compile Include="BasicTemplateOptionsFrameworkAlgorithm.cs" />
-    <Compile Include="BlackLittermanPortfolioOptimizationFrameworkAlgorithm.cs" />
-    <Compile Include="DailyResolutionSplitRegressionAlgorithm.cs" />
-    <Compile Include="MeanVarianceOptimizationFrameworkAlgorithm.cs" />
-    <Compile Include="TiingoPriceAlgorithm.cs" />
-    <Compile Include="OptionExpiryDateOnHolidayCase.cs" />
-    <Compile Include="OptionDataNullReferenceRegressionAlgorithm.cs" />
-    <Compile Include="CancelOpenOrdersRegressionAlgorithm.cs" />
-    <Compile Include="OptionDelistedDataRegressionAlgorithm.cs" />
-    <Compile Include="PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm.cs" />
-    <Compile Include="RawPricesCoarseUniverseAlgorithm.cs" />
-    <Compile Include="CompositeAlphaModelFrameworkAlgorithm.cs" />
-    <Compile Include="SectorExposureRiskFrameworkAlgorithm.cs" />
-    <Compile Include="DuplicateSecurityWithBenchmarkRegressionAlgorithm.cs" />
-    <Compile Include="BasicTemplateCryptoAlgorithm.cs" />
-    <Compile Include="BasicTemplateCryptoFrameworkAlgorithm.cs" />
-    <Compile Include="BasicTemplateIntrinioEconomicData.cs" />
-    <Compile Include="BasicTemplateFrameworkAlgorithm.cs" />
-    <Compile Include="BasicTemplateLibrary.cs" />
-    <Compile Include="Benchmarks\EmptyMinute400EquityBenchmark.cs" />
-    <Compile Include="Benchmarks\BasicTemplateBenchmark.cs" />
-    <Compile Include="Benchmarks\EmptySingleSecuritySecondEquityBenchmark.cs" />
-    <Compile Include="CustomFrameworkModelsAlgorithm.cs" />
-    <Compile Include="EmaCrossUniverseSelectionFrameworkAlgorithm.cs" />
-    <Compile Include="FinancialAdvisorDemoAlgorithm.cs" />
-    <Compile Include="ForexInternalFeedOnDataHigherResolutionRegressionAlgorithm.cs" />
-    <Compile Include="ForexInternalFeedOnDataSameResolutionRegressionAlgorithm.cs" />
-    <Compile Include="RollingWindowAlgorithm.cs" />
-    <Compile Include="BasicTemplateDailyAlgorithm.cs" />
-    <Compile Include="CallingRFromCSharp.cs" />
-    <Compile Include="FuturesMomentumAlgorithm.cs" />
-    <Compile Include="BasicTemplateFuturesConsolidationAlgorithm.cs" />
-    <Compile Include="BasicTemplateFuturesHistoryAlgorithm.cs" />
-    <Compile Include="BasicTemplateMultiAssetAlgorithm.cs" />
-    <Compile Include="FilteredIdentityAlgorithm.cs" />
-    <Compile Include="OptionExerciseAssignRegressionAlgorithm.cs" />
-    <Compile Include="BasicTemplateOptionsFilterUniverseAlgorithm.cs" />
-    <Compile Include="BasicTemplateOptionsHistoryAlgorithm.cs" />
-    <Compile Include="BasicTemplateOptionTradesAlgorithm.cs" />
-    <Compile Include="OptionChainConsistencyRegressionAlgorithm.cs" />
-    <Compile Include="OptionOpenInterestRegressionAlgorithm.cs" />
-    <Compile Include="RegressionChannelAlgorithm.cs" />
-    <Compile Include="BasicTemplateFuturesAlgorithm.cs" />
-    <Compile Include="BasicTemplateOptionStrategyAlgorithm.cs" />
-    <Compile Include="CoarseFineFundamentalRegressionAlgorithm.cs" />
-    <Compile Include="CoarseFineFundamentalComboAlgorithm.cs" />
-    <Compile Include="FuzzyInferenceAlgorithm.cs" />
-    <Compile Include="OptionRenameRegressionAlgorithm.cs" />
-    <Compile Include="OptionSplitRegressionAlgorithm.cs" />
-    <Compile Include="PortfolioOptimizationNumericsAlgorithm.cs" />
-    <Compile Include="BasicTemplateForexAlgorithm.cs" />
-    <Compile Include="AccordVectorMachinesAlgorithm.cs" />
-    <Compile Include="BasicTemplateOptionsAlgorithm.cs" />
-    <Compile Include="CoarseFundamentalTop3Algorithm.cs" />
-    <Compile Include="CustomBenchmarkAlgorithm.cs" />
-    <Compile Include="CustomBrokerageMessageHandlerAlgorithm.cs" />
-    <Compile Include="FractionalQuantityRegressionAlgorithm.cs" />
-    <Compile Include="CustomDataRegressionAlgorithm.cs" />
-    <Compile Include="CustomDataUniverseAlgorithm.cs" />
-    <Compile Include="CustomModelsAlgorithm.cs" />
-    <Compile Include="CustomSecurityInitializerAlgorithm.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="DelistingEventsAlgorithm.cs" />
-    <Compile Include="DropboxBaseDataUniverseSelectionAlgorithm.cs" />
-    <Compile Include="HistoryAlgorithm.cs" />
-    <Compile Include="IndicatorWarmupAlgorithm.cs" />
-    <Compile Include="LimitFillRegressionAlgorithm.cs" />
-    <Compile Include="BasicTemplateFillForwardAlgorithm.cs" />
-    <Compile Include="BrokerageModelAlgorithm.cs" />
-    <Compile Include="BubbleAlgorithm.cs" />
-    <Compile Include="CustomChartingAlgorithm.cs" />
-    <Compile Include="CustomDataBitcoinAlgorithm.cs" />
-    <Compile Include="CustomDataNIFTYAlgorithm.cs" />
-    <Compile Include="DailyAlgorithm.cs" />
-    <Compile Include="DataConsolidationAlgorithm.cs" />
-    <Compile Include="DisplacedMovingAverageRibbon.cs" />
-    <Compile Include="DividendAlgorithm.cs" />
-    <Compile Include="ETFGlobalRotationAlgorithm.cs" />
-    <Compile Include="IndicatorSuiteAlgorithm.cs" />
-    <Compile Include="LiveFeaturesAlgorithm.cs" />
-    <Compile Include="OpeningBreakoutAlgorithm.cs" />
-    <Compile Include="DropboxUniverseSelectionAlgorithm.cs" />
-    <Compile Include="ParameterizedAlgorithm.cs" />
-    <Compile Include="HourReverseSplitRegressionAlgorithm.cs" />
-    <Compile Include="HourSplitRegressionAlgorithm.cs" />
-    <Compile Include="ScheduledUniverseSelectionModelRegressionAlgorithm.cs" />
-    <Compile Include="StandardDeviationExecutionModelRegressionAlgorithm.cs" />
-    <Compile Include="TimeInForceAlgorithm.cs" />
-    <Compile Include="UniverseSelectionDefinitionsAlgorithm.cs" />
-    <Compile Include="UniverseSharingSecurityDifferentSubscriptionRequestRegressionAlgorithm.cs" />
-    <Compile Include="UniverseSharingSubscriptionRequestRegressionAlgorithm.cs" />
-    <Compile Include="EstimizeDataAlgorithm.cs" />
-    <Compile Include="USEnergyInformationAdministrationAlgorithm.cs" />
-    <Compile Include="UserDefinedUniverseAlgorithm.cs" />
-    <Compile Include="VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm.cs" />
-    <Compile Include="WarmUpAfterIntializeRegression.cs" />
-    <Compile Include="WarmupAlgorithm.cs" />
-    <Compile Include="WarmupConversionRatesRegressionAlgorithm.cs" />
-    <Compile Include="WarmupHistoryAlgorithm.cs" />
-    <Compile Include="MACDTrendAlgorithm.cs" />
-    <Compile Include="MarginCallEventsAlgorithm.cs" />
-    <Compile Include="MarketOnOpenOnCloseAlgorithm.cs" />
-    <Compile Include="MovingAverageCrossAlgorithm.cs" />
-    <Compile Include="MultipleSymbolConsolidationAlgorithm.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QuandlFuturesDataAlgorithm.cs" />
-    <Compile Include="QuandlImporterAlgorithm.cs" />
-    <Compile Include="RegressionAlgorithm.cs" />
-    <Compile Include="RenkoConsolidatorAlgorithm.cs" />
-    <Compile Include="ScheduledEventsAlgorithm.cs" />
-    <Compile Include="ScheduledQueuingAlgorithm.cs" />
-    <Compile Include="StressSymbolsAlgorithm.cs" />
-    <Compile Include="StressSymbols.cs" />
-    <Compile Include="TickDataFilteringAlgorithm.cs" />
-    <Compile Include="EmaCrossUniverseSelectionAlgorithm.cs" />
-    <Compile Include="UniverseSelectionRegressionAlgorithm.cs" />
-    <Compile Include="UpdateOrderLiveTestAlgorithm.cs" />
-    <Compile Include="UpdateOrderRegressionAlgorithm.cs" />
-    <Compile Include="OrderTicketDemoAlgorithm.cs" />
-    <Compile Include="WarmupIndicatorRegressionAlgorithm.cs" />
-    <Compile Include="InceptionDateSelectionRegressionAlgorithm.cs" />
-    <Compile Include="WeeklyUniverseSelectionRegressionAlgorithm.cs" />
-    <Compile Include="OptionChainProviderAlgorithm.cs" />
-    <Compile Include="ConstituentsQC500GeneratorAlgorithm.cs" />
-    <Compile Include="CustomDataIndicatorExtensionsAlgorithm.cs" />
-    <Compile Include="Benchmarks\ScheduledEventsBenchmark.cs" />
-    <Compile Include="Benchmarks\HistoryRequestBenchmark.cs" />
-    <Compile Include="Benchmarks\CoarseFineUniverseSelectionBenchmark.cs" />
-    <Compile Include="Benchmarks\IndicatorRibbonBenchmark.cs" />
-    <Compile Include="ZeroFeeRegressionAlgorithm.cs" />
+    <PackageReference Include="Accord" Version="3.6.0" />
+    <PackageReference Include="Accord.Fuzzy" Version="3.6.0" />
+    <PackageReference Include="Accord.MachineLearning" Version="3.6.0" />
+    <PackageReference Include="Accord.Math" Version="3.6.0" />
+    <PackageReference Include="Accord.Statistics" Version="3.6.0" />
+    <PackageReference Include="DynamicInterop" Version="0.7.4" />
+    <PackageReference Include="MathNet.Numerics" Version="3.19.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.3" />
+    <PackageReference Include="Microsoft.CodeAnalysis.VersionCheckAnalyzer" Version="2.9.3" />
+    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.3" />
+    <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.9.3" />
+    <PackageReference Include="Microsoft.NetFramework.Analyzers" Version="2.9.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="NodaTime" Version="1.3.4" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="1.0.5.30" />
+    <PackageReference Include="R.NET.Community" Version="1.6.5" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Algorithm.Framework\QuantConnect.Algorithm.Framework.csproj">
-      <Project>{75981418-7246-4b91-b136-482728e02901}</Project>
-      <Name>QuantConnect.Algorithm.Framework</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
-      <Project>{3240aca4-bdd4-4d24-ac36-bbb651c39212}</Project>
-      <Name>QuantConnect.Algorithm</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Common\QuantConnect.csproj">
-      <Project>{2545c0b4-fabb-49c9-8dd1-9ad7ee23f86b}</Project>
-      <Name>QuantConnect</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
-      <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>
-      <Name>QuantConnect.Indicators</Name>
-    </ProjectReference>
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
+    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <WCFMetadata Include="Connected Services\" />
+    <ProjectReference Include="..\Algorithm.Framework\QuantConnect.Algorithm.Framework.csproj" />
+    <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj" />
+    <ProjectReference Include="..\Common\QuantConnect.csproj" />
+    <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\analyzers\dotnet\Microsoft.CodeAnalysis.VersionCheckAnalyzer.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\analyzers\dotnet\cs\Humanizer.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.CodeQuality.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.CodeQuality.CSharp.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetCore.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetCore.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetCore.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetCore.CSharp.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetFramework.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetFramework.CSharp.Analyzers.dll" />
+    <Compile Remove="Alphas\MortgageRateVolatilityAlpha.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="DaylightSavingTimeHistoryRegressionAlgorithm.cs" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props'))" />
-    <Error Condition="!Exists('..\packages\Accord.3.6.0\build\Accord.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Accord.3.6.0\build\Accord.targets'))" />
-  </Target>
-  <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets')" />
-  <Import Project="..\packages\Accord.3.6.0\build\Accord.targets" Condition="Exists('..\packages\Accord.3.6.0\build\Accord.targets')" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

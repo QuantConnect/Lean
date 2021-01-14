@@ -1,281 +1,35 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props" Condition="Exists('..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props')" />
-  <Import Project="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props" Condition="Exists('..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props')" />
-  <Import Project="..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props" Condition="Exists('..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props')" />
-  <Import Project="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props" Condition="Exists('..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props')" />
-  <Import Project="..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props" Condition="Exists('..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props')" />
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{AC9A142C-B485-44D7-91FF-015C22C43D05}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>QuantConnect.ToolBox</RootNamespace>
     <AssemblyName>QuantConnect.ToolBox</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <TargetFramework>net462</TargetFramework>
     <LangVersion>6</LangVersion>
-    <TargetFrameworkProfile />
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
     <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>6</LangVersion>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>6</LangVersion>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>QuantConnect.ToolBox.Program</StartupObject>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="CoinAPI.WebSocket.V1, Version=1.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\CoinAPI.WebSocket.V1.1.6.0\lib\net45\CoinAPI.WebSocket.V1.dll</HintPath>
-    </Reference>
-    <Reference Include="Common.Logging, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
-      <HintPath>..\packages\Common.Logging.3.4.1\lib\net40\Common.Logging.dll</HintPath>
-    </Reference>
-    <Reference Include="Common.Logging.Core, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
-      <HintPath>..\packages\Common.Logging.Core.3.4.1\lib\net40\Common.Logging.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="DotNetZip, Version=1.13.3.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
-      <HintPath>..\packages\DotNetZip.1.13.3\lib\net40\DotNetZip.dll</HintPath>
-    </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib, Version=1.2.0.246, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
-      <HintPath>..\packages\SharpZipLib.1.2.0\lib\net45\ICSharpCode.SharpZipLib.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.AWT.WinForms, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.AWT.WinForms.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Beans, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Beans.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Charsets, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Charsets.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Cldrdata, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Cldrdata.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Corba, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Corba.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Core, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Jdbc, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Jdbc.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Localedata, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Localedata.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Management, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Management.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Media, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Media.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Misc, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Misc.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Naming, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Naming.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Nashorn, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Nashorn.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Remoting, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Remoting.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Security, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Security.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.SwingAWT, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.SwingAWT.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Text, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Text.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Tools, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Tools.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Util, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Util.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.XML.API, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.XML.API.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.XML.Bind, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.XML.Bind.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.XML.Crypto, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.XML.Crypto.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.XML.Parse, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.XML.Parse.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.XML.Transform, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.XML.Transform.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.XML.WebServices, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.XML.WebServices.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.XML.XPath, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.XML.XPath.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.Runtime, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.Runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.Runtime.JNI, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.Runtime.JNI.dll</HintPath>
-    </Reference>
-    <Reference Include="IQFeed.CSharpApiClient, Version=2.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\IQFeed.CSharpApiClient.2.6.0\lib\net461\IQFeed.CSharpApiClient.dll</HintPath>
-    </Reference>
-    <Reference Include="LaunchDarkly.EventSource, Version=3.3.2.0, Culture=neutral, PublicKeyToken=18e8c36453e3060f, processorArchitecture=MSIL">
-      <HintPath>..\packages\LaunchDarkly.EventSource.3.3.2\lib\net45\LaunchDarkly.EventSource.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.CommandLineUtils, Version=1.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Extensions.CommandLineUtils.1.1.1\lib\net451\Microsoft.Extensions.CommandLineUtils.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
-      <HintPath>..\packages\NodaTime.1.3.4\lib\net35-Client\NodaTime.dll</HintPath>
-    </Reference>
-    <Reference Include="QuantConnect.Fxcm">
-      <HintPath>..\Brokerages\Fxcm\QuantConnect.Fxcm.dll</HintPath>
-    </Reference>
-    <Reference Include="SevenZipSharp">
-      <HintPath>..\packages\SevenZipSharp.0.64\lib\SevenZipSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="SuperSocket.ClientEngine, Version=0.10.0.0, Culture=neutral, PublicKeyToken=ee9af13f57f00acc, processorArchitecture=MSIL">
-      <HintPath>..\packages\SuperSocket.ClientEngine.Core.0.10.0\lib\net45\SuperSocket.ClientEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Collections.Specialized, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Collections.Specialized.4.3.0\lib\net46\System.Collections.Specialized.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.ComponentModel.Composition" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Configuration.ConfigurationManager, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Configuration.ConfigurationManager.4.7.0\lib\net461\System.Configuration.ConfigurationManager.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Core" />
-    <Reference Include="System.IO.Compression, Version=4.1.2.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.IO.Compression.4.3.0\lib\net46\System.IO.Compression.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.IO.Compression.FileSystem" />
-    <Reference Include="System.Net" />
-    <Reference Include="System.Net.NameResolution, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Net.NameResolution.4.3.0\lib\net46\System.Net.NameResolution.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Net.Security, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Net.Security.4.3.0\lib\net46\System.Net.Security.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Net.Sockets, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Net.Sockets.4.3.0\lib\net46\System.Net.Sockets.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Runtime, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.4.3.0\lib\net462\System.Runtime.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.Extensions, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.Extensions.4.3.0\lib\net462\System.Runtime.Extensions.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Runtime.InteropServices, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.InteropServices.4.3.0\lib\net462\System.Runtime.InteropServices.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Security.AccessControl, Version=4.1.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Security.AccessControl.4.7.0\lib\net461\System.Security.AccessControl.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Security.Cryptography.Algorithms, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Security.Cryptography.Algorithms.4.3.0\lib\net461\System.Security.Cryptography.Algorithms.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Security.Cryptography.Encoding, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Security.Cryptography.Encoding.4.3.0\lib\net46\System.Security.Cryptography.Encoding.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Security.Cryptography.Primitives, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Security.Cryptography.Primitives.4.3.0\lib\net46\System.Security.Cryptography.Primitives.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Security.Cryptography.X509Certificates, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Security.Cryptography.X509Certificates.4.3.0\lib\net461\System.Security.Cryptography.X509Certificates.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Security.Permissions, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Security.Permissions.4.7.0\lib\net461\System.Security.Permissions.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Security.Principal.Windows, Version=4.1.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Security.Principal.Windows.4.7.0\lib\net461\System.Security.Principal.Windows.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Threading.Tasks.Extensions, Version=4.1.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.4.0\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll</HintPath>
-    </Reference>
-    <Reference Include="System.ValueTuple, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.ValueTuple.4.4.0\lib\net461\System.ValueTuple.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Web" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-    <Reference Include="Utf8Json, Version=1.3.7.0, Culture=neutral, PublicKeyToken=8a73d3ba7e392e27, processorArchitecture=MSIL">
-      <HintPath>..\packages\Utf8Json.1.3.7\lib\net45\Utf8Json.dll</HintPath>
-    </Reference>
-    <Reference Include="websocket-sharp, Version=1.0.4.0, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
-      <HintPath>..\packages\WebSocketSharpFork.1.0.4.0\lib\net35\websocket-sharp.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSocket4Net, Version=0.15.2.11, Culture=neutral, PublicKeyToken=eb4e154b696bf72a, processorArchitecture=MSIL">
-      <HintPath>..\packages\WebSocket4Net.0.15.2\lib\net45\WebSocket4Net.dll</HintPath>
-    </Reference>
-    <Reference Include="WindowsBase" />
-  </ItemGroup>
   <PropertyGroup>
     <IsWindows>false</IsWindows>
     <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
@@ -294,207 +48,92 @@
     <When Condition="$(IsWindows) AND '$(ForceLinuxBuild)' != 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.30\lib\win\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\win\Python.Runtime.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>
     <When Condition="$(IsLinux) OR '$(ForceLinuxBuild)' == 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>
     <When Condition="$(IsOSX) AND '$(ForceLinuxBuild)' != 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>
   </Choose>
   <ItemGroup>
-    <Compile Include="Benzinga\BenzingaNewsDataConverter.cs" />
-    <Compile Include="Benzinga\BenzingaProgram.cs" />
-    <Compile Include="Benzinga\BenzingaNewsDataDownloader.cs" />
-    <Compile Include="BinanceDownloader\Models\ExchangeInfo.cs" />
-    <Compile Include="BinanceDownloader\Models\Symbol.cs" />
-    <Compile Include="BinanceDownloader\BinanceDownloaderProgram.cs" />
-    <Compile Include="BinanceDownloader\BinanceDataDownloader.cs" />
-    <Compile Include="BinanceDownloader\BinanceExchangeInfoDownloader.cs" />
-    <Compile Include="BitfinexDownloader\BitfinexDataDownloader.cs" />
-    <Compile Include="BitfinexDownloader\BitfinexDownloaderProgram.cs" />
-    <Compile Include="CoarseUniverseGenerator\SecurityIdentifierContext.cs" />
-    <Compile Include="CoinApiDataConverter\CoinApiDataConverterProgram.cs" />
-    <Compile Include="CoinApiDataConverter\CoinApiDataConverter.cs" />
-    <Compile Include="CoinApiDataConverter\CoinApiDataReader.cs" />
-    <Compile Include="CoinApiDataConverter\CoinApiEntryData.cs" />
-    <Compile Include="CoinApi\CoinApiSymbol.cs" />
-    <Compile Include="CoinApi\CoinApiSymbolMapper.cs" />
-    <Compile Include="CoinApi\CoinApiDataQueueHandler.cs" />
-    <Compile Include="CoinApi\Messages\ErrorMessage.cs" />
-    <Compile Include="CoinApi\Messages\QuoteMessage.cs" />
-    <Compile Include="CoinApi\Messages\TradeMessage.cs" />
-    <Compile Include="CoinApi\Messages\BaseMessage.cs" />
-    <Compile Include="CoinApi\Messages\HelloMessage.cs" />
-    <Compile Include="EstimizeDataDownloader\EstimizeConsensusDataDownloader.cs" />
-    <Compile Include="EstimizeDataDownloader\EstimizeEstimateDataDownloader.cs" />
-    <Compile Include="EstimizeDataDownloader\EstimizeConsensusDataDownloaderProgram.cs" />
-    <Compile Include="EstimizeDataDownloader\EstimizeReleaseDataDownloader.cs" />
-    <Compile Include="EstimizeDataDownloader\EstimizeDataDownloader.cs" />
-    <Compile Include="EstimizeDataDownloader\EstimizeEstimateDataDownloaderProgram.cs" />
-    <Compile Include="EstimizeDataDownloader\EstimizeReleaseDataDownloaderProgram.cs" />
-    <Compile Include="GDAXDownloader\GDAXDownloader.cs" />
-    <Compile Include="GDAXDownloader\GDAXDownloaderProgram.cs" />
-    <Compile Include="GzipStreamProvider.cs" />
-    <Compile Include="IBDownloader\IBDataDownloader.cs" />
-    <Compile Include="IBDownloader\IBDownloaderProgram.cs" />
-    <Compile Include="IExchangeInfoDownloader.cs" />
-    <Compile Include="ExchangeInfoUpdater.cs" />
-    <Compile Include="IEX\IEXEventSourceCollection.cs" />
-    <Compile Include="IEX\IEXDataDownloader.cs" />
-    <Compile Include="IEX\IEXDownloaderProgram.cs" />
-    <Compile Include="IEX\Response\StreamResponseStocksUS.cs" />
-    <Compile Include="IQFeedDownloader\IQFeedDataDownloader.cs" />
-    <Compile Include="IQFeedDownloader\IQFeedDownloaderProgram.cs" />
-    <Compile Include="IQFeed\IQFeedFileHistoryProvider.cs" />
-    <Compile Include="IVolatilityEquityConverter\IVolatilityEquityConverterProgram.cs" />
-    <Compile Include="Polygon\WebSocket\BaseMessage.cs" />
-    <Compile Include="Polygon\WebSocket\BaseQuoteMessage.cs" />
-    <Compile Include="Polygon\WebSocket\BaseTradeMessage.cs" />
-    <Compile Include="Polygon\WebSocket\EquityQuoteMessage.cs" />
-    <Compile Include="Polygon\WebSocket\EquityTradeMessage.cs" />
-    <Compile Include="Polygon\WebSocket\CryptoTradeMessage.cs" />
-    <Compile Include="Polygon\WebSocket\CryptoQuoteMessage.cs" />
-    <Compile Include="Polygon\WebSocket\ForexQuoteMessage.cs" />
-    <Compile Include="Polygon\PolygonDataDownloader.cs" />
-    <Compile Include="Polygon\PolygonDataQueueHandler.cs" />
-    <Compile Include="Polygon\PolygonDownloaderProgram.cs" />
-    <Compile Include="Polygon\PolygonSymbolMapper.cs" />
-    <Compile Include="Polygon\PolygonWebSocketClientWrapper.cs" />
-    <Compile Include="Polygon\History\EquityQuoteTickResponse.cs" />
-    <Compile Include="Polygon\History\EquityTradeTickResponse.cs" />
-    <Compile Include="Polygon\History\CryptoTradeTickResponse.cs" />
-    <Compile Include="Polygon\History\ForexQuoteTickResponse.cs" />
-    <Compile Include="Polygon\History\AggregateRowResponse.cs" />
-    <Compile Include="Polygon\History\AggregatesResponse.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="QuiverDataDownloader\QuiverCongressDataDownloader.cs" />
-    <Compile Include="QuiverDataDownloader\QuiverDataDownloader.cs" />
-    <Compile Include="QuiverDataDownloader\QuiverEventsBetaDownloader.cs" />
-    <Compile Include="QuiverDataDownloader\QuiverWallStreetBetsDataDownloader.cs" />
-    <Compile Include="QuiverDataDownloader\QuiverWikipediaDataDownloader.cs" />
-    <Compile Include="RandomDataGenerator\DividendSplitMapGenerator.cs" />
-    <Compile Include="RandomDataGenerator\ConsoleLeveledOutput.cs" />
-    <Compile Include="RandomDataGenerator\DataDensity.cs" />
-    <Compile Include="RandomDataGenerator\RandomDataGeneratorSettings.cs" />
-    <Compile Include="RandomDataGenerator\IRandomValueGenerator.cs" />
-    <Compile Include="RandomDataGenerator\RandomDataGeneratorProgram.cs" />
-    <Compile Include="RandomDataGenerator\RandomValueGenerator.cs" />
-    <Compile Include="RandomDataGenerator\RandomValueGeneratorException.cs" />
-    <Compile Include="RandomDataGenerator\SymbolGenerator.cs" />
-    <Compile Include="RandomDataGenerator\TickGenerator.cs" />
-    <Compile Include="RandomDataGenerator\TooManyFailedAttemptsException.cs" />
-    <Compile Include="SECDataDownloader\SECDataDownloader.cs" />
-    <Compile Include="SECDataDownloader\SECDataConverter.cs" />
-    <Compile Include="SECDataDownloader\SECDataDownloaderProgram.cs" />
-    <Compile Include="SmartInsider\SmartInsiderConverter.cs" />
-    <Compile Include="SmartInsider\SmartInsiderProgram.cs" />
-    <Compile Include="TemporaryPathProvider.cs" />
-    <Compile Include="TickAggregator.cs" />
-    <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesConverter.cs" />
-    <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProcessor.cs" />
-    <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesReader.cs" />
-    <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProgram.cs" />
-    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsConverter.cs" />
-    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsProcessor.cs" />
-    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsReader.cs" />
-    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsConverterProgram.cs" />
-    <Compile Include="Bz2StreamProvider.cs" />
-    <Compile Include="CoarseUniverseGenerator\CoarseUniverseGeneratorProgram.cs" />
-    <Compile Include="ConsolidatorDataProcessor.cs" />
-    <Compile Include="CryptoiqDownloader\CryptoiqBitcoin.cs" />
-    <Compile Include="CryptoiqDownloader\CryptoiqDownloader.cs" />
-    <Compile Include="CryptoiqDownloader\CryptoiqDownloaderProgram.cs" />
-    <Compile Include="DukascopyDownloader\DukascopyDataDownloader.cs" />
-    <Compile Include="DukascopyDownloader\DukascopySymbolMapper.cs" />
-    <Compile Include="DukascopyDownloader\DukascopyDownloaderProgram.cs" />
-    <Compile Include="FactorFileGenerator.cs" />
-    <Compile Include="FileStreamProvider.cs" />
-    <Compile Include="FilteredDataProcessor.cs" />
-    <Compile Include="FxcmVolumeDownloader\FxcmVolumeAuxiliaryMethods.cs" />
-    <Compile Include="FxcmVolumeDownloader\FxcmVolumeWriter.cs" />
-    <Compile Include="FxcmVolumeDownloader\FxcmVolumeDownloader.cs" />
-    <Compile Include="FxcmVolumeDownloader\FxcmVolumeDownloadProgram.cs" />
-    <Compile Include="FxcmDownloader\FxcmDataDownloader.cs" />
-    <Compile Include="FxcmDownloader\FxcmDownloaderProgram.cs" />
-    <Compile Include="IDataProcessor.cs" />
-    <Compile Include="IEX\IEXDataQueueHandler.cs" />
-    <Compile Include="IQFeed\IQFeedDataQueueHandler.cs" />
-    <Compile Include="IQFeed\IQFeedDataQueueUniverseProvider.cs" />
-    <Compile Include="IQFeed\IQ\DataStructures.cs" />
-    <Compile Include="IQFeed\IQ\IQAdminSocketClient.cs" />
-    <Compile Include="IQFeed\IQ\IQConnect.cs" />
-    <Compile Include="IQFeed\IQ\IQCredentials.cs" />
-    <Compile Include="IQFeed\IQ\IQLevel1Client.cs" />
-    <Compile Include="IQFeed\IQ\IQLookupHistorySymbolClient.cs" />
-    <Compile Include="IQFeed\IQ\IQLookupTableClient.cs" />
-    <Compile Include="IQFeed\IQ\IQSocket.cs" />
-    <Compile Include="IQFeed\IQ\SocketClient.cs" />
-    <Compile Include="IStreamParser.cs" />
-    <Compile Include="IStreamProvider.cs" />
-    <Compile Include="KaikoDataConverter\KaikoDataConverterProgram.cs" />
-    <Compile Include="KrakenDataDownloader\KrakenDataDownloader.cs" />
-    <Compile Include="KrakenDataDownloader\KrakenDownloaderProgram.cs" />
-    <Compile Include="LazyStreamWriter.cs" />
-    <Compile Include="LeanDataReader.cs" />
-    <Compile Include="LeanDataWriter.cs" />
-    <Compile Include="LeanInstrument.cs" />
-    <Compile Include="LeanParser.cs" />
-    <Compile Include="NseMarketDataConverter\NseMarketDataConverterProgram.cs" />
-    <Compile Include="OandaDownloader\OandaDataDownloader.cs" />
-    <Compile Include="OandaDownloader\OandaDownloaderProgram.cs" />
-    <Compile Include="PipeDataProcessor.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QuandlBitfinexDownloader\QuandlBitfinexDownloaderProgram.cs" />
-    <Compile Include="QuandlBitfinexDownloader\QuandlBitfinexDownloader.cs" />
-    <Compile Include="QuantQuoteConverter\QuantQuoteConverterProgram.cs" />
-    <Compile Include="IDataDownloader.cs" />
-    <Compile Include="RawFileProcessor.cs" />
-    <Compile Include="CsvDataProcessor.cs" />
-    <Compile Include="TiingoNewsConverter\TiingoNewsConverter.cs" />
-    <Compile Include="TiingoNewsConverter\TiingoNewsConverterProgram.cs" />
-    <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsEarningsDownloader.cs" />
-    <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsEarningsDownloaderProgram.cs" />
-    <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsIndicatorDownloaderProgram.cs" />
-    <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsIndicatorDownloader.cs" />
-    <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsDataDownloader.cs" />
-    <Compile Include="TradingEconomicsDataDownloader\ITradingEconomicsDataDownloader.cs" />
-    <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsCalendarDownloader.cs" />
-    <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsCalendarDownloaderProgram.cs" />
-    <Compile Include="USTreasuryYieldCurve\USTreasuryYieldCurveConverter.cs" />
-    <Compile Include="USTreasuryYieldCurve\USTreasuryYieldCurveDownloader.cs" />
-    <Compile Include="USTreasuryYieldCurve\USTreasuryYieldCurveProgram.cs" />
-    <Compile Include="USTreasuryYieldCurve\YieldCurveAutogenXml.cs" />
-    <Compile Include="YahooDownloader\Historical.cs" />
-    <Compile Include="YahooDownloader\YahooDownloaderProgram.cs" />
-    <Compile Include="YahooDownloader\Token.cs" />
-    <Compile Include="YahooDownloader\YahooDataDownloader.cs" />
-    <Compile Include="ZipStreamProvider.cs" />
+    <PackageReference Include="CoinAPI.WebSocket.V1" Version="1.6.0" />
+    <PackageReference Include="Common.Logging" Version="3.4.1" />
+    <PackageReference Include="Common.Logging.Core" Version="3.4.1" />
+    <PackageReference Include="DotNetZip" Version="1.13.3" />
+    <PackageReference Include="IKVM" Version="8.1.5717.0" />
+    <PackageReference Include="IQFeed.CSharpApiClient" Version="2.5.1" />
+    <PackageReference Include="LaunchDarkly.EventSource" Version="3.3.2" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.3" />
+    <PackageReference Include="Microsoft.CodeAnalysis.VersionCheckAnalyzer" Version="2.9.3" />
+    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.3" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.6.0" />
+    <PackageReference Include="Microsoft.Extensions.CommandLineUtils" Version="1.1.1" />
+    <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.9.3" />
+    <PackageReference Include="Microsoft.NetFramework.Analyzers" Version="2.9.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="NodaTime" Version="1.3.4" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="1.0.5.30" />
+    <PackageReference Include="SevenZipSharp" Version="0.64" />
+    <PackageReference Include="SharpZipLib" Version="1.2.0" />
+    <PackageReference Include="SuperSocket.ClientEngine.Core" Version="0.10.0" />
+    <PackageReference Include="System.Collections.Specialized" Version="4.3.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.7.0" />
+    <PackageReference Include="System.IO.Compression" Version="4.3.0" />
+    <PackageReference Include="System.Linq" Version="4.3.0" />
+    <PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
+    <PackageReference Include="System.Net.Security" Version="4.3.0" />
+    <PackageReference Include="System.Net.Sockets" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+    <PackageReference Include="System.Runtime" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.3" />
+    <PackageReference Include="System.Runtime.Extensions" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+    <PackageReference Include="System.Security.AccessControl" Version="4.7.0" />
+    <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.0" />
+    <PackageReference Include="System.Security.Cryptography.Encoding" Version="4.3.0" />
+    <PackageReference Include="System.Security.Cryptography.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="4.3.0" />
+    <PackageReference Include="System.Security.Permissions" Version="4.7.0" />
+    <PackageReference Include="System.Security.Principal.Windows" Version="4.7.0" />
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.0" />
+    <PackageReference Include="System.Threading" Version="4.3.0" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.4.0" />
+    <PackageReference Include="System.Threading.Timer" Version="4.3.0" />
+    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
+    <PackageReference Include="Utf8Json" Version="1.3.7" />
+    <PackageReference Include="WebSocket4Net" Version="0.15.2" />
+    <PackageReference Include="WebSocketSharpFork" Version="1.0.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="QuantConnect.Fxcm">
+      <HintPath>..\Brokerages\Fxcm\QuantConnect.Fxcm.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <None Include="AlgoSeekFuturesConverter\AlgoSeek.US.Futures.PriceMultipliers.1.1.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="app.config">
-      <SubType>Designer</SubType>
-    </None>
     <None Include="IQFeed\IQFeed-symbol-map.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <Compile Include="KaikoDataConverter\KaikoCryptoReader.cs" />
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
     </None>
     <Content Include="CoarseUniverseGenerator\blacklisted-tickers.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -512,30 +151,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Brokerages\QuantConnect.Brokerages.csproj">
-      <Project>{2D3E13CF-2D14-4180-A42D-F0A13AF0ADE2}</Project>
-      <Name>QuantConnect.Brokerages</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Common\QuantConnect.csproj">
-      <Project>{2545c0b4-fabb-49c9-8dd1-9ad7ee23f86b}</Project>
-      <Name>QuantConnect</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Compression\QuantConnect.Compression.csproj">
-      <Project>{bc3bc77e-0502-43db-a727-b94f9765d74b}</Project>
-      <Name>QuantConnect.Compression</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">
-      <Project>{0aeb4ea3-28c8-476e-89fd-926f06590b4c}</Project>
-      <Name>QuantConnect.Configuration</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Engine\QuantConnect.Lean.Engine.csproj">
-      <Project>{12156f46-d07e-4e3d-ad2b-7409e82ab62f}</Project>
-      <Name>QuantConnect.Lean.Engine</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
-      <Project>{01911409-86be-4e7d-9947-df714138610d}</Project>
-      <Name>QuantConnect.Logging</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\Brokerages\QuantConnect.Brokerages.csproj" />
+    <ProjectReference Include="..\Common\QuantConnect.csproj" />
+    <ProjectReference Include="..\Compression\QuantConnect.Compression.csproj" />
+    <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj" />
+    <ProjectReference Include="..\Engine\QuantConnect.Lean.Engine.csproj" />
+    <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="instruments_dukascopy.txt">
@@ -547,35 +168,4 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\analyzers\dotnet\Microsoft.CodeAnalysis.VersionCheckAnalyzer.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\analyzers\dotnet\cs\Humanizer.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.CodeQuality.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.CodeQuality.CSharp.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetCore.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetCore.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetCore.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetCore.CSharp.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetFramework.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetFramework.CSharp.Analyzers.dll" />
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props'))" />
-  </Target>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>
