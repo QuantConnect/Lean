@@ -34,6 +34,11 @@ namespace QuantConnect.Brokerages
         public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
 
         /// <summary>
+        /// Define the default benchmark used in this model
+        /// </summary>
+        public override Symbol DefaultBenchmark => Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex);
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="BitfinexBrokerageModel"/> class
         /// </summary>
         /// <param name="accountType">The type of account to be modeled, defaults to <see cref="AccountType.Margin"/></param>

@@ -77,6 +77,11 @@ namespace QuantConnect.Brokerages
         private readonly DateTime _stopMarketOrderSupportEndDate = new DateTime(2019, 3, 23, 1, 0, 0);
 
         /// <summary>
+        /// Define the default benchmark used in this model
+        /// </summary>
+        public override Symbol DefaultBenchmark => Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="GDAXBrokerageModel"/> class
         /// </summary>
         /// <param name="accountType">The type of account to be modelled, defaults to

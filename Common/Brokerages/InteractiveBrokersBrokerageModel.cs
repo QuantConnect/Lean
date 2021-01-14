@@ -45,6 +45,11 @@ namespace QuantConnect.Brokerages
             {SecurityType.Cfd, Market.Oanda}
         }.ToReadOnlyDictionary();
 
+        /// <summary>
+        /// Define the default benchmark used in this model
+        /// </summary>
+        public override Symbol DefaultBenchmark => null;
+
         private readonly Type[] _supportedTimeInForces =
         {
             typeof(GoodTilCanceledTimeInForce),

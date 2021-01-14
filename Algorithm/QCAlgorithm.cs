@@ -558,17 +558,23 @@ namespace QuantConnect.Algorithm
             // if the benchmark hasn't been set yet, set it
             if (Benchmark == null)
             {
+                // If we don't have a symbol fetch it from the Brokerage model
                 if (_benchmarkSymbol == null)
                 {
-                    _benchmarkSymbol = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+                    _benchmarkSymbol = BrokerageModel.DefaultBenchmark;
                 }
 
-                var security = Securities.CreateSecurity(_benchmarkSymbol,
-                    new List<SubscriptionDataConfig>(),
-                    leverage: 1,
-                    addToSymbolCache:false);
+                // Before we set it, ensure the benchmark symbol is not null
+                // Brokerage implementations may set it to null to have no benchmark
+                if (_benchmarkSymbol != null)
+                {
+                    var security = Securities.CreateSecurity(_benchmarkSymbol,
+                        new List<SubscriptionDataConfig>(),
+                        leverage: 1,
+                        addToSymbolCache: false);
 
-                Benchmark = new SecurityBenchmark(security);
+                    Benchmark = new SecurityBenchmark(security);
+                }
             }
 
             // perform end of time step checks, such as enforcing underlying securities are in raw data mode

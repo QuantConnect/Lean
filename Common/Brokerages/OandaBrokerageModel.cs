@@ -41,6 +41,11 @@ namespace QuantConnect.Brokerages
         }.ToReadOnlyDictionary();
 
         /// <summary>
+        /// Define the default benchmark used in this model
+        /// </summary>
+        public override Symbol DefaultBenchmark => Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda);
+
+        /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
         public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets => DefaultMarketMap;

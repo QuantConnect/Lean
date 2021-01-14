@@ -54,6 +54,14 @@ namespace QuantConnect.Brokerages
         IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; }
 
         /// <summary>
+        /// Define the default benchmark used in this model
+        /// </summary>
+        Symbol DefaultBenchmark
+        {
+            get;
+        }
+
+        /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
         /// order type, security type, and order size limits.
         /// </summary>

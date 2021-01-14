@@ -62,6 +62,11 @@ namespace QuantConnect.Brokerages
         protected IShortableProvider ShortableProvider { get; set; }
 
         /// <summary>
+        /// Define the default benchmark used in this model
+        /// </summary>
+        public virtual Symbol DefaultBenchmark => Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        
+        /// <summary>
         /// Gets or sets the account type used by this model
         /// </summary>
         public virtual AccountType AccountType
