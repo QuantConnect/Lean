@@ -76,6 +76,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // Notifies the thread reading information from Gateway/TWS whenever there are messages ready to be consumed
         private readonly EReaderSignal _signal = new EReaderMonitorSignal();
 
+        private readonly ManualResetEvent _connectEvent = new ManualResetEvent(false);
         private readonly ManualResetEvent _waitForNextValidId = new ManualResetEvent(false);
         private readonly ManualResetEvent _accountHoldingsResetEvent = new ManualResetEvent(false);
         private Exception _accountHoldingsLastException;
@@ -305,11 +306,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.ConnectAck += (sender, e) =>
             {
                 Log.Trace("InteractiveBrokersBrokerage.HandleConnectAck(): API client connected.");
+                _connectEvent.Set();
             };
 
             _client.ConnectionClosed += (sender, e) =>
             {
                 Log.Trace("InteractiveBrokersBrokerage.HandleConnectionClosed(): API client disconnected.");
+                _connectEvent.Set();
             };
         }
 
@@ -685,8 +688,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         Thread.Sleep(2500);
                     }
 
+                    _connectEvent.Reset();
+
                     // we're going to try and connect several times, if successful break
                     _client.ClientSocket.eConnect(_host, _port, ClientId);
+
+                    if (!_connectEvent.WaitOne(TimeSpan.FromSeconds(15)))
+                    {
+                        Log.Error("InteractiveBrokersBrokerage.Connect(): timeout waiting for connect callback");
+                    }
 
                     // create the message processing thread
                     var reader = new EReader(_client.ClientSocket, _signal);
@@ -999,7 +1009,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return $"{contract.ToString().ToUpperInvariant()} {contract.LastTradeDateOrContractMonth.ToStringInvariant()} {contract.Strike.ToStringInvariant()} {contract.Right}";
         }
 
-        private static string GetContractDescription(Contract contract)
+        public static string GetContractDescription(Contract contract)
         {
             return $"{contract} {contract.PrimaryExch ?? string.Empty} {contract.LastTradeDateOrContractMonth.ToStringInvariant()} {contract.Strike.ToStringInvariant()} {contract.Right}";
         }
@@ -1202,6 +1212,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandleError(object sender, IB.ErrorEventArgs e)
         {
+            // handles the 'connection refused' connect cases
+            _connectEvent.Set();
+
             // https://www.interactivebrokers.com/en/software/api/apiguide/tables/api_message_codes.htm
 
             var requestId = e.Id;
@@ -2261,11 +2274,28 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var market = InteractiveBrokersBrokerageModel.DefaultMarketMap[securityType];
                 var isFutureOption = contract.SecType == IB.SecurityType.FutureOption;
 
+                if ((isFutureOption || securityType == SecurityType.Option) &&
+                    contract.LastTradeDateOrContractMonth == "0")
+                {
+                    // Try our best to recover from a malformed contract.
+                    // You can read more about malformed contracts at the ParseMalformedContract method's documentation.
+                    var exchange = GetSymbolExchange(securityType, market);
+
+                    contract = InteractiveBrokersSymbolMapper.ParseMalformedContractOptionSymbol(contract, exchange);
+                    ibSymbol = contract.Symbol;
+                }
+                else if (securityType == SecurityType.Future && contract.LastTradeDateOrContractMonth == "0")
+                {
+                    contract = _symbolMapper.ParseMalformedContractFutureSymbol(contract, _symbolPropertiesDatabase);
+                    ibSymbol = contract.Symbol;
+                }
+
                 // Handle future options as a Future, up until we actually return the future.
                 if (isFutureOption || securityType == SecurityType.Future)
                 {
                     var leanSymbol = _symbolMapper.GetLeanRootSymbol(ibSymbol);
                     var defaultMarket = market;
+
                     if (!_symbolPropertiesDatabase.TryGetMarket(leanSymbol, SecurityType.Future, out market))
                     {
                         market = defaultMarket;
@@ -2278,12 +2308,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         return _symbolMapper.GetLeanSymbol(ibSymbol, SecurityType.Future, market, contractExpiryDate);
                     }
 
-                    // Create a canonical future Symbol for lookup in the FuturesExpiryFunctions helper class.
-                    // We then get the delta between the futures option's expiry month vs. the future's expiry month.
-                    var canonicalFutureSymbol = _symbolMapper.GetLeanSymbol(ibSymbol, SecurityType.Future, market, SecurityIdentifier.DefaultDate);
-                    var futureExpiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFutureSymbol);
-                    var futureContractExpiryDate = futureExpiryFunction(FuturesOptionsExpiryFunctions.GetFutureContractMonth(canonicalFutureSymbol, contractExpiryDate));
-                    var futureSymbol = Symbol.CreateFuture(canonicalFutureSymbol.ID.Symbol, canonicalFutureSymbol.ID.Market, futureContractExpiryDate);
+                    // Get the *actual* futures contract that this futures options contract has as its underlying.
+                    // Futures options contracts can have a different contract month from their underlying future.
+                    // As such, we resolve the underlying future to the future with the correct contract month.
+                    // There's a chance this can fail, and if it does, we throw because this Symbol can't be
+                    // represented accurately in Lean.
+                    var futureSymbol = FuturesOptionsUnderlyingMapper.GetUnderlyingFutureFromFutureOption(leanSymbol, market, contractExpiryDate, _algorithm.Time);
+                    if (futureSymbol == null)
+                    {
+                        // This is the worst case scenario, because we didn't find a matching futures contract for the FOP.
+                        // Note that this only applies to CBOT symbols for now.
+                        throw new ArgumentException($"The Future Option contract: {GetContractDescription(contract)} with trading class: {contract.TradingClass} has no matching underlying future contract.");
+                    }
 
                     var right = contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put;
                     var strike = Convert.ToDecimal(contract.Strike);
@@ -3104,10 +3140,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Gets the exchange the Symbol should be routed to
         /// </summary>
-        /// <param name="symbol">Symbol to route</param>
-        private string GetSymbolExchange(Symbol symbol)
+        /// <param name="securityType">SecurityType of the Symbol</param>
+        /// <param name="market">Market of the Symbol</param>
+        private string GetSymbolExchange(SecurityType securityType, string market)
         {
-            switch (symbol.SecurityType)
+            switch (securityType)
             {
                 case SecurityType.Option:
                     // Regular equity options uses default, in this case "Smart"
@@ -3116,13 +3153,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // Futures options share the same market as the underlying Symbol
                 case SecurityType.FutureOption:
                 case SecurityType.Future:
-                    return _futuresExchanges.ContainsKey(symbol.ID.Market)
-                        ? _futuresExchanges[symbol.ID.Market]
-                        : symbol.ID.Market;
+                    return _futuresExchanges.ContainsKey(market)
+                        ? _futuresExchanges[market]
+                        : market;
 
                 default:
                     return "Smart";
             }
+        }
+
+        /// <summary>
+        /// Gets the exchange the Symbol should be routed to
+        /// </summary>
+        /// <param name="symbol">Symbol to route</param>
+        private string GetSymbolExchange(Symbol symbol)
+        {
+            return GetSymbolExchange(symbol.SecurityType, symbol.ID.Market);
         }
 
         /// <summary>

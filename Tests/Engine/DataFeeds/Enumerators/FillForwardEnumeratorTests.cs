@@ -19,6 +19,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Logging;
@@ -26,6 +27,7 @@ using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -675,7 +677,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         }
 
         [Test]
-        public void FillForwardHoursAtEndOfDayByHalfHour()
+        public void FillsForwardHoursAtEndOfDayByHalfHour()
         {
             var dataResolution = Time.OneHour;
             var reference = new DateTime(2015, 6, 25, 14, 0, 0);
@@ -1131,7 +1133,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [TestCase(Resolution.Minute, Resolution.Minute)]
         [TestCase(Resolution.Minute, Resolution.Daily)]
         [TestCase(Resolution.Daily, Resolution.Minute)]
-        public void FillForwardBarsForDifferentResolutions(Resolution resolution, Resolution anotherSymbolResolution)
+        public void FillsForwardBarsForDifferentResolutions(Resolution resolution, Resolution anotherSymbolResolution)
         {
             FillForwardTestAlgorithm.FillForwardBars.Clear();
 
@@ -1501,39 +1503,47 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             new TestCaseData(new SecurityExchange(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, null, SecurityType.Forex)), DateTimeZone.Utc, Resolution.Daily)
         };
 
-        private static IEnumerable<TestCaseData> ExchangeSettings(string daylight, DateTime start, int durationInDays)
+        private static IEnumerable<TestCaseData> ExchangeSettings(string daylight, DateTime start, params object[] extra)
         {
             return ExchangeSet.Select(origin =>
             {
                 var list = new List<object>(origin.Arguments)
                 {
                     daylight,
-                    start,
-                    durationInDays
+                    start
                 };
+
+                if (extra?.Any() == true)
+                {
+                    list.AddRange(extra);
+                }
 
                 return new TestCaseData(list.ToArray());
             });
         }
 
-        private static IEnumerable<TestCaseData> ExchangeDaylightTimeSet(int durationInDays)
+        private static IEnumerable<TestCaseData> ExchangeDaylightTimeSet(int durationInDays, Resolution fillforwardResolution)
         {
-            return ExchangeSettings("DST", new DateTime(2011, 3, 7), durationInDays);
+            return ExchangeSettings("DST", new DateTime(2011, 3, 7), durationInDays, fillforwardResolution);
         }
 
-        private static IEnumerable<TestCaseData> ExchangeStandardTimeSet(int durationInDays)
+        private static IEnumerable<TestCaseData> ExchangeStandardTimeSet(int durationInDays, Resolution fillforwardResolution)
         {
-            return ExchangeSettings("ST", new DateTime(2011, 10, 31), durationInDays);
+            return ExchangeSettings("ST", new DateTime(2011, 10, 31), durationInDays, fillforwardResolution);
         }
 
         [Test]
-        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 6 })]
-        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 7 })]
-        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 14 })]
-        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 6 })]
-        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 7 })]
-        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 14 })]
-        public void FillForwardBarsAroundDaylightMovementForDifferentResolutions_Enumerator(SecurityExchange exchange, DateTimeZone dataTimeZone, Resolution resolution, string dst, DateTime reference, int durationInDays)
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 6, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 7, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 14, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 6, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 7, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 14, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 7, Resolution.Minute })]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 7, Resolution.Hour })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 7, Resolution.Minute })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 7, Resolution.Hour })]
+        public void FillsForwardBarsAroundDaylightMovementForDifferentResolutions_Enumerator(SecurityExchange exchange, DateTimeZone dataTimeZone, Resolution resolution, string dst, DateTime reference, int durationInDays, Resolution fillforwardResolution)
         {
             var data = new[]
             {
@@ -1558,7 +1568,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var fillForwardEnumerator = new FillForwardEnumerator(
                 enumerator,
                 exchange,
-                Ref.Create(resolution.ToTimeSpan()),
+                Ref.Create(fillforwardResolution.ToTimeSpan()),
                 isExtendedMarketHours,
                 data.Last().EndTime,
                 resolution.ToTimeSpan(),
@@ -1576,7 +1586,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             fillForwardEnumerator.Dispose();
 
-            var expectedDataFile = $"enum_{dst}_{durationInDays}_{exchange.TimeZone.Id.Replace("/", "_")}_{dataTimeZone.Id.Replace("/","_")}_{resolution}.txt";
+            var expectedDataFile = $"enum_{dst}_{durationInDays}_{exchange.TimeZone.Id.Replace("/", "_")}_{dataTimeZone.Id.Replace("/", "_")}_{resolution}_{fillforwardResolution}.txt";
 
             // updates expected data
             if (false)
@@ -1594,14 +1604,231 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(expected.SequenceEqual(ffbars));
         }
 
+        [TestCase(15)]
+        [TestCase(18)]
+        [TestCase(19)]
+        [TestCase(21)]
+        public void FillsForwardUntilDelisted(int warningDay)
+        {
+            var exchange = new OptionExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+            DateTimeZone dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
+            var reference = new DateTime(2014, 6, 5)
+                .ConvertTo(dataTimeZone, exchange.TimeZone);
+            var dataResolution = Time.OneDay;
+            var expiry = new DateTime(2014, 6, warningDay)
+                .ConvertTo(dataTimeZone, exchange.TimeZone);
+            var delisted = new DateTime(2014, 6, 22)
+                .ConvertTo(dataTimeZone, exchange.TimeZone);
+
+            var spy = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry);
+
+            var data = new BaseData[]
+            {
+                new BaseDataCollection(
+                    reference,
+                    reference.Add(dataResolution),
+                    spy,
+                    new List<BaseData>{new TradeBar
+                        {
+                            Time = reference,
+                            Value = 1,
+                            Period = dataResolution,
+                            Volume = 100
+                        }
+                    }),
+                new BaseDataCollection(
+                    reference.AddDays(1),
+                    reference.AddDays(1).Add(dataResolution),
+                    spy,
+                    new List<BaseData>{new TradeBar
+                        {
+                            Time = reference.AddDays(1),
+                            Value = 2,
+                            Period = dataResolution,
+                            Volume = 100
+                        }
+                    }),
+                new Delisting(spy, expiry.Date.ConvertTo(dataTimeZone, exchange.TimeZone), 100, DelistingType.Warning),
+            }.ToList();
+
+            // add intermediate values between warning and delisted
+            int intermediateDay = (delisted.Day - expiry.Day) / 2;
+            if (intermediateDay > 0)
+            {
+                data.Add(new BaseDataCollection(
+                    expiry.AddDays(intermediateDay),
+                    expiry.AddDays(intermediateDay).Add(dataResolution),
+                    spy,
+                    new List<BaseData>
+                    {
+                        new TradeBar
+                        {
+                            Time = expiry.AddDays(intermediateDay),
+                            Value = 1,
+                            Period = dataResolution,
+                            Volume = 100
+                        }
+                    }));
+            }
+
+            // add delisted
+            data.Add(new Delisting(spy, delisted, 100, DelistingType.Delisted));
+            var enumerator = data.GetEnumerator();
+
+            var fillForwardEnumerator = new FillForwardEnumerator(
+                enumerator,
+                exchange,
+                Ref.Create(TimeSpan.FromDays(1)),
+                false,
+                data.Last().EndTime,
+                dataResolution,
+                dataTimeZone);
+
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());  // 2014.06.05
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());  // 2014.06.06
+
+            var counter = 0;
+            var previous = fillForwardEnumerator.Current;
+            while (fillForwardEnumerator.MoveNext())
+            {
+                Assert.NotNull(fillForwardEnumerator.Current);
+                Assert.GreaterOrEqual(fillForwardEnumerator.Current.Time, previous?.Time);
+                Assert.GreaterOrEqual(fillForwardEnumerator.Current.EndTime, previous?.EndTime);
+                Assert.AreEqual(
+                    fillForwardEnumerator.Current.DataType != MarketDataType.Auxiliary,
+                    fillForwardEnumerator.Current.IsFillForward || (intermediateDay != 0 && fillForwardEnumerator.Current.Time.Day == expiry.Day + intermediateDay));
+                if (fillForwardEnumerator.Current.IsFillForward)
+                {
+                    Assert.AreNotEqual(MarketDataType.Auxiliary, fillForwardEnumerator.Current.DataType);
+                    counter++;
+                }
+                else
+                {
+                    Assert.True(fillForwardEnumerator.Current.DataType == MarketDataType.Auxiliary
+                        || fillForwardEnumerator.Current.Time == data[3].Time);
+                }
+                previous = fillForwardEnumerator.Current;
+            }
+
+            Assert.AreEqual(
+                (int)(data.Last().EndTime - data[1].EndTime).TotalDays - (intermediateDay > 0 ? 1 : 0),
+                counter);
+
+            fillForwardEnumerator.Dispose();
+        }
+
         [Test]
-        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 6 })]
-        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 7 })]
-        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 14 })]
-        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 6 })]
-        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 7 })]
-        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 14 })]
-        public void FillForwardBarsAroundDaylightMovementForDifferentResolutions_Algorithm(SecurityExchange exchange, DateTimeZone dataTimeZone, Resolution resolution, string dst, DateTime reference, int durationInDays)
+        public void FillsForwardUntilDelistedMinuteResolution()
+        {
+            var exchange = new OptionExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+            DateTimeZone dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
+            var reference = new DateTime(2014, 6, 5, 10, 10, 0)
+                .ConvertTo(dataTimeZone, exchange.TimeZone);
+            var dataResolution = Time.OneMinute;
+            var expiry = new DateTime(2014, 6, 15)
+                .ConvertTo(dataTimeZone, exchange.TimeZone);
+            var delisted = new DateTime(2014, 6, 22)
+                .ConvertTo(dataTimeZone, exchange.TimeZone);
+
+            var spy = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry);
+
+            var data = new BaseData[]
+            {
+                new BaseDataCollection(
+                    reference,
+                    reference.Add(dataResolution),
+                    spy,
+                    new List<BaseData>{new TradeBar
+                        {
+                            Time = reference,
+                            Value = 1,
+                            Period = dataResolution,
+                            Volume = 100
+                        }
+                    }),
+                new BaseDataCollection(
+                    reference.AddDays(1),
+                    reference.AddDays(1).Add(dataResolution),
+                    spy,
+                    new List<BaseData>{new TradeBar
+                        {
+                            Time = reference.AddDays(1),
+                            Value = 2,
+                            Period = dataResolution,
+                            Volume = 100
+                        }
+                    }),
+                new Delisting(spy, expiry.Date, 100, DelistingType.Warning),
+                new BaseDataCollection(
+                    reference.AddDays(12),
+                    reference.AddDays(12).Add(dataResolution),
+                    spy,
+                    new List<BaseData>
+                    {
+                        new TradeBar
+                        {
+                            Time = reference.AddDays(12),
+                            Value = 1,
+                            Period = dataResolution,
+                            Volume = 100
+                        }
+                    }),
+                new Delisting(spy, delisted, 100, DelistingType.Delisted)
+            }.ToList();
+
+            var enumerator = data.GetEnumerator();
+
+            var fillForwardEnumerator = new FillForwardEnumerator(
+                enumerator,
+                exchange,
+                Ref.Create(TimeSpan.FromDays(1)),
+                false,
+                data.Last().EndTime,
+                dataResolution,
+                dataTimeZone);
+
+            // Fast forward 2014.06.05 - 06
+            while (fillForwardEnumerator.MoveNext())
+            {
+                Assert.IsTrue(fillForwardEnumerator.MoveNext());
+                if (fillForwardEnumerator.Current.Time.Day == 7)
+                {
+                    break;
+                }
+            }
+
+            var dateSet = new HashSet<DateTime>();
+            while (fillForwardEnumerator.MoveNext())
+            {
+                Assert.NotNull(fillForwardEnumerator.Current);
+                if (fillForwardEnumerator.Current.IsFillForward)
+                {
+                    Assert.AreNotEqual(MarketDataType.Auxiliary, fillForwardEnumerator.Current.DataType);
+                    dateSet.Add(fillForwardEnumerator.Current.Time.Date);
+                }
+                else
+                {
+                    Assert.True(fillForwardEnumerator.Current.DataType == MarketDataType.Auxiliary
+                        || fillForwardEnumerator.Current.Time == data[3].Time);
+                }
+            }
+
+            // '+1' means receiving not-Auxiliary minute data on last day of period
+            Assert.AreEqual(
+                (int)(data.Last().EndTime - data[1].EndTime).TotalDays + 1,
+                dateSet.Count);
+
+            fillForwardEnumerator.Dispose();
+        }
+
+        [Test]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 6, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 7, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeDaylightTimeSet), new object[] { 14, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 6, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 7, Resolution.Daily })]
+        [TestCaseSource(nameof(ExchangeStandardTimeSet), new object[] { 14, Resolution.Daily })]
+        public void FillsForwardBarsAroundDaylightMovementForDifferentResolutions_Algorithm(SecurityExchange exchange, DateTimeZone dataTimeZone, Resolution resolution, string dst, DateTime reference, int durationInDays, Resolution ffResolution)
         {
             MarketHoursDatabase MarketHours = MarketHoursDatabase.FromDataFolder();
             MarketHours.SetEntry(
@@ -1645,7 +1872,205 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(expected.SequenceEqual(FillForwardDaylightMovementTestAlgorithm.FillForwardBars));
         }
 
-        internal class FillForwardTestAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+        [Test]
+        public void SkipFF2AMOfSundayDST()
+        {
+            var dataResolution = Time.OneHour;
+            var reference = new DateTime(2011, 3, 12);
+            var dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
+            var exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+
+            var data = new[]
+            {
+                new TradeBar
+                {
+                    Time = reference.ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 0,
+                    Period = dataResolution,
+                    Volume = 100
+                },
+                new TradeBar
+                {
+                    Time = reference.AddDays(2).ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 2,
+                    Period = dataResolution,
+                    Volume = 100
+                }
+            }.ToList();
+            var enumerator = data.GetEnumerator();
+
+            var fillForwardEnumerator = new FillForwardEnumerator(
+                enumerator,
+                exchange,
+                Ref.Create(dataResolution),
+                false,
+                data.Last().EndTime,
+                dataResolution,
+                dataTimeZone);
+
+            int count = 0;
+            while (fillForwardEnumerator.MoveNext())
+            {
+                if (fillForwardEnumerator.Current?.IsFillForward == true)
+                {
+                    if (fillForwardEnumerator.Current.Time.DayOfWeek == DayOfWeek.Sunday &&
+                        fillForwardEnumerator.Current.Time.Hour == 2)
+                    {
+                        Assert.Fail("Shouldn't fill forward bar of 1AM of Sunday when changed Daylight Saving Time.");
+                    }
+                }
+
+                count++;
+            }
+
+            Assert.Greater(count, 0);
+            fillForwardEnumerator.Dispose();
+        }
+
+        [Test]
+        public void FillsForward2AMOfSundayST()
+        {
+            var dataResolution = Time.OneHour;
+            var reference = new DateTime(2011, 11, 5);
+            var dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
+            var exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+
+            var data = new[]
+            {
+                new TradeBar
+                {
+                    Time = reference.ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 0,
+                    Period = dataResolution,
+                    Volume = 100
+                },
+                new TradeBar
+                {
+                    Time = reference.AddDays(2).ConvertTo(dataTimeZone, exchange.TimeZone),
+                    Value = 2,
+                    Period = dataResolution,
+                    Volume = 100
+                }
+            }.ToList();
+            var enumerator = data.GetEnumerator();
+
+            var fillForwardEnumerator = new FillForwardEnumerator(
+                enumerator,
+                exchange,
+                Ref.Create(dataResolution),
+                false,
+                data.Last().EndTime,
+                dataResolution,
+                dataTimeZone);
+
+            int count = 0;
+            while (fillForwardEnumerator.MoveNext())
+            {
+                if (fillForwardEnumerator.Current?.IsFillForward == true)
+                {
+                    if (fillForwardEnumerator.Current.Time.DayOfWeek == DayOfWeek.Sunday &&
+                        fillForwardEnumerator.Current.Time.Hour == 2)
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            Assert.AreEqual(1, count);
+            fillForwardEnumerator.Dispose();
+        }
+
+        [Test]
+        public void FillsForwardNotDelistingAuxiliary()
+        {
+            var exchange = new OptionExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+            DateTimeZone dataTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
+            var reference = new DateTime(2014, 6, 5)
+                .ConvertTo(dataTimeZone, exchange.TimeZone);
+            var dataResolution = Time.OneDay;
+            var expiry = new DateTime(2014, 6, 15)
+                .ConvertTo(dataTimeZone, exchange.TimeZone);
+
+            var spy = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry);
+
+            var data = new BaseData[]
+            {
+                new BaseDataCollection(
+                    reference,
+                    reference.Add(dataResolution),
+                    spy,
+                    new List<BaseData>{new TradeBar
+                        {
+                            Time = reference,
+                            Value = 1,
+                            Period = dataResolution,
+                            Volume = 100
+                        }
+                    }),
+                new BaseDataCollection(
+                    reference.AddDays(1),
+                    reference.AddDays(1).Add(dataResolution),
+                    spy,
+                    new List<BaseData>{new TradeBar
+                        {
+                            Time = reference.AddDays(1),
+                            Value = 2,
+                            Period = dataResolution,
+                            Volume = 100
+                        }
+                    }),
+                new Dividend
+                {
+                    DataType = MarketDataType.Auxiliary,
+                    Distribution = 0.5m,
+                    ReferencePrice = decimal.MaxValue - 10000m,
+
+                    Symbol = spy,
+                    Time = reference.AddDays(5),
+                    Value = 0.5m
+                }
+            }.ToList();
+
+            var enumerator = data.GetEnumerator();
+
+            var fillForwardEnumerator = new FillForwardEnumerator(
+                enumerator,
+                exchange,
+                Ref.Create(TimeSpan.FromDays(1)),
+                false,
+                data.Last().EndTime,
+                dataResolution,
+                dataTimeZone);
+
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());  // 2014.06.05
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());  // 2014.06.06
+
+            var counter = 0;
+            var previous = fillForwardEnumerator.Current;
+            while (fillForwardEnumerator.MoveNext())
+            {
+                Assert.NotNull(fillForwardEnumerator.Current);
+                Assert.GreaterOrEqual(fillForwardEnumerator.Current.Time, previous?.Time ?? DateTime.MinValue);
+                Assert.GreaterOrEqual(fillForwardEnumerator.Current.EndTime, previous?.EndTime ?? DateTime.MinValue);
+                Assert.AreEqual(
+                    fillForwardEnumerator.Current.DataType != MarketDataType.Auxiliary,
+                    fillForwardEnumerator.Current.IsFillForward);
+                if (fillForwardEnumerator.Current.IsFillForward)
+                {
+                    counter++;
+                }
+
+                previous = fillForwardEnumerator.Current;
+            }
+
+            Assert.AreEqual(
+                (int)(data.Last().EndTime - data[1].EndTime).TotalDays,
+                counter);
+
+            fillForwardEnumerator.Dispose();
+        }
+
+        public class FillForwardTestAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
         {
             protected Symbol _symbol;
             public static List<string> FillForwardBars = new List<string>();
@@ -1680,7 +2105,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>();
         }
 
-        internal class FillForwardDaylightMovementTestAlgorithm : FillForwardTestAlgorithm
+        public class FillForwardDaylightMovementTestAlgorithm : FillForwardTestAlgorithm
         {
             public static DateTime RefDateTime { get; set; }
             public static int DurationInDays { get; set; }
@@ -1705,7 +2130,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             }
         }
 
-        internal class FillForwardTestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
+        public class FillForwardTestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
         {
             internal static FillForwardTestAlgorithm TestAlgorithm { get; set; }
 
@@ -1716,7 +2141,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             }
         }
 
-        internal class FillForwardDaylightMovementTestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
+        public class FillForwardDaylightMovementTestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
         {
             internal static FillForwardTestAlgorithm TestAlgorithm { get; set; }
 

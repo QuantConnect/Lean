@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             var model = new EquityFillModel();
             var order = new MarketOrder(Symbols.SPY, 100, Noon);
-            var config = CreateTradeBarConfig(Symbols.SPY);
+            var config = CreateQuoteBarConfig(Symbols.SPY);
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
@@ -52,13 +52,23 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
 
-            var fill = model.Fill(new FillModelParameters(
+            var parameters = new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)).OrderEvent;
+                Time.OneHour);
+
+            // IndicatorDataPoint is not market data
+            Assert.Throws<InvalidOperationException>(() => model.Fill(parameters),
+                $"Cannot get ask price to perform fill for {security.Symbol} because no market data subscription were found.");
+
+            var bidBar = new Bar(101.123m, 101.123m, 101.123m, 101.123m);
+            var askBar = new Bar(101.234m, 101.234m, 101.234m, 101.234m);
+            security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY, bidBar, 0, askBar, 0));
+
+            var fill = model.Fill(parameters).OrderEvent;
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(security.Price, fill.FillPrice);
+            Assert.AreEqual(askBar.Close, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
@@ -67,7 +77,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             var model = new EquityFillModel();
             var order = new MarketOrder(Symbols.SPY, -100, Noon);
-            var config = CreateTradeBarConfig(Symbols.SPY);
+            var config = CreateQuoteBarConfig(Symbols.SPY);
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
@@ -80,13 +90,23 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
 
-            var fill = model.Fill(new FillModelParameters(
+            var parameters = new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)).OrderEvent;
+                Time.OneHour);
+
+            // IndicatorDataPoint is not market data
+            Assert.Throws<InvalidOperationException>(() => model.Fill(parameters),
+                $"Cannot get bid price to perform fill for {security.Symbol} because no market data subscription were found.");
+
+            var bidBar = new Bar(101.123m, 101.123m, 101.123m, 101.123m);
+            var askBar = new Bar(101.234m, 101.234m, 101.234m, 101.234m);
+            security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY, bidBar, 0, askBar, 0));
+
+            var fill = model.Fill(parameters).OrderEvent;
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(security.Price, fill.FillPrice);
+            Assert.AreEqual(bidBar.Close, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
@@ -735,7 +755,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             var model = new EquityFillModel();
             var order = new MarketOrder(Symbols.SPY, -100, Noon.ConvertToUtc(TimeZones.NewYork).AddMinutes(61));
-            var config = CreateTradeBarConfig(Symbols.SPY);
+            var config = CreateTickConfig(Symbols.SPY);
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 config,
@@ -746,7 +766,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new SecurityCache()
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
+            security.SetMarketPrice(new Tick(Noon, Symbols.SPY, 101.123m, 101.456m));
 
             var fill = model.Fill(new FillModelParameters(
                 security,
@@ -804,6 +824,15 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(expected, result.Close);
         }
 
+        private SubscriptionDataConfig CreateTickConfig(Symbol symbol)
+        {
+            return new SubscriptionDataConfig(typeof(Tick), symbol, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+        }
+
+        private SubscriptionDataConfig CreateQuoteBarConfig(Symbol symbol)
+        {
+            return new SubscriptionDataConfig(typeof(QuoteBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+        }
 
         private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol)
         {

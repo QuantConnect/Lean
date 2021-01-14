@@ -221,6 +221,22 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(expected, MarketHoursDatabase.GetDatabaseSymbolKey(option));
         }
 
+        [Test]
+        public void CustomEntriesStoredAndFetched()
+        {
+            var database = MarketHoursDatabase.FromDataFolder();
+            var ticker = "BTC";
+            var hours = SecurityExchangeHours.AlwaysOpen(TimeZones.Berlin);
+            var entry = database.SetEntry(Market.USA, ticker, SecurityType.Base, hours);
+
+            // Assert our hours match the result
+            Assert.AreEqual(hours, entry.ExchangeHours);
+            
+            // Fetch the entry to ensure we can access it with the ticker
+            var fetchedEntry = database.GetEntry(Market.USA, ticker, SecurityType.Base);
+            Assert.AreSame(entry, fetchedEntry);
+        }
+
         private static MarketHoursDatabase GetMarketHoursDatabase(string file)
         {
             return MarketHoursDatabase.FromFile(file);

@@ -90,6 +90,11 @@ namespace QuantConnect.Lean.Engine.Results
         protected volatile bool ExitTriggered;
 
         /// <summary>
+        /// Event set when exit is triggered
+        /// </summary>
+        protected ManualResetEvent ExitEvent { get; }
+
+        /// <summary>
         /// The log store instance
         /// </summary>
         protected List<LogEntry> LogStore { get; }
@@ -199,6 +204,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         protected BaseResultsHandler()
         {
+            ExitEvent = new ManualResetEvent(false);
             Charts = new ConcurrentDictionary<string, Chart>();
             Messages = new ConcurrentQueue<Packet>();
             RuntimeStatistics = new Dictionary<string, string>();

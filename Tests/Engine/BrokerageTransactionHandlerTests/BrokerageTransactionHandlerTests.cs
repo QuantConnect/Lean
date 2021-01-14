@@ -1111,7 +1111,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
         }
 
-        internal class TestIncrementalOrderIdSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
+        public class TestIncrementalOrderIdSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
         {
             public override IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
             {
@@ -1119,7 +1119,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
         }
 
-        internal class EmptyHistoryProvider : HistoryProviderBase
+        public class EmptyHistoryProvider : HistoryProviderBase
         {
             public override int DataPointCount => 0;
 
@@ -1133,7 +1133,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
         }
 
-        internal class TestBrokerageModel : DefaultBrokerageModel
+        public class TestBrokerageModel : DefaultBrokerageModel
         {
             public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
             {
@@ -1142,7 +1142,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
         }
 
-        internal class TestAlgorithm : QCAlgorithm
+        public class TestAlgorithm : QCAlgorithm
         {
             public List<OrderEvent> OrderEvents = new List<OrderEvent>();
             public override void OnOrderEvent(OrderEvent orderEvent)
@@ -1151,7 +1151,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
         }
 
-        internal class TestBroker : BacktestingBrokerage
+        public class TestBroker : BacktestingBrokerage
         {
             private readonly bool _cancelOrderResult;
             public TestBroker(IAlgorithm algorithm, bool cancelOrderResult) : base(algorithm)
@@ -1164,7 +1164,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
         }
 
-        internal class TestBrokerageTransactionHandler : BrokerageTransactionHandler
+        public class TestBrokerageTransactionHandler : BrokerageTransactionHandler
         {
             private IBrokerageCashSynchronizer _brokerage;
 

@@ -38,6 +38,10 @@ namespace QuantConnect.Algorithm.CSharp
             // Find more symbols here: http://quantconnect.com/data
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Second);
 
+            // Disabling the benchmark / setting to a fixed value
+            // SetBenchmark(time => 0);
+
+            // Set the benchmark to AAPL US Equity
             SetBenchmark("AAPL");
         }
 
