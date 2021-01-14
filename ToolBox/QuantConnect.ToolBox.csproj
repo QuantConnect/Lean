@@ -8,10 +8,7 @@
     <TargetFramework>net462</TargetFramework>
     <LangVersion>6</LangVersion>
     <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
-    <AssemblyTitle>ToolBox</AssemblyTitle>
-    <Product>ToolBox</Product>
-    <Description>QuantConnect LEAN Engine: ToolBox Project - A collection of data downloaders and converters</Description>
-    <Copyright>Copyright ©  2015</Copyright>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
