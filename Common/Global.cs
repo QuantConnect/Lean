@@ -693,38 +693,53 @@ namespace QuantConnect
         {
             switch (exchange)
             {
+                case "T":
                 case "NASDA OMX":
                     return 1;
+                case "Z":
                 case "BATS Z":
                     return 2;
+                case "P":
                 case "ARCA":
                     return 3;
+                
                 case "NYSE":
                     return 4;
+                case "C":
                 case "NSE":
                     return 5;
+                case "D":
                 case "FINRA":
                     return 6;
+                case "I":
                 case "ISE":
                     return 7;
                 case "OPRA":
                     return 8;
+                case "M":
                 case "CSE":
                     return 9;
+                case "W":
                 case "CBOE":
                     return 10;
+                case "A":
                 case "AMEX":
                     return 11;
                 case "SIAC":
                     return 12;
+                case "J":
                 case "EDGA":
                     return 13;
+                case "K":
                 case "EDGX":
                     return 14;
+                case "B":
                 case "NASDAQ BX":
                     return 15;
+                case "X":
                 case "NASDAQ PSX":
                     return 16;
+                case "Y":
                 case "BATS Y":
                     return 17;
                 case "C2":
@@ -737,6 +752,7 @@ namespace QuantConnect
                     return 21;
                 case "ISE_MERCURY":
                     return 22;
+                case "Q":
                 case "NASDAQ":
                     return 2;
                 default:
