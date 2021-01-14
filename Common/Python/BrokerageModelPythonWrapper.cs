@@ -89,6 +89,11 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
+        /// Get the default benchmark used in this model
+        /// </summary>
+        public Symbol DefaultBenchmark => _model.DefaultBenchmark;
+
+        /// <summary>
         /// Applies the split to the specified order ticket
         /// </summary>
         /// <param name="tickets">The open tickets matching the split event</param>
