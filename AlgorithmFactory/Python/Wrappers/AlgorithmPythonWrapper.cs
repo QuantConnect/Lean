@@ -930,5 +930,16 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         /// <param name="objectStore">The object store</param>
         public void SetObjectStore(IObjectStore objectStore) => _baseAlgorithm.SetObjectStore(objectStore);
+
+        /// <summary>
+        /// Checks if the asset is shortable at the brokerage
+        /// </summary>
+        /// <param name="symbol">Symbol to check if it is shortable</param>
+        /// <param name="quantity">Quantity to short</param>
+        /// <returns>True if shortable at the brokerage</returns>
+        public bool Shortable(Symbol symbol, decimal quantity)
+        {
+            return _baseAlgorithm.Shortable(symbol, quantity);
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -46,6 +46,7 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Algorithm.Selection;
+using QuantConnect.Data.Shortable;
 using QuantConnect.Storage;
 
 namespace QuantConnect.Algorithm
@@ -2350,6 +2351,64 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Determines if the Symbol is shortable at the brokerage
+        /// </summary>
+        /// <param name="symbol">Symbol to check if shortable</param>
+        /// <returns>True if shortable</returns>
+        public bool Shortable(Symbol symbol)
+        {
+            return Shortable(symbol, 0);
+        }
+
+        /// <summary>
+        /// Determines if the Symbol is shortable at the brokerage
+        /// </summary>
+        /// <param name="symbol">Symbol to check if shortable</param>
+        /// <param name="shortQuantity">Order's quantity to check if it is currently shortable, taking into account current holdings and open orders</param>
+        /// <returns>True if shortable</returns>
+        public bool Shortable(Symbol symbol, decimal shortQuantity)
+        {
+            var shortableQuantity = BrokerageModel.GetShortableProvider().ShortableQuantity(symbol, Time);
+            if (shortableQuantity == null)
+            {
+                return true;
+            }
+
+            var openOrderQuantity = Transactions.GetOpenOrdersRemainingQuantity(symbol);
+            var portfolioQuantity = Portfolio.ContainsKey(symbol) ? Portfolio[symbol].Quantity : 0;
+            // We check portfolio and open orders beforehand to ensure that orderQuantity == 0 case does not return
+            // a true result whenever we have no more shares left to short.
+            if (portfolioQuantity + openOrderQuantity <= -shortableQuantity)
+            {
+                return false;
+            }
+
+            shortQuantity = -Math.Abs(shortQuantity);
+            return portfolioQuantity + shortQuantity + openOrderQuantity >= -shortableQuantity;
+        }
+
+        /// <summary>
+        /// Gets the quantity shortable for the given asset
+        /// </summary>
+        /// <returns>
+        /// Quantity shortable for the given asset. Zero if not
+        /// shortable, or a number greater than zero if shortable.
+        /// </returns>
+        public long ShortableQuantity(Symbol symbol)
+        {
+            var shortableSymbols = AllShortableSymbols();
+            return shortableSymbols.ContainsKey(symbol) ? shortableSymbols[symbol] : 0;
+        }
+
+        /// <summary>
+        /// Gets all Symbols that are shortable, as well as the quantity shortable for them
+        /// </summary>
+        /// <returns>All shortable Symbols, null if all Symbols are shortable</returns>
+        public Dictionary<Symbol, long> AllShortableSymbols()
+        {
+            return BrokerageModel.GetShortableProvider().AllShortableSymbols(Time);
+        }
+        
         /// Set the properties and exchange hours for a given key into our databases
         /// </summary>
         /// <param name="key">Key for database storage</param>
