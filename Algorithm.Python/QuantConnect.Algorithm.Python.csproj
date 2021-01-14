@@ -132,6 +132,7 @@
     <Content Include="RegisterIndicatorRegressionAlgorithm.py" />
     <Content Include="SectorWeightingFrameworkAlgorithm.py" />
     <Content Include="SetHoldingsMultipleTargetsRegressionAlgorithm.py" />
+    <Content Include="ShortableProviderOrdersRejectedRegressionAlgorithm.py" />
     <Content Include="SliceGetByTypeRegressionAlgorithm.py" />
     <Content Include="StringToSymbolImplicitConversionRegressionAlgorithm.py" />
     <Content Include="TalibIndicatorsAlgorithm.py" />

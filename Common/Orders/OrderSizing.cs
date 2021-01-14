@@ -75,8 +75,7 @@ namespace QuantConnect.Orders
         {
             var security = algorithm.Securities[target.Symbol];
             var holdings = security.Holdings.Quantity;
-            var openOrderQuantity = algorithm.Transactions.GetOpenOrderTickets(target.Symbol)
-                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled);
+            var openOrderQuantity = algorithm.Transactions.GetOpenOrdersRemainingQuantity(target.Symbol);
             var quantity = target.Quantity - holdings - openOrderQuantity;
 
             return AdjustByLotSize(security, quantity);

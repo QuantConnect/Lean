@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
+using QuantConnect.Data.Shortable;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 
@@ -135,25 +136,10 @@ namespace QuantConnect.Algorithm.CSharp
             _ordersAllowed.Add(orderTicket);
         }
 
-        public class RegressionTestShortableProvider : IShortableProvider
+        private class RegressionTestShortableProvider : LocalDiskShortableProvider
         {
-            private readonly Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-            public Dictionary<Symbol, long> AllShortableSymbols(DateTime localTime)
+            public RegressionTestShortableProvider() : base(SecurityType.Equity, "testbrokerage", Market.USA)
             {
-                return new Dictionary<Symbol, long>
-                {
-                    { _spy, 1000 }
-                };
-            }
-
-            public long? ShortableQuantity(Symbol symbol, DateTime localTime)
-            {
-                if (symbol == _spy)
-                {
-                    return 1000;
-                }
-
-                return null;
             }
         }
 
@@ -180,32 +166,32 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "8"},
+            {"Total Trades", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "362.291%"},
-            {"Drawdown", "2.300%"},
-            {"Expectancy", "-1"},
-            {"Net Profit", "1.977%"},
-            {"Sharpe Ratio", "12.257"},
-            {"Probabilistic Sharpe Ratio", "65.989%"},
-            {"Loss Rate", "100%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "-1.719%"},
+            {"Drawdown", "0.100%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "-0.036%"},
+            {"Sharpe Ratio", "-1.741"},
+            {"Probabilistic Sharpe Ratio", "35.789%"},
+            {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.061"},
-            {"Beta", "1"},
-            {"Annual Standard Deviation", "0.244"},
-            {"Annual Variance", "0.059"},
-            {"Information Ratio", "10.062"},
-            {"Tracking Error", "0.105"},
-            {"Treynor Ratio", "2.987"},
-            {"Total Fees", "$11.48"},
-            {"Fitness Score", "0.549"},
+            {"Alpha", "0.004"},
+            {"Beta", "-0.023"},
+            {"Annual Standard Deviation", "0.005"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-2.512"},
+            {"Tracking Error", "0.216"},
+            {"Treynor Ratio", "0.367"},
+            {"Total Fees", "$10.01"},
+            {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "18.728"},
-            {"Return Over Maximum Drawdown", "125.812"},
-            {"Portfolio Turnover", "0.551"},
+            {"Sortino Ratio", "-4.849"},
+            {"Return Over Maximum Drawdown", "-21.738"},
+            {"Portfolio Turnover", "0.003"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -219,7 +205,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "-1052079344"}
+            {"OrderListHash", "1777297925"}
         };
     }
 }
