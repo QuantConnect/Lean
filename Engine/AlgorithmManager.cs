@@ -1037,19 +1037,7 @@ namespace QuantConnect.Lean.Engine
                     continue;
                 }
 
-                var delistingTime = delisting.Time;
-                if (!security.Exchange.Hours.IsOpen(delistingTime, false))
-                {
-                    // This exists as a defensive measure to ensure that the delisting time
-                    // does not get moved if the market is open. If the market is closed,
-                    // we get the next market open, which will be on the same day if the delisting
-                    // date is a trading day. If the delisting date is after market close, then
-                    // the delisting will be adjusted to the next market open.
-                    delistingTime = security.Exchange.Hours.GetNextMarketOpen(delistingTime, false);
-                    delistingTime = security.Exchange.Hours.GetNextMarketClose(delistingTime, false);
-                }
-
-                if (security.LocalTime < delistingTime)
+                if (security.LocalTime < delisting.GetLiquidationTime(security.Exchange.Hours))
                 {
                     continue;
                 }

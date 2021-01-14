@@ -141,7 +141,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "4"},
+            {"Total Trades", "5"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -180,7 +180,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "50.0482%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "352959406"}
+            {"OrderListHash", "-754670464"}
         };
     }
 }

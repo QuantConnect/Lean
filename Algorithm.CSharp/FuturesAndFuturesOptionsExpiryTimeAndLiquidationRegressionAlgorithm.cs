@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private readonly DateTime _expectedExpiryWarningTime = new DateTime(2020, 6, 19);
         private readonly DateTime _expectedExpiryDelistingTime = new DateTime(2020, 6, 20);
-        private readonly DateTime _expectedLiquidationTime = new DateTime(2020, 6, 19, 0, 2, 0);
+        private readonly DateTime _expectedLiquidationTime = new DateTime(2020, 6, 19, 16, 6, 0);
 
         public override void Initialize()
         {
@@ -191,7 +191,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "2065970593"}
+            {"OrderListHash", "-1950789983"}
         };
     }
 }

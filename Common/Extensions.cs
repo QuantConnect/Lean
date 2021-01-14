@@ -50,7 +50,6 @@ using Timer = System.Timers.Timer;
 using static QuantConnect.StringExtensions;
 using Microsoft.IO;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 
@@ -66,6 +65,41 @@ namespace QuantConnect
 
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
+
+        /// <summary>
+        /// Returns the delisted liquidation time for a given delisting warning and exchange hours
+        /// </summary>
+        /// <param name="delisting">The delisting warning event</param>
+        /// <param name="exchangeHours">The securities exchange hours to use</param>
+        /// <returns>The securities liquidation time</returns>
+        public static DateTime GetLiquidationTime(this Delisting delisting, SecurityExchangeHours exchangeHours)
+        {
+            if (delisting.Type != DelistingType.Warning)
+            {
+                throw new ArgumentException("GetLiquidationTime can only be called with the liquidate warning event", nameof(delisting));
+            }
+
+            var delistingWarning = delisting.Time.Date;
+
+            // by default liquidation/exercise will happen 10 min before the end of the last trading day
+            var liquidationTime = delistingWarning.AddDays(1).AddMinutes(-10);
+
+            // if the market is open today we will determine the market close and liquidate 10 min before instead
+            if (exchangeHours.IsDateOpen(delistingWarning))
+            {
+                var marketOpen = delistingWarning;
+                if (!exchangeHours.IsOpen(marketOpen, false))
+                {
+                    // if the market isn't open at 0:00 we get next market open
+                    marketOpen = exchangeHours.GetNextMarketOpen(delistingWarning, false);
+                }
+
+                // using current market open we will get next market close which should be today and we will liquidate 10 min before
+                liquidationTime = exchangeHours.GetNextMarketClose(marketOpen, false).AddMinutes(-10);
+            }
+
+            return liquidationTime;
+        }
 
         /// <summary>
         /// Safe multiplies a decimal by 100
