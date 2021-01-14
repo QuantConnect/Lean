@@ -95,6 +95,7 @@
     <Content Include="CustomDataAddDataOnSecuritiesChangedRegressionAlgorithm.py" />
     <Content Include="CustomDataAddDataCoarseSelectionRegressionAlgorithm.py" />
     <None Include="CustomBuyingPowerModelAlgorithm.py" />
+    <Content Include="CustomDataPropertiesRegressionAlgorithm.py" />
     <Content Include="DynamicSecurityDataAlgorithm.py" />
     <Content Include="ConfidenceWeightedFrameworkAlgorithm.py" />
     <Content Include="ExtendedMarketTradingRegressionAlgorithm.py" />
