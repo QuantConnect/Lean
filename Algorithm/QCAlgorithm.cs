@@ -173,11 +173,6 @@ namespace QuantConnect.Algorithm
             // Framework
             _securityValuesProvider = new AlgorithmSecurityValuesProvider(this);
 
-            // Shortable provider, responsible for loading the data that indicates how much
-            // quantity we can short for a given asset. The NullShortableProvider default will
-            // allow for infinite quantities of any asset to be shorted.
-            ShortableProvider = new NullShortableProvider();
-
             // set model defaults, universe selection set via PostInitialize
             SetAlpha(new NullAlphaModel());
             SetPortfolioConstruction(new NullPortfolioConstructionModel());
@@ -353,15 +348,6 @@ namespace QuantConnect.Algorithm
         /// Gets the future chain provider, used to get the list of future contracts for an underlying symbol
         /// </summary>
         public IFutureChainProvider FutureChainProvider { get; private set; }
-
-        /// <summary>
-        /// Determines whether the asset you want to short is shortable.
-        /// The default is set to <see cref="NullShortableProvider"/>,
-        /// which allows for infinite shorting of any asset. You can limit the
-        /// quantity you can short for an asset class by setting this variable to
-        /// your own implementation of <see cref="IShortableProvider"/>.
-        /// </summary>
-        public IShortableProvider ShortableProvider { get; set; }
 
         /// <summary>
         /// Gets the default order properties
@@ -706,19 +692,6 @@ namespace QuantConnect.Algorithm
         public void SetFutureChainProvider(IFutureChainProvider futureChainProvider)
         {
             FutureChainProvider = futureChainProvider;
-        }
-
-        /// <summary>
-        /// Sets the shortable provider, which is used to determine whether
-        /// the asset you want to short is: shortable, and has sufficient quantity
-        /// shortable for your order. The default is set to <see cref="NullShortableProvider"/>,
-        /// which allows for infinite shorting of any asset. You can limit how much
-        /// quantity you can short for a given asset.
-        /// </summary>
-        /// <param name="shortableProvider">The shortable provider</param>
-        public void SetShortableProvider(IShortableProvider shortableProvider)
-        {
-            ShortableProvider = shortableProvider;
         }
 
         /// <summary>
