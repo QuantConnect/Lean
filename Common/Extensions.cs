@@ -428,7 +428,8 @@ namespace QuantConnect
                     PortfolioTarget = x,
                     TargetQuantity = x.Quantity,
                     ExistingQuantity = algorithm.Portfolio[x.Symbol].Quantity
-                                       + algorithm.Transactions.GetOpenOrdersRemainingQuantity(x.Symbol),
+                                       + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
+                                           .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
                     Security = algorithm.Securities[x.Symbol]
                 })
                 .Where(x => x.Security.HasData
