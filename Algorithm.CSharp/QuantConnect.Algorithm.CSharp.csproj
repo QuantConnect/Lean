@@ -142,6 +142,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="AddAlphaModelAlgorithm.cs" />
+    <Compile Include="CustomDataPropertiesRegressionAlgorithm.cs" />
     <Compile Include="FillForwardEnumeratorOutOfOrderBarRegressionAlgorithm.cs" />
     <Compile Include="CustomBuyingPowerModelAlgorithm.cs" />
     <Compile Include="AddFutureOptionContractDataStreamingRegressionAlgorithm.cs" />
