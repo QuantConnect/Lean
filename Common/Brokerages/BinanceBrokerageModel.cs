@@ -18,6 +18,7 @@ using QuantConnect.Securities;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
+using QuantConnect.Benchmarks;
 
 namespace QuantConnect.Brokerages
 {
@@ -30,11 +31,6 @@ namespace QuantConnect.Brokerages
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
         public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
-
-        /// <summary>
-        /// Define the default benchmark used in this model
-        /// </summary>
-        public override Symbol DefaultBenchmark => Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Binance);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BinanceBrokerageModel"/> class
@@ -69,6 +65,17 @@ namespace QuantConnect.Brokerages
         {
             // margin trading is not currently supported by Binance
             return 1m;
+        }
+
+        /// <summary>
+        /// Get the benchmark for this model
+        /// </summary>
+        /// <param name="securities">SecurityService to create the security with if needed</param>
+        /// <returns>The benchmark for this brokerage</returns>
+        public override IBenchmark GetBenchmark(SecurityManager securities)
+        {
+            var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Binance);
+            return CreateSecurityBenchmark(securities, symbol);
         }
 
         /// <summary>

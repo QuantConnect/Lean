@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Benchmarks;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -52,14 +53,6 @@ namespace QuantConnect.Brokerages
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
         IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; }
-
-        /// <summary>
-        /// Define the default benchmark used in this model
-        /// </summary>
-        Symbol DefaultBenchmark
-        {
-            get;
-        }
 
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
@@ -109,6 +102,13 @@ namespace QuantConnect.Brokerages
         /// <param name="security">The security's whose leverage we seek</param>
         /// <returns>The leverage for the specified security</returns>
         decimal GetLeverage(Security security);
+
+        /// <summary>
+        /// Get the benchmark for this model
+        /// </summary>
+        /// <param name="securities">SecurityService to create the security with if needed</param>
+        /// <returns>The benchmark for this brokerage</returns>
+        IBenchmark GetBenchmark(SecurityManager securities);
 
         /// <summary>
         /// Gets a new fill model that represents this brokerage's fill behavior

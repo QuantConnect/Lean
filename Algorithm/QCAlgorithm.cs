@@ -88,9 +88,6 @@ namespace QuantConnect.Algorithm
         private bool _checkedForOnDataSlice;
         private Action<Slice> _onDataSlice;
 
-        // set by SetBenchmark helper API functions
-        private Symbol _benchmarkSymbol = QuantConnect.Symbol.Empty;
-
         // flips to true when the user
         private bool _userSetSecurityInitializer = false;
 
@@ -555,30 +552,10 @@ namespace QuantConnect.Algorithm
 
             FrameworkPostInitialize();
 
-            // if the benchmark hasn't been set yet, set it
+            // if the benchmark hasn't been set yet, load in the default from the brokerage model
             if (Benchmark == null)
             {
-                // If we don't have a symbol fetch it from the Brokerage model
-                if (_benchmarkSymbol == null)
-                {
-                    _benchmarkSymbol = BrokerageModel.DefaultBenchmark;
-                }
-
-                // Brokerage implementations may set it to null to have no benchmark
-                if (_benchmarkSymbol != null)
-                {
-                    var security = Securities.CreateSecurity(_benchmarkSymbol,
-                        new List<SubscriptionDataConfig>(),
-                        leverage: 1,
-                        addToSymbolCache: false);
-
-                    Benchmark = new SecurityBenchmark(security);
-                }
-                else
-                {
-                    // Set it to always zero value
-                    Benchmark = new FuncBenchmark(x => 0);
-                }
+                Benchmark = BrokerageModel.GetBenchmark(Securities);
             }
 
             // perform end of time step checks, such as enforcing underlying securities are in raw data mode
@@ -1066,7 +1043,8 @@ namespace QuantConnect.Algorithm
                 market = Market.USA;
             }
 
-            _benchmarkSymbol = QuantConnect.Symbol.Create(symbol, securityType, market);
+            var benchmarkSymbol = QuantConnect.Symbol.Create(symbol, securityType, market);
+            SetBenchmark(benchmarkSymbol);
         }
 
         /// <summary>
@@ -1079,31 +1057,18 @@ namespace QuantConnect.Algorithm
         /// </remarks>
         public void SetBenchmark(string ticker)
         {
-            if (_locked)
-            {
-                throw new InvalidOperationException("Algorithm.SetBenchmark(): Cannot change Benchmark after algorithm initialized.");
-            }
-
             Symbol symbol;
-            Security security;
-            // lets first check the cache and use that symbol to check the securities collection
-            // else use the first matching the given ticker in the collection
-            if (!SymbolCache.TryGetSymbol(ticker, out symbol)
-                || !Securities.TryGetValue(symbol, out security))
+
+            // Check the cache for the symbol
+            if (!SymbolCache.TryGetSymbol(ticker, out symbol))
             {
-                ticker = ticker.LazyToUpper();
-                security = Securities.FirstOrDefault(x => x.Key.Value == ticker).Value;
+                // Create the symbol
+                Debug($"Warning: SetBenchmark({ticker}): no existing symbol found, benchmark security will be added with {SecurityType.Equity} type.");
+                symbol = QuantConnect.Symbol.Create(ticker, SecurityType.Equity, Market.USA);
             }
 
-            if (security == null)
-            {
-                Debug($"Warning: SetBenchmark({ticker}): no existing security found, benchmark security will be added with {SecurityType.Equity} type.");
-                _benchmarkSymbol = QuantConnect.Symbol.Create(ticker, SecurityType.Equity, Market.USA);
-            }
-            else
-            {
-                _benchmarkSymbol = security.Symbol;
-            }
+            // Send our symbol through
+            SetBenchmark(symbol);
         }
 
         /// <summary>
@@ -1112,11 +1077,35 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">symbol to use as the benchmark</param>
         public void SetBenchmark(Symbol symbol)
         {
+            Security security;
+
+            // Check if we have that symbol in our securities
+            if (!Securities.TryGetValue(symbol, out security))
+            {
+                // Else create the security from this symbol
+                security = Securities.CreateSecurity(symbol,
+                    new List<SubscriptionDataConfig>(),
+                    leverage: 1,
+                    addToSymbolCache: false);
+            }
+
+            //Send our security through
+            SetBenchmark(security);
+        }
+
+        /// <summary>
+        /// Sets the benchmark used for computing statistics of the algorithm to the specified security
+        /// </summary>
+        /// <param name="security"></param>
+        public void SetBenchmark(Security security)
+        {
             if (_locked)
             {
                 throw new InvalidOperationException("Algorithm.SetBenchmark(): Cannot change Benchmark after algorithm initialized.");
             }
-            _benchmarkSymbol = symbol;
+
+            // Create and set our SecurityBenchmark
+            Benchmark = new SecurityBenchmark(security);
         }
 
         /// <summary>
@@ -1130,6 +1119,7 @@ namespace QuantConnect.Algorithm
             {
                 throw new InvalidOperationException("Algorithm.SetBenchmark(): Cannot change Benchmark after algorithm initialized.");
             }
+
             Benchmark = new FuncBenchmark(benchmark);
         }
 

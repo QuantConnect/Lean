@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using Python.Runtime;
+using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Shortable;
@@ -89,11 +90,6 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Get the default benchmark used in this model
-        /// </summary>
-        public Symbol DefaultBenchmark => _model.DefaultBenchmark;
-
-        /// <summary>
         /// Applies the split to the specified order ticket
         /// </summary>
         /// <param name="tickets">The open tickets matching the split event</param>
@@ -157,6 +153,16 @@ namespace QuantConnect.Python
             {
                 return (_model.CanUpdateOrder(security, order, out message) as PyObject).GetAndDispose<bool>();
             }
+        }
+
+        /// <summary>
+        /// Get the benchmark for this model
+        /// </summary>
+        /// <param name="securities">SecurityService to create the security with if needed</param>
+        /// <returns>The benchmark for this brokerage</returns>
+        public IBenchmark GetBenchmark(SecurityManager securities)
+        {
+            return (_model.GetBenchmark(securities) as PyObject).GetAndDispose<IBenchmark>();
         }
 
         /// <summary>

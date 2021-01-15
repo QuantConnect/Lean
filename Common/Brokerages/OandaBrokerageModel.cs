@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Slippage;
@@ -39,11 +40,6 @@ namespace QuantConnect.Brokerages
             {SecurityType.Forex, Market.Oanda},
             {SecurityType.Cfd, Market.Oanda}
         }.ToReadOnlyDictionary();
-
-        /// <summary>
-        /// Define the default benchmark used in this model
-        /// </summary>
-        public override Symbol DefaultBenchmark => Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda);
 
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
@@ -106,6 +102,17 @@ namespace QuantConnect.Brokerages
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Get the benchmark for this model
+        /// </summary>
+        /// <param name="securities">SecurityService to create the security with if needed</param>
+        /// <returns>The benchmark for this brokerage</returns>
+        public override IBenchmark GetBenchmark(SecurityManager securities)
+        {
+            var symbol = Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda);
+            return CreateSecurityBenchmark(securities, symbol);
         }
 
         /// <summary>

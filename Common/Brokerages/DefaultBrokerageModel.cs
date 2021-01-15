@@ -16,6 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Benchmarks;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Shortable;
 using QuantConnect.Interfaces;
@@ -61,11 +63,6 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected IShortableProvider ShortableProvider { get; set; }
 
-        /// <summary>
-        /// Define the default benchmark used in this model
-        /// </summary>
-        public virtual Symbol DefaultBenchmark => Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-        
         /// <summary>
         /// Gets or sets the account type used by this model
         /// </summary>
@@ -202,6 +199,17 @@ namespace QuantConnect.Brokerages
                 default:
                     return 1m;
             }
+        }
+
+        /// <summary>
+        /// Get the benchmark for this model
+        /// </summary>
+        /// <param name="securities">SecurityService to create the security with if needed</param>
+        /// <returns>The benchmark for this brokerage</returns>
+        public virtual IBenchmark GetBenchmark(SecurityManager securities)
+        {
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            return CreateSecurityBenchmark(securities, symbol);
         }
 
         /// <summary>
@@ -381,6 +389,30 @@ namespace QuantConnect.Brokerages
         public IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
         {
             return GetBuyingPowerModel(security);
+        }
+
+        /// <summary>
+        /// Helper function for GetBenchmark that creates a SecurityBenchmark with a given symbol
+        /// </summary>
+        /// <param name="securities">SecurityService to create the security</param>
+        /// <param name="symbol">The symbol to create a security benchmark with</param>
+        /// <returns>A SecurityBenchmark for the given symbol</returns>
+        internal IBenchmark CreateSecurityBenchmark(SecurityManager securities, Symbol symbol)
+        {
+            Security security;
+
+            // Check if we have that symbol in our securities
+            if (!securities.TryGetValue(symbol, out security))
+            {
+                // Else create the security from this symbol
+                security = securities.CreateSecurity(symbol,
+                    new List<SubscriptionDataConfig>(),
+                    leverage: 1,
+                    addToSymbolCache: false);
+            }
+
+            //Send our security through
+            return new SecurityBenchmark(security);
         }
     }
 }

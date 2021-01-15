@@ -20,6 +20,7 @@ using QuantConnect.Securities;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Fees;
 using System.Linq;
+using QuantConnect.Benchmarks;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
@@ -77,11 +78,6 @@ namespace QuantConnect.Brokerages
         private readonly DateTime _stopMarketOrderSupportEndDate = new DateTime(2019, 3, 23, 1, 0, 0);
 
         /// <summary>
-        /// Define the default benchmark used in this model
-        /// </summary>
-        public override Symbol DefaultBenchmark => Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="GDAXBrokerageModel"/> class
         /// </summary>
         /// <param name="accountType">The type of account to be modelled, defaults to
@@ -104,6 +100,17 @@ namespace QuantConnect.Brokerages
         {
             // margin trading is not currently supported by GDAX
             return 1m;
+        }
+
+        /// <summary>
+        /// Get the benchmark for this model
+        /// </summary>
+        /// <param name="securities">SecurityService to create the security with if needed</param>
+        /// <returns>The benchmark for this brokerage</returns>
+        public override IBenchmark GetBenchmark(SecurityManager securities)
+        {
+            var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
+            return CreateSecurityBenchmark(securities, symbol);
         }
 
         /// <summary>

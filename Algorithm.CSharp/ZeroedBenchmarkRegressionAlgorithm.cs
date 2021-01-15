@@ -14,9 +14,11 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -27,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="trading and orders" />
-    public class NullBenchmarkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ZeroedBenchmarkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy;
 
@@ -110,7 +112,10 @@ namespace QuantConnect.Algorithm.CSharp
 
         internal class TestBrokerageModel : DefaultBrokerageModel
         {
-            public override Symbol DefaultBenchmark => null;
+            public override IBenchmark GetBenchmark(SecurityManager securities)
+            {
+                return new FuncBenchmark(x => 0);
+            }
         }
     }
 }
