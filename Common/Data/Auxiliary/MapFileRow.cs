@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -39,12 +40,12 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the mapped symbol
         /// </summary>
-        public string MainExchange { get; }
+        public byte MainExchange { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MapFileRow"/> class.
         /// </summary>
-        public MapFileRow(DateTime date, string mappedSymbol, string mainExchange = "")
+        public MapFileRow(DateTime date, string mappedSymbol, byte mainExchange = 0)
         {
             Date = date;
             MappedSymbol = mappedSymbol.LazyToUpper();
@@ -76,8 +77,14 @@ namespace QuantConnect.Data.Auxiliary
         public static MapFileRow Parse(string line)
         {
             var csv = line.Split(',');
-            var mainExchange = csv.Length > 2 ? csv[2] : "";
-            return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1], mainExchange);
+            byte encodedExchange = 0;
+            if (csv.Length == 3)
+            {
+                encodedExchange = byte.Parse(csv[2], CultureInfo.InvariantCulture);
+            }
+
+            return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1],
+                encodedExchange);
         }
 
         #region Equality members
@@ -153,13 +160,13 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public string ToCsv()
         {
-            var mainExchange = string.IsNullOrEmpty(MainExchange) ? string.Empty : $",{MainExchange}";
-            return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},{MappedSymbol.ToLowerInvariant()}{mainExchange}";
+            var encodedExchange = MainExchange == 0 ? string.Empty : $",{MainExchange}";
+            return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},{MappedSymbol.ToLowerInvariant()}{encodedExchange}";
         }
 
         public override string ToString()
         {
-            var mainExchange = string.IsNullOrEmpty(MainExchange) ? string.Empty : $" {MainExchange}";
+            var mainExchange = (PrimaryExchange) MainExchange;
             return Date.ToShortDateString() + ": " + MappedSymbol + mainExchange;
         }
     }

@@ -24,7 +24,7 @@ using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
-    public enum ExchangeName : byte
+    public enum PrimaryExchange : byte
     {
         UNKNOWN,
         NASDAOMX,
@@ -794,9 +794,9 @@ namespace QuantConnect
         /// </summary>
         /// <remarks>Useful for performance</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ExchangeName GetName(int exchangeCode)
+        public static PrimaryExchange GetName(int exchangeCode)
         {
-            return (ExchangeName) exchangeCode;
+            return (PrimaryExchange) exchangeCode;
         }
     }
 

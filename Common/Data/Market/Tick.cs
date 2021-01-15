@@ -61,7 +61,7 @@ namespace QuantConnect.Data.Market
             set
             {
                 _exchangeCode = value;
-                _exchange = ((ExchangeName) value).ToString();
+                _exchange = ((PrimaryExchange) value).ToString();
             }
         }
 
