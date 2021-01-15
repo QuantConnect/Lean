@@ -781,6 +781,10 @@ namespace QuantConnect.ToolBox.Polygon
                     case "XQ":
                         ProcessCryptoQuote(obj.ToObject<CryptoQuoteMessage>());
                         break;
+
+                    case "status":
+                        Log.Trace($"PolygonDataQueueHandler.OnMessage(): Status Update : {obj["message"]}");
+                        break;
                 }
             }
         }
