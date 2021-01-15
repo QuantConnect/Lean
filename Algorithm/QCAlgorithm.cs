@@ -1077,19 +1077,13 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">symbol to use as the benchmark</param>
         public void SetBenchmark(Symbol symbol)
         {
-            Security security;
+            // Create the security from this symbol
+            var security = Securities.CreateSecurity(symbol,
+                new List<SubscriptionDataConfig>(),
+                leverage: 1,
+                addToSymbolCache: false);
 
-            // Check if we have that symbol in our securities
-            if (!Securities.TryGetValue(symbol, out security))
-            {
-                // Else create the security from this symbol
-                security = Securities.CreateSecurity(symbol,
-                    new List<SubscriptionDataConfig>(),
-                    leverage: 1,
-                    addToSymbolCache: false);
-            }
-
-            //Send our security through
+            // Send our security through
             SetBenchmark(security);
         }
 

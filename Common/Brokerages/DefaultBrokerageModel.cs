@@ -399,19 +399,12 @@ namespace QuantConnect.Brokerages
         /// <returns>A SecurityBenchmark for the given symbol</returns>
         internal IBenchmark CreateSecurityBenchmark(SecurityManager securities, Symbol symbol)
         {
-            Security security;
-
-            // Check if we have that symbol in our securities
-            if (!securities.TryGetValue(symbol, out security))
-            {
-                // Else create the security from this symbol
-                security = securities.CreateSecurity(symbol,
-                    new List<SubscriptionDataConfig>(),
-                    leverage: 1,
-                    addToSymbolCache: false);
-            }
-
-            //Send our security through
+            // Create the security from this symbol
+            var security = securities.CreateSecurity(symbol,
+                new List<SubscriptionDataConfig>(),
+                leverage: 1,
+                addToSymbolCache: false);
+            
             return new SecurityBenchmark(security);
         }
     }
