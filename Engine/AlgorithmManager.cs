@@ -1057,6 +1057,9 @@ namespace QuantConnect.Lean.Engine
 
                 delistings.RemoveAt(i);
                 algorithm.Transactions.ProcessRequest(request);
+
+                // don't allow users to open a new position once we sent the liquidation order
+                security.IsTradable = false;
             }
         }
 

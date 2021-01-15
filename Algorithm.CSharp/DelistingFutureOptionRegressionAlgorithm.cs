@@ -18,6 +18,7 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -27,22 +28,30 @@ namespace QuantConnect.Algorithm.CSharp
     public class DelistingFutureOptionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private bool _traded;
+        private int _lastMonth;
 
         public override void Initialize()
         {
             SetStartDate(2012, 1, 1);
-            SetEndDate(2012, 5, 1);
+            SetEndDate(2013, 1, 1);
             SetCash(10000000);
 
             var dc = AddFuture(Futures.Dairy.ClassIIIMilk, Resolution.Minute, Market.CME);
             dc.SetFilter(1, 120);
 
             AddFutureOption(dc.Symbol, universe => universe.Strikes(-2, 2));
+            _lastMonth = -1;
         }
 
         public override void OnData(Slice data)
         {
-            if (Portfolio.Invested || _traded)
+            if (Time.Month != _lastMonth)
+            {
+                _lastMonth = Time.Month;
+                Log($"Holdings({Time}): {string.Join(",", Securities.Values.Where(security => security.Invested).Select(security => security.Symbol))}");
+            }
+
+            if (Portfolio.Invested)
             {
                 return;
             }
@@ -87,28 +96,28 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "16"},
             {"Average Win", "0.01%"},
             {"Average Loss", "-0.02%"},
-            {"Compounding Annual Return", "-0.334%"},
+            {"Compounding Annual Return", "-0.111%"},
             {"Drawdown", "0.100%"},
             {"Expectancy", "-0.679"},
             {"Net Profit", "-0.112%"},
-            {"Sharpe Ratio", "-1.831"},
-            {"Probabilistic Sharpe Ratio", "0.003%"},
+            {"Sharpe Ratio", "-1.052"},
+            {"Probabilistic Sharpe Ratio", "0.000%"},
             {"Loss Rate", "80%"},
             {"Win Rate", "20%"},
             {"Profit-Loss Ratio", "0.61"},
-            {"Alpha", "-0.002"},
-            {"Beta", "-0.002"},
-            {"Annual Standard Deviation", "0.002"},
+            {"Alpha", "-0.001"},
+            {"Beta", "-0.001"},
+            {"Annual Standard Deviation", "0.001"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-3.494"},
-            {"Tracking Error", "0.1"},
-            {"Treynor Ratio", "1.247"},
+            {"Information Ratio", "-1.187"},
+            {"Tracking Error", "0.115"},
+            {"Treynor Ratio", "1.545"},
             {"Total Fees", "$37.00"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-0.386"},
-            {"Return Over Maximum Drawdown", "-2.993"},
+            {"Sortino Ratio", "-0.128"},
+            {"Return Over Maximum Drawdown", "-0.995"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},

@@ -76,7 +76,7 @@ namespace QuantConnect.Tests.Python
         {
             var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("FilterUniverseRegressionAlgorithm",
                 new Dictionary<string, string> {
-                    {"Total Trades", "5"},
+                    {"Total Trades", "4"},
                     {"Average Win", "0%"},
                     {"Average Loss", "0%"},
                     {"Compounding Annual Return", "0%"},
@@ -95,8 +95,8 @@ namespace QuantConnect.Tests.Python
                     {"Information Ratio", "0"},
                     {"Tracking Error", "0"},
                     {"Treynor Ratio", "0"},
-                    {"Total Fees", "$3.00"},
-                    {"OrderListHash", "544163849"}
+                    {"Total Fees", "$2.00"},
+                    {"OrderListHash", "877696418"}
                     },
                     Language.Python,
                     AlgorithmStatus.Completed);
