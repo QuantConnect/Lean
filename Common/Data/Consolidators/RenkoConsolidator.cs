@@ -105,9 +105,9 @@ namespace QuantConnect.Data.Consolidators
         {
             EpsilonCheck(barSize);
             _barSize = barSize;
-            _selector = selector;
+            _selector = selector ?? (x => x.Value);
             _evenBars = evenBars;
-            _volumeSelector = volumeSelector;
+            _volumeSelector = volumeSelector ?? (x => 0);
         }
 
         /// <summary>
@@ -286,6 +286,18 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
         public RenkoConsolidator(decimal barSize, bool evenBars = true)
             : base(barSize, evenBars)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
+        /// The value selector will by default select <see cref="IBaseData.Value"/>
+        /// The volume selector will by default select zero.
+        /// </summary>
+        /// <param name="barSize">The constant value size of each bar</param>
+        /// <param name="type">The RenkoType of the bar</param>
+        public RenkoConsolidator(decimal barSize, RenkoType type)
+            : base(barSize, type)
         {
         }
 
