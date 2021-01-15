@@ -27,7 +27,7 @@ namespace QuantConnect
     public enum PrimaryExchange : byte
     {
         UNKNOWN,
-        NASDAOMX,
+        NASDAQ,
         BATSZ,
         ARCA,
         NYSE,
@@ -49,7 +49,6 @@ namespace QuantConnect
         MIAX,
         ISE_GEMINI,
         ISE_MERCURY,
-        NASDAQ
     }
 
     /// <summary>
@@ -722,7 +721,9 @@ namespace QuantConnect
             switch (exchange)
             {
                 case "T":
-                case "NASDA OMX":
+                case "Q":
+                case "NASDAQ":
+                case "NASDAQ OMX":
                     return 1;
                 case "Z":
                 case "BATS Z":
@@ -763,26 +764,23 @@ namespace QuantConnect
                     return 14;
                 case "B":
                 case "NASDAQ BX":
-                    return 15;
+                    return 21;
                 case "X":
                 case "NASDAQ PSX":
-                    return 16;
+                    return 23;
                 case "Y":
                 case "BATS Y":
-                    return 17;
+                    return 23;
                 case "C2":
-                    return 18;
+                    return 24;
                 case "BOSTON":
-                    return 19;
+                    return 25;
                 case "MIAX":
-                    return 20;
+                    return 26;
                 case "ISE_GEMINI":
-                    return 21;
+                    return 27;
                 case "ISE_MERCURY":
-                    return 22;
-                case "Q":
-                case "NASDAQ":
-                    return 2;
+                    return 28;
                 default:
                 case "UNKNOWN":
                     return 0;

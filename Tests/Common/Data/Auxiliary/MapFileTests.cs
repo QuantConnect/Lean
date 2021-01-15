@@ -87,12 +87,12 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         {
             var mapFile = new MapFile("goog", new List<MapFileRow>
             {
-                new MapFileRow(new DateTime(2014, 03, 27), "goocv", 2),
-                new MapFileRow(new DateTime(2014, 04, 02), "goocv", 2),
-                new MapFileRow(new DateTime(2050, 12, 31), "goog", 2)
+                new MapFileRow(new DateTime(2014, 03, 27), "goocv", 1),
+                new MapFileRow(new DateTime(2014, 04, 02), "goocv", 1),
+                new MapFileRow(new DateTime(2050, 12, 31), "goog", 1)
             });
 
-            Assert.AreEqual(2, mapFile.Last().MainExchange);
+            Assert.AreEqual(1, mapFile.Last().MainExchange);
             Assert.AreEqual("NASDAQ", (PrimaryExchange) mapFile.Last().MainExchange);
         }
 
@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         {
             // Arrange
             var mapFileRow = "19980102,aapl,2";
-            var expectedMapFileRow = new MapFileRow(new DateTime(1998, 01, 02), "aapl", 2);
+            var expectedMapFileRow = new MapFileRow(new DateTime(1998, 01, 02), "aapl", 1);
             // Act
             var actualMapFileRow = MapFileRow.Parse(mapFileRow);
             // Assert
