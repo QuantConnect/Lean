@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using Fasterflect;
 
 namespace QuantConnect.Securities
 {
@@ -30,7 +29,7 @@ namespace QuantConnect.Securities
         private static SymbolPropertiesDatabase _dataFolderSymbolPropertiesDatabase;
         private static readonly object DataFolderSymbolPropertiesDatabaseLock = new object();
 
-        private readonly IReadOnlyDictionary<SecurityDatabaseKey, SymbolProperties> _entries;
+        private readonly Dictionary<SecurityDatabaseKey, SymbolProperties> _entries;
         private readonly IReadOnlyDictionary<SecurityDatabaseKey, SecurityDatabaseKey> _keyBySecurityType;
 
         private SymbolPropertiesDatabase(string file)
@@ -183,6 +182,21 @@ namespace QuantConnect.Securities
                     yield return new KeyValuePair<SecurityDatabaseKey, SymbolProperties>(key, symbolProperties);
                 }
             }
+        }
+
+        /// <summary>
+        /// Set SymbolProperties entry for a particular market, symbol and security type.
+        /// </summary>
+        /// <param name="market">Market of the entry</param>
+        /// <param name="symbol">Symbol of the entry</param>
+        /// <param name="securityType">Type of security for the entry</param>
+        /// <param name="properties">The new symbol properties to store</param>
+        /// <returns>True if successful</returns>
+        public bool SetEntry(string market, string symbol, SecurityType securityType, SymbolProperties properties)
+        {
+            var key = new SecurityDatabaseKey(market, symbol, securityType);
+            _entries[key] = properties;
+            return true;
         }
 
         /// <summary>

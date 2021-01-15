@@ -1,24 +1,11 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props" Condition="Exists('..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props')" />
-  <Import Project="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props" Condition="Exists('..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props')" />
-  <Import Project="..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props" Condition="Exists('..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props')" />
-  <Import Project="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props" Condition="Exists('..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props')" />
-  <Import Project="..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props" Condition="Exists('..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{12156F46-D07E-4E3D-AD2B-7409E82AB62F}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>QuantConnect.Lean.Engine</RootNamespace>
     <AssemblyName>QuantConnect.Lean.Engine</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
-    <FileAlignment>512</FileAlignment>
+    <TargetFramework>net462</TargetFramework>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
     <PublishUrl>publish\</PublishUrl>
@@ -37,128 +24,48 @@
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <LangVersion>6</LangVersion>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
     <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <DocumentationFile>bin\$(Configuration)\QuantConnect.Lean.Engine.xml</DocumentationFile>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>$(SelectedOptimization)</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\QuantConnect.Lean.Engine.xml</DocumentationFile>
-    <Prefer32Bit>false</Prefer32Bit>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DocumentationFile>bin\Debug\QuantConnect.Lean.Engine.XML</DocumentationFile>
     <DebugType>full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
     <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
     <CodeAnalysisFailOnMissingRules>true</CodeAnalysisFailOnMissingRules>
-    <Prefer32Bit>false</Prefer32Bit>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>bin\x64\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
     <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
     <CodeAnalysisFailOnMissingRules>true</CodeAnalysisFailOnMissingRules>
-    <Prefer32Bit>false</Prefer32Bit>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DocumentationFile>bin\Debug\QuantConnect.Lean.Engine.xml</DocumentationFile>
     <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>
-    </DefineConstants>
-    <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>false</Prefer32Bit>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
-    <DocumentationFile>bin\Release\QuantConnect.Lean.Engine.xml</DocumentationFile>
   </PropertyGroup>
-  <Target Name="Print" BeforeTargets="Build">
-    <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
-  </Target>
-  <ItemGroup>
-    <Reference Include="DotNetZip, Version=1.13.3.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
-      <HintPath>..\packages\DotNetZip.1.13.3\lib\net40\DotNetZip.dll</HintPath>
-    </Reference>
-    <Reference Include="Fasterflect">
-      <HintPath>..\packages\fasterflect.2.1.3\lib\net40\Fasterflect.dll</HintPath>
-    </Reference>
-    <Reference Include="FSharp.Core, Version=4.4.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\FSharp.Core.4.2.1\lib\net45\FSharp.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="MathNet.Numerics, Version=3.19.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MathNet.Numerics.3.19.0\lib\net40\MathNet.Numerics.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
-      <HintPath>..\packages\NodaTime.1.3.4\lib\net35-Client\NodaTime.dll</HintPath>
-    </Reference>
-    <Reference Include="RestSharp, Version=106.6.10.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
-      <HintPath>..\packages\RestSharp.106.6.10\lib\net452\RestSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=1.2.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Collections.Immutable.1.7.1\lib\net461\System.Collections.Immutable.dll</HintPath>
-    </Reference>
-    <Reference Include="System.ComponentModel.Composition" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Runtime.Caching" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
   <PropertyGroup>
     <IsWindows>false</IsWindows>
     <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
@@ -167,6 +74,9 @@
     <IsLinux>false</IsLinux>
     <IsLinux Condition="'$(IsWindows)' != 'true' AND '$(IsOSX)' != 'true' AND '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
   </PropertyGroup>
+  <Target Name="Print" BeforeTargets="Build">
+    <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
+  </Target>
   <Target Name="PrintRID" BeforeTargets="Build">
     <Message Text="IsWindows $(IsWindows)" Importance="high" />
     <Message Text="IsOSX $(IsOSX)" Importance="high" />
@@ -177,267 +87,66 @@
     <When Condition="$(IsWindows) AND '$(ForceLinuxBuild)' != 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.30\lib\win\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\win\Python.Runtime.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>
     <When Condition="$(IsLinux) OR '$(ForceLinuxBuild)' == 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>
     <When Condition="$(IsOSX) AND '$(ForceLinuxBuild)' != 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>
   </Choose>
   <ItemGroup>
-    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
-      <Link>Properties\SharedAssemblyInfo.cs</Link>
-    </Compile>
-    <Compile Include="AlgorithmManager.cs" />
-    <Compile Include="AlgorithmTimeLimitManager.cs" />
-    <Compile Include="Alphas\ChartingInsightManagerExtension.cs" />
-    <Compile Include="Alphas\StatisticsInsightManagerExtension.cs" />
-    <Compile Include="DataFeeds\AggregationManager.cs" />
-    <Compile Include="DataFeeds\ApiDataProvider.cs" />
-    <Compile Include="DataFeeds\BacktestingFutureChainProvider.cs" />
-    <Compile Include="DataFeeds\BacktestingOptionChainProvider.cs" />
-    <Compile Include="DataFeeds\BaseSubscriptionDataSourceReader.cs" />
-    <Compile Include="DataFeeds\CachingFutureChainProvider.cs" />
-    <Compile Include="DataFeeds\CachingOptionChainProvider.cs" />
-    <Compile Include="DataFeeds\CurrencySubscriptionDataConfigManager.cs" />
-    <Compile Include="DataFeeds\DataChannelProvider.cs" />
-    <Compile Include="DataFeeds\DataPermissionManager.cs" />
-    <Compile Include="DataFeeds\Enumerators\ConcatEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\ScannableEnumerator.cs" />
-    <Compile Include="DataFeeds\IndexSubscriptionDataSourceReader.cs" />
-    <Compile Include="DataFeeds\DataManager.cs" />
-    <Compile Include="DataFeeds\Enumerators\DelistingEventProvider.cs" />
-    <Compile Include="DataFeeds\Enumerators\DividendEventProvider.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\CorporateEventEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\ITradableDateEventProvider.cs" />
-    <Compile Include="DataFeeds\Enumerators\ITradableDatesNotifier.cs" />
-    <Compile Include="DataFeeds\Enumerators\LiveEquityDataSynchronizingEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\MappingEventProvider.cs" />
-    <Compile Include="DataFeeds\Enumerators\LiveAuxiliaryDataEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\PriceScaleFactorEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\SplitEventProvider.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\LiveCustomDataSubscriptionEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\QuoteBarFillForwardEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\AuxiliaryDataEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\SubscriptionDataEnumerator.cs" />
-    <Compile Include="DataFeeds\IDataFeedSubscriptionManager.cs" />
-    <Compile Include="DataFeeds\IDataFeedTimeProvider.cs" />
-    <Compile Include="DataFeeds\IDataManager.cs" />
-    <Compile Include="DataFeeds\InternalSubscriptionManager.cs" />
-    <Compile Include="DataFeeds\ISubscriptionSynchronizer.cs" />
-    <Compile Include="DataFeeds\ISynchronizer.cs" />
-    <Compile Include="DataFeeds\LiveFutureChainProvider.cs" />
-    <Compile Include="DataFeeds\LiveOptionChainProvider.cs" />
-    <Compile Include="DataFeeds\NullDataFeed.cs" />
-    <Compile Include="DataFeeds\PendingRemovalsManager.cs" />
-    <Compile Include="DataFeeds\WorkScheduling\IWorkQueue.cs" />
-    <Compile Include="DataFeeds\PrecalculatedSubscriptionData.cs" />
-    <Compile Include="DataFeeds\WorkScheduling\WeightedWorkScheduler.cs" />
-    <Compile Include="DataFeeds\RealTimeScheduleEventService.cs" />
-    <Compile Include="DataFeeds\PredicateTimeProvider.cs" />
-    <Compile Include="DataFeeds\SubscriptionFrontierTimeProvider.cs" />
-    <Compile Include="DataFeeds\SingleEntryDataCacheProvider.cs" />
-    <Compile Include="DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\EnqueueableEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\BaseDataCollectionSubscriptionEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\BaseDataSubscriptionEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\DataQueueFuturesChainUniverseDataCollectionEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\DataQueueOptionChainUniverseDataCollectionEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\FineFundamentalSubscriptionEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\FuturesChainUniverseSubscriptionEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\OptionChainUniverseSubscriptionEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\SubscriptionDataReaderSubscriptionEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\TimeTriggeredUniverseSubscriptionEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\FastForwardEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\FillForwardEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\FrontierAwareEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\LiveFillForwardEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\FuturesChainUniverseDataCollectionAggregatorEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\OptionChainUniverseDataCollectionEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\RateLimitEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\RefreshEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\SubscriptionFilterEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\SynchronizingEnumerator.cs" />
-    <Compile Include="DataFeeds\DefaultDataProvider.cs" />
-    <Compile Include="DataFeeds\ISubscriptionDataSourceReader.cs" />
-    <Compile Include="DataFeeds\CollectionSubscriptionDataSourceReader.cs" />
-    <Compile Include="DataFeeds\ManualTimeProvider.cs" />
-    <Compile Include="DataFeeds\DataFeedPacket.cs" />
-    <Compile Include="DataFeeds\SubscriptionCollection.cs" />
-    <Compile Include="DataFeeds\SubscriptionData.cs" />
-    <Compile Include="DataFeeds\LiveSynchronizer.cs" />
-    <Compile Include="DataFeeds\SubscriptionUtils.cs" />
-    <Compile Include="DataFeeds\Synchronizer.cs" />
-    <Compile Include="DataFeeds\TextSubscriptionDataSourceReader.cs" />
-    <Compile Include="DataFeeds\CreateStreamReaderErrorEventArgs.cs" />
-    <Compile Include="DataFeeds\BaseDataExchange.cs" />
-    <Compile Include="DataFeeds\LiveTradingDataFeed.cs" />
-    <Compile Include="DataFeeds\SubscriptionSynchronizer.cs" />
-    <Compile Include="DataFeeds\Subscription.cs" />
-    <Compile Include="DataFeeds\InvalidSourceEventArgs.cs" />
-    <Compile Include="DataFeeds\SubscriptionDataSourceReader.cs" />
-    <Compile Include="DataFeeds\Queues\DataQueue.cs" />
-    <Compile Include="DataFeeds\Queues\FakeDataQueue.cs" />
-    <Compile Include="DataFeeds\ReaderErrorEventArgs.cs" />
-    <Compile Include="DataFeeds\SubscriptionDataReader.cs" />
-    <Compile Include="DataFeeds\TimeSlice.cs" />
-    <Compile Include="DataFeeds\TimeSliceFactory.cs" />
-    <Compile Include="DataFeeds\Transport\LocalFileSubscriptionStreamReader.cs" />
-    <Compile Include="DataFeeds\Transport\RemoteFileSubscriptionStreamReader.cs" />
-    <Compile Include="DataFeeds\Transport\RestSubscriptionStreamReader.cs" />
-    <Compile Include="DataFeeds\UniverseSelection.cs" />
-    <Compile Include="DataFeeds\UpdateData.cs" />
-    <Compile Include="DataFeeds\WorkScheduling\WorkItem.cs" />
-    <Compile Include="DataFeeds\WorkScheduling\WorkQueue.cs" />
-    <Compile Include="DataFeeds\ZipDataCacheProvider.cs" />
-    <Compile Include="DataFeeds\ZipEntryNameSubscriptionDataSourceReader.cs" />
-    <Compile Include="HistoricalData\SineHistoryProvider.cs" />
-    <Compile Include="RealTime\BaseRealTimeHandler.cs" />
-    <Compile Include="Results\BaseResultsHandler.cs" />
-    <Compile Include="Results\RegressionResultHandler.cs" />
-    <Compile Include="Server\LocalLeanManager.cs" />
-    <Compile Include="HistoricalData\BrokerageHistoryProvider.cs" />
-    <Compile Include="HistoricalData\SubscriptionDataReaderHistoryProvider.cs" />
-    <Compile Include="HistoricalData\SynchronizingHistoryProvider.cs" />
-    <Compile Include="Server\ILeanManager.cs" />
-    <Compile Include="LeanEngineAlgorithmHandlers.cs" />
-    <Compile Include="LeanEngineSystemHandlers.cs" />
-    <Compile Include="RealTime\LiveTradingRealTimeHandler.cs" />
-    <Compile Include="RealTime\BacktestingRealTimeHandler.cs" />
-    <Compile Include="RealTime\IRealTimeHandler.cs" />
-    <Compile Include="RealTime\ScheduledEventFactory.cs" />
-    <Compile Include="Results\IResultHandler.cs" />
-    <Compile Include="Setup\AlgorithmSetupException.cs" />
-    <Compile Include="Setup\BaseSetupHandler.cs" />
-    <Compile Include="Setup\BrokerageSetupHandler.cs" />
-    <Compile Include="Setup\ConsoleSetupHandler.cs" />
-    <Compile Include="Setup\BacktestingSetupHandler.cs" />
-    <Compile Include="Setup\ISetupHandler.cs" />
-    <None Include="app.config" />
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
-    <Compile Include="Results\BacktestingResultHandler.cs" />
-    <Compile Include="DataFeeds\FileSystemDataFeed.cs" />
-    <Compile Include="Alphas\DefaultAlphaHandler.cs" />
-    <Compile Include="Alphas\IAlphaHandler.cs" />
-    <Compile Include="Setup\SetupHandlerParameters.cs" />
-    <Compile Include="Storage\LocalObjectStore.cs" />
-    <Compile Include="Storage\StorageLimitExceededException.cs" />
-    <Compile Include="TransactionHandlers\BacktestingTransactionHandler.cs" />
-    <Compile Include="TransactionHandlers\BrokerageTransactionHandler.cs" />
-    <Compile Include="TransactionHandlers\CancelPendingOrders.cs" />
-    <Compile Include="TransactionHandlers\ITransactionHandler.cs" />
-    <Compile Include="DataFeeds\IDataFeed.cs" />
-    <Compile Include="Results\LiveTradingResultHandler.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Engine.cs" />
+    <PackageReference Include="DotNetZip" Version="1.13.3" />
+    <PackageReference Include="fasterflect" Version="2.1.3" />
+    <PackageReference Include="FSharp.Core" Version="4.2.1" />
+    <PackageReference Include="MathNet.Numerics" Version="3.19.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.3" />
+    <PackageReference Include="Microsoft.CodeAnalysis.VersionCheckAnalyzer" Version="2.9.3" />
+    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.3" />
+    <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.9.3" />
+    <PackageReference Include="Microsoft.NetFramework.Analyzers" Version="2.9.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="NodaTime" Version="1.3.4" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="1.0.5.30" />
+    <PackageReference Include="RestSharp" Version="106.6.10" />
+    <PackageReference Include="System.Buffers" Version="4.5.1" />
+    <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
+    <PackageReference Include="System.Memory" Version="4.5.4" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.3" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj">
-      <Project>{39a81c16-a1e8-425e-a8f2-1433adb80228}</Project>
-      <Name>QuantConnect.Algorithm.CSharp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\AlgorithmFactory\QuantConnect.AlgorithmFactory.csproj">
-      <Project>{e99d056a-b6fb-48d2-9f7c-683c54cebbf9}</Project>
-      <Name>QuantConnect.AlgorithmFactory</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
-      <Project>{3240aca4-bdd4-4d24-ac36-bbb651c39212}</Project>
-      <Name>QuantConnect.Algorithm</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Api\QuantConnect.Api.csproj">
-      <Project>{c5d44209-49a0-4505-a870-043c5ef5fddf}</Project>
-      <Name>QuantConnect.Api</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Brokerages\QuantConnect.Brokerages.csproj">
-      <Project>{2d3e13cf-2d14-4180-a42d-f0a13af0ade2}</Project>
-      <Name>QuantConnect.Brokerages</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Compression\QuantConnect.Compression.csproj">
-      <Project>{bc3bc77e-0502-43db-a727-b94f9765d74b}</Project>
-      <Name>QuantConnect.Compression</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">
-      <Project>{0aeb4ea3-28c8-476e-89fd-926f06590b4c}</Project>
-      <Name>QuantConnect.Configuration</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
-      <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>
-      <Name>QuantConnect.Indicators</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Common\QuantConnect.csproj">
-      <Project>{2545c0b4-fabb-49c9-8dd1-9ad7ee23f86b}</Project>
-      <Name>QuantConnect</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
-      <Project>{01911409-86be-4e7d-9947-df714138610d}</Project>
-      <Name>QuantConnect.Logging</Name>
-    </ProjectReference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.5">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.5 %28x86 and x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
+    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\analyzers\dotnet\Microsoft.CodeAnalysis.VersionCheckAnalyzer.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\analyzers\dotnet\cs\Humanizer.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.CodeQuality.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.CodeQuality.CSharp.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetCore.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetCore.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetCore.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetCore.CSharp.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetFramework.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetFramework.CSharp.Analyzers.dll" />
+    <ProjectReference Include="..\Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj" />
+    <ProjectReference Include="..\AlgorithmFactory\QuantConnect.AlgorithmFactory.csproj" />
+    <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj" />
+    <ProjectReference Include="..\Api\QuantConnect.Api.csproj" />
+    <ProjectReference Include="..\Brokerages\QuantConnect.Brokerages.csproj" />
+    <ProjectReference Include="..\Compression\QuantConnect.Compression.csproj" />
+    <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj" />
+    <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj" />
+    <ProjectReference Include="..\Common\QuantConnect.csproj" />
+    <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj" />
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props'))" />
-    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets'))" />
-  </Target>
-  <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets')" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

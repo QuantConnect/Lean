@@ -1,63 +1,29 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props" Condition="Exists('..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props')" />
-  <Import Project="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props" Condition="Exists('..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props')" />
-  <Import Project="..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props" Condition="Exists('..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props')" />
-  <Import Project="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props" Condition="Exists('..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props')" />
-  <Import Project="..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props" Condition="Exists('..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props')" />
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{73FB2522-C3ED-4E47-8E3D-AFAD48A6B888}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>QuantConnect.Indicators</RootNamespace>
     <AssemblyName>QuantConnect.Indicators</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <TargetFramework>net462</TargetFramework>
     <LangVersion>6</LangVersion>
-    <TargetFrameworkProfile />
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
     <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <DocumentationFile>bin\$(Configuration)\QuantConnect.Indicators.xml</DocumentationFile>
+    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>$(SelectedOptimization)</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\QuantConnect.Indicators.xml</DocumentationFile>
-    <LangVersion>6</LangVersion>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <LangVersion>6</LangVersion>
-    <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
-    <DocumentationFile>bin\Release\QuantConnect.Indicators.xml</DocumentationFile>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="MathNet.Numerics, Version=3.19.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MathNet.Numerics.3.19.0\lib\net40\MathNet.Numerics.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
   <PropertyGroup>
     <IsWindows>false</IsWindows>
     <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
@@ -73,236 +39,47 @@
     <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
     <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
   </Target>
+  <ItemGroup>
+    <PackageReference Include="MathNet.Numerics" Version="3.19.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.3" />
+    <PackageReference Include="Microsoft.CodeAnalysis.VersionCheckAnalyzer" Version="2.9.3" />
+    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.3" />
+    <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.9.3" />
+    <PackageReference Include="Microsoft.NetFramework.Analyzers" Version="2.9.3" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="1.0.5.30" />
+  </ItemGroup>
   <Choose>
     <When Condition="$(IsWindows) AND '$(ForceLinuxBuild)' != 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.30\lib\win\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\win\Python.Runtime.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>
     <When Condition="$(IsLinux) OR '$(ForceLinuxBuild)' == 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\linux\Python.Runtime.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>
     <When Condition="$(IsOSX) AND '$(ForceLinuxBuild)' != 'true'">
       <ItemGroup>
         <Reference Include="Python.Runtime, Version=1.0.5.30, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
+          <HintPath>$(NuGetPackageRoot)\quantconnect.pythonnet\1.0.5.30\lib\osx\Python.Runtime.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>
   </Choose>
   <ItemGroup>
-    <Compile Include="AbsolutePriceOscillator.cs" />
-    <Compile Include="AccelerationBands.cs" />
-    <Compile Include="AccumulationDistribution.cs" />
-    <Compile Include="AccumulationDistributionOscillator.cs" />
-    <Compile Include="AdvanceDeclineIndicator.cs" />
-    <Compile Include="AdvanceDeclineVolumeRatio.cs" />
-    <Compile Include="AdvanceDeclineRatio.cs" />
-    <Compile Include="ArmsIndex.cs" />
-    <Compile Include="ArnaudLegouxMovingAverage.cs" />
-    <Compile Include="AverageDirectionalIndex.cs" />
-    <Compile Include="AverageDirectionalMovementIndexRating.cs" />
-    <Compile Include="AwesomeOscillator.cs" />
-    <Compile Include="BalanceOfPower.cs" />
-    <Compile Include="CandlestickPatterns\UpDownGapThreeMethods.cs" />
-    <Compile Include="CandlestickPatterns\UpsideGapTwoCrows.cs" />
-    <Compile Include="CandlestickPatterns\UniqueThreeRiver.cs" />
-    <Compile Include="CandlestickPatterns\Tristar.cs" />
-    <Compile Include="CandlestickPatterns\Thrusting.cs" />
-    <Compile Include="CandlestickPatterns\TasukiGap.cs" />
-    <Compile Include="CandlestickPatterns\Takuri.cs" />
-    <Compile Include="CandlestickPatterns\StickSandwich.cs" />
-    <Compile Include="CandlestickPatterns\StalledPattern.cs" />
-    <Compile Include="CandlestickPatterns\SpinningTop.cs" />
-    <Compile Include="CandlestickPatterns\ShortLineCandle.cs" />
-    <Compile Include="CandlestickPatterns\ShootingStar.cs" />
-    <Compile Include="CandlestickPatterns\SeparatingLines.cs" />
-    <Compile Include="CandlestickPatterns\RiseFallThreeMethods.cs" />
-    <Compile Include="CandlestickPatterns\RickshawMan.cs" />
-    <Compile Include="CandlestickPatterns\Piercing.cs" />
-    <Compile Include="CandlestickPatterns\OnNeck.cs" />
-    <Compile Include="CandlestickPatterns\MorningStar.cs" />
-    <Compile Include="CandlestickPatterns\MorningDojiStar.cs" />
-    <Compile Include="CandlestickPatterns\MatHold.cs" />
-    <Compile Include="CandlestickPatterns\MatchingLow.cs" />
-    <Compile Include="CandlestickPatterns\Marubozu.cs" />
-    <Compile Include="CandlestickPatterns\LongLineCandle.cs" />
-    <Compile Include="CandlestickPatterns\LongLeggedDoji.cs" />
-    <Compile Include="CandlestickPatterns\LadderBottom.cs" />
-    <Compile Include="CandlestickPatterns\KickingByLength.cs" />
-    <Compile Include="CandlestickPatterns\Kicking.cs" />
-    <Compile Include="CandlestickPatterns\InvertedHammer.cs" />
-    <Compile Include="CandlestickPatterns\InNeck.cs" />
-    <Compile Include="CandlestickPatterns\HomingPigeon.cs" />
-    <Compile Include="CandlestickPatterns\HighWaveCandle.cs" />
-    <Compile Include="CandlestickPatterns\HaramiCross.cs" />
-    <Compile Include="CandlestickPatterns\Harami.cs" />
-    <Compile Include="CandlestickPatterns\HangingMan.cs" />
-    <Compile Include="CandlestickPatterns\Hammer.cs" />
-    <Compile Include="CandlestickPatterns\GravestoneDoji.cs" />
-    <Compile Include="CandlestickPatterns\EveningStar.cs" />
-    <Compile Include="CandlestickPatterns\EveningDojiStar.cs" />
-    <Compile Include="CandlestickPatterns\DragonflyDoji.cs" />
-    <Compile Include="CandlestickPatterns\DojiStar.cs" />
-    <Compile Include="CandlestickPatterns\DarkCloudCover.cs" />
-    <Compile Include="CandlestickPatterns\AbandonedBaby.cs" />
-    <Compile Include="CandlestickPatterns\AdvanceBlock.cs" />
-    <Compile Include="CandlestickPatterns\ClosingMarubozu.cs" />
-    <Compile Include="CandlestickPatterns\BeltHold.cs" />
-    <Compile Include="CandlestickPatterns\Breakaway.cs" />
-    <Compile Include="CandlestickPatterns\CandleEnums.cs" />
-    <Compile Include="CandlestickPatterns\CandleSettings.cs" />
-    <Compile Include="CandlestickPatterns\CandlestickPattern.cs" />
-    <Compile Include="CandlestickPatterns\HikkakeModified.cs" />
-    <Compile Include="CandlestickPatterns\ThreeBlackCrows.cs" />
-    <Compile Include="CandlestickPatterns\GapSideBySideWhite.cs" />
-    <Compile Include="CandlestickPatterns\ThreeInside.cs" />
-    <Compile Include="CandlestickPatterns\ConcealedBabySwallow.cs" />
-    <Compile Include="CandlestickPatterns\ThreeLineStrike.cs" />
-    <Compile Include="CandlestickPatterns\Engulfing.cs" />
-    <Compile Include="CandlestickPatterns\Hikkake.cs" />
-    <Compile Include="CandlestickPatterns\ThreeOutside.cs" />
-    <Compile Include="CandlestickPatterns\Counterattack.cs" />
-    <Compile Include="CandlestickPatterns\ThreeStarsInSouth.cs" />
-    <Compile Include="CandlestickPatterns\IdenticalThreeCrows.cs" />
-    <Compile Include="CandlestickPatterns\ThreeWhiteSoldiers.cs" />
-    <Compile Include="CandlestickPatterns\Doji.cs" />
-    <Compile Include="CandlestickPatterns\TwoCrows.cs" />
-    <Compile Include="ChaikinMoneyFlow.cs" />
-    <Compile Include="ChandeMomentumOscillator.cs" />
-    <Compile Include="CoppockCurve.cs" />
-    <Compile Include="DeMarkerIndicator.cs" />
-    <Compile Include="DetrendedPriceOscillator.cs" />
-    <Compile Include="DonchianChannel.cs" />
-    <Compile Include="DoubleExponentialMovingAverage.cs" />
-    <Compile Include="PythonIndicator.cs" />
-    <Compile Include="IntradayVwap.cs" />
-    <Compile Include="RelativeVigorIndex.cs" />
-    <Compile Include="RelativeVigorIndexSignal.cs" />
-    <Compile Include="SchaffTrendCycle.cs" />
-    <Compile Include="WilderMovingAverage.cs" />
-    <Compile Include="FractalAdaptiveMovingAverage.cs" />
-    <Compile Include="EaseOfMovementValue.cs" />
-    <Compile Include="FilteredIdentity.cs" />
-    <Compile Include="HullMovingAverage.cs" />
-    <Compile Include="MassIndex.cs" />
-    <Compile Include="RegressionChannel.cs" />
-    <Compile Include="SwissArmyKnife.cs" />
-    <Compile Include="TradeBarIndicator.cs" />
-    <Compile Include="VolumeWeightedAveragePriceIndicator.cs" />
-    <Compile Include="FisherTransform.cs" />
-    <Compile Include="HeikinAshi.cs" />
-    <Compile Include="IchimokuKinkoHyo.cs" />
-    <Compile Include="IndicatorResult.cs" />
-    <Compile Include="IndicatorStatus.cs" />
-    <Compile Include="KaufmanAdaptiveMovingAverage.cs" />
-    <Compile Include="KeltnerChannels.cs" />
-    <Compile Include="LeastSquaresMovingAverage.cs" />
-    <Compile Include="LogReturn.cs" />
-    <Compile Include="MidPrice.cs" />
-    <Compile Include="MidPoint.cs" />
-    <Compile Include="Momersion.cs" />
-    <Compile Include="NormalizedAverageTrueRange.cs" />
-    <Compile Include="OnBalanceVolume.cs" />
-    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
-      <Link>Properties\SharedAssemblyInfo.cs</Link>
-    </Compile>
-    <Compile Include="LinearWeightedMovingAverage.cs" />
-    <Compile Include="ParabolicStopAndReverse.cs" />
-    <Compile Include="PercentagePriceOscillator.cs" />
-    <Compile Include="WindowIdentity.cs" />
-    <Compile Include="T3MovingAverage.cs" />
-    <Compile Include="RateOfChangeRatio.cs" />
-    <Compile Include="Trix.cs" />
-    <Compile Include="TrueRange.cs" />
-    <Compile Include="TripleExponentialMovingAverage.cs" />
-    <Compile Include="TriangularMovingAverage.cs" />
-    <Compile Include="UltimateOscillator.cs" />
-    <Compile Include="Variance.cs" />
-    <Compile Include="WilliamsPercentR.cs" />
-    <Compile Include="AroonOscillator.cs" />
-    <Compile Include="AverageTrueRange.cs" />
-    <Compile Include="CommodityChannelIndex.cs" />
-    <Compile Include="CompositeIndicator.cs" />
-    <Compile Include="ConstantIndicator.cs" />
-    <Compile Include="Delay.cs" />
-    <Compile Include="ExponentialMovingAverage.cs" />
-    <Compile Include="FunctionalIndicator.cs" />
-    <Compile Include="Identity.cs" />
-    <Compile Include="Indicator.cs" />
-    <Compile Include="IndicatorBase.cs" />
-    <Compile Include="IndicatorExtensions.cs" />
-    <Compile Include="MeanAbsoluteDeviation.cs" />
-    <Compile Include="Minimum.cs" />
-    <Compile Include="Momentum.cs" />
-    <Compile Include="MomentumPercent.cs" />
-    <Compile Include="MoneyFlowIndex.cs" />
-    <Compile Include="MovingAverageConvergenceDivergence.cs" />
-    <Compile Include="MovingAverageType.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RateOfChange.cs" />
-    <Compile Include="RateOfChangePercent.cs" />
-    <Compile Include="RelativeStrengthIndex.cs" />
-    <Compile Include="Stochastics.cs" />
-    <Compile Include="Sum.cs" />
-    <Compile Include="SimpleMovingAverage.cs" />
-    <Compile Include="MovingAverageTypeExtensions.cs" />
-    <Compile Include="Maximum.cs" />
-    <Compile Include="BarIndicator.cs" />
-    <Compile Include="WindowIndicator.cs" />
-    <Compile Include="StandardDeviation.cs" />
-    <Compile Include="BollingerBands.cs" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\QuantConnect.csproj">
-      <Project>{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}</Project>
-      <Name>QuantConnect</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
-      <Project>{01911409-86be-4e7d-9947-df714138610d}</Project>
-      <Name>QuantConnect.Logging</Name>
-    </ProjectReference>
+    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IndicatorBase.Operators.cs" />
+    <ProjectReference Include="..\Common\QuantConnect.csproj" />
+    <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\analyzers\dotnet\Microsoft.CodeAnalysis.VersionCheckAnalyzer.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\analyzers\dotnet\cs\Humanizer.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.CodeQuality.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.CodeQuality.CSharp.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetCore.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetCore.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetCore.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetCore.CSharp.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetFramework.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetFramework.CSharp.Analyzers.dll" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.30\build\QuantConnect.pythonnet.targets'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props'))" />
-  </Target>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

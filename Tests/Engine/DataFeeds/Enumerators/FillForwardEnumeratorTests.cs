@@ -2070,7 +2070,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             fillForwardEnumerator.Dispose();
         }
 
-        internal class FillForwardTestAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+        public class FillForwardTestAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
         {
             protected Symbol _symbol;
             public static List<string> FillForwardBars = new List<string>();
@@ -2105,7 +2105,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>();
         }
 
-        internal class FillForwardDaylightMovementTestAlgorithm : FillForwardTestAlgorithm
+        public class FillForwardDaylightMovementTestAlgorithm : FillForwardTestAlgorithm
         {
             public static DateTime RefDateTime { get; set; }
             public static int DurationInDays { get; set; }
@@ -2130,7 +2130,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             }
         }
 
-        internal class FillForwardTestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
+        public class FillForwardTestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
         {
             internal static FillForwardTestAlgorithm TestAlgorithm { get; set; }
 
@@ -2141,7 +2141,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             }
         }
 
-        internal class FillForwardDaylightMovementTestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
+        public class FillForwardDaylightMovementTestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
         {
             internal static FillForwardTestAlgorithm TestAlgorithm { get; set; }
 

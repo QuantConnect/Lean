@@ -21,6 +21,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Brokerages;
 using Moq;
+using QuantConnect.Data.Shortable;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
@@ -1341,6 +1342,21 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(expected, algo.Transactions.LastOrderId);
         }
 
+        private class TestShortableProvider : IShortableProvider
+        {
+            public Dictionary<Symbol, long> AllShortableSymbols(DateTime localTime)
+            {
+                return new Dictionary<Symbol, long>
+                {
+                    { Symbols.MSFT, 1000 }
+                };
+            }
+
+            public long? ShortableQuantity(Symbol symbol, DateTime localTime)
+            {
+                return 1000;
+            }
+        }
 
         private QCAlgorithm GetAlgorithm(out Security msft, decimal leverage, decimal fee)
         {

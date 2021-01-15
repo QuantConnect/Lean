@@ -18,6 +18,8 @@ using System.Collections.Generic;
 using Python.Runtime;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.Shortable;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
@@ -233,6 +235,14 @@ namespace QuantConnect.Python
             }
         }
 
+        public bool Shortable(IAlgorithm algorithm, Symbol symbol, decimal quantity)
+        {
+            using (Py.GIL())
+            {
+                return (_model.Shortable(algorithm, symbol, quantity) as PyObject).GetAndDispose<bool>();
+            }
+        }
+
         /// <summary>
         /// Gets a new buying power model for the security, returning the default model with the security's configured leverage.
         /// For cash accounts, leverage = 1 is used.
@@ -260,6 +270,18 @@ namespace QuantConnect.Python
             {
                 return (_model.GetBuyingPowerModel(security, accountType)
                     as PyObject).GetAndDispose<IBuyingPowerModel>();
+            }
+        }
+
+        /// <summary>
+        /// Gets the shortable provider
+        /// </summary>
+        /// <returns>Shortable provider</returns>
+        public IShortableProvider GetShortableProvider()
+        {
+            using (Py.GIL())
+            {
+                return (_model.GetShortableProvider() as PyObject).GetAndDispose<IShortableProvider>();
             }
         }
     }
