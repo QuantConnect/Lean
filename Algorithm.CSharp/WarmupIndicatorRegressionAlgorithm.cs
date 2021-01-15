@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetWarmup(TimeSpan.FromDays(30));
 
             _spy = AddEquity("SPY", Resolution.Daily).Symbol;
-            var renkoConsolidator = new WickedRenkoConsolidator(2m);
+            var renkoConsolidator = new RenkoConsolidator(2m);
             renkoConsolidator.DataConsolidated += (sender, consolidated) =>
             {
                 if (IsWarmingUp) return;

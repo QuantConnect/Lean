@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             // property of the data it receives.
 
             // break SPY into $2.5 renko bricks and send that data to our 'OnRenkoBar' method
-            var renkoClose = new WickedRenkoConsolidator(2.5m);
+            var renkoClose = new RenkoConsolidator(2.5m);
             renkoClose.DataConsolidated += (sender, consolidated) =>
             {
                 // call our event handler for renko data
