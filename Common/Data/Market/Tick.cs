@@ -33,7 +33,7 @@ namespace QuantConnect.Data.Market
     public class Tick : BaseData
     {
         private string _exchange;
-        private int _exchangeCode;
+        private byte _exchangeCode;
         private uint? _parsedSaleCondition;
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace QuantConnect.Data.Market
         /// Exchange code this tick came from <see cref="Exchanges"/>
         /// </summary>
         [ProtoMember(12)]
-        public int ExchangeCode
+        public byte ExchangeCode
         {
             get
             {
@@ -61,7 +61,7 @@ namespace QuantConnect.Data.Market
             set
             {
                 _exchangeCode = value;
-                _exchange = Exchanges.GetName(value);
+                _exchange = ((ExchangeName) value).ToString();
             }
         }
 
@@ -77,7 +77,7 @@ namespace QuantConnect.Data.Market
             set
             {
                 _exchange = value;
-                _exchangeCode = Exchanges.GetCode(value);
+                _exchangeCode = Exchanges.GetCode(_exchange);
             }
         }
 

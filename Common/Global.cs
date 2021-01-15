@@ -1,4 +1,4 @@
-﻿﻿/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -24,6 +24,34 @@ using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
+    public enum ExchangeName : byte
+    {
+        UNKNOWN,
+        NASDAOMX,
+        BATSZ,
+        ARCA,
+        NYSE,
+        NSE,
+        FINRA,
+        ISE,
+        OPRA,
+        CSE,
+        CBOE,
+        AMEX,
+        SIAC,
+        EDGA,
+        EDGX,
+        NASDAQBX,
+        NASDAQPSX,
+        BATSY,
+        C2,
+        BOSTON,
+        MIAX,
+        ISE_GEMINI,
+        ISE_MERCURY,
+        NASDAQ
+    }
+
     /// <summary>
     /// Shortcut date format strings
     /// </summary>
@@ -105,7 +133,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="security">The security instance</param>
         public Holding(Security security)
-             : this()
+            : this()
         {
             var holding = security.Holdings;
 
@@ -148,7 +176,7 @@ namespace QuantConnect
                 MarketPrice = MarketPrice,
                 MarketValue = MarketValue,
                 UnrealizedPnL = UnrealizedPnL,
-                ConversionRate  = ConversionRate,
+                ConversionRate = ConversionRate,
                 CurrencySymbol = CurrencySymbol
             };
         }
@@ -159,8 +187,8 @@ namespace QuantConnect
         public override string ToString()
         {
             var value = Invariant($"{Symbol.Value}: {Quantity} @ ") +
-                        Invariant($"{CurrencySymbol}{AveragePrice} - ") +
-                        Invariant($"Market: {CurrencySymbol}{MarketPrice}");
+                Invariant($"{CurrencySymbol}{AveragePrice} - ") +
+                Invariant($"Market: {CurrencySymbol}{MarketPrice}");
 
             if (ConversionRate != 1m)
             {
@@ -689,7 +717,7 @@ namespace QuantConnect
         /// </summary>
         /// <remarks>Useful for performance</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int GetCode(string exchange)
+        public static byte GetCode(string exchange)
         {
             switch (exchange)
             {
@@ -702,7 +730,7 @@ namespace QuantConnect
                 case "P":
                 case "ARCA":
                     return 3;
-                
+                case "N":
                 case "NYSE":
                     return 4;
                 case "C":
@@ -766,61 +794,9 @@ namespace QuantConnect
         /// </summary>
         /// <remarks>Useful for performance</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string GetName(int exchangeCode)
+        public static ExchangeName GetName(int exchangeCode)
         {
-            switch (exchangeCode)
-            {
-                case (0):
-                    return "UNKNOWN";
-                case (1):
-                    return "NASDA OMX";
-                case (2):
-                    return "BATS Z";
-                case (3):
-                    return "ARCA";
-                case (4):
-                    return "NYSE";
-                case (5):
-                    return "NSE";
-                case (6):
-                    return "FINRA";
-                case (7):
-                    return "ISE";
-                case (8):
-                    return "OPRA";
-                case (9):
-                    return "CSE";
-                case (10):
-                    return "CBOE";
-                case (11):
-                    return "AMEX";
-                case (12):
-                    return "SIAC";
-                case (13):
-                    return "EDGA";
-                case (14):
-                    return "EDGX";
-                case (15):
-                    return "NASDAQ BX";
-                case (16):
-                    return "NASDAQ PSX";
-                case (17):
-                    return "BATS Y";
-                case (18):
-                    return "C2";
-                case (19):
-                    return "BOSTON";
-                case (20):
-                    return "MIAX";
-                case (21):
-                    return "ISE_GEMINI";
-                case (22):
-                    return "ISE_MERCURY";
-                case (23):
-                    return "NASDAQ";
-                default:
-                    return string.Empty;
-            }
+            return (ExchangeName) exchangeCode;
         }
     }
 
@@ -833,6 +809,7 @@ namespace QuantConnect
         /// The channel is empty
         /// </summary>
         public const string Vacated = "channel_vacated";
+
         /// <summary>
         /// The channel has subscribers
         /// </summary>
