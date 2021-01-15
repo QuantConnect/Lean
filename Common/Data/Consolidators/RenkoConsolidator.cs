@@ -115,7 +115,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="barSize"></param>
         /// <param name="type"></param>
-        [Obsolete("Please use the WickedRenkoConsolidator type if RenkoType is not Classic")]
+        [Obsolete("Please use the WickedRenkoConsolidator if RenkoType is not Classic")]
         public RenkoConsolidator(decimal barSize, RenkoType type)
         {
             if (type != RenkoType.Classic)
@@ -288,7 +288,7 @@ namespace QuantConnect.Data.Consolidators
             : base(barSize, evenBars)
         {
         }
-
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
         /// The value selector will by default select <see cref="IBaseData.Value"/>
@@ -296,6 +296,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="barSize">The constant value size of each bar</param>
         /// <param name="type">The RenkoType of the bar</param>
+        [Obsolete("Please use the WickedRenkoConsolidator if RenkoType is not Classic")]
         public RenkoConsolidator(decimal barSize, RenkoType type)
             : base(barSize, type)
         {
