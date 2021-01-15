@@ -92,8 +92,8 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
                 new MapFileRow(new DateTime(2050, 12, 31), "goog", 1)
             });
 
-            Assert.AreEqual(1, mapFile.Last().MainExchange);
-            Assert.AreEqual(PrimaryExchange.NASDAQ, (PrimaryExchange) mapFile.Last().MainExchange);
+            Assert.AreEqual(1, mapFile.Last().PrimaryExchange);
+            Assert.AreEqual(PrimaryExchange.NASDAQ, (PrimaryExchange) mapFile.Last().PrimaryExchange);
         }
 
         [Test]
