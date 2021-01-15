@@ -1062,9 +1062,15 @@ namespace QuantConnect.Algorithm
             // Check the cache for the symbol
             if (!SymbolCache.TryGetSymbol(ticker, out symbol))
             {
-                // Create the symbol
-                Debug($"Warning: SetBenchmark({ticker}): no existing symbol found, benchmark security will be added with {SecurityType.Equity} type.");
-                symbol = QuantConnect.Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+                // Check our securities for a symbol matched with this ticker
+                symbol = Securities.FirstOrDefault(x => x.Key.Value == ticker).Key;
+
+                // If we didn't find a symbol matching our ticker, create one.
+                if (symbol == null)
+                {
+                    Debug($"Warning: SetBenchmark({ticker}): no existing symbol found, benchmark security will be added with {SecurityType.Equity} type.");
+                    symbol = QuantConnect.Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+                }
             }
 
             // Send our symbol through
