@@ -239,12 +239,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     EventHandler handler = (sender, args) => subscription?.OnNewDataAvailable();
                     enumerator = _dataQueueHandler.Subscribe(request.Configuration, handler);
 
-                    if (request.Configuration.SecurityType == SecurityType.Equity && CorporateEventEnumeratorFactory.ShouldEmitAuxiliaryBaseData(request.Configuration))
+                    if (CorporateEventEnumeratorFactory.ShouldEmitAuxiliaryBaseData(request.Configuration))
                     {
-                        var dividends = _dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Dividend)), handler);
-                        var splits = _dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Split)), handler);
+                        var securityType = request.Configuration.SecurityType;
+                        var auxEnumerators = new List<IEnumerator<BaseData>>();
 
-                        enumerator = new LiveEquityDataSynchronizingEnumerator(_timeProvider, request.Configuration.ExchangeTimeZone, enumerator, dividends, splits);
+                        if (securityType == SecurityType.Equity)
+                        {
+                            auxEnumerators.Add(_dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Dividend)), handler));
+                            auxEnumerators.Add(_dataQueueHandler.Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Split)), handler));
+                        }
+                        else if (securityType == SecurityType.FutureOption || securityType == SecurityType.Future || securityType == SecurityType.Option)
+                        {
+                            auxEnumerators.Add(new LiveDelistingEventProviderEnumerator(_timeProvider, request.Configuration, request.Security.Cache));
+                        }
+
+                        enumerator = new LiveAuxiliaryDataSynchronizingEnumerator(_timeProvider, request.Configuration.ExchangeTimeZone, enumerator, auxEnumerators.ToArray());
                     }
                 }
 
