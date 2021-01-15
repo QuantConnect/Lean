@@ -93,14 +93,14 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             });
 
             Assert.AreEqual(1, mapFile.Last().MainExchange);
-            Assert.AreEqual("NASDAQ", (PrimaryExchange) mapFile.Last().MainExchange);
+            Assert.AreEqual(PrimaryExchange.NASDAQ, (PrimaryExchange) mapFile.Last().MainExchange);
         }
 
         [Test]
-        public void ParsesRwoWithExchangesCorrectly()
+        public void ParsesRowWithExchangesCorrectly()
         {
             // Arrange
-            var mapFileRow = "19980102,aapl,2";
+            var mapFileRow = "19980102,aapl,1";
             var expectedMapFileRow = new MapFileRow(new DateTime(1998, 01, 02), "aapl", 1);
             // Act
             var actualMapFileRow = MapFileRow.Parse(mapFileRow);

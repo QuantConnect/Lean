@@ -166,7 +166,7 @@ namespace QuantConnect.Data.Auxiliary
 
         public override string ToString()
         {
-            var mainExchange = (PrimaryExchange) MainExchange;
+            var mainExchange = MainExchange == 0 ? string.Empty : $" - {(PrimaryExchange) MainExchange}";
             return Date.ToShortDateString() + ": " + MappedSymbol + mainExchange;
         }
     }
