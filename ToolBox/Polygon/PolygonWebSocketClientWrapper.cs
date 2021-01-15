@@ -17,6 +17,7 @@ using System;
 using Newtonsoft.Json;
 using QuantConnect.Brokerages;
 using QuantConnect.Logging;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.ToolBox.Polygon
 {
@@ -25,9 +26,11 @@ namespace QuantConnect.ToolBox.Polygon
     /// </summary>
     public class PolygonWebSocketClientWrapper : WebSocketClientWrapper
     {
-        private const string BaseUrl = "wss://socket.polygon.io";
+        private readonly string BaseUrl = Config.Get("environment").ToLowerInvariant() == "live-alpaca"
+            ? "wss://alpaca.socket.polygon.io"
+            : "wss://socket.polygon.io";
 
-        private readonly string _apiKey;
+        private readonly string _apiKey; 
         private readonly ISymbolMapper _symbolMapper;
         private readonly SecurityType _securityType;
         private readonly Action<string> _messageHandler;

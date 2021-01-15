@@ -47,7 +47,9 @@ namespace QuantConnect.ToolBox.Polygon
     {
         private const string HistoryBaseUrl = "https://api.polygon.io";
 
-        private readonly string _apiKey = Config.Get("polygon-api-key");
+        private readonly string _apiKey = Config.Get("environment").ToLowerInvariant() == "live-alpaca"
+            ? Config.Get("alpaca-key-id")
+            : Config.Get("polygon-api-key");
 
         private readonly IDataAggregator _dataAggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
             Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
