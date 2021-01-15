@@ -645,6 +645,48 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
+        public void DelistedEventEmitted()
+        {
+            _startDate = new DateTime(2016, 2, 18);
+            var delistingDate = Symbols.SPY_C_192_Feb19_2016.GetDelistingDate();
+            CustomMockedFileBaseData.StartDate = _startDate;
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+            var feed = RunDataFeed();
+
+            _algorithm.AddOptionContract(Symbols.SPY_C_192_Feb19_2016);
+            _algorithm.OnEndOfTimeStep();
+            _algorithm.SetFinishedWarmingUp();
+
+            var receivedDelistedWarning = 0;
+            var receivedDelisted = 0;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
+                {
+                    foreach (var delisting in ts.Slice.Delistings)
+                    {
+                        if(delisting.Key != Symbols.SPY_C_192_Feb19_2016)
+                        {
+                            throw new Exception($"Unexpected delisting for symbol {delisting.Key}");
+                        }
+
+                        if (delisting.Value.Type == DelistingType.Warning)
+                        {
+                            Interlocked.Increment(ref receivedDelistedWarning);
+                        }
+                        if (delisting.Value.Type == DelistingType.Delisted)
+                        {
+                            Interlocked.Increment(ref receivedDelisted);
+                        }
+                    }
+                },
+                alwaysInvoke: false,
+                secondsTimeStep: 3600 * 8,
+                endDate: delistingDate.AddDays(2));
+
+            Assert.AreEqual(1, receivedDelistedWarning, $"Did not receive {DelistingType.Warning}");
+            Assert.AreEqual(1, receivedDelisted, $"Did not receive {DelistingType.Delisted}");
+        }
+
+        [Test]
         public void CoarseFundamentalDataIsHoldUntilTimeIsRight()
         {
             _startDate = new DateTime(2014, 3, 25);

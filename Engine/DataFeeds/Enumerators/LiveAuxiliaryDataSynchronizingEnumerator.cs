@@ -27,7 +27,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// Represents an enumerator capable of synchronizing live equity data enumerators in time.
     /// This assumes that all enumerators have data time stamped in the same time zone.
     /// </summary>
-    public class LiveEquityDataSynchronizingEnumerator : IEnumerator<BaseData>
+    public class LiveAuxiliaryDataSynchronizingEnumerator : IEnumerator<BaseData>
     {
         private readonly ITimeProvider _timeProvider;
         private readonly DateTimeZone _exchangeTimeZone;
@@ -35,13 +35,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly IEnumerator<BaseData> _tradeBarAggregator;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LiveEquityDataSynchronizingEnumerator"/> class
+        /// Initializes a new instance of the <see cref="LiveAuxiliaryDataSynchronizingEnumerator"/> class
         /// </summary>
         /// <param name="timeProvider">The source of time used to gauge when this enumerator should emit extra bars when null data is returned from the source enumerator</param>
         /// <param name="exchangeTimeZone">The time zone the raw data is time stamped in</param>
         /// <param name="tradeBarAggregator">The trade bar aggregator enumerator</param>
         /// <param name="auxDataEnumerators">The auxiliary data enumerators</param>
-        public LiveEquityDataSynchronizingEnumerator(ITimeProvider timeProvider, DateTimeZone exchangeTimeZone, IEnumerator<BaseData> tradeBarAggregator, params IEnumerator<BaseData>[] auxDataEnumerators)
+        public LiveAuxiliaryDataSynchronizingEnumerator(ITimeProvider timeProvider, DateTimeZone exchangeTimeZone, IEnumerator<BaseData> tradeBarAggregator, params IEnumerator<BaseData>[] auxDataEnumerators)
         {
             _timeProvider = timeProvider;
             _exchangeTimeZone = exchangeTimeZone;

@@ -59,19 +59,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 new Lazy<FactorFile>(() => SubscriptionUtils.GetFactorFileToUse(config, factorFileProvider));
 
             var tradableEventProviders = new List<ITradableDateEventProvider>();
-            if (config.Symbol.SecurityType != SecurityType.FutureOption)
+
+            if (config.Symbol.SecurityType == SecurityType.Equity)
             {
-                // Maintain order of the old event providers to avoid any sort of potential
-                // non-deterministic errors from occurring
-                tradableEventProviders.Add(new MappingEventProvider());
                 tradableEventProviders.Add(new SplitEventProvider());
                 tradableEventProviders.Add(new DividendEventProvider());
-                tradableEventProviders.Add(new DelistingEventProvider());
             }
-            else
+
+            if (config.Symbol.SecurityType == SecurityType.Equity
+                || config.Symbol.SecurityType == SecurityType.Base
+                || config.Symbol.SecurityType == SecurityType.Option)
             {
-                tradableEventProviders.Add(new DelistingEventProvider());
+                tradableEventProviders.Add(new MappingEventProvider());
             }
+
+            tradableEventProviders.Add(new DelistingEventProvider());
 
             var enumerator = new AuxiliaryDataEnumerator(
                 config,
@@ -106,8 +108,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <remarks>History provider is never emitting auxiliary data points</remarks>
         public static bool ShouldEmitAuxiliaryBaseData(SubscriptionDataConfig config)
         {
-            return config.SecurityType != SecurityType.Equity || !config.IsInternalFeed
-                && (config.Type == typeof(TradeBar) || config.Type == typeof(Tick) && config.TickType == TickType.Trade);
+            return !config.IsInternalFeed
+                // custom data could use remapping events, example 'CustomDataUsingMapping' regression algorithm
+                && (config.Type == typeof(TradeBar) || config.Type == typeof(Tick) && config.TickType == TickType.Trade || config.IsCustomData);
         }
 
         private static MapFile GetMapFileToUse(
