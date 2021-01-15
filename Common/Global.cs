@@ -28,7 +28,7 @@ namespace QuantConnect
     {
         UNKNOWN,
         NASDAQ,
-        BATSZ,
+        BATS,
         ARCA,
         NYSE,
         NSE,
@@ -726,6 +726,7 @@ namespace QuantConnect
                 case "NASDAQ OMX":
                     return 1;
                 case "Z":
+                case "BATS":
                 case "BATS Z":
                     return 2;
                 case "P":
