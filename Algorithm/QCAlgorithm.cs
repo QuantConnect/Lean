@@ -1077,26 +1077,16 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">symbol to use as the benchmark</param>
         public void SetBenchmark(Symbol symbol)
         {
-            // Create the security from this symbol
-            var security = Securities.CreateSecurity(symbol,
-                new List<SubscriptionDataConfig>(),
-                leverage: 1,
-                addToSymbolCache: false);
-
-            // Send our security through
-            SetBenchmark(security);
-        }
-
-        /// <summary>
-        /// Sets the benchmark used for computing statistics of the algorithm to the specified security
-        /// </summary>
-        /// <param name="security"></param>
-        public void SetBenchmark(Security security)
-        {
             if (_locked)
             {
                 throw new InvalidOperationException("Algorithm.SetBenchmark(): Cannot change Benchmark after algorithm initialized.");
             }
+
+            // Create a security from this symbol
+            var security = Securities.CreateSecurity(symbol,
+                new List<SubscriptionDataConfig>(),
+                leverage: 1,
+                addToSymbolCache: false);
 
             // Create and set our SecurityBenchmark
             Benchmark = new SecurityBenchmark(security);
