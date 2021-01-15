@@ -17,10 +17,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Web;
+
+// 3rd Party
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NodaTime;
+
+// QuantConnect
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -46,8 +54,7 @@ namespace QuantConnect.ToolBox.Polygon
     public class PolygonDataQueueHandler : SynchronizingHistoryProvider, IDataQueueHandler
     {
         private const string HistoryBaseUrl = "https://api.polygon.io";
-
-        private readonly string _apiKey = Config.Get("polygon-api-key");
+        private string _apiKey = Config.Get("polygon-api-key");
 
         private readonly IDataAggregator _dataAggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
             Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
@@ -244,6 +251,12 @@ namespace QuantConnect.ToolBox.Polygon
 
         private IEnumerable<BaseData> ProcessHistoryRequest(HistoryRequest request)
         {
+            // TODO:   Request is called too many times.   This can be fixed with a central way to have a config.json at the solution level instead of for each project
+            if(_apiKey.IsNullOrEmpty())
+            {
+                _apiKey = request._apiKey;
+            }
+
             if (string.IsNullOrWhiteSpace(_apiKey))
             {
                 Log.Error("PolygonDataQueueHandler.GetHistory(): History calls for Polygon.io require an API key.");
@@ -251,9 +264,10 @@ namespace QuantConnect.ToolBox.Polygon
             }
 
             // check security type
-            if (request.Symbol.SecurityType != SecurityType.Equity &&
-                request.Symbol.SecurityType != SecurityType.Forex &&
-                request.Symbol.SecurityType != SecurityType.Crypto)
+            if (request.Symbol.SecurityType != SecurityType.Equity //&&
+                //request.Symbol.SecurityType != SecurityType.Forex &&
+                //request.Symbol.SecurityType != SecurityType.Crypto
+                )
             {
                 Log.Error($"PolygonDataQueueHandler.ProcessHistoryRequests(): Unsupported security type: {request.Symbol.SecurityType}.");
                 yield break;
@@ -512,100 +526,217 @@ namespace QuantConnect.ToolBox.Polygon
         {
             // https://api.polygon.io/v2/ticks/stocks/nbbo/SPY/2020-08-24?apiKey=
 
+            bool isException = false;
+
             var start = request.StartTimeUtc;
             var end = request.EndTimeUtc;
+            var offsetStart = Time.DateTimeToUnixTimeStampNanoseconds(start);
+            var offsetEnd = Time.DateTimeToUnixTimeStampNanoseconds(end);
 
-            while (start <= end)
+            // Continues until offsetStart gets to the end of the set time at offsetEnd
+            while (offsetStart < offsetEnd)
             {
+                // Skips Saturday and Sunday
+                if (!start.IsCommonBusinessDay())
+                {
+                    Log.Trace("Weekends are not processed " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
+                    start = start.Date.AddDays(1);
+                    break;
+                }
+                else
+                {
+                    Log.Trace("Processing " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
+                }
+
                 using (var client = new WebClient())
                 {
-                    var offset = Time.DateTimeToUnixTimeStampNanoseconds(start);
-                    var url = $"{HistoryBaseUrl}/v2/ticks/stocks/nbbo/{request.Symbol.Value}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&timestamp={offset}";
+                    var url = $"{HistoryBaseUrl}/v2/ticks/stocks/nbbo/{request.Symbol.Value}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&timestamp={offsetStart}&limit={request._apiResultsLimit}";
 
-                    var response = client.DownloadString(url);
+#if DEBUG
+                    Log.Trace(url);
+#endif
 
-                    var obj = JObject.Parse(response);
-                    var objTicks = obj["results"];
-                    if (objTicks.Type == JTokenType.Null || !objTicks.Any())
+                    string response = "";
+                    try
                     {
-                        // current date finished, move to next day
-                        start = start.Date.AddDays(1);
-                        continue;
+                        response = client.DownloadString(url);
+                    }
+                    catch (WebException e)
+                    {
+                        isException = true;
+                        offsetStart = offsetEnd;
                     }
 
-                    foreach (var objTick in objTicks)
+                    if ((response != "") && (isException == false) && (response != null))
                     {
-                        var row = objTick.ToObject<EquityQuoteTickResponse>();
-
-                        var utcTime = Time.UnixNanosecondTimeStampToDateTime(row.ExchangeTimestamp);
-
-                        if (utcTime < start)
+                        var obj = JObject.Parse(response);
+                        var objTicks = obj["results"];
+                        if ((objTicks.Type == JTokenType.Null) || (!objTicks.Any()))
                         {
-                            continue;
+
+                            offsetStart = offsetEnd;   // Set offsetStart end of the time to Finish the while loop
                         }
-
-                        start = utcTime.AddMilliseconds(1);
-
-                        if (utcTime > end)
+                        else
                         {
-                            yield break;
+                            // Iterate through each tick and process
+                            foreach (var objTick in objTicks)
+                            {
+                                // Parse the row
+                                var row = objTick.ToObject<EquityQuoteTickResponse>();
+
+                                // Converts the results tick time to the Exchange time zone for usage in the Tick Writer LeanData.cs
+                                var utcTime = Time.UnixNanosecondTimeStampToDateTime(row.nanosecondSipTimestamp);
+                                var time = GetTickTime(request.Symbol, utcTime);
+
+                                // Get the timestamp of the last tick in the results and use for pagination of the API with offset
+                                if (objTicks.Count() == Convert.ToInt32(request._apiResultsLimit, System.Globalization.CultureInfo.GetCultureInfo("en-US")))
+                                {
+                                    offsetStart = objTicks.Last.ToObject<EquityQuoteTickResponse>().nanosecondSipTimestamp;
+                                }
+                                else
+                                {
+                                    offsetStart = offsetEnd;   // Finish
+                                }
+
+                                // TODO:   This logic should be enhanced by using the corrections to flag older ticks and better quote filtering
+                                // Look for quotes.   In this case, it uses the Polygon Quote conditions mapping for conditions that are suspicious and will be filtered
+                                bool _suspiciousFlag = false;
+
+                                // Set flag if there are any trade correction indicators    //TODO:   fix these quote and trade conditions logic ... not right !  Will bad quotes have null conditions ?
+                                if ((row.Conditions != null))
+                                {
+                                    _suspiciousFlag = (PolygonQuoteMappings.isSuspiciousQuote(row.Conditions[0]));
+                                }
+
+#if DEBUG
+                                Log.Trace($"Results count for tickers {objTicks.Count()}");
+#endif
+
+                                yield return new Tick(time, request.Symbol, row.Conditions ??= new int[] { }, row.Indicators ??= new int[] { }
+                                    , row.BidPrice, row.BidSize, row.BidExchangeID
+                                    , row.AskPrice, row.AskSize, row.AskExchangeID
+                                    , row.nanosecondSipTimestamp, row.nanosecondParticipantExchangeTimestamp, row.nanosecondTrfTimestamp
+                                    , row.SequenceNumber, row.tape, _suspiciousFlag
+                                    );
+                            }
                         }
-
-                        var time = GetTickTime(request.Symbol, utcTime);
-
-                        yield return new Tick(time, request.Symbol, string.Empty, string.Empty, row.BidSize, row.BidPrice, row.AskSize, row.AskPrice);
                     }
+                    else
+                    {
+                        offsetStart = offsetEnd;   // Finish
+                    }
+
                 }
             }
-        }
 
+
+
+
+        }
         private IEnumerable<Tick> GetEquityTradeTicks(HistoryRequest request)
         {
             // https://api.polygon.io/v2/ticks/stocks/trades/SPY/2020-08-24?apiKey=
 
+            bool isException = false;
+
             var start = request.StartTimeUtc;
             var end = request.EndTimeUtc;
+            var offsetStart = Time.DateTimeToUnixTimeStampNanoseconds(start);
+            var offsetEnd = Time.DateTimeToUnixTimeStampNanoseconds(end);
 
-            while (start <= end)
+            // Continues until offsetStart gets to the end of the set time at offsetEnd
+            while (offsetStart < offsetEnd)
             {
+                // Skips Saturday and Sunday
+                if (!start.IsCommonBusinessDay())
+                {
+                    Log.Trace("Weekends are not processed " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
+                    start = start.Date.AddDays(1);
+                    break;
+                }
+                else
+                {
+                    Log.Trace("Processing " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
+                }
+
                 using (var client = new WebClient())
                 {
-                    var offset = Time.DateTimeToUnixTimeStampNanoseconds(start);
-                    var url = $"{HistoryBaseUrl}/v2/ticks/stocks/trades/{request.Symbol.Value}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&timestamp={offset}";
+                    var url = $"{HistoryBaseUrl}/v2/ticks/stocks/trades/{request.Symbol.Value}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&timestamp={offsetStart}&limit={request._apiResultsLimit}";
 
-                    var response = client.DownloadString(url);
-
-                    var obj = JObject.Parse(response);
-                    var objTicks = obj["results"];
-                    if (objTicks.Type == JTokenType.Null || !objTicks.Any())
+                    string response = "";
+                    try
                     {
-                        // current date finished, move to next day
-                        start = start.Date.AddDays(1);
-                        continue;
+                        response = client.DownloadString(url);
+                    }
+                    catch (WebException e)
+                    {
+                        isException = true;
+                        offsetStart = offsetEnd;
                     }
 
-                    foreach (var objTick in objTicks)
+                    if ((response != "") && (isException == false) && (response != null))
                     {
-                        var row = objTick.ToObject<EquityTradeTickResponse>();
-
-                        var utcTime = Time.UnixNanosecondTimeStampToDateTime(row.ExchangeTimestamp);
-
-                        if (utcTime < start)
+                        var obj = JObject.Parse(response);
+                        var objTicks = obj["results"];
+                        if ((objTicks.Type == JTokenType.Null) || (!objTicks.Any()))
                         {
-                            continue;
+
+                            offsetStart = offsetEnd;    // Finish
                         }
-
-                        start = utcTime.AddMilliseconds(1);
-
-                        if (utcTime > end)
+                        else
                         {
-                            yield break;
+                            // Iterate through each tick and process
+                            foreach (var objTick in objTicks)
+                            {
+                                // Parse the row
+                                var row = objTick.ToObject<EquityTradeTickResponse>();
+
+                                // Converts the results tick time to the Exchange time zone for usage in the Tick Writer LeanData.cs
+                                var utcTime = Time.UnixNanosecondTimeStampToDateTime(row.nanosecondSIPTimeStamp);
+                                var time = GetTickTime(request.Symbol, utcTime);
+
+                                // Get the timestamp of the last tick in the results and use for pagination of the API with offset
+                                if (objTicks.Count() == Convert.ToInt32(request._apiResultsLimit, System.Globalization.CultureInfo.GetCultureInfo("en-US")))
+                                {
+                                    offsetStart = objTicks.Last.ToObject<EquityTradeTickResponse>().nanosecondSIPTimeStamp;
+                                }
+                                else
+                                {
+                                    offsetStart = offsetEnd;
+                                }
+
+                                // TODO:   This logic should be enhanced by using the corrections to flag older ticks as is required for SIP compliance
+                                // Look for suspicious trades.   In this case, it uses the SIP mapping for updates of high/low otherwise marks as suspicious
+                                bool suspiciousFlag = false;
+
+                                // Set flag if there are any trade correction indicators
+                                if ((row.tradeCorrectionIndicator != null))
+                                {
+                                    suspiciousFlag = true;
+                                }
+                                // Check SIP Mappings for update high/low
+                                else if (row.Conditions != null)
+                                {
+                                    suspiciousFlag = !Polygon.PolygonSIPTradeMappings.TradeUpdateHighLow(row.Conditions[0]);
+                                }
+
+                                // Setup the new tick with the correct values
+                                var newTick = new Tick(time, request.Symbol, row.Conditions ??= new int[] { },
+                                                       row.Size, row.Price, row.nanosecondSIPTimeStamp, suspiciousFlag,
+                                                       row.Exchange, row.originalTradeID, row.tradeID, row.tradeCorrectionIndicator,
+                                                       row.tradeIDReportingFacility, row.nanosecondParticipantExchangeTimeStamp,
+                                                       row.nanosecondTradeReportingFacilityTimeStamp, row.sequenceNumber, row.tape);
+
+                                // Return the ticks
+                                yield return newTick;
+                            }
                         }
-
-                        var time = GetTickTime(request.Symbol, utcTime);
-
-                        yield return new Tick(time, request.Symbol, string.Empty, string.Empty, row.Size, row.Price);
                     }
+                    else
+                    {
+                        offsetStart = offsetEnd;   // Finish
+                    }
+
                 }
             }
         }

@@ -36,9 +36,21 @@ namespace QuantConnect.ToolBox.Polygon
         /// <param name="startUtc">Start time of the data in UTC</param>
         /// <param name="endUtc">End time of the data in UTC</param>
         /// <returns>Enumerable of base data for this symbol</returns>
+        /// 
+
+        // Original base method does nothing without the proper Polygon API
         public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
-            return Get(symbol, resolution, startUtc, endUtc, TickType.Trade);
+            // Must have polygon parameters
+            throw new ArgumentException("Must have polygon parameters: string apiKey, string apiResultsLimit, string apiDownloadThreads)");
+            // Does nothing becuase we need the additional polygon parameters
+            return null;
+        }
+
+        // Extended Get method for polygon data download
+        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc, string apiKey, string apiResultsLimit, string apiDownloadThreads)
+        {
+            return Get(symbol, resolution, startUtc, endUtc, TickType.Trade, apiKey, apiResultsLimit, apiDownloadThreads);
         }
 
         /// <summary>
@@ -50,13 +62,16 @@ namespace QuantConnect.ToolBox.Polygon
         /// <param name="endUtc">End time of the data in UTC</param>
         /// <param name="tickType">The tick type (Trade or Quote)</param>
         /// <returns>Enumerable of base data for this symbol</returns>
-        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc, TickType tickType)
+        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc, TickType tickType
+                                        ,string apiKey, string apiResultsLimit, string apiDownloadThreads)
         {
-            if (symbol.SecurityType != SecurityType.Equity &&
-                symbol.SecurityType != SecurityType.Forex && 
-                symbol.SecurityType != SecurityType.Crypto)
+
+            if (symbol.SecurityType != SecurityType.Equity // &&  // TODO:  FIX-> THIS
+                                                           //symbol.SecurityType != SecurityType.Forex && 
+                                                           //symbol.SecurityType != SecurityType.Crypto
+               )
             {
-                throw new NotSupportedException($"Security type not supported: {symbol.SecurityType}");
+                throw new NotSupportedException($"Security type not yet supported: {symbol.SecurityType}");
             }
 
             if (endUtc < startUtc)
@@ -78,7 +93,10 @@ namespace QuantConnect.ToolBox.Polygon
                     true,
                     false,
                     DataNormalizationMode.Adjusted,
-                    tickType);
+                    tickType,
+                    apiKey, 
+                    apiResultsLimit, 
+                    apiDownloadThreads);
 
             foreach (var baseData in _historyProvider.GetHistory(historyRequest))
             {

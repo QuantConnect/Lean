@@ -186,7 +186,12 @@ namespace QuantConnect.ToolBox
                             GetParameterOrExit(optionsObject, "market"),
                             resolution, 
                             fromDate, 
-                            toDate);
+                            toDate,
+                            GetParameterOrExit(optionsObject, "polygon-api-name"),
+                            GetParameterOrExit(optionsObject, "polygon-api-key"),
+                            GetParameterOrExit(optionsObject, "polygon-api-results-limit"),
+                            GetParameterOrExit(optionsObject, "polygon-download-threads")
+                            );
                         break;
 
                     default:

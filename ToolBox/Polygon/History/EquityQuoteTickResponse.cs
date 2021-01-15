@@ -22,8 +22,11 @@ namespace QuantConnect.ToolBox.Polygon.History
         [JsonProperty("c")]
         public int[] Conditions { get; set; }
 
+        [JsonProperty("i")]
+        public int[] Indicators { get; set; }
+
         [JsonProperty("q")]
-        public long SequenceNumber { get; set; }
+        public long? SequenceNumber { get; set; } = null;
 
         [JsonProperty("p")]
         public decimal BidPrice { get; set; }
@@ -38,18 +41,21 @@ namespace QuantConnect.ToolBox.Polygon.History
         public decimal AskSize { get; set; }
 
         [JsonProperty("x")]
-        public int BidExchange { get; set; }
+        public int BidExchangeID { get; set; }
 
         [JsonProperty("X")]
-        public int AskExchange { get; set; }
+        public int AskExchangeID { get; set; }
 
         [JsonProperty("t")]
-        public long SipTimestamp { get; set; }
+        public long nanosecondSipTimestamp { get; set; }
 
         [JsonProperty("y")]
-        public long ExchangeTimestamp { get; set; }
+        public long? nanosecondParticipantExchangeTimestamp { get; set; } = null;
 
         [JsonProperty("f")]
-        public long TrfTimestamp { get; set; }
+        public long? nanosecondTrfTimestamp { get; set; } = null;
+
+        [JsonProperty("z")]
+        public int? tape { get; set; } = null;
     }
 }

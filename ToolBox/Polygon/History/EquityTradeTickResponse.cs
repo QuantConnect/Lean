@@ -19,31 +19,39 @@ namespace QuantConnect.ToolBox.Polygon.History
 {
     public class EquityTradeTickResponse
     {
-        [JsonProperty("c")]
-        public int[] Conditions { get; set; }
-
-        [JsonProperty("i")]
-        public string Id { get; set; }
-
-        [JsonProperty("q")]
-        public long SequenceNumber { get; set; }
-
-        [JsonProperty("s")]
-        public decimal Size { get; set; }
-
+        [JsonProperty("I")]
+        public int? originalTradeID { get; set; } = null;
+        [JsonProperty("x")]
+        public int? Exchange { get; set; } = null;
         [JsonProperty("p")]
         public decimal Price { get; set; }
-
-        [JsonProperty("x")]
-        public int Exchange { get; set; }
-
+        [JsonProperty("i")]
+        public string tradeID { get; set; } = "";
+        [JsonProperty("e")]
+        public int? tradeCorrectionIndicator { get; set; } = null;
+        [JsonProperty("r")]
+        public int? tradeIDReportingFacility { get; set; } = null;
         [JsonProperty("t")]
-        public long SipTimestamp { get; set; }
-
+        public long nanosecondSIPTimeStamp { get; set; }
         [JsonProperty("y")]
-        public long ExchangeTimestamp { get; set; }
-
+        public long? nanosecondParticipantExchangeTimeStamp { get; set; } = null;
         [JsonProperty("f")]
-        public long TrfTimestamp { get; set; }
+        public long? nanosecondTradeReportingFacilityTimeStamp { get; set; } = null;
+        [JsonProperty("q")]
+        public long? sequenceNumber { get; set; } = null;
+        [JsonProperty("c")]
+        public int[] Conditions { get; set; }
+        [JsonProperty("s")]
+        public decimal Size { get; set; }
+        [JsonProperty("z")]
+        public int? tape { get; set; } = null;
+
+
+
+
+
+
+
+
     }
 }

@@ -97,6 +97,9 @@ namespace QuantConnect.Data
         /// Gets the normalization mode used for this subscription
         /// </summary>
         public DataNormalizationMode DataNormalizationMode { get; set; }
+        public string _apiKey { get; set; }
+        public string _apiResultsLimit { get; set; }
+        public string _apiDownloadThreads { get; set; }
 
 
         /// <summary>
@@ -163,5 +166,43 @@ namespace QuantConnect.Data
             DataTimeZone = config.DataTimeZone;
             TickType = config.TickType;
         }
+
+        // Polygon version includes specific variables for downloading
+        public HistoryRequest(DateTime startTimeUtc,
+        DateTime endTimeUtc,
+        Type dataType,
+        Symbol symbol,
+        Resolution resolution,
+        SecurityExchangeHours exchangeHours,
+        DateTimeZone dataTimeZone,
+        Resolution? fillForwardResolution,
+        bool includeExtendedMarketHours,
+        bool isCustomData,
+        DataNormalizationMode dataNormalizationMode,
+        TickType tickType,
+        string apiKey,
+        string apiResultsLimit,
+        string apiDownloadThreads)
+        {
+            StartTimeUtc = startTimeUtc;
+            EndTimeUtc = endTimeUtc;
+            Symbol = symbol;
+            ExchangeHours = exchangeHours;
+            DataTimeZone = dataTimeZone;
+            Resolution = resolution;
+            FillForwardResolution = fillForwardResolution;
+            IncludeExtendedMarketHours = includeExtendedMarketHours;
+            DataType = dataType;
+            IsCustomData = isCustomData;
+            DataNormalizationMode = dataNormalizationMode;
+            TickType = tickType;
+            _apiKey = apiKey;
+            _apiResultsLimit = apiResultsLimit;
+            _apiDownloadThreads = apiDownloadThreads;
+
+
+    }
+
+
     }
 }

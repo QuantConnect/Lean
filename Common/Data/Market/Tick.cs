@@ -16,9 +16,14 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
+
+// 3rd Party
 using Newtonsoft.Json;
 using ProtoBuf;
+
+// QuantConnect
 using QuantConnect.Logging;
 using QuantConnect.Util;
 
@@ -117,6 +122,27 @@ namespace QuantConnect.Data.Market
         /// </summary>
         [ProtoMember(18)]
         public decimal AskSize = 0;
+
+
+        // Polygon Tick Extensions
+        public string _originalTradeID = "";
+        public string _tradeID = "";
+        public string _tradeCorrectionIndicator = "";
+        public string _tradeIDReportingFacility = "";
+        public string _nanosecondSIPTimeStamp = "";
+        public string _nanosecondParticipantExchangeTimeStamp = "";
+        public string _nanosecondTradeReportingFacilityTimeStamp = "";
+        public string _sequenceNumber = "";
+        public string _tape = "";
+        public string _bidExchangeID = "";
+        public string _askExchangeID = "";
+        public string _quoteConditions = "";
+        public string _quoteIndicators = "";
+
+
+
+
+
 
         //In Base Class: Alias of Closing:
         //public decimal Price;
@@ -578,6 +604,86 @@ namespace QuantConnect.Data.Market
                 Log.Error(err);
             }
         }
+
+
+
+
+
+        // Polygon Trade Tick
+        // https://polygon.io/docs/get_v2_ticks_stocks_trades__ticker___date__anchor
+        public Tick(DateTime time, Symbol symbol, int[] saleConditionsArray, decimal quantity
+                    , decimal price, long nanosecondSIPTimeStamp
+                    // Optional parameters
+                    , bool? suspiciousFlag = false, int? exchangeID = null, int? originalTradeID = null, string tradeID = ""
+                    , int? tradeCorrectionIndicator = null, int? tradeIDReportingFacility = null
+                    , long? nanosecondParticipantExchangeTimeStamp = null, long? nanosecondTradeReportingFacilityTimeStamp = null, long? sequenceNumber = null, int? tape = null
+            )
+        {
+            // Required parameters
+            Time = time;
+            Symbol = symbol;
+            SaleCondition = string.Join("", saleConditionsArray.Select(p => String.Format(System.Globalization.CultureInfo.GetCultureInfo("en-US"), "{0:X2}", p)));
+            Quantity = quantity;
+            Value = price;
+            _nanosecondSIPTimeStamp = nanosecondSIPTimeStamp.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+
+            // Optional parameters
+            Suspicious = Convert.ToBoolean(suspiciousFlag, System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+            Exchange = exchangeID.ToString();
+            _originalTradeID = originalTradeID.ToString();  // used for correction
+            _tradeID = tradeID.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+            _tradeCorrectionIndicator = tradeCorrectionIndicator.ToString();
+            _tradeIDReportingFacility = tradeIDReportingFacility.ToString();
+            _nanosecondParticipantExchangeTimeStamp = nanosecondParticipantExchangeTimeStamp.ToString(); ;
+            _nanosecondTradeReportingFacilityTimeStamp = nanosecondTradeReportingFacilityTimeStamp.ToString(); ;
+            _sequenceNumber = sequenceNumber.ToString();
+            _tape = tape.ToString();
+
+            // Other
+            DataType = MarketDataType.Tick;
+            TickType = TickType.Trade;
+
+        }
+
+        // Polygon Quote Tick
+        // https://polygon.io/docs/get_v2_ticks_stocks_nbbo__ticker___date__anchor
+        public Tick(DateTime time, Symbol symbol, int[] quoteConditionsArray, int[] quoteIndicatorsArray
+                    , decimal bidPrice, decimal bidSize, int bidExchangeID, decimal askPrice, decimal askSize, int askExchangeID
+                    , long nanosecondSIPTimeStamp, long? nanosecondParticipantExchangeTimeStamp = null, long? nanosecondTradeReportingFacilityTimeStamp = null
+                    , long? sequenceNumber = null, int? tape = null, bool? suspiciousFlag = false
+            )
+        {
+            // Required parameters
+            Time = time;
+            Symbol = symbol;
+            _quoteConditions = string.Join("", quoteConditionsArray.Select(p => String.Format(System.Globalization.CultureInfo.GetCultureInfo("en-US"), "{0:X2}", p)));
+            _quoteIndicators = string.Join("", quoteIndicatorsArray.Select(p => String.Format(System.Globalization.CultureInfo.GetCultureInfo("en-US"), "{0:X2}", p)));
+            BidPrice = bidPrice;
+            BidSize = bidSize;
+            _bidExchangeID = bidExchangeID.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US"));    // TODO:  Fix Polygon - Need to have different exchanges for both bid and ask
+            AskPrice = askPrice;
+            AskSize = askSize;
+            _askExchangeID = askExchangeID.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+            _nanosecondSIPTimeStamp = nanosecondSIPTimeStamp.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+
+            // Optional parameters
+            _nanosecondParticipantExchangeTimeStamp = nanosecondParticipantExchangeTimeStamp.ToString(); ;
+            _nanosecondTradeReportingFacilityTimeStamp = nanosecondTradeReportingFacilityTimeStamp.ToString(); ;
+            _sequenceNumber = sequenceNumber.ToString();
+            _tape = tape.ToString();
+            Suspicious = Convert.ToBoolean(suspiciousFlag, System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+
+            // Other
+            DataType = MarketDataType.Tick;
+            TickType = TickType.Quote;
+        }
+
+
+
+
+
+
+
 
         /// <summary>
         /// Tick implementation of reader method: read a line of data from the source and convert it to a tick object.
