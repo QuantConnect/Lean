@@ -127,7 +127,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void AssertFutureOptionOrderExercise(OrderEvent orderEvent, Security future, Security optionContract)
         {
-            var expectedLiquidationTimeUtc = new DateTime(2020, 6, 19, 20, 6, 0);
+            var expectedLiquidationTimeUtc = new DateTime(2020, 6, 19, 4, 1, 0);
 
             if (orderEvent.Direction == OrderDirection.Sell && future.Holdings.Quantity != 0)
             {
@@ -242,7 +242,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "268629545"}
+            {"OrderListHash", "-1009515759"}
         };
     }
 }

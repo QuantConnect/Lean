@@ -67,41 +67,6 @@ namespace QuantConnect
             = new Dictionary<IntPtr, PythonActivator>();
 
         /// <summary>
-        /// Returns the delisted liquidation time for a given delisting warning and exchange hours
-        /// </summary>
-        /// <param name="delisting">The delisting warning event</param>
-        /// <param name="exchangeHours">The securities exchange hours to use</param>
-        /// <returns>The securities liquidation time</returns>
-        public static DateTime GetLiquidationTime(this Delisting delisting, SecurityExchangeHours exchangeHours)
-        {
-            if (delisting.Type != DelistingType.Warning)
-            {
-                throw new ArgumentException("GetLiquidationTime can only be called with the liquidate warning event", nameof(delisting));
-            }
-
-            var delistingWarning = delisting.Time.Date;
-
-            // by default liquidation/exercise will happen 10 min before the end of the last trading day
-            var liquidationTime = delistingWarning.AddDays(1).AddMinutes(-10);
-
-            // if the market is open today we will determine the market close and liquidate 10 min before instead
-            if (exchangeHours.IsDateOpen(delistingWarning))
-            {
-                var marketOpen = delistingWarning;
-                if (!exchangeHours.IsOpen(marketOpen, false))
-                {
-                    // if the market isn't open at 0:00 we get next market open
-                    marketOpen = exchangeHours.GetNextMarketOpen(delistingWarning, false);
-                }
-
-                // using current market open we will get next market close which should be today and we will liquidate 10 min before
-                liquidationTime = exchangeHours.GetNextMarketClose(marketOpen, false).AddMinutes(-10);
-            }
-
-            return liquidationTime;
-        }
-
-        /// <summary>
         /// Safe multiplies a decimal by 100
         /// </summary>
         /// <param name="value">The decimal to multiply</param>
@@ -1245,6 +1210,7 @@ namespace QuantConnect
         /// <param name="exchangeHours">The exchange hours to determine open times</param>
         /// <param name="extendedMarket">True for extended market hours, otherwise false</param>
         /// <returns>Rounded datetime</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DateTime ExchangeRoundDown(this DateTime dateTime, TimeSpan interval, SecurityExchangeHours exchangeHours, bool extendedMarket)
         {
             // can't round against a zero interval
@@ -1269,6 +1235,7 @@ namespace QuantConnect
         /// <param name="roundingTimeZone">The time zone to perform the rounding in</param>
         /// <param name="extendedMarket">True for extended market hours, otherwise false</param>
         /// <returns>Rounded datetime</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DateTime ExchangeRoundDownInTimeZone(this DateTime dateTime, TimeSpan interval, SecurityExchangeHours exchangeHours, DateTimeZone roundingTimeZone, bool extendedMarket)
         {
             // can't round against a zero interval
@@ -1332,6 +1299,7 @@ namespace QuantConnect
         /// <param name="to">The time zone to be converted to</param>
         /// <param name="strict">True for strict conversion, this will throw during ambiguitities, false for lenient conversion</param>
         /// <returns>The time in terms of the to time zone</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DateTime ConvertTo(this DateTime time, DateTimeZone from, DateTimeZone to, bool strict = false)
         {
             if (strict)
@@ -1361,6 +1329,7 @@ namespace QuantConnect
         /// <param name="from">The time zone the specified <paramref name="time"/> is in</param>
         /// <param name="strict">True for strict conversion, this will throw during ambiguitities, false for lenient conversion</param>
         /// <returns>The time in terms of the to time zone</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DateTime ConvertToUtc(this DateTime time, DateTimeZone from, bool strict = false)
         {
             if (strict)

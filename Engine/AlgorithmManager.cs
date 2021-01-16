@@ -1037,8 +1037,19 @@ namespace QuantConnect.Lean.Engine
                     continue;
                 }
 
-                if (security.LocalTime < delisting.GetLiquidationTime(security.Exchange.Hours))
+                // liquidate ASAP on the last trading day
+                if (security.LocalTime < delisting.Time.Date)
                 {
+                    continue;
+                }
+
+                // if there is any delisting event for a symbol that we are the underlying for and we are still invested retry
+                // they will by liquidated first
+                if (delistings.Any(delistingEvent => delistingEvent.Symbol.Underlying == security.Symbol
+                    && algorithm.Securities[delistingEvent.Symbol].Invested))
+                {
+                    // this case could happen for example if we have a future 'A' position open and a future option position with underlying 'A'
+                    // and both get delisted on the same date, we will allow the FOP exercise order to get handled first
                     continue;
                 }
 
