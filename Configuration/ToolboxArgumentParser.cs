@@ -79,7 +79,12 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("splits-percentage", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Sets the probability each equity generated will have a stock split event. Note that this is not the total probability for all symbols generated. Only used for Equity. Defaults to 15.0: Example: --splits-percentage=10.0 ]"),
                 new CommandLineOption("dividends-percentage", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Sets the probability each equity generated will have dividends. Note that this is not the probability for all symbols genearted. Only used for Equity. Defaults to 60.0: Example: --dividends-percentage=25.5 ]"),
                 new CommandLineOption("dividend-every-quarter-percentage", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Sets the probability each equity generated will have a dividend event every quarter. Note that this is not the total probability for all symbols generated. Only used for Equity. Defaults to 30.0: Example: --dividend-every-quarter-percentage=15.0 ]"),
-            };
+                new CommandLineOption("polygon-api-name", CommandOptionType.SingleValue, "[REQUIRED for PolygonDownloader.  No Default.  Example: --api-name=HistoricTrades, --api-name=HistoricQuotes]"),
+                new CommandLineOption("polygon-api-key", CommandOptionType.SingleValue, "[REQUIRED for PolygonDownloader]"),
+                new CommandLineOption("polygon-api-results-limit", CommandOptionType.SingleValue, "[REQUIRED for PolygonDownloader.  No Default.  Example: --api-limit=50000]"),
+                new CommandLineOption("polygon-api-download-threads", CommandOptionType.SingleValue, "[REQUIRED for PolygonDownloader.  No Default.  Example: --polygon-download-threads=64]"),
+
+        };
 
         /// <summary>
         /// Argument parser contructor
