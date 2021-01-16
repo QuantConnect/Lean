@@ -24,18 +24,46 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     public class WickedRenkoConsolidator : IDataConsolidator
     {
-        internal DateTime CloseOn;
-        internal decimal CloseRate;
-        internal decimal HighRate;
-        internal decimal LowRate;
-        internal DateTime OpenOn;
-        internal decimal OpenRate;
-        internal decimal BarSize;
         private bool _firstTick = true;
         private RenkoBar _lastWicko;
         private DataConsolidatedHandler _dataConsolidatedHandler;
         private RenkoBar _currentBar;
         private IBaseData _consolidated;
+        
+        /// <summary>
+        /// Time of consolidated close.
+        /// </summary>
+        protected internal DateTime CloseOn;
+
+        /// <summary>
+        /// Value of consolidated close.
+        /// </summary>
+        protected internal decimal CloseRate;
+
+        /// <summary>
+        /// Value of consolidated high.
+        /// </summary>
+        protected internal decimal HighRate;
+
+        /// <summary>
+        /// Value of consolidated low.
+        /// </summary>
+        protected internal decimal LowRate;
+
+        /// <summary>
+        /// Time of consolidated open.
+        /// </summary>
+        protected internal DateTime OpenOn;
+
+        /// <summary>
+        /// Value of consolidate open.
+        /// </summary>
+        protected internal decimal OpenRate;
+
+        /// <summary>
+        /// Size of the consolidated bar.
+        /// </summary>
+        protected internal decimal BarSize;
 
         /// <summary>
         /// Gets the kind of the bar
@@ -114,9 +142,15 @@ namespace QuantConnect.Data.Consolidators
             {
                 CloseOn = data.Time;
 
-                if (rate > HighRate) HighRate = rate;
+                if (rate > HighRate)
+                {
+                    HighRate = rate;
+                }
 
-                if (rate < LowRate) LowRate = rate;
+                if (rate < LowRate)
+                {
+                    LowRate = rate;
+                }
 
                 CloseRate = rate;
 

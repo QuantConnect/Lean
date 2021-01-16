@@ -25,7 +25,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     /// <meta name="tag" content="renko" />
     /// <meta name="tag" content="indicators" />
-    /// <meta name="tag" content="wicked"/>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="consolidating data" />
     public class RenkoConsolidatorAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition

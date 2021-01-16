@@ -117,6 +117,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="type"></param>
         [Obsolete("Please use the WickedRenkoConsolidator if RenkoType is not Classic")]
         public RenkoConsolidator(decimal barSize, RenkoType type)
+        : this(barSize, true)
         {
             if (type != RenkoType.Classic)
             {
@@ -285,7 +286,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="barSize">The constant value size of each bar</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
         public RenkoConsolidator(decimal barSize, bool evenBars = true)
-            : base(barSize, evenBars)
+            : this(barSize, x => x.Value, x => 0, evenBars)
         {
         }
         
