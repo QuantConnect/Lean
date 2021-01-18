@@ -101,15 +101,20 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            if (Portfolio.Invested)
-            {
-                Liquidate();
-            }
-
             foreach (var symbol in ActiveSecurities.Keys)
             {
-                MarketOrder(symbol, -(decimal)ShortableQuantity(symbol));
-                _lastTradeDate = Time.Date;
+                if (!Portfolio.ContainsKey(symbol) || !Portfolio[symbol].Invested)
+                {
+                    if (!Shortable(symbol))
+                    {
+                        throw new Exception($"Expected {symbol} to be shortable on {Time:yyyy-MM-dd}");
+                    }
+
+                    // Buy at least once into all Symbols. Since daily data will always use
+                    // MOO orders, it makes the testing of liquidating buying into Symbols difficult.
+                    MarketOrder(symbol, -(decimal)ShortableQuantity(symbol));
+                    _lastTradeDate = Time.Date;
+                }
             }
         }
 
@@ -186,32 +191,32 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "9"},
-            {"Average Win", "0.01%"},
+            {"Total Trades", "5"},
+            {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "24.190%"},
-            {"Drawdown", "0.100%"},
+            {"Compounding Annual Return", "36.294%"},
+            {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.238%"},
-            {"Sharpe Ratio", "6.606"},
-            {"Probabilistic Sharpe Ratio", "74.593%"},
+            {"Net Profit", "0.340%"},
+            {"Sharpe Ratio", "21.2"},
+            {"Probabilistic Sharpe Ratio", "99.990%"},
             {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
+            {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.206"},
-            {"Beta", "0.175"},
-            {"Annual Standard Deviation", "0.024"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "6.072"},
+            {"Alpha", "0.274"},
+            {"Beta", "0.138"},
+            {"Annual Standard Deviation", "0.011"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "7.202"},
             {"Tracking Error", "0.068"},
-            {"Treynor Ratio", "0.921"},
-            {"Total Fees", "$540.00"},
-            {"Fitness Score", "0.292"},
+            {"Treynor Ratio", "1.722"},
+            {"Total Fees", "$307.50"},
+            {"Fitness Score", "0.173"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "233.368"},
-            {"Portfolio Turnover", "0.292"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Portfolio Turnover", "0.173"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -225,7 +230,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "-1049828230"}
+            {"OrderListHash", "97613274"}
         };
     }
 }

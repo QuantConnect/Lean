@@ -21,6 +21,7 @@ from QuantConnect.Data import *
 from QuantConnect.Data.Shortable import *
 from QuantConnect.Data.UniverseSelection import *
 from QuantConnect.Interfaces import *
+from QuantConnect import *
 
 
 class AllShortableSymbolsRegressionAlgorithmBrokerageModel(DefaultBrokerageModel):
@@ -74,12 +75,15 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
         if self.Time.date() == self.lastTradeDate:
             return
 
-        if self.Portfolio.Invested:
-            self.Liquidate();
-
         for symbol in self.ActiveSecurities.Keys:
-            self.MarketOrder(symbol, -float(self.ShortableQuantity(symbol)));
-            self.lastTradeDate = self.Time.date();
+            if not symbol in self.Portfolio or not self.Portfolio[symbol].Invested:
+                if not self.Shortable(symbol):
+                    raise Exception(f"Expected {symbol} to be shortable on {self.Time}")
+
+                # Buy at least once into all Symbols. Since daily data will always use
+                # MOO orders, it makes the testing of liquidating buying into Symbols difficult
+                self.MarketOrder(symbol, -float(self.ShortableQuantity(symbol)))
+                self.lastTradeDate = self.Time.date()
 
     def CoarseSelectionFunc(self, coarse):
         shortableSymbols = self.AllShortableSymbols();
