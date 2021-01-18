@@ -33,42 +33,49 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Time of consolidated close.
         /// </summary>
-        protected internal DateTime CloseOn;
+        /// <remarks>Protected for testing</remarks>
+        protected DateTime CloseOn;
 
         /// <summary>
         /// Value of consolidated close.
         /// </summary>
-        protected internal decimal CloseRate;
+        /// <remarks>Protected for testing</remarks>
+        protected decimal CloseRate;
 
         /// <summary>
         /// Value of consolidated high.
         /// </summary>
-        protected internal decimal HighRate;
+        /// <remarks>Protected for testing</remarks>
+        protected decimal HighRate;
 
         /// <summary>
         /// Value of consolidated low.
         /// </summary>
-        protected internal decimal LowRate;
+        /// <remarks>Protected for testing</remarks>
+        protected decimal LowRate;
 
         /// <summary>
         /// Time of consolidated open.
         /// </summary>
-        protected internal DateTime OpenOn;
+        /// <remarks>Protected for testing</remarks>
+        protected DateTime OpenOn;
 
         /// <summary>
         /// Value of consolidate open.
         /// </summary>
-        protected internal decimal OpenRate;
+        /// <remarks>Protected for testing</remarks>
+        protected decimal OpenRate;
 
         /// <summary>
         /// Size of the consolidated bar.
         /// </summary>
-        protected internal decimal BarSize;
+        /// <remarks>Protected for testing</remarks>
+        protected decimal BarSize;
 
         /// <summary>
         /// Gets the kind of the bar
         /// </summary>
-        public RenkoType Type { get; }
+        public RenkoType Type => RenkoType.Wicked;
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
@@ -116,7 +123,6 @@ namespace QuantConnect.Data.Consolidators
         public WickedRenkoConsolidator(decimal barSize)
         {
             BarSize = barSize;
-            Type = RenkoType.Wicked;
         }
 
         /// <summary>

@@ -113,8 +113,8 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         ///Initializes a new instance of the <see cref="RenkoConsolidator" /> class.
         /// </summary>
-        /// <param name="barSize"></param>
-        /// <param name="type"></param>
+        /// <param name="barSize">The constant value size of each bar</param>
+        /// <param name="type">The RenkoType of the bar</param>
         [Obsolete("Please use the WickedRenkoConsolidator if RenkoType is not Classic")]
         public RenkoConsolidator(decimal barSize, RenkoType type)
         : this(barSize, true)
@@ -123,8 +123,6 @@ namespace QuantConnect.Data.Consolidators
             {
                 throw new ArgumentException("Please use the WickedRenkoConsolidator type if RenkoType is not Classic");
             }
-
-            _barSize = barSize;
         }
 
         /// <summary>
