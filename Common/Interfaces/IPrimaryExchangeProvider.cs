@@ -13,9 +13,6 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
-using System.Linq;
-
 namespace QuantConnect.Interfaces
 {
     public interface IPrimaryExchangeProvider
@@ -26,31 +23,5 @@ namespace QuantConnect.Interfaces
         /// <param name="securityIdentifier">The security identifier to get the primary exchange for</param>
         /// <returns>Returns the primary exchange or null if not found</returns>
         string GetPrimaryExchange(SecurityIdentifier securityIdentifier);
-    }
-
-    class MapFilePrimaryExchangeProvider : IPrimaryExchangeProvider
-    {
-        private readonly Dictionary<SecurityIdentifier, PrimaryExchange> _primaryExchangeBySid;
-        public MapFilePrimaryExchangeProvider(IMapFileProvider mapFileProvider, string market = "USA")
-        {
-            _primaryExchangeBySid = new Dictionary<SecurityIdentifier, PrimaryExchange>();
-            foreach (var mapFile in mapFileProvider.Get(market))
-            {
-                var sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.FirstTicker, market);
-                var primaryExchange = (PrimaryExchange)mapFile.Last().PrimaryExchange;
-                _primaryExchangeBySid[sid] = primaryExchange;
-            }
-        }
-
-
-        public string GetPrimaryExchange(SecurityIdentifier securityIdentifier)
-        {
-            if (_primaryExchangeBySid.ContainsKey(securityIdentifier))
-            {
-                return _primaryExchangeBySid[securityIdentifier].ToString();
-            }
-
-            return null;
-        }
     }
 }
