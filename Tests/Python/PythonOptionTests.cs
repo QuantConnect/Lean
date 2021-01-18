@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.Python
                     {"Tracking Error", "0"},
                     {"Treynor Ratio", "0"},
                     {"Total Fees", "$2.00"},
-                    {"OrderListHash", "877696418"}
+                    {"OrderListHash", "-546310956"}
                     },
                     Language.Python,
                     AlgorithmStatus.Completed);
@@ -152,7 +152,7 @@ namespace QuantConnect.Tests.Python
                     {"Mean Population Magnitude", "0%"},
                     {"Rolling Averaged Population Direction", "0%"},
                     {"Rolling Averaged Population Magnitude", "0%"},
-                    {"OrderListHash", "-369469870"}
+                    {"OrderListHash", "-572432979"}
                 },
                 Language.Python,
                 AlgorithmStatus.Completed);
