@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
@@ -26,24 +27,24 @@ namespace QuantConnect
 {
     public enum PrimaryExchange : byte
     {
-        UNKNOWN,
-        NASDAQ,
-        BATS,
-        ARCA,
-        NYSE,
-        NSE,
-        FINRA,
-        ISE,
+        UNKNOWN=0,
+        NASDAQ=81,
+        BATS=90,
+        ARCA=80,
+        NYSE=78,
+        NSE=67,
+        FINRA=68,
+        ISE=73,
         OPRA,
-        CSE,
-        CBOE,
-        AMEX,
+        CSE=77,
+        CBOE=87,
+        AMEX=65,
         SIAC,
-        EDGA,
-        EDGX,
-        NASDAQBX,
-        NASDAQPSX,
-        BATSY,
+        EDGA=74,
+        EDGX=75,
+        NASDAQ_BX=66,
+        NASDAQ_PSX=88,
+        BATS_Y,
         C2,
         BOSTON,
         MIAX,
@@ -711,80 +712,91 @@ namespace QuantConnect
     /// </summary>
     public static class Exchanges
     {
+        public static PrimaryExchange GetPrimaryExchange(char exchange)
+        {
+            return (PrimaryExchange) exchange;
+        }
+
         /// <summary>
         /// Gets the exchange name for the given code number
         /// </summary>
         /// <remarks>Useful for performance</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte GetCode(string exchange)
+        public static PrimaryExchange GetPrimaryExchange(string exchange)
         {
+            PrimaryExchange primaryExchange;
+            if (Enum.TryParse(exchange, true, out primaryExchange))
+            {
+                return primaryExchange;
+            }
+            
             switch (exchange)
             {
                 case "T":
                 case "Q":
                 case "NASDAQ":
                 case "NASDAQ OMX":
-                    return 1;
+                    return PrimaryExchange.NASDAQ;
                 case "Z":
                 case "BATS":
                 case "BATS Z":
-                    return 2;
+                    return PrimaryExchange.BATS;
                 case "P":
                 case "ARCA":
-                    return 3;
+                    return PrimaryExchange.ARCA;
                 case "N":
                 case "NYSE":
-                    return 4;
+                    return PrimaryExchange.NYSE;
                 case "C":
                 case "NSE":
-                    return 5;
+                    return PrimaryExchange.NSE;
                 case "D":
                 case "FINRA":
-                    return 6;
+                    return PrimaryExchange.FINRA;
                 case "I":
                 case "ISE":
-                    return 7;
+                    return PrimaryExchange.ISE;
                 case "OPRA":
-                    return 8;
+                    return PrimaryExchange.OPRA;
                 case "M":
                 case "CSE":
-                    return 9;
+                    return PrimaryExchange.CSE;
                 case "W":
                 case "CBOE":
-                    return 10;
+                    return PrimaryExchange.CBOE;
                 case "A":
                 case "AMEX":
-                    return 11;
+                    return PrimaryExchange.AMEX;
                 case "SIAC":
-                    return 12;
+                    return PrimaryExchange.SIAC;
                 case "J":
                 case "EDGA":
-                    return 13;
+                    return PrimaryExchange.EDGA;
                 case "K":
                 case "EDGX":
-                    return 14;
+                    return PrimaryExchange.EDGX;
                 case "B":
                 case "NASDAQ BX":
-                    return 21;
+                    return PrimaryExchange.NASDAQ_BX;
                 case "X":
                 case "NASDAQ PSX":
-                    return 23;
+                    return PrimaryExchange.NASDAQ_PSX;
                 case "Y":
                 case "BATS Y":
-                    return 23;
+                    return PrimaryExchange.BATS_Y;
                 case "C2":
-                    return 24;
+                    return PrimaryExchange.C2;
                 case "BOSTON":
-                    return 25;
+                    return PrimaryExchange.BOSTON;
                 case "MIAX":
-                    return 26;
+                    return PrimaryExchange.MIAX;
                 case "ISE_GEMINI":
-                    return 27;
+                    return PrimaryExchange.ISE_GEMINI;
                 case "ISE_MERCURY":
-                    return 28;
+                    return PrimaryExchange.ISE_MERCURY;
                 default:
                 case "UNKNOWN":
-                    return 0;
+                    return PrimaryExchange.UNKNOWN;
             }
         }
 

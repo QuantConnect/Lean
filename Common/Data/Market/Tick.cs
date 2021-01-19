@@ -77,7 +77,7 @@ namespace QuantConnect.Data.Market
             set
             {
                 _exchange = value;
-                _exchangeCode = Exchanges.GetCode(_exchange);
+                _exchangeCode = (byte) Exchanges.GetPrimaryExchange(_exchange);
             }
         }
 
