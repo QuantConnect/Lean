@@ -728,9 +728,7 @@ namespace QuantConnect
         /// <returns></returns>
         public static PrimaryExchange GetPrimaryExchange(char exchange)
         {
-            return Enum.IsDefined(typeof(PrimaryExchange), exchange)
-                ? (PrimaryExchange) exchange
-                : PrimaryExchange.UNKNOWN;
+            return (PrimaryExchange)exchange;
         }
 
         /// <summary>
