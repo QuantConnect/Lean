@@ -16,10 +16,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
-using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -232,9 +230,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 : OrderResponse.WarmingUp(request);
 
             var shortable = true;
-            // Only enforce shortable restrictions if our order is a short, not one of:
-            //   * A long order being closed, which uses negative quantity in its order fields
-            //   * A short order being closed, which uses positive quantity in its order fields
             if (request.Quantity < 0)
             {
                 shortable = _algorithm.Shortable(request.Symbol, request.Quantity);
@@ -318,9 +313,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 var order = GetOrderByIdInternal(request.OrderId);
                 var orderQuantity = request.Quantity ?? ticket.Quantity;
 
-                // Only enforce shortable restrictions if our order is a short, not one of:
-                //   * A long order being closed, which uses negative quantity in its order fields
-                //   * A short order being closed, which uses positive quantity in its order fields
                 var shortable = true;
                 if (order?.Direction == OrderDirection.Sell || orderQuantity < 0)
                 {
