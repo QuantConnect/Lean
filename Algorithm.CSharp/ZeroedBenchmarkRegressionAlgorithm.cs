@@ -23,8 +23,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Basic template algorithm simply initializes the date range and cash. This is a skeleton
-    /// framework you can use for designing an algorithm.
+    /// Regression algorithm to test zeroed benchmark through BrokerageModel override
     /// </summary>
     public class ZeroedBenchmarkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -42,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Add equity
             _spy = AddEquity("SPY", Resolution.Hour).Symbol;
 
-            // Use our Test Brokerage Model with null default benchmark symbol
+            // Use our Test Brokerage Model with zeroed default benchmark
             SetBrokerageModel(new TestBrokerageModel());
         }
 
@@ -67,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
