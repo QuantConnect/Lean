@@ -32,7 +32,7 @@ namespace QuantConnect.Data.Market
     [ProtoInclude(1000, typeof(OpenInterest))]
     public class Tick : BaseData
     {
-        private string _exchange;
+        private string _exchange = string.Empty;
         private byte _exchangeCode;
         private uint? _parsedSaleCondition;
 
