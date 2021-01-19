@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Brokerages;
@@ -230,7 +229,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 ? OrderResponse.Success(request)
                 : OrderResponse.WarmingUp(request);
 
-            var shortable = _algorithm.Shortable(request.Symbol, request.Quantity);
+            var shortable = true;
+            if (request.Quantity < 0)
+            {
+                shortable = _algorithm.Shortable(request.Symbol, request.Quantity);
+            }
+
             if (!shortable)
             {
                 response = OrderResponse.Error(request, OrderResponseErrorCode.ExceedsShortableQuantity,
@@ -308,7 +312,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 //Update the order from the behaviour
                 var order = GetOrderByIdInternal(request.OrderId);
                 var orderQuantity = request.Quantity ?? ticket.Quantity;
-                var shortable = _algorithm.Shortable(ticket.Symbol, orderQuantity);
+
+                var shortable = true;
+                if (order?.Direction == OrderDirection.Sell || orderQuantity < 0)
+                {
+                    shortable = _algorithm.Shortable(ticket.Symbol, orderQuantity);
+                }
 
                 if (order == null)
                 {
