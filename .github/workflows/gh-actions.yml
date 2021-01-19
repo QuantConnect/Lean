@@ -13,10 +13,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 5.0.x
+    - name: Setup .NET & Mono
+      run: |
+        sudo apt update
+        sudo apt install dirmngr gnupg apt-transport-https ca-certificates
+        sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+        sudo sh -c 'echo "deb https://download.mono-project.com/repo/ubuntu stable-bionic main" > /etc/apt/sources.list.d/mono-official-stable.list'
+        sudo apt update
+        sudo apt install mono-complete
+
     - name: Setup Python & Dependencies
       run: |
         export PATH="$HOME/miniconda3/bin:$PATH"
@@ -32,11 +37,14 @@ jobs:
         conda install -y scipy=1.4.1
         conda install -y wrapt=1.12.1
     - name: Restore nuget dependencies
-      run: dotnet restore
+      run: |
+        nuget restore QuantConnect.Lean.sln -v quiet
+        nuget install NUnit.Runners -Version 3.11.1 -OutputDirectory testrunner
     - name: Build
-      run: dotnet build --no-restore
+      run: msbuild /p:Configuration=Release /p:VbcToolExe=vbnc.exe /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
     - name: Run Tests
-      run: dotnet test --no-build --filter "cat != TravisExclude" -- TestRunParameters.Parameter\(name=\"log-handler\", value=\"ConsoleErrorLogHandler\"\) 
+      run: |
+        mono ./testrunner/NUnit.ConsoleRunner.3.11.1/tools/nunit3-console.exe ./Tests/bin/Release/QuantConnect.Tests.dll --where "cat != TravisExclude" --labels=Off --params:log-handler=ConsoleErrorLogHandler
     - name: Generate & Publish python stubs
       run: |
         chmod +x ci_build_stubs.sh
