@@ -168,7 +168,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="if $(ConfigurationName) == Debug copy &quot;$(SolutionDir)\Launcher\config.json&quot; &quot;$(TargetDir)\config.json&quot;&#xD;&#xA;if $(ConfigurationName) == Release copy &quot;$(SolutionDir)\Launcher\config.json&quot; &quot;$(TargetDir)\config.json&quot;" />
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="build&#xD;&#xA;" />
   </Target>
 </Project>
