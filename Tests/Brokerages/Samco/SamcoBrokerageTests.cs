@@ -19,7 +19,7 @@ using System.Threading;
 
 namespace QuantConnect.Tests.Brokerages.Samco
 {
-    [TestFixture]//, Ignore("This test requires a configured and active Samco account")]
+    [TestFixture, Ignore("This test requires a configured and active Samco account")]
     public class SamcoBrokerageTests
     {
 
