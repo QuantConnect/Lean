@@ -17,9 +17,23 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.x
-    - name: Restore dependencies
+    - name: Setup Python & Dependencies
+      run: |
+        export PATH="$HOME/miniconda3/bin:$PATH"
+        wget -q https://cdn.quantconnect.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
+        bash Miniconda3-4.5.12-Linux-x86_64.sh -b
+        rm -rf Miniconda3-4.5.12-Linux-x86_64.sh
+        sudo ln -s $HOME/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so
+        conda update -y python conda pip
+        conda install -y python=3.6.8
+        conda install -y numpy=1.18.1
+        conda install -y pandas=0.25.3
+        conda install -y cython=0.29.15
+        conda install -y scipy=1.4.1
+        conda install -y wrapt=1.12.1
+    - name: Restore nuget dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test --no-build --filter "cat != TravisExclude" -- TestRunParameters.Parameter(name=\"log-handler\", value=\"ConsoleErrorLogHandler\") 
