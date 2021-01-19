@@ -18,7 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
 
-namespace QuantConnect
+namespace QuantConnect.Data.Auxiliary
 {
     /// <summary>
     /// Implementation of IPrimaryExchangeProvider from map files. 

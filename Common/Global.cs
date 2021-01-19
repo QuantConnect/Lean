@@ -25,6 +25,15 @@ using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
+    /// <summary>
+    /// Equity US exchanges
+    /// </summary>
+    /// <remarks>
+    /// The byte value of each entry are the byte representation of the exchange single letter code.
+    /// E.g.
+    ///     - 'Q' byte representation is 81 and it maps to NASDAQ
+    ///     - 'Z' byte representation is 90 and it maps to BATS
+    /// </remarks>
     public enum PrimaryExchange : byte
     {
         UNKNOWN=32,
@@ -798,16 +807,6 @@ namespace QuantConnect
                 case "UNKNOWN":
                     return PrimaryExchange.UNKNOWN;
             }
-        }
-
-        /// <summary>
-        /// Gets the exchange name for the given code number
-        /// </summary>
-        /// <remarks>Useful for performance</remarks>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static PrimaryExchange GetName(int exchangeCode)
-        {
-            return (PrimaryExchange) exchangeCode;
         }
     }
 
