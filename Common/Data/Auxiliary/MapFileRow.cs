@@ -51,6 +51,16 @@ namespace QuantConnect.Data.Auxiliary
             MappedSymbol = mappedSymbol.LazyToUpper();
             PrimaryExchange = Exchanges.GetPrimaryExchange(primaryExchange);
         }
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MapFileRow"/> class.
+        /// </summary>
+        public MapFileRow(DateTime date, string mappedSymbol, PrimaryExchange primaryExchange)
+        {
+            Date = date;
+            MappedSymbol = mappedSymbol.LazyToUpper();
+            PrimaryExchange = primaryExchange;
+        }
 
         /// <summary>
         /// Reads in the map_file for the specified equity symbol
