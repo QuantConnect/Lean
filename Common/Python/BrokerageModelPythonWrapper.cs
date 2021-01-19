@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using Python.Runtime;
+using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Shortable;
@@ -151,6 +152,19 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 return (_model.CanUpdateOrder(security, order, out message) as PyObject).GetAndDispose<bool>();
+            }
+        }
+
+        /// <summary>
+        /// Get the benchmark for this model
+        /// </summary>
+        /// <param name="securities">SecurityService to create the security with if needed</param>
+        /// <returns>The benchmark for this brokerage</returns>
+        public IBenchmark GetBenchmark(SecurityManager securities)
+        {
+            using (Py.GIL())
+            {
+                return (_model.GetBenchmark(securities) as PyObject).GetAndDispose<IBenchmark>();
             }
         }
 

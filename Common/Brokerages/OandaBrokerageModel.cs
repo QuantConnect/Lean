@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Slippage;
@@ -101,6 +102,17 @@ namespace QuantConnect.Brokerages
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Get the benchmark for this model
+        /// </summary>
+        /// <param name="securities">SecurityService to create the security with if needed</param>
+        /// <returns>The benchmark for this brokerage</returns>
+        public override IBenchmark GetBenchmark(SecurityManager securities)
+        {
+            var symbol = Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda);
+            return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 
         /// <summary>
