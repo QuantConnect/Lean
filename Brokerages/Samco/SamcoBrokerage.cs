@@ -474,7 +474,7 @@ namespace QuantConnect.Brokerages.Samco
         public override bool PlaceOrder(Order order)
         {
             LockStream();
-            SamcoOrderResponse orderResponse = _samcoAPI.PlaceOrder(order, order.Symbol.Value, _samcoProductType, _algorithm);
+            SamcoOrderResponse orderResponse = _samcoAPI.PlaceOrder(order, order.Symbol.Value, _samcoProductType);
 
             var orderFee = new OrderFee(new CashAmount(CalculateBrokerageOrderFee(order.Quantity * order.Price, order.Direction), Currencies.INR));
 
@@ -541,7 +541,7 @@ namespace QuantConnect.Brokerages.Samco
         public override bool UpdateOrder(Order order)
         {
             LockStream();
-            var orderResponse = _samcoAPI.ModifyOrder(order, _algorithm);
+            var orderResponse = _samcoAPI.ModifyOrder(order);
             var orderFee = new OrderFee(new CashAmount(CalculateBrokerageOrderFee(order.Quantity * order.Price, order.Direction), Currencies.INR));
             if (orderResponse.status == "Success")
             {
