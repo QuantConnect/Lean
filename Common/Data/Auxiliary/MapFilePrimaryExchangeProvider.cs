@@ -46,12 +46,12 @@ namespace QuantConnect.Data.Auxiliary
             if (!_primaryExchangeBySid.TryGetValue(securityIdentifier, out primaryExchange))
             {
                 var mapFile = _mapFileProvider.Get(_market).ResolveMapFile(securityIdentifier.Symbol, securityIdentifier.Date);
-                if (mapFile != null)
+                if (mapFile != null && mapFile.Any())
                 {
                     primaryExchange = mapFile.Last().PrimaryExchange;
                 }
+                _primaryExchangeBySid[securityIdentifier] = primaryExchange;
             }
-            _primaryExchangeBySid[securityIdentifier] = primaryExchange;
             return primaryExchange.ToString();
         }
     }
