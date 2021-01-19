@@ -26,9 +26,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// Basic template algorithm simply initializes the date range and cash. This is a skeleton
     /// framework you can use for designing an algorithm.
     /// </summary>
-    /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="using quantconnect" />
-    /// <meta name="tag" content="trading and orders" />
     public class ZeroedBenchmarkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy;

@@ -162,7 +162,10 @@ namespace QuantConnect.Python
         /// <returns>The benchmark for this brokerage</returns>
         public IBenchmark GetBenchmark(SecurityManager securities)
         {
-            return (_model.GetBenchmark(securities) as PyObject).GetAndDispose<IBenchmark>();
+            using (Py.GIL())
+            {
+                return (_model.GetBenchmark(securities) as PyObject).GetAndDispose<IBenchmark>();
+            }
         }
 
         /// <summary>
