@@ -51,7 +51,6 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Exchange code this tick came from <see cref="Exchanges"/>
         /// </summary>
-        [ProtoMember(12)]
         public byte ExchangeCode
         {
             get
@@ -68,6 +67,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Exchange name this tick came from <see cref="Exchanges"/>
         /// </summary>
+        [ProtoMember(12)]
         public string Exchange
         {
             get

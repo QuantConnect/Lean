@@ -45,12 +45,9 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Initializes a new instance of the <see cref="MapFileRow"/> class.
         /// </summary>
-        public MapFileRow(DateTime date, string mappedSymbol, char primaryExchange=' ')
-        {
-            Date = date;
-            MappedSymbol = mappedSymbol.LazyToUpper();
-            PrimaryExchange = Exchanges.GetPrimaryExchange(primaryExchange);
-        }
+        public MapFileRow(DateTime date, string mappedSymbol, char primaryExchange = ' ')
+            : this(date, mappedSymbol, Exchanges.GetPrimaryExchange(primaryExchange))
+        { }
         
         /// <summary>
         /// Initializes a new instance of the <see cref="MapFileRow"/> class.
@@ -93,8 +90,7 @@ namespace QuantConnect.Data.Auxiliary
                 primaryExchange = Exchanges.GetPrimaryExchange(Convert.ToChar(csv[2], CultureInfo.InvariantCulture));
             }
 
-            return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1],
-                Convert.ToChar((byte) primaryExchange));
+            return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1], primaryExchange);
         }
 
         #region Equality members
@@ -176,7 +172,7 @@ namespace QuantConnect.Data.Auxiliary
 
         public override string ToString()
         {
-            var mainExchange = PrimaryExchange == PrimaryExchange.UNKNOWN ? string.Empty : $" - {(PrimaryExchange) PrimaryExchange}";
+            var mainExchange = PrimaryExchange == PrimaryExchange.UNKNOWN ? string.Empty : $" - {PrimaryExchange.ToString()}";
             return Date.ToShortDateString() + ": " + MappedSymbol + mainExchange;
         }
     }
