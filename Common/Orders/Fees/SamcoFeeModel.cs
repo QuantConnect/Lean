@@ -20,9 +20,9 @@ namespace QuantConnect.Orders.Fees
 {
     /// <summary>
     /// Provides the default implementation of <see cref="IFeeModel"/>
-    /// Refer to https://zerodha.com/brokerage-calculator
+    /// Refer to https://www.samco.in/technology/brokerage_calculator
     /// </summary>
-    public class ZerodhaFeeModel : IFeeModel
+    public class SamcoFeeModel : IFeeModel
     {
         public OrderFee GetOrderFee(OrderFeeParameters parameters)
         {

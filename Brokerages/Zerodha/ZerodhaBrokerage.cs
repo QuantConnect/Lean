@@ -105,13 +105,9 @@ namespace QuantConnect.Brokerages.Zerodha
         private readonly List<string> unSubscribeInstrumentTokens = new List<string>();
 
         private Kite _kite;
-        private readonly IOrderProvider _orderProvider;
-        private readonly ISecurityProvider _securityProvider;
         private readonly string _apiKey;
         private readonly string _accessToken;
         private readonly string _wssUrl = "wss://ws.kite.trade/";
-        private readonly string RestApiUrl = "https://api.kite.trade";
-
         private readonly string _tradingSegment;
         private readonly string _zerodhaProductType;
 
