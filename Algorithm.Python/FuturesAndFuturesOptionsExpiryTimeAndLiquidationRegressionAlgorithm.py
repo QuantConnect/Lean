@@ -17,7 +17,7 @@ class FuturesAndFuturesOptionsExpiryTimeAndLiquidationRegressionAlgorithm(QCAlgo
 
         self.expectedExpiryWarningTime = datetime(2020, 6, 19)
         self.expectedExpiryDelistingTime = datetime(2020, 6, 20)
-        self.expectedLiquidationTime = datetime(2020, 6, 19, 0, 2, 0)
+        self.expectedLiquidationTime = datetime(2020, 6, 19, 0, 1, 0)
 
         self.SetStartDate(2020, 1, 5)
         self.SetEndDate(2020, 12, 1)
@@ -72,7 +72,7 @@ class FuturesAndFuturesOptionsExpiryTimeAndLiquidationRegressionAlgorithm(QCAlgo
 
         # * Future Liquidation
         # * Future Option Exercise
-        # * Underlying Future Liquidation
+        # * We expect NO Underlying Future Liquidation because we already hold a Long future position so the FOP Put selling leaves us breakeven
         self.liquidated += 1
         if orderEvent.Symbol.SecurityType == SecurityType.FutureOption and self.expectedLiquidationTime != self.Time:
             raise AssertionError(f"Expected to liquidate option {orderEvent.Symbol} at {self.expectedLiquidationTime}, instead liquidated at {self.Time}")
@@ -91,5 +91,5 @@ class FuturesAndFuturesOptionsExpiryTimeAndLiquidationRegressionAlgorithm(QCAlgo
         if self.delistingsReceived != 4:
             raise AssertionError(f"Expected 4 delisting events received, found: {self.delistingsReceived}")
 
-        if self.liquidated != 3:
+        if self.liquidated != 2:
             raise AssertionError(f"Expected 3 liquidation events, found {self.liquidated}")

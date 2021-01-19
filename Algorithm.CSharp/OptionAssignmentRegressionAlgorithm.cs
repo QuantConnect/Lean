@@ -77,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "22"},
+            {"Total Trades", "24"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -101,8 +101,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-50.218"},
-            {"Portfolio Turnover", "6.713"},
+            {"Return Over Maximum Drawdown", "-50.725"},
+            {"Portfolio Turnover", "8.14"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -116,7 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "-1597098916"}
+            {"OrderListHash", "-1137535376"}
         };
     }
 }

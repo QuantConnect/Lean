@@ -1037,20 +1037,19 @@ namespace QuantConnect.Lean.Engine
                     continue;
                 }
 
-                var delistingTime = delisting.Time;
-                if (!security.Exchange.Hours.IsOpen(delistingTime, false))
+                // liquidate ASAP on the last trading day
+                if (security.LocalTime < delisting.Time.Date)
                 {
-                    // This exists as a defensive measure to ensure that the delisting time
-                    // does not get moved if the market is open. If the market is closed,
-                    // we get the next market open, which will be on the same day if the delisting
-                    // date is a trading day. If the delisting date is after market close, then
-                    // the delisting will be adjusted to the next market open.
-                    delistingTime = security.Exchange.Hours.GetNextMarketOpen(delistingTime, false);
-                    delistingTime = security.Exchange.Hours.GetNextMarketClose(delistingTime, false);
+                    continue;
                 }
 
-                if (security.LocalTime < delistingTime)
+                // if there is any delisting event for a symbol that we are the underlying for and we are still invested retry
+                // they will by liquidated first
+                if (delistings.Any(delistingEvent => delistingEvent.Symbol.Underlying == security.Symbol
+                    && algorithm.Securities[delistingEvent.Symbol].Invested))
                 {
+                    // this case could happen for example if we have a future 'A' position open and a future option position with underlying 'A'
+                    // and both get delisted on the same date, we will allow the FOP exercise order to get handled first
                     continue;
                 }
 
@@ -1069,6 +1068,9 @@ namespace QuantConnect.Lean.Engine
 
                 delistings.RemoveAt(i);
                 algorithm.Transactions.ProcessRequest(request);
+
+                // don't allow users to open a new position once we sent the liquidation order
+                security.IsTradable = false;
             }
         }
 
