@@ -93,21 +93,52 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
                 new MapFileRow(new DateTime(2050, 12, 31), "goog", 'Q')
             });
 
-            Assert.AreEqual(1, mapFile.Last().PrimaryExchange);
             Assert.AreEqual(PrimaryExchange.NASDAQ, (PrimaryExchange) mapFile.Last().PrimaryExchange);
         }
 
-        [TestCase("20000113,aapl,Q", PrimaryExchange.NASDAQ)]
+        [TestCase("20010213,aapl,Q", PrimaryExchange.NASDAQ)]
+        [TestCase("20010213,aapl,Z", PrimaryExchange.BATS)]
+        [TestCase("20010213,aapl,P", PrimaryExchange.ARCA)]
+        [TestCase("20010213,aapl,N", PrimaryExchange.NYSE)]
+        [TestCase("20010213,aapl,C", PrimaryExchange.NSE)]
+        [TestCase("20010213,aapl,D", PrimaryExchange.FINRA)]
+        [TestCase("20010213,aapl,I", PrimaryExchange.ISE)]
+        [TestCase("20010213,aapl,M", PrimaryExchange.CSE)]
+        [TestCase("20010213,aapl,W", PrimaryExchange.CBOE)]
+        [TestCase("20010213,aapl,A", PrimaryExchange.AMEX)]
+        [TestCase("20010213,aapl,J", PrimaryExchange.EDGA)]
+        [TestCase("20010213,aapl,K", PrimaryExchange.EDGX)]
+        [TestCase("20010213,aapl,B", PrimaryExchange.NASDAQ_BX)]
+        [TestCase("20010213,aapl,X", PrimaryExchange.NASDAQ_PSX)]
+        [TestCase("20010213,aapl,Y", PrimaryExchange.BATS_Y)]
         public void ParsesRowWithExchangesCorrectly(string mapFileRow, PrimaryExchange expectedPrimaryExchange)
         {
             // Arrange
             var rowParts = mapFileRow.Split(',');
-            var expectedMapFileRow = new MapFileRow(DateTime.Parse(rowParts[0], CultureInfo.InvariantCulture),
-                rowParts[1], Convert.ToChar(rowParts[2], CultureInfo.InvariantCulture));
+            var expectedMapFileRow = new MapFileRow(
+                DateTime.ParseExact(rowParts[0], DateFormat.EightCharacter, CultureInfo.InvariantCulture),
+                rowParts[1],
+                Convert.ToChar(rowParts[2], CultureInfo.InvariantCulture));
             // Act
             var actualMapFileRow = MapFileRow.Parse(mapFileRow);
             // Assert
             Assert.AreEqual(expectedPrimaryExchange, actualMapFileRow.PrimaryExchange);
+            Assert.AreEqual(expectedMapFileRow, actualMapFileRow);
+        }
+
+        [Test]
+        public void ParsesRowWithoutExchangesCorrectly()
+        {
+            // Arrange
+            var mapFileRow = "20010213,aapl";
+            var rowParts = mapFileRow.Split(',');
+            var expectedMapFileRow = new MapFileRow(
+                DateTime.ParseExact(rowParts[0], DateFormat.EightCharacter, CultureInfo.InvariantCulture),
+                rowParts[1]);
+            // Act
+            var actualMapFileRow = MapFileRow.Parse(mapFileRow);
+            // Assert
+            Assert.AreEqual(PrimaryExchange.UNKNOWN, actualMapFileRow.PrimaryExchange);
             Assert.AreEqual(expectedMapFileRow, actualMapFileRow);
         }
     }

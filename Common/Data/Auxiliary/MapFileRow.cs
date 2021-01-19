@@ -160,7 +160,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public string ToCsv()
         {
-            var encodedExchange = PrimaryExchange == 0 ? string.Empty : $",{Convert.ToChar((byte) PrimaryExchange)}";
+            var encodedExchange = PrimaryExchange == PrimaryExchange.UNKNOWN? string.Empty : $",{Convert.ToChar((byte) PrimaryExchange)}";
             return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},{MappedSymbol.ToLowerInvariant()}{encodedExchange}";
         }
 
