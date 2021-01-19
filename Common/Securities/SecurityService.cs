@@ -133,11 +133,7 @@ namespace QuantConnect.Securities
             switch (symbol.ID.SecurityType)
             {
                 case SecurityType.Equity:
-                    var primaryExchange = PrimaryExchange.UNKNOWN;
-                    if (_primaryExchangeProvider?.GetPrimaryExchange(symbol.ID) != null)
-                    {
-                        primaryExchange = (PrimaryExchange)Enum.Parse(typeof(PrimaryExchange), _primaryExchangeProvider.GetPrimaryExchange(symbol.ID));
-                    }
+                    var primaryExchange = _primaryExchangeProvider.GetPrimaryExchange(symbol.ID).GetPrimaryExchange();
                     security = new Equity.Equity(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache, primaryExchange);
                     break;
 

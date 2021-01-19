@@ -721,20 +721,27 @@ namespace QuantConnect
     /// </summary>
     public static class Exchanges
     {
+        /// <summary>
+        /// Returns the main Exchange from the single character encoding.
+        /// </summary>
+        /// <param name="exchange"></param>
+        /// <returns></returns>
         public static PrimaryExchange GetPrimaryExchange(char exchange)
         {
-            return (PrimaryExchange) exchange;
+            return Enum.IsDefined(typeof(PrimaryExchange), exchange)
+                ? (PrimaryExchange) exchange
+                : PrimaryExchange.UNKNOWN;
         }
 
         /// <summary>
-        /// Gets the exchange name for the given code number
+        /// Gets the exchange as PrimaryExchange object.
         /// </summary>
         /// <remarks>Useful for performance</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static PrimaryExchange GetPrimaryExchange(string exchange)
+        public static PrimaryExchange GetPrimaryExchange(this string exchange)
         {
             PrimaryExchange primaryExchange;
-            if (Enum.TryParse(exchange, true, out primaryExchange))
+            if (Enum.TryParse(exchange, false, out primaryExchange))
             {
                 return primaryExchange;
             }

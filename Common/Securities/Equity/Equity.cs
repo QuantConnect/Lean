@@ -61,7 +61,7 @@ namespace QuantConnect.Securities.Equity
         public long? TotalShortableQuantity => ShortableProvider.ShortableQuantity(Symbol, LocalTime);
 
         /// <summary>
-        /// 
+        /// Equity primary exchange.
         /// </summary>
         public PrimaryExchange PrimaryExchange;
 

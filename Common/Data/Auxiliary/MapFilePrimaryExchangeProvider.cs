@@ -25,16 +25,14 @@ namespace QuantConnect.Data.Auxiliary
     /// </summary>
     class MapFilePrimaryExchangeProvider : IPrimaryExchangeProvider
     {
-        private readonly Dictionary<SecurityIdentifier, PrimaryExchange> _primaryExchangeBySid;
+        private readonly IMapFileProvider _mapFileProvider;
+        private readonly string _market;
+        private readonly Dictionary<SecurityIdentifier, PrimaryExchange> _primaryExchangeBySid = new Dictionary<SecurityIdentifier, PrimaryExchange>();
+
         public MapFilePrimaryExchangeProvider(IMapFileProvider mapFileProvider, string market = "USA")
         {
-            _primaryExchangeBySid = new Dictionary<SecurityIdentifier, PrimaryExchange>();
-            foreach (var mapFile in mapFileProvider.Get(market))
-            {
-                var sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.FirstTicker, market);
-                var primaryExchange = (PrimaryExchange) mapFile.Last().PrimaryExchange;
-                _primaryExchangeBySid[sid] = primaryExchange;
-            }
+            _mapFileProvider = mapFileProvider;
+            _market = market;
         }
 
         /// <summary>
@@ -44,12 +42,17 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>Returns the primary exchange or null if not found</returns>
         public string GetPrimaryExchange(SecurityIdentifier securityIdentifier)
         {
-            if (_primaryExchangeBySid.ContainsKey(securityIdentifier))
+            var primaryExchange = PrimaryExchange.UNKNOWN;
+            if (!_primaryExchangeBySid.TryGetValue(securityIdentifier, out primaryExchange))
             {
-                return _primaryExchangeBySid[securityIdentifier].ToString();
+                var mapFile = _mapFileProvider.Get(_market).ResolveMapFile(securityIdentifier.Symbol, securityIdentifier.Date);
+                if (mapFile != null)
+                {
+                    primaryExchange = mapFile.Last().PrimaryExchange;
+                }
             }
-
-            return null;
+            _primaryExchangeBySid[securityIdentifier] = primaryExchange;
+            return primaryExchange.ToString();
         }
     }
 }
