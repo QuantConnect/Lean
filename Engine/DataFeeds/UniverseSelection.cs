@@ -263,35 +263,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // determine which data subscriptions need to be removed from this universe
-            foreach (var member in universe.Members.Values)
+            foreach (var member in universe.Securities.Values.OrderBy(member => member.Security.Symbol.SecurityType))
             {
+                var security = member.Security;
                 // if we've selected this subscription again, keep it
-                if (selections.Contains(member.Symbol)) continue;
+                if (selections.Contains(security.Symbol)) continue;
 
                 // don't remove if the universe wants to keep him in
-                if (!universe.CanRemoveMember(dateTimeUtc, member)) continue;
+                if (!universe.CanRemoveMember(dateTimeUtc, security)) continue;
 
                 // remove the member - this marks this member as not being
                 // selected by the universe, but it may remain in the universe
                 // until open orders are closed and the security is liquidated
-                removals.Add(member);
+                removals.Add(security);
 
-                RemoveSecurityFromUniverse(_pendingRemovalsManager.TryRemoveMember(member, universe),
+                RemoveSecurityFromUniverse(_pendingRemovalsManager.TryRemoveMember(security, universe),
                     removals,
                     dateTimeUtc,
                     algorithmEndDateUtc);
             }
 
-            var keys = _pendingSecurityAdditions.Keys;
-            if (keys.Any() && keys.Single() != dateTimeUtc)
-            {
-                // if the frontier moved forward then we've added these securities to the algorithm
-                _pendingSecurityAdditions.Clear();
-            }
-
             Dictionary<Symbol, Security> pendingAdditions;
             if (!_pendingSecurityAdditions.TryGetValue(dateTimeUtc, out pendingAdditions))
             {
+                // if the frontier moved forward then we've added these securities to the algorithm
+                _pendingSecurityAdditions.Clear();
+
                 // keep track of created securities so we don't create the same security twice, leads to bad things :)
                 pendingAdditions = new Dictionary<Symbol, Security>();
                 _pendingSecurityAdditions[dateTimeUtc] = pendingAdditions;
@@ -464,6 +461,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             DateTime dateTimeUtc,
             DateTime algorithmEndDateUtc)
         {
+            if (removedMembers == null)
+            {
+                return;
+            }
             foreach (var removedMember in removedMembers)
             {
                 var universe = removedMember.Universe;
