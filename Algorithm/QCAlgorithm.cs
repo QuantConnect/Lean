@@ -1088,14 +1088,8 @@ namespace QuantConnect.Algorithm
                 throw new InvalidOperationException("Algorithm.SetBenchmark(): Cannot change Benchmark after algorithm initialized.");
             }
 
-            // Create a security from this symbol
-            var security = Securities.CreateSecurity(symbol,
-                new List<SubscriptionDataConfig>(),
-                leverage: 1,
-                addToSymbolCache: false);
-
-            // Create and set our SecurityBenchmark
-            Benchmark = new SecurityBenchmark(security);
+            // Create our security benchmark
+            Benchmark = SecurityBenchmark.CreateInstance(Securities, symbol);
         }
 
         /// <summary>

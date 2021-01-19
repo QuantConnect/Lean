@@ -112,7 +112,7 @@ namespace QuantConnect.Brokerages
         public override IBenchmark GetBenchmark(SecurityManager securities)
         {
             var symbol = Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda);
-            return CreateSecurityBenchmark(securities, symbol);
+            return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 
         /// <summary>

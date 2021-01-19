@@ -209,7 +209,7 @@ namespace QuantConnect.Brokerages
         public virtual IBenchmark GetBenchmark(SecurityManager securities)
         {
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-            return CreateSecurityBenchmark(securities, symbol);
+            return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 
         /// <summary>
@@ -389,23 +389,6 @@ namespace QuantConnect.Brokerages
         public IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
         {
             return GetBuyingPowerModel(security);
-        }
-
-        /// <summary>
-        /// Helper function for GetBenchmark that creates a SecurityBenchmark with a given symbol
-        /// </summary>
-        /// <param name="securities">SecurityService to create the security</param>
-        /// <param name="symbol">The symbol to create a security benchmark with</param>
-        /// <returns>A SecurityBenchmark for the given symbol</returns>
-        internal IBenchmark CreateSecurityBenchmark(SecurityManager securities, Symbol symbol)
-        {
-            // Create the security from this symbol
-            var security = securities.CreateSecurity(symbol,
-                new List<SubscriptionDataConfig>(),
-                leverage: 1,
-                addToSymbolCache: false);
-            
-            return new SecurityBenchmark(security);
         }
     }
 }

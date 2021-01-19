@@ -168,8 +168,8 @@ namespace QuantConnect.Brokerages
         /// <returns>The benchmark for this brokerage</returns>
         public override IBenchmark GetBenchmark(SecurityManager securities)
         {
-            var symbol = Symbol.Create("EURUSD", SecurityType.Future, Market.FXCM);
-            return CreateSecurityBenchmark(securities, symbol);
+            var symbol = Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM);
+            return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 
         /// <summary>
