@@ -50,7 +50,6 @@ using Timer = System.Timers.Timer;
 using static QuantConnect.StringExtensions;
 using Microsoft.IO;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 
@@ -1211,6 +1210,7 @@ namespace QuantConnect
         /// <param name="exchangeHours">The exchange hours to determine open times</param>
         /// <param name="extendedMarket">True for extended market hours, otherwise false</param>
         /// <returns>Rounded datetime</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DateTime ExchangeRoundDown(this DateTime dateTime, TimeSpan interval, SecurityExchangeHours exchangeHours, bool extendedMarket)
         {
             // can't round against a zero interval
@@ -1235,6 +1235,7 @@ namespace QuantConnect
         /// <param name="roundingTimeZone">The time zone to perform the rounding in</param>
         /// <param name="extendedMarket">True for extended market hours, otherwise false</param>
         /// <returns>Rounded datetime</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DateTime ExchangeRoundDownInTimeZone(this DateTime dateTime, TimeSpan interval, SecurityExchangeHours exchangeHours, DateTimeZone roundingTimeZone, bool extendedMarket)
         {
             // can't round against a zero interval
@@ -1298,6 +1299,7 @@ namespace QuantConnect
         /// <param name="to">The time zone to be converted to</param>
         /// <param name="strict">True for strict conversion, this will throw during ambiguitities, false for lenient conversion</param>
         /// <returns>The time in terms of the to time zone</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DateTime ConvertTo(this DateTime time, DateTimeZone from, DateTimeZone to, bool strict = false)
         {
             if (strict)
@@ -1327,6 +1329,7 @@ namespace QuantConnect
         /// <param name="from">The time zone the specified <paramref name="time"/> is in</param>
         /// <param name="strict">True for strict conversion, this will throw during ambiguitities, false for lenient conversion</param>
         /// <returns>The time in terms of the to time zone</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DateTime ConvertToUtc(this DateTime time, DateTimeZone from, bool strict = false)
         {
             if (strict)

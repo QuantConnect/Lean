@@ -96,12 +96,7 @@ class FutureOptionPutITMExpiryRegressionAlgorithm(QCAlgorithm):
         self.Log(f"{self.Time} -- {orderEvent.Symbol} :: Price: {self.Securities[orderEvent.Symbol].Holdings.Price} Qty: {self.Securities[orderEvent.Symbol].Holdings.Quantity} Direction: {orderEvent.Direction} Msg: {orderEvent.Message}")
 
     def AssertFutureOptionOrderExercise(self, orderEvent: OrderEvent, future: Security, optionContract: Security):
-        # We expect the liquidation to occur on the day of the delisting (while the market is open),
-        # but currently we liquidate at the next market open (AAPL open) which happens to be
-        # at 9:30:00 Eastern Time. For unknown reasons, the delisting happens two minutes after the
-        # market open.
-        # Read more about the issue affecting this test here: https://github.com/QuantConnect/Lean/issues/4980
-        expectedLiquidationTimeUtc = datetime(2020, 6, 19, 4, 2, 0)
+        expectedLiquidationTimeUtc = datetime(2020, 6, 19, 4, 1, 0)
 
         if orderEvent.Direction == OrderDirection.Buy and future.Holdings.Quantity != 0:
             # We expect the contract to have been liquidated immediately
