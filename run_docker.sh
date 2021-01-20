@@ -15,6 +15,9 @@
 # allow script to be called from anywhere
 cd "$(dirname "$0")/" || exit
 
+# for directory exclusions
+shopt -s nullglob
+
 DEFAULT_IMAGE=quantconnect/lean:latest
 DEFAULT_DATA_DIR=./Data
 DEFAULT_RESULTS_DIR=./Results
@@ -23,6 +26,8 @@ DEFAULT_PYTHON_DIR=./Algorithm.Python/
 CSHARP_DLL=./Launcher/bin/Debug/QuantConnect.Algorithm.CSharp.dll
 CSHARP_PDB=./Launcher/bin/Debug/QuantConnect.Algorithm.CSharp.pdb
 CONTAINER_NAME=LeanEngine
+DEFAULT_TERM=Debug
+DEFAULT_EXCLUDE=.git,.vs,.idea
 
 yes_or_no() {
   while true; do
@@ -42,6 +47,13 @@ absolute_path() {
   echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"
 }
 
+# TODO: Add more details. Functions mostly as a placeholder to avoid immediate execution
+if [[ "$1" =~ ^("-h"|"--help") ]]; then
+  echo "Lean Engine -- Docker Runner"
+  echo ""
+  echo "Usage: bash run_docker.sh [OPTION]"
+  exit 1
+fi
 # If arg is a file process the key values
 if [ -f "$1" ]; then
   IFS="="
@@ -55,99 +67,26 @@ elif [ -n "$*" ]; then
   done
 # Else query user for settings
 else
-  read -p "Docker image [default: $DEFAULT_IMAGE]: " IMAGE
-  read -p "Path to Lean config.json [default: $DEFAULT_CONFIG]: " CONFIG_FILE
-  read -p "Path to Data directory [default: $DEFAULT_DATA_DIR]: " DATA_DIR
-  read -p "Path to Results directory [default: $DEFAULT_RESULTS_DIR]: " RESULTS_DIR
-  read -p "Path to Python directory [default: $DEFAULT_PYTHON_DIR]: " PYTHON_DIR
-  read -p "Would you like to debug C#? (Requires mono debugger attachment) [default: N]: " DEBUGGING
-  read -p "Would you like to update the Docker Image? [default: Y]: " UPDATE
+  read -p "Would you like to debug a script [Debug] or launch into a terminal? [Term] [default: $DEFAULT_TERM]: " TERM_CHECK
+  TERM_CHECK=${TERM_CHECK:-$DEFAULT_TERM}
+  if [ "$DEFAULT_TERM" == "$TERM_CHECK" ]; then
+    read -p "Docker image [default: $DEFAULT_IMAGE]: " IMAGE
+    read -p "Path to Lean config.json [default: $DEFAULT_CONFIG]: " CONFIG_FILE
+    read -p "Path to Data directory [default: $DEFAULT_DATA_DIR]: " DATA_DIR
+    read -p "Path to Results directory [default: $DEFAULT_RESULTS_DIR]: " RESULTS_DIR
+    read -p "Path to Python directory [default: $DEFAULT_PYTHON_DIR]: " PYTHON_DIR
+    read -p "Would you like to debug C#? (Requires mono debugger attachment) [default: N]: " DEBUGGING
+    read -p "Would you like to update the Docker Image? [default: Y]: " UPDATE
+  else
+    read -p "Should this directory be mounted? [default N]: " MOUNT
+    if [ "$MOUNT" != "Y" ]; then
+      echo "Which directories should be excluded?"
+      read -p "Specify multiple directories as: Dir1,Dir2,Dir3, or write None for none [default: $DEFAULT_EXCLUDE]: " EXCLUDE
+    fi
+  fi
 fi
 
-# Have to reset IFS for cfg files to work properly
-IFS=" "
-
-# Fall back to defaults on empty input without
-CONFIG_FILE=${CONFIG_FILE:-$DEFAULT_CONFIG}
-DATA_DIR=${DATA_DIR:-$DEFAULT_DATA_DIR}
-RESULTS_DIR=${RESULTS_DIR:-$DEFAULT_RESULTS_DIR}
-IMAGE=${IMAGE:-$DEFAULT_IMAGE}
-PYTHON_DIR=${PYTHON_DIR:-$DEFAULT_PYTHON_DIR}
-UPDATE=${UPDATE:-Y}
-
-# Convert to absolute paths
-CONFIG_FILE=$(absolute_path "${CONFIG_FILE}")
-PYTHON_DIR=$(absolute_path "${PYTHON_DIR}")
-DATA_DIR=$(absolute_path "${DATA_DIR}")
-RESULTS_DIR=$(absolute_path "${RESULTS_DIR}")
-CSHARP_DLL=$(absolute_path "${CSHARP_DLL}")
-CSHARP_PDB=$(absolute_path "${CSHARP_PDB}")
-
-if [ ! -f "$CONFIG_FILE" ]; then
-  echo "Lean config file $CONFIG_FILE does not exist"
-  exit 1
-fi
-
-if [ ! -d "$DATA_DIR" ]; then
-  echo "Data directory $DATA_DIR does not exist"
-  exit 1
-fi
-
-if [ ! -d "$RESULTS_DIR" ]; then
-  echo "Results directory $RESULTS_DIR does not exist; creating it now"
-  mkdir $RESULTS_DIR
-fi
-
-# First part of the docker COMMAND that is static, then we build the rest
-COMMAND="docker run --rm \
-    --mount type=bind,source=$CONFIG_FILE,target=/Lean/Launcher/config.json,readonly \
-    -v $DATA_DIR:/Data:ro \
-    -v $RESULTS_DIR:/Results \
-    --name $CONTAINER_NAME \
-    -p 5678:5678 \
-    --expose 6000 "
-
-if [[ "$(uname)" == "Linux" ]]; then
-  COMMAND+="--add-host=host.docker.internal:$(ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+') "
-fi
-
-# If the csharp dll and pdb are present, mount them
-if [ ! -f "$CSHARP_DLL" ]; then
-  echo "Csharp file at '$CSHARP_DLL' does not exist; no CSharp files will be mounted"
-else
-  COMMAND+="--mount type=bind,source=$CSHARP_DLL,target=/Lean/Launcher/bin/Debug/QuantConnect.Algorithm.CSharp.dll \
-    --mount type=bind,source=$CSHARP_PDB,target=/Lean/Launcher/bin/Debug/QuantConnect.Algorithm.CSharp.pdb "
-fi
-
-# If python algorithms are present, mount them
-if [ ! -d "$PYTHON_DIR" ]; then
-  echo "No Python Algorithm location found at '$PYTHON_DIR'; no Python files will be mounted"
-else
-  COMMAND+="-v $PYTHON_DIR:/Lean/Algorithm.Python "
-fi
-
-# If DEBUGGING is set then set the entrypoint to run mono with a debugger server
-shopt -s nocasematch
-if [[ "$DEBUGGING" == "y" ]]; then
-  COMMAND+="-p 55555:55555 \
-    --entrypoint mono \
-    $IMAGE --debug --debugger-agent=transport=dt_socket,server=y,address=0.0.0.0:55555,suspend=y \
-    QuantConnect.Lean.Launcher.exe --data-folder /Data --results-destination-folder /Results --config /Lean/Launcher/config.json"
-
-  echo "Docker container starting, attach to Mono process at localhost:55555 to begin"
-else
-  COMMAND+="$IMAGE --data-folder /Data --results-destination-folder /Results --config /Lean/Launcher/config.json"
-fi
-
-SUDO=""
-
-# Verify if user has docker permissions
-if ! touch /var/run/docker.sock &>/dev/null; then
-  sudo -v
-  SUDO="sudo"
-  COMMAND="$SUDO $COMMAND"
-fi
-
+# Check for existing LeanEngine
 if [ "$($SUDO docker container inspect -f '{{.State.Running}}' $CONTAINER_NAME)" == "true" ]; then
   yes_or_no "A Lean container is already running. Stop and recreate with this configuration?" &&
     $SUDO docker stop $CONTAINER_NAME
@@ -162,7 +101,151 @@ if [[ "$UPDATE" == "y" ]]; then
   $SUDO docker pull $IMAGE
 fi
 
-echo -e "Launching LeanEngine with command: "
-echo -e "$COMMAND"
-#Run built docker COMMAND;
-eval "$COMMAND"
+if [ "$TERM_CHECK" == "$DEFAULT_TERM" ]; then
+  # Have to reset IFS for cfg files to work properly
+  IFS=" "
+
+  # Fall back to defaults on empty input without
+  CONFIG_FILE=${CONFIG_FILE:-$DEFAULT_CONFIG}
+  DATA_DIR=${DATA_DIR:-$DEFAULT_DATA_DIR}
+  RESULTS_DIR=${RESULTS_DIR:-$DEFAULT_RESULTS_DIR}
+  IMAGE=${IMAGE:-$DEFAULT_IMAGE}
+  PYTHON_DIR=${PYTHON_DIR:-$DEFAULT_PYTHON_DIR}
+  UPDATE=${UPDATE:-Y}
+
+  # Convert to absolute paths
+  CONFIG_FILE=$(absolute_path "${CONFIG_FILE}")
+  PYTHON_DIR=$(absolute_path "${PYTHON_DIR}")
+  DATA_DIR=$(absolute_path "${DATA_DIR}")
+  RESULTS_DIR=$(absolute_path "${RESULTS_DIR}")
+  CSHARP_DLL=$(absolute_path "${CSHARP_DLL}")
+  CSHARP_PDB=$(absolute_path "${CSHARP_PDB}")
+
+  if [ ! -f "$CONFIG_FILE" ]; then
+    echo "Lean config file $CONFIG_FILE does not exist"
+    exit 1
+  fi
+
+  if [ ! -d "$DATA_DIR" ]; then
+    echo "Data directory $DATA_DIR does not exist"
+    exit 1
+  fi
+
+  if [ ! -d "$RESULTS_DIR" ]; then
+    echo "Results directory $RESULTS_DIR does not exist; creating it now"
+    mkdir $RESULTS_DIR
+  fi
+
+  # First part of the docker DOCKER_CMD that is static, then we build the rest
+  DOCKER_CMD="docker run --rm \
+      --mount type=bind,source=$CONFIG_FILE,target=/Lean/Launcher/config.json,readonly \
+      -v $DATA_DIR:/Data:ro \
+      -v $RESULTS_DIR:/Results \
+      --name $CONTAINER_NAME \
+      -p 5678:5678 \
+      --expose 6000 "
+
+  if [[ "$(uname)" == "Linux" ]]; then
+    DOCKER_CMD+="--add-host=host.docker.internal:$(ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+') "
+  fi
+
+  # If the csharp dll and pdb are present, mount them
+  if [ ! -f "$CSHARP_DLL" ]; then
+    echo "Csharp file at '$CSHARP_DLL' does not exist; no CSharp files will be mounted"
+  else
+    DOCKER_CMD+="--mount type=bind,source=$CSHARP_DLL,target=/Lean/Launcher/bin/Debug/QuantConnect.Algorithm.CSharp.dll \
+      --mount type=bind,source=$CSHARP_PDB,target=/Lean/Launcher/bin/Debug/QuantConnect.Algorithm.CSharp.pdb "
+  fi
+
+  # If python algorithms are present, mount them
+  if [ ! -d "$PYTHON_DIR" ]; then
+    echo "No Python Algorithm location found at '$PYTHON_DIR'; no Python files will be mounted"
+  else
+    DOCKER_CMD+="-v $PYTHON_DIR:/Lean/Algorithm.Python "
+  fi
+
+  # If DEBUGGING is set then set the entrypoint to run mono with a debugger server
+  shopt -s nocasematch
+  if [[ "$DEBUGGING" == "y" ]]; then
+    DOCKER_CMD+="-p 55555:55555 \
+      --entrypoint mono \
+      $IMAGE --debug --debugger-agent=transport=dt_socket,server=y,address=0.0.0.0:55555,suspend=y \
+      QuantConnect.Lean.Launcher.exe --data-folder /Data --results-destination-folder /Results --config /Lean/Launcher/config.json"
+
+    echo "Docker container starting, attach to Mono process at localhost:55555 to begin"
+  else
+    DOCKER_CMD+="$IMAGE --data-folder /Data --results-destination-folder /Results --config /Lean/Launcher/config.json"
+  fi
+
+  SUDO=""
+
+  # Verify if user has docker permissions
+  if ! touch /var/run/docker.sock &>/dev/null; then
+    sudo -v
+    SUDO="sudo"
+    DOCKER_CMD="$SUDO $DOCKER_CMD"
+  fi
+
+  echo -e "Launching LeanEngine with DOCKER_CMD: "
+  echo -e "$DOCKER_CMD"
+  #Run built docker DOCKER_CMD;
+  eval "$DOCKER_CMD"
+else
+
+  # First part of the docker DOCKER_CMD that is static, then we build the rest
+  DOCKER_CMD="docker run -i -t \
+      --name $CONTAINER_NAME \
+      -p 5678:5678 \
+      --expose 6000 \
+       --net host $USER"
+
+  if [ "$MOUNT" != "Y" ]; then
+
+    TEMP_DOCKERFILE='FROM quantconnect/lean:foundation \n
+MAINTAINER QuantConnect <contact@quantconnect.com> \n
+RUN pip install ptvsd \n
+WORKDIR /Lean/ \n
+ENTRYPOINT ["/bin/bash"]'
+
+    EXCLUDE=${EXCLUDE:-$DEFAULT_EXCLUDE}
+    FILES_DIRS=("$(find . -maxdepth 1 \! -name '.' \! -name '..')")
+    # Parse exclusions
+    if [[ "$EXCLUDE" != "None" ]]; then
+      # Internal field separator -> array
+      while IFS="," read -ra EXCLUDE; do
+        for i in "${EXCLUDE[@]}"; do
+          FILES_DIRS=("${FILES_DIRS[@]/$i/}")
+        done
+      done
+    fi
+
+    # Launch container, copy relevant folders
+    for dir in "${FILES_DIRS[@]/$i/}"; do
+      TEMP_DOCKERFILE+="\n COPY $dir /Lean/$dir"
+    done
+
+  # Mount drive
+  else
+    TEMP_DOCKERFILE='FROM quantconnect/lean:foundation \n
+MAINTAINER QuantConnect <contact@quantconnect.com> \n
+RUN pip install ptvsd \n
+WORKDIR /Lean/ \n
+ENTRYPOINT ["/bin/bash"] '
+    DOCKER_CMD+=" -v $(pwd):/$CONTAINER_NAME:rw"
+  fi
+
+  TEMP_DOCKERFILE="docker build - < $TEMP_DOCKERFILE"
+
+  SUDO=""
+
+  # Verify if user has docker permissions
+  if ! touch /var/run/docker.sock &>/dev/null; then
+    sudo -v
+    SUDO="sudo"
+    DOCKER_CMD="$SUDO $DOCKER_CMD"
+    TEMP_DOCKERFILE=$TEMP_DOCKERFILE
+  fi
+
+  echo "Executing..."
+  exec TEMP_DOCKERFILE && DOCKER_CMD
+fi
