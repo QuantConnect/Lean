@@ -127,7 +127,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     try
                     {
                         // Ensure the data time is after subscription start time
-                        if (current.Time < _startTime)
+                        if (current.EndTime < _startTime)
                         {
                             continue;
                         }
