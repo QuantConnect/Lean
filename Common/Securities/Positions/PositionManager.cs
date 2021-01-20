@@ -121,6 +121,20 @@ namespace QuantConnect.Securities.Positions
         }
 
         /// <summary>
+        /// Applies the order fill without running the position group resolver. This aims to ensure we're
+        /// keeping track of used buying power within a single time step to handle multiple calls to SetHoldings
+        /// in the same time step. At the end of the time step
+        /// </summary>
+        /// <param name="fill">The fill event -- this should only be events that change security holdings</param>
+        public void ProcessFill(OrderEvent fill)
+        {
+            if (fill.Status.IsFill())
+            {
+                ResolvePositionGroups();
+            }
+        }
+
+        /// <summary>
         /// Resolves the algorithm's position groups from all of its holdings
         /// </summary>
         public void ResolvePositionGroups()
@@ -131,10 +145,12 @@ namespace QuantConnect.Securities.Positions
                 // TODO : Replace w/ special IPosition impl to always equal security.Quantity and we'll
                 // use them explicitly for resolution collection so we don't do this each time
 
-                Groups = ResolvePositionGroups(new PositionCollection(_securities.ToImmutableDictionary(
-                    kvp => kvp.Key,
-                    kvp => (IPosition) new Position(kvp.Value)
-                )));
+                Groups = ResolvePositionGroups(new PositionCollection(_securities
+                    .Where(kvp => kvp.Value.Invested).ToImmutableDictionary(
+                        kvp => kvp.Key,
+                        kvp => (IPosition) new Position(kvp.Value)
+                    )
+                ));
             }
         }
 
