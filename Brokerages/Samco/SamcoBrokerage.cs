@@ -39,6 +39,7 @@ namespace QuantConnect.Brokerages.Samco
     /// <summary>
     /// Samco Brokerage implementation
     /// </summary>
+    [BrokerageFactory(typeof(SamcoBrokerageFactory))]
     public partial class SamcoBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
     {
         private readonly IAlgorithm _algorithm;
