@@ -140,6 +140,7 @@ namespace QuantConnect.Data.Consolidators
             PyObject volumeSelector = null,
             bool evenBars = true
             )
+        : this(barSize, evenBars)
         {
             EpsilonCheck(barSize);
 
