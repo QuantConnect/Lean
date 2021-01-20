@@ -26,13 +26,11 @@ namespace QuantConnect.Data.Auxiliary
     class MapFilePrimaryExchangeProvider : IPrimaryExchangeProvider
     {
         private readonly IMapFileProvider _mapFileProvider;
-        private readonly string _market;
         private readonly Dictionary<SecurityIdentifier, PrimaryExchange> _primaryExchangeBySid = new Dictionary<SecurityIdentifier, PrimaryExchange>();
 
-        public MapFilePrimaryExchangeProvider(IMapFileProvider mapFileProvider, string market = "USA")
+        public MapFilePrimaryExchangeProvider(IMapFileProvider mapFileProvider)
         {
             _mapFileProvider = mapFileProvider;
-            _market = market;
         }
 
         /// <summary>
@@ -45,7 +43,7 @@ namespace QuantConnect.Data.Auxiliary
             PrimaryExchange primaryExchange;
             if (!_primaryExchangeBySid.TryGetValue(securityIdentifier, out primaryExchange))
             {
-                var mapFile = _mapFileProvider.Get(_market).ResolveMapFile(securityIdentifier.Symbol, securityIdentifier.Date);
+                var mapFile = _mapFileProvider.Get(securityIdentifier.Market).ResolveMapFile(securityIdentifier.Symbol, securityIdentifier.Date);
                 if (mapFile != null && mapFile.Any())
                 {
                     primaryExchange = mapFile.Last().PrimaryExchange;

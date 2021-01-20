@@ -739,12 +739,12 @@ namespace QuantConnect
         public static PrimaryExchange GetPrimaryExchange(this string exchange)
         {
             PrimaryExchange primaryExchange;
-            if (Enum.TryParse(exchange, false, out primaryExchange))
+            if (Enum.TryParse(exchange, true, out primaryExchange))
             {
                 return primaryExchange;
             }
             
-            switch (exchange)
+            switch (exchange.LazyToUpper())
             {
                 case "T":
                 case "Q":

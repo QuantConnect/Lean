@@ -59,7 +59,7 @@ namespace QuantConnect.Data.Market
             }
             set
             {
-                value = Enum.IsDefined(typeof(PrimaryExchange), value) ? value : (byte)32;
+                value = Enum.IsDefined(typeof(PrimaryExchange), value) ? value : (byte)PrimaryExchange.UNKNOWN;
                 _exchangeCode = value;
                 _exchange = ((PrimaryExchange) value).ToString();
             }

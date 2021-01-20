@@ -214,8 +214,6 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.DoesNotThrow(()=> tick.ExchangeCode = (byte)'L');
             Assert.AreEqual(PrimaryExchange.UNKNOWN, tick.Exchange.GetPrimaryExchange(), "Failed at Exchange Property");
             Assert.AreEqual((byte)PrimaryExchange.UNKNOWN, tick.ExchangeCode, "Failed at ExchangeCode Property");
-            
-
         }
     }
 }
