@@ -642,6 +642,7 @@ namespace QuantConnect.Securities
         {
             var security = Securities[fill.Symbol];
             security.PortfolioModel.ProcessFill(this, security, fill);
+            Positions.ProcessFill(fill);
             InvalidateTotalPortfolioValue();
         }
 
