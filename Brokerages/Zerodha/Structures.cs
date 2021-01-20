@@ -21,6 +21,7 @@ using System.Net;
 using System.Globalization;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using CsvHelper.Configuration.Attributes;
 
 namespace QuantConnect.Brokerages.Zerodha.Messages
 {
@@ -704,6 +705,37 @@ namespace QuantConnect.Brokerages.Zerodha.Messages
         public string Segment { get; set; }
         public string Exchange { get; set; }
         public decimal Strike { get; set; }
+        public uint LotSize { get; set; }
+    }
+
+    /// <summary>
+    /// Instrument structure
+    /// </summary>
+    public class CsvInstrument
+    {
+        [Name("instrument_token")]
+        public uint InstrumentToken { get; set; }
+        [Name("exchange_token")]
+        public uint ExchangeToken { get; set; }
+        [Name("tradingsymbol")]
+        public string TradingSymbol { get; set; }
+        [Name("name")]
+        public string Name { get; set; }
+        [Name("last_price")]
+        public decimal LastPrice { get; set; }
+        [Name("tick_size")]
+        public decimal TickSize { get; set; }
+        [Name("expiry")]
+        public DateTime? Expiry { get; set; }
+        [Name("instrument_type")]
+        public string InstrumentType { get; set; }
+        [Name("segment")]
+        public string Segment { get; set; }
+        [Name("exchange")]
+        public string Exchange { get; set; }
+        [Name("instrument_token")]
+        public decimal Strike { get; set; }
+        [Name("lot_size")]
         public uint LotSize { get; set; }
     }
 
