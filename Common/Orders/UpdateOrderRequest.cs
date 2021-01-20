@@ -47,17 +47,6 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal? StopPrice { get; private set; }
 
-
-        /// <summary>
-        /// Gets the new entry price of the order
-        /// </summary>
-        public decimal? EntryPrice { get; internal set; }
-
-        /// <summary>
-        /// Gets the new trailing stoploss of the order
-        /// </summary>>
-        public decimal? TrailingStopLoss { get; internal set; }
-
         /// <summary>
         /// Gets the new trigger price of the order, null to not change the trigger price
         /// </summary>
