@@ -36,7 +36,7 @@ namespace QuantConnect
     /// </remarks>
     public enum PrimaryExchange : byte
     {
-        UNKNOWN=32,
+        UNKNOWN=0,
         NASDAQ=81,
         BATS=90,
         ARCA=80,

@@ -45,7 +45,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Initializes a new instance of the <see cref="MapFileRow"/> class.
         /// </summary>
-        public MapFileRow(DateTime date, string mappedSymbol, char primaryExchange = ' ')
+        public MapFileRow(DateTime date, string mappedSymbol, char primaryExchange = '\0')
             : this(date, mappedSymbol, Exchanges.GetPrimaryExchange(primaryExchange))
         { }
         

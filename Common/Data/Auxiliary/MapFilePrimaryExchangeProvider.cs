@@ -42,7 +42,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>Returns the primary exchange or null if not found</returns>
         public string GetPrimaryExchange(SecurityIdentifier securityIdentifier)
         {
-            var primaryExchange = PrimaryExchange.UNKNOWN;
+            PrimaryExchange primaryExchange;
             if (!_primaryExchangeBySid.TryGetValue(securityIdentifier, out primaryExchange))
             {
                 var mapFile = _mapFileProvider.Get(_market).ResolveMapFile(securityIdentifier.Symbol, securityIdentifier.Date);
