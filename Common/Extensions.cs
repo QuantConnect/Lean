@@ -850,9 +850,10 @@ namespace QuantConnect
         /// <param name="input">The value to be cast</param>
         /// <returns>The input value as a decimal, if the value is too large or to small to be represented
         /// as a decimal, then the closest decimal value will be returned</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static decimal SafeDecimalCast(this double input)
         {
-            if (double.IsNaN(input) || double.IsInfinity(input))
+            if (input.IsNaNOrInfinity())
             {
                 throw new ArgumentException(
                     $"It is not possible to cast a non-finite floating-point value ({input}) as decimal. Please review math operations and verify the result is valid.",
@@ -1073,9 +1074,20 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Check if a number is NaN or infinity
+        /// </summary>
+        /// <param name="value">The double value to check</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsNaNOrInfinity(this double value)
+        {
+            return double.IsNaN(value) || double.IsInfinity(value);
+        }
+
+        /// <summary>
         /// Check if a number is NaN or equal to zero
         /// </summary>
         /// <param name="value">The double value to check</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNaNOrZero(this double value)
         {
             return double.IsNaN(value) || Math.Abs(value) < double.Epsilon;
@@ -2351,6 +2363,41 @@ namespace QuantConnect
                 default:
                     return mapFile?.DelistingDate ?? SecurityIdentifier.DefaultDate;
             }
+        }
+
+        /// <summary>
+        /// Returns the delisted liquidation time for a given delisting warning and exchange hours
+        /// </summary>
+        /// <param name="delisting">The delisting warning event</param>
+        /// <param name="exchangeHours">The securities exchange hours to use</param>
+        /// <returns>The securities liquidation time</returns>
+        public static DateTime GetLiquidationTime(this Delisting delisting, SecurityExchangeHours exchangeHours)
+        {
+            if (delisting.Type != DelistingType.Warning)
+            {
+                throw new ArgumentException("GetLiquidationTime can only be called with the liquidate warning event", nameof(delisting));
+            }
+
+            var delistingWarning = delisting.Time.Date;
+
+            // by default liquidation/exercise will happen a few min before the end of the last trading day
+            var liquidationTime = delistingWarning.AddDays(1).AddMinutes(-15);
+
+            // if the market is open today (most probably should), we will determine the market close and liquidate a few min before instead
+            if (exchangeHours.IsDateOpen(delistingWarning))
+            {
+                var marketOpen = delistingWarning;
+                if (!exchangeHours.IsOpen(marketOpen, false))
+                {
+                    // if the market isn't open at 0:00 we get next market open
+                    marketOpen = exchangeHours.GetNextMarketOpen(delistingWarning, false);
+                }
+
+                // using current market open we will get next market close which should be today and we will liquidate a few min before
+                liquidationTime = exchangeHours.GetNextMarketClose(marketOpen, false).AddMinutes(-15);
+            }
+
+            return liquidationTime;
         }
 
         /// <summary>
