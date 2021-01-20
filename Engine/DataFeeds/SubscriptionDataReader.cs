@@ -365,7 +365,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
 
-                    if (instance.EndTime < _periodStart)
+                    // To deal with OpenInterest data that only comes in once per day, we will check it against the periodStart date
+                    if ((_config.TickType == TickType.OpenInterest && instance.EndTime < _periodStart.Date) || instance.EndTime < _periodStart)
                     {
                         // keep reading until we get a value on or after the start
                         _previous = instance;

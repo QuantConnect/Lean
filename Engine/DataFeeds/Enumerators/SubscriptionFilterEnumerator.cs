@@ -37,6 +37,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
         private readonly bool _liveMode;
         private readonly Security _security;
+        private readonly DateTime _startTime;
         private readonly DateTime _endTime;
         private readonly bool _extendedMarketHours;
         private readonly SecurityExchange _exchange;
@@ -54,9 +55,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="liveMode">True if live mode</param>
         /// <returns>A new instance of the <see cref="SubscriptionFilterEnumerator"/> class that has had it's <see cref="DataFilterError"/>
         /// event subscribed to to send errors to the result handler</returns>
-        public static SubscriptionFilterEnumerator WrapForDataFeed(IResultHandler resultHandler, IEnumerator<BaseData> enumerator, Security security, DateTime endTime, bool extendedMarketHours, bool liveMode)
+        public static SubscriptionFilterEnumerator WrapForDataFeed(IResultHandler resultHandler, IEnumerator<BaseData> enumerator, Security security, DateTime startTime, DateTime endTime, bool extendedMarketHours, bool liveMode)
         {
-            var filter = new SubscriptionFilterEnumerator(enumerator, security, endTime, extendedMarketHours, liveMode);
+            var filter = new SubscriptionFilterEnumerator(enumerator, security, startTime, endTime, extendedMarketHours, liveMode);
             filter.DataFilterError += (sender, exception) =>
             {
                 Log.Error(exception, "WrapForDataFeed");
@@ -73,11 +74,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="endTime">The end time of the subscription</param>
         /// <param name="extendedMarketHours">True if extended market hours are enabled</param>
         /// <param name="liveMode">True if live mode</param>
-        public SubscriptionFilterEnumerator(IEnumerator<BaseData> enumerator, Security security, DateTime endTime, bool extendedMarketHours, bool liveMode)
+        public SubscriptionFilterEnumerator(IEnumerator<BaseData> enumerator, Security security, DateTime startTime, DateTime endTime, bool extendedMarketHours, bool liveMode)
         {
             _liveMode = liveMode;
             _enumerator = enumerator;
             _security = security;
+            _startTime = startTime;
             _endTime = endTime;
             _exchange = _security.Exchange;
             _dataFilter = _security.DataFilter;
@@ -124,6 +126,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 {
                     try
                     {
+                        // Ensure the data time is after subscription start time
+                        if (current.Time < _startTime)
+                        {
+                            continue;
+                        }
+
                         // execute user data filters
                         if (current.DataType != MarketDataType.Auxiliary && !_dataFilter.Filter(_security, current))
                         {
