@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
             SetBenchmark(x => 0);
 
-            _symbol = AddEquity("VXX", Resolution.Hour).Symbol;
+            _symbol = AddEquity("VXX.1", Resolution.Hour).Symbol;
         }
 
         public void OnData(TradeBars tradeBars)
@@ -88,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "-257.316"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -103,7 +103,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "1795141360"}
+            {"OrderListHash", "233024002"}
         };
     }
 }

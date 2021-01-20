@@ -68,8 +68,8 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         }
 
         [TestCase("AAPL", "AAPL")]
-        [TestCase("AOL", "TWX")]
-        [TestCase("NWSA", "FOXA")]
+        [TestCase("VXXB", "VXX")]
+        [TestCase("NB", "BAC")]
         public void MapCorrectBrokerageSymbol(string ticker, string ibSymbol)
         {
             var mapper = new InteractiveBrokersSymbolMapper(new LocalDiskMapFileProvider());
