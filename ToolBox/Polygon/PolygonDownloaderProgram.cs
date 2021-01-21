@@ -16,6 +16,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
+
+//QuantConnect
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Logging;
@@ -54,35 +58,50 @@ namespace QuantConnect.ToolBox.Polygon
 
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
-                var startDate = fromDate.ConvertToUtc(TimeZones.NewYork);
-                var endDate = toDate.ConvertToUtc(TimeZones.NewYork);
 
+                // Get hours
                 var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
                 // Create an instance of the downloader
                 using (var downloader = new PolygonDataDownloader())
                 {
+                    // Server side parameters for multithreaded simultaneous API connections
+                    ServicePointManager.DefaultConnectionLimit = 4;
+
                     foreach (var ticker in tickers)
                     {
                         var symbol = Symbol.Create(ticker, securityType, market);
-
+                        
+                        // Get the correct time zones
                         var exchangeTimeZone = marketHoursDatabase.GetExchangeHours(market, symbol, securityType).TimeZone;
                         var dataTimeZone = marketHoursDatabase.GetDataTimeZone(market, symbol, securityType);
 
-                        foreach (var tickType in tickTypes)
-                        {
-                            // Download the data
-                            var data = downloader.Get(symbol, resolution, startDate, endDate, tickType)
-                                .Select(x =>
-                                    {
-                                        x.Time = x.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
-                                        return x;
-                                    }
-                                );
+                        // Set the UTC times for correctness of the architecture
+                        var utcStartDate = fromDate.ConvertToUtc(dataTimeZone);  // TimeZones.NewYork);
+                        var utcEndDate = toDate.ConvertToUtc(dataTimeZone);  // TimeZones.NewYork);
+                        var numberOfDays = (utcEndDate - utcStartDate).TotalDays;
 
-                            // Save the data
-                            var writer = new LeanDataWriter(resolution, symbol, dataDirectory, tickType);
-                            writer.Write(data);
+                        // Iterate through each day, which is the Polygon.IO api architecture
+                        for (int i = 0; i <= numberOfDays; i++)
+                        {
+                            foreach (var tickType in tickTypes)
+                            {
+                                // Download the data
+                                var data = downloader.Get(symbol, resolution, utcStartDate.AddDays(i), utcEndDate.AddDays(i + 1), tickType)
+                                    .Select(x =>
+                                        {
+                                            x.Time = x.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
+                                            return x;
+                                        }
+                                    );
+
+                                if ((data != null))
+                                {
+                                    // Save the data
+                                    var writer = new LeanDataWriter(resolution, symbol, dataDirectory, tickType);
+                                    writer.Write(data);
+                                }
+                            }
                         }
                     }
                 }

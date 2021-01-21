@@ -48,6 +48,7 @@ namespace QuantConnect.ToolBox.Polygon
         private const string HistoryBaseUrl = "https://api.polygon.io";
 
         private readonly string _apiKey = Config.Get("polygon-api-key");
+        private readonly int _apiResultsLimit = 10000;
 
         private readonly IDataAggregator _dataAggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
             Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
@@ -507,105 +508,228 @@ namespace QuantConnect.ToolBox.Polygon
             }
         }
 
-
         private IEnumerable<Tick> GetEquityQuoteTicks(HistoryRequest request)
         {
             // https://api.polygon.io/v2/ticks/stocks/nbbo/SPY/2020-08-24?apiKey=
 
+            bool isException = false;
+
             var start = request.StartTimeUtc;
             var end = request.EndTimeUtc;
+            var offsetStart = Time.DateTimeToUnixTimeStampNanoseconds(start);
+            var offsetEnd = Time.DateTimeToUnixTimeStampNanoseconds(end);
 
-            while (start <= end)
+            // Continues until offsetStart gets to the end of the set time at offsetEnd
+            while (offsetStart < offsetEnd)
             {
+                // Skips Saturday and Sunday
+                if (!start.IsCommonBusinessDay())
+                {
+                    Log.Trace("Weekends are not processed " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
+                    start = start.Date.AddDays(1);
+                    break;
+                }
+                else
+                {
+                    Log.Trace("Processing " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
+                }
+
                 using (var client = new WebClient())
                 {
-                    var offset = Time.DateTimeToUnixTimeStampNanoseconds(start);
-                    var url = $"{HistoryBaseUrl}/v2/ticks/stocks/nbbo/{request.Symbol.Value}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&timestamp={offset}";
+                    var url = $"{HistoryBaseUrl}/v2/ticks/stocks/nbbo/{request.Symbol.Value}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&timestamp={offsetStart}&limit={_apiResultsLimit}";
 
-                    var response = client.DownloadString(url);
+#if DEBUG
+                    Log.Trace(url);
+#endif
 
-                    var obj = JObject.Parse(response);
-                    var objTicks = obj["results"];
-                    if (objTicks.Type == JTokenType.Null || !objTicks.Any())
+                    string response = "";
+                    try
                     {
-                        // current date finished, move to next day
-                        start = start.Date.AddDays(1);
-                        continue;
+                        response = client.DownloadString(url);
+                    }
+                    catch (WebException e)
+                    {
+                        isException = true;
+                        offsetStart = offsetEnd;
                     }
 
-                    foreach (var objTick in objTicks)
+                    if ((response != "") && (isException == false) && (response != null))
                     {
-                        var row = objTick.ToObject<EquityQuoteTickResponse>();
-
-                        var utcTime = Time.UnixNanosecondTimeStampToDateTime(row.ExchangeTimestamp);
-
-                        if (utcTime < start)
+                        var obj = JObject.Parse(response);
+                        var objTicks = obj["results"];
+                        if ((objTicks.Type == JTokenType.Null) || (!objTicks.Any()))
                         {
-                            continue;
+
+                            offsetStart = offsetEnd;   // Set offsetStart end of the time to Finish the while loop
                         }
-
-                        start = utcTime.AddMilliseconds(1);
-
-                        if (utcTime > end)
+                        else
                         {
-                            yield break;
+                            // Iterate through each tick and process
+                            foreach (var objTick in objTicks)
+                            {
+                                // Parse the row
+                                var row = objTick.ToObject<EquityQuoteTickResponse>();
+
+                                // Converts the results tick time to the Exchange time zone for usage in the Tick Writer LeanData.cs
+                                var utcTime = Time.UnixNanosecondTimeStampToDateTime(row.SipTimestamp);
+                                var time = GetTickTime(request.Symbol, utcTime);
+
+                                // Get the timestamp of the last tick in the results and use for pagination of the API with offset
+                                if (objTicks.Count() == _apiResultsLimit)
+                                {
+                                    offsetStart = objTicks.Last.ToObject<EquityQuoteTickResponse>().SipTimestamp;
+                                }
+                                else
+                                {
+                                    offsetStart = offsetEnd;   // Finish
+                                }
+
+                                // TODO:   This logic should be enhanced by using the corrections to flag older ticks and better quote filtering
+                                // Look for quotes.   In this case, it uses the Polygon Quote conditions mapping for conditions that are suspicious and will be filtered
+                                bool _suspiciousFlag = false;
+
+                                // Set flag if there are any trade correction indicators    //TODO:   fix these quote and trade conditions logic ... not right !  Will bad quotes have null conditions ?
+                                if ((row.Conditions != null))
+                                {
+                                    _suspiciousFlag = (PolygonQuoteMappings.isSuspiciousQuote(row.Conditions[0]));
+                                }
+
+#if DEBUG
+                                Log.Trace($"Results count for tickers {objTicks.Count()}");
+#endif
+
+
+                                string quoteConditions = "";
+                                if (row.Conditions != null)
+                                {
+                                    quoteConditions = string.Join("", row.Conditions.Select(p => String.Format(System.Globalization.CultureInfo.GetCultureInfo("en-US"), "{0:X2}", p)));
+                                }
+                                // Adds the exchange the Tick.   Prefers the bid exchange and assumes mutually exclusive bid/ask exchange IDs on quote
+                                string exchange = "";
+                                if (row.BidExchange != null)
+                                {
+                                    exchange = row.BidExchange.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+                                }
+                                else if (row.AskExchange != null)
+                                {
+                                    exchange = row.AskExchange.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+                                }
+
+                                yield return new Tick(time, request.Symbol, quoteConditions, exchange, row.BidSize, row.BidPrice, row.AskSize, row.AskPrice);
+                            }
                         }
-
-                        var time = GetTickTime(request.Symbol, utcTime);
-
-                        yield return new Tick(time, request.Symbol, string.Empty, string.Empty, row.BidSize, row.BidPrice, row.AskSize, row.AskPrice);
                     }
+                    else
+                    {
+                        offsetStart = offsetEnd;   // Finish
+                    }
+
                 }
             }
+
+
+
+
         }
 
         private IEnumerable<Tick> GetEquityTradeTicks(HistoryRequest request)
         {
             // https://api.polygon.io/v2/ticks/stocks/trades/SPY/2020-08-24?apiKey=
 
+            bool isException = false;
+
             var start = request.StartTimeUtc;
             var end = request.EndTimeUtc;
+            var offsetStart = Time.DateTimeToUnixTimeStampNanoseconds(start);
+            var offsetEnd = Time.DateTimeToUnixTimeStampNanoseconds(end);
 
-            while (start <= end)
+            // Continues until offsetStart gets to the end of the set time at offsetEnd
+            while (offsetStart < offsetEnd)
             {
+                // Skips Saturday and Sunday
+                if (!start.IsCommonBusinessDay())
+                {
+                    Log.Trace("Weekends are not processed " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
+                    start = start.Date.AddDays(1);
+                    break;
+                }
+                else
+                {
+                    Log.Trace("Processing " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
+                }
+
                 using (var client = new WebClient())
                 {
-                    var offset = Time.DateTimeToUnixTimeStampNanoseconds(start);
-                    var url = $"{HistoryBaseUrl}/v2/ticks/stocks/trades/{request.Symbol.Value}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&timestamp={offset}";
+                    var url = $"{HistoryBaseUrl}/v2/ticks/stocks/trades/{request.Symbol.Value}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&timestamp={offsetStart}&limit={_apiResultsLimit}";
 
-                    var response = client.DownloadString(url);
-
-                    var obj = JObject.Parse(response);
-                    var objTicks = obj["results"];
-                    if (objTicks.Type == JTokenType.Null || !objTicks.Any())
+                    string response = "";
+                    try
                     {
-                        // current date finished, move to next day
-                        start = start.Date.AddDays(1);
-                        continue;
+                        response = client.DownloadString(url);
+                    }
+                    catch (WebException e)
+                    {
+                        isException = true;
+                        offsetStart = offsetEnd;
                     }
 
-                    foreach (var objTick in objTicks)
+                    if ((response != "") && (isException == false) && (response != null))
                     {
-                        var row = objTick.ToObject<EquityTradeTickResponse>();
-
-                        var utcTime = Time.UnixNanosecondTimeStampToDateTime(row.ExchangeTimestamp);
-
-                        if (utcTime < start)
+                        var obj = JObject.Parse(response);
+                        var objTicks = obj["results"];
+                        if ((objTicks.Type == JTokenType.Null) || (!objTicks.Any()))
                         {
-                            continue;
+
+                            offsetStart = offsetEnd;    // Finish
                         }
-
-                        start = utcTime.AddMilliseconds(1);
-
-                        if (utcTime > end)
+                        else
                         {
-                            yield break;
+                            // Iterate through each tick and process
+                            foreach (var objTick in objTicks)
+                            {
+                                // Parse the row
+                                var row = objTick.ToObject<EquityTradeTickResponse>();
+
+                                // Converts the results tick time to the Exchange time zone for usage in the Tick Writer LeanData.cs
+                                var utcTime = Time.UnixNanosecondTimeStampToDateTime(row.SipTimestamp);
+                                var time = GetTickTime(request.Symbol, utcTime);
+
+                                // Get the timestamp of the last tick in the results and use for pagination of the API with offset
+                                if (objTicks.Count() == _apiResultsLimit)
+                                {
+                                    offsetStart = objTicks.Last.ToObject<EquityTradeTickResponse>().SipTimestamp;
+                                }
+                                else
+                                {
+                                    offsetStart = offsetEnd;
+                                }
+
+                                // Look for suspicious trades.   In this case, it uses the SIP mapping for updates of high/low otherwise marks as suspicious
+                                bool suspiciousFlag = false;
+                                // Check SIP Mappings for update high/low and mark as suspicious if not update/high low.    This needs more sophistication
+                                if (row.Conditions != null)
+                                {
+                                    suspiciousFlag = !Polygon.PolygonSIPTradeMappings.TradeUpdateHighLow(row.Conditions[0]);
+                                }
+
+                                // Convert Sale Conditions to Hex and concatenate
+                                string saleConditions = "";
+                                if (row.Conditions != null)
+                                {
+                                    saleConditions = string.Join("", row.Conditions.Select(p => String.Format(System.Globalization.CultureInfo.GetCultureInfo("en-US"), "{0:X2}", p)));
+                                }
+
+                                // Return the ticks
+                                yield return new Tick(time, request.Symbol, saleConditions, row.Exchange.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")), row.Size, row.Price);
+
+                            }
                         }
-
-                        var time = GetTickTime(request.Symbol, utcTime);
-
-                        yield return new Tick(time, request.Symbol, string.Empty, string.Empty, row.Size, row.Price);
                     }
+                    else
+                    {
+                        offsetStart = offsetEnd;   // Finish
+                    }
+
                 }
             }
         }
