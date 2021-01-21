@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
             SetBenchmark(x => 0);
 
-            _symbol = AddEquity("VXX", Resolution.Hour).Symbol;
+            _symbol = AddEquity("VXX.1", Resolution.Hour).Symbol;
         }
 
         public void OnData(TradeBars tradeBars)
@@ -103,7 +103,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "1795141360"}
+            {"OrderListHash", "105744170"}
         };
     }
 }

@@ -32,6 +32,7 @@ namespace QuantConnect.Securities
         private readonly IRegisteredSecurityDataTypesProvider _registeredTypes;
         private readonly ISecurityInitializerProvider _securityInitializerProvider;
         private readonly SecurityCacheProvider _cacheProvider;
+        private readonly IPrimaryExchangeProvider _primaryExchangeProvider;
         private bool _isLiveMode;
 
         /// <summary>
@@ -42,7 +43,8 @@ namespace QuantConnect.Securities
             SymbolPropertiesDatabase symbolPropertiesDatabase,
             ISecurityInitializerProvider securityInitializerProvider,
             IRegisteredSecurityDataTypesProvider registeredTypes,
-            SecurityCacheProvider cacheProvider)
+            SecurityCacheProvider cacheProvider,
+            IPrimaryExchangeProvider primaryExchangeProvider=null)
         {
             _cashBook = cashBook;
             _registeredTypes = registeredTypes;
@@ -50,6 +52,7 @@ namespace QuantConnect.Securities
             _symbolPropertiesDatabase = symbolPropertiesDatabase;
             _securityInitializerProvider = securityInitializerProvider;
             _cacheProvider = cacheProvider;
+            _primaryExchangeProvider = primaryExchangeProvider;
         }
 
         /// <summary>
@@ -130,7 +133,10 @@ namespace QuantConnect.Securities
             switch (symbol.ID.SecurityType)
             {
                 case SecurityType.Equity:
-                    security = new Equity.Equity(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
+                    var primaryExchange =
+                        _primaryExchangeProvider?.GetPrimaryExchange(symbol.ID).GetPrimaryExchange() ??
+                        PrimaryExchange.UNKNOWN;
+                    security = new Equity.Equity(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache, primaryExchange);
                     break;
 
                 case SecurityType.Option:
