@@ -902,6 +902,28 @@ namespace QuantConnect
             return $"{number - 5000000m:#,,,.##}B";
         }
 
+        /// Discretizes the <paramref name="value"/> to a maximum precision specified by <paramref name="quanta"/>. Quanta
+        /// can be an arbitrary positive number and represents the step size. Consider a quanta equal to 0.15 and rounding
+        /// a value of 1.0. Valid values would be 0.9 (6 quanta) and 1.05 (7 quanta) which would be rounded up to 1.05.
+        /// </summary>
+        /// <param name="value">The value to be rounded by discretization</param>
+        /// <param name="quanta">The maximum precision allowed by the value</param>
+        /// <param name="mode">Specifies how to handle the rounding of half value, defaulting to away from zero.</param>
+        /// <returns></returns>
+        public static decimal DiscretelyRoundBy(this decimal value, decimal quanta, MidpointRounding mode = MidpointRounding.AwayFromZero)
+        {
+            if (quanta == 0m)
+            {
+                return value;
+            }
+
+            // away from zero is the 'common sense' rounding.
+            // +0.5 rounded by 1 yields +1
+            // -0.5 rounded by 1 yields -1
+            var multiplicand = Math.Round(value / quanta, mode);
+            return quanta * multiplicand;
+        }
+
         /// <summary>
         /// Will truncate the provided decimal, without rounding, to 3 decimal places
         /// </summary>

@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Newtonsoft.Json;
 using NodaTime;
@@ -1325,6 +1326,28 @@ actualDictionary.update({'IBM': 5})
 
             // deterministic
             Assert.AreEqual(ints1.GetListHashCode(), new[] {1, 2, 3}.GetListHashCode());
+        }
+
+        [Test]
+        [TestCase("0.999", "0.0001", "0.999")]
+        [TestCase("0.999", "0.001", "0.999")]
+        [TestCase("0.999", "0.01", "1.000")]
+        [TestCase("0.999", "0.1", "1.000")]
+        [TestCase("0.999", "1", "1.000")]
+        [TestCase("0.999", "2", "0")]
+        [TestCase("1.0", "0.15", "1.05")]
+        [TestCase("1.05", "0.15", "1.05")]
+        [TestCase("0.975", "0.15", "1.05")]
+        [TestCase("-0.975", "0.15", "-1.05")]
+        [TestCase("-1.0", "0.15", "-1.05")]
+        [TestCase("-1.05", "0.15", "-1.05")]
+        public void DiscretelyRoundBy(string valueString, string quantaString, string expectedString)
+        {
+            var value = decimal.Parse(valueString, CultureInfo.InvariantCulture);
+            var quanta = decimal.Parse(quantaString, CultureInfo.InvariantCulture);
+            var expected = decimal.Parse(expectedString, CultureInfo.InvariantCulture);
+            var actual = value.DiscretelyRoundBy(quanta);
+            Assert.AreEqual(expected, actual);
         }
 
         private PyObject ConvertToPyObject(object value)
