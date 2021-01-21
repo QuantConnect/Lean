@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using QuantConnect.Util;
 
 namespace QuantConnect.Notifications
@@ -22,6 +23,7 @@ namespace QuantConnect.Notifications
     /// <summary>
     /// Local/desktop implementation of messaging system for Lean Engine.
     /// </summary>
+    [JsonConverter(typeof(NotificationJsonConverter))]
     public abstract class Notification
     {
         /// <summary>
@@ -42,11 +44,13 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Send a notification message to this web address
         /// </summary>
+        [JsonProperty("address")]
         public string Address;
 
         /// <summary>
         /// Object data to send.
         /// </summary>
+        [JsonIgnore]
         public object Data;
 
         /// <summary>
@@ -69,11 +73,13 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Send a notification message to this phone number
         /// </summary>
+        [JsonProperty("phoneNumber")]
         public string PhoneNumber;
 
         /// <summary>
         /// Message to send. Limited to 160 characters
         /// </summary>
+        [JsonIgnore]
         public string Message;
 
         /// <summary>
@@ -97,26 +103,31 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Optional email headers
         /// </summary>
+        [JsonProperty("headers")]
         public Dictionary<string, string> Headers;
 
         /// <summary>
         /// Send to address:
         /// </summary>
+        [JsonProperty("address")]
         public string Address;
 
         /// <summary>
         /// Email subject
         /// </summary>
+        [JsonProperty("subject")]
         public string Subject;
 
         /// <summary>
         /// Message to send.
         /// </summary>
+        [JsonIgnore]
         public string Message;
 
         /// <summary>
         /// Email Data
         /// </summary>
+        [JsonIgnore]
         public string Data;
 
         /// <summary>
