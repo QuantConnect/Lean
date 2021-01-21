@@ -18,6 +18,7 @@ using Newtonsoft.Json.Linq;
 using QuantConnect.Brokerages.Samco.SamcoMessages;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Util;
 using RestSharp;
 using System;
 using System.Collections.Concurrent;
@@ -25,18 +26,21 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
+using QuantConnect.Logging;
+using System.Web;
 
 namespace QuantConnect.Brokerages.Samco
 {
     /// <summary>
     /// Utility methods for Samco brokerage
     /// </summary>
-    public class SamcoBrokerageAPI
+    public class SamcoBrokerageAPI:IDisposable
     {
         public readonly string tokenHeader = "x-session-token";
         public string token = "";
         public IRestClient RestClient { get; }
         public ConcurrentDictionary<int, Order> CachedOrderIDs = new ConcurrentDictionary<int, Order>();
+        private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
 
         public SamcoBrokerageAPI()
         {
@@ -73,7 +77,8 @@ namespace QuantConnect.Brokerages.Samco
 
         public QuoteResponse GetQuote(string symbol, string exchange = "NSE")
         {
-            string endpoint = $"/quote/getQuote?symbolName={symbol}&exchange={exchange.ToUpperInvariant()}";
+            
+            string endpoint = $"/quote/getQuote?symbolName={HttpUtility.UrlEncode(symbol)}&exchange={exchange.ToUpperInvariant()}";
             var req = new RestRequest(endpoint, Method.GET);
             var response = ExecuteRestRequest(req);
             if (response.StatusCode != HttpStatusCode.OK)
@@ -92,7 +97,7 @@ namespace QuantConnect.Brokerages.Samco
 
             var start = startDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
             var end = endDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-            string endpoint = $"/intraday/candleData?symbolName={symbol}&fromDate={start}&toDate={end}&exchange={exchange}";
+            string endpoint = $"/intraday/candleData?symbolName={HttpUtility.UrlEncode(symbol)}&fromDate={start}&toDate={end}&exchange={exchange}";
 
             var restRequest = new RestRequest(endpoint, Method.GET);
             var response = ExecuteRestRequest(restRequest);
@@ -216,9 +221,25 @@ namespace QuantConnect.Brokerages.Samco
         /// <returns></returns>
         public IRestResponse ExecuteRestRequest(IRestRequest request)
         {
+            const int maxAttempts = 10;
+            var attempts = 0;
+
+
             IRestResponse response;
             SignRequest(request);
-            response = RestClient.Execute(request);
+            do
+            {
+                if (!_restRateLimiter.WaitToProceed(TimeSpan.Zero))
+                {
+                    Log.Trace("Brokerage.OnMessage(): " + new BrokerageMessageEvent(BrokerageMessageType.Warning, "RateLimit",
+                        "The API request has been rate limited. To avoid this message, please reduce the frequency of API calls."));
+
+                    _restRateLimiter.WaitToProceed();
+                }
+
+                response = RestClient.Execute(request);
+                // 429 status code: Too Many Requests
+            } while (++attempts < maxAttempts && (int)response.StatusCode == 429);
             return response;
         }
         /// <summary>
@@ -378,6 +399,14 @@ namespace QuantConnect.Brokerages.Samco
             var response = ExecuteRestRequest(request);
             var positionsReponse = JsonConvert.DeserializeObject<PositionsResponse>(response.Content);
             return positionsReponse;
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            _restRateLimiter.DisposeSafely();
         }
     }
 
