@@ -173,7 +173,7 @@ namespace QuantConnect.Brokerages.Samco.SamcoMessages
         {
             public decimal aPr { get; set; }
             public decimal aSz { get; set; }
-            public string avgPr { get; set; }
+            public decimal avgPr { get; set; }
             public decimal bPr { get; set; }
             public decimal bSz { get; set; }
             public string c { get; set; }
