@@ -594,11 +594,6 @@ namespace QuantConnect.ToolBox.Polygon
                                     _suspiciousFlag = (PolygonQuoteMappings.isSuspiciousQuote(row.Conditions[0]));
                                 }
 
-#if DEBUG
-                                Log.Trace($"Results count for tickers {objTicks.Count()}");
-#endif
-
-
                                 string quoteConditions = "";
                                 if (row.Conditions != null)
                                 {
@@ -662,6 +657,10 @@ namespace QuantConnect.ToolBox.Polygon
                 {
                     var url = $"{HistoryBaseUrl}/v2/ticks/stocks/trades/{request.Symbol.Value}/{start.Date:yyyy-MM-dd}?apiKey={_apiKey}&timestamp={offsetStart}&limit={_apiResultsLimit}";
 
+#if DEBUG
+                    Log.Trace(url);
+#endif
+                    
                     string response = "";
                     try
                     {
