@@ -580,12 +580,16 @@ namespace QuantConnect.Tests.Common.Securities
 
             var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
             var futureSecurity = algorithm.AddFuture(ticker);
+            var lotSize = futureSecurity.SymbolProperties.LotSize;
             Update(futureSecurity, 100, algorithm);
             var model = futureSecurity.BuyingPowerModel as FutureMarginModel;
             // Close market
             futureSecurity.Exchange.SetLocalDateTimeFrontier(new DateTime(2020, 2, 1));
 
             var quantityClosedMarket = algorithm.CalculateOrderQuantity(futureSecurity.Symbol, target);
+            Assert.AreEqual(quantityClosedMarket.DiscretelyRoundBy(lotSize), quantityClosedMarket,
+                "Calculated order quantity was not whole number multiple of the lot size"
+            );
             var request = GetOrderRequest(futureSecurity.Symbol, quantityClosedMarket);
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(algorithm.Transactions, request));
@@ -601,12 +605,14 @@ namespace QuantConnect.Tests.Common.Securities
             // Open market
             futureSecurity.Exchange.SetLocalDateTimeFrontier(new DateTime(2020, 2, 3));
 
-            futureSecurity.Holdings.SetHoldings(100, quantityClosedMarket * 0.4m);
+            var fourtyPercentQuantity = (quantityClosedMarket * 0.4m).DiscretelyRoundBy(lotSize);
+            futureSecurity.Holdings.SetHoldings(100, fourtyPercentQuantity);
 
+            var halfQuantity = (quantityClosedMarket / 2).DiscretelyRoundBy(lotSize);
             Assert.IsTrue(model.HasSufficientBuyingPowerForOrder(
                 new HasSufficientBuyingPowerForOrderParameters(algorithm.Portfolio,
                     futureSecurity,
-                    new MarketOrder(futureSecurity.Symbol, quantityClosedMarket / 2, DateTime.UtcNow))).IsSufficient);
+                    new MarketOrder(futureSecurity.Symbol, halfQuantity, DateTime.UtcNow))).IsSufficient);
 
             Assert.Greater(initialOvernight, model.InitialIntradayMarginRequirement);
             Assert.Greater(maintenanceOvernight, model.MaintenanceIntradayMarginRequirement);
