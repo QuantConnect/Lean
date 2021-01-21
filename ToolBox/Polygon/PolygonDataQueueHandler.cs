@@ -525,13 +525,17 @@ namespace QuantConnect.ToolBox.Polygon
                 // Skips Saturday and Sunday
                 if (!start.IsCommonBusinessDay())
                 {
+#if DEBUG
                     Log.Trace("Weekends are not processed " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
+#endif
                     start = start.Date.AddDays(1);
                     break;
                 }
                 else
                 {
+#if DEBUG
                     Log.Trace("Processing " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
+#endif
                 }
 
                 using (var client = new WebClient())
@@ -644,13 +648,17 @@ namespace QuantConnect.ToolBox.Polygon
                 // Skips Saturday and Sunday
                 if (!start.IsCommonBusinessDay())
                 {
+#if DEBUG
                     Log.Trace("Weekends are not processed " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
+#endif
                     start = start.Date.AddDays(1);
                     break;
                 }
                 else
                 {
+#if DEBUG
                     Log.Trace("Processing " + start.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
+#endif
                 }
 
                 using (var client = new WebClient())
