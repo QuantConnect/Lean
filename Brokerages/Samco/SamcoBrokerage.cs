@@ -71,7 +71,6 @@ namespace QuantConnect.Brokerages.Samco
         /// </summary>
         public readonly object TickLocker = new object();
 
-        private ConcurrentDictionary<string, QuoteUpdate> quotes = new ConcurrentDictionary<string, QuoteUpdate>();
         private readonly CancellationTokenSource _ctsFillMonitor = new CancellationTokenSource();
         private readonly Task _fillMonitorTask;
         private readonly AutoResetEvent _fillMonitorResetEvent = new AutoResetEvent(false);
@@ -85,6 +84,9 @@ namespace QuantConnect.Brokerages.Samco
 
         private readonly List<string> subscribeInstrumentTokens = new List<string>();
         private readonly List<string> unSubscribeInstrumentTokens = new List<string>();
+
+        private DateTime _lastTradeTickTime;
+
 
 
         /// <summary>
@@ -963,24 +965,21 @@ namespace QuantConnect.Brokerages.Samco
                     var raw = token.ToObject<QuoteUpdate>();
                     if (raw.response.streaming_type.ToLowerInvariant() == "quote")
                     {
-                        QuoteUpdate existing;
-                        if (!quotes.TryGetValue(raw.response.data.sym, out existing))
-                        {
-                            existing = raw;
-                            quotes[raw.response.data.sym] = raw;
-                        }
-
                         var upd = raw.response.data;
                         var sym = _subscriptionsById[raw.response.data.sym];
 
-                        EmitQuoteTick(sym, upd.bPr, upd.bSz, upd.aPr, upd.aSz);
+                        EmitQuoteTick(sym,upd.avgPr, upd.bPr, upd.bSz, upd.aPr, upd.aSz);
 
-                        if (existing.response.data.vol == raw.response.data.vol)
+                        if (_lastTradeTickTime != upd.lTrdT)
                         {
-                            return;
+                            EmitTradeTick(sym, upd.lTrdT, upd.ltp, upd.ltq);
+                            _lastTradeTickTime = upd.lTrdT;
                         }
+                        if(upd.oI!="")
+                        {
 
-                        EmitTradeTick(sym, upd.lTrdT, upd.ltp, upd.ltq);
+                            EmitOpenInterestTick(sym,Convert.ToInt64(upd.oI,CultureInfo.InvariantCulture));
+                        }
                     }
                     else
                     {
@@ -1001,16 +1000,20 @@ namespace QuantConnect.Brokerages.Samco
             {
                 lock (TickLocker)
                 {
-                    _aggregator.Update(new Tick
+                    var tick = new Tick
                     {
                         Value = price,
-                        Time = time.ConvertToUtc(TimeZones.Kolkata),
+                        Time = time,
                         //Time = DateTime.UtcNow,
                         Symbol = symbol,
                         Exchange = symbol.ID.Market,
                         TickType = TickType.Trade,
-                        Quantity = amount
-                    });
+                        Quantity = amount,
+                        DataType = MarketDataType.Tick,
+                        Suspicious = false,
+                        EndTime = time
+                    };
+                    _aggregator.Update(tick);
                 }
             }
             catch (Exception e)
@@ -1020,7 +1023,30 @@ namespace QuantConnect.Brokerages.Samco
             }
         }
 
-        private void EmitQuoteTick(Symbol symbol, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
+        private void EmitOpenInterestTick(Symbol symbol,long openInterest)
+        {
+            try
+            {
+                var tick = new Tick
+                {
+                   TickType=TickType.OpenInterest,
+                   Value=openInterest,
+                   Exchange=symbol.ID.Market,
+                   Symbol=symbol
+                };
+
+                lock (TickLocker)
+                {
+                    _aggregator.Update(tick);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+            private void EmitQuoteTick(Symbol symbol, decimal avgPrice, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
         {
             try
             {
@@ -1028,10 +1054,10 @@ namespace QuantConnect.Brokerages.Samco
                 {
                     AskPrice = askPrice,
                     BidPrice = bidPrice,
-                    //Value = (askPrice + bidPrice) / 2m,
+                    Value = avgPrice,
                     Symbol = symbol,
-                    Time = DateTime.UtcNow,
-                    //Exchange = symbol.ID.Market,
+                    Time = DateTime.UtcNow.ConvertFromUtc(TimeZones.Kolkata),
+                    Exchange = symbol.ID.Market,
                     TickType = TickType.Quote,
                     AskSize = askSize,
                     BidSize = bidSize
