@@ -67,6 +67,15 @@ namespace QuantConnect
             = new Dictionary<IntPtr, PythonActivator>();
 
         /// <summary>
+        /// The offset span from the market close to liquidate or exercise a security on the delisting date
+        /// </summary>
+        /// <remarks>Will no be used in live trading</remarks>
+        /// <remarks>By default span is negative 15 minutes. We want to liquidate before market closes if not, in some cases
+        /// like future options the market close would match the delisted event time and would cancel all orders and mark the security
+        /// as non tradable and delisted.</remarks>
+        public static TimeSpan DelistingMarketCloseOffsetSpan { get; set; } = TimeSpan.FromMinutes(-15);
+
+        /// <summary>
         /// Safe multiplies a decimal by 100
         /// </summary>
         /// <param name="value">The decimal to multiply</param>
@@ -2381,7 +2390,7 @@ namespace QuantConnect
             var delistingWarning = delisting.Time.Date;
 
             // by default liquidation/exercise will happen a few min before the end of the last trading day
-            var liquidationTime = delistingWarning.AddDays(1).AddMinutes(-15);
+            var liquidationTime = delistingWarning.AddDays(1).Add(DelistingMarketCloseOffsetSpan);
 
             // if the market is open today (most probably should), we will determine the market close and liquidate a few min before instead
             if (exchangeHours.IsDateOpen(delistingWarning))
@@ -2394,7 +2403,8 @@ namespace QuantConnect
                 }
 
                 // using current market open we will get next market close which should be today and we will liquidate a few min before
-                liquidationTime = exchangeHours.GetNextMarketClose(marketOpen, false).AddMinutes(-15);
+                liquidationTime = exchangeHours.GetNextMarketClose(marketOpen, false)
+                    .Add(DelistingMarketCloseOffsetSpan);
             }
 
             return liquidationTime;
