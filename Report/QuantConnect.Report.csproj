@@ -45,6 +45,9 @@
     <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
     <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
   </Target>
+  <PropertyGroup>
+    <Features>flow-analysis</Features>
+  </PropertyGroup>
   <Choose>
     <When Condition="$(IsWindows) AND '$(ForceLinuxBuild)' != 'true'">
       <ItemGroup>
@@ -72,6 +75,10 @@
     <PackageReference Include="Deedle" Version="2.1.0" />
     <PackageReference Include="FSharp.Core" Version="4.5.2" />
     <PackageReference Include="MathNet.Numerics" Version="4.9.0" />
+    <PackageReference Include="Microsoft.Net.Compilers" Version="2.10.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="morelinq" Version="3.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="NodaTime" Version="1.3.4" />
