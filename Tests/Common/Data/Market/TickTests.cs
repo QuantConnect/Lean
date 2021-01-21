@@ -203,5 +203,17 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual(10000m, tickFromStream.Price);
             Assert.AreEqual(10, tickFromStream.Quantity);
         }
+
+        [Test]
+        public void ExchangeSetterHandlesNonExpectedEncoding()
+        {
+            const string line = "15093000,1456300,100,P,T,0";
+
+            var baseDate = new DateTime(2013, 10, 08);
+            var tick = new Tick(Symbols.SPY, line, baseDate);
+            Assert.DoesNotThrow(()=> tick.ExchangeCode = (byte)'L');
+            Assert.AreEqual(PrimaryExchange.UNKNOWN, tick.Exchange.GetPrimaryExchange(), "Failed at Exchange Property");
+            Assert.AreEqual((byte)PrimaryExchange.UNKNOWN, tick.ExchangeCode, "Failed at ExchangeCode Property");
+        }
     }
 }

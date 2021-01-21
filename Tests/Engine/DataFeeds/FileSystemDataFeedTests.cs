@@ -167,7 +167,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var message = ((DebugPacket) resultHandler.Messages.Single()).Message;
             Assert.IsTrue(message.Equals(
-                "The starting date for symbol AAA, 2001-11-30, has been adjusted to match map file first date 2002-05-22."));
+                "The starting date for symbol AAA, 2001-11-30, has been adjusted to match map file first date 2020-09-09."));
         }
     }
 }
