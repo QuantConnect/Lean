@@ -19,8 +19,6 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
-using QuantConnect.Securities.FutureOption;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {

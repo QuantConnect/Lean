@@ -97,7 +97,7 @@ class FutureOptionCallITMExpiryRegressionAlgorithm(QCAlgorithm):
         self.Log(f"{self.Time} -- {orderEvent.Symbol} :: Price: {self.Securities[orderEvent.Symbol].Holdings.Price} Qty: {self.Securities[orderEvent.Symbol].Holdings.Quantity} Direction: {orderEvent.Direction} Msg: {orderEvent.Message}")
 
     def AssertFutureOptionOrderExercise(self, orderEvent: OrderEvent, future: Security, optionContract: Security):
-        expectedLiquidationTimeUtc = datetime(2020, 6, 19, 4, 1, 0)
+        expectedLiquidationTimeUtc = datetime(2020, 6, 19, 20, 0, 0)
 
         if orderEvent.Direction == OrderDirection.Sell and future.Holdings.Quantity != 0:
             # We expect the contract to have been liquidated immediately

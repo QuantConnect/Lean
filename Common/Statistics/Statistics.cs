@@ -442,7 +442,14 @@ namespace QuantConnect.Statistics
         /// <returns>Decimal fraction for annual compounding performance</returns>
         public static decimal CompoundingAnnualPerformance(decimal startingCapital, decimal finalCapital, decimal years)
         {
-            return (years == 0 ? 0d : Math.Pow((double)finalCapital / (double)startingCapital, 1 / (double)years) - 1).SafeDecimalCast();
+            if (years == 0 || startingCapital == 0)
+            {
+                return 0;
+            }
+            var power = 1 / (double)years;
+            var baseNumber = (double)finalCapital / (double)startingCapital;
+            var result = Math.Pow(baseNumber, power) - 1;
+            return result.IsNaNOrInfinity() ? 0 : result.SafeDecimalCast();
         }
 
         /// <summary>
