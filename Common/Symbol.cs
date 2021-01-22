@@ -165,31 +165,7 @@ namespace QuantConnect
         {
             var sid = SecurityIdentifier.GenerateOption(expiry, underlyingSymbol.ID, market, strike, right, style);
 
-            if (expiry == SecurityIdentifier.DefaultDate)
-            {
-                alias = alias ?? $"?{underlyingSymbol.Value.LazyToUpper()}";
-            }
-            else
-            {
-                var sym = underlyingSymbol.Value;
-                if (sid.Symbol != underlyingSymbol.ID.Symbol)
-                {
-                    // If we have changed the SID and it does not match the underlying,
-                    // we've mapped a future into another Symbol. We want to have a value
-                    // representing the mapped ticker, not of the underlying.
-                    // e.g. we want:
-                    //     OG  C3200...|GC18Z20
-                    // NOT
-                    //     GC  C3200...|GC18Z20
-                    sym = sid.Symbol;
-                }
-
-                if (sym.Length > 5) sym += " ";
-
-                alias = alias ?? SymbolRepresentation.GenerateOptionTickerOSI(sym, sid.OptionRight, sid.StrikePrice, sid.Date);
-            }
-
-            return new Symbol(sid, alias, underlyingSymbol);
+            return new Symbol(sid, alias ?? GetAlias(sid, underlyingSymbol), underlyingSymbol);
         }
 
         /// <summary>
@@ -205,17 +181,7 @@ namespace QuantConnect
         {
             var sid = SecurityIdentifier.GenerateFuture(expiry, ticker, market);
 
-            if (expiry == SecurityIdentifier.DefaultDate)
-            {
-                alias = alias ?? "/" + ticker.LazyToUpper();
-            }
-            else
-            {
-                var sym = sid.Symbol;
-                alias = alias ?? SymbolRepresentation.GenerateFutureTicker(sym, sid.Date);
-            }
-
-            return new Symbol(sid, alias);
+            return new Symbol(sid, alias ?? GetAlias(sid));
         }
 
         /// <summary>
@@ -312,7 +278,7 @@ namespace QuantConnect
                 Underlying = new Symbol(ID.Underlying, ID.Underlying.Symbol);
             }
 
-            Value = value.LazyToUpper();
+            Value = GetAlias(sid, Underlying) ?? value.LazyToUpper();
         }
 
         /// <summary>
@@ -597,5 +563,47 @@ namespace QuantConnect
 #pragma warning restore 1591
 
         #endregion
+
+        /// <summary>
+        /// Centralized helper method to resolve alias for a symbol
+        /// </summary>
+        public static string GetAlias(SecurityIdentifier securityIdentifier, Symbol underlying = null)
+        {
+            string sym;
+            switch (securityIdentifier.SecurityType)
+            {
+                case SecurityType.FutureOption:
+                case SecurityType.Option:
+                    if (securityIdentifier.Date == SecurityIdentifier.DefaultDate)
+                    {
+                        return $"?{underlying.Value.LazyToUpper()}";
+                    }
+                    sym = underlying.Value;
+                    if (securityIdentifier.Symbol != underlying.ID.Symbol)
+                    {
+                        // If we have changed the SID and it does not match the underlying,
+                        // we've mapped a future into another Symbol. We want to have a value
+                        // representing the mapped ticker, not of the underlying.
+                        // e.g. we want:
+                        //     OG  C3200...|GC18Z20
+                        // NOT
+                        //     GC  C3200...|GC18Z20
+                        sym = securityIdentifier.Symbol;
+                    }
+
+                    if (sym.Length > 5) sym += " ";
+
+                    return SymbolRepresentation.GenerateOptionTickerOSI(sym, securityIdentifier.OptionRight, securityIdentifier.StrikePrice, securityIdentifier.Date);
+                case SecurityType.Future:
+                    sym = securityIdentifier.Symbol;
+                    if (securityIdentifier.Date == SecurityIdentifier.DefaultDate)
+                    {
+                        return $"/{sym}";
+                    }
+                    return SymbolRepresentation.GenerateFutureTicker(sym, securityIdentifier.Date);
+                default:
+                    return null;
+            }
+        }
     }
 }
