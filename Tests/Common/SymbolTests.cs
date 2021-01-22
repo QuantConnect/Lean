@@ -605,6 +605,7 @@ namespace QuantConnect.Tests.Common
         }
 
         [TestCase("CL XKJAZ588SI4H", "CL", "CL21F21")] // Future
+        [TestCase("CL JL", "CL", "/CL")] // Canonical Future
         [TestCase("ES 1S4 | ES XLDTU1KH5XC1", "CL", "?ES21F21")] // Future Option Canonical
         [TestCase("ES XKGCMV4QK9VO | ES XLDTU1KH5XC1", "ES", "ES21F21  201218C00000000")] // Future Option
         [TestCase("SPY 2U | SPY R735QTJ8XC9X", "SPY", "?SPY")] // Option Canonical
