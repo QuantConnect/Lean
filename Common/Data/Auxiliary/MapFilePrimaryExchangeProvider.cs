@@ -14,6 +14,7 @@
  *
 */
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
@@ -26,11 +27,12 @@ namespace QuantConnect.Data.Auxiliary
     class MapFilePrimaryExchangeProvider : IPrimaryExchangeProvider
     {
         private readonly IMapFileProvider _mapFileProvider;
-        private readonly Dictionary<SecurityIdentifier, PrimaryExchange> _primaryExchangeBySid = new Dictionary<SecurityIdentifier, PrimaryExchange>();
+        private readonly ConcurrentDictionary<SecurityIdentifier, PrimaryExchange> _primaryExchangeBySid;
 
         public MapFilePrimaryExchangeProvider(IMapFileProvider mapFileProvider)
         {
             _mapFileProvider = mapFileProvider;
+            _primaryExchangeBySid = new ConcurrentDictionary<SecurityIdentifier, PrimaryExchange>();
         }
 
         /// <summary>
