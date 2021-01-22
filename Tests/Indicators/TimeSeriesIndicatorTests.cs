@@ -42,8 +42,7 @@ namespace QuantConnect.Tests.Indicators
             Console.WriteLine(test.Sum());
             double[] heads;
             var differencer = TimeSeriesIndicator.DifferenceSeries(1, test, out heads);
-            Console.WriteLine(test.Sum());
-            Assert.AreEqual(1, differencer.Sum());
+            Assert.AreEqual(-1, differencer.Sum());
             Assert.AreEqual(test.Sum(), TimeSeriesIndicator.InverseDifferencedSeries(differencer, heads).Sum());
         } 
         [Test]

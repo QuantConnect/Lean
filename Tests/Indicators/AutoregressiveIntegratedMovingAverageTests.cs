@@ -25,7 +25,7 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class ArimaIndicatorTests : CommonIndicatorTests<IndicatorDataPoint>
+    public class AutoregressiveIntegratedMovingAverageTests : CommonIndicatorTests<IndicatorDataPoint>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {

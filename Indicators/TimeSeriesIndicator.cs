@@ -69,14 +69,14 @@ namespace QuantConnect.Indicators
             }
 
             var localSeries = series;
-            for (var j = 0; j+1 <= d; j++)
+            for (var j = 1; j <= d; j++)
             {
                 var result = new double[localSeries.Length - 1];
-                diffHeads[j] = localSeries.Last();
+                diffHeads[j - 1] = localSeries.Last();
 
-                for (var i = 1; i <= localSeries.Length - 1; i++)
+                for (var i = 0; i <= localSeries.Length - 2; i++)
                 {
-                    result[i - 1] = localSeries[i] - localSeries[i - 1];
+                    result[i] = localSeries[i] - localSeries[i + 1];
                 }
 
                 localSeries = result;
@@ -100,14 +100,14 @@ namespace QuantConnect.Indicators
             }
 
             var localSeries = series;
-            for (var j = 0; j+1 <= d; j++)
+            for (var j = 1; j <= d; j++)
             {
                 var result = new double[localSeries.Length - 1];
-                DiffHeads[j] = localSeries.Last();
+                DiffHeads[j - 1] = localSeries.Last();
 
-                for (var i = 1; i <= localSeries.Length - 1; i++)
+                for (var i = 0; i <= localSeries.Length - 2; i++)
                 {
-                    result[i - 1] = localSeries[i] - localSeries[i - 1];
+                    result[i] = localSeries[i] - localSeries[i + 1];
                 }
 
                 localSeries = result;
@@ -121,15 +121,21 @@ namespace QuantConnect.Indicators
         /// the value at that spot in the original series.
         /// </summary>
         /// <param name="series">Series to cumulatively sum over.</param>
+        /// <param name="reverse">Whether to reverse the series before applying the cumulative sum.</param>
         /// <returns>Cumulatively summed series.</returns>
-        protected static double[] CumulativeSum(double[] series)
+        protected static List<double> CumulativeSum(List<double> series, bool reverse=false)
         {
-            var sums = 0d;
-            var outSeries = new double[series.Length];
-            for (var i = 0; i < series.Length; i++)
+            var localSeries = series;
+            if (reverse)
             {
-                sums += series[i];
-                outSeries[i] = sums;
+                localSeries.Reverse(); // For top-down
+            }
+            var sums = 0d;
+            var outSeries = new List<double>();
+            foreach (var val in localSeries)
+            {
+                sums += val;
+                outSeries.Add(sums);
             }
 
             return outSeries;
@@ -155,18 +161,16 @@ namespace QuantConnect.Indicators
         public static double[]
             InverseDifferencedSeries(double[] series, double[] diffHeads)
         {
-            var serial = series.ToList();
-            var localDiffs = diffHeads;
-            
-            while (localDiffs.Length > 0)
+            var localDiffs = new Stack<double>(diffHeads.Reverse());
+            var localSeries = series.ToList();
+            while (localDiffs.Count() > 0)
             {
-                var first = localDiffs.Last();
-                localDiffs = localDiffs.Take(localDiffs.Length - 1) as double[]; // removes from original
-                serial.Add(first);
-                series = CumulativeSum(series);
+                var first = localDiffs.Pop();
+                localSeries.Add(first);
+                localSeries = CumulativeSum(localSeries,true);
             }
 
-            return serial.ToArray();
+            return localSeries.ToArray();
         }
 
         /// <summary>
