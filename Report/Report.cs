@@ -18,6 +18,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Deedle;
+using Newtonsoft.Json;
+using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Report.ReportElements;
@@ -38,7 +40,8 @@ namespace QuantConnect.Report
         /// <param name="version">Version number of the strategy</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live)
+        /// <param name="pointInTimePortfolioDestination">Point in time portfolio json output base filename</param>
+        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string pointInTimePortfolioDestination = null)
         {
             var backtestCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(backtest));
             var liveCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(live));
@@ -50,6 +53,25 @@ namespace QuantConnect.Report
             var backtestPortfolioInTime = PortfolioLooper.FromOrders(backtestCurve, backtestOrders).ToList();
             Log.Trace($"QuantConnect.Report.Report(): Processing live orders");
             var livePortfolioInTime = PortfolioLooper.FromOrders(liveCurve, liveOrders, liveSeries: true).ToList();
+
+            var destination = pointInTimePortfolioDestination ?? Config.Get("report-destination");
+            if (!string.IsNullOrWhiteSpace(destination))
+            {
+                if (backtestPortfolioInTime.Count != 0)
+                {
+                    var outputFile = destination.Replace(".html", string.Empty) + "-backtesting-portfolio.json";
+                    Log.Trace($"Report.Report(): Writing backtest point-in-time portfolios to JSON file: {outputFile}");
+                    var backtestPortfolioOutput = JsonConvert.SerializeObject(backtestPortfolioInTime);
+                    File.WriteAllText(outputFile, backtestPortfolioOutput);
+                }
+                if (livePortfolioInTime.Count != 0)
+                {
+                    var outputFile = destination.Replace(".html", string.Empty) + "-live-portfolio.json";
+                    Log.Trace($"Report.Report(): Writing live point-in-time portfolios to JSON file: {outputFile}");
+                    var livePortfolioOutput = JsonConvert.SerializeObject(livePortfolioInTime);
+                    File.WriteAllText(outputFile, livePortfolioOutput);
+                }
+            }
 
             _elements = new List<IReportElement>
             {
