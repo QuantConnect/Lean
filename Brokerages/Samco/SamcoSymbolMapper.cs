@@ -232,6 +232,11 @@ namespace QuantConnect.Brokerages.Samco
         /// <returns>A new Lean Symbol instance</returns>
         public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market, DateTime expirationDate = default(DateTime), decimal strike = 0, OptionRight optionRight = OptionRight.Call)
         {
+            if (brokerageSymbol.Contains('-'))
+            {
+                brokerageSymbol = brokerageSymbol.Split('-')[0];
+            }
+
             // return KnownSymbols.Where(s => s.ID.Symbol == brokerageSymbol && s.ID.Market == market).FirstOrDefault();
 
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
@@ -262,6 +267,10 @@ namespace QuantConnect.Brokerages.Samco
         /// <returns>The security type</returns>
         public SecurityType GetBrokerageSecurityType(string brokerageSymbol,string exchange)
         {
+            if (brokerageSymbol.Contains('-'))
+            {
+                brokerageSymbol = brokerageSymbol.Split('-')[0];
+            }
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 throw new ArgumentException($"Invalid Samco symbol: {brokerageSymbol}");
 
