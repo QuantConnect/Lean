@@ -40,7 +40,8 @@ namespace QuantConnect.Report
         /// <param name="version">Version number of the strategy</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live)
+        /// <param name="pointInTimePortfolioDestination">Point in time portfolio json output base filename</param>
+        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string pointInTimePortfolioDestination = null)
         {
             var backtestCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(backtest));
             var liveCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(live));
@@ -53,7 +54,7 @@ namespace QuantConnect.Report
             Log.Trace($"QuantConnect.Report.Report(): Processing live orders");
             var livePortfolioInTime = PortfolioLooper.FromOrders(liveCurve, liveOrders, liveSeries: true).ToList();
 
-            var destination = Config.Get("report-destination");
+            var destination = pointInTimePortfolioDestination ?? Config.Get("report-destination");
             if (!string.IsNullOrWhiteSpace(destination))
             {
                 if (backtestPortfolioInTime.Count != 0)
