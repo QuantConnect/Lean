@@ -113,10 +113,10 @@ namespace QuantConnect.Algorithm
         /// <param name="period">Size of the rolling series to fit onto</param>
         /// <param name="resolution">The resolution</param>
         /// <returns>The ARIMA indicator for the requested symbol over the specified period</returns>
-        public ArimaIndicator ARIMA(Symbol symbol, int p, int d, int q, int period, Resolution? resolution = null)
+        public AutoRegressiveIntegratedMovingAverage ARIMA(Symbol symbol, int p, int d, int q, int period, Resolution? resolution = null)
         {
             var name = CreateIndicatorName(symbol, $"ARIMA({p},{d},{q},{period})", resolution);
-            var arimaIndicator = new ArimaIndicator(name, p, d, q, period);
+            var arimaIndicator = new AutoRegressiveIntegratedMovingAverage(name, p, d, q, period);
             RegisterIndicator(symbol, arimaIndicator, resolution);
 
             if (EnableAutomaticIndicatorWarmUp)

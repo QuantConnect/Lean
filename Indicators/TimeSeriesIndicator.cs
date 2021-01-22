@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -24,7 +23,7 @@ namespace QuantConnect.Indicators
     /// </summary>
     public abstract class TimeSeriesIndicator : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
-        private double[] _diffHeads;
+        internal double[] DiffHeads;
 
         /// <summary>
         /// A constructor for a basic Time Series indicator.
@@ -60,20 +59,51 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="series">Series to difference</param>
         /// <param name="d">The differencing order</param>
-        protected double[]
-            DifferenceSeries(int d, double[] series)
+        /// <param name="diffHeads">"Integration" constants</param>
+        public static double[] DifferenceSeries(int d, double[] series, out double[] diffHeads)
         {
-            _diffHeads = new double[series.Length - d];
+            diffHeads = new double[d];
             if (d == 0)
             {
                 return null;
             }
 
             var localSeries = series;
-            for (var j = 1; j <= d; j++)
+            for (var j = 0; j+1 <= d; j++)
             {
                 var result = new double[localSeries.Length - 1];
-                _diffHeads[j - 1] = localSeries.Last();
+                diffHeads[j] = localSeries.Last();
+
+                for (var i = 1; i <= localSeries.Length - 1; i++)
+                {
+                    result[i - 1] = localSeries[i] - localSeries[i - 1];
+                }
+
+                localSeries = result;
+            }
+
+            return localSeries;
+        }
+
+        /// <summary>
+        /// Differences a time series d times.
+        /// </summary>
+        /// <param name="series">Series to difference</param>
+        /// <param name="d">The differencing order</param>
+        protected double[]
+            DifferenceSeries(int d, double[] series)
+        {
+            DiffHeads = new double[d];
+            if (d == 0)
+            {
+                return null;
+            }
+
+            var localSeries = series;
+            for (var j = 0; j+1 <= d; j++)
+            {
+                var result = new double[localSeries.Length - 1];
+                DiffHeads[j] = localSeries.Last();
 
                 for (var i = 1; i <= localSeries.Length - 1; i++)
                 {
@@ -92,7 +122,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="series">Series to cumulatively sum over.</param>
         /// <returns>Cumulatively summed series.</returns>
-        protected double[] CumulativeSum(double[] series)
+        protected static double[] CumulativeSum(double[] series)
         {
             var sums = 0d;
             var outSeries = new double[series.Length];
@@ -106,28 +136,37 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Undoes the differencing of a time series which has been differenced using <see cref="DifferenceSeries" />..
+        /// Undoes the differencing of a time series which has been differenced using <see cref="DifferenceSeries" />.
         /// https://github.com/statsmodels/statsmodels/blob/04f00006a7aeb1c93d6894caa420698400da6c33/statsmodels/tsa/tsatools.py#L758
         /// </summary>
         /// <param name="series">Series to un-difference</param>
         protected double[]
             InverseDifferencedSeries(double[] series)
         {
-            if (_diffHeads == null)
-            {
-                throw new IndexOutOfRangeException("Series was not (or not properly) differenced.");
-            }
+           return InverseDifferencedSeries(series, DiffHeads);
+        }
 
-            var diffHeads = _diffHeads;
-            while (diffHeads.Length > 0)
+        /// <summary>
+        /// Undoes the differencing of a time series which has been differenced using <see cref="DifferenceSeries" />.
+        /// https://github.com/statsmodels/statsmodels/blob/04f00006a7aeb1c93d6894caa420698400da6c33/statsmodels/tsa/tsatools.py#L758
+        /// </summary>
+        /// <param name="series">Series to un-difference</param>
+        /// <param name="diffHeads">Series of "integration" constants for un-differencing</param>
+        public static double[]
+            InverseDifferencedSeries(double[] series, double[] diffHeads)
+        {
+            var serial = series.ToList();
+            var localDiffs = diffHeads;
+            
+            while (localDiffs.Length > 0)
             {
-                var first = diffHeads.Last();
-                diffHeads = diffHeads.Take(diffHeads.Length - 1) as double[]; // removes from original
-                series[series.Length + 1] = first;
+                var first = localDiffs.Last();
+                localDiffs = localDiffs.Take(localDiffs.Length - 1) as double[]; // removes from original
+                serial.Add(first);
                 series = CumulativeSum(series);
             }
 
-            return series;
+            return serial.ToArray();
         }
 
         /// <summary>
@@ -137,7 +176,7 @@ namespace QuantConnect.Indicators
         /// <param name="series">Series to calculate the lags of</param>
         /// <param name="includeT">Whether or not to include t with its lags in the output array</param>
         /// <returns>A list such that index i returns the series for i+1 lags</returns>
-        protected double[][] LaggedSeries(int p, double[] series, bool includeT = false)
+        public static double[][] LaggedSeries(int p, double[] series, bool includeT = false)
         {
             // P-defined lagging - for each X_t, return double[] of the relevant lagged terms
             var toArray = new List<double[]>();

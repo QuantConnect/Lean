@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            var ARIMA = new ArimaIndicator("ARIMA", 1, 0, 1, 50);
+            var ARIMA = new AutoRegressiveIntegratedMovingAverage("ARIMA", 1, 0, 1, 50);
             return ARIMA;
         }
 
@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Indicators
                 betweenMethods.Add(Math.Abs(arimas[0] - arimas[1]));
             }
 
-            Console.Write($"Prediction error for ArimaIndicator: {ssIndicator}\n");
+            Console.Write($"Prediction error for AutoRegressiveIntegratedMovingAverage: {ssIndicator}\n");
             Console.Write($"Prediction error for External: {ssTest}\n");
             Console.Write(
                 $"Mean difference between methods: {betweenMethods.Average()}, Std: {betweenMethods.ToDoubleArray().StandardDeviation()} ");

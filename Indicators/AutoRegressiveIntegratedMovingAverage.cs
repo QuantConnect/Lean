@@ -24,108 +24,119 @@ namespace QuantConnect.Indicators
 {
     /// <summary>
     /// An ARIMA is a time series model which can be used to describe a set of data. In particular,with Xₜ
-    /// representing the series, the model assumes the data are of form (after differencing <see cref="_d" /> times):
+    /// representing the series, the model assumes the data are of form (after differencing <see cref="_diffOrder" /> times):
     /// <para>
     ///     Xₜ = c + εₜ + ΣᵢφᵢXₜ₋ᵢ +  Σᵢθᵢεₜ₋ᵢ
     /// </para>
-    /// where the first sum has an upper limit of <see cref="_p" /> and the second <see cref="_q" />.
+    /// where the first sum has an upper limit of <see cref="_arOrder" /> and the second <see cref="_maOrder" />.
     /// </summary>
-    public class ArimaIndicator : TimeSeriesIndicator, IIndicatorWarmUpPeriodProvider
+    public class AutoRegressiveIntegratedMovingAverage : TimeSeriesIndicator, IIndicatorWarmUpPeriodProvider
 
     {
         /// <summary>
-        /// Differencing coefficient. Determines how many times the series should be differenced before fitting the
+        /// Differencing coefficient (d). Determines how many times the series should be differenced before fitting the
         /// model.
         /// </summary>
-        private readonly int _d;
+        private readonly int _diffOrder;
 
         private readonly bool _intercept;
 
         /// <summary>
-        /// AR coefficient.
+        /// AR coefficient -- p
         /// </summary>
-        private readonly int _p;
+        private readonly int _arOrder;
 
         /// <summary>
-        /// MA Coefficient.
+        /// MA Coefficient -- q
         /// </summary>
-        private readonly int _q;
+        private readonly int _maOrder;
 
         private readonly RollingWindow<double> _rollingData;
 
         private List<double> _residuals;
 
         /// <summary>
-        /// A dictionary, indexed by "AR" and "MA", containing their respective, fitted parameters.
+        /// Fitted AR parameters (φ terms).
         /// </summary>
-        public Dictionary<string, double[]> Parameters;
+        public double[] ArParameters;
 
         /// <summary>
-        /// Fits an ARIMA(p,d,q) model of form (after differencing it <see cref="_d" /> times):
+        /// Fitted MA parameters (θ terms).
+        /// </summary>
+        public double[] MaParameters;
+        
+        /// <summary>
+        /// Fitted intercept (c term).
+        /// </summary>
+        public double Intercept;
+        
+        
+        /// <summary>
+        /// Fits an ARIMA(arOrder,diffOrder,maOrder) model of form (after differencing it <see cref="_diffOrder" /> times):
         /// <para>
         ///     Xₜ = c + εₜ + ΣᵢφᵢXₜ₋ᵢ +  Σᵢθᵢεₜ₋ᵢ
         /// </para>
-        /// where the first sum has an upper limit of <see cref="_p" /> and the second <see cref="_q" />.
+        /// where the first sum has an upper limit of <see cref="_arOrder" /> and the second <see cref="_maOrder" />.
         /// This particular constructor fits the model by means of <see cref="TwoStepFit" /> for a specified name.
         /// </summary>
         /// <param name="name">The name of the indicator</param>
-        /// <param name="p">AR order</param>
-        /// <param name="d">Difference order</param>
-        /// <param name="q">MA order</param>
+        /// <param name="arOrder">AR order -- p</param>
+        /// <param name="diffOrder">Difference order -- d</param>
+        /// <param name="maOrder">MA order -- q</param>
         /// <param name="period">Size of the rolling series to fit onto</param>
         /// <param name="intercept">Whether ot not to include the intercept term</param>
-        public ArimaIndicator(
+        public AutoRegressiveIntegratedMovingAverage(
             string name,
-            int p,
-            int d,
-            int q,
+            int arOrder,
+            int diffOrder,
+            int maOrder,
             int period,
             bool intercept = true
             )
             : base(name)
         {
-            if (period >= Math.Max(p, q))
+            if (period >= Math.Max(arOrder, maOrder))
             {
-                _p = p;
-                _q = q;
-                _d = d;
+                _arOrder = arOrder;
+                _maOrder = maOrder;
+                _diffOrder = diffOrder;
                 WarmUpPeriod = period;
                 _rollingData = new RollingWindow<double>(period);
                 _intercept = intercept;
             }
             else
             {
-                throw new ArgumentException("Period must exceed both p and q");
+                throw new ArgumentException("Period must exceed both arOrder and maOrder");
             }
         }
 
         /// <summary>
-        /// Fits an ARIMA(p,d,q) model of form (after differencing it <see cref="_d" /> times):
+        /// Fits an ARIMA(arOrder,diffOrder,maOrder) model of form (after differencing it <see cref="_diffOrder" /> times):
         /// <para>
         ///     Xₜ = c + εₜ + ΣᵢφᵢXₜ₋ᵢ +  Σᵢθᵢεₜ₋ᵢ
         /// </para>
-        /// where the first sum has an upper limit of <see cref="_p" /> and the second <see cref="_q" />.
-        /// This particular constructor fits the model by means of <see cref="TwoStepFit" /> by means of OLS.
+        /// where the first sum has an upper limit of <see cref="_arOrder" /> and the second <see cref="_maOrder" />.
+        /// This particular constructor fits the model by means of <see cref="TwoStepFit" /> using ordinary least squares.
         /// </summary>
-        /// <param name="p">AR order</param>
-        /// <param name="d">Difference order</param>
-        /// <param name="q">MA order</param>
+        /// <param name="arOrder">AR order -- p</param>
+        /// <param name="diffOrder">Difference order -- d</param>
+        /// <param name="maOrder">MA order -- q</param>
         /// <param name="period">Size of the rolling series to fit onto</param>
-        public ArimaIndicator(int p, int d, int q, int period)
-            : this($"ARIMA(({p},{d},{q}), {period})", p, d, q, period)
+        public AutoRegressiveIntegratedMovingAverage(int arOrder, int diffOrder, int maOrder, int period)
+            : this($"ARIMA(({arOrder}, {diffOrder}, {maOrder}), {period})", arOrder, diffOrder, maOrder, period)
         {
-            if (period >= Math.Max(p, q))
+            if (period >= Math.Max(arOrder, maOrder))
             {
-                _p = p;
-                _q = q;
-                _d = d;
+                _arOrder = arOrder;
+                _maOrder = maOrder;
+                _diffOrder = diffOrder;
                 WarmUpPeriod = period;
                 _rollingData = new RollingWindow<double>(period);
                 _intercept = true;
             }
             else
             {
-                throw new ArgumentException("Period must exceed both p and q");
+                throw new ArgumentException("Period must exceed both arOrder and maOrder");
             }
         }
 
@@ -152,9 +163,9 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Fits the model by means of implementing the following pseudo-code algorithm (in the form of "if{then}"):
         /// <code>
-        /// if d > 0 {Difference data D times}
-        /// if p > 0 {Fit the AR model Xₜ = ΣᵢφᵢXₜ; ε's are set to residuals from fitting this.}
-        /// if q > 0 {Fit the MA parameters left over  Xₜ = c + εₜ + ΣᵢφᵢXₜ₋ᵢ +  Σᵢθᵢεₜ₋ᵢ}
+        /// if diffOrder > 0 {Difference data diffOrder times}
+        /// if arOrder > 0 {Fit the AR model Xₜ = ΣᵢφᵢXₜ; ε's are set to residuals from fitting this.}
+        /// if maOrder > 0 {Fit the MA parameters left over  Xₜ = c + εₜ + ΣᵢφᵢXₜ₋ᵢ +  Σᵢθᵢεₜ₋ᵢ}
         /// Return: φ and θ estimates.
         /// </code>
         /// http://mbhauser.com/informal-notes/two-step-arma-estimation.pdf
@@ -162,35 +173,34 @@ namespace QuantConnect.Indicators
         protected void TwoStepFit(double[] series) // Protected for any future inheritors (e.g., SARIMA)
         {
             _residuals = new List<double>();
-            Parameters = new Dictionary<string, double[]>();
-            var data = _d > 0 ? DifferenceSeries(_d, series) : series; // Difference the series
+            var data = _diffOrder > 0 ? DifferenceSeries(_diffOrder, series) : series; // Difference the series
             double errAr = 0;
             double errMa = 0;
             double[] arFits;
-            var lags = _p > 0 ? LaggedSeries(_p, data) : new[] {data};
-            if (_p > 0)
+            var lags = _arOrder > 0 ? LaggedSeries(_arOrder, data) : new[] {data};
+            if (_arOrder > 0)
             {
                 // The function (lags[time][lagged X]) |---> ΣᵢφᵢXₜ₋ᵢ 
-                arFits = Fit.MultiDim(lags, data.Skip(_p).ToArray(), method: DirectRegressionMethod.NormalEquations);
+                arFits = Fit.MultiDim(lags, data.Skip(_arOrder).ToArray(), method: DirectRegressionMethod.NormalEquations);
                 var fittedVec = Vector.Build.Dense(arFits);
 
                 for (var i = 0; i < data.Length; i++) // Calculate the error assoc. with model.
                 {
-                    if (i < _p)
+                    if (i < _arOrder)
                     {
                         _residuals.Add(0); // 0-padding
                         continue;
                     }
 
-                    var residual = data[i] - Vector.Build.Dense(lags[i - _p]).DotProduct(fittedVec);
+                    var residual = data[i] - Vector.Build.Dense(lags[i - _arOrder]).DotProduct(fittedVec);
                     errAr += Math.Pow(residual, 2);
                     _residuals.Add(residual);
                 }
 
-                ArResidualError = errAr / (data.Length - _p - 1);
-                if (_q == 0)
+                ArResidualError = errAr / (data.Length - _arOrder - 1);
+                if (_maOrder == 0)
                 {
-                    Parameters["AR"] = arFits; // Will not be thrown out
+                    ArParameters = arFits; // Will not be thrown out
                 }
             }
 
@@ -199,9 +209,9 @@ namespace QuantConnect.Indicators
                 _residuals = series.ToList();
             }
 
-            if (_q > 0) // MA part as in (4) of mbhauser notes.
+            if (_maOrder > 0) // MA part as in (4) of mbhauser notes.
             {
-                var size = Math.Max(_q, _p);
+                var size = Math.Max(_maOrder, _arOrder);
                 var appendedData = new List<double[]>();
                 var laggedErrors = LaggedSeries(size, _residuals.ToArray());
                 for (var i = 0; i < laggedErrors.Length; i++)
@@ -211,7 +221,7 @@ namespace QuantConnect.Indicators
                     appendedData.Add(doubles.ToArray());
                 }
 
-                var maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(_p).ToArray(),
+                var maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(_arOrder).ToArray(),
                     method: DirectRegressionMethod.NormalEquations, intercept: _intercept);
                 for (var i = size; i < data.Length; i++) // Calculate the error assoc. with model.
                 {
@@ -224,16 +234,16 @@ namespace QuantConnect.Indicators
 
                 if (_intercept)
                 {
-                    MaResidualError = errMa / (data.Length - Math.Max(_p, _q) - 1);
-                    Parameters["MA"] = maFits.Skip(1 + _q).ToArray();
-                    Parameters["AR"] = maFits.Skip(1).Take(_q).ToArray();
-                    Parameters["Intercept"] = new[] {maFits[0]};
+                    MaResidualError = errMa / (data.Length - Math.Max(_arOrder, _maOrder) - 1);
+                    MaParameters = maFits.Skip(1 + _maOrder).ToArray();
+                    ArParameters = maFits.Skip(1).Take(_maOrder).ToArray();
+                    Intercept = maFits[0];
                 }
                 else
                 {
-                    MaResidualError = errMa / (data.Length - Math.Max(_p, _q) - 1);
-                    Parameters["MA"] = maFits.Skip(_q).ToArray();
-                    Parameters["AR"] = maFits.Take(_q).ToArray();
+                    MaResidualError = errMa / (data.Length - Math.Max(_arOrder, _maOrder) - 1);
+                    MaParameters = maFits.Skip(_maOrder).ToArray();
+                    ArParameters = maFits.Take(_maOrder).ToArray();
                 }
             }
         }
@@ -259,27 +269,27 @@ namespace QuantConnect.Indicators
             {
                 var arrayData = _rollingData.ToArray();
                 TwoStepFit(arrayData);
-                arrayData = _d > 0 ? DifferenceSeries(_d, arrayData) : arrayData;
+                arrayData = _diffOrder > 0 ? DifferenceSeries(_diffOrder, arrayData) : arrayData;
                 double summants = 0;
-                if (_p > 0)
+                if (_arOrder > 0)
                 {
-                    for (var i = 0; i < _p; i++) // AR Parameters
+                    for (var i = 0; i < _arOrder; i++) // AR Parameters
                     {
-                        summants += Parameters["AR"][i] * arrayData[i];
+                        summants += ArParameters[i] * arrayData[i];
                     }
                 }
 
-                if (_q > 0)
+                if (_maOrder > 0)
                 {
-                    for (var i = 0; i < _q; i++) // MA Parameters
+                    for (var i = 0; i < _maOrder; i++) // MA Parameters
                     {
-                        summants += Parameters["MA"][i] * _residuals[_q + i];
+                        summants += MaParameters[i] * _residuals[_maOrder + i];
                     }
 
-                    summants += Parameters.ContainsKey("Intercept") ? Parameters["Intercept"][0] : 0; // Intercept term
+                    summants += Intercept; // Intercept term
                 }
 
-                if (_d > 0)
+                if (_diffOrder > 0)
                 {
                     arrayData.ToList().Insert(0, summants); // Prepends
                     summants = InverseDifferencedSeries(arrayData).First(); // Returns disintegrated series
@@ -289,19 +299,6 @@ namespace QuantConnect.Indicators
             }
 
             return 0m;
-        }
-
-        /// <summary>
-        /// Fits the model by means of Maximum Likelihood Estimation (MLE).
-        /// </summary>
-        /// <param name="series">Series to fit the model onto</param>
-        protected void MaxLikelihood(double[] series)
-        {
-            _residuals = new List<double>();
-            Parameters = new Dictionary<string, double[]>();
-            var data = _d > 0 ? DifferenceSeries(_d, series) : series; // Difference the series
-            var lags = _p > 0 ? LaggedSeries(_p, data) : new[] {data};
-
         }
     }
 }
