@@ -127,6 +127,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     try
                     {
                         // Ensure the data time is after subscription start time
+                        // We must skip Auxiliary data as it will cause problems with delisting processing GH #5207
                         if (current.EndTime < _startTime && current.DataType != MarketDataType.Auxiliary)
                         {
                             continue;

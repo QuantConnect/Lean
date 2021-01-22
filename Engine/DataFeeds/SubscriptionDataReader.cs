@@ -365,9 +365,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
 
+                    // Filter out any data that is before the period start for the subscription
                     // To deal with OpenInterest data that only comes in once per day, we will check it against the periodStart date
-                    if ((_config.TickType == TickType.OpenInterest && instance.EndTime < _periodStart.Date) || 
-                        (_config.TickType != TickType.OpenInterest && instance.EndTime < _periodStart))
+                    // it will later be filtered based on the start time by the SubscriptionFilterEnumerator which is after the FFEnumerator
+                    if ((_config.TickType != TickType.OpenInterest && instance.EndTime < _periodStart) ||
+                        (_config.TickType == TickType.OpenInterest && instance.EndTime < _periodStart.Date))
                     {
                         // keep reading until we get a value on or after the start
                         _previous = instance;
