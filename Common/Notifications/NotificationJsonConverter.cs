@@ -67,7 +67,9 @@ namespace QuantConnect.Notifications
             }
             else if (jObject.TryGetValue("address", out token))
             {
-                return new NotificationWeb(token.ToString());
+                JToken headers;
+                jObject.TryGetValue("headers", out headers);
+                return new NotificationWeb(token.ToString(), null, headers?.ToObject<Dictionary<string, string>>());
             }
 
             throw new NotImplementedException($"Unexpected json object: '{jObject.ToString(Formatting.None)}'");
