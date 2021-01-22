@@ -109,6 +109,7 @@ namespace QuantConnect.Brokerages.Samco
             _samcoAPI.Authorize(apiKey, apiSecret, yob);
             _symbolMapper = new SamcoSymbolMapper();
             var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _algorithm.SetOptionChainProvider(new SamcoLiveOptionChainProvider(_symbolMapper));
 
             WebSocket = new SamcoWebSocketClientWrapper();
             WebSocket.Initialize("");
@@ -184,14 +185,18 @@ namespace QuantConnect.Brokerages.Samco
                         var order = kvp.Value;
 
                         var response = _samcoAPI.GetOrderDetails(orderId);
-                        if (response.status != "Success")
-                        {
-                            OnMessage(new BrokerageMessageEvent(
-                                BrokerageMessageType.Warning,
-                                -1,
-                                $"SamcoBrokerage.FillMonitorAction(): request failed: [{response.status}] {response.statusMessage}, Content: {response.ToString()}, ErrorMessage: {response.validationErrors}"));
 
-                            continue;
+                        if (response.status!= null)
+                        {
+                            if (response.status.ToUpperInvariant() == "FAILURE")
+                            {
+                                OnMessage(new BrokerageMessageEvent(
+                                    BrokerageMessageType.Warning,
+                                    -1,
+                                    $"SamcoBrokerage.FillMonitorAction(): request failed: [{response.status}] {response.statusMessage}, Content: {response.ToString()}, ErrorMessage: {response.validationErrors}"));
+
+                                continue;
+                            }
                         }
 
                         //Process cancelled orders here.
@@ -199,9 +204,14 @@ namespace QuantConnect.Brokerages.Samco
                         {
                             OnOrderClose(response.orderDetails);
                         }
-                       
-                        // Process rest of the orders here.
-                        EmitFillOrder(response.orderDetails);
+
+                        if (response.orderStatus == "EXECUTED")
+                        {
+                            // Process rest of the orders here.
+                            EmitFillOrder(response);
+                        }
+
+                        
                         
                     }
                 }
@@ -338,11 +348,12 @@ namespace QuantConnect.Brokerages.Samco
             }
         }
 
-        private void EmitFillOrder(OrderDetails orderDetails)
+        private void EmitFillOrder(SamcoOrderResponse orderResponse)
         {
             try
             {
-                var brokerId = orderDetails.orderNumber;
+                var brokerId = orderResponse.orderNumber;
+                var orderDetails = orderResponse.orderDetails;
                 var order = CachedOrderIDs
                     .FirstOrDefault(o => o.Value.BrokerId.Contains(brokerId))
                     .Value;
@@ -361,6 +372,11 @@ namespace QuantConnect.Brokerages.Samco
                 var fillQuantity = decimal.Parse(orderDetails.filledQuantity, NumberStyles.Float, CultureInfo.InvariantCulture);
                 var updTime = DateTime.UtcNow;
                 var orderFee = new OrderFee(new CashAmount(CalculateBrokerageOrderFee(fillPrice * fillQuantity, order.Direction), Currencies.INR));
+
+                if (order.Direction == OrderDirection.Sell)
+                {
+                    fillQuantity = -1 * fillQuantity;
+                }
                 var status = OrderStatus.Filled;
                 if (fillQuantity != order.Quantity)
                 {
@@ -388,6 +404,7 @@ namespace QuantConnect.Brokerages.Samco
                     CachedOrderIDs.TryRemove(order.Id, out outOrder);
                     decimal ignored;
                     _fills.TryRemove(order.Id, out ignored);
+                    _pendingOrders.TryRemove(brokerId, out outOrder);
                 }
 
                 OnOrderEvent(orderEvent);
