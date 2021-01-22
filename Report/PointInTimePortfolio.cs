@@ -18,6 +18,8 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace QuantConnect.Report
 {
@@ -37,8 +39,14 @@ namespace QuantConnect.Report
         public decimal TotalPortfolioValue { get; private set; }
 
         /// <summary>
+        /// The cash the portfolio has
+        /// </summary>
+        public decimal Cash { get; private set; }
+
+        /// <summary>
         /// The order we just processed
         /// </summary>
+        [JsonIgnore]
         public Order Order { get; private set; }
 
         /// <summary>
@@ -61,6 +69,7 @@ namespace QuantConnect.Report
             Time = order.Time;
             Order = order;
             TotalPortfolioValue = portfolio.TotalPortfolioValue;
+            Cash = portfolio.Cash;
             Holdings = portfolio.Securities.Values.Select(x => new PointInTimeHolding(x.Symbol, x.Holdings.HoldingsValue, x.Holdings.Quantity)).ToList();
             Leverage = Holdings.Sum(x => x.AbsoluteHoldingsValue) / TotalPortfolioValue;
         }
@@ -75,6 +84,7 @@ namespace QuantConnect.Report
             Time = time;
             Order = portfolio.Order;
             TotalPortfolioValue = portfolio.TotalPortfolioValue;
+            Cash = portfolio.Cash;
             Holdings = portfolio.Holdings;
             Leverage = portfolio.Leverage;
         }
