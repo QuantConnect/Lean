@@ -192,6 +192,7 @@ else
   # First part of the docker DOCKER_CMD
   DOCKER_CMD="docker run -it --rm\
       --name $CONTAINER_NAME \
+      --user "$(id -u):$(id -g)" \ 
       -p 5678:5678 \
       --expose 6000 \
        $IMAGE"
@@ -219,7 +220,7 @@ EOF
         done
       done
     fi
-
+    
     # Launch container, copy relevant folders
     for dir in "${FILES_DIRS[@]/$i/}"; do
       echo "COPY $dir /Lean/$dir" >> TEMP_DOCKERFILE
@@ -236,7 +237,7 @@ WORKDIR /Lean/
 ENTRYPOINT ["/bin/bash"]
 EOF
     )"
-    DOCKER_CMD+=" -v $(pwd):/$CONTAINER_NAME:rw"
+    DOCKER_CMD+=" --mount type=bind,source=$(pwd),target=/Lean"
   fi
 
   TEMP=$(mktemp ./.temp_dockerfile.XXXXXXXX)
@@ -256,6 +257,6 @@ EOF
   echo "###############COMMAND###############"
   echo -e "$DOCKER_CMD"
   eval "$DOCKERFILE"
-  eval "$DOCKER_CMD"
   rm TEMP
+  eval "$DOCKER_CMD"
 fi
