@@ -59,16 +59,30 @@ namespace QuantConnect.Report
             {
                 if (backtestPortfolioInTime.Count != 0)
                 {
+                    var dailyBacktestPortfolioInTime = backtestPortfolioInTime
+                        .Select(x => new PointInTimePortfolio(x, x.Time.Date).NoEmptyHoldings())
+                        .GroupBy(x => x.Time.Date)
+                        .Select(kvp => kvp.Last())
+                        .OrderBy(x => x.Time)
+                        .ToList();
+
                     var outputFile = destination.Replace(".html", string.Empty) + "-backtesting-portfolio.json";
                     Log.Trace($"Report.Report(): Writing backtest point-in-time portfolios to JSON file: {outputFile}");
-                    var backtestPortfolioOutput = JsonConvert.SerializeObject(backtestPortfolioInTime);
+                    var backtestPortfolioOutput = JsonConvert.SerializeObject(dailyBacktestPortfolioInTime);
                     File.WriteAllText(outputFile, backtestPortfolioOutput);
                 }
                 if (livePortfolioInTime.Count != 0)
                 {
+                    var dailyLivePortfolioInTime = livePortfolioInTime
+                        .Select(x => new PointInTimePortfolio(x, x.Time.Date).NoEmptyHoldings())
+                        .GroupBy(x => x.Time.Date)
+                        .Select(kvp => kvp.Last())
+                        .OrderBy(x => x.Time)
+                        .ToList();
+
                     var outputFile = destination.Replace(".html", string.Empty) + "-live-portfolio.json";
                     Log.Trace($"Report.Report(): Writing live point-in-time portfolios to JSON file: {outputFile}");
-                    var livePortfolioOutput = JsonConvert.SerializeObject(livePortfolioInTime);
+                    var livePortfolioOutput = JsonConvert.SerializeObject(dailyLivePortfolioInTime);
                     File.WriteAllText(outputFile, livePortfolioOutput);
                 }
             }

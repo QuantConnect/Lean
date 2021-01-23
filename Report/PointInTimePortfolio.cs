@@ -85,8 +85,18 @@ namespace QuantConnect.Report
             Order = portfolio.Order;
             TotalPortfolioValue = portfolio.TotalPortfolioValue;
             Cash = portfolio.Cash;
-            Holdings = portfolio.Holdings;
+            Holdings = portfolio.Holdings.Select(x => new PointInTimeHolding(x.Symbol, x.HoldingsValue, x.Quantity)).ToList();
             Leverage = portfolio.Leverage;
+        }
+
+        /// <summary>
+        /// Filters out any empty holdings from the current <see cref="Holdings"/>
+        /// </summary>
+        /// <returns>Current object, but without empty holdings</returns>
+        public PointInTimePortfolio NoEmptyHoldings()
+        {
+            Holdings = Holdings.Where(h => h.Quantity != 0).ToList();
+            return this;
         }
 
         /// <summary>
@@ -112,11 +122,13 @@ namespace QuantConnect.Report
             /// <summary>
             /// Absolute value of the holdings.
             /// </summary>
+            [JsonIgnore]
             public decimal AbsoluteHoldingsValue => Math.Abs(HoldingsValue);
 
             /// <summary>
             /// Absolute value of the quantity
             /// </summary>
+            [JsonIgnore]
             public decimal AbsoluteHoldingsQuantity => Math.Abs(Quantity);
 
             /// <summary>
