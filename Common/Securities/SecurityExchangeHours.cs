@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using NodaTime;
 using QuantConnect.Util;
 
@@ -156,6 +157,7 @@ namespace QuantConnect.Securities
         /// <param name="endLocalDateTime">The end of the interval in local time</param>
         /// <param name="extendedMarket">True to use the extended market hours, false for just regular market hours</param>
         /// <returns>True if the exchange is considered open at the specified time, false otherwise</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsOpen(DateTime startLocalDateTime, DateTime endLocalDateTime, bool extendedMarket)
         {
             if (startLocalDateTime == endLocalDateTime)

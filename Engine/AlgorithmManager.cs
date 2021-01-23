@@ -316,7 +316,7 @@ namespace QuantConnect.Lean.Engine
                 ProcessDelistedSymbols(algorithm, delistings);
 
                 // process split warnings for options
-                ProcessSplitSymbols(algorithm, splitWarnings);
+                ProcessSplitSymbols(algorithm, splitWarnings, delistings);
 
                 //Check if the user's signalled Quit: loop over data until day changes.
                 if (algorithm.Status == AlgorithmStatus.Stopped)
@@ -978,13 +978,20 @@ namespace QuantConnect.Lean.Engine
         {
             foreach (var delisting in newDelistings.Values)
             {
+                Log.Trace($"AlgorithmManager.HandleDelistedSymbols(): Delisting {delisting.Type}: {delisting.Symbol.Value}, UtcTime: {algorithm.UtcTime}, DelistingTime: {delisting.Time}");
+                if (algorithm.LiveMode)
+                {
+                    // skip automatic handling of delisting event in live trading
+                    // Lean will not exercise, liquidate or cancel open orders
+                    continue;
+                }
+
                 // submit an order to liquidate on market close
                 if (delisting.Type == DelistingType.Warning)
                 {
-                    if (!delistings.Any(x => x.Symbol == delisting.Symbol && x.Type == delisting.Type))
+                    if (delistings.All(x => x.Symbol != delisting.Symbol))
                     {
                         delistings.Add(delisting);
-                        Log.Trace($"AlgorithmManager.Run(): Security delisting warning: {delisting.Symbol.Value}, UtcTime: {algorithm.UtcTime}, DelistingTime: {delisting.Time}");
                     }
                 }
                 else
@@ -1013,7 +1020,6 @@ namespace QuantConnect.Lean.Engine
                         }
                     }
 
-                    Log.Trace($"AlgorithmManager.Run(): Security delisted: {delisting.Symbol.Value}, UtcTime: {algorithm.UtcTime}, DelistingTime: {delisting.Time}");
                     var cancelledOrders = algorithm.Transactions.CancelOpenOrders(delisting.Symbol);
                     foreach (var cancelledOrder in cancelledOrders)
                     {
@@ -1037,20 +1043,18 @@ namespace QuantConnect.Lean.Engine
                     continue;
                 }
 
-                var delistingTime = delisting.Time;
-                if (!security.Exchange.Hours.IsOpen(delistingTime, false))
+                if (security.LocalTime < delisting.GetLiquidationTime(security.Exchange.Hours))
                 {
-                    // This exists as a defensive measure to ensure that the delisting time
-                    // does not get moved if the market is open. If the market is closed,
-                    // we get the next market open, which will be on the same day if the delisting
-                    // date is a trading day. If the delisting date is after market close, then
-                    // the delisting will be adjusted to the next market open.
-                    delistingTime = security.Exchange.Hours.GetNextMarketOpen(delistingTime, false);
-                    delistingTime = security.Exchange.Hours.GetNextMarketClose(delistingTime, false);
+                    continue;
                 }
 
-                if (security.LocalTime < delistingTime)
+                // if there is any delisting event for a symbol that we are the underlying for and we are still invested retry
+                // they will by liquidated first
+                if (delistings.Any(delistingEvent => delistingEvent.Symbol.Underlying == security.Symbol
+                    && algorithm.Securities[delistingEvent.Symbol].Invested))
                 {
+                    // this case could happen for example if we have a future 'A' position open and a future option position with underlying 'A'
+                    // and both get delisted on the same date, we will allow the FOP exercise order to get handled first
                     continue;
                 }
 
@@ -1069,6 +1073,9 @@ namespace QuantConnect.Lean.Engine
 
                 delistings.RemoveAt(i);
                 algorithm.Transactions.ProcessRequest(request);
+
+                // don't allow users to open a new position once we sent the liquidation order
+                security.IsTradable = false;
             }
         }
 
@@ -1097,7 +1104,7 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Liquidate option contact holdings who's underlying security has split
         /// </summary>
-        private void ProcessSplitSymbols(IAlgorithm algorithm, List<Split> splitWarnings)
+        private void ProcessSplitSymbols(IAlgorithm algorithm, List<Split> splitWarnings, List<Delisting> delistings)
         {
             // NOTE: This method assumes option contracts have the same core trading hours as their underlying contract
             //       This is a small performance optimization to prevent scanning every contract on every time step,
@@ -1155,6 +1162,13 @@ namespace QuantConnect.Lean.Engine
                 {
                     var optionContractSymbol = kvp.Key;
                     var optionContractSecurity = (Option) kvp.Value;
+
+                    if (delistings.Any(x => x.Symbol == optionContractSymbol
+                        && x.Time.Date == optionContractSecurity.LocalTime.Date))
+                    {
+                        // if the option is going to be delisted today we skip sending the market on close order
+                        continue;
+                    }
 
                     // close any open orders
                     algorithm.Transactions.CancelOpenOrders(optionContractSymbol, "Canceled due to impending split. Separate MarketOnClose order submitted to liquidate position.");

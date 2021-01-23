@@ -116,7 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Annual Variance", "0.013"},
             {"Information Ratio", "-0.234"},
             {"Tracking Error", "0.214"},
-            {"Treynor Ratio", "-0.775"},
+            {"Treynor Ratio", "-0.774"},
             {"Total Fees", "$443.74"},
             {"Fitness Score", "0.013"},
             {"Kelly Criterion Estimate", "0"},

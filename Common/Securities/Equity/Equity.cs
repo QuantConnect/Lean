@@ -61,6 +61,11 @@ namespace QuantConnect.Securities.Equity
         public long? TotalShortableQuantity => ShortableProvider.ShortableQuantity(Symbol, LocalTime);
 
         /// <summary>
+        /// Equity primary exchange.
+        /// </summary>
+        public PrimaryExchange PrimaryExchange;
+
+        /// <summary>
         /// Construct the Equity Object
         /// </summary>
         public Equity(Symbol symbol,
@@ -69,7 +74,8 @@ namespace QuantConnect.Securities.Equity
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
-            SecurityCache securityCache)
+            SecurityCache securityCache,
+            PrimaryExchange primaryExchange=PrimaryExchange.UNKNOWN)
             : base(symbol,
                 quoteCurrency,
                 symbolProperties,
@@ -89,6 +95,7 @@ namespace QuantConnect.Securities.Equity
                 )
         {
             Holdings = new EquityHolding(this, currencyConverter);
+            PrimaryExchange = primaryExchange;
         }
 
         /// <summary>
@@ -99,7 +106,8 @@ namespace QuantConnect.Securities.Equity
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
-            IRegisteredSecurityDataTypesProvider registeredTypes)
+            IRegisteredSecurityDataTypesProvider registeredTypes,
+            PrimaryExchange primaryExchange = PrimaryExchange.UNKNOWN)
             : base(
                 config,
                 quoteCurrency,
@@ -120,6 +128,7 @@ namespace QuantConnect.Securities.Equity
                 )
         {
             Holdings = new EquityHolding(this, currencyConverter);
+            PrimaryExchange = primaryExchange;
         }
 
         /// <summary>

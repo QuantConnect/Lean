@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -29,20 +30,33 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the date associated with this data
         /// </summary>
-        public DateTime Date { get; private set; }
+        public DateTime Date { get; }
 
         /// <summary>
         /// Gets the mapped symbol
         /// </summary>
-        public string MappedSymbol { get; private set; }
+        public string MappedSymbol { get; }
+
+        /// <summary>
+        /// Gets the mapped symbol
+        /// </summary>
+        public PrimaryExchange PrimaryExchange { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MapFileRow"/> class.
         /// </summary>
-        public MapFileRow(DateTime date, string mappedSymbol)
+        public MapFileRow(DateTime date, string mappedSymbol, char primaryExchange = '\0')
+            : this(date, mappedSymbol, Exchanges.GetPrimaryExchange(primaryExchange))
+        { }
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MapFileRow"/> class.
+        /// </summary>
+        public MapFileRow(DateTime date, string mappedSymbol, PrimaryExchange primaryExchange)
         {
             Date = date;
             MappedSymbol = mappedSymbol.LazyToUpper();
+            PrimaryExchange = primaryExchange;
         }
 
         /// <summary>
@@ -70,7 +84,13 @@ namespace QuantConnect.Data.Auxiliary
         public static MapFileRow Parse(string line)
         {
             var csv = line.Split(',');
-            return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1]);
+            var primaryExchange = PrimaryExchange.UNKNOWN;
+            if (csv.Length == 3)
+            {
+                primaryExchange = Exchanges.GetPrimaryExchange(Convert.ToChar(csv[2], CultureInfo.InvariantCulture));
+            }
+
+            return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1], primaryExchange);
         }
 
         #region Equality members
@@ -86,7 +106,9 @@ namespace QuantConnect.Data.Auxiliary
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Date.Equals(other.Date) && string.Equals(MappedSymbol, other.MappedSymbol);
+            return Date.Equals(other.Date) &&
+                   string.Equals(MappedSymbol, other.MappedSymbol) &&
+                   string.Equals(PrimaryExchange, other.PrimaryExchange);
         }
 
         /// <summary>
@@ -115,7 +137,9 @@ namespace QuantConnect.Data.Auxiliary
         {
             unchecked
             {
-                return (Date.GetHashCode() * 397) ^ (MappedSymbol != null ? MappedSymbol.GetHashCode() : 0);
+                return (Date.GetHashCode() * 397) ^ 
+                       (MappedSymbol != null ? MappedSymbol.GetHashCode() : 0) ^
+                       (PrimaryExchange != null ? PrimaryExchange.GetHashCode() : 0);
             }
         }
 
@@ -142,12 +166,14 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public string ToCsv()
         {
-            return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},{MappedSymbol.ToLowerInvariant()}";
+            var encodedExchange = PrimaryExchange == PrimaryExchange.UNKNOWN? string.Empty : $",{Convert.ToChar((byte) PrimaryExchange)}";
+            return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},{MappedSymbol.ToLowerInvariant()}{encodedExchange}";
         }
 
         public override string ToString()
         {
-            return Date.ToShortDateString() + ": " + MappedSymbol;
+            var mainExchange = PrimaryExchange == PrimaryExchange.UNKNOWN ? string.Empty : $" - {PrimaryExchange.ToString()}";
+            return Date.ToShortDateString() + ": " + MappedSymbol + mainExchange;
         }
     }
 }
