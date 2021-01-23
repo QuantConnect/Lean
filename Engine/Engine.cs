@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Exceptions;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -137,14 +138,15 @@ namespace QuantConnect.Lean.Engine
                     brokerage = AlgorithmHandlers.Setup.CreateBrokerage(job, algorithm, out factory);
 
                     var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
-
+                    var mapFilePrimaryExchangeProvider = new MapFilePrimaryExchangeProvider(AlgorithmHandlers.MapFileProvider);
                     var registeredTypesProvider = new RegisteredSecurityDataTypesProvider();
                     var securityService = new SecurityService(algorithm.Portfolio.CashBook,
                         marketHoursDatabase,
                         symbolPropertiesDatabase,
                         algorithm,
                         registeredTypesProvider,
-                        new SecurityCacheProvider(algorithm.Portfolio));
+                        new SecurityCacheProvider(algorithm.Portfolio),
+                        mapFilePrimaryExchangeProvider);
 
                     algorithm.Securities.SetSecurityService(securityService);
 

@@ -44,8 +44,8 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
         }
 
         [TestCase("AAPL", "AAPL")]
-        [TestCase("AOL", "TWX")]
-        [TestCase("NWSA", "FOXA")]
+        [TestCase("VXXB", "VXX")]
+        [TestCase("NB", "BAC")]
         [TestCase("TWX", "TWX")]
         [TestCase("FOXA", "FOXA")]
         public void MapCorrectBrokerageSymbol(string ticker, string alpacaSymbol)

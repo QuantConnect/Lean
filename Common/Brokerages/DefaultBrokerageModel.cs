@@ -16,6 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Benchmarks;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Shortable;
 using QuantConnect.Interfaces;
@@ -197,6 +199,17 @@ namespace QuantConnect.Brokerages
                 default:
                     return 1m;
             }
+        }
+
+        /// <summary>
+        /// Get the benchmark for this model
+        /// </summary>
+        /// <param name="securities">SecurityService to create the security with if needed</param>
+        /// <returns>The benchmark for this brokerage</returns>
+        public virtual IBenchmark GetBenchmark(SecurityManager securities)
+        {
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 
         /// <summary>

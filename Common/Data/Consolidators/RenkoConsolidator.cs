@@ -134,15 +134,12 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public RenkoConsolidator(
-            decimal barSize,
+        public RenkoConsolidator(decimal barSize,
             PyObject selector,
             PyObject volumeSelector = null,
-            bool evenBars = true
-            )
+            bool evenBars = true)
+            : this(barSize, evenBars)
         {
-            EpsilonCheck(barSize);
-
             if (selector != null)
             {
                 if (!selector.TryConvertToDelegate(out _selector))
@@ -168,8 +165,6 @@ namespace QuantConnect.Data.Consolidators
             {
                 _volumeSelector = x => 0;
             }
-
-            _evenBars = evenBars;
         }
 
         /// <summary>
