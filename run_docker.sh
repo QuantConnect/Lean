@@ -15,9 +15,6 @@
 # allow script to be called from anywhere
 cd "$(dirname "$0")/" || exit
 
-# for directory exclusions
-shopt -s nullglob
-
 DEFAULT_IMAGE=quantconnect/lean:latest
 DEFAULT_DATA_DIR=./Data
 DEFAULT_RESULTS_DIR=./Results
@@ -98,7 +95,7 @@ fi
 # Pull the image if we want to update
 if [[ "$UPDATE" == "y" ]]; then
   echo "Pulling Docker image: $IMAGE"
-  $SUDO docker pull $IMAGE
+  $SUDO docker pull "$IMAGE"
 fi
 
 if [ "$TERM_CHECK" == "$DEFAULT_TERM" ]; then
@@ -186,26 +183,30 @@ if [ "$TERM_CHECK" == "$DEFAULT_TERM" ]; then
     DOCKER_CMD="$SUDO $DOCKER_CMD"
   fi
 
-  echo -e "Launching LeanEngine with DOCKER_CMD: "
+  echo -e "Launching LeanEngine with arguments: "
   echo -e "$DOCKER_CMD"
   #Run built docker DOCKER_CMD;
   eval "$DOCKER_CMD"
 else
 
-  # First part of the docker DOCKER_CMD that is static, then we build the rest
-  DOCKER_CMD="docker run -i -t \
+  # First part of the docker DOCKER_CMD
+  DOCKER_CMD="docker run -it --rm\
       --name $CONTAINER_NAME \
       -p 5678:5678 \
       --expose 6000 \
-       --net host $USER"
+       $IMAGE"
 
   if [ "$MOUNT" != "Y" ]; then
 
-    TEMP_DOCKERFILE='FROM quantconnect/lean:foundation \n
-MAINTAINER QuantConnect <contact@quantconnect.com> \n
-RUN pip install ptvsd \n
-WORKDIR /Lean/ \n
-ENTRYPOINT ["/bin/bash"]'
+    TEMP_DOCKERFILE="$(
+      cat <<EOF
+FROM quantconnect/lean:latest 
+MAINTAINER QuantConnect <contact@quantconnect.com> 
+RUN pip install ptvsd 
+WORKDIR /Lean/ 
+ENTRYPOINT ["/bin/bash"]
+EOF
+    )"
 
     EXCLUDE=${EXCLUDE:-$DEFAULT_EXCLUDE}
     FILES_DIRS=("$(find . -maxdepth 1 \! -name '.' \! -name '..')")
@@ -221,31 +222,40 @@ ENTRYPOINT ["/bin/bash"]'
 
     # Launch container, copy relevant folders
     for dir in "${FILES_DIRS[@]/$i/}"; do
-      TEMP_DOCKERFILE+="\n COPY $dir /Lean/$dir"
+      echo "COPY $dir /Lean/$dir" >> TEMP_DOCKERFILE
     done
-
+    
   # Mount drive
   else
-    TEMP_DOCKERFILE='FROM quantconnect/lean:foundation \n
-MAINTAINER QuantConnect <contact@quantconnect.com> \n
-RUN pip install ptvsd \n
-WORKDIR /Lean/ \n
-ENTRYPOINT ["/bin/bash"] '
+    TEMP_DOCKERFILE="$(
+      cat <<EOF
+FROM quantconnect/lean:latest 
+MAINTAINER QuantConnect <contact@quantconnect.com> 
+RUN pip install ptvsd 
+WORKDIR /Lean/ 
+ENTRYPOINT ["/bin/bash"]
+EOF
+    )"
     DOCKER_CMD+=" -v $(pwd):/$CONTAINER_NAME:rw"
   fi
 
-  TEMP_DOCKERFILE="docker build - < $TEMP_DOCKERFILE"
-
-  SUDO=""
+  TEMP=$(mktemp ./.temp_dockerfile.XXXXXXXX)
+  echo "$TEMP_DOCKERFILE" >> "$TEMP"
+  DOCKERFILE="docker build -f $TEMP ."
 
   # Verify if user has docker permissions
   if ! touch /var/run/docker.sock &>/dev/null; then
     sudo -v
     SUDO="sudo"
     DOCKER_CMD="$SUDO $DOCKER_CMD"
-    TEMP_DOCKERFILE=$TEMP_DOCKERFILE
+    DOCKERFILE="$SUDO $DOCKERFILE"
   fi
-
-  echo "Executing..."
-  exec TEMP_DOCKERFILE && DOCKER_CMD
+  echo "Executing:"
+  echo "###############DOCKERFILE###############"
+  cat "$TEMP"
+  echo "###############COMMAND###############"
+  echo -e "$DOCKER_CMD"
+  eval "$DOCKERFILE"
+  eval "$DOCKER_CMD"
+  rm TEMP
 fi
