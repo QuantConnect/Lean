@@ -61,7 +61,6 @@ namespace QuantConnect.Report
                 {
                     var dailyBacktestPortfolioInTime = backtestPortfolioInTime
                         .Select(x => new PointInTimePortfolio(x, x.Time.Date).NoEmptyHoldings())
-                        .Where(x => x.Holdings.Count != 0)
                         .GroupBy(x => x.Time.Date)
                         .Select(kvp => kvp.Last())
                         .OrderBy(x => x.Time)
@@ -76,7 +75,6 @@ namespace QuantConnect.Report
                 {
                     var dailyLivePortfolioInTime = livePortfolioInTime
                         .Select(x => new PointInTimePortfolio(x, x.Time.Date).NoEmptyHoldings())
-                        .Where(x => x.Holdings.Count != 0)
                         .GroupBy(x => x.Time.Date)
                         .Select(kvp => kvp.Last())
                         .OrderBy(x => x.Time)
