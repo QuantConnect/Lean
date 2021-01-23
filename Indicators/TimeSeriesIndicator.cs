@@ -23,7 +23,12 @@ namespace QuantConnect.Indicators
     /// </summary>
     public abstract class TimeSeriesIndicator : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
-        internal double[] DiffHeads;
+        private double[] _diffHeads;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public abstract int WarmUpPeriod { get; }
 
         /// <summary>
         /// A constructor for a basic Time Series indicator.
@@ -32,26 +37,6 @@ namespace QuantConnect.Indicators
         protected TimeSeriesIndicator(string name)
             : base(name)
         {
-        }
-
-        /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady { get; }
-
-        /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        public int WarmUpPeriod { get; }
-
-        /// <summary>
-        /// Computes the next value of this indicator from the given state
-        /// </summary>
-        /// <param name="input">The input given to the indicator</param>
-        /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IndicatorDataPoint input)
-        {
-            return 0m;
         }
 
         /// <summary>
@@ -86,73 +71,6 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Differences a time series d times.
-        /// </summary>
-        /// <param name="series">Series to difference</param>
-        /// <param name="d">The differencing order</param>
-        protected double[]
-            DifferenceSeries(int d, double[] series)
-        {
-            DiffHeads = new double[d];
-            if (d == 0)
-            {
-                return null;
-            }
-
-            var localSeries = series;
-            for (var j = 1; j <= d; j++)
-            {
-                var result = new double[localSeries.Length - 1];
-                DiffHeads[j - 1] = localSeries.Last();
-
-                for (var i = 0; i <= localSeries.Length - 2; i++)
-                {
-                    result[i] = localSeries[i] - localSeries[i + 1];
-                }
-
-                localSeries = result;
-            }
-
-            return localSeries;
-        }
-
-        /// <summary>
-        /// Returns a series where each spot is taken by the cumulative sum of all points up to and including
-        /// the value at that spot in the original series.
-        /// </summary>
-        /// <param name="series">Series to cumulatively sum over.</param>
-        /// <param name="reverse">Whether to reverse the series before applying the cumulative sum.</param>
-        /// <returns>Cumulatively summed series.</returns>
-        protected static List<double> CumulativeSum(List<double> series, bool reverse=false)
-        {
-            var localSeries = series;
-            if (reverse)
-            {
-                localSeries.Reverse(); // For top-down
-            }
-            var sums = 0d;
-            var outSeries = new List<double>();
-            foreach (var val in localSeries)
-            {
-                sums += val;
-                outSeries.Add(sums);
-            }
-
-            return outSeries;
-        }
-
-        /// <summary>
-        /// Undoes the differencing of a time series which has been differenced using <see cref="DifferenceSeries" />.
-        /// https://github.com/statsmodels/statsmodels/blob/04f00006a7aeb1c93d6894caa420698400da6c33/statsmodels/tsa/tsatools.py#L758
-        /// </summary>
-        /// <param name="series">Series to un-difference</param>
-        protected double[]
-            InverseDifferencedSeries(double[] series)
-        {
-           return InverseDifferencedSeries(series, DiffHeads);
-        }
-
-        /// <summary>
         /// Undoes the differencing of a time series which has been differenced using <see cref="DifferenceSeries" />.
         /// https://github.com/statsmodels/statsmodels/blob/04f00006a7aeb1c93d6894caa420698400da6c33/statsmodels/tsa/tsatools.py#L758
         /// </summary>
@@ -167,7 +85,7 @@ namespace QuantConnect.Indicators
             {
                 var first = localDiffs.Pop();
                 localSeries.Add(first);
-                localSeries = CumulativeSum(localSeries,true);
+                localSeries = CumulativeSum(localSeries, true);
             }
 
             return localSeries.ToArray();
@@ -196,6 +114,74 @@ namespace QuantConnect.Indicators
             }
 
             return toArray.ToArray();
+        }
+
+        /// <summary>
+        /// Returns a series where each spot is taken by the cumulative sum of all points up to and including
+        /// the value at that spot in the original series.
+        /// </summary>
+        /// <param name="series">Series to cumulatively sum over.</param>
+        /// <param name="reverse">Whether to reverse the series before applying the cumulative sum.</param>
+        /// <returns>Cumulatively summed series.</returns>
+        protected static List<double> CumulativeSum(List<double> series, bool reverse = false)
+        {
+            var localSeries = series;
+            if (reverse)
+            {
+                localSeries.Reverse(); // For top-down
+            }
+
+            var sums = 0d;
+            var outSeries = new List<double>();
+            foreach (var val in localSeries)
+            {
+                sums += val;
+                outSeries.Add(sums);
+            }
+
+            return outSeries;
+        }
+
+        /// <summary>
+        /// Differences a time series d times.
+        /// </summary>
+        /// <param name="series">Series to difference</param>
+        /// <param name="d">The differencing order</param>
+        protected double[]
+            DifferenceSeries(int d, double[] series)
+        {
+            _diffHeads = new double[d];
+            if (d == 0)
+            {
+                return null;
+            }
+
+            var localSeries = series;
+            for (var j = 1; j <= d; j++)
+            {
+                var result = new double[localSeries.Length - 1];
+                _diffHeads[j - 1] = localSeries.Last();
+
+                for (var i = 0; i <= localSeries.Length - 2; i++)
+                {
+                    result[i] = localSeries[i] - localSeries[i + 1];
+                }
+
+                localSeries = result;
+            }
+
+            return localSeries;
+        }
+
+        /// <summary>
+        /// Undoes the differencing of a time series which has been differenced using <see cref="DifferenceSeries" />.
+        /// https://github.com/statsmodels/statsmodels/blob/04f00006a7aeb1c93d6894caa420698400da6c33/statsmodels/tsa/tsatools.py#L758
+        /// </summary>
+        /// <param name="series">Series to un-difference</param>
+        protected double[]
+            InverseDifferencedSeries(double[] series)
+        {
+            return InverseDifferencedSeries(series, _diffHeads);
         }
     }
 }

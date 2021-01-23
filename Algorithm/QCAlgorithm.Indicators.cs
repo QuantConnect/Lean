@@ -107,16 +107,16 @@ namespace QuantConnect.Algorithm
         /// Creates a new ARIMA indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose ARIMA indicator we want</param>
-        /// <param name="p">AR order</param>
-        /// <param name="d">Difference order</param>
-        /// <param name="q">MA order</param>
+        /// <param name="arOrder">AR order</param>
+        /// <param name="diffOrder">Difference order</param>
+        /// <param name="maOrder">MA order</param>
         /// <param name="period">Size of the rolling series to fit onto</param>
         /// <param name="resolution">The resolution</param>
         /// <returns>The ARIMA indicator for the requested symbol over the specified period</returns>
-        public AutoRegressiveIntegratedMovingAverage ARIMA(Symbol symbol, int p, int d, int q, int period, Resolution? resolution = null)
+        public AutoRegressiveIntegratedMovingAverage ARIMA(Symbol symbol, int arOrder, int diffOrder, int maOrder, int period, Resolution? resolution = null)
         {
-            var name = CreateIndicatorName(symbol, $"ARIMA({p},{d},{q},{period})", resolution);
-            var arimaIndicator = new AutoRegressiveIntegratedMovingAverage(name, p, d, q, period);
+            var name = CreateIndicatorName(symbol, $"ARIMA({arOrder},{diffOrder},{maOrder},{period})", resolution);
+            var arimaIndicator = new AutoRegressiveIntegratedMovingAverage(name, arOrder, diffOrder, maOrder, period);
             RegisterIndicator(symbol, arimaIndicator, resolution);
 
             if (EnableAutomaticIndicatorWarmUp)

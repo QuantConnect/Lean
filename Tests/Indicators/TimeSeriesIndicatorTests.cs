@@ -24,12 +24,12 @@ namespace QuantConnect.Tests.Indicators
     public class TimeSeriesIndicatorTests
     {
         [Test]
-        public void DifferencingTest()
+        public void DifferencesAndUndifferencesSeries()
         {
             var test = new double[100];
             for (var i = 0; i < test.Length; i++)
             {
-                switch (i%2)
+                switch (i % 2)
                 {
                     case 0:
                         test[i] = 1;
@@ -39,19 +39,20 @@ namespace QuantConnect.Tests.Indicators
                         break;
                 }
             }
-            Console.WriteLine(test.Sum());
+
             double[] heads;
             var differencer = TimeSeriesIndicator.DifferenceSeries(1, test, out heads);
             Assert.AreEqual(-1, differencer.Sum());
             Assert.AreEqual(test.Sum(), TimeSeriesIndicator.InverseDifferencedSeries(differencer, heads).Sum());
-        } 
+        }
+
         [Test]
-        public void LagTest()
+        public void ProperlyLagsSeries()
         {
             var test = new double[100];
             for (var i = 0; i < test.Length; i++)
             {
-                switch (i%2)
+                switch (i % 2)
                 {
                     case 0:
                         test[i] = 0;
@@ -61,10 +62,10 @@ namespace QuantConnect.Tests.Indicators
                         break;
                 }
             }
-        
+
             Console.WriteLine(test.Sum());
             var lags = TimeSeriesIndicator.LaggedSeries(1, test);
             Assert.AreEqual(49d, lags.Sum());
-        } 
+        }
     }
 }

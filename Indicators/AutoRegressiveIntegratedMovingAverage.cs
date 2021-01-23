@@ -23,8 +23,9 @@ using MathNet.Numerics.LinearRegression;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// An ARIMA is a time series model which can be used to describe a set of data. In particular,with Xₜ
-    /// representing the series, the model assumes the data are of form (after differencing <see cref="_diffOrder" /> times):
+    /// An Autoregressive Intergrated Moving Average (ARIMA) is a time series model which can be used to describe a set of data.
+    /// In particular,with Xₜ representing the series, the model assumes the data are of form
+    /// (after differencing <see cref="_diffOrder" /> times):
     /// <para>
     ///     Xₜ = c + εₜ + ΣᵢφᵢXₜ₋ᵢ +  Σᵢθᵢεₜ₋ᵢ
     /// </para>
@@ -33,6 +34,21 @@ namespace QuantConnect.Indicators
     public class AutoRegressiveIntegratedMovingAverage : TimeSeriesIndicator, IIndicatorWarmUpPeriodProvider
 
     {
+        /// <summary>
+        /// Fitted AR parameters (φ terms).
+        /// </summary>
+        public double[] ArParameters;
+
+        /// <summary>
+        /// Fitted MA parameters (θ terms).
+        /// </summary>
+        public double[] MaParameters;
+
+        /// <summary>
+        /// Fitted intercept (c term).
+        /// </summary>
+        public double Intercept;
+
         /// <summary>
         /// Differencing coefficient (d). Determines how many times the series should be differenced before fitting the
         /// model.
@@ -56,21 +72,25 @@ namespace QuantConnect.Indicators
         private List<double> _residuals;
 
         /// <summary>
-        /// Fitted AR parameters (φ terms).
+        /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public double[] ArParameters;
+        public override bool IsReady => _rollingData.IsReady;
 
         /// <summary>
-        /// Fitted MA parameters (θ terms).
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public double[] MaParameters;
-        
+        public override int WarmUpPeriod { get; }
+
         /// <summary>
-        /// Fitted intercept (c term).
+        /// The variance of the residuals (Var(ε)) from the first step of <see cref="TwoStepFit" />.
         /// </summary>
-        public double Intercept;
-        
-        
+        public double ArResidualError { get; private set; }
+
+        /// <summary>
+        /// The variance of the residuals (Var(ε)) from the second step of <see cref="TwoStepFit" />.
+        /// </summary>
+        public double MaResidualError { get; private set; }
+
         /// <summary>
         /// Fits an ARIMA(arOrder,diffOrder,maOrder) model of form (after differencing it <see cref="_diffOrder" /> times):
         /// <para>
@@ -122,43 +142,26 @@ namespace QuantConnect.Indicators
         /// <param name="diffOrder">Difference order -- d</param>
         /// <param name="maOrder">MA order -- q</param>
         /// <param name="period">Size of the rolling series to fit onto</param>
-        public AutoRegressiveIntegratedMovingAverage(int arOrder, int diffOrder, int maOrder, int period)
-            : this($"ARIMA(({arOrder}, {diffOrder}, {maOrder}), {period})", arOrder, diffOrder, maOrder, period)
+        public AutoRegressiveIntegratedMovingAverage(
+            int arOrder,
+            int diffOrder,
+            int maOrder,
+            int period,
+            bool intercept
+            )
+            : this($"ARIMA(({arOrder}, {diffOrder}, {maOrder}), {period}, {intercept})", arOrder, diffOrder, maOrder,
+                period)
         {
-            if (period >= Math.Max(arOrder, maOrder))
-            {
-                _arOrder = arOrder;
-                _maOrder = maOrder;
-                _diffOrder = diffOrder;
-                WarmUpPeriod = period;
-                _rollingData = new RollingWindow<double>(period);
-                _intercept = true;
-            }
-            else
-            {
-                throw new ArgumentException("Period must exceed both arOrder and maOrder");
-            }
         }
 
         /// <summary>
-        /// The variance of the residuals (Var(ε)) from the first step of <see cref="TwoStepFit" />.
+        /// Resets this indicator to its initial state
         /// </summary>
-        public double ArResidualError { get; private set; }
-
-        /// <summary>
-        /// The variance of the residuals (Var(ε)) from the second step of <see cref="TwoStepFit" />.
-        /// </summary>
-        public double MaResidualError { get; private set; }
-
-        /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady => _rollingData.IsReady;
-
-        /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        public new int WarmUpPeriod { get; }
+        public override void Reset()
+        {
+            base.Reset();
+            _rollingData.Reset();
+        }
 
         /// <summary>
         /// Fits the model by means of implementing the following pseudo-code algorithm (in the form of "if{then}"):
@@ -181,7 +184,8 @@ namespace QuantConnect.Indicators
             if (_arOrder > 0)
             {
                 // The function (lags[time][lagged X]) |---> ΣᵢφᵢXₜ₋ᵢ 
-                arFits = Fit.MultiDim(lags, data.Skip(_arOrder).ToArray(), method: DirectRegressionMethod.NormalEquations);
+                arFits = Fit.MultiDim(lags, data.Skip(_arOrder).ToArray(),
+                    method: DirectRegressionMethod.NormalEquations);
                 var fittedVec = Vector.Build.Dense(arFits);
 
                 for (var i = 0; i < data.Length; i++) // Calculate the error assoc. with model.
@@ -246,15 +250,6 @@ namespace QuantConnect.Indicators
                     ArParameters = maFits.Take(_maOrder).ToArray();
                 }
             }
-        }
-
-        /// <summary>
-        /// Resets this indicator to its initial state
-        /// </summary>
-        public override void Reset()
-        {
-            base.Reset();
-            _rollingData.Reset();
         }
 
         /// <summary>
