@@ -14,13 +14,13 @@
         Requires Mono Debug extension from the marketplace.
 
         Attach to Python (Container):
-        Will attempt to attach to LEAN in the container using PTVSD. Requires that the container is
-        actively running and config is set: "debugging": true, "debugging-method": "PTVSD",
+        Will attempt to attach to LEAN in the container using DebugPy. Requires that the container is
+        actively running and config is set: "debugging": true, "debugging-method": "DebugPy",
         Requires Python extension from the marketplace.
 
         Attach to Python (Local):
-        Will attempt to attach to LEAN running locally using PTVSD. Requires that the process is
-        actively running and config is set: "debugging": true, "debugging-method": "PTVSD",
+        Will attempt to attach to LEAN running locally using DebugPy. Requires that the process is
+        actively running and config is set: "debugging": true, "debugging-method": "DebugPy",
         Requires Python extension from the marketplace.
 
     */

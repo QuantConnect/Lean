@@ -51,7 +51,7 @@ namespace QuantConnect.AlgorithmFactory
             /// <see cref="Language.Python"/> will use 'Python Extension in VS Code' 
             ///or 'Python Tools in Visual Studio'
             /// </summary>
-            PTVSD,
+            DebugPy,
 
             /// <summary>
             ///  PyCharm PyDev Debugger for remote python debugging.
@@ -90,9 +90,9 @@ while not sys.gettrace():
     time.sleep(0.25)");
                             break;
 
-                        case DebuggingMethod.PTVSD:
-                            Log.Trace("DebuggerHelper.Initialize(): waiting for PTVSD debugger to attach at localhost:5678...");
-                            PythonEngine.RunSimpleString("import ptvsd; ptvsd.enable_attach(); ptvsd.wait_for_attach()");
+                        case DebuggingMethod.DebugPy:
+                            Log.Trace("DebuggerHelper.Initialize(): waiting for debugpy debugger to attach at localhost:5678...");
+                            PythonEngine.RunSimpleString("import shutil; import debugpy; debugpy.configure(python=shutil.which('python')); debugpy.listen(('localhost', 5678)); debugpy.wait_for_client()");
                             break;
 
                         case DebuggingMethod.PyCharm:
