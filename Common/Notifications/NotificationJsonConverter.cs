@@ -54,22 +54,25 @@ namespace QuantConnect.Notifications
             JToken token;
             if (jObject.TryGetValue("phoneNumber", out token))
             {
-                return new NotificationSms(token.ToString(), null);
+                var message = jObject.GetValue("message");
+
+                return new NotificationSms(token.ToString(), message?.ToString());
             }
             else if (jObject.TryGetValue("subject", out token))
             {
-                JToken address;
-                jObject.TryGetValue("address", out address);
+                var data = jObject.GetValue("data");
+                var message = jObject.GetValue("message");
+                var address = jObject.GetValue("address");
+                var headers= jObject.GetValue("headers");
 
-                JToken headers;
-                jObject.TryGetValue("headers", out headers);
-                return new NotificationEmail(address?.ToString(), token.ToString(), null, null, headers?.ToObject<Dictionary<string, string>>());
+                return new NotificationEmail(address?.ToString(), token.ToString(), message?.ToString(), data?.ToString(), headers?.ToObject<Dictionary<string, string>>());
             }
             else if (jObject.TryGetValue("address", out token))
             {
-                JToken headers;
-                jObject.TryGetValue("headers", out headers);
-                return new NotificationWeb(token.ToString(), null, headers?.ToObject<Dictionary<string, string>>());
+                var headers = jObject.GetValue("headers");
+                var data = jObject.GetValue("data");
+
+                return new NotificationWeb(token.ToString(), data?.ToString(), headers?.ToObject<Dictionary<string, string>>());
             }
 
             throw new NotImplementedException($"Unexpected json object: '{jObject.ToString(Formatting.None)}'");

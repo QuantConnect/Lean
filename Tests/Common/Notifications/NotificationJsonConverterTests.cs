@@ -26,12 +26,13 @@ namespace QuantConnect.Tests.Common.Notifications
     {
         [TestCase(true)]
         [TestCase(false)]
-        public void EmailRoundTrip(bool withHeader)
+        public void EmailRoundTrip(bool nullFields)
         {
             var expected = new NotificationEmail("p@p.com", "subjectP", null, null);
-            if (withHeader)
+            if (!nullFields)
             {
                 expected.Headers = new Dictionary<string, string> { { "key", "value" } };
+                expected.Data = "dataContent";
             }
 
             var serialized = JsonConvert.SerializeObject(expected);
@@ -45,10 +46,11 @@ namespace QuantConnect.Tests.Common.Notifications
             Assert.AreEqual(expected.Headers, result.Headers);
         }
 
-        [Test]
-        public void SmsRoundTrip()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void SmsRoundTrip(bool nullFields)
         {
-            var expected = new NotificationSms("123", null);
+            var expected = new NotificationSms("123", nullFields ? null : "ImATextMessage");
 
             var serialized = JsonConvert.SerializeObject(expected);
 
@@ -58,10 +60,13 @@ namespace QuantConnect.Tests.Common.Notifications
             Assert.AreEqual(expected.Message, result.Message);
         }
 
-        [Test]
-        public void WebRoundTrip()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void WebRoundTrip(bool nullFields)
         {
-            var expected = new NotificationWeb("qc.com", null);
+            var expected = new NotificationWeb("qc.com",
+                nullFields ? null : "JijiData",
+                nullFields ? null : new Dictionary<string, string> { { "key", "value" } });
 
             var serialized = JsonConvert.SerializeObject(expected);
 
@@ -69,6 +74,7 @@ namespace QuantConnect.Tests.Common.Notifications
 
             Assert.AreEqual(expected.Address, result.Address);
             Assert.AreEqual(expected.Data, result.Data);
+            Assert.AreEqual(expected.Headers, result.Headers);
         }
     }
 }

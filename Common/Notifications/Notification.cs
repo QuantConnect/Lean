@@ -102,7 +102,6 @@ namespace QuantConnect.Notifications
         }
     }
 
-
     /// <summary>
     /// Email notification data.
     /// </summary>
