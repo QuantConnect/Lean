@@ -139,6 +139,11 @@ namespace QuantConnect.Indicators
                 outSeries.Add(sums);
             }
 
+            if (reverse)
+            {
+                outSeries.Reverse(); // Return to original order
+            }
+
             return outSeries;
         }
 

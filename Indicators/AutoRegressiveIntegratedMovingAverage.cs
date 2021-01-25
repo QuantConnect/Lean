@@ -115,19 +115,28 @@ namespace QuantConnect.Indicators
             )
             : base(name)
         {
-            if (period >= Math.Max(arOrder, maOrder))
+            if (arOrder < 0 || maOrder < 0)
             {
-                _arOrder = arOrder;
-                _maOrder = maOrder;
-                _diffOrder = diffOrder;
-                WarmUpPeriod = period;
-                _rollingData = new RollingWindow<double>(period);
-                _intercept = intercept;
+                throw new ArgumentException("AR/MA orders cannot be negative.");
             }
-            else
+
+            if (arOrder == 0)
+            {
+                throw new ArgumentException("arOrder (p) must be greater than zero for all " +
+                    "currently available fitting methods.");
+            }
+
+            if (period < Math.Max(arOrder, maOrder))
             {
                 throw new ArgumentException("Period must exceed both arOrder and maOrder");
             }
+
+            _arOrder = arOrder;
+            _maOrder = maOrder;
+            _diffOrder = diffOrder;
+            WarmUpPeriod = period;
+            _rollingData = new RollingWindow<double>(period);
+            _intercept = intercept;
         }
 
         /// <summary>
@@ -181,43 +190,35 @@ namespace QuantConnect.Indicators
             double errMa = 0;
             double[] arFits;
             var lags = _arOrder > 0 ? LaggedSeries(_arOrder, data) : new[] {data};
-            if (_arOrder > 0)
+
+            // The function (lags[time][lagged X]) |---> ΣᵢφᵢXₜ₋ᵢ 
+            arFits = Fit.MultiDim(lags, data.Skip(_arOrder).ToArray(),
+                method: DirectRegressionMethod.NormalEquations);
+            var fittedVec = Vector.Build.Dense(arFits);
+
+            for (var i = 0; i < data.Length; i++) // Calculate the error assoc. with model.
             {
-                // The function (lags[time][lagged X]) |---> ΣᵢφᵢXₜ₋ᵢ 
-                arFits = Fit.MultiDim(lags, data.Skip(_arOrder).ToArray(),
-                    method: DirectRegressionMethod.NormalEquations);
-                var fittedVec = Vector.Build.Dense(arFits);
-
-                for (var i = 0; i < data.Length; i++) // Calculate the error assoc. with model.
+                if (i < _arOrder)
                 {
-                    if (i < _arOrder)
-                    {
-                        _residuals.Add(0); // 0-padding
-                        continue;
-                    }
-
-                    var residual = data[i] - Vector.Build.Dense(lags[i - _arOrder]).DotProduct(fittedVec);
-                    errAr += Math.Pow(residual, 2);
-                    _residuals.Add(residual);
+                    _residuals.Add(0); // 0-padding
+                    continue;
                 }
 
-                ArResidualError = errAr / (data.Length - _arOrder - 1);
-                if (_maOrder == 0)
-                {
-                    ArParameters = arFits; // Will not be thrown out
-                }
+                var residual = data[i] - Vector.Build.Dense(lags[i - _arOrder]).DotProduct(fittedVec);
+                errAr += Math.Pow(residual, 2);
+                _residuals.Add(residual);
             }
 
-            else // Xₜ is a sum of mean-zero terms.
+            ArResidualError = errAr / (data.Length - _arOrder - 1);
+            if (_maOrder == 0)
             {
-                _residuals = series.ToList();
+                ArParameters = arFits; // Will not be thrown out
             }
 
             if (_maOrder > 0) // MA part as in (4) of mbhauser notes.
             {
-                var size = Math.Max(_maOrder, _arOrder);
                 var appendedData = new List<double[]>();
-                var laggedErrors = LaggedSeries(size, _residuals.ToArray());
+                var laggedErrors = LaggedSeries(_maOrder, _residuals.ToArray());
                 for (var i = 0; i < laggedErrors.Length; i++)
                 {
                     var doubles = lags[i].ToList();
@@ -225,29 +226,30 @@ namespace QuantConnect.Indicators
                     appendedData.Add(doubles.ToArray());
                 }
 
-                var maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(_arOrder).ToArray(),
+                var maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(_maOrder).ToArray(),
                     method: DirectRegressionMethod.NormalEquations, intercept: _intercept);
-                for (var i = size; i < data.Length; i++) // Calculate the error assoc. with model.
+                for (var i = _maOrder; i < data.Length; i++) // Calculate the error assoc. with model.
                 {
                     var paramVector = _intercept
                         ? Vector.Build.Dense(maFits.Skip(1).ToArray())
                         : Vector.Build.Dense(maFits);
-                    var residual = data[i] - Vector.Build.Dense(appendedData[i - size]).DotProduct(paramVector);
+                    var residual = data[i] - Vector.Build.Dense(appendedData[i - _maOrder]).DotProduct(paramVector);
                     errMa += Math.Pow(residual, 2);
                 }
 
-                if (_intercept)
+                switch (_intercept)
                 {
-                    MaResidualError = errMa / (data.Length - Math.Max(_arOrder, _maOrder) - 1);
-                    MaParameters = maFits.Skip(1 + _maOrder).ToArray();
-                    ArParameters = maFits.Skip(1).Take(_maOrder).ToArray();
-                    Intercept = maFits[0];
-                }
-                else
-                {
-                    MaResidualError = errMa / (data.Length - Math.Max(_arOrder, _maOrder) - 1);
-                    MaParameters = maFits.Skip(_maOrder).ToArray();
-                    ArParameters = maFits.Take(_maOrder).ToArray();
+                    case true:
+                        MaResidualError = errMa / (data.Length - Math.Max(_arOrder, _maOrder) - 1);
+                        MaParameters = maFits.Skip(1 + _arOrder).ToArray();
+                        ArParameters = maFits.Skip(1).Take(_arOrder).ToArray();
+                        Intercept = maFits[0];
+                        break;
+                    default:
+                        MaResidualError = errMa / (data.Length - Math.Max(_arOrder, _maOrder) - 1);
+                        MaParameters = maFits.Skip(_arOrder).ToArray();
+                        ArParameters = maFits.Take(_arOrder).ToArray();
+                        break;
                 }
             }
         }
@@ -275,19 +277,18 @@ namespace QuantConnect.Indicators
                 }
 
                 if (_maOrder > 0)
-                {
                     for (var i = 0; i < _maOrder; i++) // MA Parameters
                     {
-                        summants += MaParameters[i] * _residuals[_maOrder + i];
+                        summants += MaParameters[i] * _residuals[_maOrder + i + 1];
                     }
 
-                    summants += Intercept; // Intercept term
-                }
+                summants += Intercept; // By default equals 0
 
                 if (_diffOrder > 0)
                 {
-                    arrayData.ToList().Insert(0, summants); // Prepends
-                    summants = InverseDifferencedSeries(arrayData).First(); // Returns disintegrated series
+                    var dataCast = arrayData.ToList();
+                    dataCast.Insert(0, summants); // Prepends
+                    summants = InverseDifferencedSeries(dataCast.ToArray()).First(); // Returns disintegrated series
                 }
 
                 return (decimal) summants;

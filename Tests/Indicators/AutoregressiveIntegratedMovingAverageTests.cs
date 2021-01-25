@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Indicators
         {
             var ARIMA = CreateIndicator();
             TestHelper.TestIndicator(ARIMA, TestFileName, TestColumnName,
-                (ind, expected) => Assert.AreEqual(expected, (double) ARIMA.Current.Value, 7d));
+                (ind, expected) => Assert.AreEqual(expected, (double) ARIMA.Current.Value, 10d));
         }
 
         [Test]
@@ -49,10 +49,10 @@ namespace QuantConnect.Tests.Indicators
         {
             var ARIMA = CreateIndicator();
             TestHelper.TestIndicator(ARIMA, TestFileName, TestColumnName,
-                (ind, expected) => Assert.AreEqual(expected, (double) ARIMA.Current.Value, 7d));
+                (ind, expected) => Assert.AreEqual(expected, (double) ARIMA.Current.Value, 10d));
             ARIMA.Reset();
             TestHelper.TestIndicator(ARIMA, TestFileName, TestColumnName,
-                (ind, expected) => Assert.AreEqual(expected, (double) ARIMA.Current.Value, 7d));
+                (ind, expected) => Assert.AreEqual(expected, (double) ARIMA.Current.Value, 10d));
         }
 
         [Test]
