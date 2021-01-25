@@ -67,7 +67,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created.</exception>
         public bool MoveNext()
         {
-            var currentDate = _timeProvider.GetUtcNow().ConvertFromUtc(_dataConfig.ExchangeTimeZone);
+            var currentDate = _timeProvider.GetUtcNow().ConvertFromUtc(_dataConfig.ExchangeTimeZone).Date;
             if (currentDate != _lastTime)
             {
                 // when the date changes for the security we trigger a new tradable date event
