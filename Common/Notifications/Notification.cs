@@ -44,19 +44,18 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Optional email headers
         /// </summary>
-        [JsonProperty("headers", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public Dictionary<string, string> Headers;
 
         /// <summary>
         /// Send a notification message to this web address
         /// </summary>
-        [JsonProperty("address")]
         public string Address;
 
         /// <summary>
         /// Object data to send.
         /// </summary>
-        [JsonProperty("data", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public object Data;
 
         /// <summary>
@@ -81,13 +80,12 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Send a notification message to this phone number
         /// </summary>
-        [JsonProperty("phoneNumber")]
         public string PhoneNumber;
 
         /// <summary>
         /// Message to send. Limited to 160 characters
         /// </summary>
-        [JsonProperty("message", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Message;
 
         /// <summary>
@@ -110,31 +108,29 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Optional email headers
         /// </summary>
-        [JsonProperty("headers", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public Dictionary<string, string> Headers;
 
         /// <summary>
         /// Send to address:
         /// </summary>
-        [JsonProperty("address")]
         public string Address;
 
         /// <summary>
         /// Email subject
         /// </summary>
-        [JsonProperty("subject")]
         public string Subject;
 
         /// <summary>
         /// Message to send.
         /// </summary>
-        [JsonProperty("message", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Message;
 
         /// <summary>
         /// Email Data
         /// </summary>
-        [JsonProperty("data", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Data;
 
         /// <summary>

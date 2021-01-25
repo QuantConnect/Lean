@@ -52,25 +52,25 @@ namespace QuantConnect.Notifications
             var jObject = JObject.Load(reader);
 
             JToken token;
-            if (jObject.TryGetValue("phoneNumber", out token))
+            if (jObject.TryGetValue("PhoneNumber", out token))
             {
-                var message = jObject.GetValue("message");
+                var message = jObject.GetValue("Message");
 
                 return new NotificationSms(token.ToString(), message?.ToString());
             }
-            else if (jObject.TryGetValue("subject", out token))
+            else if (jObject.TryGetValue("Subject", out token))
             {
-                var data = jObject.GetValue("data");
-                var message = jObject.GetValue("message");
-                var address = jObject.GetValue("address");
-                var headers= jObject.GetValue("headers");
+                var data = jObject.GetValue("Data");
+                var message = jObject.GetValue("Message");
+                var address = jObject.GetValue("Address");
+                var headers= jObject.GetValue("Headers");
 
                 return new NotificationEmail(address?.ToString(), token.ToString(), message?.ToString(), data?.ToString(), headers?.ToObject<Dictionary<string, string>>());
             }
-            else if (jObject.TryGetValue("address", out token))
+            else if (jObject.TryGetValue("Address", out token))
             {
-                var headers = jObject.GetValue("headers");
-                var data = jObject.GetValue("data");
+                var headers = jObject.GetValue("Headers");
+                var data = jObject.GetValue("Data");
 
                 return new NotificationWeb(token.ToString(), data?.ToString(), headers?.ToObject<Dictionary<string, string>>());
             }
