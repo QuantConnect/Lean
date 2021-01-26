@@ -305,7 +305,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             _client.ConnectAck += (sender, e) =>
             {
-                Log.Trace("InteractiveBrokersBrokerage.HandleConnectAck(): API client connected.");
+                Log.Trace($"InteractiveBrokersBrokerage.HandleConnectAck(): API client connected [Server Version: {_client.ClientSocket.ServerVersion}].");
                 _connectEvent.Set();
             };
 
