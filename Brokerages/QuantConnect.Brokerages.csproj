@@ -43,7 +43,7 @@
     <PackageReference Include="NATS.Client" Version="0.8.1" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="NodaTime" Version="1.3.4" />
-    <PackageReference Include="QuantConnect.IBAutomater" Version="1.0.35" />
+    <PackageReference Include="QuantConnect.IBAutomater" Version="1.0.43" />
     <PackageReference Include="RestSharp" Version="106.6.10" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.0" />
