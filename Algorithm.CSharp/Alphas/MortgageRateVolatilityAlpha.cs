@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
 	/// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
     /// sourced so the community and client funds can see an example of an alpha.
 	/// <summary>
-    public class MortgageRateVolatilityAlgorithm : QCAlgorithmFramework
+    public class MortgageRateVolatilityAlgorithm : QCAlgorithm
     {
         public override void Initialize()
         {
@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
             private readonly StandardDeviation _mortgageRateStd;
 
             public MortgageRateVolatilityAlphaModel(
-                QCAlgorithmFramework algorithm,
+                QCAlgorithm algorithm,
                 int indicatorPeriod = 15,
                 double insightMagnitude = 0.0005,
                 int deviations = 2,
@@ -102,7 +102,7 @@ namespace QuantConnect.Algorithm.CSharp
                 WarmUpIndicators(algorithm);
             }
             
-            public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+            public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
                 var insights = new List<Insight>();
                 
@@ -141,7 +141,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return insights;
             }
 
-            private void WarmUpIndicators(QCAlgorithmFramework algorithm)
+            private void WarmUpIndicators(QCAlgorithm algorithm)
             {
             	// Make a history call and update the indicators
                 algorithm.History(new[] { _mortgageRate }, _indicatorPeriod, _resolution).PushThrough(bar =>
