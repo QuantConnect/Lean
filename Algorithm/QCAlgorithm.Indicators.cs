@@ -420,14 +420,14 @@ namespace QuantConnect.Algorithm
 
             return chandeMomentumOscillator;
         }
-        
+
         ///<summary>
         /// Creates a new DeMarker Indicator (DEM), an oscillator-type indicator measuring changes in terms of an asset's
         /// High and Low tradebar values. 
         ///</summary>
         /// <param name="symbol">The symbol whose DEM we seek.</param>
         /// <param name="period">The period of the moving average implemented</param>
-        /// <param name="movingAverageType">Specifies the type of moving average to be used</param>
+        /// <param name="type">Specifies the type of moving average to be used</param>
         /// <param name="resolution">The resolution.</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The DeMarker indicator for the requested symbol.</returns>
@@ -1510,6 +1510,7 @@ namespace QuantConnect.Algorithm
 
             return standardDeviation;
         }
+
         /// <summary>
         /// Creates a new Stochastic indicator.
         /// </summary>
@@ -1543,6 +1544,28 @@ namespace QuantConnect.Algorithm
         public Stochastic STO(Symbol symbol, int period, Resolution? resolution = null)
         {
             return STO(symbol, period, period, 3, resolution);
+        }
+
+        /// <summary>
+        /// Creates a new SuperTrend indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose SuperTrend indicator we want.</param>
+        /// <param name="period">The smoothing period for average true range.</param>
+        /// <param name="multiplier">Multiplier to calculate basic upper and lower bands width.</param>
+        /// <param name="movingAverageType">Smoother type for average true range, defaults to Wilders.</param>
+        /// <param name="resolution">The resolution.</param>
+        public SuperTrend STRD(Symbol symbol, int period, decimal multiplier, MovingAverageType movingAverageType = MovingAverageType.Wilders, Resolution? resolution = null)
+        {
+            var name = CreateIndicatorName(symbol, $"STR({period},{multiplier})", resolution);
+            var strend = new SuperTrend(name, period, multiplier, movingAverageType);
+            RegisterIndicator(symbol, strend, resolution);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, strend, resolution);
+            }
+
+            return strend;
         }
 
         /// <summary>
