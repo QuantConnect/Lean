@@ -610,12 +610,13 @@ namespace QuantConnect.Brokerages.Samco
         /// <returns>True if the request was submitted for cancellation, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
+            var brokerId = order.BrokerId[0].ToStringInvariant();
             LockStream();
-            SamcoOrderResponse orderResponse = _samcoAPI.CancelOrder(order.Id.ToStringInvariant());
+            SamcoOrderResponse orderResponse = _samcoAPI.CancelOrder(brokerId);
             if (orderResponse.status == "Success")
             {
                 Order orderRemoved;
-                _pendingOrders.TryRemove(order.Id.ToStringInvariant(), out orderRemoved);
+                _pendingOrders.TryRemove(brokerId, out orderRemoved);
                 UnlockStream();
                 return true;
             }
@@ -637,19 +638,19 @@ namespace QuantConnect.Brokerages.Samco
             //Only loop if there are any actual orders inside response
             if (allOrders.status != "Failure" && allOrders.orderBookDetails.Count > 0)
             {
-                foreach (var item in allOrders.orderBookDetails.Where(z => z.orderStatus.ToUpperInvariant() == "PENDING"))
+                foreach (var item in allOrders.orderBookDetails.Where(z => z.orderStatus.ToUpperInvariant() == "OPEN"))
                 {
 
                     Order order;
-                    if (item.orderType.ToLowerInvariant() == "MKT")
+                    if (item.orderType.ToUpperInvariant() == "MKT")
                     {
                         order = new MarketOrder { Price = Convert.ToDecimal(item.orderPrice, CultureInfo.InvariantCulture) };
                     }
-                    else if (item.orderType.ToLowerInvariant() == "L")
+                    else if (item.orderType.ToUpperInvariant() == "L")
                     {
                         order = new LimitOrder { LimitPrice = Convert.ToDecimal(item.orderPrice, CultureInfo.InvariantCulture) };
                     }
-                    else if (item.orderType.ToLowerInvariant() == "SL-M")
+                    else if (item.orderType.ToUpperInvariant() == "SL-M")
                     {
                         order = new StopMarketOrder { StopPrice = Convert.ToDecimal(item.orderPrice, CultureInfo.InvariantCulture) };
                     }
