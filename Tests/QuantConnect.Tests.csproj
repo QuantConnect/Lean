@@ -148,11 +148,6 @@
     <Content Include="Research\RegressionScripts\Test_QuantBookIndicator.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="RegressionAlgorithms\Test_Cash.cs" />
-    <None Include="RegressionAlgorithms\Test_LiveAlgorithm.cs" />
-    <None Include="RegressionAlgorithms\Test_MixedAssets.cs" />
-    <None Include="RegressionAlgorithms\Test_OnEndOfDay.cs" />
-    <None Include="RegressionAlgorithms\Test_SetHolding.cs" />
     <None Include="TestData\20151224_quote_american.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -502,13 +497,5 @@
     <Content Include="TestData\test_forex_fills_mch_quantity.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="RegressionAlgorithms\Test_Cash.cs" />
-    <Compile Remove="RegressionAlgorithms\Test_LiveAlgorithm.cs" />
-    <Compile Remove="RegressionAlgorithms\Test_MixedAssets.cs" />
-    <Compile Remove="RegressionAlgorithms\Test_OnEndOfDay.cs" />
-    <Compile Remove="RegressionAlgorithms\Test_SetHolding.cs" />
-    <Compile Remove="Algorithm\Framework\Alphas\InsightCollectionTests.cs" />
   </ItemGroup>
 </Project>
