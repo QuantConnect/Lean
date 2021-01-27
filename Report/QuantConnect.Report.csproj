@@ -73,7 +73,6 @@
   </Choose>
   <ItemGroup>
     <PackageReference Include="Deedle" Version="2.1.0" />
-    <PackageReference Include="FSharp.Core" Version="4.5.2" />
     <PackageReference Include="MathNet.Numerics" Version="4.9.0" />
     <PackageReference Include="Microsoft.Net.Compilers" Version="2.10.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
