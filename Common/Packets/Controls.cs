@@ -156,6 +156,18 @@ namespace QuantConnect.Packets
         public decimal CreditCost;
 
         /// <summary>
+        /// The maximum deployments count for the same job packet
+        /// </summary>
+        [JsonProperty(PropertyName = "iMaximumDeployments")]
+        public int MaximumDeployments;
+
+        /// <summary>
+        /// The current deployment count
+        /// </summary>
+        [JsonProperty(PropertyName = "iCurrentDeployment")]
+        public int CurrentDeployment;
+
+        /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class
         /// </summary>
         public Controls()
