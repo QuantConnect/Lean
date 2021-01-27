@@ -280,7 +280,7 @@ namespace QuantConnect.Brokerages.Samco
             var payload = new JsonObject
             {
                 { "exchange", order.Symbol.ID.Market.ToUpperInvariant() },
-                { "priceType", "LTP" },
+                //{ "priceType", "LTP" },
                 { "orderValidity", GetOrderValidity(order.TimeInForce) },
                 { "afterMarketOrderFlag", "NO" },
                 { "productType", productType },
