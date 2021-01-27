@@ -35,21 +35,6 @@ namespace QuantConnect.Indicators
 
     {
         /// <summary>
-        /// Fitted AR parameters (φ terms).
-        /// </summary>
-        public double[] ArParameters;
-
-        /// <summary>
-        /// Fitted MA parameters (θ terms).
-        /// </summary>
-        public double[] MaParameters;
-
-        /// <summary>
-        /// Fitted intercept (c term).
-        /// </summary>
-        public double Intercept;
-
-        /// <summary>
         /// Differencing coefficient (d). Determines how many times the series should be differenced before fitting the
         /// model.
         /// </summary>
@@ -70,6 +55,21 @@ namespace QuantConnect.Indicators
         private readonly RollingWindow<double> _rollingData;
 
         private List<double> _residuals;
+
+        /// <summary>
+        /// Fitted AR parameters (φ terms).
+        /// </summary>
+        public double[] ArParameters;
+
+        /// <summary>
+        /// Fitted MA parameters (θ terms).
+        /// </summary>
+        public double[] MaParameters;
+
+        /// <summary>
+        /// Fitted intercept (c term).
+        /// </summary>
+        public double Intercept;
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -100,9 +100,9 @@ namespace QuantConnect.Indicators
         /// This particular constructor fits the model by means of <see cref="TwoStepFit" /> for a specified name.
         /// </summary>
         /// <param name="name">The name of the indicator</param>
-        /// <param name="arOrder">AR order -- p</param>
-        /// <param name="diffOrder">Difference order -- d</param>
-        /// <param name="maOrder">MA order -- q</param>
+        /// <param name="arOrder">AR order (p) -- defines the number of past values to consider in the AR component of the model.</param>
+        /// <param name="diffOrder">Difference order (d) -- defines how many times to difference the model before fitting parameters.</param>
+        /// <param name="maOrder">MA order -- defines the number of past values to consider in the MA component of the model.</param>
         /// <param name="period">Size of the rolling series to fit onto</param>
         /// <param name="intercept">Whether ot not to include the intercept term</param>
         public AutoRegressiveIntegratedMovingAverage(
@@ -147,10 +147,11 @@ namespace QuantConnect.Indicators
         /// where the first sum has an upper limit of <see cref="_arOrder" /> and the second <see cref="_maOrder" />.
         /// This particular constructor fits the model by means of <see cref="TwoStepFit" /> using ordinary least squares.
         /// </summary>
-        /// <param name="arOrder">AR order -- p</param>
-        /// <param name="diffOrder">Difference order -- d</param>
-        /// <param name="maOrder">MA order -- q</param>
+        /// <param name="arOrder">AR order (p) -- defines the number of past values to consider in the AR component of the model.</param>
+        /// <param name="diffOrder">Difference order (d) -- defines how many times to difference the model before fitting parameters.</param>
+        /// <param name="maOrder">MA order -- defines the number of past values to consider in the MA component of the model.</param>
         /// <param name="period">Size of the rolling series to fit onto</param>
+        /// <param name="intercept">Whether to include an intercept term (c)</param>
         public AutoRegressiveIntegratedMovingAverage(
             int arOrder,
             int diffOrder,

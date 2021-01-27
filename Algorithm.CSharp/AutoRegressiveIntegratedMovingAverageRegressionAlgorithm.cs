@@ -14,8 +14,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -24,9 +26,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// In particular, an ARIMA(1,1,1) and ARIMA(1,1,0) are instantiated while orders are placed if their difference
     /// is sufficiently large (which would be due to the inclusion of the MA(1) term).
     /// </summary>
-    public class AutoRegressiveMovingAverageIndicatorExample : QCAlgorithm
+    public class AutoRegressiveIntegratedMovingAverageRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _spy;
         private AutoRegressiveIntegratedMovingAverage _arima;
         private AutoRegressiveIntegratedMovingAverage _ar;
         private decimal _last;
@@ -37,9 +38,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 12, 11);
 
             EnableAutomaticIndicatorWarmUp = true;
-            _spy = AddEquity("SPY", Resolution.Daily).Symbol;
-            _arima = ARIMA(_spy, 1, 1, 1, 50);
-            _ar = ARIMA(_spy, 1, 1, 0, 50);
+            AddEquity("SPY", Resolution.Daily);
+            _arima = ARIMA("SPY", 1, 1, 1, 50);
+            _ar = ARIMA("SPY", 1, 1, 0, 50);
         }
 
         public override void OnData(Slice slice)
@@ -50,16 +51,28 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (_arima.Current.Value > _last)
                     {
-                        MarketOrder(_spy, 1);
+                        MarketOrder("SPY", 1);
                     }
                     else
                     {
-                        MarketOrder(_spy, -1);
+                        MarketOrder("SPY", -1);
                     }
                 }
 
                 _last = _arima.Current.Value;
             }
+        }
+
+        public bool CanRunLocally
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public Language[] Languages => new Language[] {Language.Python, Language.CSharp};
+
+        public Dictionary<string, string> ExpectedStatistics
+        {
+            get { throw new NotImplementedException(); }
         }
     }
 }
