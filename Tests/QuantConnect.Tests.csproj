@@ -51,7 +51,6 @@
     <PackageReference Include="Common.Logging.Core" Version="3.4.1" />
     <PackageReference Include="Deedle" Version="2.1.0" />
     <PackageReference Include="DotNetZip" Version="1.13.3" />
-    <PackageReference Include="FSharp.Core" Version="4.5.2" />
     <PackageReference Include="IKVM" Version="8.1.5717.0" />
     <PackageReference Include="LaunchDarkly.EventSource" Version="3.3.2" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.3" />
