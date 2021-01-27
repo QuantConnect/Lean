@@ -52,7 +52,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
+                new SecurityCache(),
+                PrimaryExchange.UNKNOWN
             );
             security.Setup(m => m.Invested).Returns(invested);
 

@@ -40,14 +40,14 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 07, 02);
             SetCash(1000000);
 
-            var option = AddOption("FOXA");
+            var option = AddOption("TFCFA");
             _optionSymbol = option.Symbol;
 
             // set our strike/expiry filter for this option chain
             option.SetFilter(-1, +1, TimeSpan.Zero, TimeSpan.MaxValue);
 
             // use the underlying equity as the benchmark
-            SetBenchmark("FOXA");
+            SetBenchmark("TFCFA");
         }
 
         /// <summary>
@@ -182,7 +182,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "-932374"}
+            {"OrderListHash", "-1383033718"}
         };
     }
 }

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,38 +14,47 @@
 */
 
 using System.Collections.Generic;
-using QuantConnect.Data.Market;
+using QuantConnect.Benchmarks;
+using QuantConnect.Brokerages;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression test for consistency of hour data over a reverse split event in US equities.
+    /// Regression algorithm to test zeroed benchmark through BrokerageModel override
     /// </summary>
-    /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="regression test" />
-    public class HourReverseSplitRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ZeroedBenchmarkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _symbol;
+        private Symbol _spy;
 
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 11, 7);
-            SetEndDate(2013, 11, 8);
-            SetCash(100000);
-            SetBenchmark(x => 0);
+            SetStartDate(2013, 10, 07);  //Set Start Date
+            SetEndDate(2013, 10, 08);    //Set End Date
+            SetCash(100000);             //Set Strategy Cash
 
-            _symbol = AddEquity("VXX.1", Resolution.Hour).Symbol;
+            // Add equity
+            _spy = AddEquity("SPY", Resolution.Hour).Symbol;
+
+            // Use our Test Brokerage Model with zeroed default benchmark
+            SetBrokerageModel(new TestBrokerageModel());
         }
 
-        public void OnData(TradeBars tradeBars)
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice data)
         {
-            TradeBar bar;
-            if (!tradeBars.TryGetValue(_symbol, out bar)) return;
-
-            if (!Portfolio.Invested && Time.Date == EndDate.Date)
+            if (!Portfolio.Invested)
             {
-                Buy(_symbol, 1);
+                SetHoldings(_spy, 1);
+                Debug("Purchased Stock");
             }
         }
 
@@ -76,20 +85,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$1.00"},
-            {"Fitness Score", "0"},
+            {"Total Fees", "$3.25"},
+            {"Fitness Score", "0.498"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -103,7 +103,15 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "105744170"}
+            {"OrderListHash", "-1491193070"}
         };
+
+        internal class TestBrokerageModel : DefaultBrokerageModel
+        {
+            public override IBenchmark GetBenchmark(SecurityManager securities)
+            {
+                return new FuncBenchmark(x => 0);
+            }
+        }
     }
 }

@@ -17,7 +17,7 @@ class FuturesAndFuturesOptionsExpiryTimeAndLiquidationRegressionAlgorithm(QCAlgo
 
         self.expectedExpiryWarningTime = datetime(2020, 6, 19)
         self.expectedExpiryDelistingTime = datetime(2020, 6, 20)
-        self.expectedLiquidationTime = datetime(2020, 6, 19, 0, 1, 0)
+        self.expectedLiquidationTime = datetime(2020, 6, 19, 16, 0, 0)
 
         self.SetStartDate(2020, 1, 5)
         self.SetEndDate(2020, 12, 1)
