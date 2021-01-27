@@ -19,27 +19,26 @@ using QuantConnect.Indicators;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Data.Custom;
 using System.Collections.Generic;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Algorithm.CSharp.Alphas
 {
-	/// <summary>
-	/// This Alpha Model uses Wells Fargo 30-year Fixed Rate Mortgage data from Quandl to 
-	/// generate Insights about the movement of Real Estate ETFs. Mortgage rates can provide information 
-	/// regarding the general price trend of real estate, and ETFs provide good continuous-time instruments 
-	/// to measure the impact against. Volatility in mortgage rates tends to put downward pressure on real 
-	/// estate prices, whereas stable mortgage rates, regardless of true rate, lead to stable or higher real
-	/// estate prices. This Alpha model seeks to take advantage of this correlation by emitting insights
-	/// based on volatility and rate deviation from its historic mean.
-	
-	/// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
+    ///<summary>
+    /// This Alpha Model uses Wells Fargo 30-year Fixed Rate Mortgage data from Quandl to
+    /// generate Insights about the movement of Real Estate ETFs. Mortgage rates can provide information
+    /// regarding the general price trend of real estate, and ETFs provide good continuous-time instruments
+    /// to measure the impact against. Volatility in mortgage rates tends to put downward pressure on real
+    /// estate prices, whereas stable mortgage rates, regardless of true rate, lead to stable or higher real
+    /// estate prices. This Alpha model seeks to take advantage of this correlation by emitting insights
+    /// based on volatility and rate deviation from its historic mean.
+    ///
+    /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
     /// sourced so the community and client funds can see an example of an alpha.
-	/// <summary>
+    ///</summary>
     public class MortgageRateVolatilityAlgorithm : QCAlgorithm
     {
         public override void Initialize()
@@ -51,8 +50,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetSecurityInitializer(security => security.FeeModel = new ConstantFeeModel(0));
 
             // Basket of 6 liquid real estate ETFs
-            Func<string, Symbol> ToSymbol = x => QuantConnect.Symbol.Create(x, SecurityType.Equity, Market.USA);
-            var realEstateETFs = new[] { "VNQ", "REET", "TAO", "FREL", "SRET", "HIPS" }.Select(ToSymbol).ToArray();
+            Func<string, Symbol> toSymbol = x => QuantConnect.Symbol.Create(x, SecurityType.Equity, Market.USA);
+            var realEstateETFs = new[] { "VNQ", "REET", "TAO", "FREL", "SRET", "HIPS" }.Select(toSymbol).ToArray();
             SetUniverseSelection(new ManualUniverseSelectionModel(realEstateETFs));
 
             SetAlpha(new MortgageRateVolatilityAlphaModel(this));
@@ -64,8 +63,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetRiskManagement(new NullRiskManagementModel());
 
         }
-        
-        public void OnData(QuandlMortgagePriceColumns data) {  }
 
         private class MortgageRateVolatilityAlphaModel : AlphaModel
         {
