@@ -361,6 +361,33 @@ namespace QuantConnect
             return DateTime.Now;
         }
 
+        /// <summary>
+        /// Parse a standard YY MM DD date into a DateTime. Attempt common date formats
+        /// </summary>
+        /// <param name="dateToParse">String date time to parse</param>
+        /// <returns>Date time</returns>
+        public static DateTime ParseFIXUtcTimestamp(string dateToParse)
+        {
+            try
+            {
+                //First try the exact options:
+                DateTime date;
+                if (DateTime.TryParseExact(dateToParse, DateFormat.FIX, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                {
+                    return date;
+                }
+                if (DateTime.TryParseExact(dateToParse, DateFormat.FIXWithMillisecond, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                {
+                    return date;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+
+            return DateTime.UtcNow;
+        }
 
         /// <summary>
         /// Define an enumerable date range and return each date as a datetime object in the date range

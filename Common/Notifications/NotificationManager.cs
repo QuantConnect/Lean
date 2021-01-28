@@ -108,14 +108,15 @@ namespace QuantConnect.Notifications
         /// </summary>
         /// <param name="address">Endpoint address</param>
         /// <param name="data">Data to send in body JSON encoded (optional)</param>
-        public bool Web(string address, object data = null)
+        /// <param name="headers">Optional headers to use</param>
+        public bool Web(string address, object data = null, Dictionary<string, string> headers = null)
         {
             if (!Allow())
             {
                 return false;
             }
 
-            var web = new NotificationWeb(address, data);
+            var web = new NotificationWeb(address, data, headers);
             Messages.Enqueue(web);
 
             return true;

@@ -321,7 +321,4 @@
       ./build.sh
     </PostBuildEvent>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="PythonAlgorithm.cs" />
-  </ItemGroup>
 </Project>

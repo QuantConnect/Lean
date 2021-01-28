@@ -101,7 +101,4 @@
     <ProjectReference Include="..\Common\QuantConnect.csproj" />
     <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Alphas\MortgageRateVolatilityAlpha.cs" />
-  </ItemGroup>
 </Project>

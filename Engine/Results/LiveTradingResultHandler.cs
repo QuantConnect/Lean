@@ -708,7 +708,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="algorithm">Algorithm object matching IAlgorithm interface</param>
         /// <param name="startingPortfolioValue">Algorithm starting capital for statistics calculations</param>
-        public void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
+        public virtual void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
         {
             Algorithm = algorithm;
             _portfolioValue = DailyPortfolioValue = StartingPortfolioValue = startingPortfolioValue;
@@ -1032,7 +1032,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// This method is triggered from the algorithm manager thread.
         /// </summary>
         /// <remarks>Prime candidate for putting into a base class. Is identical across all result handlers.</remarks>
-        public void ProcessSynchronousEvents(bool forceProcess = false)
+        public virtual void ProcessSynchronousEvents(bool forceProcess = false)
         {
             var time = DateTime.UtcNow;
 
