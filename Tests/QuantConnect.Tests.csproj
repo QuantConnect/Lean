@@ -12,6 +12,7 @@
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -50,13 +51,16 @@
     <PackageReference Include="Common.Logging.Core" Version="3.4.1" />
     <PackageReference Include="Deedle" Version="2.1.0" />
     <PackageReference Include="DotNetZip" Version="1.13.3" />
-    <PackageReference Include="FSharp.Core" Version="4.5.2" />
     <PackageReference Include="IKVM" Version="8.1.5717.0" />
     <PackageReference Include="LaunchDarkly.EventSource" Version="3.3.2" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.3" />
     <PackageReference Include="Microsoft.CodeAnalysis.VersionCheckAnalyzer" Version="2.9.3" />
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.3" />
     <PackageReference Include="Microsoft.Extensions.CommandLineUtils" Version="1.1.1" />
+    <PackageReference Include="Microsoft.Net.Compilers" Version="2.10.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.9.3" />
     <PackageReference Include="Microsoft.NetFramework.Analyzers" Version="2.9.3" />
@@ -143,11 +147,6 @@
     <Content Include="Research\RegressionScripts\Test_QuantBookIndicator.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="RegressionAlgorithms\Test_Cash.cs" />
-    <None Include="RegressionAlgorithms\Test_LiveAlgorithm.cs" />
-    <None Include="RegressionAlgorithms\Test_MixedAssets.cs" />
-    <None Include="RegressionAlgorithms\Test_OnEndOfDay.cs" />
-    <None Include="RegressionAlgorithms\Test_SetHolding.cs" />
     <None Include="TestData\20151224_quote_american.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -497,13 +496,5 @@
     <Content Include="TestData\test_forex_fills_mch_quantity.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="RegressionAlgorithms\Test_Cash.cs" />
-    <Compile Remove="RegressionAlgorithms\Test_LiveAlgorithm.cs" />
-    <Compile Remove="RegressionAlgorithms\Test_MixedAssets.cs" />
-    <Compile Remove="RegressionAlgorithms\Test_OnEndOfDay.cs" />
-    <Compile Remove="RegressionAlgorithms\Test_SetHolding.cs" />
-    <Compile Remove="Algorithm\Framework\Alphas\InsightCollectionTests.cs" />
   </ItemGroup>
 </Project>
