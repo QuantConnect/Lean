@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-16.04
     container:
         image: quantconnect/lean:foundation
     steps:
