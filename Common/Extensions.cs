@@ -49,6 +49,7 @@ using QuantConnect.Util;
 using Timer = System.Timers.Timer;
 using static QuantConnect.StringExtensions;
 using Microsoft.IO;
+using NodaTime.TimeZones;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
@@ -65,6 +66,12 @@ namespace QuantConnect
 
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
+
+        /// <summary>
+        /// Maintains old behavior of NodaTime's (&lt; 2.0) daylight savings mapping. More info can be found
+        /// in the summary of the <see cref="Resolvers.LenientResolver"/> delegate.
+        /// </summary>
+        private static readonly ZoneLocalMappingResolver _mappingResolver = Resolvers.CreateMappingResolver(Resolvers.ReturnLater, Resolvers.ReturnStartOfIntervalAfter);
 
         /// <summary>
         /// The offset span from the market close to liquidate or exercise a security on the delisting date
@@ -1328,7 +1335,10 @@ namespace QuantConnect
                 return from.AtStrictly(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
             }
 
-            return from.AtLeniently(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
+            return LocalDateTime.FromDateTime(time)
+                .InZone(from, _mappingResolver)
+                .WithZone(to)
+                .ToDateTimeUnspecified();
         }
 
         /// <summary>
@@ -1358,7 +1368,9 @@ namespace QuantConnect
                 return from.AtStrictly(LocalDateTime.FromDateTime(time)).ToDateTimeUtc();
             }
 
-            return from.AtLeniently(LocalDateTime.FromDateTime(time)).ToDateTimeUtc();
+            return LocalDateTime.FromDateTime(time)
+                .InZone(from, _mappingResolver)
+                .ToDateTimeUtc();
         }
 
         /// <summary>

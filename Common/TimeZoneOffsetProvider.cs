@@ -62,7 +62,7 @@ namespace QuantConnect
             var zoneIntervals = _timeZone.GetZoneIntervals(start.ToInstant(), end.ToInstant()).ToList();
 
             // short circuit time zones with no discontinuities
-            if (zoneIntervals.Count == 1 && zoneIntervals[0].Start == Instant.MinValue && zoneIntervals[0].End == Instant.MaxValue)
+            if (zoneIntervals.Count == 1 && zoneIntervals[0].HasStart && zoneIntervals[0].Start == Instant.MinValue && zoneIntervals[0].End == Instant.MaxValue)
             {
                 // end of discontinuities
                 _discontinuities = new Queue<long>();
@@ -157,10 +157,11 @@ namespace QuantConnect
             // can't convert these values directly to date times, so just shortcut these here
             // we set the min value to one since the logic in the ctor will decrement this value to
             // determine the last instant BEFORE the discontinuity
-            if (zoneInterval.Start == Instant.MinValue) return 1;
-            if (zoneInterval.Start == Instant.MaxValue) return DateTime.MaxValue.Ticks;
+            if (!zoneInterval.HasStart || zoneInterval.Start == Instant.MinValue) return 1;
+            if (zoneInterval.HasStart && zoneInterval.Start == Instant.MaxValue) return DateTime.MaxValue.Ticks;
+            if (zoneInterval.HasStart) return zoneInterval.Start.ToDateTimeUtc().Ticks;
 
-            return zoneInterval.Start.ToDateTimeUtc().Ticks;
+            return 1;
         }
     }
 }
