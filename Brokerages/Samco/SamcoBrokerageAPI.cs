@@ -148,8 +148,6 @@ namespace QuantConnect.Brokerages.Samco
                     return "MKT";
                 case OrderType.StopMarket:
                     return "SL-M";
-                case OrderType.Bracket:
-                    return "BO";
                 default:
                     throw new NotSupportedException($"SamcoBrokerage.ConvertOrderType: Unsupported order type: {orderType}");
             }
