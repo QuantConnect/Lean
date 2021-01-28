@@ -137,18 +137,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         public override bool IsConnected => _client != null && _client.Connected && !_stateManager.Disconnected1100Fired;
 
         /// <summary>
-        /// Returns true if the connected user is a financial advisor or non-disclosed broker
+        /// Returns true if the connected user is a financial advisor
         /// </summary>
         public bool IsFinancialAdvisor => IsMasterAccount(_account);
 
         /// <summary>
-        /// Returns true if the account is a financial advisor or non-disclosed broker master account
+        /// Returns true if the account is a financial advisor master account
         /// </summary>
         /// <param name="account">The account code</param>
         /// <returns>True if the account is a master account</returns>
         public static bool IsMasterAccount(string account)
         {
-            return account.Contains("F") || account.Contains("I");
+            return account.Contains("F");
         }
 
         /// <summary>
@@ -305,7 +305,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             _client.ConnectAck += (sender, e) =>
             {
-                Log.Trace("InteractiveBrokersBrokerage.HandleConnectAck(): API client connected.");
+                Log.Trace($"InteractiveBrokersBrokerage.HandleConnectAck(): API client connected [Server Version: {_client.ClientSocket.ServerVersion}].");
                 _connectEvent.Set();
             };
 

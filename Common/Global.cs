@@ -88,6 +88,10 @@ namespace QuantConnect
         public const string USDateOnly = "M/d/yyyy";
         /// Date format of QC forex data
         public const string Forex = "yyyyMMdd HH:mm:ss.ffff";
+        /// Date format of FIX Protocol UTC Timestamp without milliseconds
+        public const string FIX = "yyyyMMdd-HH:mm:ss";
+        /// Date format of FIX Protocol UTC Timestamp with milliseconds 
+        public const string FIXWithMillisecond = "yyyyMMdd-HH:mm:ss.fff";
         /// YYYYMM Year and Month Character Date Representation (used for futures)
         public const string YearMonth = "yyyyMM";
     }

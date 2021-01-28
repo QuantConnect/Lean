@@ -25,7 +25,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm to test warming up after initialize behavior, should throw if used outside of initialize
     /// Reference GH Issue #4939
     /// </summary>
-    public class WarmUpAfterIntializeRegression : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class WarmUpAfterInitializeRegression : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
