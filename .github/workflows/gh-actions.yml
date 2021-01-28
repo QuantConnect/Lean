@@ -1,51 +1,31 @@
 name: Build & Test Lean
 
 on:
-  push:
-    branches: [ '*' ]
-  pull_request:
-    branches: [ master ]
+    push:
+        branches: ['*']
+    pull_request:
+        branches: [master]
 
 jobs:
-  build:
-    runs-on: ubuntu-16.04
-    container: 
-      image: quantconnect/lean:foundation
-    steps:
-     - uses: actions/checkout@v2
-#     - name: Setup .NET & Mono
-#       run: |
-#         sudo apt update
-#         sudo apt install dirmngr gnupg apt-transport-https ca-certificates
-#         sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-#         sudo sh -c 'echo "deb https://download.mono-project.com/repo/ubuntu bionic/snapshots/5.12.0 main" > /etc/apt/sources.list.d/mono-official-stable.list'
-#         sudo apt update
-#         sudo apt install mono-devel -t bionic
+    build:
+        runs-on: ubuntu-16.04
+        container:
+            image: quantconnect/lean:foundation
+        steps:
+            - uses: actions/checkout@v2
 
-#     - name: Setup Python & Dependencies
-#       run: |
-#         export PATH="$HOME/miniconda3/bin:$PATH"
-#         wget -q https://cdn.quantconnect.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
-#         bash Miniconda3-4.5.12-Linux-x86_64.sh -b
-#         rm -rf Miniconda3-4.5.12-Linux-x86_64.sh
-#         sudo ln -s $HOME/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so
-#         conda update -y python conda pip
-#         conda install -y python=3.6.8
-#         conda install -y numpy=1.18.1
-#         conda install -y pandas=0.25.3
-#         conda install -y cython=0.29.15
-#         conda install -y scipy=1.4.1
-#         conda install -y wrapt=1.12.1
-#     - name: Restore nuget dependencies
-#       run: |
-#         nuget restore QuantConnect.Lean.sln -v quiet
-#         nuget install NUnit.Runners -Version 3.11.1 -OutputDirectory testrunner
-#     - name: Build
-#       run: msbuild /p:Configuration=Release /p:VbcToolExe=vbnc.exe /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
-#     - name: Run Tests
-#       run: |
-#         mono ./testrunner/NUnit.ConsoleRunner.3.11.1/tools/nunit3-console.exe ./Tests/bin/Release/QuantConnect.Tests.dll --where "cat != TravisExclude" --labels=Off --params:log-handler=ConsoleErrorLogHandler
-#     - name: Generate & Publish python stubs
-#       run: |
-#         chmod +x ci_build_stubs.sh
-#         sudo -E ./ci_build_stubs.sh -d -t -g #Ignore Publish as of since credentials are missing on CI
+            - name: Restore nuget dependencies
+              run: |
+                  nuget restore QuantConnect.Lean.sln -v quiet
+                  nuget install NUnit.Runners -Version 3.11.1 -OutputDirectory testrunner
+
+            - name: Build
+              run: msbuild /p:Configuration=Release /p:VbcToolExe=vbnc.exe /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
+
+            - name: Run Tests
+              run: mono ./testrunner/NUnit.ConsoleRunner.3.11.1/tools/nunit3-console.exe ./Tests/bin/Release/QuantConnect.Tests.dll --where "cat != TravisExclude" --labels=Off --params:log-handler=ConsoleErrorLogHandler
+
+            - name: Generate & Publish python stubs
+              run: |
+                  chmod +x ci_build_stubs.sh
+                  sudo -E ./ci_build_stubs.sh -d -t -g #Ignore Publish as of since credentials are missing on CI
