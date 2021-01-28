@@ -180,13 +180,6 @@ RUN conda install -y -c pytorch     \
     pytorch=1.5.0                   \
     torchvision=0.6.0
 
-RUN pip install --no-cache-dir      \
-    torch-scatter==2.0.5            \
-    torch-sparse==0.6.8             \
-    torch-cluster==1.5.8            \
-    torch-spline-conv==1.2.0        \
-    torch-geometric==1.6.3
-
 RUN conda clean -y --all
 
 RUN python -m nltk.downloader -d /usr/share/nltk_data punkt
