@@ -63,52 +63,61 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
         public bool CanRunLocally { get; } = true;
 
-        public Language[] Languages { get; } = { Language.Python, Language.CSharp };
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades","65"},
-            {"Average Win","0"},
-            {"Average Loss","0"},
-            {"Compounding Annual Return","0.0015"},
-            {"Drawdown","0.001"},
-            {"Expectancy","2.19"},
-            {"Net Profit","0.0013"},
-            {"Sharpe Ratio","0.993"},
-            {"Probabilistic Sharpe Ratio","0.4967"},
-            {"Loss Rate","0.29"},
-            {"Win Rate","0.71"},
-            {"Profit-Loss Ratio","3.5"},
-            {"Alpha","0.001"},
-            {"Beta","0"},
-            {"Annual Standard Deviation","0.001"},
-            {"Annual Variance","0"},
-            {"Information Ratio","-2.168"},
-            {"Tracking Error","0.099"},
-            {"Treynor Ratio","-5.187"},
-            {"Total Fees","$65"},
-            {"Fitness Score","0"},
-            {"Kelly Criterion Estimate","0"},
-            {"Kelly Criterion Probability Value","0"},
-            {"Sortino Ratio","1.51"},
-            {"Return Over Maximum Drawdown","1.819"},
-            {"Portfolio Turnover","0"},
-            {"Total Insights Generated","0"},
-            {"Total Insights Closed","0"},
-            {"Total Insights Analysis Completed","0"},
-            {"Long Insight Count","0"},
-            {"Short Insight Count","0"},
-            {"Long/Short Ratio","1"},
-            {"Estimated Monthly Alpha Value","$0"},
-            {"Total Accumulated Estimated Alpha Value","$0"},
-            {"Mean Population Estimated Insight Value","$0"},
-            {"Mean Population Direction","0"},
-            {"Mean Population Magnitude","0"},
-            {"Rolling Averaged Population Direction","0"},
-            {"Rolling Averaged Population Magnitude","0"},
-            {"OrderListHash","852801548"}
+            {"Total Trades", "65"},
+            {"Average Win", "0.00%"},
+            {"Average Loss", "0.00%"},
+            {"Compounding Annual Return", "0.145%"},
+            {"Drawdown", "0.100%"},
+            {"Expectancy", "2.190"},
+            {"Net Profit", "0.134%"},
+            {"Sharpe Ratio", "0.993"},
+            {"Probabilistic Sharpe Ratio", "49.669%"},
+            {"Loss Rate", "29%"},
+            {"Win Rate", "71%"},
+            {"Profit-Loss Ratio", "3.50"},
+            {"Alpha", "0.001"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0.001"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-2.168"},
+            {"Tracking Error", "0.099"},
+            {"Treynor Ratio", "-5.187"},
+            {"Total Fees", "$65.00"},
+            {"Fitness Score", "0"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "1.51"},
+            {"Return Over Maximum Drawdown", "1.819"},
+            {"Portfolio Turnover", "0"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "852801548"}
         };
     }
 }

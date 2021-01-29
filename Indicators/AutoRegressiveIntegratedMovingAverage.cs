@@ -31,29 +31,27 @@ namespace QuantConnect.Indicators
     /// </para>
     /// where the first sum has an upper limit of <see cref="_arOrder" /> and the second <see cref="_maOrder" />.
     /// </summary>
-    public class AutoRegressiveIntegratedMovingAverage : TimeSeriesIndicator, IIndicatorWarmUpPeriodProvider
+    public class AutoRegressiveIntegratedMovingAverage : TimeSeriesIndicator
     {
+        private List<double> _residuals;
+        private readonly bool _intercept;
+        private readonly RollingWindow<double> _rollingData;
+
         /// <summary>
         /// Differencing coefficient (d). Determines how many times the series should be differenced before fitting the
         /// model.
         /// </summary>
-        readonly private int _diffOrder;
-
-        readonly private bool _intercept;
+        private readonly int _diffOrder;
 
         /// <summary>
         /// AR coefficient -- p
         /// </summary>
-        readonly private int _arOrder;
+        private readonly int _arOrder;
 
         /// <summary>
         /// MA Coefficient -- q
         /// </summary>
-        readonly private int _maOrder;
-
-        readonly private RollingWindow<double> _rollingData;
-
-        private List<double> _residuals;
+        private readonly int _maOrder;
 
         /// <summary>
         /// Fitted AR parameters (φ terms).
@@ -173,6 +171,51 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Forecasts the series of the fitted model one point ahead.
+        /// </summary>
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>A new value for this indicator</returns>
+        protected override decimal ComputeNextValue(IndicatorDataPoint input)
+        {
+            _rollingData.Add((double)input.Value);
+            if (_rollingData.IsReady)
+            {
+                var arrayData = _rollingData.ToArray();
+                arrayData = _diffOrder > 0 ? DifferenceSeries(_diffOrder, arrayData, out _diffHeads) : arrayData;
+                TwoStepFit(arrayData);
+                double summants = 0;
+                if (_arOrder > 0)
+                {
+                    for (var i = 0; i < _arOrder; i++) // AR Parameters
+                    {
+                        summants += ArParameters[i] * arrayData[i];
+                    }
+                }
+
+                if (_maOrder > 0)
+                {
+                    for (var i = 0; i < _maOrder; i++) // MA Parameters
+                    {
+                        summants += MaParameters[i] * _residuals[_maOrder + i + 1];
+                    }
+                }
+
+                summants += Intercept; // By default equals 0
+
+                if (_diffOrder > 0)
+                {
+                    var dataCast = arrayData.ToList();
+                    dataCast.Insert(0, summants); // Prepends
+                    summants = InverseDifferencedSeries(dataCast.ToArray(), _diffHeads).First(); // Returns disintegrated series
+                }
+
+                return (decimal)summants;
+            }
+
+            return 0m;
+        }
+
+        /// <summary>
         /// Fits the model by means of implementing the following pseudo-code algorithm (in the form of "if{then}"):
         /// <code>
         /// if diffOrder > 0 {Difference data diffOrder times}
@@ -187,17 +230,16 @@ namespace QuantConnect.Indicators
             _residuals = new List<double>();
             double errorAr = 0;
             double errorMa = 0;
-            double[] arFits;
             var lags = _arOrder > 0 ? LaggedSeries(_arOrder, series) : new[] {series};
 
-            ArStep(lags, series, errorAr);
+            AutoRegressiveStep(lags, series, errorAr);
 
             if (_maOrder <= 0)
             {
                 return;
             }
 
-            MaStep(lags, series, errorMa);
+            MovingAverageStep(lags, series, errorMa);
         }
 
         /// <summary>
@@ -206,7 +248,7 @@ namespace QuantConnect.Indicators
         /// <param name="lags">An array of lagged data (<see cref="TimeSeriesIndicator.LaggedSeries"/>).</param>
         /// <param name="data">The input series, differenced <see cref="_diffOrder"/> times.</param>
         /// <param name="errorMa">The summed residuals (by default 0) associated with the MA component.</param>
-        private void MaStep(double[][] lags, double[] data, double errorMa)
+        private void MovingAverageStep(double[][] lags, double[] data, double errorMa)
         {
             var appendedData = new List<double[]>();
             var laggedErrors = LaggedSeries(_maOrder, _residuals.ToArray());
@@ -250,7 +292,7 @@ namespace QuantConnect.Indicators
         /// <param name="lags">An array of lagged data (<see cref="TimeSeriesIndicator.LaggedSeries"/>).</param>
         /// <param name="data">The input series, differenced <see cref="_diffOrder"/> times.</param>
         /// <param name="errorAr">The summed residuals (by default 0) associated with the AR component.</param>
-        private void ArStep(double[][] lags, double[] data, double errorAr)
+        private void AutoRegressiveStep(double[][] lags, double[] data, double errorAr)
         {
             double[] arFits;
             // The function (lags[time][lagged X]) |---> ΣᵢφᵢXₜ₋ᵢ 
@@ -276,51 +318,6 @@ namespace QuantConnect.Indicators
             {
                 ArParameters = arFits; // Will not be thrown out
             }
-        }
-
-        /// <summary>
-        /// Forecasts the series of the fitted model one point ahead.
-        /// </summary>
-        /// <param name="input">The input given to the indicator</param>
-        /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IndicatorDataPoint input)
-        {
-            _rollingData.Add((double) input.Value);
-            if (_rollingData.IsReady)
-            {
-                var arrayData = _rollingData.ToArray();
-                arrayData = _diffOrder > 0 ? DifferenceSeries(_diffOrder, arrayData, out _diffHeads) : arrayData;
-                TwoStepFit(arrayData);
-                double summants = 0;
-                if (_arOrder > 0)
-                {
-                    for (var i = 0; i < _arOrder; i++) // AR Parameters
-                    {
-                        summants += ArParameters[i] * arrayData[i];
-                    }
-                }
-
-                if (_maOrder > 0)
-                {
-                    for (var i = 0; i < _maOrder; i++) // MA Parameters
-                    {
-                        summants += MaParameters[i] * _residuals[_maOrder + i + 1];
-                    }
-                }
-
-                summants += Intercept; // By default equals 0
-
-                if (_diffOrder > 0)
-                {
-                    var dataCast = arrayData.ToList();
-                    dataCast.Insert(0, summants); // Prepends
-                    summants = InverseDifferencedSeries(dataCast.ToArray(), _diffHeads).First(); // Returns disintegrated series
-                }
-
-                return (decimal) summants;
-            }
-
-            return 0m;
         }
     }
 }

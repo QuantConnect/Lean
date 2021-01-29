@@ -76,12 +76,11 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="series">Series to un-difference</param>
         /// <param name="diffHeads">Series of "integration" constants for un-differencing</param>
-        public static double[]
-            InverseDifferencedSeries(double[] series, double[] diffHeads)
+        public static double[] InverseDifferencedSeries(double[] series, double[] diffHeads)
         {
             var localDiffs = new Stack<double>(diffHeads.Reverse());
             var localSeries = series.ToList();
-            while (localDiffs.Count() > 0)
+            while (localDiffs.Count > 0)
             {
                 var first = localDiffs.Pop();
                 localSeries.Add(first);
