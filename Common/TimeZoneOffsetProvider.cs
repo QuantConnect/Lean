@@ -61,6 +61,7 @@ namespace QuantConnect
             var end = DateTimeZone.Utc.AtLeniently(LocalDateTime.FromDateTime(utcEndTime));
             var zoneIntervals = _timeZone.GetZoneIntervals(start.ToInstant(), end.ToInstant()).ToList();
 
+            // In NodaTime v3.0.5, ZoneInterval throws if `ZoneInterval.HasStart` is false and `ZoneInterval.Start` is called.
             // short circuit time zones with no discontinuities
             if (zoneIntervals.Count == 1 && zoneIntervals[0].HasStart && zoneIntervals[0].Start == Instant.MinValue && zoneIntervals[0].End == Instant.MaxValue)
             {
