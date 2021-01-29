@@ -123,7 +123,7 @@ namespace QuantConnect.Indicators
         /// <param name="series">Series to cumulatively sum over.</param>
         /// <param name="reverse">Whether to reverse the series before applying the cumulative sum.</param>
         /// <returns>Cumulatively summed series.</returns>
-        protected static List<double> CumulativeSum(List<double> series, bool reverse = false)
+        public static List<double> CumulativeSum(List<double> series, bool reverse = false)
         {
             var localSeries = series;
             if (reverse)

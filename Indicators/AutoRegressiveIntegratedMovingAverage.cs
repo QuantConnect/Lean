@@ -38,21 +38,21 @@ namespace QuantConnect.Indicators
         /// Differencing coefficient (d). Determines how many times the series should be differenced before fitting the
         /// model.
         /// </summary>
-        private readonly int _diffOrder;
+        readonly private int _diffOrder;
 
-        private readonly bool _intercept;
+        readonly private bool _intercept;
 
         /// <summary>
         /// AR coefficient -- p
         /// </summary>
-        private readonly int _arOrder;
+        readonly private int _arOrder;
 
         /// <summary>
         /// MA Coefficient -- q
         /// </summary>
-        private readonly int _maOrder;
+        readonly private int _maOrder;
 
-        private readonly RollingWindow<double> _rollingData;
+        readonly private RollingWindow<double> _rollingData;
 
         private List<double> _residuals;
 
@@ -149,7 +149,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="arOrder">AR order (p) -- defines the number of past values to consider in the AR component of the model.</param>
         /// <param name="diffOrder">Difference order (d) -- defines how many times to difference the model before fitting parameters.</param>
-        /// <param name="maOrder">MA order -- defines the number of past values to consider in the MA component of the model.</param>
+        /// <param name="maOrder">MA order (q) -- defines the number of past values to consider in the MA component of the model.</param>
         /// <param name="period">Size of the rolling series to fit onto</param>
         /// <param name="intercept">Whether to include an intercept term (c)</param>
         public AutoRegressiveIntegratedMovingAverage(
@@ -183,7 +183,7 @@ namespace QuantConnect.Indicators
         /// </code>
         /// http://mbhauser.com/informal-notes/two-step-arma-estimation.pdf
         /// </summary>
-        protected void TwoStepFit(double[] series) // Protected for any future inheritors (e.g., SARIMA)
+        private void TwoStepFit(double[] series) // Protected for any future inheritors (e.g., SARIMA)
         {
             _residuals = new List<double>();
             var data = _diffOrder > 0 ? DifferenceSeries(_diffOrder, series) : series; // Difference the series
@@ -192,6 +192,69 @@ namespace QuantConnect.Indicators
             double[] arFits;
             var lags = _arOrder > 0 ? LaggedSeries(_arOrder, data) : new[] {data};
 
+            ArStep(lags, data, errAr);
+
+            if (_maOrder <= 0)
+            {
+                return;
+            }
+
+            MaStep(lags, data, errMa);
+        }
+
+        /// <summary>
+        /// Fits the moving average component in the <see cref="TwoStepFit"/> method.
+        /// </summary>
+        /// <param name="lags">An array of lagged data (<see cref="TimeSeriesIndicator.LaggedSeries"/>).</param>
+        /// <param name="data">The input series, differenced <see cref="_diffOrder"/> times.</param>
+        /// <param name="errMa">The residuals (by default 0) associated with the MA component.</param>
+        private void MaStep(double[][] lags, double[] data, double errMa)
+        {
+            var appendedData = new List<double[]>();
+            var laggedErrors = LaggedSeries(_maOrder, _residuals.ToArray());
+            for (var i = 0; i < laggedErrors.Length; i++)
+            {
+                var doubles = lags[i].ToList();
+                doubles.AddRange(laggedErrors[i]);
+                appendedData.Add(doubles.ToArray());
+            }
+
+            var maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(_maOrder).ToArray(),
+                method: DirectRegressionMethod.NormalEquations, intercept: _intercept);
+            for (var i = _maOrder; i < data.Length; i++) // Calculate the error assoc. with model.
+            {
+                var paramVector = _intercept
+                    ? Vector.Build.Dense(maFits.Skip(1).ToArray())
+                    : Vector.Build.Dense(maFits);
+                var residual = data[i] - Vector.Build.Dense(appendedData[i - _maOrder]).DotProduct(paramVector);
+                errMa += Math.Pow(residual, 2);
+            }
+
+            switch (_intercept)
+            {
+                case true:
+                    MaResidualError = errMa / (data.Length - Math.Max(_arOrder, _maOrder) - 1);
+                    MaParameters = maFits.Skip(1 + _arOrder).ToArray();
+                    ArParameters = maFits.Skip(1).Take(_arOrder).ToArray();
+                    Intercept = maFits[0];
+                    break;
+                default:
+                    MaResidualError = errMa / (data.Length - Math.Max(_arOrder, _maOrder) - 1);
+                    MaParameters = maFits.Skip(_arOrder).ToArray();
+                    ArParameters = maFits.Take(_arOrder).ToArray();
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Fits the autoregressive component in the <see cref="TwoStepFit"/> method.
+        /// </summary>
+        /// <param name="lags">An array of lagged data (<see cref="TimeSeriesIndicator.LaggedSeries"/>).</param>
+        /// <param name="data">The input series, differenced <see cref="_diffOrder"/> times.</param>
+        /// <param name="errAr">The residuals (by default 0) associated with the AR component.</param>
+        private void ArStep(double[][] lags, double[] data, double errAr)
+        {
+            double[] arFits;
             // The function (lags[time][lagged X]) |---> ΣᵢφᵢXₜ₋ᵢ 
             arFits = Fit.MultiDim(lags, data.Skip(_arOrder).ToArray(),
                 method: DirectRegressionMethod.NormalEquations);
@@ -214,44 +277,6 @@ namespace QuantConnect.Indicators
             if (_maOrder == 0)
             {
                 ArParameters = arFits; // Will not be thrown out
-            }
-
-            if (_maOrder > 0) // MA part as in (4) of mbhauser notes.
-            {
-                var appendedData = new List<double[]>();
-                var laggedErrors = LaggedSeries(_maOrder, _residuals.ToArray());
-                for (var i = 0; i < laggedErrors.Length; i++)
-                {
-                    var doubles = lags[i].ToList();
-                    doubles.AddRange(laggedErrors[i]);
-                    appendedData.Add(doubles.ToArray());
-                }
-
-                var maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(_maOrder).ToArray(),
-                    method: DirectRegressionMethod.NormalEquations, intercept: _intercept);
-                for (var i = _maOrder; i < data.Length; i++) // Calculate the error assoc. with model.
-                {
-                    var paramVector = _intercept
-                        ? Vector.Build.Dense(maFits.Skip(1).ToArray())
-                        : Vector.Build.Dense(maFits);
-                    var residual = data[i] - Vector.Build.Dense(appendedData[i - _maOrder]).DotProduct(paramVector);
-                    errMa += Math.Pow(residual, 2);
-                }
-
-                switch (_intercept)
-                {
-                    case true:
-                        MaResidualError = errMa / (data.Length - Math.Max(_arOrder, _maOrder) - 1);
-                        MaParameters = maFits.Skip(1 + _arOrder).ToArray();
-                        ArParameters = maFits.Skip(1).Take(_arOrder).ToArray();
-                        Intercept = maFits[0];
-                        break;
-                    default:
-                        MaResidualError = errMa / (data.Length - Math.Max(_arOrder, _maOrder) - 1);
-                        MaParameters = maFits.Skip(_arOrder).ToArray();
-                        ArParameters = maFits.Take(_arOrder).ToArray();
-                        break;
-                }
             }
         }
 

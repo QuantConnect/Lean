@@ -13,7 +13,7 @@
  * limitations under the License.
 */
 
-using System;
+using System.Linq;
 using Accord.Math;
 using NUnit.Framework;
 using QuantConnect.Indicators;
@@ -24,48 +24,62 @@ namespace QuantConnect.Tests.Indicators
     public class TimeSeriesIndicatorTests
     {
         [Test]
-        public void DifferencesAndUndifferencesSeries()
+        public void DifferencesSeries()
         {
-            var test = new double[100];
-            for (var i = 0; i < test.Length; i++)
-            {
-                switch (i % 2)
-                {
-                    case 0:
-                        test[i] = 1;
-                        break;
-                    default:
-                        test[i] = 2;
-                        break;
-                }
-            }
+            var test = EvenOddSeries();
 
             double[] heads;
             var differencer = TimeSeriesIndicator.DifferenceSeries(1, test, out heads);
             Assert.AreEqual(-1, differencer.Sum());
+        }
+
+        [Test]
+        public void UndifferencesSeries()
+        {
+            var test = EvenOddSeries();
+
+            double[] heads;
+            var differencer = TimeSeriesIndicator.DifferenceSeries(1, test, out heads);
             Assert.AreEqual(test.Sum(), TimeSeriesIndicator.InverseDifferencedSeries(differencer, heads).Sum());
         }
 
         [Test]
-        public void ProperlyLagsSeries()
+        public void LagsSeriesTest()
         {
-            var test = new double[100];
+            var test = EvenOddSeries(0, 1);
+            var lags = TimeSeriesIndicator.LaggedSeries(1, test);
+            
+            Assert.AreEqual(50, test.Sum());
+            Assert.AreEqual(49d, lags.Sum());
+        }
+
+        [Test]
+        public void CumulativeSumTest()
+        {
+            var test = EvenOddSeries(0, 1, 50);
+            var sums = TimeSeriesIndicator.CumulativeSum(test.ToList());
+            
+            Assert.AreEqual(25, test.Sum());
+            Assert.AreEqual(625, sums.Sum()); // From excel
+        }
+
+        private static double[] EvenOddSeries(int even = 1, int odd = 2, int len = 100)
+        {
+            var test = new double[len];
             for (var i = 0; i < test.Length; i++)
             {
                 switch (i % 2)
                 {
                     case 0:
-                        test[i] = 0;
+                        test[i] = even;
                         break;
                     default:
-                        test[i] = 1;
+                        test[i] = odd;
                         break;
                 }
             }
 
-            Console.WriteLine(test.Sum());
-            var lags = TimeSeriesIndicator.LaggedSeries(1, test);
-            Assert.AreEqual(49d, lags.Sum());
+            return test;
         }
     }
 }
