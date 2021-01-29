@@ -45,7 +45,6 @@
     <PackageReference Include="NodaTime" Version="1.3.4" />
     <PackageReference Include="QuantConnect.IBAutomater" Version="1.0.43" />
     <PackageReference Include="RestSharp" Version="106.6.10" />
-    <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.0" />
     <PackageReference Include="System.Security.Cryptography.Encoding" Version="4.3.0" />
     <PackageReference Include="System.Security.Cryptography.Primitives" Version="4.3.0" />
@@ -62,6 +61,7 @@
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Web" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
