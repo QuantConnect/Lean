@@ -28,4 +28,4 @@ jobs:
       - name: Generate & Publish python stubs
         run: |
           chmod +x ci_build_stubs.sh
-          sudo -E ./ci_build_stubs.sh -d -t -g #Ignore Publish as of since credentials are missing on CI
+          ./ci_build_stubs.sh -d -t -g #Ignore Publish as of since credentials are missing on CI
