@@ -63,16 +63,52 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public bool CanRunLocally
-        {
-            get { throw new NotImplementedException(); }
-        }
+        public bool CanRunLocally { get; } = true;
 
-        public Language[] Languages => new Language[] {Language.Python, Language.CSharp};
+        public Language[] Languages { get; } = { Language.Python, Language.CSharp };
 
-        public Dictionary<string, string> ExpectedStatistics
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            get { throw new NotImplementedException(); }
-        }
+            {"Total Trades","65"},
+            {"Average Win","0"},
+            {"Average Loss","0"},
+            {"Compounding Annual Return","0.0015"},
+            {"Drawdown","0.001"},
+            {"Expectancy","2.19"},
+            {"Net Profit","0.0013"},
+            {"Sharpe Ratio","0.993"},
+            {"Probabilistic Sharpe Ratio","0.4967"},
+            {"Loss Rate","0.29"},
+            {"Win Rate","0.71"},
+            {"Profit-Loss Ratio","3.5"},
+            {"Alpha","0.001"},
+            {"Beta","0"},
+            {"Annual Standard Deviation","0.001"},
+            {"Annual Variance","0"},
+            {"Information Ratio","-2.168"},
+            {"Tracking Error","0.099"},
+            {"Treynor Ratio","-5.187"},
+            {"Total Fees","65"},
+            {"Fitness Score","0"},
+            {"Kelly Criterion Estimate","0"},
+            {"Kelly Criterion Probability Value","0"},
+            {"Sortino Ratio","1.51"},
+            {"Return Over Maximum Drawdown","1.819"},
+            {"Portfolio Turnover","0"},
+            {"Total Insights Generated","0"},
+            {"Total Insights Closed","0"},
+            {"Total Insights Analysis Completed","0"},
+            {"Long Insight Count","0"},
+            {"Short Insight Count","0"},
+            {"Long/Short Ratio","1"},
+            {"Estimated Monthly Alpha Value","0"},
+            {"Total Accumulated Estimated Alpha Value","0"},
+            {"Mean Population Estimated Insight Value","0"},
+            {"Mean Population Direction","0"},
+            {"Mean Population Magnitude","0"},
+            {"Rolling Averaged Population Direction","0"},
+            {"Rolling Averaged Population Magnitude","0"},
+            {"OrderListHash","852801548"}
+        };
     }
 }
