@@ -185,19 +185,19 @@ namespace QuantConnect.Indicators
         private void TwoStepFit(double[] series) // Protected for any future inheritors (e.g., SARIMA)
         {
             _residuals = new List<double>();
-            double errAr = 0;
-            double errMa = 0;
+            double errorAr = 0;
+            double errorMa = 0;
             double[] arFits;
             var lags = _arOrder > 0 ? LaggedSeries(_arOrder, series) : new[] {series};
 
-            ArStep(lags, series, errAr);
+            ArStep(lags, series, errorAr);
 
             if (_maOrder <= 0)
             {
                 return;
             }
 
-            MaStep(lags, series, errMa);
+            MaStep(lags, series, errorMa);
         }
 
         /// <summary>
@@ -205,8 +205,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="lags">An array of lagged data (<see cref="TimeSeriesIndicator.LaggedSeries"/>).</param>
         /// <param name="data">The input series, differenced <see cref="_diffOrder"/> times.</param>
-        /// <param name="errMa">The residuals (by default 0) associated with the MA component.</param>
-        private void MaStep(double[][] lags, double[] data, double errMa)
+        /// <param name="errorMa">The summed residuals (by default 0) associated with the MA component.</param>
+        private void MaStep(double[][] lags, double[] data, double errorMa)
         {
             var appendedData = new List<double[]>();
             var laggedErrors = LaggedSeries(_maOrder, _residuals.ToArray());
@@ -225,19 +225,19 @@ namespace QuantConnect.Indicators
                     ? Vector.Build.Dense(maFits.Skip(1).ToArray())
                     : Vector.Build.Dense(maFits);
                 var residual = data[i] - Vector.Build.Dense(appendedData[i - _maOrder]).DotProduct(paramVector);
-                errMa += Math.Pow(residual, 2);
+                errorMa += Math.Pow(residual, 2);
             }
 
             switch (_intercept)
             {
                 case true:
-                    MaResidualError = errMa / (data.Length - Math.Max(_arOrder, _maOrder) - 1);
+                    MaResidualError = errorMa / (data.Length - Math.Max(_arOrder, _maOrder) - 1);
                     MaParameters = maFits.Skip(1 + _arOrder).ToArray();
                     ArParameters = maFits.Skip(1).Take(_arOrder).ToArray();
                     Intercept = maFits[0];
                     break;
                 default:
-                    MaResidualError = errMa / (data.Length - Math.Max(_arOrder, _maOrder) - 1);
+                    MaResidualError = errorMa / (data.Length - Math.Max(_arOrder, _maOrder) - 1);
                     MaParameters = maFits.Skip(_arOrder).ToArray();
                     ArParameters = maFits.Take(_arOrder).ToArray();
                     break;
@@ -249,8 +249,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="lags">An array of lagged data (<see cref="TimeSeriesIndicator.LaggedSeries"/>).</param>
         /// <param name="data">The input series, differenced <see cref="_diffOrder"/> times.</param>
-        /// <param name="errAr">The residuals (by default 0) associated with the AR component.</param>
-        private void ArStep(double[][] lags, double[] data, double errAr)
+        /// <param name="errorAr">The summed residuals (by default 0) associated with the AR component.</param>
+        private void ArStep(double[][] lags, double[] data, double errorAr)
         {
             double[] arFits;
             // The function (lags[time][lagged X]) |---> ΣᵢφᵢXₜ₋ᵢ 
@@ -267,11 +267,11 @@ namespace QuantConnect.Indicators
                 }
 
                 var residual = data[i] - Vector.Build.Dense(lags[i - _arOrder]).DotProduct(fittedVec);
-                errAr += Math.Pow(residual, 2);
+                errorAr += Math.Pow(residual, 2);
                 _residuals.Add(residual);
             }
 
-            ArResidualError = errAr / (data.Length - _arOrder - 1);
+            ArResidualError = errorAr / (data.Length - _arOrder - 1);
             if (_maOrder == 0)
             {
                 ArParameters = arFits; // Will not be thrown out
