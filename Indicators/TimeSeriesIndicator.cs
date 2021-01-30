@@ -23,7 +23,7 @@ namespace QuantConnect.Indicators
     /// </summary>
     public abstract class TimeSeriesIndicator : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
-        private double[] _diffHeads;
+        protected double[] _diffHeads;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -145,48 +145,6 @@ namespace QuantConnect.Indicators
             }
 
             return outSeries;
-        }
-
-        /// <summary>
-        /// Differences a time series d times.
-        /// </summary>
-        /// <param name="series">Series to difference</param>
-        /// <param name="d">The differencing order</param>
-        protected double[]
-            DifferenceSeries(int d, double[] series)
-        {
-            _diffHeads = new double[d];
-            if (d == 0)
-            {
-                return null;
-            }
-
-            var localSeries = series;
-            for (var j = 1; j <= d; j++)
-            {
-                var result = new double[localSeries.Length - 1];
-                _diffHeads[j - 1] = localSeries.Last();
-
-                for (var i = 0; i <= localSeries.Length - 2; i++)
-                {
-                    result[i] = localSeries[i] - localSeries[i + 1];
-                }
-
-                localSeries = result;
-            }
-
-            return localSeries;
-        }
-
-        /// <summary>
-        /// Undoes the differencing of a time series which has been differenced using <see cref="DifferenceSeries" />.
-        /// https://github.com/statsmodels/statsmodels/blob/04f00006a7aeb1c93d6894caa420698400da6c33/statsmodels/tsa/tsatools.py#L758
-        /// </summary>
-        /// <param name="series">Series to un-difference</param>
-        protected double[]
-            InverseDifferencedSeries(double[] series)
-        {
-            return InverseDifferencedSeries(series, _diffHeads);
         }
     }
 }

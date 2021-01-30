@@ -186,20 +186,19 @@ namespace QuantConnect.Indicators
         private void TwoStepFit(double[] series) // Protected for any future inheritors (e.g., SARIMA)
         {
             _residuals = new List<double>();
-            var data = _diffOrder > 0 ? DifferenceSeries(_diffOrder, series) : series; // Difference the series
             double errAr = 0;
             double errMa = 0;
             double[] arFits;
-            var lags = _arOrder > 0 ? LaggedSeries(_arOrder, data) : new[] {data};
+            var lags = _arOrder > 0 ? LaggedSeries(_arOrder, series) : new[] {series};
 
-            ArStep(lags, data, errAr);
+            ArStep(lags, series, errAr);
 
             if (_maOrder <= 0)
             {
                 return;
             }
 
-            MaStep(lags, data, errMa);
+            MaStep(lags, series, errMa);
         }
 
         /// <summary>
@@ -291,8 +290,8 @@ namespace QuantConnect.Indicators
             if (_rollingData.IsReady)
             {
                 var arrayData = _rollingData.ToArray();
+                arrayData = _diffOrder > 0 ? DifferenceSeries(_diffOrder, arrayData, out _diffHeads) : arrayData;
                 TwoStepFit(arrayData);
-                arrayData = _diffOrder > 0 ? DifferenceSeries(_diffOrder, arrayData) : arrayData;
                 double summants = 0;
                 if (_arOrder > 0)
                 {
@@ -314,7 +313,7 @@ namespace QuantConnect.Indicators
                 {
                     var dataCast = arrayData.ToList();
                     dataCast.Insert(0, summants); // Prepends
-                    summants = InverseDifferencedSeries(dataCast.ToArray()).First(); // Returns disintegrated series
+                    summants = InverseDifferencedSeries(dataCast.ToArray(), _diffHeads).First(); // Returns disintegrated series
                 }
 
                 return (decimal) summants;
