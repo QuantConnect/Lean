@@ -159,7 +159,7 @@ namespace QuantConnect.Indicators
             bool intercept
             )
             : this($"ARIMA(({arOrder}, {diffOrder}, {maOrder}), {period}, {intercept})", arOrder, diffOrder, maOrder,
-                period)
+                period, intercept)
         {
         }
 
