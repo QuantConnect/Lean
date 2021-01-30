@@ -32,7 +32,6 @@ namespace QuantConnect.Indicators
     /// where the first sum has an upper limit of <see cref="_arOrder" /> and the second <see cref="_maOrder" />.
     /// </summary>
     public class AutoRegressiveIntegratedMovingAverage : TimeSeriesIndicator, IIndicatorWarmUpPeriodProvider
-
     {
         /// <summary>
         /// Differencing coefficient (d). Determines how many times the series should be differenced before fitting the
@@ -302,10 +301,12 @@ namespace QuantConnect.Indicators
                 }
 
                 if (_maOrder > 0)
+                {
                     for (var i = 0; i < _maOrder; i++) // MA Parameters
                     {
                         summants += MaParameters[i] * _residuals[_maOrder + i + 1];
                     }
+                }
 
                 summants += Intercept; // By default equals 0
 
