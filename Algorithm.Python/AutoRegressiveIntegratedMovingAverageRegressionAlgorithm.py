@@ -34,7 +34,7 @@ class AutoRegressiveIntegratedMovingAverageRegressionAlgorithm(QCAlgorithm):
         self.EnableAutomaticIndicatorWarmUp = True
         self.AddEquity("SPY", Resolution.Daily)
         self.arima = self.ARIMA("SPY", 1, 1, 1, 50)
-        self.ar = self.ARIMA("SPY", 1, 1, 1, 50)
+        self.ar = self.ARIMA("SPY", 1, 1, 0, 50)
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
