@@ -357,7 +357,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             var symbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
             var resultionTimeSpan = request.Resolution.ToTimeSpan();
             var resolutionString = ConvertResolution(request.Resolution);
-            var resolutionTimeStamp = (long)request.Resolution.ToTimeSpan().TotalMilliseconds;
+            var resolutionTotalMilliseconds = (long)request.Resolution.ToTimeSpan().TotalMilliseconds;
             var endpoint = $"{ApiVersion}/candles/trade:{resolutionString}:{symbol}/hist?limit=1000&sort=1";
 
             // Bitfinex API only allows to support trade bar history requests.
@@ -390,7 +390,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 // we proceed to avoid an exception to be thrown
                 if (candles.Any())
                 {
-                    startTimeStamp = candles.Last().Timestamp + resolutionTimeStamp;
+                    startTimeStamp = candles.Last().Timestamp + resolutionTotalMilliseconds;
                 }
                 else
                 {
