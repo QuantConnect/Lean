@@ -28,24 +28,24 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     public class FuncDataQueueHandlerUniverseProvider : FuncDataQueueHandler, IDataQueueUniverseProvider
     {
         private readonly Func<Symbol, bool, string, IEnumerable<Symbol>> _lookupSymbolsFunction;
-        private readonly Func<SecurityType, bool> _canAdvanceTimeFunction;
+        private readonly Func<bool> _canPerformSelectionFunction;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FuncDataQueueHandlerUniverseProvider"/> class
         /// </summary>
         /// <param name="getNextTicksFunction">The functional implementation for the <see cref="FuncDataQueueHandler.GetNextTicks"/> function</param>
         /// <param name="lookupSymbolsFunction">The functional implementation for the <see cref="IDataQueueUniverseProvider.LookupSymbols"/> function</param>
-        /// <param name="canAdvanceTimeFunction">The functional implementation for the <see cref="IDataQueueUniverseProvider.CanAdvanceTime"/> function</param>
+        /// <param name="canPerformSelectionFunction">The functional implementation for the <see cref="IDataQueueUniverseProvider.CanPerformSelection"/> function</param>
         /// <param name="timeProvider">The time provider instance to use</param>
         public FuncDataQueueHandlerUniverseProvider(
             Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction,
             Func<Symbol, bool, string, IEnumerable<Symbol>> lookupSymbolsFunction,
-            Func<SecurityType, bool> canAdvanceTimeFunction,
+            Func<bool> canPerformSelectionFunction,
             ITimeProvider timeProvider)
             : base(getNextTicksFunction, timeProvider)
         {
             _lookupSymbolsFunction = lookupSymbolsFunction;
-            _canAdvanceTimeFunction = canAdvanceTimeFunction;
+            _canPerformSelectionFunction = canPerformSelectionFunction;
         }
 
         /// <summary>
@@ -61,13 +61,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Returns whether the time can be advanced or not.
+        /// Returns whether selection can take place or not.
         /// </summary>
-        /// <param name="securityType">The security type</param>
-        /// <returns>true if the time can be advanced</returns>
-        public bool CanAdvanceTime(SecurityType securityType)
+        /// <returns>True if selection can take place</returns>
+        public bool CanPerformSelection()
         {
-            return _canAdvanceTimeFunction(securityType);
+            return _canPerformSelectionFunction();
         }
     }
 }
