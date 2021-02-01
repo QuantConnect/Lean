@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data.Shortable;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 
@@ -23,8 +25,14 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class AtreyuBrokerageModel : DefaultBrokerageModel
     {
+        private readonly IShortableProvider _shortableProvider;
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
         public AtreyuBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
         {
+            _shortableProvider = new AtreyuShortableProvider(SecurityType.Equity, Market.USA);
         }
 
         /// <summary>
@@ -35,6 +43,15 @@ namespace QuantConnect.Brokerages
         public override IFeeModel GetFeeModel(Security security)
         {
             return new AtreyuFeeModel();
+        }
+
+        /// <summary>
+        /// Gets the shortable provider
+        /// </summary>
+        /// <returns>Shortable provider</returns>
+        public override IShortableProvider GetShortableProvider()
+        {
+            return _shortableProvider;
         }
     }
 }
