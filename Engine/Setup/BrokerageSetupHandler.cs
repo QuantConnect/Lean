@@ -312,7 +312,9 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future, SecurityType.FutureOption, SecurityType.Crypto
                 };
-                var minResolution = new Lazy<Resolution>(() => algorithm.Securities.Select(x => x.Value.Resolution).DefaultIfEmpty(Resolution.Second).Min());
+
+                var minResolution = new Lazy<Resolution>(() => algorithm.Securities.Select(x => x.Value.Resolution)
+                    .DefaultIfEmpty(algorithm.UniverseSettings.Resolution).DefaultIfEmpty(Resolution.Second).Min());
 
                 Log.Trace("BrokerageSetupHandler.Setup(): Fetching open orders from brokerage...");
                 try
