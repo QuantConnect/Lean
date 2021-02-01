@@ -777,6 +777,36 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsTrue(fineWasCalled);
         }
 
+        [TestCase(SecurityType.Future)]
+        [TestCase(SecurityType.Option)]
+        public void AddChainUniverseCanNotAdvanceTime(SecurityType securityType)
+        {
+            _algorithm.UniverseSettings.Resolution = Resolution.Daily;
+            _algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
+            // this reproduces GH issue #5245 where time can not advance and will keep it's default value
+            var feed = RunDataFeed(lookupSymbolsFunction: null, canPerformSelection: () => false);
+
+            if (securityType == SecurityType.Future)
+            {
+                _algorithm.AddFuture(Futures.Metals.Gold);
+            }
+            else
+            {
+                _algorithm.AddOption("AAPL");
+            }
+            // will add the universe
+            _algorithm.OnEndOfTimeStep();
+            ConsumeBridge(feed, TimeSpan.FromSeconds(2), ts =>
+            {
+                if (ts.UniverseData.Count > 0)
+                {
+                }
+            }, secondsTimeStep: 60 * 60 * 3, // 3 hour time step
+                alwaysInvoke: true);
+
+            Assert.AreNotEqual(AlgorithmStatus.RuntimeError, _algorithm.Status);
+        }
+
         [Test]
         public void ConstituentsUniverse()
         {
@@ -1114,7 +1144,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
 
         private IDataFeed RunDataFeed(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null, List<string> crypto = null,
-            Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null)
+            Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null,
+            Func<Symbol, bool, string, IEnumerable<Symbol>> lookupSymbolsFunction = null,
+            Func<bool> canPerformSelection = null)
         {
             _algorithm.SetStartDate(_startDate);
 
@@ -1147,7 +1179,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // result handler is used due to dependency in SubscriptionDataReader
             var resultHandler = new BacktestingResultHandler();
 
-            _dataQueueHandler = new FuncDataQueueHandler(getNextTicksFunction, _manualTimeProvider);
+            _dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(getNextTicksFunction, lookupSymbolsFunction, canPerformSelection, _manualTimeProvider);
 
             _feed = new TestableLiveTradingDataFeed(_dataQueueHandler);
             var mapFileProvider = new LocalDiskMapFileProvider();
@@ -1957,12 +1989,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 },
 
                 // CanAdvanceTime
-                secType =>
+                () =>
                 {
                     var time = timeProvider.GetUtcNow().ConvertFromUtc(algorithmTimeZone);
                     var result = time.Hour >= 1 && time.Hour < 23 && time.Day != 21;
 
-                    Log.Debug($"CanAdvanceTime() called at {time} ({algorithmTimeZone}), returning {result}");
+                    Log.Debug($"CanPerformSelection() called at {time} ({algorithmTimeZone}), returning {result}");
 
                     return result;
                 },

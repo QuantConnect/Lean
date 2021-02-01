@@ -355,10 +355,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     throw new NotSupportedException("The DataQueueHandler does not support Options.");
                 }
 
-                var timeProvider = new PredicateTimeProvider(_timeProvider,
-                    time => symbolUniverse.CanAdvanceTime(config.SecurityType));
-
-                var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, timeProvider);
+                var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, _timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
 
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
@@ -373,10 +370,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     throw new NotSupportedException("The DataQueueHandler does not support Futures.");
                 }
 
-                var timeProvider = new PredicateTimeProvider(_timeProvider,
-                    time => symbolUniverse.CanAdvanceTime(config.SecurityType));
-
-                var enumeratorFactory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, timeProvider);
+                var enumeratorFactory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, _timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
 
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
