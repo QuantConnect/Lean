@@ -27,11 +27,9 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture]
     public class AutoregressiveIntegratedMovingAverageTests : CommonIndicatorTests<IndicatorDataPoint>
     {
-        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
-        {
-            var ARIMA = new AutoRegressiveIntegratedMovingAverage("ARIMA", 1, 0, 1, 50);
-            return ARIMA;
-        }
+        private static List<decimal> betweenMethods;
+        private double _ssIndicator;
+        private double _ssTest;
 
         protected override string TestFileName => "spy_arima.csv";
         protected override string TestColumnName => "ARIMA";
@@ -58,6 +56,56 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void PredictionErrorAgainstExternalData()
         {
+            if (betweenMethods == null)
+            {
+                betweenMethods = FillDataPerMethod();
+            }
+            
+            // Testing predictive performance vs. external.
+            Assert.LessOrEqual(_ssIndicator, _ssTest);
+        }
+
+        [Test]
+        public override void WarmsUpProperly() // Overridden in order to ensure matrix inversion during ARIMA fitting.
+        {
+            var indicator = CreateIndicator();
+            var period = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
+            if (!period.HasValue)
+            {
+                Assert.Ignore($"{indicator.Name} is not IIndicatorWarmUpPeriodProvider");
+                return;
+            }
+
+            var startDate = new DateTime(2019, 1, 1);
+            for (decimal i = 0; i < period.Value; i++)
+            {
+                indicator.Update(startDate, 100m * (1m + 0.05m * i)); // Values should be sufficiently different, now.
+                Assert.AreEqual(i == period.Value - 1, indicator.IsReady);
+            }
+
+            Assert.AreEqual(period.Value, indicator.Samples);
+        }
+
+        [Test]
+        public void ExpectedDifferenceFromExternal()
+        {
+            if (betweenMethods == null)
+            {
+                betweenMethods = FillDataPerMethod();
+            }
+            
+            Assert.LessOrEqual(1.39080827453985, betweenMethods.Average()); // Mean difference
+            Assert.LessOrEqual(1.19542348709062, betweenMethods.ToDoubleArray().StandardDeviation()); // Std. Dev
+        }
+
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+        {
+            var ARIMA = new AutoRegressiveIntegratedMovingAverage("ARIMA", 1, 0, 1, 50);
+            return ARIMA;
+        }
+
+        private List<decimal> FillDataPerMethod()
+        {
             var ARIMA = CreateIndicator();
             var realValues = new List<decimal>();
             var testValues = new List<decimal[]>();
@@ -80,43 +128,18 @@ namespace QuantConnect.Tests.Indicators
                 }
             }
 
-            var ssIndicator = 0d;
-            var ssTest = 0d;
+            _ssIndicator = 0d;
+            _ssTest = 0d;
             for (var i = 51; i < realValues.Count; i++)
             {
                 var test = realValues[i];
                 var arimas = testValues[i - 50];
-                ssIndicator += Math.Pow((double) (arimas[0] - test), 2);
-                ssTest += Math.Pow((double) (arimas[1] - test), 2);
+                _ssIndicator += Math.Pow((double) (arimas[0] - test), 2);
+                _ssTest += Math.Pow((double) (arimas[1] - test), 2);
                 betweenMethods.Add(Math.Abs(arimas[0] - arimas[1]));
             }
 
-            Console.Write($"Prediction error for AutoRegressiveIntegratedMovingAverage: {ssIndicator}\n");
-            Console.Write($"Prediction error for External: {ssTest}\n");
-            Console.Write(
-                $"Mean difference between methods: {betweenMethods.Average()}, Std: {betweenMethods.ToDoubleArray().StandardDeviation()} ");
-            Assert.LessOrEqual(ssIndicator, ssTest);
-        }
-
-        [Test]
-        public override void WarmsUpProperly() // Overridden in order to ensure matrix inversion during ARIMA fitting.
-        {
-            var indicator = CreateIndicator();
-            var period = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
-            if (!period.HasValue)
-            {
-                Assert.Ignore($"{indicator.Name} is not IIndicatorWarmUpPeriodProvider");
-                return;
-            }
-
-            var startDate = new DateTime(2019, 1, 1);
-            for (decimal i = 0; i < period.Value; i++)
-            {
-                indicator.Update(startDate, 100m * (1m + 0.05m * i)); // Values should be sufficiently different, now.
-                Assert.AreEqual(i == period.Value - 1, indicator.IsReady);
-            }
-
-            Assert.AreEqual(period.Value, indicator.Samples);
+            return betweenMethods;
         }
     }
 }
