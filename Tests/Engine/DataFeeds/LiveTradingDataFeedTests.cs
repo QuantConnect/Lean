@@ -784,7 +784,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm.UniverseSettings.Resolution = Resolution.Daily;
             _algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             // this reproduces GH issue #5245 where time can not advance and will keep it's default value
-            var feed = RunDataFeed(lookupSymbolsFunction: null, canAdvanceTime: type => false);
+            var feed = RunDataFeed(lookupSymbolsFunction: null, canPerformSelection: () => false);
 
             if (securityType == SecurityType.Future)
             {
@@ -1146,7 +1146,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private IDataFeed RunDataFeed(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null, List<string> crypto = null,
             Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null,
             Func<Symbol, bool, string, IEnumerable<Symbol>> lookupSymbolsFunction = null,
-            Func<SecurityType, bool> canAdvanceTime = null)
+            Func<bool> canPerformSelection = null)
         {
             _algorithm.SetStartDate(_startDate);
 
@@ -1179,7 +1179,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // result handler is used due to dependency in SubscriptionDataReader
             var resultHandler = new BacktestingResultHandler();
 
-            _dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(getNextTicksFunction, lookupSymbolsFunction, canAdvanceTime, _manualTimeProvider);
+            _dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(getNextTicksFunction, lookupSymbolsFunction, canPerformSelection, _manualTimeProvider);
 
             _feed = new TestableLiveTradingDataFeed(_dataQueueHandler);
             var mapFileProvider = new LocalDiskMapFileProvider();
@@ -1989,12 +1989,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 },
 
                 // CanAdvanceTime
-                secType =>
+                () =>
                 {
                     var time = timeProvider.GetUtcNow().ConvertFromUtc(algorithmTimeZone);
                     var result = time.Hour >= 1 && time.Hour < 23 && time.Day != 21;
 
-                    Log.Debug($"CanAdvanceTime() called at {time} ({algorithmTimeZone}), returning {result}");
+                    Log.Debug($"CanPerformSelection() called at {time} ({algorithmTimeZone}), returning {result}");
 
                     return result;
                 },
