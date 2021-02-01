@@ -181,7 +181,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The <see cref="ITimeProvider"/> to use</returns>
         protected override ITimeProvider GetTimeProvider()
         {
-            return new RealTimeProvider();
+            return RealTimeProvider.Instance;
         }
 
         /// <summary>

@@ -105,8 +105,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             if (_needNewCurrent)
             {
-                var localTime = _timeProvider.GetUtcNow()
-                    .RoundDown(_subscriptionRequest.Configuration.Increment)
+                var now = _timeProvider.GetUtcNow();
+                // in live trading, we might be initialized during a period where time might no be allowed to advance
+                // for example during IB reset times, let's skip this case and retry again
+                if (now == default(DateTime))
+                {
+                    Current = null;
+                    return true;
+                }
+
+                var localTime = now.RoundDown(_subscriptionRequest.Configuration.Increment)
                     .ConvertFromUtc(_subscriptionRequest.Configuration.ExchangeTimeZone);
 
                 // loading the list of futures contracts and converting them into zip entries
