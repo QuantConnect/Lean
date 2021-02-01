@@ -78,6 +78,19 @@ namespace QuantConnect
         private static readonly ZoneLocalMappingResolver _mappingResolver = Resolvers.CreateMappingResolver(Resolvers.ReturnLater, Resolvers.ReturnStartOfIntervalAfter);
 
         /// <summary>
+        /// Get's the default resolution the algorithm should use when initializing subscriptions
+        /// for open orders or holdings
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <returns>The resolution to use</returns>
+        public static Resolution GetDefaultResolution(this IAlgorithm algorithm)
+        {
+            return algorithm.SubscriptionManager.Subscriptions.Select(config => config.Resolution)
+                .DefaultIfEmpty(algorithm.UniverseSettings.Resolution)
+                .Min();
+        }
+
+        /// <summary>
         /// The offset span from the market close to liquidate or exercise a security on the delisting date
         /// </summary>
         /// <remarks>Will no be used in live trading</remarks>

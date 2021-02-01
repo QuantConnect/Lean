@@ -14,11 +14,14 @@
 */
 
 using System;
+using System.Collections;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
@@ -35,6 +38,46 @@ namespace QuantConnect.Tests.Algorithm
         private const BrokerageName BrokerageName = QuantConnect.Brokerages.BrokerageName.FxcmBrokerage;
         private const int RoundingPrecision = 20;
         private readonly MarketOrder _order = new MarketOrder { Quantity = 1000 };
+
+        [Test]
+        public void DefaultResolution()
+        {
+            var algorithm = GetAlgorithm();
+            Assert.AreEqual(Resolution.Minute, algorithm.GetDefaultResolution());
+        }
+
+        [Test]
+        public void DefaultResolutionWithSecurityAdded()
+        {
+            var algorithm = GetAlgorithm();
+            algorithm.AddForex(Ticker, Resolution.Second, Market);
+            Assert.AreEqual(Resolution.Second, algorithm.GetDefaultResolution());
+        }
+
+        [Test]
+        public void DefaultResolutionUniverseSettings()
+        {
+            var algorithm = GetAlgorithm();
+            algorithm.UniverseSettings.Resolution = Resolution.Tick;
+            Assert.AreEqual(Resolution.Tick, algorithm.GetDefaultResolution());
+        }
+
+        [Test]
+        public void DefaultResolutionWithUniverseFuture()
+        {
+            var algorithm = GetAlgorithm();
+            algorithm.AddFuture(Futures.Indices.SP500EMini, Resolution.Tick);
+            Assert.AreEqual(Resolution.Tick, algorithm.GetDefaultResolution());
+        }
+
+        [Test]
+        public void DefaultResolutionWithUniverseCoarse()
+        {
+            var algorithm = GetAlgorithm();
+            algorithm.AddUniverse(coarse => Enumerable.Empty<Symbol>(),
+                fine => Enumerable.Empty<Symbol>());
+            Assert.AreEqual(algorithm.UniverseSettings.Resolution, algorithm.GetDefaultResolution());
+        }
 
         [Test]
         public void Validates_SetBrokerageModel_AddForex()
