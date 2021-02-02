@@ -106,20 +106,63 @@ namespace QuantConnect.Tests.Engine.Setup
         }
 
         [Test, TestCaseSource(nameof(GetExistingHoldingsAndOrdersTestCaseData))]
+        public void SecondExistingHoldingsAndOrdersResolution(Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected)
+        {
+            ExistingHoldingsAndOrdersResolution(getHoldings, getOrders, expected, Resolution.Second);
+        }
+
+        [Test, TestCaseSource(nameof(GetExistingHoldingsAndOrdersTestCaseData))]
+        public void MinuteExistingHoldingsAndOrdersResolution(Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected)
+        {
+            ExistingHoldingsAndOrdersResolution(getHoldings, getOrders, expected, Resolution.Minute);
+        }
+
+        [Test, TestCaseSource(nameof(GetExistingHoldingsAndOrdersTestCaseData))]
+        public void TickExistingHoldingsAndOrdersResolution(Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected)
+        {
+            ExistingHoldingsAndOrdersResolution(getHoldings, getOrders, expected, Resolution.Tick);
+        }
+
+        public void ExistingHoldingsAndOrdersResolution(Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected, Resolution resolution)
+        {
+            var algorithm = new TestAlgorithm { UniverseSettings = { Resolution = resolution } };
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = GetJob();
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var objectStore = new Mock<IObjectStore>();
+            var brokerage = new Mock<IBrokerage>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(getHoldings);
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(getOrders);
+
+            var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+
+            var result = setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object));
+
+            Assert.AreEqual(expected, result);
+
+            foreach (var symbol in algorithm.Securities.Keys)
+            {
+                var configs = algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol);
+                Assert.AreEqual(algorithm.UniverseSettings.Resolution, configs.First().Resolution);
+            }
+        }
+
+        [Test, TestCaseSource(nameof(GetExistingHoldingsAndOrdersTestCaseData))]
         public void LoadsExistingHoldingsAndOrders(Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected)
         {
             var algorithm = new TestAlgorithm();
             algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
-            var job = new LiveNodePacket
-            {
-                UserId = 1,
-                ProjectId = 1,
-                DeployId = "1",
-                Brokerage = "PaperBrokerage",
-                DataQueueHandler = "none"
-            };
-            // Increasing RAM limit, else the tests fail. This is happening in master, when running all the tests together, locally (not travis).
-            job.Controls.RamAllocation = 1024 * 1024 * 1024;
+            var job = GetJob();
 
             var resultHandler = new Mock<IResultHandler>();
             var transactionHandler = new Mock<ITransactionHandler>();
@@ -164,16 +207,7 @@ namespace QuantConnect.Tests.Engine.Setup
             algorithm.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
 
             algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
-            var job = new LiveNodePacket
-            {
-                UserId = 1,
-                ProjectId = 1,
-                DeployId = "1",
-                Brokerage = "PaperBrokerage",
-                DataQueueHandler = "none"
-            };
-            // Increasing RAM limit, else the tests fail. This is happening in master, when running all the tests together, locally (not travis).
-            job.Controls.RamAllocation = 1024 * 1024 * 1024;
+            var job = GetJob();
 
             var resultHandler = new Mock<IResultHandler>();
             var transactionHandler = new Mock<ITransactionHandler>();
@@ -212,16 +246,7 @@ namespace QuantConnect.Tests.Engine.Setup
             algorithm.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
 
             algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
-            var job = new LiveNodePacket
-            {
-                UserId = 1,
-                ProjectId = 1,
-                DeployId = "1",
-                Brokerage = "PaperBrokerage",
-                DataQueueHandler = "none"
-            };
-            // Increasing RAM limit, else the tests fail. This is happening in master, when running all the tests together, locally (not travis).
-            job.Controls.RamAllocation = 1024 * 1024 * 1024;
+            var job = GetJob();
 
             var resultHandler = new Mock<IResultHandler>();
             var transactionHandler = new Mock<ITransactionHandler>();
@@ -269,15 +294,7 @@ namespace QuantConnect.Tests.Engine.Setup
             Assert.AreEqual(new DateTime(1998, 1, 1), algorithm.UtcTime);
 
             algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
-            var job = new LiveNodePacket
-            {
-                UserId = 1,
-                ProjectId = 1,
-                DeployId = "1",
-                Brokerage = "PaperBrokerage",
-                DataQueueHandler = "none",
-                Controls = new Controls { RamAllocation = 4096 } // no real limit
-            };
+            var job = GetJob();
 
             var resultHandler = new Mock<IResultHandler>();
             var transactionHandler = new Mock<ITransactionHandler>();
@@ -311,15 +328,8 @@ namespace QuantConnect.Tests.Engine.Setup
             var algorithm = new TestAlgorithm();
 
             algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
-            var job = new LiveNodePacket
-            {
-                UserId = 1,
-                ProjectId = 1,
-                DeployId = "1",
-                Brokerage = "TestBrokerage",
-                DataQueueHandler = "none",
-                Controls = new Controls { RamAllocation = 4096 } // no real limit
-            };
+            var job = GetJob();
+            job.Brokerage = "TestBrokerage";
 
             var resultHandler = new Mock<IResultHandler>();
             var transactionHandler = new Mock<ITransactionHandler>();
@@ -507,7 +517,7 @@ namespace QuantConnect.Tests.Engine.Setup
             public TestAlgorithm(Action beforePostInitializeAction = null)
             {
                 _beforePostInitializeAction = beforePostInitializeAction;
-                SubscriptionManager.SetDataManager(new DataManagerStub(this, new MockDataFeed(), liveMode:true));
+                SubscriptionManager.SetDataManager(new DataManagerStub(this, new MockDataFeed(), liveMode: true));
             }
 
             public override void Initialize() { }
@@ -517,6 +527,21 @@ namespace QuantConnect.Tests.Engine.Setup
                 _beforePostInitializeAction?.Invoke();
                 base.PostInitialize();
             }
+        }
+
+        private LiveNodePacket GetJob()
+        {
+            var job = new LiveNodePacket
+            {
+                UserId = 1,
+                ProjectId = 1,
+                DeployId = "1",
+                Brokerage = "PaperBrokerage",
+                DataQueueHandler = "none"
+            };
+            // Increasing RAM limit, else the tests fail. This is happening in master, when running all the tests together, locally (not travis).
+            job.Controls.RamAllocation = 1024 * 1024 * 1024;
+            return job;
         }
 
         private class NonDequeingTestResultsHandler : TestResultHandler
@@ -539,7 +564,7 @@ namespace QuantConnect.Tests.Engine.Setup
 
             public void PublicGetOpenOrders(IAlgorithm algorithm, IResultHandler resultHandler, ITransactionHandler transactionHandler, IBrokerage brokerage)
             {
-                GetOpenOrders(algorithm, resultHandler, transactionHandler, brokerage, _supportedSecurityTypes, Resolution.Second);
+                GetOpenOrders(algorithm, resultHandler, transactionHandler, brokerage, _supportedSecurityTypes);
             }
         }
     }
