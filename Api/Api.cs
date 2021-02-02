@@ -745,9 +745,9 @@ namespace QuantConnect.Api
         /// <summary>
         /// Gets the link to the downloadable data.
         /// </summary>
-        /// <param name="key">File path key representing the data requested</param>
+        /// <param name="filePath">File path representing the data requested</param>
         /// <returns><see cref="Link"/> to the downloadable data.</returns>
-        public Link ReadDataLink(string key)
+        public Link ReadDataLink(string filePath)
         {
             var request = new RestRequest("data/read", Method.POST)
             {
@@ -757,7 +757,7 @@ namespace QuantConnect.Api
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
             {
                 format = "link",
-                key
+                filePath
             }), ParameterType.RequestBody);
 
             Link result;
@@ -792,22 +792,23 @@ namespace QuantConnect.Api
         /// <summary>
         /// Method to download and save the data purchased through QuantConnect
         /// </summary>
-        /// <param name="key">File path key representing the data requested</param>
+        /// <param name="filePath">File path representing the data requested</param>
         /// <returns>A <see cref="bool"/> indicating whether the data was successfully downloaded or not.</returns>
 
-        public bool DownloadData(string key)
+        public bool DownloadData(string filePath)
         {
             // Get a link to the data
-            var link = ReadDataLink(key);
+            var link = ReadDataLink(filePath);
 
             // Make sure the link was successfully retrieved
             if (!link.Success)
                 return false;
 
             // Make sure the directory exist before writing
-            if (!Directory.Exists(key))
+            var directory = Path.GetDirectoryName(filePath);
+            if (!Directory.Exists(directory))
             {
-                Directory.CreateDirectory(key);
+                Directory.CreateDirectory(directory);
             }
 
             // Download and save the data
@@ -823,24 +824,20 @@ namespace QuantConnect.Api
             {
                 try
                 {
-                    Symbol symbol;
-                    DateTime date;
-                    Resolution resolution;
-                    LeanData.TryParsePath(key, out symbol, out date, out resolution);
                     var contentObj = JObject.Parse(response.Content);
                     var message = contentObj["message"].Value<string>();
-                    Log.Error($"Api.DownloadData(): Failed to download zip for {symbol} {resolution} data for date {date}, Api response: {message}");
+                    Log.Error($"Api.DownloadData(): Failed to download zip for path {filePath}, Api response: {message}");
                 }
                 catch
                 {
-                    Log.Error($"Api.DownloadData(): Failed to download zip for key ({key})");
+                    Log.Error($"Api.DownloadData(): Failed to download zip for path ({filePath})");
                 }
 
                 return false;
             }
             
             // Any other case save the content to given path
-            response.RawBytes.SaveAs(key);
+            response.RawBytes.SaveAs(filePath);
             return true;
         }
 

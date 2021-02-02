@@ -48,27 +48,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Retrieves data to be used in an algorithm.
         /// If file does not exist, an attempt is made to download them from the api
         /// </summary>
-        /// <param name="key">A string representing where the data is stored</param>
+        /// <param name="filePath">File path representing where the data requested</param>
         /// <returns>A <see cref="Stream"/> of the data requested</returns>
-        public Stream Fetch(string key)
+        public Stream Fetch(string filePath)
         {
             Symbol symbol;
             DateTime date;
             Resolution resolution;
 
             // Fetch the details of this data request
-            if (LeanData.TryParsePath(key, out symbol, out date, out resolution))
+            if (LeanData.TryParsePath(filePath, out symbol, out date, out resolution))
             {
-                if (!File.Exists(key) || IsOutOfDate(resolution, key))
+                if (!File.Exists(filePath) || IsOutOfDate(resolution, filePath))
                 {
-                    return DownloadData(key, symbol, date, resolution);
+                    return DownloadData(filePath, symbol, date, resolution);
                 }
 
                 // Use the file already on the disk
-                return new FileStream(key, FileMode.Open, FileAccess.Read, FileShare.Read);
+                return new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             }
 
-            Log.Error("ApiDataProvider.Fetch(): failed to parse key {0}", key);
+            Log.Error("ApiDataProvider.Fetch(): failed to parse file path key {0}", filePath);
             return null;
         }
 
@@ -88,19 +88,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Attempt to download data using the Api for and return a FileStream of that data.
         /// </summary>
-        /// <param name="key">The path to store the file</param>
+        /// <param name="filePath">The path to store the file</param>
         /// <param name="symbol">The symbol we are downloading</param>
         /// <param name="date">The date of the data</param>
         /// <param name="resolution">The resolution of the data</param>
         /// <returns>A FileStream of the data</returns>
-        private FileStream DownloadData(string key, Symbol symbol, DateTime date, Resolution resolution)
+        private FileStream DownloadData(string filePath, Symbol symbol, DateTime date, Resolution resolution)
         {
             Log.Trace("ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for symbol({0}), resolution({1}) and date({2}).",
                 symbol.Value,
                 resolution,
                 date.Date.ToShortDateString());
 
-            var downloadSuccessful = _api.DownloadData(key);
+            var downloadSuccessful = _api.DownloadData(filePath);
 
             if (downloadSuccessful)
             {
@@ -109,13 +109,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     resolution,
                     date.Date.ToShortDateString());
 
-                return new FileStream(key, FileMode.Open, FileAccess.Read, FileShare.Read);
+                return new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             }
 
             // Failed to download
             Log.Error("ApiDataProvider.Fetch(): Unable to remotely retrieve data for path {0}. " +
                 "Please make sure you have the necessary data in your online QuantConnect data library.",
-                key);
+                filePath);
             return null;
         }
     }

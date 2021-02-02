@@ -218,11 +218,11 @@ namespace QuantConnect.Tests.API
         [Test]
         public void NonExistantData_WillBeDownloaded_Unsuccessfully()
         {
-            var fakeKey = Path.Combine(_dataFolder, "forex/oanda/minute/eurusd/19891011_quote.zip");
-            var nonExistentData = _api.DownloadData(fakeKey);
+            var fakePath = Path.Combine(_dataFolder, "forex/oanda/minute/eurusd/19891011_quote.zip");
+            var nonExistentData = _api.DownloadData(fakePath);
 
             Assert.IsFalse(nonExistentData);
-            Assert.IsFalse(Directory.Exists(fakeKey));
+            Assert.IsFalse(Directory.Exists(fakePath));
         }
 
         /// <summary>

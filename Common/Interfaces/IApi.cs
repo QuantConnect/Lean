@@ -181,16 +181,16 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets the link to the downloadable data.
         /// </summary>
-        /// <param name="key">File path key representing the data requested</param>
+        /// <param name="filePath">File path representing the data requested</param>
         /// <returns>Link to the downloadable data.</returns>
-        Link ReadDataLink(string Key);
+        Link ReadDataLink(string filePath);
 
         /// <summary>
         /// Method to download and save the data purchased through QuantConnect
         /// </summary>
-        /// <param name="key">File path key representing the data requested</param>
+        /// <param name="filePath">File path representing the data requested</param>
         /// <returns>A bool indicating whether the data was successfully downloaded or not.</returns>
-        bool DownloadData(string key);
+        bool DownloadData(string filePath);
 
         /// <summary>
         /// Create a new live algorithm for a logged in user.
