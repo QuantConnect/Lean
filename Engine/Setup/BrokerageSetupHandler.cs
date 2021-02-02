@@ -315,12 +315,10 @@ namespace QuantConnect.Lean.Engine.Setup
                     SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future, SecurityType.FutureOption, SecurityType.Crypto
                 };
 
-                var minResolution = algorithm.GetDefaultResolution();
-
                 Log.Trace("BrokerageSetupHandler.Setup(): Fetching open orders from brokerage...");
                 try
                 {
-                    GetOpenOrders(algorithm, parameters.ResultHandler, parameters.TransactionHandler, brokerage, supportedSecurityTypes, minResolution);
+                    GetOpenOrders(algorithm, parameters.ResultHandler, parameters.TransactionHandler, brokerage, supportedSecurityTypes);
                 }
                 catch (Exception err)
                 {
@@ -353,7 +351,7 @@ namespace QuantConnect.Lean.Engine.Setup
                             continue;
                         }
 
-                        AddUnrequestedSecurity(algorithm, holding.Symbol, minResolution);
+                        AddUnrequestedSecurity(algorithm, holding.Symbol);
 
                         var security = algorithm.Securities[holding.Symbol];
                         var exchangeTime = utcNow.ConvertFromUtc(security.Exchange.TimeZone);
@@ -412,16 +410,16 @@ namespace QuantConnect.Lean.Engine.Setup
             return Errors.Count == 0;
         }
 
-        private void AddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol, Resolution minResolution)
+        private void AddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol)
         {
             if (!algorithm.Portfolio.ContainsKey(symbol))
             {
+                var resolution = algorithm.UniverseSettings.Resolution;
                 if (!_notifiedDefaultResolutionUsed)
                 {
                     // let's just send the message once
                     _notifiedDefaultResolutionUsed = true;
-
-                    algorithm.Debug($"Algorithm will use {minResolution} resolution for automatically added securities for open orders and holdings.");
+                    algorithm.Debug($"Will use UniverseSettings.Resolution value '{resolution}' for automatically added securities for open orders and holdings.");
                 }
 
                 Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + symbol.Value);
@@ -429,17 +427,17 @@ namespace QuantConnect.Lean.Engine.Setup
                 if (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.FutureOption)
                 {
                     // add current option contract to the system
-                    algorithm.AddOptionContract(symbol, minResolution, true, 1.0m);
+                    algorithm.AddOptionContract(symbol, resolution, true, 1.0m);
                 }
                 else if (symbol.SecurityType == SecurityType.Future)
                 {
                     // add current future contract to the system
-                    algorithm.AddFutureContract(symbol, minResolution, true, 1.0m);
+                    algorithm.AddFutureContract(symbol, resolution, true, 1.0m);
                 }
                 else
                 {
                     // for items not directly requested set leverage to 1 and at the min resolution
-                    algorithm.AddSecurity(symbol.SecurityType, symbol.Value, minResolution, symbol.ID.Market, true, 1.0m, false);
+                    algorithm.AddSecurity(symbol.SecurityType, symbol.Value, resolution, symbol.ID.Market, true, 1.0m, false);
                 }
             }
         }
@@ -452,9 +450,8 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="transactionHandler">The configurated transaction handler</param>
         /// <param name="brokerage">Brokerage output instance</param>
         /// <param name="supportedSecurityTypes">The list of supported security types</param>
-        /// <param name="minResolution">The resolution for the security to add, if required</param>
         protected void GetOpenOrders(IAlgorithm algorithm, IResultHandler resultHandler, ITransactionHandler transactionHandler, IBrokerage brokerage,
-            HashSet<SecurityType> supportedSecurityTypes, Resolution minResolution)
+            HashSet<SecurityType> supportedSecurityTypes)
         {
             // populate the algorithm with the account's outstanding orders
             var openOrders = brokerage.GetOpenOrders();
@@ -481,7 +478,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     continue;
                 }
 
-                AddUnrequestedSecurity(algorithm, order.Symbol, minResolution);
+                AddUnrequestedSecurity(algorithm, order.Symbol);
             }
         }
 
