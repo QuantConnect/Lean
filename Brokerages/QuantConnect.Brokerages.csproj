@@ -40,7 +40,6 @@
     </PackageReference>
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.9.3" />
     <PackageReference Include="Microsoft.NetFramework.Analyzers" Version="2.9.3" />
-    <PackageReference Include="NATS.Client" Version="0.8.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
     <PackageReference Include="QuantConnect.IBAutomater" Version="1.0.43" />
@@ -84,8 +83,5 @@
     <None Include="Fxcm\QuantConnect.Fxcm.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Alpaca\Markets\AlpacaTradingClient.WatchList.cs" />
   </ItemGroup>
 </Project>

@@ -173,28 +173,6 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
-        /// Live trading via Alpaca
-        /// </summary>
-        [Test]
-        public void LiveAlpacaTest()
-        {
-            var key = Config.Get("alpaca-key-id");
-            var secretKey = Config.Get("alpaca-secret-key");
-            var environment = Config.Get("alpaca-trading-mode").ToLowerInvariant().Equals("live") ? BrokerageEnvironment.Live : BrokerageEnvironment.Paper;
-
-            // Create default algorithm settings
-            var settings = new AlpacaLiveAlgorithmSettings(key, secretKey, environment);
-
-            var file = new ProjectFile
-            {
-                Name = "Main.cs",
-                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
-            };
-
-            RunLiveAlgorithm(settings, file);
-        }
-
-        /// <summary>
         /// Live trading via GDAX (Coinbase)
         /// </summary>
         [Test]
@@ -286,13 +264,6 @@ namespace QuantConnect.Tests.API
                         secretKey = Config.Get("bitfinex-api-secret");
 
                         settings = new BitfinexLiveAlgorithmSettings(key, secretKey);
-                        break;
-                    case BrokerageName.Alpaca:
-                        key = Config.Get("alpaca-key-id");
-                        secretKey = Config.Get("alpaca-secret-key");
-                        environment = Config.Get("alpaca-trading-mode").ToLowerInvariant().Equals("live") ? BrokerageEnvironment.Live : BrokerageEnvironment.Paper;
-
-                        settings = new AlpacaLiveAlgorithmSettings(key, secretKey, environment);
                         break;
                     case BrokerageName.GDAX:
                         key = Config.Get("gdax-api-key");
