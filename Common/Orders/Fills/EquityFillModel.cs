@@ -18,10 +18,12 @@ using System.Collections.Generic;
 using System.Linq;
 using QLNet;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
 
 namespace QuantConnect.Orders.Fills
@@ -500,9 +502,18 @@ namespace QuantConnect.Orders.Fills
 
             if (subscribedTypes.Contains(typeof(Tick)))
             {
+                var primaryExchange = (byte) ((Equity) asset).PrimaryExchange;
+                var officialOpen = (uint) (TradeConditionFlags.Regular | TradeConditionFlags.OfficialOpen);
+                var openingPrints = (uint) (TradeConditionFlags.Regular | TradeConditionFlags.OpeningPrints);
+
                 // Get the first valid (non-zero) tick of trade type from an open market
-                var trade = asset.Cache.GetAll<Tick>().FirstOrDefault(x =>
-                    x.TickType == TickType.Trade && x.Price > 0 && asset.Exchange.DateTimeIsOpen(x.Time));
+                var trade = asset.Cache.GetAll<Tick>()
+                    .Where(x => !string.IsNullOrWhiteSpace(x.SaleCondition))
+                    .FirstOrDefault(x =>
+                        x.TickType == TickType.Trade && x.Price > 0 && x.ExchangeCode == primaryExchange &&
+                        (x.ParsedSaleCondition == officialOpen || x.ParsedSaleCondition == openingPrints) &&
+                        asset.Exchange.DateTimeIsOpen(x.Time));
+
                 if (trade != null)
                 {
                     endTime = trade.EndTime;
