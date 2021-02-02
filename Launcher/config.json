@@ -142,12 +142,6 @@
   // Required for IEX history requests
   "iex-cloud-api-key": "",
 
-  // alpaca configuration
-  // available trading mode: 'paper', 'live'
-  "alpaca-key-id": "",
-  "alpaca-secret-key": "",
-  "alpaca-trading-mode": "paper",
-
   // Required for streaming Polygon.io data
   // To get your access token go to https://polygon.io
   "polygon-api-key": "",
@@ -304,21 +298,6 @@
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "BinanceBrokerage",
       "data-queue-handler": "BinanceBrokerage",
-      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
-      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-      "history-provider": "BrokerageHistoryProvider"
-    },
-
-    // defines the 'live-alpaca' environment
-    "live-alpaca": {
-      "live-mode": true,
-
-      // real brokerage implementations require the BrokerageTransactionHandler
-      "live-mode-brokerage": "AlpacaBrokerage",
-      "data-queue-handler": "PolygonDataQueueHandler",
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
